@@ -1,0 +1,14 @@
+{
+  "group": "animated",
+  "motion": true,
+  "start": {
+    "blank": [
+      512,
+      512
+    ]
+  },
+  "from": "ask-animates-what-it-makes-an-animated-svg-icon: tweaks to an animation Ask made (the user, 2026-11-05)",
+  "make": "make an animated icon of a balloon popping",
+  "then": "pop faster",
+  "part": "the speed of the pop"
+}

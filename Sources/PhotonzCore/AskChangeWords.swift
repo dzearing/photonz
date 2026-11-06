@@ -35,6 +35,7 @@ public enum AskChangeWords {
         case "restyle_icon": Kind(verb: "Restyled", one: "the icon", many: "icons")
         case "set_keys": Kind(verb: "Animated", one: "a layer", many: "layers")
         case "remove_keys": Kind(verb: "Took keys off", one: "a layer", many: "layers")
+        case "change_keys": Kind(verb: "Retimed", one: "the motion", many: "motions")
         case "set_timing": Kind(verb: "Timed", one: "the picture", many: "pictures")
         case "add_style": Kind(verb: "Saved", one: "a style", many: "styles")
         case "apply_style": Kind(verb: "Restyled", one: "a layer", many: "layers")
@@ -47,6 +48,16 @@ public enum AskChangeWords {
         case "apply_zooms": Kind(verb: "Added", one: "zooms", many: "zooms")
         default: nil
         }
+    }
+
+    /// What a motion Ask made does, for its row: how long it plays and
+    /// whether it goes round, and anything an SVG of it would leave still.
+    public static func motionNote(lapSeconds: Double, loops: Bool, notMoving: [String]) -> String {
+        let seconds = lapSeconds.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(lapSeconds)) : String(format: "%.1f", lapSeconds)
+        let plays = loops ? "Plays for \(seconds) s and loops." : "Plays once, for \(seconds) s."
+        guard let last = notMoving.last else { return plays }
+        let names = notMoving.count == 1 ? last : notMoving.dropLast().joined(separator: ", ") + " and \(last)"
+        return plays + " \(names) will not move in an SVG."
     }
 
     /// The row of an icon that opened in a new picture: the person's own

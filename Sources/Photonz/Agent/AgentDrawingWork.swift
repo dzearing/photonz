@@ -167,7 +167,7 @@ enum AgentDrawingWork {
             from = "painted: \(painted.model), \(painted.paths) paths in \(Int(painted.seconds.rounded())) s"
             fitted = AgentDrawingPlacement.box(call.frame, fitting: drawing.bounds.size, on: document.canvasSize)
         } else if let svg = call.svg {
-            switch SVGArtwork.parse(svg) {
+            switch SVGArtwork.parse(svg, keepingGroups: call.forMotion) {
             case .success(let read): drawing = read
             case .failure(let trouble): throw Failure("add_drawing: \(trouble.message)")
             }
@@ -180,7 +180,7 @@ enum AgentDrawingWork {
         target.asOneUndoStep {
             if call.icon {
                 let blank = isBlank(target)
-                target.perform { made = $0.addDrawing(drawing, named: call.layerName, icon: true, side: call.side, box: call.frame, blank: blank) }
+                target.perform { made = $0.addDrawing(drawing, named: call.layerName, icon: true, side: call.side, box: call.frame, blank: blank, onGrid: call.forMotion) }
             } else {
                 let group = drawing.group(named: call.layerName,
                                           fitting: fitted ?? AgentDrawingPlacement.box(call.frame, on: document.canvasSize))

@@ -100,6 +100,8 @@ enum AgentWork {
             return try landKeys(AgentDocuments.editor(id).get()) { $0.agentRemoveKeys(call) }
         case .setTiming(let id, let timing):
             return try landKeys(AgentDocuments.editor(id).get()) { $0.agentSetTiming(timing) }
+        case .changeKeys(let id, let call):
+            return try landKeys(AgentDocuments.editor(id).get()) { $0.agentChangeKeys(call) }
         }
     }
 

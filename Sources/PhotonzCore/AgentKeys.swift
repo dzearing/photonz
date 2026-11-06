@@ -80,6 +80,32 @@ public struct AgentTiming: Hashable, Sendable {
     }
 }
 
+/// A change_keys call: every key of what it names, faster or further at once.
+public struct AgentChangeKeys: Hashable, Sendable {
+    /// The layers, by id; every keyed layer when nil.
+    public var layers: [String]?
+    /// Only this value of them.
+    public var property: MotionProperty?
+    /// 2 is twice as fast.
+    public var speed: Double?
+    /// 1.5 goes half as far again from where each value starts; -1 the other way.
+    public var amount: Double?
+
+    public init(layers: [String]? = nil, property: MotionProperty? = nil, speed: Double? = nil, amount: Double? = nil) {
+        self.layers = layers
+        self.property = property
+        self.speed = speed
+        self.amount = amount
+    }
+}
+
+/// What change_keys did.
+public struct AgentKeysChanged: Encodable, Hashable, Sendable {
+    /// How many values it changed.
+    public let values: Int
+    public let lapSeconds: Double?
+}
+
 /// What set_keys did.
 public struct AgentKeysSet: Encodable, Hashable, Sendable {
     public let layer: String
@@ -196,6 +222,16 @@ extension AgentTools {
                 "seconds": ["type": "number", "minimum": 0, "description": "Only the key at this moment. Every moment when left out."],
             ], required: ["layer"])),
         AgentTool(
+            name: "change_keys",
+            description: "Change an animation that is there, all at once: faster or slower, further or less far. Every key keeps its curve. With no layers, it changes everything keyed and the lap with it. One undo step.",
+            inputSchema: schema([
+                "document": documentWords,
+                "layers": ["type": "array", "items": ["type": "string"], "description": "The layers' ids from read_document. Every keyed layer when left out."],
+                "property": ["type": "string", "enum": propertyNames, "description": "Only this value. Left out, speed changes every value and amount changes position, rotation and scale."],
+                "speed": ["type": "number", "exclusiveMinimum": 0, "maximum": 20, "description": "2 is twice as fast, 0.5 half as fast. A layer named on its own keeps when it starts."],
+                "amount": ["type": "number", "minimum": -10, "maximum": 10, "description": "How far each value goes from where it starts: 1.5 is half as far again, 0.5 half as far, -1 the other way."],
+            ])),
+        AgentTool(
             name: "set_timing",
             description: "Say how a picture plays: the length of its lap and whether it loops. It stays a picture, and it moves once it has keys. A video's length is its clips. One undo step.",
             inputSchema: schema([
@@ -234,6 +270,12 @@ extension AgentTools {
             let timing = AgentTiming(lengthMS: args["seconds"]?.doubleValue.map(milliseconds), repeats: args["loop"]?.boolValue)
             guard timing != AgentTiming() else { return fail("say seconds, loop or both.") }
             return .success(.setTiming(document: document, timing: timing))
+        case "change_keys":
+            let call = AgentChangeKeys(layers: args["layers"]?.arrayValue?.compactMap(\.stringValue), property: property,
+                                       speed: args["speed"]?.doubleValue, amount: args["amount"]?.doubleValue)
+            guard call.speed != nil || call.amount != nil else { return fail("say speed, amount or both.") }
+            if let speed = call.speed, speed <= 0 { return fail("speed is above 0: 2 is twice as fast.") }
+            return .success(.changeKeys(document: document, call: call))
         case "remove_keys":
             let layer = args["layer"]?.stringValue ?? ""
             return .success(.removeKeys(document: document, call: AgentRemoveKeys(
@@ -416,6 +458,93 @@ extension PhotonzDocument {
             return fail("there is no key on \(what)\(call.atMS.map { " at \(Double($0) / 1000) s" } ?? "").")
         }
         return .success(AgentKeysRemoved(layer: id.uuidString, removed: removed))
+    }
+
+    /// The values `amount` changes when none is named: what a person means by
+    /// further. A fade or a colour has no further to go.
+    private static let amountChanges: Set<MotionProperty> = [.position, .rotation, .scale]
+
+    /// `value`, `amount` times as far from `rest`.
+    private static func further(_ value: MotionValue, from rest: MotionValue, amount: Double,
+                                property: MotionProperty) -> MotionValue? {
+        switch (rest, value) {
+        case let (.point(start), .point(point)):
+            return .point(CGPoint(x: start.x + (point.x - start.x) * amount, y: start.y + (point.y - start.y) * amount))
+        case let (.number(start), .number(number)):
+            let moved = start + (number - start) * amount
+            if [.opacity, .shadowOpacity, .glowOpacity, .trimStart, .trimEnd].contains(property) { return .number(min(max(moved, 0), 100)) }
+            return .number(property == .scale ? max(moved, 0) : moved)
+        default:
+            return nil
+        }
+    }
+
+    /// Lands a change_keys call. Nothing changes where it is refused.
+    public mutating func agentChangeKeys(_ call: AgentChangeKeys) -> Result<AgentKeysChanged, AgentToolError> {
+        func fail(_ words: String) -> Result<AgentKeysChanged, AgentToolError> { .failure(AgentToolError("change_keys: \(words)")) }
+        var targets: [Layer] = []
+        if let named = call.layers {
+            for id in named {
+                switch keyTarget(id, "change_keys") {
+                case .success(let found): targets.append(found)
+                case .failure(let refused): return .failure(refused)
+                }
+            }
+        } else {
+            targets = keyedLayers()
+        }
+        var work = self
+        var values = 0
+        for layer in targets {
+            let motions = keyedMotions(of: layer).filter { motion in call.property.map { $0 == motion.property } ?? true }
+            var lead = motions.compactMap { $0.keyframes.first?.atMS }.min() ?? 0
+            if call.layers == nil { lead = 0 }
+            for motion in motions {
+                var stops = motion.keyframes
+                guard let first = stops.first else { continue }
+                var changed = false
+                if let amount = call.amount, call.property != nil || Self.amountChanges.contains(motion.property) {
+                    for index in stops.indices {
+                        if let moved = Self.further(stops[index].value, from: first.value, amount: amount, property: motion.property) {
+                            stops[index].value = moved
+                            changed = true
+                        }
+                    }
+                }
+                if let speed = call.speed {
+                    for index in stops.indices {
+                        stops[index].atMS = lead + Int((Double(stops[index].atMS - lead) / speed).rounded())
+                    }
+                    changed = true
+                    for (one, next) in zip(stops, stops.dropFirst()) where next.atMS - one.atMS <= PropertyKeys.nearMS {
+                        return fail("\(layer.name)'s keys would land on each other at that speed. Ask for less, or remove some with remove_keys.")
+                    }
+                }
+                guard changed else { continue }
+                let made = motion.rebuilt(from: stops)
+                work.updateLayer(id: layer.id) { edited in
+                    guard let index = edited.motions?.firstIndex(where: { $0.id == motion.id }) else { return }
+                    edited.motions?[index] = made
+                }
+                values += 1
+            }
+        }
+        guard values > 0 else {
+            return fail("nothing there to change\(call.property.map { " on \($0.rawValue)" } ?? ""). read_document lists what is keyed.")
+        }
+        if let speed = call.speed, call.layers == nil, call.property == nil, !hasTime {
+            work.motionCycleMS = max(1, Int((Double(motionCycleLengthMS) / speed).rounded()))
+        }
+        self = work
+        return .success(AgentKeysChanged(values: values, lapSeconds: hasTime ? nil : Double(motionCycleLengthMS) / 1000))
+    }
+
+    /// Every layer with a key on it, in the order they are listed.
+    private func keyedLayers() -> [Layer] {
+        func walk(_ list: [Layer]) -> [Layer] {
+            list.flatMap { layer in (keyedMotions(of: layer).isEmpty ? [] : [layer]) + walk(layer.children) }
+        }
+        return walk(layers)
     }
 
     /// Lands a set_timing call. The lap is written down whether or not there

@@ -63,9 +63,10 @@ async function scoreCase(testCase, dir, got, judgeRuns) {
   // An icon is judged on a sheet of it at the sizes it is used, beside references;
   // it is still named blind from the picture alone.
   const icon = testCase.group === "icon";
+  const animated = testCase.group === "animated";
   const judged = icon && rules.score !== 0 ? await iconSheet(testCase, dir, got.picture) : got.picture;
   const [judge, named] = await Promise.all([
-    rules.score === 0 ? null : judgePicture({ picture: judged, request: testCase.request, context: testCase.context, runs: judgeRuns, crafted: !!testCase.crafted, video: testCase.group === "video", photo: !!testCase.photo, icon }),
+    rules.score === 0 ? null : judgePicture({ picture: judged, request: testCase.request, context: testCase.context, runs: judgeRuns, crafted: !!testCase.crafted, video: testCase.group === "video", photo: !!testCase.photo, icon, animated }),
     ["drawing", "photo", "icon"].includes(testCase.group) && rules.score !== 0 ? nameBlind({ picture: got.picture, names: testCase.names ?? [], runs: judgeRuns }) : null,
   ]);
   // A drawing that spells out what it is gets named from its words, not its
@@ -132,7 +133,7 @@ export function judgeLines(cases) {
   const ran = Object.values(cases).filter((r) => !r.unrun);
   const means = (list) => {
     const out = {};
-    for (const key of ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted", "photographic", "readsAsIcon"]) {
+    for (const key of ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted", "photographic", "readsAsIcon", "loops"]) {
       const values = list.map((r) => r.judge?.lines?.[key]).filter((v) => typeof v === "number");
       if (values.length) out[key] = Math.round(values.reduce((a, b) => a + b, 0) / values.length * 10) / 10;
     }
@@ -141,7 +142,8 @@ export function judgeLines(cases) {
   const drawings = ran.filter((r) => r.group === "drawing");
   const seconds = drawings.map((r) => r.seconds).filter((v) => typeof v === "number").sort((a, b) => a - b);
   return {
-    drawing: means(drawings), icon: means(ran.filter((r) => r.group === "icon")), all: means(ran),
+    drawing: means(drawings), icon: means(ran.filter((r) => r.group === "icon")),
+    animated: means(ran.filter((r) => r.group === "animated")), all: means(ran),
     drawingSeconds: seconds.length ? seconds[Math.floor((seconds.length - 1) / 2)] : null,
   };
 }

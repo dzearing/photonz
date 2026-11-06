@@ -134,8 +134,10 @@ public struct SVGArtwork: Hashable, Sendable {
 
     /// The layers, in canvas points, with the drawing scaled to fit `box` and
     /// centred in it. Bottom first.
-    public func layers(named name: String, fitting box: CGRect) -> [Layer] {
-        let from = bounds
+    /// `within` is the part of the drawing that fills `box`: all of what is
+    /// drawn when left out.
+    public func layers(named name: String, fitting box: CGRect, within: CGRect? = nil) -> [Layer] {
+        let from = within ?? bounds
         guard !from.isNull, from.width > 0 || from.height > 0, box.width > 0, box.height > 0 else { return [] }
         let scale = min(from.width > 0 ? box.width / from.width : .infinity,
                         from.height > 0 ? box.height / from.height : .infinity)
@@ -256,11 +258,30 @@ public struct SVGArtwork: Hashable, Sendable {
     /// The drawing as an icon: a square frame of `side` points with the
     /// drawing filling its live area, the margin every icon in a set keeps
     /// (`IconKeylines`).
-    public func iconFrame(named name: String, side: CGFloat, origin: CGPoint) -> Layer {
-        let margin = IconKeylines.margin(forSide: side)
-        let live = CGRect(x: margin, y: margin, width: side - 2 * margin, height: side - 2 * margin)
-        return Layer.frameLayer(name: name, origin: origin, size: CGSize(width: side, height: side),
-                                children: layers(named: name, fitting: live), backgroundHex: nil)
+    ///
+    /// `onGrid` is an icon that moves: its viewBox fills the frame, so what
+    /// was drawn stands where its grid says and has the room around it the
+    /// drawing left, for parts that travel. Nothing is fitted to what happens
+    /// to be drawn, and a `<g id>` read keeping its groups stays a group.
+    public func iconFrame(named name: String, side: CGFloat, origin: CGPoint, onGrid: Bool = false) -> Layer {
+        let size = CGSize(width: side, height: side)
+        guard onGrid, let viewBox, viewBox.width > 0, viewBox.height > 0 else {
+            let margin = IconKeylines.margin(forSide: side)
+            let live = CGRect(x: margin, y: margin, width: side - 2 * margin, height: side - 2 * margin)
+            return Layer.frameLayer(name: name, origin: origin, size: size,
+                                    children: layers(named: name, fitting: live), backgroundHex: nil)
+        }
+        let drawn = layers(named: name, fitting: CGRect(origin: .zero, size: size), within: viewBox)
+        var children = drawn
+        if parts.contains(where: { !$0.groups.isEmpty }),
+           let top = Self.nest(name: name, Array(zip(drawn, parts.map(\.groups))), depth: 0) {
+            children = top.children.map { child in
+                var moved = child
+                moved.frame = child.frame.offsetBy(dx: top.frame.minX, dy: top.frame.minY)
+                return moved
+            }
+        }
+        return Layer.frameLayer(name: name, origin: origin, size: size, children: children, backgroundHex: nil)
     }
 }
 

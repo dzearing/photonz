@@ -479,12 +479,28 @@ export function webSafety(read, web, engine) {
   return { score: Math.max(0, 10 - failed * 5), note: notes.join("; "), failed };
 }
 
+/// An animated icon, read from what left the app: keys in the document, motion
+/// in the file, and nothing the file could not carry. Each thing missing costs
+/// its share; a still document scores 0 here.
+export function moves(read) {
+  const film = read.animation ?? {};
+  const keyed = flatten(made(read)).filter((node) => (node.layer.keyed ?? []).length).length;
+  if (!read.lap || !keyed || !film.animates) return { score: 0, note: `lap ${read.lap ? "yes" : "no"}, ${keyed} keyed layers, ${film.animates ?? 0} animations in the file` };
+  let value = 10;
+  const notes = [`${keyed} keyed layers, ${film.animates} animations, ${read.lap.seconds} s lap`];
+  if ((film.moves ?? 0) < 0.05) { value -= 6; notes.push("the frames do not differ"); }
+  if ((film.notMoving ?? []).length) { value -= 3; notes.push(`the file left still: ${film.notMoving.join("; ")}`); }
+  if (read.lap.loop && (film.seam ?? 0) > 1) { value -= 3; notes.push(`it jumps at the loop (${film.seam.toFixed(2)})`); }
+  return { score: Math.max(value, 0), note: notes.join(", ") };
+}
+
 export function score(read, testCase, engine = null) {
   const expect = testCase.expect ?? {};
   const mine = made(read);
   if (!mine.length) return { score: 0, rules: { made: { score: 0, note: "nothing was made" } } };
   const nodes = flatten(mine);
-  const icon = testCase.group === "icon";
+  const animated = testCase.group === "animated";
+  const icon = testCase.group === "icon" || animated;
   const drawing = testCase.group === "drawing" || icon;
   const laidOut = testCase.group === "sheet" || testCase.group === "layout";
   const video = testCase.group === "video";
@@ -498,6 +514,7 @@ export function score(read, testCase, engine = null) {
     composed: testCase.group === "drawing" ? composed(nodes, read) : null,
     iconCraft: expect.iconCraft ? iconCraft(nodes, read, expect) : null,
     plays: video ? plays(read, clips) : null,
+    moves: animated ? moves(read) : null,
     asked: video ? askedOfVideoRule(read, expect, clips) : asked(nodes, read, expect),
     web: expect.web ? webSafety(read, expect.web, engine) : null,
   };

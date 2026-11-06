@@ -56,6 +56,24 @@ enum MotionSVG {
     /// Straight through: what a hold and a sampled run both use.
     static let hold: Spline = (0, 0, 1, 1)
 
+    /// What every line drawing itself measures out at, whatever its length.
+    static let trimLength = 100.0
+    /// How far past its end the dash stands at nothing drawn: a dash ending
+    /// exactly on the line would still put down a round cap's dot.
+    static let trimClear = 0.5
+
+    /// What this file can move: what Ask may key for an animated SVG, so
+    /// nothing it plans is left still in the file.
+    static let carried: [MotionProperty] = [.position, .scale, .rotation, .opacity, .color, .strokeWidth, .trimStart, .trimEnd]
+
+    /// The dash's offset for a percent of the line, 100 being all of it drawn.
+    /// The dash is as long as the line: at nothing drawn it stands just before
+    /// the start for an end, and just past the end for a start.
+    static func trimOffset(_ percent: Double, of property: MotionProperty) -> Double {
+        let share = min(max(percent, 0), 100) / trimLength
+        return property == .trimEnd ? (1 - share) * (trimLength + trimClear) : -share * (trimLength + trimClear)
+    }
+
     // MARK: What wraps one layer
 
     /// The groups one animated layer is wrapped in, and what its own shapes
@@ -78,6 +96,9 @@ enum MotionSVG {
         /// Whether a turn owns the layer's angle outright, so the still
         /// placement must not turn it a second time.
         var ownsTheTurn = false
+        /// Whether a line's trim is animated, so the shape inside measures
+        /// itself out of `MotionSVG.trimLength` for the dash to run along.
+        var pathLength = false
         /// Parts of the motion the file could not carry, each with the reason
         /// in words a person can read.
         var dropped: [SVGExport.Fallback] = []
@@ -166,7 +187,7 @@ enum MotionSVG {
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
-             .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd,
+             .backgroundBlur, .backgroundZoom,
              .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation,
              .rotationX, .rotationY, .depth, .pivotDepth,
              .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
@@ -184,6 +205,19 @@ enum MotionSVG {
                 }
                 wrap.omitsStrokeWidth = true
                 push(" stroke-width=\"\(track.base)\"", [track.element])
+            case .trimStart, .trimEnd:
+                guard !isPicture, layer.keyStill(property) != nil else {
+                    drop(property, "has no line in the file to draw on")
+                    continue
+                }
+                // One dash runs along the line, so one number moves it. Both
+                // ends keyed would need the dash's length to move as well.
+                guard !wrap.pathLength else {
+                    drop(property, "cannot move with the other end of the line in the file")
+                    continue
+                }
+                wrap.pathLength = true
+                push(" stroke-dasharray=\"\(number(trimLength)) \(number(trimLength * 2))\" stroke-dashoffset=\"\(track.base)\"", [track.element])
             }
         }
         return wrap
@@ -311,11 +345,14 @@ enum MotionSVG {
         case .strokeWidth:
             element = "animate"
             attributes = "attributeName=\"stroke-width\""
+        case .trimStart, .trimEnd:
+            element = "animate"
+            attributes = "attributeName=\"stroke-dashoffset\""
         case .blur, .cornerRadius, .shadow, .textSize, .glow, .gradientShift, .pathStart,
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
-             .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd,
+             .backgroundBlur, .backgroundZoom,
              .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation,
              .rotationX, .rotationY, .depth, .pivotDepth,
              .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
@@ -579,6 +616,8 @@ enum MotionSVG {
             return number(min(max(percent / 100, 0), 1))
         case let (.strokeWidth, .number(points)):
             return number(max(0, points))
+        case let (.trimStart, .number(percent)), let (.trimEnd, .number(percent)):
+            return number(trimOffset(percent, of: property))
         case let (.color, .color(hex)):
             guard let rgba = RGBA(hex: hex) else { return nil }
             return MotionValue.hex(rgba)

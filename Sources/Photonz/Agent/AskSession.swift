@@ -644,7 +644,8 @@ final class AskSession {
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
             note("done")
-            let sayings = [talk.note, landed.layoutSentence, unclear ? AskCopy.iconMayNotRead : nil].compactMap { $0 }
+            let sayings = [talk.note, landed.layoutSentence, unclear ? AskCopy.iconMayNotRead : nil,
+                           Self.motionNote(of: landed, in: canvas)].compactMap { $0 }
             said = sayings.isEmpty ? nil : sayings.joined(separator: " ")
             leftOut = landed.leftOut
             if let line = landed.leftOut { note("left out: \(line)") }
@@ -721,7 +722,8 @@ final class AskSession {
                     stepsRun = number
                     continue
                 }
-                switch step.request(document: document, made: ledger.made) {
+                let readied = editor.document.map { AskMotion.landing(step, in: $0, plan: plan.steps, made: ledger.made) } ?? .success(step)
+                switch readied.flatMap({ $0.request(document: document, made: ledger.made) }) {
                 case .failure(let refused):
                     refusal = refused.message
                 case .success(let request):
@@ -775,6 +777,16 @@ final class AskSession {
         lastSources = sources
         return Ran(before: before, landed: ledger.landed, made: ledger.made, sources: sources,
                    layoutSentence: layoutSentence, leftOut: ledger.sentence)
+    }
+
+    /// What a plan that keyed something says about it (`AskChangeWords.motionNote`).
+    private static func motionNote(of ran: Ran, in editor: EditorState) -> String? {
+        guard ran.landed.contains(where: { AskTools.keyDoing.contains($0.tool) }), let document = editor.document,
+              !document.hasTime, let lap = document.keyLap else { return nil }
+        let animation = CompositeCopy.svgAnimation(for: document, motionOn: Experiments.shared.animatedSVGExportEnabled)
+        let written = SVGExporter.data(document, store: editor.store, renderer: DocumentRenderer(), animation: animation, background: .drop)
+        return AskChangeWords.motionNote(lapSeconds: Double(document.motionCycleLengthMS) / 1000, loops: lap.repeats,
+                                         notMoving: Array(Set(written?.unmoved.map(\.layerName) ?? [])).sorted())
     }
 
     /// What a step's line says while it runs, and once its painting is
@@ -1018,7 +1030,12 @@ final class AskSession {
         // something is happening to it (`AskIcon.designAsk`).
         var iconDesign: String?
         var iconBreak: String?
-        if AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil, holdsIcon: AskIcon.holdsIcon(Self.text(of: read))),
+        if AskMotion.drawsMotion(words), AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil, holdsIcon: AskIcon.holdsIcon(Self.text(of: read))),
+           !AskLocalModel.answersAreScripted {
+            let answer = try? await AskLocalModel.chat(AskMotion.designBody(model: model, request: words))
+            iconDesign = (answer?["message"]?["content"]?.stringValue).flatMap(AskMotion.design(fromAnswer:))
+            note("icon: motion design: \(iconDesign ?? "none")")
+        } else if !AskMotion.drawsMotion(words), AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil, holdsIcon: AskIcon.holdsIcon(Self.text(of: read))),
            !AskLocalModel.answersAreScripted {
             let broken = try? await AskLocalModel.chat(AskIconBreak.questionBody(model: model, request: words))
             iconBreak = (broken?["message"]?["content"]?.stringValue).flatMap(AskIconBreak.object(fromAnswer:))

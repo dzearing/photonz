@@ -69,8 +69,12 @@ async function walkCase(testCase, dir, build) {
       { do: "blank", canvasWidth: width, canvasHeight: height, width: 1280, height: 840 }, { do: "wait", seconds: 1 },
       ...askSteps(testCase.make, limit, "made"),
       { do: "render", name: "first" },
+      ...(testCase.motion ? [{ do: "writeSVG", name: "first" }] : []),
       ...askSteps(testCase.then, limit, "changed"),
       { do: "render", name: "second" },
+      // What leaves the app before and after, and one Command Z after the
+      // tweak, which must bring the first file back byte for byte.
+      ...(testCase.motion ? [{ do: "writeSVG", name: "second" }, { do: "key", key: "z", modifiers: ["command"] }, { do: "wait", seconds: 1 }, { do: "writeSVG", name: "undone" }] : []),
     ],
   }, null, 2));
   const args = [script];
@@ -86,12 +90,40 @@ async function walkCase(testCase, dir, build) {
     const png = path.join(out, `${name}.png`);
     if (existsSync(png)) copyFileSync(png, path.join(dir, `${name}.png`));
   }
+  const motion = testCase.motion ? await filmBoth(out, dir) : null;
   return {
-    code: result.code,
+    code: result.code, motion,
     made: made && { phase: made.phase, says: made.says, steps: made.steps?.length ?? 0 },
     changed: changed && { phase: changed.phase, says: changed.says, steps: changed.steps ?? [], trace: changed.trace ?? [] },
   };
 }
+
+/// A motion is judged on its file as WebKit plays it, each lap's own frames.
+async function filmBoth(out, dir) {
+  const said = {};
+  for (const name of ["first", "second"]) {
+    const file = path.join(out, `${name}.svg`);
+    if (!existsSync(file)) continue;
+    copyFileSync(file, path.join(dir, `${name}.svg`));
+    const text = readFileSync(file, "utf8");
+    const lap = Math.max(0, ...[...text.matchAll(/dur="(\d+(?:\.\d+)?)ms"/g)].map((m) => Number(m[1]))) / 1000;
+    said[name] = { lap, animates: (text.match(/<animate/g) ?? []).length };
+    if (!lap) continue;
+    const shot = await run("swift", [path.join(here, "svg-frames.swift"), path.join(dir, `${name}.png`), file, String(lap), "--gif", path.join(dir, `${name}.gif`)], { cwd: repo, timeoutMS: 120_000 });
+    try { Object.assign(said[name], JSON.parse(shot.stdout.trim().split("\n").pop())); } catch {}
+  }
+  const undone = path.join(out, "undone.svg");
+  said.oneUndoStep = existsSync(undone) && existsSync(path.join(out, "first.svg"))
+    && readFileSync(undone, "utf8") === readFileSync(path.join(out, "first.svg"), "utf8");
+  return said;
+}
+
+const MOTION_PROMPT = `Two sheets of frames of an animated icon, each frame labelled with its time, evenly across one lap as a browser plays the file. The first sheet, at {{first}}, is what a picture editor's helper made when asked: "{{make}}"; one lap takes {{firstLap}} s. Then the person asked: "{{then}}". The second sheet, at {{second}}, is the result; one lap takes {{secondLap}} s. A change of speed or a pause shows in the lap's length and the times on the frames, not only in the shapes.
+Read both sheets, then score the change from 1 to 10 on each line, strictly:
+- rightPart: did the change land on what the words name ({{part}}) and nothing else? 10: exactly that. 1: nothing changed, or something else changed instead.
+- matchesWords: does the motion now do what the words say, plainly enough to see or to read from the times? 10: unmistakable. 1: nothing visible, or the opposite.
+- nothingElseMoved: is it the same icon doing the same motion apart from what was named? 10: same drawing, same beats, only that changed. 5: the same icon with other parts of the motion noticeably changed. 1: a different icon or a different motion, remade from scratch.
+Answer with only JSON: {"rightPart": n, "matchesWords": n, "nothingElseMoved": n, "why": "one sentence"}`;
 
 const PROMPT = `Two pictures from a picture editor. The first, at {{first}}, is what its helper made when asked: "{{make}}". Then the person asked: "{{then}}". The second picture, at {{second}}, is the result.
 Read both pictures, then score the change from 1 to 10 on each line, strictly:
@@ -100,14 +132,15 @@ Read both pictures, then score the change from 1 to 10 on each line, strictly:
 - nothingElseMoved: is everything the words did not name the same as in the first picture? 10: identical apart from what was named. 5: the same picture with other parts noticeably changed. 1: a different picture, remade from scratch.
 Answer with only JSON: {"rightPart": n, "matchesWords": n, "nothingElseMoved": n, "why": "one sentence"}`;
 
-async function look(testCase, first, second) {
+async function look(testCase, first, second, motion) {
   const scratch = mkdtempSync(path.join(os.tmpdir(), "followup-judge-"));
   try {
     const a = path.join(scratch, "first.png"), b = path.join(scratch, "second.png");
     copyFileSync(first, a);
     copyFileSync(second, b);
-    const text = PROMPT.replaceAll("{{first}}", a).replaceAll("{{second}}", b).replaceAll("{{make}}", testCase.make)
-      .replaceAll("{{then}}", testCase.then).replaceAll("{{part}}", testCase.part);
+    const text = (motion ? MOTION_PROMPT : PROMPT).replaceAll("{{first}}", a).replaceAll("{{second}}", b).replaceAll("{{make}}", testCase.make)
+      .replaceAll("{{then}}", testCase.then).replaceAll("{{part}}", testCase.part)
+      .replaceAll("{{firstLap}}", String(motion?.first?.lap ?? 0)).replaceAll("{{secondLap}}", String(motion?.second?.lap ?? 0));
     const result = await run("claude", ["-p", "--model", JUDGE_MODEL, "--tools", "Read", "--allowedTools", "Read",
       "--setting-sources", "", "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}',
       "--no-session-persistence", "--output-format", "json", text], { cwd: scratch, timeoutMS: 180_000 });
@@ -134,15 +167,17 @@ async function judge(testCase, dir, walked) {
   if (!existsSync(first) || !existsSync(second) || walked.made?.phase !== "ran") {
     return { pass: false, why: `the first request did not make anything (${walked.made?.phase ?? "no state"})`, looks: [] };
   }
-  const looks = (await Promise.all(Array.from({ length: LOOKS }, () => look(testCase, first, second)))).filter(Boolean);
+  const looks = (await Promise.all(Array.from({ length: LOOKS }, () => look(testCase, first, second, walked.motion)))).filter(Boolean);
   const lines = {
     rightPart: median(looks.map((l) => l.rightPart)),
     matchesWords: median(looks.map((l) => l.matchesWords)),
     nothingElseMoved: median(looks.map((l) => l.nothingElseMoved)),
   };
-  const pass = ran && Object.values(lines).every((v) => v !== null && v >= BAR);
+  // A motion's tweak must also be one step back to the first file, and move.
+  const held = !testCase.motion || (walked.motion?.oneUndoStep && (walked.motion?.second?.animates ?? 0) > 0);
+  const pass = ran && held && Object.values(lines).every((v) => v !== null && v >= BAR);
   const why = !ran ? `the change request ended ${walked.changed?.phase ?? "with no state"}: ${walked.changed?.says ?? ""}` : looks[0]?.why ?? "";
-  return { pass, ...lines, why, looks };
+  return { pass, ...lines, why, looks, motion: walked.motion };
 }
 
 async function commandRun() {
@@ -180,7 +215,7 @@ async function commandRun() {
       made: walked.made, changed: { phase: walked.changed?.phase, says: walked.changed?.says,
         steps: walked.changed?.steps ?? [], trace: (walked.changed?.trace ?? []).slice(-40) }, ...score };
     writeFileSync(path.join(caseDir, "score.json"), JSON.stringify(record, null, 2));
-    console.log(`${testCase.id}: ${score.pass ? "PASS" : "fail"}  part ${score.rightPart ?? "-"} words ${score.matchesWords ?? "-"} rest ${score.nothingElseMoved ?? "-"}  ${score.why}`);
+    console.log(`${testCase.id}: ${score.pass ? "PASS" : "fail"}  part ${score.rightPart ?? "-"} words ${score.matchesWords ?? "-"} rest ${score.nothingElseMoved ?? "-"}  ${testCase.motion ? `undo ${walked.motion?.oneUndoStep ? "one step" : "NOT one step"}  ` : ""}${score.why}`);
   }
   report(id);
 }

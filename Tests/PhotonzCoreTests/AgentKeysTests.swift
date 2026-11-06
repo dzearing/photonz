@@ -394,7 +394,7 @@ struct AgentKeysTests {
             #expect(names.contains(tool))
             #expect(AskTools.modelTool(tool) != nil)
         }
-        #expect(Set(AskTools.keyDoing) == ["set_keys", "remove_keys", "set_timing"])
+        #expect(Set(AskTools.keyDoing) == ["set_keys", "remove_keys", "change_keys", "set_timing"])
         for request in ["animate the logo", "make an animated icon", "add a keyframe here", "Animation please"] {
             #expect(Self.toolNames(AskConversation(request: request, documentRead: Self.plainRead)).contains("set_keys"), "\(request)")
         }
@@ -436,5 +436,106 @@ struct AgentToolWalkStepTests {
             """#.utf8))
         #expect(script.steps.first == .agentTool(tool: "set_timing", arguments: #"{"seconds": 2}"#))
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("agentTool"))
+    }
+}
+
+/// change_keys: what a tweak to an animation asks for, in one call.
+@Suite("Agent changes keys that are there")
+struct AgentChangeKeysTests {
+
+    static func keyed() throws -> (document: PhotonzDocument, box: UUID, dot: UUID) {
+        let box = Layer(name: "Box", content: .annotation(AnnotationContent(shape: .rectangle, colorHex: "#FF0000")),
+                        frame: CGRect(x: 10, y: 20, width: 40, height: 30))
+        let dot = Layer(name: "Dot", content: .annotation(AnnotationContent(shape: .ellipse, colorHex: "#00FF00")),
+                        frame: CGRect(x: 100, y: 100, width: 10, height: 10))
+        var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200), layers: [box, dot])
+        _ = try document.agentSetKeys(AgentSetKeys(layer: box.id.uuidString, property: .position, keys: [
+            AgentKey(atMS: 0, value: .point(CGPoint(x: 10, y: 20)), curve: .easeOutBack),
+            AgentKey(atMS: 1000, value: .point(CGPoint(x: 50, y: 20))),
+            AgentKey(atMS: 2000, value: .point(CGPoint(x: 10, y: 20))),
+        ])).get()
+        _ = try document.agentSetKeys(AgentSetKeys(layer: dot.id.uuidString, property: .rotation, keys: [
+            AgentKey(atMS: 1000, value: .number(0)), AgentKey(atMS: 1500, value: .number(90)),
+        ])).get()
+        _ = try document.agentSetTiming(AgentTiming(lengthMS: 2000)).get()
+        return (document, box.id, dot.id)
+    }
+
+    static func times(_ document: PhotonzDocument, _ id: UUID, _ property: MotionProperty) -> [Int] {
+        document.layer(id: id)?.keyedMotion(property)?.keyframes.map(\.atMS) ?? []
+    }
+
+    @Test("The call is schema checked: it says how, and only sensible amounts")
+    func call() throws {
+        #expect(AgentTools.tool(named: "change_keys") != nil)
+        if case .failure = try AgentKeysTests.request("change_keys", #"{"speed":2}"#) { Issue.record("speed alone is a call") }
+        guard case .failure = try AgentKeysTests.request("change_keys", #"{}"#) else { Issue.record("say speed or amount"); return }
+        guard case .failure = try AgentKeysTests.request("change_keys", #"{"speed":0}"#) else { Issue.record("speed 0 stops time"); return }
+    }
+
+    @Test("Twice as fast halves every key and the lap, and keeps each curve")
+    func faster() throws {
+        var (document, box, dot) = try Self.keyed()
+        let answer = try document.agentChangeKeys(AgentChangeKeys(speed: 2)).get()
+        #expect(Self.times(document, box, .position) == [0, 500, 1000])
+        #expect(Self.times(document, dot, .rotation) == [500, 750])
+        #expect(document.motionCycleLengthMS == 1000)
+        #expect(answer.lapSeconds == 1)
+        #expect(document.layer(id: box)?.keyedMotion(.position)?.stretchCurve(0) == .easeOutBack)
+    }
+
+    @Test("Faster on one layer keeps its start and the lap, and does not touch the others")
+    func fasterOnOne() throws {
+        var (document, box, dot) = try Self.keyed()
+        _ = try document.agentChangeKeys(AgentChangeKeys(layers: [dot.uuidString], speed: 2)).get()
+        #expect(Self.times(document, dot, .rotation) == [1000, 1250])
+        #expect(Self.times(document, box, .position) == [0, 1000, 2000])
+        #expect(document.motionCycleLengthMS == 2000)
+    }
+
+    @Test("Further scales each value from where it starts, and -1 turns it the other way")
+    func further() throws {
+        var (document, box, dot) = try Self.keyed()
+        _ = try document.agentChangeKeys(AgentChangeKeys(layers: [box.uuidString], amount: 1.5)).get()
+        let middle = document.layer(id: box)?.keyedMotion(.position)?.keyframes[1].value
+        #expect(middle == .point(CGPoint(x: 70, y: 20)))
+        _ = try document.agentChangeKeys(AgentChangeKeys(layers: [dot.uuidString], property: .rotation, amount: -1)).get()
+        #expect(document.layer(id: dot)?.keyedMotion(.rotation)?.keyframes.last?.value == .number(-90))
+    }
+
+    @Test("A fade is left alone by amount unless it is named, and stays in range when it is")
+    func fades() throws {
+        var (document, box, _) = try Self.keyed()
+        _ = try document.agentSetKeys(AgentSetKeys(layer: box.uuidString, property: .opacity, keys: [
+            AgentKey(atMS: 0, value: .number(40)), AgentKey(atMS: 1000, value: .number(90)),
+        ])).get()
+        _ = try document.agentChangeKeys(AgentChangeKeys(amount: 2)).get()
+        #expect(document.layer(id: box)?.keyedMotion(.opacity)?.keyframes.last?.value == .number(90))
+        _ = try document.agentChangeKeys(AgentChangeKeys(property: .opacity, amount: 2)).get()
+        #expect(document.layer(id: box)?.keyedMotion(.opacity)?.keyframes.last?.value == .number(100))
+    }
+
+    @Test("Nothing to change is refused, and changes nothing")
+    func refused() throws {
+        var (document, box, _) = try Self.keyed()
+        let before = document
+        guard case .failure = document.agentChangeKeys(AgentChangeKeys(layers: [box.uuidString], property: .color, speed: 2)) else {
+            Issue.record("no colour keys to change"); return
+        }
+        guard case .failure = document.agentChangeKeys(AgentChangeKeys(layers: ["nobody"], speed: 2)) else {
+            Issue.record("no such layer"); return
+        }
+        #expect(document == before)
+    }
+
+    @Test("Keys too close to tell apart after a speed up are refused rather than merged")
+    func tooClose() throws {
+        var (document, box, _) = try Self.keyed()
+        _ = try document.agentSetKeys(AgentSetKeys(layer: box.uuidString, property: .scale, keys: [
+            AgentKey(atMS: 0, value: .number(100)), AgentKey(atMS: PropertyKeys.nearMS * 2, value: .number(120)),
+        ])).get()
+        guard case .failure = document.agentChangeKeys(AgentChangeKeys(speed: 10)) else {
+            Issue.record("keys would land on each other"); return
+        }
     }
 }

@@ -39,11 +39,27 @@ public enum AskTools {
     /// Offered only where the request is about motion or the document already
     /// has it, so what every other request is shown stays exactly as it was.
     /// When to animate is taught elsewhere; this only keeps the tools in reach.
-    public static let keyDoing = ["set_keys", "remove_keys", "set_timing"]
+    public static let keyDoing = ["set_keys", "remove_keys", "change_keys", "set_timing"]
     public static let keyModelTools: [AgentJSON] = keyDoing.compactMap(modelTool)
+    /// On a picture, only what an animated SVG can carry is offered, so
+    /// nothing planned for one is left standing still in the file.
+    public static let pictureKeyModelTools: [AgentJSON] = keyDoing.compactMap { name in
+        guard var tool = modelTool(name)?.objectValue, name == "set_keys" || name == "change_keys",
+              var function = tool["function"]?.objectValue, var parameters = function["parameters"]?.objectValue,
+              var properties = parameters["properties"]?.objectValue, var property = properties["property"]?.objectValue else {
+            return modelTool(name)
+        }
+        property["enum"] = AgentJSON.array(MotionSVG.carried.map { AgentJSON.string($0.rawValue) })
+        properties["property"] = .object(property)
+        properties["effect"] = nil
+        parameters["properties"] = .object(properties)
+        function["parameters"] = .object(parameters)
+        tool["function"] = .object(function)
+        return .object(tool)
+    }
     private static let motionWords: Set<String> = [
         "animate", "animates", "animated", "animating", "animation", "animations",
-        "keyframe", "keyframes", "motion",
+        "keyframe", "keyframes", "motion", "looping",
     ]
 
     /// Whether the words of a request are about motion.
@@ -97,7 +113,7 @@ public enum AskTools {
     /// flat turn and 3D turn (the reworked selection, 2026-11-01). Ask's
     /// window is tight (`AskDocumentFitTests`), and turning a layer in 3D is
     /// not what a person asks Ask for; the schema still takes them.
-    static let outsideOnly: [String: Set<String>] = ["set_layer": ["rotation", "tip", "swing", "depth"]]
+    static let outsideOnly: [String: Set<String>] = ["set_layer": ["rotation", "tip", "swing", "depth"], "add_drawing": ["forMotion"]]
 
     static func modelTool(_ name: String) -> AgentJSON? {
         guard let tool = AgentTools.tool(named: name) else { return nil }
@@ -108,9 +124,34 @@ public enum AskTools {
             top["properties"] = .object(properties)
             schema = .object(top)
         }
+        let parameters = modelSchema(schema, top: true)
         return ["type": "function",
                 "function": ["name": .string(tool.name), "description": .string(tool.description),
-                             "parameters": modelSchema(schema, top: true)]]
+                             "parameters": name == "set_keys" ? keyShapes(parameters) : parameters]]
+    }
+
+    /// set_keys as a model can write it. `modelSchema` keeps the first choice
+    /// of an `anyOf`, and a tool call is held to its schema, so a key's value
+    /// could only be a number and its pivot only a word: Ask could not move
+    /// anything (the eval, 2026-11-06: "position takes x and y", and an
+    /// opacity of 112 where a model had nowhere else to put a number).
+    static func keyShapes(_ parameters: AgentJSON) -> AgentJSON {
+        let axes: AgentJSON = ["x": ["type": "number"], "y": ["type": "number"]]
+        guard var top = parameters.objectValue, var properties = top["properties"]?.objectValue,
+              var keys = properties["keys"]?.objectValue, var items = keys["items"]?.objectValue,
+              var fields = items["properties"]?.objectValue, var value = fields["value"]?.objectValue,
+              var pivot = properties["pivot"]?.objectValue else { return parameters }
+        value["type"] = ["number", "string", "object"]
+        value["properties"] = axes
+        fields["value"] = .object(value)
+        items["properties"] = .object(fields)
+        keys["items"] = .object(items)
+        properties["keys"] = .object(keys)
+        pivot["type"] = "object"
+        pivot["properties"] = axes
+        properties["pivot"] = .object(pivot)
+        top["properties"] = .object(properties)
+        return .object(top)
     }
 
     /// add_component's keys in the order a person writes them: what a part
@@ -119,11 +160,17 @@ public enum AskTools {
     /// model write keys in the schema's own order, and sorted they put height
     /// before width and every look before the parts it changes, so a model
     /// that wrote width first could never give a height (2026-10-23).
+    ///
+    /// set_keys is held the same way: sorted, a key's numbers came before what
+    /// they are about, so a scale's 100, 115, 0 was named opacity once it was
+    /// written and refused (the eval, 2026-11-06). It says the layer and the
+    /// value first, and each key its moment, its value, then its curve.
     static let componentKeyOrder = [
-        "name", "shape", "part", "x", "y", "width", "height", "step", "labels", "property", "parts", "firstLook", "looks", "changes",
+        "layer", "name", "shape", "part", "x", "y", "width", "height", "step", "labels", "property", "parts", "firstLook", "looks", "changes",
         "text", "fontSize", "weight", "color", "alignment", "centerIn",
         "fill", "stroke", "strokeWidth", "cornerRadius", "opacity", "shadow", "removeShadow", "visible",
         "points", "closed", "smooth",
+        "pivot", "replace", "seconds", "value", "curve", "keys",
     ]
 
     /// A list_components answer with the Library's starters taken out. They
@@ -139,7 +186,7 @@ public enum AskTools {
     /// schema in `componentKeyOrder`.
     public static func wireEncoded(_ body: AgentJSON) -> Data {
         body.encoded(leading: componentKeyOrder) { json in
-            json["name"]?.stringValue == "add_component" && json["parameters"] != nil
+            ["add_component", "set_keys"].contains(json["name"]?.stringValue ?? "") && json["parameters"] != nil
         }
     }
 
@@ -213,7 +260,7 @@ public struct AskStep: Hashable, Sendable {
     func names(step number: Int) -> Bool {
         func names(_ value: AgentJSON) -> Bool {
             switch value {
-            case .string(let word): Self.stepNamed(word) == number
+            case .string(let word): (Self.stepNamed(word) ?? AskMotion.partReference(word)?.step) == number
             case .array(let array): array.contains(where: names)
             case .object(let object): object.contains { key, inner in !Self.wordKeys.contains(key) && names(inner) }
             default: false
@@ -457,6 +504,10 @@ public struct AskConversation: Sendable {
     private let holdsIcon: Bool
     /// The request is about motion, or the document has some.
     private let keysMotion: Bool
+    /// This icon moves: what is drawn is keyed in the same plan (`AskMotion`).
+    private let drawsMotion: Bool
+    /// How many times this plan's motion went back to the model.
+    private var motionSendBacks = 0
     /// The document has a timeline, or does not say: the video tools are
     /// offered. A picture is not shown them (`AskTools.videoOnly`).
     private let video: Bool
@@ -494,7 +545,10 @@ public struct AskConversation: Sendable {
         let icon = Self.takesIconRoute(request, brushes: brushes, web: web != nil, holdsIcon: holdsIcon)
         self.icon = icon
         self.holdsIcon = holdsIcon
-        landsAsDrawn = icon && (iconDesign != nil || iconBreak != nil)
+        let drawsMotion = icon && AskMotion.drawsMotion(request)
+        self.drawsMotion = drawsMotion
+        // A drawing with its hidden pieces all showing is no still to look at.
+        landsAsDrawn = icon && (iconDesign != nil || iconBreak != nil || drawsMotion)
         tearsTheIcon = icon && iconBreak != nil
         self.paints = paints && !icon
         self.brushes = brushes
@@ -510,9 +564,12 @@ public struct AskConversation: Sendable {
         namesInShort = AskDocumentDigest.namesInShort(described)
         var instructions = web.map { Self.webInstructions(documentRead: described, page: $0) }
             ?? Self.instructions(documentRead: described, paints: paints && !icon, painting: painting, video: video,
-                                 icon: icon, iconLook: AskIcon.documentLook(documentRead))
+                                 icon: icon, iconLook: AskIcon.documentLook(documentRead), drawsMotion: drawsMotion)
         if web == nil, AskDocumentDigest.saysInShort(described) { instructions += "\n\(Self.inShortRules)" }
         if holdsIcon, !icon { instructions += "\n\(AskIcon.tweakRules)" }
+        if keysMotion, !drawsMotion, !video {
+            instructions += "\n\(parsed?["lap"] == nil ? AskMotion.keyRules : AskMotion.tweakRules)"
+        }
         if web == nil, let lookedUp { instructions += "\n\(AskLookup.rules)\n\(lookedUp.listing)" }
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
         if !styles.isEmpty { instructions += "\nThe saved styles (list_styles):\n\(styles)" }
@@ -538,7 +595,7 @@ public struct AskConversation: Sendable {
         ]
         if icon, let iconDesign {
             messages.append(["role": "assistant", "content": .string(iconDesign)])
-            messages.append(["role": "user", "content": .string(AskIcon.drawTheDesign)])
+            messages.append(["role": "user", "content": .string(drawsMotion ? AskMotion.drawTheDesign : AskIcon.drawTheDesign)])
         }
         learnNames(components)
     }
@@ -546,7 +603,7 @@ public struct AskConversation: Sendable {
     /// Whether `request` takes the icon route (`AskIcon`): the words for an
     /// icon, unless it is a painting or a web page.
     public static func takesIconRoute(_ request: String, brushes: Bool, web: Bool, holdsIcon: Bool = false) -> Bool {
-        !web && !(brushes && AgentPictureKind.asked(in: request) == .paint) && AskIcon.asked(in: request)
+        !web && !(brushes && AgentPictureKind.asked(in: request) == .paint) && (AskIcon.asked(in: request) || AskMotion.drawsMotion(request))
             && !(holdsIcon && AskIcon.meansTheOneHere(request))
     }
 
@@ -627,19 +684,26 @@ public struct AskConversation: Sendable {
     /// things (`AskLookup`).
     var offeredTools: [AgentJSON] {
         guard web == nil else { return AskTools.webModelTools }
+        if drawsMotion {
+            return AskMotion.tools.compactMap { name in
+                (AskTools.pictureKeyModelTools + AskTools.modelTools).first { $0["function"]?["name"]?.stringValue == name }
+            }
+        }
         let all = AskTools.modelTools(painting: painting, video: video) + (holdsIcon ? AskTools.iconModelTools : [])
-            + (keysMotion ? AskTools.keyModelTools : [])
+            + (keysMotion ? (video ? AskTools.keyModelTools : AskTools.pictureKeyModelTools) : [])
         guard lookedUp != nil else { return all }
         let allowed = Set(AskLookup.looking + AskLookup.doing)
         return all.filter { allowed.contains($0["function"]?["name"]?.stringValue ?? "") }
     }
     var lookingTools: [String] {
         guard web == nil else { return AskWeb.looking }
+        if drawsMotion { return [] }
         let all = AskTools.looking(painting: painting, video: video)
         return lookedUp == nil ? all : all.filter(AskLookup.looking.contains)
     }
     var doingTools: [String] {
         guard web == nil else { return AskWeb.doing }
+        if drawsMotion { return AskMotion.tools }
         let all = AskTools.doing(painting: painting, video: video) + (holdsIcon ? AskTools.iconDoing : [])
             + (keysMotion ? AskTools.keyDoing : [])
         return lookedUp == nil ? all : all.filter(AskLookup.doing.contains)
@@ -656,7 +720,7 @@ public struct AskConversation: Sendable {
             let plan = webPlan(steps, page: web, summary: summary)
             return AskPlan(steps: plan.steps, summary: plan.summary, names: plan.names, unplanned: unplanned)
         }
-        return AskPlan(steps: steps, summary: summary, names: names, unplanned: unplanned)
+        return AskPlan(steps: drawsMotion ? AskMotion.fitted(steps) : steps, summary: summary, names: names, unplanned: unplanned)
     }
 
     /// What this plan could not make, so far.
@@ -728,11 +792,20 @@ public struct AskConversation: Sendable {
             // A sheet of labelled rows with no title is asked for one once
             // (the eval, 2026-10-23: twelve rows and no title).
             if askForTitle() { return .again(looks: []) }
+            if drawsMotion, motionSendBacks < AskMotionCheck.mostSendBacks {
+                let problems = AskMotionCheck.problems(steps)
+                if !problems.isEmpty {
+                    motionSendBacks += 1
+                    messages.append(["role": "user", "content": .string(problems.joined(separator: " "))])
+                    return .again(looks: [])
+                }
+            }
             return .planned(plan(summary: sentence))
         }
         var looks: [AskLook] = []
         for (name, said) in calls {
-            let arguments = name == "add_text" || name == "add_component" ? Self.withoutEntities(said) : said
+            let arguments = name == "add_text" || name == "add_component" ? Self.withoutEntities(said)
+                : name == "set_keys" ? AskMotion.tidied(said) : said
             if lookingTools.contains(name) {
                 looks.append(AskLook(tool: name, arguments: arguments))
             } else if let web, name == AskWeb.pageTool {
@@ -759,6 +832,11 @@ public struct AskConversation: Sendable {
                     continue
                 }
                 if name == "place_component", let refusal = componentNotInLibrary(arguments["component"]?.stringValue ?? "") {
+                    brokenCalls += 1
+                    refuse(name, arguments, refusal)
+                    continue
+                }
+                if name == "set_keys", let refusal = AskMotion.refusal(arguments, steps: steps) {
                     brokenCalls += 1
                     refuse(name, arguments, refusal)
                     continue
@@ -804,6 +882,15 @@ public struct AskConversation: Sendable {
                     step = AskStep(tool: name, arguments: arguments)
                 }
                 if icon, name == "add_drawing" { arguments = Self.asIcon(arguments, request: request) }
+                if drawsMotion, name == "add_drawing", var object = arguments.objectValue {
+                    object["forMotion"] = true
+                    arguments = .object(object)
+                    if iconSendBacks < AskIconCheck.mostSendBacks, let problem = arguments["svg"]?.stringValue.flatMap(AskMotion.drawingProblem) {
+                        iconSendBacks += 1
+                        refuse(name, arguments, problem)
+                        continue
+                    }
+                }
                 arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
                 if name == "add_drawing", let problem = drawingProblem(arguments) {
                     brokenCalls += 1
@@ -1420,8 +1507,9 @@ public struct AskConversation: Sendable {
 
     /// What the model is told before the person's request.
     static func instructions(documentRead: String, paints: Bool = false, painting: Bool = false, video: Bool = true,
-                             icon: Bool = false, iconLook: String? = nil) -> String {
-        let iconRules = Self.iconRules + (iconLook.map { "\n- " + $0 } ?? "")
+                             icon: Bool = false, iconLook: String? = nil, drawsMotion: Bool = false) -> String {
+        var iconRules = Self.iconRules + (iconLook.map { "\n- " + $0 } ?? "")
+        if drawsMotion { iconRules = iconRules.replacingOccurrences(of: Self.iconActionRule, with: "") + "\n\(AskMotion.drawRules)" }
         let drawingRules = icon ? iconRules : painting ? Self.brushRules : paints ? Self.paintingRules : Self.drawingRules
         return """
         You are Ask, the helper inside Photonz, a Mac picture and video editor. The person typed \
@@ -1513,6 +1601,15 @@ public struct AskConversation: Sendable {
     /// How to make an icon (`AskIcon`): the craft of icon design, which holds
     /// for any subject. What the subject looks like is the model's own
     /// knowledge; nothing here names one.
+    /// How a still icon shows something happening; a moving one shows it
+    /// happen (`AskMotion`).
+    static let iconActionRule = """
+         An action or a change of state happens to the object itself: break its outline where it happens, leave a gap, \
+        take a piece away, tilt or open it, so it no longer looks whole and at rest. Then at most four small marks \
+        (short lines, fragments or an arrow) around that place, a gap of 2 away, never touching the object: marks \
+        stuck on a whole shape read as a sun or a target.
+        """
+
     static let iconRules = """
         - This request is for an icon. Draw it yourself: call add_drawing once with subject, icon true, style \
         set to the look named if any, and svg: your own icon as one complete SVG, the way the icons in SF Symbols, \
@@ -1523,11 +1620,7 @@ public struct AskConversation: Sendable {
         rect, circle, line and short paths with arcs, as an icon designer does.
         - One subject: the one object the request names, reduced to the simplest silhouette that still says what it \
         is, in 2 to 8 shapes. No person, no hand, no ground, no scene, no shadow, no words, no backdrop unless asked. \
-        Draw its true outline, the shape only this object has, never a plain circle standing in for it. An action or \
-        a change of state happens to the object itself: break its outline where it happens, leave a gap, take a piece \
-        away, tilt or open it, so it no longer looks whole and at rest. Then at most four small marks (short lines, \
-        fragments or an arrow) around that place, a gap of 2 away, never touching the object: marks stuck on a whole \
-        shape read as a sun or a target.
+        Draw its true outline, the shape only this object has, never a plain circle standing in for it.\(iconActionRule)
         - The look. Outline, or when no look is named: fill="none" stroke="#1D1D1F" stroke-width="2" \
         stroke-linecap="round" stroke-linejoin="round" on the svg, every line that one weight. Filled: solid shapes \
         with fill="#1D1D1F" and no stroke, details cut out with gaps of 2 or fill-rule="evenodd". Duotone: the big \

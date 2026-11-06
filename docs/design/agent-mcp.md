@@ -506,6 +506,11 @@ with the whole budget.
 
 ### Keys (`an-agent-can-set-read-and-change-a-layer-s-keys`)
 
+`change_keys` changes what is keyed all at once, for a tweak: `speed` retimes
+every key (and the lap, when no layer is named), `amount` scales each value from
+where it starts, each key keeping its curve. `add_drawing`'s `forMotion` keeps each
+`<g id>` a group and stands an icon on its viewBox, so its parts can be keyed.
+
 `set_keys`, `remove_keys` and `set_timing` (`AgentKeys.swift`) write the keys a
 person sets: the same `LayerMotion`, on the same lap (`PictureKeys.swift`), so
 they land on the strip where a hand can pick, drag and ease them. There is no

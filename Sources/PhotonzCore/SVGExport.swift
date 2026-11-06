@@ -719,6 +719,9 @@ private struct Writer {
     var omitPaint: Set<String> = []
     /// The same for the width of the one line the layer draws.
     var omitsStrokeWidth = false
+    /// The line this layer draws is drawing itself on, so it measures itself
+    /// for the dash around it (`MotionSVG.trimLength`).
+    var measuresItsLine = false
     var nextPaintNumber = 1
     var nextClipNumber = 1
     var nextCutNumber = 1
@@ -914,10 +917,12 @@ private struct Writer {
             // reaches a shape SMIL is not attached to.
             omitPaint = wrap.omitPaint
             omitsStrokeWidth = wrap.omitsStrokeWidth
+            measuresItsLine = wrap.pathLength
             inside.append(contentsOf: content(of: drawn, canvasOrigin: canvasOrigin,
                                               level: inner))
             omitPaint = []
             omitsStrokeWidth = false
+            measuresItsLine = false
         }
         inside.append(contentsOf: rings(of: drawn, level: inner))
         // A group with nothing left in it is nothing at all, rather than an
@@ -1899,7 +1904,20 @@ private struct Writer {
             // The ring fills the band from the outer edge inwards by its own
             // width, so the line it rides is half a width in from there.
             let ride = outer.insetBy(dx: border.width / 2, dy: border.width / 2)
-            guard ride.width > 0, ride.height > 0 else { continue }
+            // A band as wide as the box meets itself: there is no line to
+            // ride, the box is solid. Skipped, every thin bar with a line of
+            // its own (a lid, a rim) was missing from the file while the
+            // canvas drew it (the eval, 2026-11-06).
+            guard ride.width > 0, ride.height > 0 else {
+                let solid = fill(border.paint, box: outer)
+                if oval {
+                    lines.append(indent(level) + "<ellipse cx=\"\(n(outer.midX))\" cy=\"\(n(outer.midY))\""
+                        + " rx=\"\(n(outer.width / 2))\" ry=\"\(n(outer.height / 2))\"\(solid)/>")
+                } else {
+                    lines.append(boxElement(outer, radii: radii.grown(by: outset).fitted(in: outer.size), paint: solid, level: level))
+                }
+                continue
+            }
             let ink = stroke(border.paint, box: outer)
                 + " stroke-width=\"\(n(border.width))\""
             if oval {
@@ -1985,7 +2003,8 @@ private struct Writer {
     /// The width of the one line this layer draws, or nothing where the group
     /// around it is animating that width and the shape inherits it.
     func width(_ value: CGFloat) -> String {
-        omitsStrokeWidth ? "" : " stroke-width=\"\(n(value))\""
+        let length = measuresItsLine ? " pathLength=\"\(MotionSVG.number(MotionSVG.trimLength))\"" : ""
+        return omitsStrokeWidth ? length : " stroke-width=\"\(n(value))\"" + length
     }
 
     mutating func fill(_ paint: Paint, box: CGRect) -> String {

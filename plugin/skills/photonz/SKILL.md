@@ -39,7 +39,7 @@ checked.
 | Painting | `list_brushes` (pencil, charcoal, chalk, crayon, marker, airbrush, oil, watercolour and every setting each has), `set_brush` (the brush in hand), `paint_stroke` (one stroke through `points` or a short `path`, optional pen pressure; its own `medium`, `color` and `settings` for this stroke only; `part` names what it paints; one undo step) |
 | Changing a part | `change_part` (one named part of something already made, in place: a painting's strokes of that `part` as `read_document` lists them, or the layers of that name in a drawing; recolour toward `color` keeping its shading, or shift `hue`, `saturation`, `lightness`, `warmth` (a photo's go through its colour grade); `scale` about its middle; move by `dx`, `dy`; or `remove`; on a drawing traced into colour layers, `at` (a canvas point inside the part) splits that piece out under the part's name; one undo step) |
 | Restyling an icon | `restyle_icon` (a whole icon in place, every part alike: `look` outline or filled, `weight` thicker or thinner, `color`). One undo step. |
-| Animating | `set_keys` (one value of a layer keyed: `property`, `keys` with `seconds`, `value` and `curve`, `pivot` for what a rotation turns about, `replace` to start that value over), `remove_keys`, `set_timing` (a picture's lap: `seconds`, `loop`). The keys a person sets, on the same timeline. One undo step each. |
+| Animating | `set_keys` (one value of a layer keyed: `property`, `keys` with `seconds`, `value` and `curve`, `pivot` for what a rotation turns about, `replace` to start that value over), `remove_keys`, `change_keys` (what is there, all at once: `speed`, `amount`, `layers`, `property`), `set_timing` (a picture's lap: `seconds`, `loop`). The keys a person sets, on the same timeline. One undo step each. |
 | Measuring a screenshot | `find_measurements` (the redline code chooses: one size of each kind of control, then the spacing), `mark_measurements` (lays the ids you pick, readouts kept clear); `find_elements` and `add_measurement` for one particular thing |
 | Checking a screenshot's consistency | `find_misalignments` (edges that miss by 1 to 8 points, uneven gaps, padding or borders that differ, every number measured), `mark_misalignments` (redlines for the ids you pick) |
 | Design system | `add_style` / `list_styles` / `apply_style` (named colours and text styles on the Library's Styles shelf), `set_layout` (a group as a stack or grid with gap and padding) |
@@ -203,6 +203,9 @@ gives it a lap, and the lap is what an animated SVG plays.
 
 1. `read_document` for the layer ids, then `set_timing` with `seconds` and `loop`. Left
    out, the lap is 2 seconds and loops, and a key past its end grows it.
+   To key the parts of an icon you draw, give `add_drawing` `forMotion: true`: each
+   `<g id>` stays a group, and the viewBox fills the frame instead of the drawing being
+   fitted, so parts have room to travel.
 2. `set_keys` once per value that moves. Values are what the panel shows: `position` is
    the top left of the box, `scale` and `opacity` are percents (opacity 0 to 100),
    `rotation` is degrees clockwise, `color` is `#RRGGBB`. Inside a group, a layer's place
@@ -218,7 +221,10 @@ gives it a lap, and the lap is what an animated SVG plays.
    key under the layer's `keyed`, in the words `set_keys` takes.
 6. To change it, call `set_keys` again: a key at the same moment is rewritten, the rest
    stay, and `replace: true` starts that value over. `remove_keys` takes one key, one
-   value's keys or all of a layer's. Slower or faster is new times, or `set_timing`.
+   value's keys or all of a layer's. Faster, slower, further or the other way is one
+   `change_keys`: `speed: 2` is twice as fast, `amount: 1.5` half as far again from where
+   each value starts, `amount: -1` the other way, and `layers` keeps it to some of them.
+   A pause when it loops is `set_timing` with more `seconds` than the lap.
 7. `export` `format: svg` writes the motion: its answer gives `lapSeconds`, and
    `notMoving` names anything the file could not carry. `run_command copy_svg` copies
    the same thing.

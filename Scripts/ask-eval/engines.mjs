@@ -94,7 +94,7 @@ export async function quitProbe() {
 /// it was asked in; an agent may open a new one (an icon on an icon canvas),
 /// so the newest document it made wins, then the one in front. A video is
 /// photographed as it plays (`playback`).
-async function collect(dir, before = []) {
+async function collect(dir, before = [], { animated = false } = {}) {
   const bridge = connect();
   try {
     await bridge.start();
@@ -116,6 +116,7 @@ async function collect(dir, before = []) {
         if (alone?.image) writeFileSync(path.join(dir, "icon.png"), Buffer.from(alone.image, "base64"));
       }
     }
+    if (animated) Object.assign(read, { animation: await filmed(bridge, pick.id, read, dir) });
     writeFileSync(path.join(dir, "read.json"), JSON.stringify(read, null, 2));
     return { read, picture: path.join(dir, "result.png"), document: pick.id, documents: docs.length };
   } catch (error) {
@@ -123,6 +124,19 @@ async function collect(dir, before = []) {
   } finally {
     bridge.close();
   }
+}
+
+/// An animated icon as it leaves the app: exported as the person would export
+/// it, and played in WebKit (`svg-frames.swift`). `result.png` becomes the frames
+/// the judge reads and `reel.gif` the reel; a still document films as a still.
+async function filmed(bridge, document, read, dir) {
+  const file = path.join(dir, "result.svg");
+  const written = (await bridge.tool("export", { document, format: "svg", path: file, background: false }, 120_000)).json ?? {};
+  const lap = written.lapSeconds ?? read.lap?.seconds ?? 2;
+  const shot = await run("swift", [path.join(repo, "Scripts/ask-eval/svg-frames.swift"), path.join(dir, "result.png"), file, String(lap), "--gif", path.join(dir, "reel.gif")], { cwd: repo, timeoutMS: 120_000 });
+  let stats = {};
+  try { stats = JSON.parse(shot.stdout.trim().split("\n").pop()); } catch { stats = { error: shot.stderr.trim().split("\n").pop() }; }
+  return { ...stats, lapSeconds: written.lapSeconds ?? null, notMoving: written.notMoving ?? [], animates: (readFileSync(file, "utf8").match(/<animate/g) ?? []).length };
 }
 
 const clock = (s) => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, "0")}`;
@@ -271,7 +285,7 @@ async function runAskOnce(testCase, dir, { build, switched, models, mac }) {
   if (walked.code === 3 || walked.code === 6) return { engine, unrun: walked.code === 3 ? "screen locked" : "deferred: person at the Mac" };
   if (unprepared) { await quitProbe(); return { engine, unrun: unprepared }; }
   if (engine.phase === "idle") return { engine };
-  const got = await collect(dir);
+  const got = await collect(dir, [], { animated: testCase.group === "animated" });
   await quitProbe();
   return { engine, ...got };
 }
@@ -318,7 +332,7 @@ export async function runSkill(testCase, dir, { build, switched }) {
     said: String(result.result ?? "").slice(0, 400), calls: calls.length, skillLoaded: calls.includes("Skill"),
     sources: sourcesFromTranscript(lines),
   };
-  const got = await collect(dir, before);
+  const got = await collect(dir, before, { animated: testCase.group === "animated" });
   await quitProbe();
   return { engine, ...got };
 }

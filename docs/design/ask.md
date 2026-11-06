@@ -1120,6 +1120,72 @@ shades stayed. A named part of a traced drawing is a region of many colour
 pieces, which neither a name nor one point reaches yet: folded into the task
 `making-a-part-of-a-traced-drawing-smaller-shrink`.
 
+## A moving icon (2026-11-06)
+
+"Make an animated SVG icon of a balloon popping" is one request, one plan and one
+undo step. The words that choose it are general (`AskMotion.drawsMotion`: animate,
+animated, animation or looping with a word for an icon or an SVG); nothing reads a
+subject, and "a motion sensor icon" stays a still.
+
+First the model designs it in words (`AskMotion.designAsk`): what the eye must see,
+the parts and their hinges, the beats in milliseconds. No numbers for the shape:
+given rough coordinates the model drew from them and lost the form it knows, a
+paper plane collapsing to a slash, as a rocket did on the still route.
+
+Then it plans `add_drawing`, `set_timing` and `set_keys` once a value, the keys a
+person sets, on the same strip. Those three are all it is shown (`AskMotion.tools`):
+the rest of Ask's tools are 13,000 tokens read before every plan, about 100 of a
+request's 190 seconds.
+
+A plan runs only when it is complete, so nothing it drew has an id yet, and the
+model knows its drawing as ids on a 24 grid. So it writes `"layer": "$1/lid"`, a
+`position` as how far the part has moved on that grid, and a `pivot` on that grid,
+and `AskMotion.landing` turns those into a layer id, points and a spot on the box
+as each step runs. A pivot of 0 to 1 is read as fractions of the part, the way the
+tool says on a layer that is there. `forMotion` on the drawing keeps each `<g id>` a
+group and stands the icon on its viewBox rather than fitting it to what is drawn.
+
+The sense of motion is the model's own. `AskMotion.principles` teaches what is
+true of anything: beats first, anticipation, follow-through, staggering, what each
+curve does, that a change of state is movement and never a crossfade, a lap that
+loops. There is no motion per subject, and no tear: the still route's `AskIconBreak`
+is skipped, since a moving icon shows the thing happening. It lands as drawn: a
+still of a drawing with its hidden pieces showing would only mislead the look.
+
+Before a plan lands, `AskMotionCheck` sends it back (twice at most) for what cannot
+play: nothing keyed, a value whose keys never change, a value that jumps at the
+loop, a Hold just before the last key. A line that draws itself and starts over is
+a loop, and is not told to end where it began: told that, the model set a
+checkmark's last key to 0 and it never drew. Room is not sent back. Told to fit, the
+model shrank its own motion, so `AskMotion.fitted` widens the viewBox about its
+middle to hold what the keys do, a part's turn and travel together, by at most
+`mostRoom`: whatever flies further is meant to leave.
+
+Two things in how a tool call reaches the model decide all of this, and both were
+wrong at first. A call is held to its schema, and `modelSchema` keeps only an
+`anyOf`'s first choice, so a key's value could only be a number and its pivot only a
+word: `AskTools.keyShapes` says both as they are. And a call is written in schema
+order, so sorted, a key's numbers came before what they were about and a scale track
+was named opacity: `wireEncoded` puts set_keys in the order a person says it.
+
+On a picture Ask is offered only what an animated SVG carries
+(`MotionSVG.carried`), and its row says how long the motion plays and names
+anything an SVG of it would leave still. A line drawing itself goes out as a dash
+moving along it: `pathLength="100"` on the shape and `stroke-dashoffset` animated
+on the group around it, standing just clear of the line at nothing drawn so a
+round cap leaves no dot. Both ends of one line keyed cannot be said with one number,
+so the second is left still and named.
+
+A follow-up on a picture that moves (`AskMotion.tweakRules`) keeps the motion:
+`change_keys` for faster, slower, further and the other way, `set_timing` for a
+pause when it loops, `set_keys` with `replace` for anything else. Arithmetic over
+every key is what a small model gets wrong, so one call does it.
+
+The eval's `animated` cases and `"motion": true` tweaks (`Scripts/ask-eval/README.md`)
+judge the file as WebKit plays it, not the document. That is how a lid missing from
+every SVG was found: a box no taller than its own inside line had no line left to
+ride, and `boxRings` skipped it while the canvas drew it.
+
 ## Try paths (walks)
 
 * `Scripts/playtest/ask-annotates-a-screenshot-walk.json`: settings screenshot,

@@ -1,0 +1,195 @@
+{
+  "out": "/tmp/photonz-playtest/ask-animates-an-icon-walk",
+  "seed": "The user, 2026-11-04: Ask for an animated SVG of a balloon popping. At Next defaults one request draws the icon and keys its parts: it plays on the canvas, Copy SVG puts a looping file on the clipboard, a follow-up changes the keys in place, and one Command Z takes the follow-up back.",
+  "clock": 780,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 512,
+      "canvasHeight": 512,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "make an animated SVG icon of a balloon popping"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-made",
+      "note": "one request drew the icon and keyed its parts"
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3,
+      "atMost": 24
+    },
+    {
+      "do": "snapshot",
+      "name": "1-the-icon-and-its-keys"
+    },
+    {
+      "do": "press",
+      "control": "Play"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Pause",
+      "present": true
+    },
+    {
+      "do": "expectPictureMoves"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-playing"
+    },
+    {
+      "do": "press",
+      "control": "Pause"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "writeSVG",
+      "name": "made",
+      "carries": "repeatCount=\"indefinite\""
+    },
+    {
+      "do": "agentTool",
+      "tool": "run_command",
+      "arguments": "{\"command\": \"copy_svg\"}"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "3-copied",
+      "svgAsText": true,
+      "svg": true,
+      "svgSameAs": "made"
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "pop faster"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-faster",
+      "note": "the same icon in the same window, its keys retimed"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3,
+      "atMost": 24
+    },
+    {
+      "do": "snapshot",
+      "name": "4-faster"
+    },
+    {
+      "do": "writeSVG",
+      "name": "faster",
+      "carries": "repeatCount=\"indefinite\""
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "writeSVG",
+      "name": "undone",
+      "carries": "repeatCount=\"indefinite\""
+    }
+  ]
+}

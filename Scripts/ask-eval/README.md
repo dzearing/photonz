@@ -170,6 +170,24 @@ of the rubric id so nothing else stops comparing). SF Symbols are drawn from the
 Mac; the other two are fetched once into `.ask-eval/references/` and only ever
 reach the judge. `lines <run>` prints the line's mean under `icon`.
 
+## Animated icon cases
+
+An `animated` case (since 2026-11-06) is a request for an icon that moves. It is
+judged on the file that leaves the app, never the document: the run exports the
+SVG and `svg-frames.swift` plays it in WebKit, photographing 16 moments across
+one lap, so `result.png` is frames and `reel.gif` the reel. Rules: `iconCraft`,
+plus `moves` (`rules.mjs`): keys in the document, motion in the file, no frames
+all alike, nothing the file left still, no jump at the loop. The judge reads the
+frames against `rubric-animated.md`, its own rubric kept out of the rubric id:
+didWhatWasAsked is "the motion reads as what was asked" and `loops` is whether it
+loops cleanly. `lines <run>` prints both under `animated`. There is no blind
+naming: a word for a still does not name a motion. The score is 4 x rules +
+6 x judge, scaled by didWhatWasAsked like everything else.
+
+Tweaks are two-turn cases with `"motion": true` in `followups/`: both files are
+filmed the same way and judged side by side with each lap's length, and a pass
+also needs one Command Z to bring the first file back byte for byte.
+
 ## The held-out set
 
 `held-out/` is 45 requests a runner never climbs on (2026-10-20, after Ask

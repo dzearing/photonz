@@ -36,6 +36,9 @@ public struct AgentDrawingCall: Hashable, Sendable {
     /// in front ("its front paws rest on the keys"). Painted from, and checked
     /// against the drawing once it is made (`AskDrawingCheck`).
     public var plan: [String]
+    /// The drawing will be keyed: its groups stay groups and an icon stands on
+    /// its own grid (`SVGArtwork.iconFrame`).
+    public var forMotion: Bool
 
     /// More statements than this and the picture model's words stop being
     /// about the picture.
@@ -43,7 +46,8 @@ public struct AgentDrawingCall: Hashable, Sendable {
 
     public init(subject: String, svg: String? = nil, icon: Bool = false, side: CGFloat = AgentDrawingPlacement.iconSide,
                 frame: CGRect? = nil, name: String? = nil, style: String? = nil, asked: String? = nil,
-                scene: Bool = false, plan: [String] = []) {
+                scene: Bool = false, plan: [String] = [], forMotion: Bool = false) {
+        self.forMotion = forMotion
         self.side = side
         self.plan = plan
         self.style = style
@@ -262,12 +266,12 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func addDrawing(_ drawing: SVGArtwork, named name: String, icon: Bool,
                                     side: CGFloat = AgentDrawingPlacement.iconSide, box: CGRect?,
-                                    blank: Bool? = nil) -> UUID {
+                                    blank: Bool? = nil, onGrid: Bool = false) -> UUID {
         if icon, box == nil, blank ?? layers.isEmpty {
             // The whole picture becomes the icon: its flat background is
             // squeezed to the square with it.
             resize(to: CGSize(width: side, height: side))
-            let frame = drawing.iconFrame(named: name, side: side, origin: .zero)
+            let frame = drawing.iconFrame(named: name, side: side, origin: .zero, onGrid: onGrid)
             addLayer(frame)
             return frame.id
         }

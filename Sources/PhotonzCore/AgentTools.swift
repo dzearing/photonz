@@ -86,6 +86,7 @@ public enum AgentRequest: Hashable, Sendable {
     case setKeys(document: String?, call: AgentSetKeys)
     case removeKeys(document: String?, call: AgentRemoveKeys)
     case setTiming(document: String?, timing: AgentTiming)
+    case changeKeys(document: String?, call: AgentChangeKeys)
 }
 
 /// Why a call was refused, in one sentence a model can act on.
@@ -357,6 +358,7 @@ public enum AgentTools {
                 "style": ["type": "string", "description": "The look asked for, in the person's words (line art, silhouette, watercolor, flat). Leave it out when none was named."],
                 "asked": ["type": "string", "description": "The person's own words for the drawing, when they say more than the subject does (what it is doing, where)."],
                 "scene": ["type": "boolean", "description": "true when the drawing is a place or a scene that fills the picture with its own sky or ground (a landscape, a skyline, a beach at sunset), so it is painted edge to edge."],
+                "forMotion": ["type": "boolean", "description": "true when you will key its parts: each <g id> stays a group of layers, and an icon stands on its viewBox rather than being fitted to what is drawn, so parts have room to travel."],
                 "plan": ["type": "array", "items": ["type": "string"], "description": "Only when the request names more than the thing: one to four short statements someone looking at the picture can answer yes or no, for each pose, action, view, mood and relationship the request names, and when two things act together which parts touch (its paws on the keys) and what is in front. Nothing the request did not ask for. Painted from, and checked against the drawing once it is made."],
             ], required: ["subject"])),
         AgentTool(
@@ -755,7 +757,7 @@ public enum AgentTools {
                 name: args["name"]?.stringValue,
                 style: args["style"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 },
                 asked: args["asked"]?.stringValue, scene: args["scene"]?.boolValue ?? false,
-                plan: AgentDrawingCall.statements(args["plan"]))))
+                plan: AgentDrawingCall.statements(args["plan"]), forMotion: args["forMotion"]?.boolValue ?? false)))
         case "add_photo":
             let subject = (args["subject"]?.stringValue ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             guard !subject.isEmpty else { return fail("subject is empty: say what the photo shows.") }

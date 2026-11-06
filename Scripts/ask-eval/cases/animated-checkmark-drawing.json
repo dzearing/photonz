@@ -1,0 +1,19 @@
+{
+  "request": "make an animated icon of a checkmark drawing itself",
+  "group": "animated",
+  "from": "ask-animates-what-it-makes-an-animated-svg-icon: the task's list and motions like them, 2026-11-06",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "check"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}
