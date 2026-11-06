@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:26:13.810Z",
-  "updated": "2026-11-06T01:40:32.857Z",
+  "updated": "2026-11-06T04:50:25.278Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'The motion pane is totally unintuitive. I hit the + sign and i have to choose which property i want to animate. I do not want to think about this. I want to just start creating keyframes where maybe I position something, save a keyframe, or click on one, adjust some things (opacity position, transform, etc) and it persists on that keyframe and auto tweens. Don't we have this? We should be reusing a lot of the ux for videos for animated images. Please file a task to properly design an intuitive simplified way to create them.' Today: video has Add Key + any change keys itself (Sources/PhotonzCore/KeyMoments.swift, PropertyKeys.swift, LooksAtThePlayhead.swift); pictures lead with the Animate a property picker (Sources/Photonz/EditorState+PropertyKeys.swift, InspectorPanel 'Animate a property'). Related queued: ask-animates-what-it-makes-an-animated-svg-icon (Ask setting keys) should use the same model.",
@@ -77,7 +77,52 @@
     {
       "t": "2026-11-06T01:40:32.856Z",
       "note": "decision \"Should animating a picture work like this prototype: press Add Key (1), and from then on a change to that layer lands on the hollow diamond at the playhead (2), with a slim bar (3) and the video timeline's rows (4) under the picture?\" resolved: Build it as shown, on pictures and videos: K adds a key, the Lens loses its letter, the Add Key button replaces Animate a property on video, and the pivot shows only on the Rotation row"
+    },
+    {
+      "t": "2026-11-06T01:43:15.572Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-06T01:53:22.083Z",
+      "note": "Build: core landed in the working tree, 29 tests green (PictureKeys.swift, Document.keyLap). Chose a stored keyLap plus isKeyedPicture asked from the layers over clearing state on every delete path, because then the last key leaving by any route is a still and undo needs nothing. Chose keys stay .once with a play-time .everyLap over rewriting motions on Repeat, because one source of truth cannot drift. A saved Once on a picture is untouched until someone presses Add Key."
+    },
+    {
+      "t": "2026-11-06T03:08:21.570Z",
+      "note": "Adversarial pass on the built thing: a still export, Copy and the icon previews read the stored layer, which on a keyed picture is where it was before any key, so a PNG would have shown a place the picture never was. Fixed with keyedStill (first moment) and previews at the playhead. Layers inside a frame were not posed at the playhead, the main case for an icon: failed a test at 4 against 14, fixed with posedTree. Chose first moment for a still over the playhead, because an export should not depend on where the playhead was left. Chose to pin next-picture-keys off on the 14 walks that prove the saved From and To rows, over deleting them, because saved motion still shows those rows and they are the only proof of it."
+    },
+    {
+      "t": "2026-11-06T04:33:59.298Z",
+      "note": "owns these walks: picture-keys-walk, picture-keys-back-to-a-still-walk, picture-keys-thirty-seconds-walk, picture-keys-pivot-walk, video-add-key-walk, tutorial-make-something-move-walk"
+    },
+    {
+      "t": "2026-11-06T04:50:15.652Z",
+      "note": "Built on the card's answer a, commit e75a3228. Checklist: every step of the mock's flow has a walk at Next defaults with no flag (picture-keys-walk, picture-keys-back-to-a-still-walk, picture-keys-pivot-walk, video-add-key-walk, tutorial-make-something-move-walk). Animated SVG read from the walk's file: keyTimes 0;0.5;1, repeatCount indefinite, and repeatCount 1 with fill freeze on Repeat off. 30 second bar: 16.2 s first click to playing in picture-keys-thirty-seconds-walk, at a scripted two seconds of looking before each of seven actions, so it is the app's time plus an assumed pace, not a person timed."
+    },
+    {
+      "t": "2026-11-06T04:50:15.729Z",
+      "note": "Looked at every audit picture (1 to 9) against the goal, and that is what caught the real bugs: picture 8 showed the guide's crosshair drag had moved the layer while its walk stayed green, because any edit advances that step, so the walk now fails if a Position row appears. Pictures 8 and 9 showed the selection turning about the box's centre with the pivot moved: fixed in CanvasDisplay. A try at centring the key at 0:00 cut the diamond in half at the lane's clip, seen in picture 8, so it was reverted. Two walk misreads were mine and not the app's: the crosshair point (the picture is wider with the tutorial card hung on it) and press on a row, which only a real click reaches."
+    },
+    {
+      "t": "2026-11-06T04:50:15.806Z",
+      "note": "Rough items: size pill filed as the-size-pill-says-the-key-and-the-time-while-a (p2). Left rough, did not earn a task: a key at 0:00 stands 6 points right of the playhead, same as video; the keyed Rotation row has no Around dropdown, the crosshair does it; Ask still sets no keys, covered by ask-animates-what-it-makes-an-animated-svg-icon. K through the live menu bar is unproven: walks use the menu stand-in, and the audit asks for one press by hand. Tests: Scripts/test.sh exit 0 on the final tree; earlier runs on near identical trees failed in VideoCutExportTests and BusyVideoSizeTests, both pass alone, both named by the-full-test-suite-stays-green-on-a-busy-mac-wh. section-fold-motion-walk fails, and fails the same on untouched main, logged on walks-that-fail-in-the-full-sweep-26. Of the walks touched, 67 ran and passed apart from that one."
+    },
+    {
+      "t": "2026-11-06T04:50:15.896Z",
+      "note": "Animating a picture is Add Key or K, then change things: it keys itself and tweens, at Next defaults, on pictures and videos (e75a3228). Verified by 6 walks with no flag, 32 core tests, Scripts/test.sh exit 0, and audit 2026-11-05-animating-a-picture-is-as-simple-as-setting-a-mo. K through the live menu bar still wants one press by hand."
+    },
+    {
+      "t": "2026-11-06T04:50:25.277Z",
+      "note": "Correction to the lines above: the core suite is 35 tests, not 32. And the walk count: about 70 related walks ran across two batches, but those batches came before the last code changes (the selection turning about the pivot, and a harness row pick). After those, 18 walks were rerun, the picture-keys set, the guide, video-add-key, every-key-dot, motion-pivot, pivot-somewhere and every-section-header, and all passed once two coordinates of mine were corrected. The rest wait on the rotating check."
     }
   ],
-  "started": "2026-11-06T00:50:20.003Z"
+  "started": "2026-11-06T01:43:15.571Z",
+  "walks": [
+    "picture-keys-walk",
+    "picture-keys-back-to-a-still-walk",
+    "picture-keys-thirty-seconds-walk",
+    "picture-keys-pivot-walk",
+    "video-add-key-walk",
+    "tutorial-make-something-move-walk"
+  ],
+  "completed": "2026-11-06T04:50:15.897Z"
 }

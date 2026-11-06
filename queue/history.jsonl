@@ -15796,3 +15796,16 @@
 {"t":"2026-11-06T01:40:35.984Z","ev":"task_done","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":"blocked","note":"Closed by the user's call, 2026-11-05 ('just fix the suspects'): all four suspects fixed and shipped in 76fdef76. If a screenshot still misses the clipboard on the other Mac after the next release, the user will say so and a new task starts from the other-mac-report."}
 {"t":"2026-11-06T01:40:38.783Z","ev":"decision_resolved","id":"a-screenshot-is-on-the-clipboard-every-time-on-a-the-fixes-are-in-and-the-rows-ma","taskId":"a-screenshot-is-on-the-clipboard-every-time-on-a","choice":"a"}
 {"t":"2026-11-06T01:40:38.845Z","ev":"task_unblocked","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","decision":"a-screenshot-is-on-the-clipboard-every-time-on-a-the-fixes-are-in-and-the-rows-ma"}
+{"t":"2026-11-06T01:43:15.402Z","ev":"slice_pass","walks":23,"passed":23,"failed":0,"seconds":1740,"of":1098,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-06T01:43:15.577Z","ev":"task_started","id":"animating-a-picture-is-as-simple-as-setting-a-mo","title":"Animating a picture is as simple as setting a moment and changing things: design it, then build it","priority":"p1-high"}
+{"t":"2026-11-06T01:53:22.085Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T03:08:21.572Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T03:48:05.629Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-06T04:10:43.800Z","ev":"task_created","id":"the-size-pill-says-the-key-and-the-time-while-a","priority":"p2-normal","title":"The size pill says the key and the time while a hand is on a keyed layer"}
+{"t":"2026-11-06T04:33:18.925Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-06T04:33:59.300Z","ev":"task_walks","id":"animating-a-picture-is-as-simple-as-setting-a-mo","walks":["picture-keys-walk","picture-keys-back-to-a-still-walk","picture-keys-thirty-seconds-walk","picture-keys-pivot-walk","video-add-key-walk","tutorial-make-something-move-walk"]}
+{"t":"2026-11-06T04:50:15.654Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T04:50:15.731Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T04:50:15.808Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T04:50:15.899Z","ev":"task_done","id":"animating-a-picture-is-as-simple-as-setting-a-mo","from":"in_progress","note":"Animating a picture is Add Key or K, then change things: it keys itself and tweens, at Next defaults, on pictures and videos (e75a3228). Verified by 6 walks with no flag, 32 core tests, Scripts/test.sh exit 0, and audit 2026-11-05-animating-a-picture-is-as-simple-as-setting-a-mo. K through the live menu bar still wants one press by hand."}
+{"t":"2026-11-06T04:50:25.279Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}

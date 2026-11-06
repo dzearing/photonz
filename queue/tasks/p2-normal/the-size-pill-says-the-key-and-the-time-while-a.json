@@ -1,0 +1,27 @@
+{
+  "id": "the-size-pill-says-the-key-and-the-time-while-a",
+  "title": "The size pill says the key and the time while a hand is on a keyed layer",
+  "goal": "The approved Animate a picture design shows a diamond and the time in the size pill while you drag a layer that has keys, so you can see where the change lands without looking down. The build shows only the size today.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 8.75,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-06T04:10:43.796Z",
+  "updated": "2026-11-06T04:10:43.799Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up of animating-a-picture-is-as-simple-as-setting-a-mo. docs/design/mocks/pages/picture-keys.html, Showing that a change will key. The other signals in that row are built: hollow diamond at the playhead, the pop, the panel row diamond, the diamond in Layers.",
+  "acceptance": [
+    "Dragging, resizing or turning a layer with keys shows a diamond and the playhead time in the size pill, on a picture and on a video",
+    "A layer with no keys shows the size alone, as it does now",
+    "A walk at Next defaults photographs the pill mid drag"
+  ],
+  "log": [
+    {
+      "t": "2026-11-06T04:10:43.798Z",
+      "note": "created (manual)"
+    }
+  ]
+}
