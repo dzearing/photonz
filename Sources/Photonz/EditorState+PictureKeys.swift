@@ -60,7 +60,7 @@ extension EditorState {
         perform { $0.animate(layerID: layer.id, property, atDocumentTimeMS: 0, ease: ease) }
     }
 
-    private func beginPictureLap() {
+    func beginPictureLap() {
         pauseMotionPreview()
         documentTimeMS = 0
         isMotionStripOpen = true

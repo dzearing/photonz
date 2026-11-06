@@ -94,7 +94,29 @@ enum AgentWork {
             return try changePart(AgentDocuments.editor(id).get(), change)
         case .restyleIcon(let id, let change):
             return try restyleIcon(AgentDocuments.editor(id).get(), change)
+        case .setKeys(let id, let call):
+            return try landKeys(AgentDocuments.editor(id).get()) { $0.agentSetKeys(call) }
+        case .removeKeys(let id, let call):
+            return try landKeys(AgentDocuments.editor(id).get()) { $0.agentRemoveKeys(call) }
+        case .setTiming(let id, let timing):
+            return try landKeys(AgentDocuments.editor(id).get()) { $0.agentSetTiming(timing) }
         }
+    }
+
+    /// set_keys, remove_keys and set_timing (`AgentKeys`), as one undo step. A
+    /// picture's first keys arrive the way Add Key's do: the playhead at the
+    /// top of the lap and the strip up, so a person sees what was made.
+    private static func landKeys<Made: Encodable>(
+        _ editor: EditorState, _ change: (inout PhotonzDocument) -> Result<Made, AgentToolError>) throws -> Answer {
+        var changed = try document(of: editor)
+        let answer: Made
+        switch change(&changed) {
+        case .success(let made): answer = made
+        case .failure(let refused): throw Failure(refused.message)
+        }
+        if changed.isKeyedPicture, !editor.isKeyedPicture { editor.beginPictureLap() }
+        editor.asOneUndoStep { editor.perform { $0 = changed } }
+        return .json(answer)
     }
 
     /// restyle_icon: the whole icon's look, line weight or colour changed in
@@ -313,6 +335,8 @@ enum AgentWork {
             return try png(crop(picture, region: region, canvas: document.canvasSize),
                            saying: "\(title(of: editor)) at \(AgentContactSheet.label(ms: ms))")
         }
+        // A keyed picture is seen at its playhead, as the canvas shows it.
+        if document.isKeyedPicture { document = document.moved(toMotionTimeMS: editor.documentTimeMS) }
         // Drawn here, the way Copy draws a picture, with a renderer of its own
         // so the canvas's caches are left alone.
         let renderer = DocumentRenderer()
@@ -359,32 +383,46 @@ enum AgentWork {
         return context.makeImage() ?? picture
     }
 
-    private static func videoDocument(_ editor: EditorState) throws -> PhotonzDocument {
+    /// A document with moments to look at: a video, or a picture with keys.
+    private static func timedDocument(_ editor: EditorState) throws -> PhotonzDocument {
         let document = try document(of: editor)
-        guard document.hasTime else {
-            throw Failure("\(title(of: editor)) is a picture, not a video. Use render_picture to see it.")
+        guard document.hasKeyClock else {
+            throw Failure("\(title(of: editor)) is a picture with no keys. Use render_picture to see it.")
         }
         return document
     }
 
+    /// How long a video runs, or one lap of a keyed picture.
+    static func timedLengthMS(_ document: PhotonzDocument) -> Int {
+        document.isKeyedPicture ? document.motionCycleLengthMS : document.documentDurationMS
+    }
+
+    /// A keyed picture at a moment of its lap.
+    private static func lapPicture(of document: PhotonzDocument, store: ImageStore, atMS ms: Int,
+                                   scale: CGFloat) -> CGImage? {
+        DocumentRenderer().render(document.moved(toMotionTimeMS: ms), store: store, scale: scale)
+    }
+
     private static func videoFrame(_ editor: EditorState, atMS ms: Int, region: CGRect?,
                                    maxSize: Int) async throws -> Answer {
-        let document = try videoDocument(editor)
-        let length = document.documentDurationMS
+        let document = try timedDocument(editor)
+        let length = timedLengthMS(document)
         guard ms < length else {
-            throw Failure("The video is \(AgentContactSheet.label(ms: length)) long; ask for a moment before that.")
+            throw Failure("It is \(AgentContactSheet.label(ms: length)) long; ask for a moment before that.")
         }
         let region = try checkedRegion(region, in: document)
         let scale = scale(fitting: region?.size ?? document.canvasSize, maxSize: maxSize)
-        let picture = await frame(of: document, store: editor.store, atMS: ms, scale: scale)
+        let picture = document.isKeyedPicture
+            ? lapPicture(of: document, store: editor.store, atMS: ms, scale: scale)
+            : await frame(of: document, store: editor.store, atMS: ms, scale: scale)
         return try png(crop(picture, region: region, canvas: document.canvasSize),
                        saying: "\(title(of: editor)) at \(AgentContactSheet.label(ms: ms))")
     }
 
     private static func contactSheet(_ editor: EditorState, fromMS: Int?, toMS: Int?, count: Int,
                                      columns: Int?, cellWidth: Int) async throws -> Answer {
-        let document = try videoDocument(editor)
-        let length = document.documentDurationMS
+        let document = try timedDocument(editor)
+        let length = timedLengthMS(document)
         let from = min(fromMS ?? 0, max(0, length - 1))
         let to = min(toMS ?? length, length)
         let times = AgentContactSheet.times(fromMS: from, toMS: max(to, from), count: count)
@@ -409,7 +447,11 @@ enum AgentWork {
             // On black, as the file shows a frame (`onBlack`).
             context.setFillColor(CGColor(gray: 0, alpha: 1))
             context.fill(flipped)
-            if let picture = await frames.frame(atMS: ms) { context.draw(picture, in: flipped) }
+            let scale = pictureSize.width / max(1, document.canvasSize.width)
+            let shown = document.isKeyedPicture
+                ? lapPicture(of: document, store: editor.store, atMS: ms, scale: scale)
+                : await frames.frame(atMS: ms)
+            if let shown { context.draw(shown, in: flipped) }
             let label = layout.labels[index]
             draw(AgentContactSheet.label(ms: ms), in: context,
                  at: CGPoint(x: label.minX + 2, y: height - label.maxY + 6))
@@ -487,7 +529,7 @@ enum AgentWork {
             throw Failure("There is no command called \(call.id.rawValue).")
         }
         let before = try document(of: editor)
-        if command.area == .timeline && !editor.documentHasTime {
+        if command.area == .timeline && !editor.documentHasKeyClock {
             throw Failure("\(command.name) works on a video, and \(title(of: editor)) is a picture.")
         }
         var refusal: String?
@@ -512,7 +554,7 @@ enum AgentWork {
         if let refusal { throw Failure(refusal) }
         let after = editor.document
         return .json(Ran(ran: command.name, title: command.title, changed: after != before,
-                         playheadSeconds: editor.documentHasTime ? Double(editor.documentTimeMS) / 1000 : nil,
+                         playheadSeconds: editor.documentHasKeyClock ? Double(editor.documentTimeMS) / 1000 : nil,
                          picked: editor.actionableLayerIDs.map(\.uuidString).sorted(),
                          canUndo: editor.canUndo, canRedo: editor.canRedo))
     }
@@ -553,10 +595,10 @@ enum AgentWork {
     /// says, checking each exists first.
     private static func pick(_ call: AppCommandCall, in editor: EditorState, document: PhotonzDocument) throws {
         if let ms = call.atMS {
-            let length = document.documentDurationMS
-            guard document.hasTime else { throw Failure("seconds only means something on a video.") }
+            let length = timedLengthMS(document)
+            guard document.hasKeyClock else { throw Failure("seconds only means something on a video or a picture with keys.") }
             guard ms <= length else {
-                throw Failure("The video is \(AgentContactSheet.label(ms: length)) long; seconds must be inside it.")
+                throw Failure("It is \(AgentContactSheet.label(ms: length)) long; seconds must be inside it.")
             }
             editor.moveDocumentPlayhead(toMS: ms)
         }

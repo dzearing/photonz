@@ -3296,6 +3296,15 @@ public enum PlaytestStep: Sendable, Equatable {
     ///
     /// `lacks` is a run of text the file must not hold and `carries` one it
     /// must, which is how a walk claims there is no rectangle behind an icon.
+    /// Calls an agent tool in the window, the way the MCP channel does, with
+    /// `arguments` as a JSON object in a string. `$picked` in them is the
+    /// picked layer's id. A refusal fails the step.
+    case agentTool(tool: String, arguments: String)
+    /// Fails unless the canvas's own PICTURE differs across `seconds`, read
+    /// from what it draws rather than from the chrome: a Pause button and
+    /// moving numbers say nothing about whether the picture moved, and on
+    /// 2026-11-06 a keyed picture played frozen under a green walk.
+    case expectPictureMoves(seconds: Double)
     case writeSVG(name: String, background: SVGExport.Background, frame: String? = nil,
                   lacks: String? = nil, carries: String? = nil)
     /// Write the document out as a picture to `<out>/<name>.<ext>`, at the
@@ -4754,7 +4763,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "appKey", "holdAppKey", "appearance", "askFromNothing", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
+        "action", "agentTool", "expectPictureMoves", "appKey", "holdAppKey", "appearance", "askFromNothing", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
@@ -4831,6 +4840,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragOver: "dragOver"
         case .snapshot: "snapshot"
         case .render: "render"
+        case .agentTool: "agentTool"
+        case .expectPictureMoves: "expectPictureMoves"
         case .writeSVG: "writeSVG"
         case .writePicture: "writePicture"
         case .exportQuality: "exportQuality"
@@ -5534,6 +5545,10 @@ public enum PlaytestStep: Sendable, Equatable {
         case "render":
             self = .render(name: try f.string("name"),
                            scale: CGFloat(try f.optionalNumber("scale") ?? 1))
+        case "expectPictureMoves":
+            self = .expectPictureMoves(seconds: try f.optionalNumber("seconds") ?? 0.25)
+        case "agentTool":
+            self = .agentTool(tool: try f.string("tool"), arguments: try f.optionalString("arguments") ?? "{}")
         case "writeSVG":
             let background = f.has("background")
                 ? try f.enumValue("background", SVGExport.Background.self)

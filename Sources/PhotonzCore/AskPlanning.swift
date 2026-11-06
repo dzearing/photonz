@@ -36,6 +36,20 @@ public enum AskTools {
     public static let iconDoing = ["restyle_icon"]
     public static let iconModelTools: [AgentJSON] = iconDoing.compactMap(modelTool)
     public static let paintingDoing = ["paint_stroke"]
+    /// Offered only where the request is about motion or the document already
+    /// has it, so what every other request is shown stays exactly as it was.
+    /// When to animate is taught elsewhere; this only keeps the tools in reach.
+    public static let keyDoing = ["set_keys", "remove_keys", "set_timing"]
+    public static let keyModelTools: [AgentJSON] = keyDoing.compactMap(modelTool)
+    private static let motionWords: Set<String> = [
+        "animate", "animates", "animated", "animating", "animation", "animations",
+        "keyframe", "keyframes", "motion",
+    ]
+
+    /// Whether the words of a request are about motion.
+    public static func asksForMotion(_ request: String) -> Bool {
+        !motionWords.isDisjoint(with: AgentDrawingWords.words(request))
+    }
 
     public static func looking(painting: Bool) -> [String] { painting ? looking + paintingLooking : looking }
     public static func doing(painting: Bool) -> [String] { painting ? doing + paintingDoing : doing }
@@ -441,6 +455,8 @@ public struct AskConversation: Sendable {
     private let tearsTheIcon: Bool
     /// The picture holds an icon, so it can be restyled (`AgentIconRestyle`).
     private let holdsIcon: Bool
+    /// The request is about motion, or the document has some.
+    private let keysMotion: Bool
     /// The document has a timeline, or does not say: the video tools are
     /// offered. A picture is not shown them (`AskTools.videoOnly`).
     private let video: Bool
@@ -484,6 +500,7 @@ public struct AskConversation: Sendable {
         self.brushes = brushes
         let parsed = try? AgentJSON.parse(Data(documentRead.utf8))
         video = parsed?["kind"]?.stringValue != "picture"
+        keysMotion = web == nil && (AskTools.asksForMotion(request) || parsed?["lap"] != nil)
         let size = parsed?["canvas"]
         canvasWidth = size?["width"]?.doubleValue ?? 0
         canvasHeight = size?["height"]?.doubleValue ?? 0
@@ -611,6 +628,7 @@ public struct AskConversation: Sendable {
     var offeredTools: [AgentJSON] {
         guard web == nil else { return AskTools.webModelTools }
         let all = AskTools.modelTools(painting: painting, video: video) + (holdsIcon ? AskTools.iconModelTools : [])
+            + (keysMotion ? AskTools.keyModelTools : [])
         guard lookedUp != nil else { return all }
         let allowed = Set(AskLookup.looking + AskLookup.doing)
         return all.filter { allowed.contains($0["function"]?["name"]?.stringValue ?? "") }
@@ -623,6 +641,7 @@ public struct AskConversation: Sendable {
     var doingTools: [String] {
         guard web == nil else { return AskWeb.doing }
         let all = AskTools.doing(painting: painting, video: video) + (holdsIcon ? AskTools.iconDoing : [])
+            + (keysMotion ? AskTools.keyDoing : [])
         return lookedUp == nil ? all : all.filter(AskLookup.doing.contains)
     }
 

@@ -270,6 +270,10 @@
       "key": "space"
     },
     {
+      "do": "expectPictureMoves",
+      "seconds": 0.2
+    },
+    {
       "do": "wait",
       "seconds": 0.6,
       "onTheClock": true

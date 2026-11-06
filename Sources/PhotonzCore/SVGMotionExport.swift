@@ -374,6 +374,7 @@ enum MotionSVG {
     static func stops(for motion: LayerMotion, cycleMS: Int) -> [Stop] {
         let cycle = max(1, cycleMS)
         let lap = Double(cycle)
+        if let keyed = keyStops(for: motion, cycleMS: cycle) { return keyed }
         let startMS = min(Double(motion.timing.startMS), lap)
         let exact = spline(for: motion.curve)
 
@@ -468,6 +469,57 @@ enum MotionSVG {
         let landed = last.truncated ? value(at: last.to - 1) : last.lands
         add(last.to, landed, hold)
         if last.to < lap - 0.5 { add(lap, landed, hold) }
+        return stops
+    }
+
+    /// The moments of a motion whose keys say their own curves, one stretch at
+    /// a time, or nil where `motion.curve` speaks for it or the old way has to
+    /// answer: a run the lap cuts off, a there-and-back, or a path that bends.
+    ///
+    /// `motion.curve` says nothing for a key somebody eased: read that way, a
+    /// linear spin went out easing and a held key slid, so the file played
+    /// something the timeline did not. Each stretch states its own curve when
+    /// SVG can, and is drawn point by point when it cannot.
+    private static func keyStops(for motion: LayerMotion, cycleMS: Int) -> [Stop]? {
+        let keys = motion.keyframes
+        let lap = Double(cycleMS)
+        let says = keys.count > 2 || keys.contains { $0.ease != nil || $0.curve != nil || $0.handles != nil }
+        guard says, keys.count > 1, !motion.repeats.reverses, Double(motion.timing.endMS) <= lap,
+              keys.allSatisfy({ $0.bend == nil }), let first = keys.first, let last = keys.last else { return nil }
+        var stops: [Stop] = []
+        func add(_ ms: Double, _ value: MotionValue, _ spline: Spline) {
+            if let end = stops.last, abs(end.ms - ms) < 0.5 {
+                stops[stops.count - 1].spline = spline
+                return
+            }
+            stops.append(Stop(ms: ms, value: value, spline: spline))
+        }
+        if first.atMS > 0 { add(0, first.value, hold) }
+        for (left, right) in zip(keys, keys.dropFirst()) {
+            let from = Double(left.atMS)
+            let span = Double(right.atMS) - from
+            let curve = motion.segmentCurve(leaving: left, arriving: right)
+            if let exact = spline(for: curve) {
+                add(from, left.value, exact)
+            } else if case let .steps(count) = curve {
+                // A jump is a value held to a millisecond short of the next.
+                let steps = max(1, count)
+                for step in 0..<steps {
+                    let share = Double(step) / Double(steps)
+                    let value = left.value.blended(to: right.value, progress: share) ?? left.value
+                    add(from + span * share, value, hold)
+                    add(from + span * Double(step + 1) / Double(steps) - 1, value, hold)
+                }
+            } else {
+                let samples = max(1, sampleCount(for: curve))
+                for sample in 0..<samples {
+                    let ms = from + span * Double(sample) / Double(samples)
+                    add(ms, sample == 0 ? left.value : motion.value(atMS: Int(ms.rounded()), cycleMS: cycleMS), hold)
+                }
+            }
+        }
+        add(Double(last.atMS), last.value, hold)
+        if Double(last.atMS) < lap - 0.5 { add(lap, last.value, hold) }
         return stops
     }
 

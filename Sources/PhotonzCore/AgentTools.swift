@@ -82,6 +82,10 @@ public enum AgentRequest: Hashable, Sendable {
     // A part of what was made (`AgentPartChange.swift`)
     case changePart(document: String?, change: AgentPartChange)
     case restyleIcon(document: String?, change: AgentIconRestyle)
+    // Keys (`AgentKeys.swift`)
+    case setKeys(document: String?, call: AgentSetKeys)
+    case removeKeys(document: String?, call: AgentRemoveKeys)
+    case setTiming(document: String?, timing: AgentTiming)
 }
 
 /// Why a call was refused, in one sentence a model can act on.
@@ -252,7 +256,7 @@ public enum AgentTools {
             ])),
         AgentTool(
             name: "video_frame",
-            description: "A PNG of a video document at a moment, drawn the way export draws it.",
+            description: "A PNG of a video, or of a picture with keys, at a moment, drawn the way export draws it.",
             inputSchema: schema([
                 "document": documentProperty,
                 "seconds": ["type": "number", "minimum": 0, "description": "The moment, in seconds from the start."],
@@ -261,7 +265,7 @@ public enum AgentTools {
             ], required: ["seconds"])),
         AgentTool(
             name: "contact_sheet",
-            description: "One PNG holding frames spread evenly across a stretch of a video, each labelled with its time, to see a whole edit at a glance.",
+            description: "One PNG holding frames spread evenly across a stretch of a video or a keyed picture's lap, each labelled with its time, to see a whole edit or a whole move at a glance.",
             inputSchema: schema([
                 "document": documentProperty,
                 "fromSeconds": ["type": "number", "minimum": 0, "description": "Where the stretch starts. The start of the video when left out."],
@@ -298,7 +302,7 @@ public enum AgentTools {
                 "command": ["type": "string", "description": "The command's name from list_commands, such as split_at_playhead."],
                 "arguments": ["type": "object", "description": "The command's arguments, as list_commands gives them."],
             ], required: ["command"])),
-    ] + drawingTools + videoTools + designTools + componentTools + paintTools + partTools + iconTools
+    ] + drawingTools + videoTools + designTools + componentTools + paintTools + partTools + iconTools + keyTools
 
     /// Slice 3: build a picture out of real layers and export it.
     static let drawingTools: [AgentTool] = [
@@ -588,6 +592,8 @@ public enum AgentTools {
             return partRequest(name, args, document: document)
         case _ where iconToolNames.contains(name):
             return iconRequest(name, args, document: document)
+        case _ where keyToolNames.contains(name):
+            return keyRequest(name, args, document: document)
         default:
             return .failure(AgentToolError("There is no tool called \(name).", isUnknownTool: true))
         }

@@ -1,0 +1,51 @@
+{
+  "feature": "An agent can set, read and change a layer's keys",
+  "epic": "icon-animate",
+  "summary": "Ask and outside agents can now key any layer, give a picture a length and a loop, and read the keys back. The keys land on the same strip a person uses, and the result copies as an animated SVG.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Run Scripts/agent-keys-drill.mjs against the probe for the tool calls, or use the agent-keys-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "From an agent, call set_keys on a shape: rotation, 0 at 0 seconds with curve Linear, 90 at 1 second.",
+      "shot": "2026-11-06-agent-keys-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the second diamond on the strip.",
+      "shot": "2026-11-06-agent-keys-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With that key picked, type 30 into Opacity and press Return."
+    },
+    {
+      "do": "From the agent, call set_timing with seconds 1.5, then read_document, and find the keys under keyed."
+    },
+    {
+      "do": "Run play_pause from the agent, or press Space, and watch the shape turn on the canvas.",
+      "shot": "2026-11-06-agent-keys-3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Call contact_sheet to see the whole lap at once.",
+      "shot": "2026-11-06-agent-keys-sheet.png"
+    },
+    {
+      "do": "Run copy_svg, paste it into a browser, and watch it loop. The file from the drill is 2026-11-06-agent-keys.svg."
+    }
+  ],
+  "evaluate": [
+    "Does a key an agent set feel exactly like one you set, when you click it and change it?",
+    "Does a keyed picture now visibly move on the canvas when you press Space?",
+    "Does the SVG play in Safari and Chrome the way it plays in Photonz?",
+    "Should opacity read 0 to 100 on keys while set_layer says 0 to 1, or should they match?"
+  ],
+  "rough": [
+    "No mock covers the agent tools; the strip they land on is the one picture-keys.html draws, and it matches.",
+    "A looping motion still stands still on the main canvas while its previews swing. It has a different cause from the keyed picture freeze fixed here. Filed as a-looping-motion-moves-on-the-canvas-while-it-pl.",
+    "The SVG was read and compared with the timeline value by value, not watched in a real browser. Try step 7 is the first time anyone sees it play there.",
+    "Ask is offered the tools but not taught when to use them, and no Ask eval was run: requests with no word about motion, on documents with no lap, are shown what they always were. Teaching it stays in ask-animates-what-it-makes-an-animated-svg-icon.",
+    "Keys use the panel's numbers, so opacity is 0 to 100 here and 0 to 1 on set_layer. A model that mixes them up makes a layer nearly invisible.",
+    "Volume cannot be keyed by these tools: its keys are the mixer's level points."
+  ]
+}

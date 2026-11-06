@@ -5690,6 +5690,16 @@ final class EditorState {
     /// down here, a step of the playhead drew the canvas once for that and
     /// again for the picture, and the first of the two was spent showing the
     /// old moment less sharply (`first-long-jump-when-zoomed-in-walk`).
+    /// A keyed picture was stopped at its playhead, so it has a sharp tile of
+    /// that moment, and the tile sits over the composite. Left there it hides
+    /// every frame of the play and the picture stands frozen under a selection
+    /// that turns. It goes with the first moving frame, so nothing flashes.
+    private func letGoOfCrispTileForPlay() {
+        crispTileTask?.cancel()
+        crispTileTask = nil
+        if crispTile != nil { crispTileOutOfDate = true }
+    }
+
     private func refreshCrispTile(showing preview: PhotonzDocument? = nil,
                                   displayed: PhotonzDocument? = nil,
                                   withTheNextFrame: Bool = false) {
@@ -5804,7 +5814,11 @@ final class EditorState {
         // second would clear the tile thirty times a second, which every view
         // reading it is told about whether or not the value changed.
         defer {
-            if !isMotionPlaying { refreshCrispTile(showing: submitted, displayed: displayed, withTheNextFrame: true) }
+            if !isMotionPlaying {
+                refreshCrispTile(showing: submitted, displayed: displayed, withTheNextFrame: true)
+            } else if isKeyedPicture {
+                letGoOfCrispTileForPlay()
+            }
         }
         if scheduler == nil {
             scheduler = RenderScheduler(store: store, onDelivery: { [weak self] frame in

@@ -602,6 +602,10 @@ enum AgentDrawingWork {
         let height: Int?
         /// Layers an SVG could only carry as pictures, with why.
         let asPictures: [String]?
+        /// How long one lap of a moving SVG is. Left out of a still file.
+        var lapSeconds: Double?
+        /// What on a moving SVG the file could not carry, with why.
+        var notMoving: [String]?
     }
 
     private static func export(_ editor: EditorState, format: AgentExportFormat, path: String,
@@ -628,15 +632,20 @@ enum AgentDrawingWork {
                               width: Int((size.width * scale).rounded()), height: Int((size.height * scale).rounded()),
                               asPictures: nil)
         case .svg:
+            // The motion goes out as Copy SVG sends it.
+            let animation = CompositeCopy.svgAnimation(for: document, motionOn: Experiments.shared.animatedSVGExportEnabled)
             guard let written = SVGExporter.data(document, store: editor.store, renderer: DocumentRenderer(),
-                                                 background: backdrop) else {
+                                                 animation: animation, background: backdrop) else {
                 throw Failure("Photonz could not write the picture as SVG.")
             }
             try written.data.write(to: url)
             answer = Exported(path: url.path, format: "svg", bytes: written.data.count,
                               width: Int(document.canvasSize.width), height: Int(document.canvasSize.height),
                               asPictures: written.fallbacks.isEmpty ? nil
-                                  : written.fallbacks.map { "\($0.layerName): \($0.reason)" })
+                                  : written.fallbacks.map { "\($0.layerName): \($0.reason)" },
+                              lapSeconds: animation.isMoving ? Double(document.motionCycleLengthMS) / 1000 : nil,
+                              notMoving: written.unmoved.isEmpty ? nil
+                                  : written.unmoved.map { "\($0.layerName): \($0.reason)" })
         case .mp4:
             throw Failure("export: an MP4 is written from a video.")
         }

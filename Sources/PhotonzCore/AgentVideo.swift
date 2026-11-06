@@ -190,7 +190,7 @@ extension AgentTools {
             ])),
         AgentTool(
             name: "set_playhead",
-            description: "Move the playhead to a moment, as clicking the ruler does. The window shows that frame.",
+            description: "Move the playhead to a moment of a video or a keyed picture's lap, as clicking the ruler does. The window shows that frame.",
             inputSchema: videoSchema([
                 "document": videoDocument,
                 "seconds": secondsProperty("The moment, on the video's clock."),

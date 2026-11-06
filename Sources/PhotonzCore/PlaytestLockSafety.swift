@@ -318,6 +318,11 @@ public enum PlaytestLockSafety {
         "filmThumb",
         "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
+        // The agent channel works on a locked screen by design: nothing in it
+        // looks a control up by name (`docs/design/agent-mcp.md`).
+        "agentTool",
+        // Reads the canvas's own layers inside the app, as `snapshot` does.
+        "expectPictureMoves",
         // Sets what the walk's own drags hand the canvas; nothing on screen.
         "pen",
         // A video export asks the editor to write a file and then opens the

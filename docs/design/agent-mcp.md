@@ -504,6 +504,39 @@ board with a page of thirty rows runs past that and the rows below stop being
 listed. `layer` reads one group, frame or component and everything inside it
 with the whole budget.
 
+### Keys (`an-agent-can-set-read-and-change-a-layer-s-keys`)
+
+`set_keys`, `remove_keys` and `set_timing` (`AgentKeys.swift`) write the keys a
+person sets: the same `LayerMotion`, on the same lap (`PictureKeys.swift`), so
+they land on the strip where a hand can pick, drag and ease them. There is no
+second model, and a picture stays a picture: its first key gives it a lap.
+
+* **Times are the document's**: a moment of the lap, or of the video. A key
+  outside a clip's stretch is refused; a key past a picture's lap grows the lap,
+  and the answer says so. A lap may end exactly on its last key and no sooner.
+* **Values are the panel's**, so what is read can be handed straight back:
+  opacity 0 to 100 here, where `set_layer` says 0 to 1.
+* **A `curve` belongs to the run leaving its key**, in the Curve dropdown's
+  words (`AgentKeyCurve`), plus `cubic-bezier(...)` for a drawn one.
+* **`read_document`** lists `keyed` under a layer, `emptyKeys` for moments Add
+  Key left with nothing in them, and `lap` and `playheadSeconds` on the
+  document. A motion on a still picture is not a key and is not listed.
+* **A keyed picture has moments to look at**: `set_playhead`, `video_frame`,
+  `contact_sheet`, `render_picture` (at the playhead), `seconds` on `run_command`
+  and `play_pause` all answer on one. `export` writes SVG the way Copy SVG does,
+  moving, with `lapSeconds` and `notMoving` in its answer.
+* **Ask** is shown the three only where the request is about motion or the
+  document has a lap (`AskTools.keyDoing`), since tools cost reading time on
+  every request. When to animate is `ask-animates-what-it-makes-an-animated-svg-icon`.
+* Volume is left out: its keys are the mixer's level points, not a motion.
+
+The file plays what the timeline plays because `MotionSVG.keyStops` writes a
+motion whose keys say their own curves one stretch at a time. Until 2026-11-06
+a two key motion went out on `motion.curve`, so a linear spin eased and a held
+key slid. A walk can call a tool with the `agentTool` step: `agent-keys-walk`
+is a person changing what a tool set, and `Scripts/agent-keys-drill.mjs` is the
+whole try path over the bridge.
+
 ### The skill and the plugin
 
 `plugin/` is a Claude Code plugin: the Photonz skill

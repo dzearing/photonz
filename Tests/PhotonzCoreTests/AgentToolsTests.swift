@@ -28,6 +28,7 @@ struct AgentToolsTests {
             "add_component",
             "list_brushes", "set_brush", "paint_stroke",
             "change_part", "restyle_icon",
+            "set_keys", "remove_keys", "set_timing",
         ])
     }
 

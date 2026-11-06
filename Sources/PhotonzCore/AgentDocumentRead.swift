@@ -141,6 +141,96 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         /// Set only when Ask says this layer in short to fit its model's
         /// window (`AskDocumentDigest`): what it holds, in place of `children`.
         public var parts: Parts?
+        /// What is keyed on it, in the words set_keys takes.
+        public var keyed: [Keyed]?
+        /// Moments Add Key left with nothing keyed in them yet, in seconds.
+        public var emptyKeys: [Double]?
+    }
+
+    /// A key's value: a number, a place or a colour.
+    public enum KeyValue: Codable, Hashable, Sendable {
+        case number(Double)
+        case point(x: Double, y: Double)
+        case color(String)
+
+        private enum Place: String, CodingKey { case x, y }
+
+        init(_ value: MotionValue) {
+            switch value {
+            case .number(let number): self = .number(tidy(number))
+            case .point(let point): self = .point(x: tidy(point.x), y: tidy(point.y))
+            case .color(let hex): self = .color(hex)
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            switch self {
+            case .number(let number):
+                var single = encoder.singleValueContainer()
+                try single.encode(number)
+            case .color(let hex):
+                var single = encoder.singleValueContainer()
+                try single.encode(hex)
+            case .point(let x, let y):
+                var place = encoder.container(keyedBy: Place.self)
+                try place.encode(x, forKey: .x)
+                try place.encode(y, forKey: .y)
+            }
+        }
+
+        public init(from decoder: Decoder) throws {
+            if let place = try? decoder.container(keyedBy: Place.self),
+               let x = try? place.decode(Double.self, forKey: .x), let y = try? place.decode(Double.self, forKey: .y) {
+                self = .point(x: x, y: y)
+                return
+            }
+            let single = try decoder.singleValueContainer()
+            if let number = try? single.decode(Double.self) {
+                self = .number(number)
+            } else {
+                self = .color(try single.decode(String.self))
+            }
+        }
+    }
+
+    public struct Key: Codable, Hashable, Sendable {
+        public var seconds: Double
+        public var value: KeyValue
+        /// The run leaving this key. The last key has none.
+        public var curve: String?
+    }
+
+    /// What a rotation turns about, where that is not the layer's middle.
+    public struct Pivot: Codable, Hashable, Sendable {
+        public var x: Double
+        public var y: Double
+        public var artboard: Bool?
+
+        public init(x: Double, y: Double, artboard: Bool? = nil) {
+            self.x = x
+            self.y = y
+            self.artboard = artboard
+        }
+    }
+
+    /// One keyed value of a layer.
+    public struct Keyed: Codable, Hashable, Sendable {
+        public var property: String
+        /// Which shadow, glow or border, past the first.
+        public var effect: Int?
+        public var pivot: Pivot?
+        public var keys: [Key]
+    }
+
+    /// How a keyed picture plays.
+    public struct Lap: Codable, Hashable, Sendable {
+        public var seconds: Double
+        public var loop: Bool
+
+        public init(seconds: Double, loop: Bool) {
+            self.seconds = seconds
+            self.loop = loop
+        }
     }
 
     /// A group's Layout section: how it arranges what is inside and the room
@@ -261,6 +351,8 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
     public var pixelScale: Double?
     public var durationSeconds: Double?
     public var playheadSeconds: Double?
+    /// A picture's lap, once it has one.
+    public var lap: Lap?
     public var canUndo: Bool
     public var canRedo: Bool
     /// Every layer in the document, nested ones included.
@@ -294,8 +386,8 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         let hasTime = document.hasTime
         var budget = mostLayersListed
         let looks = LookNames(document)
-        let layers = only.flatMap(document.layer(id:)).map { [summarize($0, looks: looks, budget: &budget)] }
-            ?? summarize(document.layers, looks: looks, budget: &budget)
+        let layers = only.flatMap(document.layer(id:)).map { [summarize($0, in: document, looks: looks, budget: &budget)] }
+            ?? summarize(document.layers, in: document, looks: looks, budget: &budget)
         let count = document.allLayers.count
         var read = AgentDocumentRead(
             id: context.id, title: context.title, file: context.file,
@@ -303,10 +395,13 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             canvas: Size(width: tidy(document.canvasSize.width), height: tidy(document.canvasSize.height)),
             pixelScale: document.pixelScale == 1 ? nil : Double(document.pixelScale),
             durationSeconds: hasTime ? seconds(document.documentDurationMS) : nil,
-            playheadSeconds: hasTime ? seconds(context.playheadMS) : nil,
+            playheadSeconds: document.hasKeyClock ? seconds(context.playheadMS) : nil,
             canUndo: context.canUndo, canRedo: context.canRedo,
             layerCount: count, layers: layers,
             layersNotListed: only == nil && count > mostLayersListed ? count - mostLayersListed : nil)
+        if !hasTime, let lap = document.keyLap {
+            read.lap = Lap(seconds: seconds(document.motionCycleLengthMS), loop: lap.repeats)
+        }
         guard hasTime else { return read }
         let byID = Dictionary(document.layers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         read.tracks = document.timelineLanes.map { track in
@@ -368,17 +463,43 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         }
     }
 
-    private static func summarize(_ layers: [PhotonzCore.Layer], looks: LookNames, budget: inout Int) -> [Layer] {
+    private static func summarize(_ layers: [PhotonzCore.Layer], in document: PhotonzDocument, looks: LookNames,
+                                  budget: inout Int) -> [Layer] {
         var out: [Layer] = []
         for layer in layers.reversed() {
             guard budget > 0 else { break }
             budget -= 1
-            out.append(summarize(layer, looks: looks, budget: &budget))
+            out.append(summarize(layer, in: document, looks: looks, budget: &budget))
         }
         return out
     }
 
-    private static func summarize(_ layer: PhotonzCore.Layer, looks: LookNames, budget: inout Int) -> Layer {
+    /// What is keyed on `layer`, on the document's clock. Nothing where the
+    /// document has no key clock: a motion on a still picture is not a key.
+    private static func keyed(_ layer: PhotonzCore.Layer, in document: PhotonzDocument) -> [Keyed]? {
+        guard document.hasKeyClock else { return nil }
+        let owner = document.clockOwner(of: layer)
+        let list = document.keyedMotions(of: layer).map { motion -> Keyed in
+            let frames = motion.keyframes
+            let keys = frames.indices.compactMap { index -> Key? in
+                guard let ms = document.clipKeyDocumentMS(owner, clock: frames[index].atMS) else { return nil }
+                return Key(seconds: seconds(ms), value: KeyValue(frames[index].value),
+                           curve: motion.stretchCurve(index).map(AgentKeyCurve.word))
+            }
+            return Keyed(property: motion.property.rawValue,
+                         effect: motion.effectOrdinal == 0 ? nil : motion.effectOrdinal,
+                         pivot: pivot(of: motion), keys: keys)
+        }
+        return list.isEmpty ? nil : list
+    }
+
+    private static func pivot(of motion: LayerMotion) -> Pivot? {
+        guard motion.property == .rotation, let pivot = motion.pivot, pivot != .centre else { return nil }
+        return Pivot(x: Double(pivot.unit.x), y: Double(pivot.unit.y), artboard: pivot.isOnArtboard ? true : nil)
+    }
+
+    private static func summarize(_ layer: PhotonzCore.Layer, in document: PhotonzDocument, looks: LookNames,
+                                  budget: inout Int) -> Layer {
         let style = layer.style
         let degrees = Double(layer.transform.rotation) * 180 / .pi
         // A group's stored size is unused: its frame here is the box it covers.
@@ -395,6 +516,11 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             time: layer.time.map { Time(inSeconds: seconds($0.inMS), outSeconds: seconds($0.outMS)) })
         let flips = FlipAxis.allCases.filter { layer.transform.isFlipped($0) }.map(\.rawValue)
         if !flips.isEmpty { node.flipped = flips }
+        node.keyed = keyed(layer, in: document)
+        if document.hasKeyClock {
+            let empty = document.clipKeyMarks(layerID: layer.id).filter(\.isHollow).map { seconds($0.documentMS) }
+            node.emptyKeys = empty.isEmpty ? nil : empty
+        }
         switch layer.content {
         case .image(let ref):
             node.pixels = Size(width: tidy(ref.pixelSize.width), height: tidy(ref.pixelSize.height))
@@ -412,7 +538,7 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         case .group(let group):
             node.layout = group.layout.map(Layout.make)
             node.look = looks.look(of: group)
-            let children = summarize(group.children, looks: looks, budget: &budget)
+            let children = summarize(group.children, in: document, looks: looks, budget: &budget)
             node.children = children.isEmpty ? nil : children
         case .paint(let paint):
             var media: [String] = []

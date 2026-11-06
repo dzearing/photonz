@@ -22608,3 +22608,11 @@ What's next: nothing on this task. Open question: whether a painted Background s
 ## 2026-11-06: an icon frame's white stays out of its SVG
 
 An icon frame's untouched white now leaves Export and Copy with the canvas, and the frame's cut goes too when nothing reaches past it. A chosen colour stays, the Export sheet's row opens ticked on it, and unticking it is `.dropChosen`. Screen frames are unchanged. `writeSVG` gains `lacks` and `carries` claims. Open question in the audit: whether a hand drawn square frame of 512 or less should count as an icon here.
+
+## 2026-11-06: an agent can key a layer
+
+Changed: `set_keys`, `remove_keys` and `set_timing` (`AgentKeys.swift`) write the keys a person sets, and `read_document` shows them. A keyed picture now answers `set_playhead`, `video_frame`, `contact_sheet`, `render_picture` and `play_pause`, and `export` writes a moving SVG. Two bugs fixed on the way: an SVG ignored a two-key motion's own curves, and a keyed picture played frozen on the canvas under a green walk (a stale crisp tile). New walk steps `agentTool` and `expectPictureMoves`.
+
+Next: `ask-animates-what-it-makes-an-animated-svg-icon` teaches Ask to use the tools.
+
+Open: a looping motion also stands still on the canvas, with a different cause (`a-looping-motion-moves-on-the-canvas-while-it-pl`, filed). The SVG has not been watched in a real browser.

@@ -2816,6 +2816,38 @@ private final class Run {
             try writePNG(image, name: name)
             note(number, step.name, "\(name).png \(image.width)x\(image.height) px at \(scale)x")
 
+        case .expectPictureMoves(let seconds):
+            let canvas = try requireCanvas()
+            guard let before = canvas.playtestPicture() else {
+                throw Failure(description: "expectPictureMoves: the canvas drew no picture")
+            }
+            try await Task.sleep(for: .seconds(seconds))
+            guard let after = canvas.playtestPicture() else {
+                throw Failure(description: "expectPictureMoves: the canvas drew no picture")
+            }
+            let difference = CanvasNSView.playtestPictureDifference(before, after)
+            print("    the canvas's picture differs by \(difference) across \(seconds)s")
+            guard difference > 0 else {
+                throw Failure(description: "the canvas's picture stood still for \(seconds)s")
+            }
+        case .agentTool(let tool, let arguments):
+            let editor = try requireEditor()
+            let filled = arguments.replacingOccurrences(of: "$picked", with: editor.selectedLayerID?.uuidString ?? "")
+            guard let json = try? AgentJSON.parse(Data(filled.utf8)) else {
+                throw Failure(description: "agentTool \(tool): its arguments are not JSON")
+            }
+            switch AgentTools.request(tool: tool, arguments: json) {
+            case .failure(let refused):
+                throw Failure(description: "agentTool \(tool): \(refused.message)")
+            case .success(let request):
+                let answer = await AgentWork.run(request)
+                let said = answer.content.compactMap { part -> String? in
+                    if case .text(let words) = part { return words }
+                    return nil
+                }.joined(separator: " ")
+                if answer.isError { throw Failure(description: "agentTool \(tool): \(said)") }
+                print("    \(tool): \(said.prefix(600))")
+            }
         case .writeSVG(let name, let background, let frameName, let lacks, let carries):
             let editor = try requireEditor()
             guard let whole = editor.document else {

@@ -86,7 +86,7 @@ extension EditorState {
         if let wanted = call.on, let now = isOn(call.id), wanted == now { return }
         switch call.id {
         // Sequence: playing
-        case .playPause: toggleDocumentPlayback()
+        case .playPause: if isKeyedPicture { toggleMotionPreview() } else { toggleDocumentPlayback() }
         case .playInToOut: playInToOut()
         case .playBackward: shuttle(.reverse)
         case .stop: shuttle(.stop)
@@ -428,7 +428,8 @@ extension EditorState {
         let placed = placedLayerInHand
         let word = captionWordInHand
         switch call.id {
-        case .playPause, .playBackward, .playForward: return timed
+        case .playPause: return timed || isKeyedPicture
+        case .playBackward, .playForward: return timed
         case .playInToOut: return canPlayInToOut
         case .stop: return isDocumentPlaying
         case .goToPreviousEdit: return canGoToEditPoint(forward: false)

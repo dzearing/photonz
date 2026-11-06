@@ -47,10 +47,14 @@ enum AgentVideoWork {
         case .applyZooms(let id, let clip):
             return try applyZooms(video(id), clip: clip)
         case .setPlayhead(let id, let atMS):
-            let editor = try video(id)
-            let length = editor.document?.documentDurationMS ?? 0
+            let editor = try AgentDocuments.editor(id).get()
+            let document = try AgentWork.document(of: editor)
+            guard document.hasKeyClock else {
+                throw Failure("\(AgentWork.title(of: editor)) is a picture with no keys, so it has no playhead. set_keys gives it one.")
+            }
+            let length = AgentWork.timedLengthMS(document)
             guard atMS <= length else {
-                throw Failure("The video is \(AgentContactSheet.label(ms: length)) long; seconds must be inside it.")
+                throw Failure("It is \(AgentContactSheet.label(ms: length)) long; seconds must be inside it.")
             }
             editor.moveDocumentPlayhead(toMS: atMS)
             return .json(["playheadSeconds": Double(editor.documentTimeMS) / 1000])
