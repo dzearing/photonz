@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 74,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:58:49.976Z",
-  "updated": "2026-11-05T14:59:11.072Z",
+  "updated": "2026-11-06T10:56:04.351Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-11-05 on the probe built 00:05 from df457197. queue/manager/shots/2026-11-05-walks/m3.json writeSVG frame Frame with the default background of drop: '<rect x=\"0\" y=\"0\" width=\"24\" height=\"24\" fill=\"#FFFFFF\"/>' sits under the path. m7.json copies the frame and readClipboard svg shows the same rect in a 408 byte public.svg-image. The Export sheet photographed in m2.json (Frame, A web page, SVG) has no Background row. Cause, read not run: SVGExport.backdrop(in:flatImages:) only recognises a flat bottom layer covering the canvas, and exportTarget(frameID:) keeps the frame's surface. The two tasks that left the canvas out (an-icon-exported-as-svg-comes-out-with-nothing-b, an-icon-exported-as-a-picture-can-come-out-with) never covered a frame. Decided here: a new icon frame's default white counts as not drawn, so it drops by default, and a surface the person set is kept unless they say otherwise. The first-class check is objective icon-export: 'nothing behind the icon that was not drawn'. Related, not this task: copying-an-icon-carries-the-white-canvas-the-exp is the picture on the clipboard from a blank canvas. The clip-1 clipPath round the frame goes too if nothing reaches past the frame.",
@@ -28,6 +28,59 @@
     {
       "t": "2026-11-05T14:59:11.071Z",
       "note": "seq 137.5 -> 74"
+    },
+    {
+      "t": "2026-11-06T10:19:57.560Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-06T10:41:10.204Z",
+      "note": "owns these walks: icon-frame-white-stays-out-walk"
+    },
+    {
+      "t": "2026-11-06T10:55:53.568Z",
+      "note": "Reproduced first on today's probe: queue/manager/shots/2026-11-05-walks/m3.json wrote the white rect and clip-1 into 3-union.svg."
+    },
+    {
+      "t": "2026-11-06T10:55:53.638Z",
+      "note": "Chose no Background row on a screen frame over a ticked row, because the task says a screen exports exactly as it does today and its surface is part of the screen."
+    },
+    {
+      "t": "2026-11-06T10:55:53.704Z",
+      "note": "Chose reading the frame's colour over a new stored 'chosen' mark, because a surface is set from several places and a mark would change the file format for one edge case: white picked by hand reads as untouched, and the Export row brings it back."
+    },
+    {
+      "t": "2026-11-06T10:55:53.774Z",
+      "note": "Chose treating a rounded, shadowed, faded or moving white frame as chosen, because a rounded white tile is the icon's own shape."
+    },
+    {
+      "t": "2026-11-06T10:55:53.840Z",
+      "note": "Chose top level frames only, because an icon inside a screen has the screen behind it and losing its white would change how the screen looks."
+    },
+    {
+      "t": "2026-11-06T10:55:53.907Z",
+      "note": "Corrected a wrong turn: I said the leaving-the-frame check ignored the motion's pivot. It does not (turnPivot reads it), and the two pivot tests passed unchanged. They stay as cover."
+    },
+    {
+      "t": "2026-11-06T10:55:53.974Z",
+      "note": "left rough: a shape swinging near the edge can keep the frame's clip because reach is measured from its padded box. The sample bell reads 24.48 against ink of about 23.8 (worked by hand, not measured). The clip paints nothing, and erring this way never lets ink past the frame. Did not earn a task."
+    },
+    {
+      "t": "2026-11-06T10:55:54.040Z",
+      "note": "left rough: frames are Next only (next-frames), so Current cannot make an icon frame, but a Next file opened in Current would get this rule on a canvas export. Not tested in Current. Did not earn a task."
+    },
+    {
+      "t": "2026-11-06T10:55:54.108Z",
+      "note": "Verified: Scripts/test.sh exit 0; icon-frame-white-stays-out-walk green at defaults; 16 related walks green; tutorial-export-an-animated-svg-walk green with a new claim that the moving frame lacks #FFFFFF. Pictures opened: sheet unticked, sheet chosen, dark page. Audit rough items stay in this log, none clears the follow-up bar."
+    },
+    {
+      "t": "2026-11-06T10:56:04.349Z",
+      "note": "An icon frame's untouched white now stays out of Export and Copy, still and moving, with the clip gone when nothing reaches past the frame. A chosen colour stays, the Export sheet row appears and opens ticked on it, and screens are unchanged. Verified by Scripts/test.sh, icon-frame-white-stays-out-walk at Next defaults, 16 related walks, the animated tutorial walk, and a browser on a dark page."
     }
-  ]
+  ],
+  "started": "2026-11-06T10:19:57.559Z",
+  "walks": [
+    "icon-frame-white-stays-out-walk"
+  ],
+  "completed": "2026-11-06T10:56:04.350Z"
 }

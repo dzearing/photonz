@@ -15843,3 +15843,17 @@
 {"t":"2026-11-06T09:55:44.657Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-06T10:00:48.242Z","ev":"task_walks","id":"a-picture-made-for-an-icon-works-like-an-icon-gu","walks":["icon-picture-from-the-new-sheet-walk","a-square-picture-is-not-an-icon-walk","a-saved-icon-opens-as-an-icon-walk","ask-tweaks-an-icon-walk"]}
 {"t":"2026-11-06T10:01:14.388Z","ev":"task_done","id":"a-picture-made-for-an-icon-works-like-an-icon-gu","from":"in_progress","note":"File, New, Image, Icon and App Icon now make a picture whose canvas answers as an icon frame does: keylines, whole units for the Pen, starting weight, Artboard pivot, previews once something is drawn. The window opens in Icon, also for a saved one and for Ask's icon; a square picture stays Image. Commit fa789f6f. Verified: IconCanvasTests, 4 walks at Next defaults with pictures opened, 28 of 29 icon-named walks (icon-stroke-weight-walk already failing on 2026-11-05, folded into walks-that-fail-in-the-full-sweep-26), Scripts/test.sh exit 0 on the last run after two unrelated video failures under load, logged on the-full-test-suite-stays-green-on-a-busy-mac-wh."}
+{"t":"2026-11-06T10:17:53.815Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-06T10:19:57.381Z","ev":"slice_pass","walks":29,"passed":28,"failed":1,"seconds":788,"of":1109,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-06T10:19:57.565Z","ev":"task_started","id":"an-icon-frame-s-white-square-stays-out-of-its-sv","title":"An icon frame's white square stays out of its SVG","priority":"p1-high"}
+{"t":"2026-11-06T10:41:10.206Z","ev":"task_walks","id":"an-icon-frame-s-white-square-stays-out-of-its-sv","walks":["icon-frame-white-stays-out-walk"]}
+{"t":"2026-11-06T10:55:53.570Z","ev":"task_note","id":"an-icon-frame-s-white-square-stays-out-of-its-sv"}
+{"t":"2026-11-06T10:55:53.640Z","ev":"task_note","id":"an-icon-frame-s-white-square-stays-out-of-its-sv"}
+{"t":"2026-11-06T10:55:53.706Z","ev":"task_note","id":"an-icon-frame-s-white-square-stays-out-of-its-sv"}
+{"t":"2026-11-06T10:55:53.776Z","ev":"task_note","id":"an-icon-frame-s-white-square-stays-out-of-its-sv"}
+{"t":"2026-11-06T10:55:53.842Z","ev":"task_note","id":"an-icon-frame-s-white-square-stays-out-of-its-sv"}
+{"t":"2026-11-06T10:55:53.909Z","ev":"task_note","id":"an-icon-frame-s-white-square-stays-out-of-its-sv"}
+{"t":"2026-11-06T10:55:53.976Z","ev":"task_note","id":"an-icon-frame-s-white-square-stays-out-of-its-sv"}
+{"t":"2026-11-06T10:55:54.042Z","ev":"task_note","id":"an-icon-frame-s-white-square-stays-out-of-its-sv"}
+{"t":"2026-11-06T10:55:54.110Z","ev":"task_note","id":"an-icon-frame-s-white-square-stays-out-of-its-sv"}
+{"t":"2026-11-06T10:56:04.352Z","ev":"task_done","id":"an-icon-frame-s-white-square-stays-out-of-its-sv","from":"in_progress","note":"An icon frame's untouched white now stays out of Export and Copy, still and moving, with the clip gone when nothing reaches past the frame. A chosen colour stays, the Export sheet row appears and opens ticked on it, and screens are unchanged. Verified by Scripts/test.sh, icon-frame-white-stays-out-walk at Next defaults, 16 related walks, the animated tutorial walk, and a browser on a dark page."}
