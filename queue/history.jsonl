@@ -15778,3 +15778,16 @@
 {"t":"2026-11-06T00:19:24.337Z","ev":"task_created","id":"find-out-why-the-held-out-set-lost-points-on-202","priority":"p2-normal","title":"Find out why the held-out set lost points on 2026-11-05"}
 {"t":"2026-11-06T00:19:24.454Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-06T00:19:45.363Z","ev":"task_done","id":"ask-makes-icons-that-are-icons-one-subject-clean","from":"in_progress","note":"Shipped in 7c581639 and f0e55cc4. The balloon reads as popping: 88.8, 88, 85.6, 88.8, at its bar of 7 on three readings of four (one read 7 and 6), named 3 of 3 each, against 55.4 and 25.8 before. Icon tweaks work in place with one undo: 8 of 8 two-turn cases against 3 of 7, walked at Next defaults. 14 icon cases 90.8 against 88.3. Held-out fell to 62.7 from 68.4, mostly more time-outs, cause unknown: filed as find-out-why-the-held-out-set-lost-points-on-202. The tear reads lower than no tear on an egg and a bubble: filed as a-broken-icon-reads-as-what-breaks-it-a-crack-th."}
+{"t":"2026-11-06T00:50:19.820Z","ev":"slice_pass","walks":14,"passed":14,"failed":0,"seconds":1805,"of":1098,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-06T00:50:20.013Z","ev":"task_started","id":"animating-a-picture-is-as-simple-as-setting-a-mo","title":"Animating a picture is as simple as setting a moment and changing things: design it, then build it","priority":"p1-high"}
+{"t":"2026-11-06T00:51:45.749Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T01:05:54.502Z","ev":"decision_opened","id":"animating-a-picture-is-as-simple-as-setting-a-mo-should-animating-a-picture-work","taskId":"animating-a-picture-is-as-simple-as-setting-a-mo","question":"Should animating a picture work like this prototype: press Add Key (1), and from then on a change to that layer lands on the hollow diamond at the playhead (2), with a slim bar (3) and the video timeline's rows (4) under the picture?"}
+{"t":"2026-11-06T01:06:35.673Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T01:06:35.739Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T01:06:35.805Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T01:06:35.870Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T01:06:35.934Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T01:06:35.998Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T01:06:36.073Z","ev":"task_note","id":"ask-animates-what-it-makes-an-animated-svg-icon"}
+{"t":"2026-11-06T01:06:36.143Z","ev":"task_note","id":"an-agent-can-set-read-and-change-a-layer-s-keys"}
+{"t":"2026-11-06T01:13:55.856Z","ev":"task_blocked","id":"animating-a-picture-is-as-simple-as-setting-a-mo","from":"in_progress","note":"Design finished and with the user: interactive prototype at docs/design/mocks/pages/picture-keys.html (commit 93f105a6), card animating-a-picture-is-as-simple-as-setting-a-mo-should-animating-a-picture-work with a marked picture and a brief. The task's own checklist says to wait for approval before building, so nothing in the app changed."}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:58:50.343Z",
-  "updated": "2026-11-05T14:59:11.146Z",
+  "updated": "2026-11-06T01:06:36.142Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of ask-animates-what-it-makes-an-animated-svg-icon so its wait on the balloon holds only what needs a good icon. The 2026-11-05 digest raised this: the tools for keying layers do not need a good balloon, only animation's last try does. That wait stays exactly as intake set it. Files: AgentTools.swift, AskPlanning.swift, LayerMotion, MotionProperty, KeyMoments.swift, PropertyKeys.swift, SVGMotionExport. Use the keys the video editor uses, since animating-a-picture-is-as-simple-as-setting-a-mo is designing one shared way of keying; if that design changes the model, the tools follow it. No code for a particular subject or animation (Hard rules in queue/bin/runner-prompt.md). Nothing here teaches Ask when to animate: that stays in the task it came from.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-11-05T14:59:11.145Z",
       "note": "seq 139.6875 -> 76"
+    },
+    {
+      "t": "2026-11-06T01:06:36.141Z",
+      "note": "Related: animating-a-picture-is-as-simple-as-setting-a-mo proposes keys on a picture with no video duration (a lap). Its card is with the user; the agent's key calls should not assume hasTime."
     }
   ]
 }

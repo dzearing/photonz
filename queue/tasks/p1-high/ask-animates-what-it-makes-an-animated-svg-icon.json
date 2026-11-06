@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:20.100Z",
-  "updated": "2026-11-05T14:59:10.848Z",
+  "updated": "2026-11-06T01:06:36.072Z",
   "deps": [
     "ask-makes-icons-that-are-icons-one-subject-clean",
     "an-agent-can-set-read-and-change-a-layer-s-keys"
@@ -57,6 +57,10 @@
     {
       "t": "2026-11-05T14:59:10.847Z",
       "note": "manager 2026-11-05: the tools on this checklist's first line moved to an-agent-can-set-read-and-change-a-layer-s-keys, which has no wait on the balloon, and this task now also depends on it. The wait on the icon task stays as intake set it. Build what is left here: Ask planning the motion, the tweaks, the eval and the try path."
+    },
+    {
+      "t": "2026-11-06T01:06:36.071Z",
+      "note": "Waiting on the user's answer to the card on animating-a-picture-is-as-simple-as-setting-a-mo: if approved, a picture is animated with keys on a lap and the Motion entries' From and To form stops being offered, so build Ask's animation on keys, not on that form."
     }
   ]
 }
