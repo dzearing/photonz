@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:58:50.099Z",
-  "updated": "2026-11-06T18:49:52.067Z",
+  "updated": "2026-11-06T21:48:25.439Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-11-05: queue/manager/shots/2026-11-05-walks/m7.json, action showGrid on a 24 frame, picture queue/manager/shots/2026-11-05-grid-on-24-unit-frame.png: lines about 218 pixels apart on a frame of about 1310, so 4 units, drawn across the whole canvas. Whole-unit snapping itself works (IconSnap.swift). Mock: docs/design/mocks/pages/icon-draw-wt.html, 'the quiet 24 unit grid' and the Grid & snap group. The grid stays in the View menu: that was settled by the card on 2026-10-20 and the placement contract row for the View menu, so add no control. Objective icon-grid success line 1. The canvas grid's level-of-detail ladder is in UX-PATTERNS D16; the units are the frame's own, not a second grid setting.",
@@ -32,6 +32,39 @@
     {
       "t": "2026-11-06T18:49:52.066Z",
       "note": "seq 78 -> 20"
+    },
+    {
+      "t": "2026-11-06T20:58:58.730Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-06T21:05:56.718Z",
+      "note": "Reproduced with Scripts/playtest/a-24-unit-artboard-rules-itself-walk.json on today's build: zoom 32, grid report 'over · pulls to 4', 5 lines cross the frame each way, four units apart. Adversarial pass before building: (1) the canvas grid's own lines must leave the artboard or two grids fight inside it; (2) moves, resizes and arrow keys pull to canvas grid lines, so once those lines are gone from the artboard they would land on lines nobody can see, and must land on units instead; (3) a Photoshop or Illustrator user expects pixel-grid lines only once zoomed in far enough, which the 6 point floor gives; (4) the mock has a stronger line every 4 units as well as the unit lines, so both are built."
+    },
+    {
+      "t": "2026-11-06T21:34:00.400Z",
+      "note": "owns these walks: a-24-unit-artboard-rules-itself-walk"
+    },
+    {
+      "t": "2026-11-06T21:48:25.235Z",
+      "note": "Chose units only with the Grid on over always showing them because the mock's igGrid stays off until step 1 turns the grid on. Chose to move the grid's pull onto the units inside a ruled artboard over leaving it on the canvas grid because a drag would otherwise land on lines no longer drawn there. Chose keyline rounding (whole points plus a half) over device pixel rounding because most keylines sit on a unit and any other rounding set them a pixel apart: measured 62 to 66 pixel gaps before, 64 everywhere after. Chose the canvas grid's own ink and strength over a new colour so the units read as the grid getting finer."
+    },
+    {
+      "t": "2026-11-06T21:48:25.300Z",
+      "note": "Measured with Scripts/measure-icon-units.py on the real capture: 23 lines each way, gap 64 pixels, PASS. The earlier picture queue/manager/shots/2026-11-05-grid-on-24-unit-frame.png FAILS it (it also counts keylines and handles there; by eye 5 grid lines, four units apart). Contrast off the surface: unit 21.5 and fourth unit 39.6 on white against keyline 124; 15.7 and 29.3 on near black against 154. Pictures opened: grid-on, drawn, dark-frame, six-points and the sheet beside the mock; each shows the ruled artboard. Neighbouring walks green: 15 grid, icon and tutorial walks. Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-06T21:48:25.363Z",
+      "note": "left rough: under six points a unit nothing is ruled, so a 1024 app icon at fit zoom keeps the canvas grid across it; a grid set to Columns still rules both ways on an artboard; while the grid's zero point is being placed the canvas lines come back over the artboard. None earned a task: each is a choice, in the audit's rough list or here, and nothing is broken. The snap dots were folded into icon-snapping-reaches-what-the-icon-mock-draws."
+    },
+    {
+      "t": "2026-11-06T21:48:25.437Z",
+      "note": "With the Grid on, icon frames and icon pictures are ruled one line per unit from the corner, a stronger line every fourth, under the keylines; the canvas grid steps round them and drags, arrow keys and text land on the units. bbf1f6c8. Verified by a-24-unit-artboard-rules-itself-walk at Next defaults, 23 lines each way measured on the capture, Scripts/test.sh green."
     }
-  ]
+  ],
+  "started": "2026-11-06T20:58:58.729Z",
+  "walks": [
+    "a-24-unit-artboard-rules-itself-walk"
+  ],
+  "completed": "2026-11-06T21:48:25.438Z"
 }
