@@ -1,0 +1,28 @@
+{
+  "id": "an-animated-icon-s-flap-reads-and-a-drawn-line-e",
+  "title": "An animated icon's flap reads, and a drawn line ends its lap cleanly",
+  "goal": "Ask's moving icons still fall short on a few kinds of motion: an envelope's flap crosses its body, a plane stops cut off at the top edge, and lines that draw themselves jump when the loop restarts. Make these read as well as the rest, and measure the work on requests nobody tuned for.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 9.375,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-06T18:22:08.469Z",
+  "updated": "2026-11-06T18:22:08.472Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ask-animates-what-it-makes-an-animated-svg-icon, run 20261106-171511-ask: envelope 4, plane 6, wifi loops 3. AskMotionCheck leaves trimStart and trimEnd out of its loop check on purpose, since a checkmark set to end where it began never drew. Rules in AskMotion.principles must stay general: nothing per subject. Pictures: queue/audits/2026-11-06-ask-animates-after-envelope-opening.png and -after-wifi-signal.png.",
+  "acceptance": [
+    "An animated envelope opening reads as asked at 7 or more in the eval, its flap turning on the top edge without crossing the body",
+    "A paper plane taking off is never cut off while it is in the frame: it stays inside or leaves completely, reading 7 or more",
+    "A motion that draws lines on loops at 7 or more: wifi no longer shrinks to a row of dots before the lap restarts",
+    "The held-out set gains animated requests written by someone who has not tuned the prompt, and its total is reported"
+  ],
+  "log": [
+    {
+      "t": "2026-11-06T18:22:08.471Z",
+      "note": "created (manual)"
+    }
+  ]
+}

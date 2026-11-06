@@ -5,11 +5,11 @@
   "epic": "ui-prototyping",
   "priority": "p1-high",
   "seq": 70,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:44:52.741Z",
-  "updated": "2026-11-06T08:41:13.429Z",
+  "updated": "2026-11-06T15:57:57.641Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'When we make a component, i'm not sure how to preview it interactively. e.g. i make a page with a bunch of components and want to preview it and hover over things or click on things...is this possible already?' and 2026-11-05: 'what happened to previewing the states of controls' (the intake window had proposed Preview mode and not filed it). Today: components have looks per state (ComponentVersionMatching names them), nothing plays them. Objective ui-prototyping ('Click-through prototyping') was staged later; this is its first step, asked for by the user. Mock reference: docs/design/mocks/pages/ui-prototype.html.",
@@ -74,6 +74,10 @@
     {
       "t": "2026-11-06T08:41:13.425Z",
       "note": "Design finished and with the user: interactive prototype at docs/design/mocks/pages/component-preview.html (commit 5c81ba66), card preview-a-page-of-components-and-use-it-hover-pr-should-a-page-of-components-work with two marked pictures and a brief. The task's own checklist says to build after approval, so no app code is written. The first checklist item is the only one finished; the rest wait on the answer. If the card comes back as option c, the next runner changes the prototype from the note and opens a new card; it does not build."
+    },
+    {
+      "t": "2026-11-06T15:57:57.640Z",
+      "note": "decision \"Should a page of components work like this prototype: press Preview (1), then Save shows its Hover look under the pointer (2), a clicked switch stays On (3), one tab stays picked (4), and a pill says how to leave (5)?\" resolved: Build it as shown: a Preview button in the title bar, View ▸ Preview and ⌘Return to go in, Esc to leave, and one small pill on the canvas while you are in"
     }
   ],
   "started": "2026-11-06T08:25:38.051Z"

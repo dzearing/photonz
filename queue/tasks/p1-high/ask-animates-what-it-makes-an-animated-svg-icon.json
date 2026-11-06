@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:20.100Z",
-  "updated": "2026-11-06T12:14:52.519Z",
+  "updated": "2026-11-06T18:22:24.999Z",
   "deps": [
     "ask-makes-icons-that-are-icons-one-subject-clean",
     "an-agent-can-set-read-and-change-a-layer-s-keys"
@@ -65,6 +65,43 @@
     {
       "t": "2026-11-06T12:14:52.518Z",
       "note": "From an-agent-can-set-read-and-change-a-layer-s-keys, 2026-11-06: the key tools are built and in Ask's reach only for a request with animate, animation, keyframe or motion in it, or a document with a lap (AskTools.keyDoing, asksForMotion). No instructions teach them yet. contact_sheet and video_frame now work on a keyed picture, which this task's eval needs. Widen the gate here if a request like 'a spinning loader' must reach them."
+    },
+    {
+      "t": "2026-11-06T12:16:00.369Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-06T13:02:50.043Z",
+      "note": "Before, run 20261106-122500-ask at 47fe531e: 15.0 of 100, reads-as-asked mean 1.8, on 12 animated cases. Not quite 'none can animate': the key tools already reach an animated request, so 6 of 12 got some keys, and only the heart read (6)."
+    },
+    {
+      "t": "2026-11-06T14:26:01.451Z",
+      "note": "Second measure, 20261106-135201-ask: two bugs from the previous task found through the eval. A key's value could only be a number and its pivot only a word (modelSchema keeps an anyOf's first choice), and set_keys wrote its keys before saying what they were about (schema order). Pivot sent as fractions flew a gear off the canvas. All three fixed with tests; a design step and a rule that a change of state is movement added next."
+    },
+    {
+      "t": "2026-11-06T15:25:50.984Z",
+      "note": "Run 20261106-145432-ask: 66.2, reads-as-asked mean 6.5, 6 of 12 at 7 or more, plans about 90 s against 190 s once this route was shown 3 tools. Found on its trash can: a box no taller than its own inside line was missing from every SVG, still or moving (SVGExport.boxRings skipped a ring with no line left to ride). Fixed with a test. Chose widening the viewBox over sending parts back for room, because told to fit, the model shrank its own motion: flap 180 to 90, letter 3 to 1."
+    },
+    {
+      "t": "2026-11-06T18:22:08.581Z",
+      "note": "owns these walks: ask-animates-an-icon-walk"
+    },
+    {
+      "t": "2026-11-06T18:22:24.760Z",
+      "note": "Pictures opened against the goal: before balloon (a still in all 16 frames), after balloon (swells, shards fly and fade, it fades back), trash (lid swings open on its hinge, overshoots, holds, closes), checkmark, bell, spinner, envelope (weak: flap crosses the body), wifi (arcs shrink to dots before the restart), the three window captures, Chrome frames, parity frames. Chose WebKit seeking plus Chrome seeking over a timed Chrome run because virtual time does not line up with SVG time: the first Chrome read showed a blank checkmark that was the measurement, not the file."
+    },
+    {
+      "t": "2026-11-06T18:22:24.824Z",
+      "note": "left rough: an animated icon's SVG has fractional numbers since a 24 grid is drawn at 512; plays the same, no person is stopped by it. Still icons lose stroke-dasharray quietly at the SVG reader; only the moving route refuses it. Neither earned a task yet. Held-out NOT run again (about 2.4 h): last total 62.7 at f0e55cc4; it has no animated case and the still icon rules were compared with 47fe531e and are byte identical, pinned by a test. The bar on reads-as-asked is met by one run only: 7.5 mean, 10 of 12 at 7 or more, run 20261106-171511-ask."
+    },
+    {
+      "t": "2026-11-06T18:22:24.997Z",
+      "note": "Ask makes an animated SVG icon from one request, keyed on the strip in one undo step, tweaks in place through change_keys (e1ac1119, 729ac165). 12 animated cases 15.0 to 77.3, reads as asked 1.8 to 7.5, 10 of 12 at 7 or more, one run. Tweaks 7 of 7, each one Command Z back byte for byte. ask-animates-an-icon-walk passes at Next defaults. Plays in WebKit and Chrome, same as the timeline. Scripts/test.sh exit 0. Held-out not run again; said in the audit. Envelope 4, plane 6 and wifi's loop filed as an-animated-icon-s-flap-reads-and-a-drawn-line-e."
     }
-  ]
+  ],
+  "started": "2026-11-06T12:16:00.368Z",
+  "walks": [
+    "ask-animates-an-icon-walk"
+  ],
+  "completed": "2026-11-06T18:22:24.998Z"
 }
