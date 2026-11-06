@@ -2,6 +2,23 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-11-06: Ask animates what it makes
+
+One request now gives an animated SVG icon that loops and stays editable: Ask
+designs the motion in words, draws every part it needs, and keys them in the same
+plan (`AskMotion.swift`, `docs/design/ask.md`, "A moving icon"). `change_keys` does
+tweaks in place. The eval has 12 animated cases and 7 tweaks, judged on the file as
+WebKit plays it: 15.0 to 77.3, reads-as-asked 1.8 to 7.5, 10 of 12 at 7 or more; 7
+of 7 tweaks, each one Command Z back.
+
+Playing the file found what the document hid: a key's value could only be a number
+(`modelSchema`), set_keys wrote its numbers before naming them, and a thin outlined
+bar was missing from every SVG. All fixed with tests.
+
+Open: the envelope reads 4 and the plane 6, and a run is one reading: filed. The
+held-out total was not run again (last 62.7, f0e55cc4): it has no animated case and
+prompts for anything else are unchanged, pinned by a test.
+
 ## 2026-11-04: Ask makes icons that are icons
 
 An icon request now takes its own route (`AskIcon`, `AskIconCheck`): the model

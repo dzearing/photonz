@@ -493,6 +493,22 @@ struct AgentChangeKeysTests {
         #expect(document.motionCycleLengthMS == 2000)
     }
 
+    @Test("Naming every keyed layer is the whole motion, so the lap goes with it: a slowed spinner never stops half way round")
+    func everyLayerNamed() throws {
+        var (document, box, dot) = try Self.keyed()
+        _ = try document.agentChangeKeys(AgentChangeKeys(layers: [box.uuidString, dot.uuidString], speed: 0.5)).get()
+        #expect(Self.times(document, box, .position) == [0, 2000, 4000])
+        #expect(document.motionCycleLengthMS == 4000)
+    }
+
+    @Test("A key slowed past the end of the lap makes the lap longer, rather than never being reached")
+    func pastTheLap() throws {
+        var (document, _, dot) = try Self.keyed()
+        _ = try document.agentChangeKeys(AgentChangeKeys(layers: [dot.uuidString], speed: 0.2)).get()
+        #expect(Self.times(document, dot, .rotation) == [1000, 3500])
+        #expect(document.motionCycleLengthMS == 3500)
+    }
+
     @Test("Further scales each value from where it starts, and -1 turns it the other way")
     func further() throws {
         var (document, box, dot) = try Self.keyed()

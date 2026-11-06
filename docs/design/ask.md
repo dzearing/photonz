@@ -1179,7 +1179,9 @@ so the second is left still and named.
 A follow-up on a picture that moves (`AskMotion.tweakRules`) keeps the motion:
 `change_keys` for faster, slower, further and the other way, `set_timing` for a
 pause when it loops, `set_keys` with `replace` for anything else. Arithmetic over
-every key is what a small model gets wrong, so one call does it.
+every key is what a small model gets wrong, so one call does it. Naming every keyed
+layer is the whole motion, so the lap changes with it, and a key slowed past the end
+of the lap grows the lap: a spinner kept to its old lap stopped half way round.
 
 The eval's `animated` cases and `"motion": true` tweaks (`Scripts/ask-eval/README.md`)
 judge the file as WebKit plays it, not the document. That is how a lid missing from
@@ -1187,6 +1189,11 @@ every SVG was found: a box no taller than its own inside line had no line left t
 ride, and `boxRings` skipped it while the canvas drew it.
 
 ## Try paths (walks)
+
+`ask-animates-an-icon-walk`: an animated SVG icon from one request at Next
+defaults, playing on the canvas, copied as a looping SVG, a follow-up changing its
+keys in place, and one Command Z taking that back. `Scripts/ask-motion-parity-drill.mjs`
+puts the timeline's frames beside the file's as WebKit plays it.
 
 * `Scripts/playtest/ask-annotates-a-screenshot-walk.json`: settings screenshot,
   "annotate the ux with measurements around the major ui elements".

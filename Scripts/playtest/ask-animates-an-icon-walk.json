@@ -119,9 +119,7 @@
     {
       "do": "readClipboard",
       "stage": "3-copied",
-      "svgAsText": true,
-      "svg": true,
-      "svgSameAs": "made"
+      "textHas": "repeatCount=\"indefinite\""
     },
     {
       "do": "press",

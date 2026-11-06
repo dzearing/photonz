@@ -493,12 +493,14 @@ extension PhotonzDocument {
         } else {
             targets = keyedLayers()
         }
+        // Naming every keyed layer is the whole motion, however it was said.
+        let whole = call.property == nil && Set(keyedLayers().map(\.id)).isSubset(of: Set(targets.map(\.id)))
         var work = self
         var values = 0
         for layer in targets {
             let motions = keyedMotions(of: layer).filter { motion in call.property.map { $0 == motion.property } ?? true }
             var lead = motions.compactMap { $0.keyframes.first?.atMS }.min() ?? 0
-            if call.layers == nil { lead = 0 }
+            if whole { lead = 0 }
             for motion in motions {
                 var stops = motion.keyframes
                 guard let first = stops.first else { continue }
@@ -532,11 +534,17 @@ extension PhotonzDocument {
         guard values > 0 else {
             return fail("nothing there to change\(call.property.map { " on \($0.rawValue)" } ?? ""). read_document lists what is keyed.")
         }
-        if let speed = call.speed, call.layers == nil, call.property == nil, !hasTime {
-            work.motionCycleMS = max(1, Int((Double(motionCycleLengthMS) / speed).rounded()))
+        if let speed = call.speed, !hasTime {
+            if whole {
+                work.motionCycleMS = max(1, Int((Double(motionCycleLengthMS) / speed).rounded()))
+            } else {
+                // A key past the end of the lap would never be reached.
+                let last = work.keyedLayers().flatMap { work.keyedMotions(of: $0) }.compactMap { $0.keyframes.last?.atMS }.max() ?? 0
+                if last > motionCycleLengthMS { work.motionCycleMS = last }
+            }
         }
         self = work
-        return .success(AgentKeysChanged(values: values, lapSeconds: hasTime ? nil : Double(motionCycleLengthMS) / 1000))
+        return .success(AgentKeysChanged(values: values, lapSeconds: hasTime ? nil : Double(work.motionCycleLengthMS) / 1000))
     }
 
     /// Every layer with a key on it, in the order they are listed.

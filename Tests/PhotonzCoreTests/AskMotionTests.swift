@@ -96,7 +96,8 @@ struct AskMotionTests {
         let talk = Self.conversation("a kite icon")
         let told = talk.messages.first?["content"]?.stringValue ?? ""
         #expect(!told.contains("change_keys"))
-        #expect(told.contains("break its outline"))
+        #expect(told.contains("never a plain circle standing in for it. An action or a change of state happens to the object itself: break its outline where it happens, leave a gap, take a piece away, tilt or open it, so it no longer looks whole and at rest. Then at most four small marks (short lines, fragments or an arrow) around that place, a gap of 2 away, never touching the object: marks stuck on a whole shape read as a sun or a target.\n- The look."))
+        #expect(!talk.offeredTools.contains { $0["function"]?["name"]?.stringValue == "set_keys" })
     }
 
     @Test("The model can write what a key holds: a tool call is held to its schema, so a place and a pivot must be in it")
