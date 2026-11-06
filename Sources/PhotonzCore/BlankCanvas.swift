@@ -50,6 +50,12 @@ public enum BlankCanvas {
         withIcons ? presets + iconPresets : presets
     }
 
+    /// Whether this row of the sheet makes an icon rather than a picture that
+    /// happens to be square (`PhotonzDocument.madeAsIcon`).
+    public static func makesAnIcon(presetID: String) -> Bool {
+        iconPresets.contains { $0.id == presetID }
+    }
+
     /// What the sheet opens on, so Return alone makes a canvas.
     public static let defaultPreset = presets[0]
 

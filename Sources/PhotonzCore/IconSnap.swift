@@ -200,8 +200,7 @@ extension PhotonzDocument {
     public func iconSnap(at point: CGPoint, keylines: Bool,
                          choices: IconSnapChoices = .all,
                          excluding: UUID? = nil) -> IconSnap? {
-        guard let id = iconFrameID(under: point), let box = canvasFrame(of: id),
-              let frame = layer(id: id) else { return nil }
+        guard let id = iconFrameID(under: point), let box = iconBox(of: id) else { return nil }
         var anchors: [CGPoint] = []
         var shapes: [CGRect] = []
         func gather(_ children: [Layer], at origin: CGPoint) {
@@ -243,7 +242,7 @@ extension PhotonzDocument {
                 }
             }
         }
-        if choices.geometry { gather(frame.children, at: box.origin) }
+        if choices.geometry { gather(iconContents(of: id), at: box.origin) }
         return IconSnap(frame: box, keylines: keylines && choices.keylines,
                         anchors: anchors, shapes: shapes, grid: choices.grid)
     }

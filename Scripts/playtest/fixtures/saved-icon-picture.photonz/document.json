@@ -1,0 +1,79 @@
+{
+ "canvasSize": [
+  512,
+  512
+ ],
+ "layers": [
+  {
+   "content": {
+    "annotation": {
+     "_0": {
+      "arrowheadScale": 1,
+      "arrowheadStyle": "triangle",
+      "captionFontSize": 20,
+      "captionPinned": false,
+      "captionRoundness": 1,
+      "colorHex": "#2F6FED",
+      "cornerRadius": 0,
+      "end": [
+       0,
+       0
+      ],
+      "headColorHex": "#2F6FED",
+      "lineEnd": "round",
+      "shape": "rectangle",
+      "start": [
+       0,
+       0
+      ],
+      "strokePosition": "inside",
+      "strokeWidth": 0
+     }
+    }
+   },
+   "frame": [
+    [
+     156,
+     156
+    ],
+    [
+     200,
+     200
+    ]
+   ],
+   "id": "66D03615-B788-4E30-9991-B80EFD654E22",
+   "isLocked": false,
+   "isVisible": true,
+   "name": "Glyph",
+   "style": {
+    "blendMode": "normal",
+    "blurRadius": 0,
+    "borderColorHex": "#2F6FED",
+    "borderWidth": 4,
+    "cornerRadius": 0,
+    "effects": [
+     {
+      "border": {
+       "colorHex": "#2F6FED",
+       "isOn": true,
+       "position": "inside",
+       "width": 4
+      },
+      "kind": "border"
+     }
+    ],
+    "opacity": 1,
+    "ringIsAnEffect": true
+   },
+   "transform": {
+    "flipHorizontal": false,
+    "flipVertical": false,
+    "rotation": 0,
+    "skewX": 0,
+    "skewY": 0
+   }
+  }
+ ],
+ "madeAsIcon": true,
+ "pixelScale": 1
+}

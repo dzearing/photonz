@@ -399,4 +399,53 @@ struct IconPreviewMotionPerfTests {
         MachineSpeed.check("one icon frame moved to a moment",
                            medianMS: median, baselineMS: 0.05)
     }
+
+    // MARK: - A picture made as an icon
+
+    /// What File, New, Image, Icon holds once something is drawn: a white
+    /// Background, marked, and a dark square in the middle of it.
+    private func iconPicture(store: ImageStore) throws -> PhotonzDocument {
+        let size = CGSize(width: 512, height: 512)
+        let white = try #require(SolidImage.make(size: size, hex: "#FFFFFF"))
+        var document = PhotonzDocument.withBaseImage(store.register(white))
+        document.madeAsIcon = true
+        let box = AnnotationContent(shape: .rectangle, strokeWidth: 0, start: .zero,
+                                    end: CGPoint(x: 256, y: 256), fillColorHex: "#101010")
+        document.addLayerDrawnOnFrame(Layer(name: "Box", content: .annotation(box),
+                                            frame: CGRect(x: 128, y: 128, width: 256, height: 256)))
+        return document
+    }
+
+    @Test("A picture made as an icon previews its whole canvas, white on Light and clear on Dark")
+    func canvasPreview() throws {
+        let store = ImageStore()
+        let document = try iconPicture(store: store)
+        let renderer = DocumentRenderer()
+        let id = PhotonzDocument.iconCanvasID
+        let light = try #require(renderer.iconPreview(for: id, in: document, store: store, side: 32))
+        let dark = try #require(renderer.iconPreview(for: id, in: document, store: store, side: 32,
+                                                     onDarkGround: true))
+        #expect(light.width == 32 && light.height == 32)
+        #expect(dark.width == 32 && dark.height == 32)
+        func corner(_ image: CGImage) -> [UInt8] {
+            var pixel = [UInt8](repeating: 0, count: 4)
+            let context = CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                    space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+            context.draw(image, in: CGRect(x: 0, y: 0, width: 32, height: 32))
+            return pixel
+        }
+        // The Background is the picture on Light and is left out on Dark.
+        #expect(corner(light)[3] == 255)
+        #expect(corner(dark)[3] == 0)
+    }
+
+    @Test("A square picture nobody made as an icon has no preview")
+    func noPreviewForASquare() throws {
+        let store = ImageStore()
+        var document = try iconPicture(store: store)
+        document.madeAsIcon = false
+        #expect(DocumentRenderer().iconPreview(for: PhotonzDocument.iconCanvasID, in: document,
+                                               store: store, side: 32) == nil)
+    }
 }

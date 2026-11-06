@@ -9,8 +9,9 @@ import SwiftUI
 /// in `onCreate`, so the empty window's card fills that window and the File
 /// menu can open a new one, from the same sheet.
 struct NewCanvasDialog: View {
-    /// Called with the chosen size when Create is pressed.
-    let onCreate: (CGSize) -> Void
+    /// Called with the chosen size when Create is pressed, and whether the row
+    /// picked makes an icon rather than a square picture.
+    let onCreate: (CGSize, Bool) -> Void
     /// Whether the canvas will arrive in a window of its own. The button says
     /// so, because the picture behind this sheet is not going anywhere and
     /// nobody should have to press Create to find that out.
@@ -70,7 +71,7 @@ struct NewCanvasDialog: View {
                 Button("Cancel", role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 Button(opensNewWindow ? "Create in New Window" : "Create") {
-                    onCreate(chosenSize)
+                    onCreate(chosenSize, BlankCanvas.makesAnIcon(presetID: selection))
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)

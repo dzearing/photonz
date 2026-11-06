@@ -56,6 +56,11 @@
       "seconds": 1.5
     },
     {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
       "do": "describe",
       "stage": "1-the-icon",
       "note": "the blank picture became the icon, drawn in lines"

@@ -74,9 +74,10 @@ extension EditorState {
     /// would be the worst thing on the screen.
     var iconPreviewPlacement: IconPreviews.Placement? {
         guard let frameID = iconPreviewFrameID, let document,
-              let authored = document.layer(id: frameID),
-              let icon = document.canvasBounds(of: frameID) else { return nil }
-        let sides = IconPreviews.sides(forFrameSize: authored.frame.size)
+              let size = document.iconSize(of: frameID),
+              let icon = document.canvasBounds(of: frameID) ?? document.iconBox(of: frameID)
+        else { return nil }
+        let sides = IconPreviews.sides(forFrameSize: size)
         guard !sides.isEmpty else { return nil }
         let playable = iconPreviewsPlayable
         let inset = EditorChromeLayout.cornerInset
@@ -113,14 +114,12 @@ extension EditorState {
     /// A picture that has not landed yet is nil and leaves its place on the
     /// ground empty, so the card keeps its shape.
     func iconPreviewTiles(sides: [CGFloat]) -> [IconPreviewTile] {
-        guard let frameID = iconPreviewFrameID, let document,
-              let authored = document.layer(id: frameID) else { return [] }
+        guard let frameID = iconPreviewFrameID, let document else { return [] }
         let source = iconPreviewSource(document, frameID: frameID)
-        let frame = source.layer(id: frameID) ?? authored
         return sides.map { side in
             IconPreviewTile(side: side,
-                            light: iconPreview(of: frame, in: source, side: side, onDarkGround: false),
-                            dark: iconPreview(of: frame, in: source, side: side, onDarkGround: true))
+                            light: iconPreview(of: frameID, in: source, side: side, onDarkGround: false),
+                            dark: iconPreview(of: frameID, in: source, side: side, onDarkGround: true))
         }
     }
 
@@ -145,11 +144,11 @@ extension EditorState {
         let document = withDraggedMotionTiming(document)
         // A keyed picture's previews show the moment the canvas does.
         if document.isKeyedPicture {
-            return document.moved(layerID: frameID,
-                                  toMotionTimeMS: isMotionPlaying ? motionPlayheadMS : documentTimeMS)
+            return document.movedIcon(id: frameID,
+                                      toMotionTimeMS: isMotionPlaying ? motionPlayheadMS : documentTimeMS)
         }
         guard Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion else { return document }
-        return document.moved(layerID: frameID, toMotionTimeMS: motionPlayheadMS)
+        return document.movedIcon(id: frameID, toMotionTimeMS: motionPlayheadMS)
     }
 
     /// One preview, from the cache or ordered up.
@@ -159,14 +158,14 @@ extension EditorState {
     /// nothing else does. While a fresh one is being drawn the last one stays
     /// on screen: a strip that blinked empty on every stroke would be worse
     /// than one a frame behind.
-    private func iconPreview(of frame: Layer, in document: PhotonzDocument, side: CGFloat,
+    private func iconPreview(of frameID: UUID, in document: PhotonzDocument, side: CGFloat,
                              onDarkGround: Bool) -> CGImage? {
-        let key = IconPreviewKey(frameID: frame.id, side: Int(side), onDarkGround: onDarkGround)
+        let key = IconPreviewKey(frameID: frameID, side: Int(side), onDarkGround: onDarkGround)
         // The hash is of the frame the picture will be made FROM, which while
         // the loop runs is the frame at this moment of it. So a moving icon
         // orders a fresh picture per frame and a still one orders none, with no
         // second rule for the running case.
-        let hash = frame.hashValue
+        let hash = document.iconPreviewHash(id: frameID)
         if let cached = iconPreviews[key], cached.hash == hash { return cached.image }
         if !iconPreviewsInFlight.contains(key) {
             let renderer = previewRenderer
@@ -200,9 +199,8 @@ extension EditorState {
     /// on somebody's canvas: with a still icon it stays exactly the row of
     /// pictures it has always been.
     var iconPreviewsPlayable: Bool {
-        guard canPlayMotion, let frameID = iconPreviewFrameID,
-              let frame = document?.layer(id: frameID) else { return false }
-        return frame.hasMotionInside
+        guard canPlayMotion, let frameID = iconPreviewFrameID else { return false }
+        return document?.iconHasMotion(id: frameID) ?? false
     }
 }
 

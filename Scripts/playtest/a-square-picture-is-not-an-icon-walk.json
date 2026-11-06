@@ -1,0 +1,155 @@
+{
+  "out": "/tmp/photonz-playtest/a-square-picture-is-not-an-icon",
+  "seed": "A square picture nobody made as an icon gets none of what an icon gets: the Square row of the New Image sheet, and a 512 by 512 blank, the size the Icon row makes. Both stay in Image, with no strip however much is drawn, and a Pen point part way through a unit stays where it was put rather than landing on a whole unit.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "startFromEmpty",
+      "row": "New image",
+      "answer": [
+        "Square",
+        "Create"
+      ],
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Image"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-square"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 512,
+      "canvasHeight": 512,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Image"
+    },
+    {
+      "do": "pinch",
+      "to": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        170.5,
+        170.5
+      ],
+      "to": [
+        230.5,
+        230.5
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "pen"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        150.5,
+        400.5
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        300.5,
+        400.5
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPath",
+      "anchors": 2,
+      "closed": false,
+      "anchor": 0,
+      "near": [
+        150.5,
+        400.5
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectIconPreviews",
+      "absent": true
+    },
+    {
+      "do": "snapshot",
+      "name": "2-512-drawn"
+    }
+  ]
+}

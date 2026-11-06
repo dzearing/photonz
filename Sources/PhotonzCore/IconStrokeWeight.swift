@@ -65,8 +65,7 @@ extension PhotonzDocument {
     /// frame adopts a new shape, so the weight a shape arrives at and the frame
     /// it arrives in can never disagree.
     public func iconFrameSize(under point: CGPoint) -> CGSize? {
-        guard let id = iconFrameID(under: point), let frame = layer(id: id) else { return nil }
-        return frame.frame.size
+        iconFrameID(under: point).flatMap(iconSize(of:))
     }
 
     /// The size of the icon frame this layer is being drawn INSIDE, or nil when
@@ -78,9 +77,7 @@ extension PhotonzDocument {
     /// showing (`IconPreviews.iconFrameID(containing:)`). So the Width row, the
     /// previews strip and the drawing all mean the same icon.
     public func iconFrameSize(containing id: UUID) -> CGSize? {
-        guard let frameID = iconFrameID(containing: id),
-              let frame = layer(id: frameID) else { return nil }
-        return frame.frame.size
+        iconFrameID(containing: id).flatMap(iconSize(of:))
     }
 
     /// The weight a freshly drawn line takes, landing centred on this point.

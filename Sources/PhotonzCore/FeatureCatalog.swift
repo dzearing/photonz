@@ -489,7 +489,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: windowModesFlag,
                     title: "Set the window up for the job in front of you",
-                    description: "A chip beside the traffic lights sets a picture's window up for Image, Icon or Design, folding away the sections that job does not need. Every picture starts in Image, and a video has no chip.",
+                    description: "A chip beside the traffic lights sets a picture's window up for Image, Icon or Design, folding away the sections that job does not need. A picture starts in Image, an icon in Icon, and a video has no chip.",
                     area: .panel,
                     isEnabled: false,
                     parameters: []),

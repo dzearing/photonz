@@ -196,9 +196,9 @@ public struct IconKeylineGuides: Hashable, Sendable {
 
 extension PhotonzDocument {
     /// Whether anything in this document is a frame the size an icon is drawn
-    /// at. A document of screenshots answers no without the canvas drawing,
-    /// measuring or reserving anything.
+    /// at, or its canvas was made as an icon. A document of screenshots
+    /// answers no without the canvas drawing, measuring or reserving anything.
     public var hasIconFrames: Bool {
-        hasFrames && frames.contains { IconPreviews.isIconSize($0.frame.size) }
+        isIconCanvas || hasFrames && frames.contains { IconPreviews.isIconSize($0.frame.size) }
     }
 }

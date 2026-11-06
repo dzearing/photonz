@@ -4,8 +4,8 @@ import PhotonzCore
 /// What this window is set up for (Next, `next-window-modes`;
 /// `docs/design/modes.md`).
 ///
-/// The mode is the WINDOW's: a picture's window starts in Image and offers
-/// Image, Icon and Design; a document with time is always in the video setup,
+/// The mode is the WINDOW's: a picture's window starts in Image (an icon's in
+/// Icon) and offers Image, Icon and Design; a document with time is always in the video setup,
 /// offers nothing and draws no chip. How each mode is arranged is the app's
 /// (`WindowModeStore`), so the panel this window draws is the arrangement of
 /// the mode it is in, and a section ticked in the Sections list is kept for
@@ -51,6 +51,13 @@ extension EditorState {
         guard next.swap(to: id, hasTime: documentHasTime) else { return false }
         windowModeSession = next
         return true
+    }
+
+    /// Starts this window in Icon if what it holds is an icon, however it got
+    /// here: made from the sheet, opened from a file, or drawn by Ask.
+    func startInIconModeIfAnIcon() {
+        guard document?.opensAsIcon == true else { return }
+        swapWindowMode(to: WindowModes.iconID)
     }
 
     /// Put this window's mode back the way it shipped, without leaving it.

@@ -2869,7 +2869,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// pointer, on the row's face, the way a person does: "Design UI" opens
     /// the UI starter. The walk then drives whatever document the row opened.
     /// `window` and `card` are `blank`'s.
-    case startFromEmpty(row: String, window: CGSize?, card: String?)
+    ///
+    /// `answer` is what is pressed, in order, in the sheet a row puts up, for a
+    /// row that opens one rather than a document.
+    case startFromEmpty(row: String, window: CGSize?, card: String?, answer: [String] = [])
     /// Start from the New window File > New opens: pick `tile` (Image or
     /// Video) by pointer on its face, when there is one, click each of
     /// `first` (a size row, say) by pointer, then press the primary button by
@@ -3767,7 +3770,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `absent: true` claims no strip at all, which is what a document with no
     /// icon frame in it must give. `bothGrounds` claims every size has its
     /// picture on the Light ground and on the Dark one.
-    case expectIconPreviews(sides: [Int], absent: Bool, bothGrounds: Bool)
+    ///
+    /// `inked` claims every size really has something in it. Without it a strip
+    /// of empty grounds passes: a walk once drew its circle off the picture and
+    /// stayed green while the strip showed nothing at all.
+    case expectIconPreviews(sides: [Int], absent: Bool, bothGrounds: Bool, inked: Bool)
     /// How many times a named view may have built since the step before it.
     ///
     /// The guard for what a click COSTS, written as a count rather than as a
@@ -4977,7 +4984,8 @@ public enum PlaytestStep: Sendable, Equatable {
             let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
             self = .startFromEmpty(row: try f.string("row"), window: window,
-                                   card: try f.optionalString("card"))
+                                   card: try f.optionalString("card"),
+                                   answer: try f.optionalStrings("answer"))
         case "askFromNothing":
             let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
@@ -6724,7 +6732,8 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectIconPreviews(sides: try f.optionalNumbers("sides").map { Int($0) },
                                        absent: absent,
-                                       bothGrounds: try f.optionalFlag("bothGrounds") ?? false)
+                                       bothGrounds: try f.optionalFlag("bothGrounds") ?? false,
+                                       inked: try f.optionalFlag("inked") ?? false)
         case "wheel":
             self = .wheel(control: try f.string("control"), by: try f.number("by"),
                           modifiers: try f.optionalModifiers("modifiers") ?? [])

@@ -22596,3 +22596,11 @@ The prototype answers how Preview is entered and left, what the window looks lik
 What's next: the task waits on the card, since its checklist says to build after approval. The build notes are in the task log. Option c changes the prototype and opens a new card; it does not build.
 
 Open question: whether a first timer can tell what is live on the page, since Preview draws only their looks and adds no hints.
+
+## 2026-11-06: a picture made for an icon works like an icon
+
+What changed: File, New, Image, Icon and App Icon now make a picture whose canvas answers everything an icon frame answers: keylines, whole units for the Pen, the starting weight, the Artboard pivot and the previews strip once something is drawn. The window opens in Icon, and so does a picture Ask's icon fills. `PhotonzDocument.madeAsIcon` is the one new field, about the canvas and not a document kind: a screen laid on it stays a screen, and a canvas cut to a size no icon is drawn at stops being one (`IconCanvas.swift`, `IconCanvasTests`). The mode is still never in the file.
+
+Walks: `icon-picture-from-the-new-sheet-walk`, `a-square-picture-is-not-an-icon-walk`. `expectIconPreviews` gained `inked`, because a walk drew its circle off the picture and stayed green with an empty strip. `startFromEmpty` gained `answer`, for a row that opens a sheet.
+
+What's next: nothing on this task. Open question: whether a painted Background should stay on the Dark ground.

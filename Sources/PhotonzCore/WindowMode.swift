@@ -141,7 +141,10 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
 /// mode's id.
 ///
 /// **Modes are for pictures.** A picture is offered Image, Icon and Design and
-/// starts in Image. A document with time has one sensible setup, the video one,
+/// starts in Image, unless it is an icon (`PhotonzDocument.opensAsIcon`), which
+/// starts in Icon. That is the window reading the picture as it opens: the mode
+/// is still never written into the file, and swapping away is as free as ever.
+/// A document with time has one sensible setup, the video one,
 /// so it is offered no list at all and its window draws no chip (the user,
 /// 2026-10-17: "when you open a video, you shouldn't see the dropdown. it makes
 /// no sense if only one mode is relevant").
@@ -152,6 +155,9 @@ public enum WindowModes {
     /// exactly as it does for somebody who never finds modes. It was called
     /// Redline until 2026-10-17, and folded the building sections then.
     public static let imageID = "image"
+
+    /// The mode a picture made as an icon starts in.
+    public static let iconID = "icon"
 
     /// The one setup a document with time has. Never in a list.
     public static let videoID = "video"
@@ -165,7 +171,7 @@ public enum WindowModes {
             preset: choices([:]),
             libraryWaitsToBeTurnedOn: true),
         WindowMode(
-            id: "icon",
+            id: iconID,
             title: "Icon",
             summary: "Drawing a glyph on a small frame.",
             symbol: "app.dashed",
@@ -335,7 +341,8 @@ public struct WindowModeArrangements: Sendable, Equatable, Codable {
 ///
 /// Per WINDOW, never shared: a recording's window in its video setup and a
 /// picture's window in Design are two sessions that never meet, and a new
-/// window starts a picture in Image whatever any other window picked. It holds
+/// window starts a picture in Image whatever any other window picked (an icon
+/// in Icon, whatever any other window picked). It holds
 /// no arrangement, only the name of the mode; what that mode looks like is the
 /// app's (`WindowModeArrangements`).
 ///

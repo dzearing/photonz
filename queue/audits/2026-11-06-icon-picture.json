@@ -1,0 +1,56 @@
+{
+  "feature": "A picture made for an icon works like an icon",
+  "epic": "icon-grid",
+  "summary": "File, New, Image, Icon now gives you an icon straight away: keylines on the canvas, Pen points on whole units, and previews at real sizes as soon as you draw. The window reads Icon, for App Icon and for an icon Ask made too.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: icon-picture-from-the-new-sheet-walk, a-square-picture-is-not-an-icon-walk, a-saved-icon-opens-as-an-icon-walk, ask-tweaks-an-icon-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose File, New, Image, pick Icon, press Create.",
+      "shot": "2026-11-06-icon-picture-1-made.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press the Ellipse tool and drag a circle on the canvas.",
+      "shot": "2026-11-06-icon-picture-2-drawn.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick the circle and press Shift Command M to mirror it across the middle.",
+      "shot": "2026-11-06-icon-picture-3-mirrored.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Choose Center on the Artboard from the Layers panel's menu."
+    },
+    {
+      "do": "Press P, click two points, press Return, and read where they landed."
+    },
+    {
+      "do": "Choose File, New, Image, pick App Icon, press Create in New Window.",
+      "shot": "2026-11-06-icon-picture-6-app-icon.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Choose File, New, Image, pick Square, press Create, and check it stays plain Image."
+    },
+    {
+      "do": "Press Ask, type an envelope icon, outline, and press Send.",
+      "shot": "2026-11-06-icon-picture-7-ask.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does the picture feel ready to draw an icon on the moment it opens?",
+    "Is it right that the Actual sizes card stays away until something is drawn?",
+    "On a smaller window the card sits over a corner of the picture but never the drawing. Is that acceptable?",
+    "Should an icon that is saved and reopened always come back in Icon, even if you had moved it to Image?"
+  ],
+  "rough": [
+    "No mock draws the New Image route into an icon; the keylines and card are the ones an icon frame already shows, as icon-draw-wt.html draws them.",
+    "The Dark ground leaves out the whole Background, so anything painted onto the Background itself does not appear there.",
+    "The keylines assume a pale picture. On a Background painted dark they keep the deep violet and rely on their casing to read.",
+    "Undoing Ask's icon takes the drawing back but leaves the chip on Icon, because the mode belongs to the window and nothing undoes a window setting.",
+    "Shape tools land on whole points in every picture, so whole units only change what the Pen does and how keylines and other shapes pull."
+  ]
+}

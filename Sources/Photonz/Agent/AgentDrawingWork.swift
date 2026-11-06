@@ -189,6 +189,9 @@ enum AgentDrawingWork {
             }
             if let made { target.selectLayer(made) }
         }
+        // An icon that became the whole picture sets its window up for icons,
+        // as File, New, Image, Icon does.
+        if call.icon { target.startInIconModeIfAnIcon() }
         guard let made, let layer = target.document?.layer(id: made) else {
             throw Failure("Photonz could not add that drawing to \(AgentWork.title(of: target)).")
         }

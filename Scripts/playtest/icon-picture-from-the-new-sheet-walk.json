@@ -1,0 +1,316 @@
+{
+  "out": "/tmp/photonz-playtest/icon-picture-from-the-new-sheet",
+  "seed": "File, New, Image, Icon, Create, draw a circle with the Ellipse tool, at Next defaults with nothing switched on. The picture is the icon: the chip reads Icon, the keylines are on the canvas with no frame in the layers list, nothing is previewed until something is drawn, and then the strip shows the circle at real sizes. The drag starts and ends part way through a unit and lands on whole units. Mirror Across Center and Center on the Artboard work about the middle of the picture. Then App Icon from a window already holding a picture: it lands in a window of its own, in Icon too.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "startFromEmpty",
+      "row": "New image",
+      "answer": [
+        "Icon",
+        "Create"
+      ],
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "expectIconPreviews",
+      "absent": true
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-made",
+      "note": "THE PICTURE TO LOOK AT. A new Icon picture with nothing drawn: the keylines are on the canvas, the chip reads Icon, the layers list holds only the Background."
+    },
+    {
+      "do": "snapshot",
+      "name": "1-icon-picture"
+    },
+    {
+      "do": "pinch",
+      "to": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        170.5,
+        170.5
+      ],
+      "to": [
+        230.5,
+        230.5
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse",
+      "at": [
+        171,
+        171
+      ],
+      "size": [
+        60,
+        60
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24,
+        32,
+        48,
+        64
+      ],
+      "bothGrounds": true,
+      "inked": true
+    },
+    {
+      "do": "describe",
+      "stage": "2-drawn",
+      "note": "THE PICTURE TO LOOK AT. A circle drawn with the Ellipse tool, on whole units though the drag was not: the previews strip came up by itself with the circle in every size, on the Light and the Dark ground."
+    },
+    {
+      "do": "snapshot",
+      "name": "2-drawn"
+    },
+    {
+      "do": "panel",
+      "stage": "2-drawn"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24,
+        32,
+        48,
+        64
+      ],
+      "inked": true
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "mirrorAcrossCenter"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 3
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse 2",
+      "at": [
+        281,
+        171
+      ],
+      "size": [
+        60,
+        60
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "panel",
+      "stage": "3-mirrored"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-mirrored"
+    },
+    {
+      "do": "action",
+      "action": "centerOnArtboard"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse 2",
+      "at": [
+        226,
+        226
+      ],
+      "size": [
+        60,
+        60
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "snapshot",
+      "name": "4-centered"
+    },
+    {
+      "do": "panel",
+      "stage": "4-centered"
+    },
+    {
+      "do": "tool",
+      "tool": "pen"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        150.5,
+        400.5
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        300.5,
+        400.5
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPath",
+      "anchors": 2,
+      "closed": false,
+      "anchor": 0,
+      "near": [
+        151,
+        401
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "5-pen"
+    },
+    {
+      "do": "panel",
+      "stage": "5-pen"
+    },
+    {
+      "do": "action",
+      "action": "newCanvasDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "App Icon"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Create in New Window"
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "describe",
+      "stage": "6-app-icon",
+      "note": "App Icon from a window that already holds a picture: a window of its own, 1024 by 1024, the chip reading Icon, and the first icon untouched."
+    },
+    {
+      "do": "snapshot",
+      "name": "6-app-icon",
+      "window": "Untitled 2"
+    }
+  ]
+}

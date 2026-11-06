@@ -462,7 +462,7 @@ struct EditorView: View {
             // Where the canvas lands is the editor's call (empty window fills
             // itself, a busy one opens a new window), so both routes into this
             // sheet behave the same.
-            NewCanvasDialog(onCreate: { editorState.createBlankCanvas(size: $0) },
+            NewCanvasDialog(onCreate: { editorState.createBlankCanvas(size: $0, asIcon: $1) },
                             opensNewWindow: BlankCanvas.destination(
                                 windowHasDocument: editorState.hasDocument) == .newWindow)
         }

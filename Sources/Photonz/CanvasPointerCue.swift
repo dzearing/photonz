@@ -60,12 +60,13 @@ extension CanvasNSView {
     /// frame landed at 2.
     ///
     /// Two things keep it cheap. It only asks while the release that has icon
-    /// frames is on and the document HAS frames at all, so a document of
-    /// screenshots never pays for it; and it only reports a change, so a
+    /// frames is on and the document HAS frames at all, or a canvas made as an
+    /// icon, so a document of screenshots never pays for it; and it only reports a change, so a
     /// pointer wandering inside one frame rebuilds nothing.
     func refreshPointerIconFrame(at viewPoint: CGPoint) {
         guard Experiments.shared.iconFramesEnabled,
-              let document, document.hasFrames, let viewport else { return }
+              let document, document.hasFrames || document.isIconCanvas,
+              let viewport else { return }
         let id = document.iconFrameID(under: viewport.documentPoint(fromView: viewPoint))
         guard id != pointerIconFrameID else { return }
         pointerIconFrameID = id

@@ -2632,11 +2632,16 @@ final class EditorState {
     /// Downstream this is indistinguishable from an opened file — locked
     /// Background layer, window sized to the canvas, clean undo baseline — so
     /// save, export and history need to know nothing about it.
-    func newBlankCanvas(size: CGSize) {
+    ///
+    /// `asIcon` is the sheet's Icon and App Icon rows: the canvas is the icon
+    /// (`PhotonzDocument.madeAsIcon`).
+    func newBlankCanvas(size: CGSize, asIcon: Bool = false) {
         let size = BlankCanvas.normalized(size)
         guard let white = SolidImage.make(size: size, hex: Self.blankCanvasBackgroundHex) else { return }
         let ref = store.register(white)
-        installDocument(.withBaseImage(ref), url: nil)
+        var document = PhotonzDocument.withBaseImage(ref)
+        document.madeAsIcon = asIcon
+        installDocument(document, url: nil)
     }
 
     /// Starts a video from nothing (File ▸ New Video): an empty timeline of
@@ -2702,7 +2707,7 @@ final class EditorState {
     /// How this window opens another one holding a blank canvas. Set once by
     /// the window root, which is where the app coordinator lives; the editor
     /// itself stays free of window plumbing.
-    @ObservationIgnored var openBlankCanvasWindow: ((CGSize, String?) -> Void)?
+    @ObservationIgnored var openBlankCanvasWindow: ((CGSize, String?, Bool) -> Void)?
 
     /// What happens when a recording this window was opened for cannot be read
     /// after all. Set by the window root, which is the only thing that can both
@@ -2729,13 +2734,16 @@ final class EditorState {
     ///
     /// `asking`, from the New window's Describe field, is a request Ask
     /// draws into the new canvas the moment it is up.
-    func createBlankCanvas(size: CGSize, asking: String? = nil) {
+    ///
+    /// `asIcon` says the picture is made as an icon, from the sheet's Icon and
+    /// App Icon rows.
+    func createBlankCanvas(size: CGSize, asking: String? = nil, asIcon: Bool = false) {
         switch BlankCanvas.destination(windowHasDocument: document != nil, isFrontDoor: isFrontDoor) {
         case .thisWindow:
-            newBlankCanvas(size: size)
+            newBlankCanvas(size: size, asIcon: asIcon)
             if let asking, document != nil { ask.askOnceShown(asking, in: self) }
         case .newWindow:
-            openBlankCanvasWindow?(size, asking)
+            openBlankCanvasWindow?(size, asking, asIcon)
             closeFrontDoorOnceTheEditorOpens()
         }
     }
@@ -2785,7 +2793,7 @@ final class EditorState {
         case .blankCanvas(let id, let size):
             untitledName = Self.nextUntitledName()
             if let size {
-                newBlankCanvas(size: size)
+                newBlankCanvas(size: size, asIcon: IconCanvasHandoff.take(id))
                 // Made from the New window's Describe field: Ask draws what
                 // was described into it.
                 if let asking = AskHandoff.take(id), document != nil { ask.askOnceShown(asking, in: self) }
@@ -3830,6 +3838,9 @@ final class EditorState {
         // Edit, so a clip dropped into one lands on a timeline already showing
         // it.
         openInItsMode(document)
+        // ...and so is whether an icon's window starts in Icon. The window
+        // reads it here; nothing about the mode is in the file.
+        startInIconModeIfAnIcon()
         recordingURL = nil
         // Size the window to the image (100% when it fits, reduced only when a
         // maxed window can't). The `.fit` above is the fallback for when there

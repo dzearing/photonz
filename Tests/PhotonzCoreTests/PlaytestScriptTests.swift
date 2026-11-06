@@ -645,19 +645,25 @@ struct PlaytestScriptTests {
           "out": "/tmp/walk/out",
           "steps": [
             { "do": "startFromEmpty", "row": "Design UI", "width": 1300, "height": 900, "card": "empty-card" },
-            { "do": "startFromEmpty", "row": "Design UI" }
+            { "do": "startFromEmpty", "row": "Design UI" },
+            { "do": "startFromEmpty", "row": "New image", "answer": ["Icon", "Create"] }
           ]
         }
         """)
-        guard case .startFromEmpty(let row, let window, let card) = script.steps[0] else {
+        guard case .startFromEmpty(let row, let window, let card, _) = script.steps[0] else {
             Issue.record("startFromEmpty"); return
         }
         #expect(row == "Design UI")
         #expect(window == CGSize(width: 1300, height: 900))
         #expect(card == "empty-card")
         #expect(script.steps[0].name == "startFromEmpty")
-        guard case .startFromEmpty("Design UI", nil, nil) = script.steps[1] else {
+        guard case .startFromEmpty("Design UI", nil, nil, let none) = script.steps[1], none.isEmpty else {
             Issue.record("bare startFromEmpty"); return
+        }
+        // A row that opens a sheet is answered the way a person answers it.
+        guard case .startFromEmpty("New image", nil, nil, let answer) = script.steps[2],
+              answer == ["Icon", "Create"] else {
+            Issue.record("startFromEmpty answering a sheet"); return
         }
         #expect(PlaytestLockSafety.canRunLocked([script.steps[1]]))
         #expect(throws: (any Error).self) {
@@ -3143,13 +3149,13 @@ struct PlaytestScriptTests {
     @Test("An expectIconPreviews step can claim every size is drawn on both grounds")
     func expectIconPreviewsClaimsBothGrounds() throws {
         let script = try decode("""
-        { "steps": [ { "do": "expectIconPreviews", "sides": [16, 24, 32, 48], "bothGrounds": true },
+        { "steps": [ { "do": "expectIconPreviews", "sides": [16, 24, 32, 48], "bothGrounds": true, "inked": true },
                      { "do": "expectIconPreviews", "sides": [16, 24] },
                      { "do": "expectIconPreviews", "absent": true } ] }
         """)
-        guard case .expectIconPreviews(let sides, let absent, let both) = script.steps[0],
-              case .expectIconPreviews(_, _, let unclaimed) = script.steps[1],
-              case .expectIconPreviews(_, let none, _) = script.steps[2] else {
+        guard case .expectIconPreviews(let sides, let absent, let both, let inked) = script.steps[0],
+              case .expectIconPreviews(_, _, let unclaimed, let notInked) = script.steps[1],
+              case .expectIconPreviews(_, let none, _, _) = script.steps[2], inked, !notInked else {
             Issue.record("expectIconPreviews"); return
         }
         #expect(sides == [16, 24, 32, 48])

@@ -959,9 +959,12 @@ final class AppCoordinator {
     ///
     /// `asking` is a request for Ask to draw into it, from the New window's
     /// Describe field: held for the window until it is seeded.
-    func newBlankCanvasWindow(size: CGSize, asking: String? = nil) {
+    ///
+    /// `asIcon` is the sheet's Icon and App Icon rows, held the same way.
+    func newBlankCanvasWindow(size: CGSize, asking: String? = nil, asIcon: Bool = false) {
         let id = UUID()
         if let asking { AskHandoff.hold(asking, for: id) }
+        if asIcon { IconCanvasHandoff.hold(id) }
         openWindow(.blankCanvas(id, size))
     }
 

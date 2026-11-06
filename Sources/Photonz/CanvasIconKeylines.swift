@@ -72,9 +72,15 @@ extension CanvasNSView {
         // frame is painted: a white icon frame takes a different strength from
         // a dark one, and two icons on one canvas can be painted differently.
         var drawn: [CAShapeLayer] = []
-        for frame in document.frames {
-            guard frame.isVisible, let box = liveCanvasBounds(of: frame.id),
-                  let guides = IconKeylines.guides(in: box) else { continue }
+        var spaces: [(frame: Layer?, box: CGRect)] = document.frames.compactMap { frame in
+            guard frame.isVisible, let box = liveCanvasBounds(of: frame.id) else { return nil }
+            return (frame, box)
+        }
+        // A canvas made as an icon draws them too, under anything on it that
+        // is an icon of its own, and it has no layer to be asked about.
+        if let canvas = document.iconBox(of: PhotonzDocument.iconCanvasID) { spaces.insert((nil, canvas), at: 0) }
+        for (frame, box) in spaces {
+            guard let guides = IconKeylines.guides(in: box) else { continue }
             let onScreen = viewRect(forDocRect: box, in: viewport)
             guard onScreen.intersects(bounds),
                   onScreen.width >= Self.smallestDrawableIcon else { continue }
@@ -233,7 +239,7 @@ extension CanvasNSView {
     /// app is still white. So a dark frame takes a brighter violet, a light one
     /// a deeper one, and a frame you can see straight through is judged by the
     /// canvas behind it instead.
-    private func iconKeylineInk(on frame: Layer) -> CGColor {
+    private func iconKeylineInk(on frame: Layer?) -> CGColor {
         let violet = surfaceIsPale(on: frame)
             ? NSColor(calibratedRed: 0.42, green: 0.26, blue: 0.85, alpha: 0.85)
             : NSColor(calibratedRed: 0.72, green: 0.60, blue: 1.0, alpha: 0.95)
@@ -250,7 +256,7 @@ extension CanvasNSView {
     /// drawing that has strayed into it, which is the one thing somebody looks
     /// at the margin to check. Stronger on a dark frame than on a pale one,
     /// for the same reason the ink is.
-    private func iconKeylineWash(on frame: Layer) -> CGColor {
+    private func iconKeylineWash(on frame: Layer?) -> CGColor {
         let violet = surfaceIsPale(on: frame)
             ? NSColor(calibratedRed: 0.42, green: 0.26, blue: 0.85, alpha: 0.13)
             : NSColor(calibratedRed: 0.72, green: 0.60, blue: 1.0, alpha: 0.18)
@@ -265,7 +271,7 @@ extension CanvasNSView {
     /// behind a dark violet, black behind a pale one. On the frame's own
     /// surface it disappears; over anything drawn on the frame it is what stops
     /// the guide disappearing with it.
-    private func iconKeylineCasing(on frame: Layer) -> CGColor {
+    private func iconKeylineCasing(on frame: Layer?) -> CGColor {
         surfaceIsPale(on: frame)
             ? CGColor(gray: 1, alpha: 0.7)
             : CGColor(gray: 0, alpha: 0.45)
@@ -274,7 +280,9 @@ extension CanvasNSView {
     /// Whether the surface this frame's guides are lying on is a pale one. The
     /// frame's own paint when it has any, because a white frame in a dark app
     /// is still white, and the app's theme for a frame you can see through.
-    private func surfaceIsPale(on frame: Layer) -> Bool {
+    /// Nil is a canvas made as an icon, which starts white.
+    private func surfaceIsPale(on frame: Layer?) -> Bool {
+        guard let frame else { return true }
         guard let surface = frame.group?.backgroundHex.flatMap({ RGBA(hex: $0) }),
               surface.a > 0.5 else { return !isDarkCanvasAppearance }
         return surface.relativeLuminance >= 0.5

@@ -15,7 +15,7 @@ extension PhotonzDocument {
     /// corner instead.
     public func artboardPivot(for id: UUID) -> MotionPivot? {
         guard let frameID = iconFrameID(containing: id), frameID != id,
-              let icon = canvasFrame(of: frameID), let layer = layer(id: id),
+              let icon = iconBox(of: frameID), let layer = layer(id: id),
               let origin = parentOrigin(of: id) else { return nil }
         let middle = CGPoint(x: icon.midX - origin.x, y: icon.midY - origin.y)
         return .artboard(at: middle, in: layer.turnPivotBox)

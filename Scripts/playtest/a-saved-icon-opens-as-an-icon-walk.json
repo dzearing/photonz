@@ -1,0 +1,61 @@
+{
+  "out": "/tmp/photonz-playtest/a-saved-icon-opens-as-an-icon",
+  "seed": "An icon comes back as an icon. A saved picture made as one opens with the chip reading Icon and the strip already up, with nothing picked and the pointer nowhere near it; a picture that is one icon frame from edge to edge, which is how Ask lands an icon, opens in Icon too.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "fixtures/saved-icon-picture.photonz",
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24,
+        32,
+        48,
+        64
+      ],
+      "bothGrounds": true,
+      "inked": true
+    },
+    {
+      "do": "snapshot",
+      "name": "1-saved-icon"
+    },
+    {
+      "do": "open",
+      "file": "fixtures/ask-shaped-icon-picture.photonz",
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-ask-shaped"
+    }
+  ]
+}

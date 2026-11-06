@@ -194,6 +194,9 @@ switch on a raster layer, which belongs to the drawing work.
   replaces.
 - **New documents:** every picture opens in **Image**, in a window of its own
   mode, whatever any other window is in. New UI Design opens in Design. A
+  picture made as an icon (the New Image sheet's Icon and App Icon rows, or Ask
+  drawing an icon that becomes the whole picture) opens in **Icon**: the window
+  reads that as it opens, and the mode itself is still never in the file. A
   recording has one setup and no chip (see "Modes are for pictures" below).
   Nobody is asked a question at the front door.
 - **Somebody who never finds modes** loses nothing: the default arrangement is
@@ -315,7 +318,8 @@ video, you shouldn't see the dropdown. it makes no sense if only one mode is
 relevant." So, now:
 
 - **A picture is offered Image, Icon and Design**, in that order, on ⌃1, ⌃2, ⌃3,
-  then Show Everything. No Video row. Every picture starts in **Image**.
+  then Show Everything. No Video row. A picture starts in **Image**, an icon in
+  **Icon**.
 - **Image is what Redline was renamed to, and it folds nothing.** Redline folded
   Motion, Component, Placement and Columns for measuring a capture; as the mode
   every picture starts in, that would hide the Motion section's plus (the only

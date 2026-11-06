@@ -18,6 +18,11 @@ import Testing
 /// What carries the context instead is the FRAME you are working in, and these
 /// tests pin that too: the same document says icon about one frame and not
 /// about the other, at the same moment, with nothing chosen up front.
+///
+/// A picture made as an icon does not change this. `madeAsIcon` is about the
+/// CANVAS, which then answers as a frame would, and only where no frame does
+/// (`IconCanvasTests`): the same document still says icon about one place and
+/// not about another.
 struct DocumentHasNoKindTests {
 
     /// The size list itself refuses to separate them: one list, both groups.
@@ -77,5 +82,18 @@ struct DocumentHasNoKindTests {
                                                onFrameSized: CGSize(width: 24, height: 24)) == 2)
         #expect(IconStrokeWeight.startingWidth(armed: armed, chosen: false,
                                                onFrameSized: CGSize(width: 1440, height: 1024)) == armed)
+    }
+
+    /// The one mark a document carries is about its canvas, so context still
+    /// follows the place: a screen on an icon's canvas is a screen.
+    @Test("A canvas made as an icon gives icon context beside a screen, not inside it")
+    func madeAsIconIsAboutTheCanvas() {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 1024, height: 1024))
+        document.madeAsIcon = true
+        let screen = document.addFrame(origin: CGPoint(x: 40, y: 40), size: CGSize(width: 390, height: 844))
+        let onScreen = CGPoint(x: 100, y: 100), beside = CGPoint(x: 800, y: 100)
+        #expect(document.iconFrameSize(under: onScreen) == nil)
+        #expect(document.iconFrameSize(under: beside) == CGSize(width: 1024, height: 1024))
+        #expect(document.iconFrameID(containing: screen.id) == nil)
     }
 }

@@ -195,8 +195,10 @@ public enum IconPreviews {
 
 extension PhotonzDocument {
 
-    /// Whether this layer is a frame the size an icon is drawn at.
+    /// Whether this layer is a frame the size an icon is drawn at, or this is
+    /// the id a canvas made as an icon answers to (`iconCanvasID`).
     public func isIconFrame(id: UUID) -> Bool {
+        if id == Self.iconCanvasID { return isIconCanvas }
         guard let layer = layer(id: id), layer.isFrame else { return false }
         return IconPreviews.isIconSize(layer.frame.size)
     }
@@ -221,6 +223,7 @@ extension PhotonzDocument {
     /// cut to the frame: the thing the previews card must never cover. The
     /// frame clips, so whatever spills past its edge is not on screen.
     public func iconPreviewInk(id: UUID) -> [CGRect] {
+        if id == Self.iconCanvasID { return iconCanvasInk }
         guard let frame = layer(id: id), frame.isFrame, let box = canvasBounds(of: id),
               let children = frame.group?.children else { return [] }
         return children.filter(\.isVisible).compactMap { child in
@@ -238,6 +241,7 @@ extension PhotonzDocument {
     /// the artboard rather than the icon, and left in it would cover the dark
     /// the ground exists to show the glyph against.
     public func iconPreviewDocument(id: UUID, onDarkGround: Bool) -> PhotonzDocument? {
+        if id == Self.iconCanvasID { return iconCanvasPreviewDocument(onDarkGround: onDarkGround) }
         guard var scoped = frameDocument(id: id) else { return nil }
         guard onDarkGround else { return scoped }
         scoped.updateLayer(id: id) { frame in
@@ -253,9 +257,12 @@ extension PhotonzDocument {
     /// Itself when the frame is what is selected, and the frame above it when
     /// what is selected is the shape you are drawing — which is what it is for
     /// nearly the whole time anybody is drawing an icon.
+    ///
+    /// On a canvas made as an icon, a layer on no frame is in the canvas.
     public func iconFrameID(containing id: UUID) -> UUID? {
-        guard let frameID = frameID(containing: id), isIconFrame(id: frameID) else { return nil }
-        return frameID
+        if let frameID = frameID(containing: id) { return isIconFrame(id: frameID) ? frameID : nil }
+        guard isIconCanvas, id == Self.iconCanvasID || layer(id: id) != nil else { return nil }
+        return Self.iconCanvasID
     }
 
     /// The icon the previews strip is showing, from the three things that can
@@ -281,9 +288,18 @@ extension PhotonzDocument {
     /// not in the document.
     public func iconPreviewFrameID(picked: UUID?, pointerIn hovered: UUID?,
                                    remembered: UUID?) -> UUID? {
-        if let id = picked ?? hovered { return iconFrameID(containing: id) }
-        guard let remembered, isIconFrame(id: remembered) else { return nil }
-        return remembered
+        if let id = picked ?? hovered { return iconFrameID(containing: id).flatMap(hasIconToPreview) }
+        if let remembered, isIconFrame(id: remembered) { return hasIconToPreview(remembered) }
+        // A canvas made as an icon is the one icon there is, so it needs
+        // nobody to have named it: a file just opened shows it straight away.
+        return isIconCanvas ? hasIconToPreview(Self.iconCanvasID) : nil
+    }
+
+    /// `id`, unless it is a canvas nothing has been drawn on yet. A white
+    /// square at five sizes says nothing, and the canvas has no name in the
+    /// layers list to explain it the way a new frame does.
+    private func hasIconToPreview(_ id: UUID) -> UUID? {
+        id == Self.iconCanvasID && iconCanvasDrawing.isEmpty ? nil : id
     }
 
     /// The icon frame a canvas point is inside, if any.
@@ -291,8 +307,13 @@ extension PhotonzDocument {
     /// The same question `frameID(under:)` answers, narrowed to the frames that
     /// are icons, so a screen and bare canvas both come back nil: neither has
     /// anything to say about the weight of a line.
+    ///
+    /// On a canvas made as an icon the canvas answers wherever no frame does,
+    /// edges included, because a point dragged to the edge is aimed at it.
     public func iconFrameID(under point: CGPoint) -> UUID? {
-        guard let id = frameID(under: point), isIconFrame(id: id) else { return nil }
-        return id
+        if let id = frameID(under: point) { return isIconFrame(id: id) ? id : nil }
+        guard isIconCanvas, (0...canvasSize.width).contains(point.x),
+              (0...canvasSize.height).contains(point.y) else { return nil }
+        return Self.iconCanvasID
     }
 }

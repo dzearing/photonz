@@ -59,6 +59,13 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// (`PictureKeys.swift`). A document with time ignores it: its clock is
     /// its own.
     public var keyLap: KeyLap?
+    /// That this picture's CANVAS was made to be an icon: File, New, Image,
+    /// Icon or App Icon said so. It is about the canvas and nothing else, so
+    /// the canvas answers what a frame of its size would (`IconCanvas.swift`),
+    /// and a screen laid on it is still a screen. It is not a kind of
+    /// document, and judging by size instead would give every square PNG
+    /// keylines.
+    public var madeAsIcon = false
     /// How long this document runs for, in milliseconds, or nil for a document
     /// with no time in it: the far commoner case, and every document anybody
     /// has today (`DocumentTime.swift`).
@@ -135,7 +142,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
         case gridOriginX, gridOriginY, motionCycleMS, keyLap, readWords, durationMS
         case tracks, trackGroups, media, markers, markInMS, markOutMS
-        case captionLook, captionsListenedTo, componentOriginals, camera
+        case captionLook, captionsListenedTo, componentOriginals, camera, madeAsIcon
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -186,6 +193,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // A document nobody set a camera on writes none, so every file saved
         // before the camera existed is byte for byte what it was.
         try c.encodeIfPresent(camera, forKey: .camera)
+        // Only a picture made as an icon says so, so every other file is byte
+        // for byte what it was.
+        if madeAsIcon { try c.encode(madeAsIcon, forKey: .madeAsIcon) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -235,6 +245,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         componentOriginals = try c.decodeIfPresent([Layer].self, forKey: .componentOriginals)?
             .map { $0.retiringItsOutline() } ?? []
         camera = try c.decodeIfPresent(SceneCamera.self, forKey: .camera)
+        madeAsIcon = try c.decodeIfPresent(Bool.self, forKey: .madeAsIcon) ?? false
         // Captions saved as a plain group of cues open as one Captions layer.
         adoptingCaptionGroups()
         // A zoom written before zooms were aimed at what is seen opens showing

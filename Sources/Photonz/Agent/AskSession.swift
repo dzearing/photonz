@@ -1354,6 +1354,18 @@ enum AskFeedbackFolder {
     }
 }
 
+/// That a window on its way was asked for by the New Image sheet's Icon or App
+/// Icon row, held until it is seeded with its picture. A window's id is written
+/// down for restoring it, so this rides beside it rather than in it.
+@MainActor
+enum IconCanvasHandoff {
+    private static var held: Set<UUID> = []
+
+    static func hold(_ window: UUID) { held.insert(window) }
+
+    static func take(_ window: UUID) -> Bool { held.remove(window) != nil }
+}
+
 /// A request typed into the New window's Describe field, held from the moment
 /// it asks for a window until that window is seeded with its blank picture.
 @MainActor

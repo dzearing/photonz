@@ -1068,8 +1068,8 @@ private final class Run {
         case .blankVideo(let size, let card):
             try await blankVideo(window: size, card: card, number: number)
 
-        case .startFromEmpty(let row, let size, let card):
-            try await startFromEmpty(row: row, window: size, card: card, number: number)
+        case .startFromEmpty(let row, let size, let card, let answer):
+            try await startFromEmpty(row: row, window: size, card: card, answer: answer, number: number)
         case .startFromFrontDoor(let tile, let press, let answer, let size, let card, let rest, let first, let gone):
             try await startFromFrontDoor(tile: tile, press: press, answer: answer, window: size, card: card,
                                          rest: rest, first: first, gone: gone, number: number)
@@ -3190,8 +3190,9 @@ private final class Run {
         case .expectPicked(let layers, let outline):
             note(number, step.name, try checkPicked(layers, outline: outline), state: describe())
 
-        case .expectIconPreviews(let sides, let absent, let bothGrounds):
-            note(number, step.name, try checkIconPreviews(sides: sides, absent: absent, bothGrounds: bothGrounds),
+        case .expectIconPreviews(let sides, let absent, let bothGrounds, let inked):
+            note(number, step.name, try checkIconPreviews(sides: sides, absent: absent, bothGrounds: bothGrounds,
+                                                          inked: inked),
                  state: describe())
 
         case .expectMeasures(let count, let reads, let inks, let chips):
@@ -10252,14 +10253,18 @@ private final class Run {
     /// ones the document holds, because the two ways this goes wrong are "the
     /// strip is gone" and "the strip is showing the wrong icon", and a bare
     /// list of numbers tells them apart from neither.
-    private func checkIconPreviews(sides: [Int], absent: Bool, bothGrounds: Bool) throws -> String {
+    private func checkIconPreviews(sides: [Int], absent: Bool, bothGrounds: Bool,
+                                   inked: Bool) throws -> String {
         let editor = try requireEditor()
         let showing = editor.iconPreviewTiles.map { Int($0.side) }
         let frameID = editor.iconPreviewFrameID
-        let named = frameID.flatMap { editor.document?.layer(id: $0)?.name } ?? "no icon"
+        let canvasName = "the picture itself"
+        let named = frameID.flatMap {
+            $0 == PhotonzDocument.iconCanvasID ? canvasName : editor.document?.layer(id: $0)?.name
+        } ?? "no icon"
         let icons = (editor.document?.allLayers ?? [])
             .filter { editor.document?.isIconFrame(id: $0.id) == true }
-            .map(\.name)
+            .map(\.name) + (editor.document?.isIconCanvas == true ? [canvasName] : [])
         let inTheDocument = icons.isEmpty ? "none" : icons.joined(separator: ", ")
         func list(_ values: [Int]) -> String {
             values.isEmpty ? "nothing" : values.map(String.init).joined(separator: ", ")
@@ -10283,8 +10288,34 @@ private final class Run {
             throw Failure(description: "the icon previews strip has \(list(unfinished)) missing "
                 + "from a ground; it is showing \(list(showing)) for \"\(named)\"")
         }
+        // The Dark picture is the one with no surface behind the drawing, so
+        // anything at all in it is ink.
+        let empty = editor.iconPreviewTiles.filter { !Self.hasInk($0.dark) }.map { Int($0.side) }
+        if inked, !empty.isEmpty {
+            throw Failure(description: "the icon previews strip has nothing drawn at \(list(empty)); "
+                + "it is showing \(list(showing)) for \"\(named)\"")
+        }
         let groundsNote = bothGrounds ? ", each on both grounds" : ""
-        return "icon previews for \"\(named)\" at \(list(showing))\(groundsNote), as claimed"
+        let inkNote = inked ? ", with the drawing in every one" : ""
+        return "icon previews for \"\(named)\" at \(list(showing))\(groundsNote)\(inkNote), as claimed"
+    }
+
+    /// Whether any pixel of a preview can be seen.
+    private static func hasInk(_ image: CGImage?) -> Bool {
+        guard let image else { return false }
+        let width = image.width, height = image.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let drew = bytes.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(data: buffer.baseAddress, width: width, height: height,
+                                          bitsPerComponent: 8, bytesPerRow: width * 4,
+                                          space: CGColorSpace(name: CGColorSpace.sRGB)
+                                              ?? CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return false }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        return drew && stride(from: 3, to: bytes.count, by: 4).contains { bytes[$0] > 0 }
     }
 
     /// How thick the ink is through one document point of the document as it
@@ -16665,7 +16696,7 @@ private final class Run {
     /// A new empty window, and one row of its card clicked by pointer on its
     /// face, the way a person starts something there. The walk then takes
     /// over whatever document that row put in the window.
-    private func startFromEmpty(row: String, window: CGSize?, card: String?,
+    private func startFromEmpty(row: String, window: CGSize?, card: String?, answer: [String],
                                 number: Int) async throws {
         try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
         let before = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
@@ -16683,6 +16714,9 @@ private final class Run {
         }
         try await adoptEmpty(fresh, step: "startFromEmpty", subject: "an empty window", number: number)
         try await pressControl(row, in: nil, count: 1, modifiers: [], across: nil, number: number)
+        for control in answer {
+            try await pressControl(control, in: nil, count: 1, modifiers: [], across: nil, number: number)
+        }
         try await poll("the document the \"\(row)\" row opens", within: 10) { fresh.document != nil }
         try await adopt(fresh, window: window, step: "startFromEmpty",
                         subject: "\"\(row)\" clicked in the empty window's card", number: number)
