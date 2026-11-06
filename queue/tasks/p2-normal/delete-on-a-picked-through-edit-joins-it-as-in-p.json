@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 360,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:01:09.195Z",
-  "updated": "2026-11-04T16:08:48.045Z",
+  "updated": "2026-11-06T18:49:51.023Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-10-17-a-cut-with-nothing-removed-can-be-joined-back-in.json: 'Delete on a picked through edit does not join it, as it does in Premiere; the task asked not to change Delete without a card, so it is left as it was.' No card was ever opened, so the gap would sit unseen. Premiere: select a through edit (the dashed edit line) and press Delete to join it. Reuse the Join Through Edit action from task a-cut-with-nothing-removed-can-be-joined-back-in; do not write a second join. Filed by the digest of 2026-10-17.",
@@ -84,6 +84,10 @@
     {
       "t": "2026-11-04T16:08:48.044Z",
       "note": "seq 350 -> 360"
+    },
+    {
+      "t": "2026-11-06T18:49:51.022Z",
+      "note": "duplicate of option-delete-ripple-deletes-on-the-timeline-as: checklist and notes folded in, one change to the timeline's Delete keys"
     }
   ]
 }

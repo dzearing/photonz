@@ -4,12 +4,12 @@
   "goal": "An icon drawn in a 512 picture exports with long fractions, because 24 units do not divide into 512. A person handing the file to a developer expects a 24 by 24 icon with whole numbers, the way an icon frame already writes it.",
   "epic": "icon-export",
   "priority": "p1-high",
-  "seq": 79,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:58:50.222Z",
-  "updated": "2026-11-05T14:59:11.294Z",
+  "updated": "2026-11-06T18:49:52.141Z",
   "deps": [
     "a-picture-made-for-an-icon-works-like-an-icon-gu"
   ],
@@ -18,6 +18,7 @@
   "acceptance": [
     "An icon drawn on whole units in a File, New, Image, Icon picture exports as SVG with viewBox 0 0 24 24 and every point on a whole unit, except where a curve's own handles need a fraction",
     "An icon Ask made exports the same way, and Copy puts that same SVG on the clipboard",
+    "An animated icon from the same picture writes the same whole units in its moving SVG, and plays the same in Safari and Chrome",
     "The drawing looks the same at every size as before: a rendered comparison of the 512 canvas and the exported file differs by no visible amount",
     "PNG export of the same picture still comes out at 512 unless the sheet says otherwise",
     "Try path: File, New, Image, Icon, draw with the Pen, Export as SVG, read the file. Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
@@ -30,6 +31,14 @@
     {
       "t": "2026-11-05T14:59:11.293Z",
       "note": "seq 139.375 -> 79"
+    },
+    {
+      "t": "2026-11-06T18:49:51.484Z",
+      "note": "digest 2026-11-06: the task it waited on closed (a-picture-made-for-an-icon-works-like-an-icon-gu), so it can run. The rough list of ask-animates-what-it-makes-an-animated-svg-icon says moving icons carry the same fractions, so that is now on the checklist."
+    },
+    {
+      "t": "2026-11-06T18:49:52.140Z",
+      "note": "seq 79 -> 30"
     }
   ]
 }

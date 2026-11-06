@@ -4,12 +4,12 @@
   "goal": "Choosing what a drawn line is painted with shows each brush as a little sample stroke, the way the Brush tool's chooser already does, instead of a list of words, and offers Browse brushes and Edit brush next to it as the drawing mock shows.",
   "epic": "image-paint",
   "priority": "p2-normal",
-  "seq": 530,
+  "seq": 560,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T05:54:41.076Z",
-  "updated": "2026-11-05T14:50:00.523Z",
+  "updated": "2026-11-06T18:49:58.107Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from a-vector-path-s-line-can-be-painted-with-a-brush (2026-10-31), which shipped the row as a word dropdown (PathBrushSettings.swift) because the tile chooser (BrushChooser.swift: BrushChooserButton/BrushChooserGrid) is tied to the armed brush and a second popover needs queue/bin/focus-drill.sh with the person away. Mock: docs/design/mocks/pages/draw.html Stroke group (Brush picker, Size, Flow, Color, Browse brushes, Edit brush) and vector-wt.html step 9 (Library scope Brushes). The user asked on 2026-10-24 that brushes be picked from tiles, not a dropdown. Edit brush depends on a brush editor that does not exist yet (brush-editor.html); it can open the panel's full Brush settings for that medium until then.",
@@ -50,6 +50,10 @@
     {
       "t": "2026-11-05T14:50:00.522Z",
       "note": "seq 580 -> 530"
+    },
+    {
+      "t": "2026-11-06T18:49:58.106Z",
+      "note": "seq 530 -> 560"
     }
   ]
 }

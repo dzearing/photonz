@@ -24,5 +24,6 @@
   "stash": "335e3a5f3782fed37554a377127869d863f51215",
   "restore": "git stash apply 335e3a5f3782fed37554a377127869d863f51215",
   "why": "",
-  "handed": null
+  "handed": "2026-11-06T18:49:21.803Z",
+  "clearedWhy": "Looked at it: the Qwen-Image-2.1 measuring scripts and a section of docs/design/ask.md, byte for byte the same as stash 3583be90, which intake kept as a backup when it closed the task on 2026-11-05 (answered by 841cf2f6). That older stash is no longer in the stash list, so this stash stays as the one named copy. No task filed: the question is answered and nothing is left to finish."
 }

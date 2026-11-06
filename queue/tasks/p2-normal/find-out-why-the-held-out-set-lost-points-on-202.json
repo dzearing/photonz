@@ -4,12 +4,12 @@
   "goal": "The score for requests Ask has never been tuned on fell from 68.4 to 62.7 the day icon tweaks landed, mostly because more drawings ran out of time. Nobody knows yet whether that is the change, the way the run was done, or chance, so the next reading has to say.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 7.5,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T00:19:24.333Z",
-  "updated": "2026-11-06T00:19:24.336Z",
+  "updated": "2026-11-06T18:49:54.031Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced, one reading. Scripts/ask-eval.sh time 20261105-214708-ask-held-out 20261105-055127-ask-held-out printed drawing 4 of 36 ran out of time, 3 stopped part way, 149s median, against 1 of 36, 2 stopped, 147s; redline 33.8 against 44.1 over 3 cases, a group that read 33.2 and 33.6 earlier this week. Three extra zeros are about 4.7 of the 5.7 points. Prompts for anything but an icon did not change in 7c581639 or f0e55cc4, and restyle_icon is offered only on a picture holding an icon. Held-out icon requests of something breaking would take the new route, which cannot be told from totals. The run was resumed in about sixteen pieces of six minutes, each restarting the probe; that is a guess at the cause, not a finding.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-11-06T00:19:24.335Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-06T18:49:51.783Z",
+      "note": "digest 2026-11-06: one held-out reading also serves ask-s-redlines-do-at-least-as-well-on-unseen-req, so take it once for both. It was not run again for ask-animates-what-it-makes-an-animated-svg-icon (about 2.4 hours), so 62.7 is still the latest total."
+    },
+    {
+      "t": "2026-11-06T18:49:54.030Z",
+      "note": "seq 7.5 -> 20"
     }
   ]
 }

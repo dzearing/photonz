@@ -4,12 +4,12 @@
   "goal": "An 8 GB Mac is told today that it does not have enough memory for Ask, because the only model small enough for it scores far below what Ask needs. Find a way, such as shorter instructions for small models, fewer tools or a better small model, to give 8 GB Macs an Ask that does real work.",
   "epic": "agent-drivable",
   "priority": "p2-normal",
-  "seq": 120,
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-02T14:13:20.821Z",
-  "updated": "2026-11-02T14:50:08.788Z",
+  "updated": "2026-11-06T18:49:55.024Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-11-02 (docs/design/ask.md, Choosing a model): Gemma 4 E2B 4.6 held-out (4.2 GB, the only one that fits), Qwen3.5 4B 12.4 (reads 7.8 GB, perhaps high; the eval memory reading took 29.1 for the 9B once, likely another llama-server), Gemma 4 E4B 4.5. Small models fail mostly by writing tool calls Ask cannot use (AskConversation.brokenCalls counts unparsed text calls, drawing problems and refused arguments together). Ask instructions are about 16k tokens, half of an 8 GB Macs 32k window. Qwen3.5 9B reached 20.7 at --mac 16. Model files are already in ~/Library/Application Support/Photonz/Models. Eval: Scripts/ask-eval.sh run --engine ask --set held-out --models <id> --mac 8 --minutes 8, then --resume.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-11-02T14:50:08.787Z",
       "note": "seq 108.75 -> 120"
+    },
+    {
+      "t": "2026-11-06T18:49:55.023Z",
+      "note": "seq 120 -> 150"
     }
   ]
 }

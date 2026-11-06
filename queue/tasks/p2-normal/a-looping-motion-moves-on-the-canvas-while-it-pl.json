@@ -1,0 +1,40 @@
+{
+  "id": "a-looping-motion-moves-on-the-canvas-while-it-pl",
+  "title": "Find out what a picture with a saved motion does at Next defaults: does it move on the canvas, and does its strip read",
+  "goal": "Add Motion is gone at Next defaults, so nobody can make a looping motion there today, but a picture saved with one can still be opened. With the new keys switched off, its shape stands still on the canvas while the small previews swing, and its strip can print \"repeats\" over a ruler number. Find out whether a person opening such a picture with default settings sees either, and fix what they do see.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-06T12:14:52.180Z",
+  "updated": "2026-11-06T18:49:54.268Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-06. Insert {\"do\":\"expectPictureMoves\",\"seconds\":0.2} after the second {\"do\":\"key\",\"key\":\"space\"} of Scripts/playtest/motion-loop-preview-walk.json and run Scripts/playtest.sh on it with --no-build. Output: '[29 expectPictureMoves] FAILED: the canvas's picture stood still for 0.2s'. Two window captures 0.2 s apart showed the previews at different angles, the strip's playhead moved, and the main canvas square and its selection flat in both. NOT the crisp tile cause that froze keyed pictures: letting the tile go on every play in Next (letGoOfCrispTileForPlay, EditorState.swift) left this check failing, so that widening was reverted. Unconfirmed: the cause, and whether a first play is affected. EditorState.displayDocument does ask for document.moved(toMotionTimeMS:) while isMotionPlaying, so look past it. Walks stayed green because they only read 'playing'.\n\nDigest 2026-11-06: the check above sets next-picture-keys OFF in the walk's setup. Same walk with the flag left alone stops at step 16: no menu called \"Add Motion\" is in the window. The keyed route a person has at defaults is covered: picture-keys-walk, agent-keys-walk and ask-animates-an-icon-walk each carry expectPictureMoves. Theory only, not tested: the crisp tile is let go only when isKeyedPicture (EditorState.swift ~5820), and a picture with saved motion and no keys is not one. Folded in from the-repeats-label-on-the-timing-strip-s-ruler-ne: label is MotionStripMarksView in MotionStripView.swift (~1102); repro Scripts/playtest.sh Scripts/playtest/a-lone-spinner-strip-reads-one-turn-walk.json, which also pins the flag off, then look at 1-one-turn-sc.png; mock icon-loop-wt.html #wrapMark keeps \"and again\" in the lanes. The strip people get at defaults (PictureKeyStrip) draws no ruler tick at a 2 s lap end: queue/audits/2026-11-05-picture-keys-5.png.",
+  "acceptance": [
+    "A picture saved with a looping Rotation is opened at Next defaults with no switch changed, and played; what the canvas and the strip do is written in this task, with the walk that shows it",
+    "If the shape stands still there, it turns as the previews do, and that walk carries expectPictureMoves straight after Play and passes with no flag forced",
+    "If that picture shows the old strip, a lone 800 ms Forever spinner has its ruler 800 and its repeats label both readable in a real capture, and a lap ending between ticks shows the label where it does today",
+    "If no such picture can reach Next defaults, this closes saying so, and neither fault is worked on"
+  ],
+  "log": [
+    {
+      "t": "2026-11-06T12:14:52.182Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-06T18:49:51.182Z",
+      "note": "priority p1-high -> p2-normal"
+    },
+    {
+      "t": "2026-11-06T18:49:51.334Z",
+      "note": "digest 2026-11-06: moved p1 to p2 and retitled as the open question it is. Ran the notes' command at acc8dc1d: it still fails, '[29 expectPictureMoves] the canvas's picture stood still for 0.2s', and it also fails on the first play straight after Add Motion, which answers that checklist item. But motion-loop-preview-walk forces next-picture-keys off. With the flag left alone the walk stops at step 16 because Add Motion is not in the window, so a person at Next defaults cannot make this motion. Whether an older saved picture reaches it at defaults was not tested."
+    },
+    {
+      "t": "2026-11-06T18:49:54.267Z",
+      "note": "seq 135 -> 50"
+    }
+  ]
+}

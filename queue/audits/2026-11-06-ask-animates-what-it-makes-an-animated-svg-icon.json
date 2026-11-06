@@ -1,0 +1,62 @@
+{
+  "feature": "Ask makes an animated SVG icon from one request",
+  "epic": "icon-animate",
+  "summary": "Ask an icon to move and it draws the icon and keys its parts in about a minute and a half, as one undo step. It plays, loops, copies as an animated SVG, stays editable on the timeline, and a follow-up like 'pop faster' changes that motion in place.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: ask-animates-an-icon-walk. Eval: 12 animated cases, run 20261106-171511-ask, against before run 20261106-122500-ask. Tweaks: runs 20261106-161512-followup and 20261106-180346-followup.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open Ask (Command K), type: make an animated SVG icon of a balloon popping, and press Send.",
+      "shot": "2026-11-06-ask-animates-1-icon-and-keys-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Play under the canvas.",
+      "shot": "2026-11-06-ask-animates-2-playing-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Compare the frames of what you get with the same request before this work.",
+      "shot": "2026-11-06-ask-animates-after-balloon-popping.png"
+    },
+    {
+      "do": "Open the reel to watch it move.",
+      "shot": "2026-11-06-ask-animates-reel-balloon-popping.gif"
+    },
+    {
+      "do": "Right click the canvas, choose Copy SVG, paste it into a new .svg file and open that in Safari or Chrome.",
+      "shot": "2026-11-06-ask-animates-chrome.png"
+    },
+    {
+      "do": "Ask again in the same window: pop faster.",
+      "shot": "2026-11-06-ask-animates-3-faster-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once: the motion goes back to its first speed."
+    },
+    {
+      "do": "Try a request of your own: make an animated icon of a trash can lid opening.",
+      "shot": "2026-11-06-ask-animates-after-trash-lid-opening.png"
+    }
+  ],
+  "evaluate": [
+    "Does the balloon read as a pop to you, or does the fade back in spoil it?",
+    "Is about a minute and a half an acceptable wait for an animated icon?",
+    "When the motion needs room Ask draws the icon a little smaller in its frame: is that better than the motion being cut off?",
+    "Is 'Plays for 1.6 s and loops.' the right thing for the Agent row to say?",
+    "Should a request like 'a spinning loader', with no word such as animated in it, also move?"
+  ],
+  "rough": [
+    "Before: 15.0 of 100, reads as asked 1.8. After: 77.3, reads as asked 7.5, 10 of 12 cases at 7 or more, loops cleanly 8.2. That is one run: between my last few runs single cases moved by up to 3 points.",
+    "'None can animate' was not quite true before: 6 of 12 got some keys, because the key tools already reached an animated request. Only the heart read as asked.",
+    "The envelope still reads 4: the flap is a bent stick that crosses the body. Filed as an-animated-icon-s-flap-reads-and-a-drawn-line-e.",
+    "The paper plane reads 6 and stalls cut off at the top, and the wifi's arcs shrink to a row of dots just before the lap restarts, so it loops at 3. Both are on the same follow-up, an-animated-icon-s-flap-reads-and-a-drawn-line-e.",
+    "Tweaks: 7 of 7, each one Command Z back to the first file byte for byte. Six ran before the last fix to change_keys and the spinner ran after it. That fix only changes what happens when a layer is named, so the six were not run again.",
+    "The held-out total was not run again, about 2.4 hours. It stays 62.7 from f0e55cc4. It holds no animated case and the still icon rules are word for word the same, so nothing in it reaches this route, which also means this work has no unseen score yet.",
+    "An animated icon's file has fractional numbers, because a 24 grid is drawn at 512. It plays the same, but it is less tidy than a still icon's.",
+    "A dashed line in an icon Ask draws is refused for a moving icon, because dashes do not reach the layers. Still icons lose their dashes quietly.",
+    "Fixed on the way, and it affects every icon: a thin outlined bar was missing from all SVG exports, still or moving, while the canvas drew it.",
+    "No mock covers Ask making motion."
+  ]
+}

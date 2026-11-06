@@ -2,14 +2,14 @@
   "id": "a-corner-resize-that-keeps-proportions-still-sna",
   "title": "A corner resize that keeps proportions still snaps to guides and neighbours",
   "goal": "Since corners keep a layer's proportions by default (the user, 2026-11-01), a corner drag no longer lines its edge up with guides, the grid or nearby layers, because snapping only ever ran on free resizes. A redline user resizing a box to meet a neighbour loses the yellow guide. The dragged corner should still catch, with the other side following the proportions.",
-  "epic": "found-selection",
+  "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 550,
+  "seq": 580,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T16:35:27.500Z",
-  "updated": "2026-11-05T14:50:00.677Z",
+  "updated": "2026-11-06T18:49:58.256Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by reading and by the walk numbers: CanvasPointerDrags.swift resize branch, snapping = !aspect && !held.isFree && !centred, and aspect is now SelectionDrag.keepsProportions(handle, shift:) which is true for every corner without Shift. selection-grips-walk step 12 corner drag reports no guide. Before next-transform-modes only Shift-corner drags (rare) skipped snapping. Found by the-reworked-selection-ships-cleaner-grips-a-tag.",
@@ -43,6 +43,14 @@
     {
       "t": "2026-11-05T14:50:00.676Z",
       "note": "seq 600 -> 550"
+    },
+    {
+      "t": "2026-11-06T18:49:51.409Z",
+      "note": "digest 2026-11-06: epic moved from found-selection, staged later, to measure-redline, staged now: its goal is a redline user losing the yellow guide. Priority and order unchanged."
+    },
+    {
+      "t": "2026-11-06T18:49:58.255Z",
+      "note": "seq 550 -> 580"
     }
   ]
 }
