@@ -44,6 +44,12 @@ export const DEFAULTS = {
   // Hours between whole-set runs. 24, once a day (was twelve until 2026-09-26, when walks made the user's Mac unusable): a full sweep is 113
   // minutes at 544 walks, which is 16 per cent of a day at this floor.
   floorHours: 24,
+  // Hours between two rotating checks. Until 2026-11-05 a check ran after EVERY
+  // task that landed code, and a "ten minute" check was taking about thirty
+  // (14 walks in 30 minutes that evening), so the user kept finding the loop
+  // between tasks and asked for it less often: at most one every four hours.
+  // The whole set still runs once a day and catches the rest.
+  sliceFloorHours: 4,
   // How long a rotating check is allowed to take, in walks-worth of time. Ten
   // minutes is short enough that it never reads as the loop stalling; at the
   // measured cost of a walk (about 18s on 2026-10-06) it is about thirty five
@@ -95,6 +101,10 @@ export function decide({
   codeSinceCheck = null,
   screenLocked = false,
   floorHours = DEFAULTS.floorHours,
+  // When the last rotating check finished (queue/sweep/last-slice.json), and
+  // the least time between two of them.
+  lastSliceEnded = null,
+  sliceFloorHours = DEFAULTS.sliceFloorHours,
   // The walk names as they are now. Only needed to carry on from a stopped
   // whole-set run (queue/bin/sweep-resume.mjs); without it nothing resumes.
   set = null,
@@ -193,6 +203,10 @@ export function decide({
   // followed straight away by a rotating check over the same code.
   if (head && (checkedCode || sameCode)) {
     return out('nothing', 'nothing new has landed since the last walk check');
+  }
+  const sinceSlice = lastSliceEnded ? (now - Date.parse(lastSliceEnded)) / HOUR : Infinity;
+  if (Number.isFinite(sinceSlice) && sinceSlice < sliceFloorHours) {
+    return out('nothing', `the last rotating check was ${sinceSlice.toFixed(1)}h ago; the next waits until ${sliceFloorHours}h have passed`);
   }
   return out('slice', `code has landed since the last walk check and it is ${hoursSince.toFixed(1)}h since the last whole-set run, so the rotating check runs${asked}${notResumed}`);
 }
@@ -356,6 +370,7 @@ export function decideFromDisk({
   const latest = readJSON(join(dir, 'latest.json'));
   const blind = readJSON(join(dir, 'blind.json'));
   const rotation = readJSON(join(dir, 'rotation.json'));
+  const lastSlice = readJSON(join(dir, 'last-slice.json'));
   return decide({
     now,
     requests: (requested && requested.requests) || [],
@@ -369,6 +384,8 @@ export function decideFromDisk({
     codeSinceCheck: rotation ? codeLandedBetween(rotation.lastHead, at, repo) : null,
     screenLocked,
     floorHours,
+    lastSliceEnded: lastSlice && lastSlice.ended ? lastSlice.ended : null,
+    sliceFloorHours: Number(process.env.PHOTONZ_SLICE_FLOOR_HOURS || DEFAULTS.sliceFloorHours),
     set: walkNames(repo),
   });
 }
