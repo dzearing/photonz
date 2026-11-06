@@ -58,7 +58,12 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
+  "status": "resolved",
   "created": "2026-11-06T01:05:54.501Z",
-  "shot": "2026-11-05-picture-keys-review.png"
+  "shot": "2026-11-05-picture-keys-review.png",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-11-06T01:40:32.799Z"
+  }
 }

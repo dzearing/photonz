@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 40,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:26:13.810Z",
-  "updated": "2026-11-06T01:13:55.855Z",
+  "updated": "2026-11-06T01:40:32.857Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'The motion pane is totally unintuitive. I hit the + sign and i have to choose which property i want to animate. I do not want to think about this. I want to just start creating keyframes where maybe I position something, save a keyframe, or click on one, adjust some things (opacity position, transform, etc) and it persists on that keyframe and auto tweens. Don't we have this? We should be reusing a lot of the ux for videos for animated images. Please file a task to properly design an intuitive simplified way to create them.' Today: video has Add Key + any change keys itself (Sources/PhotonzCore/KeyMoments.swift, PropertyKeys.swift, LooksAtThePlayhead.swift); pictures lead with the Animate a property picker (Sources/Photonz/EditorState+PropertyKeys.swift, InspectorPanel 'Animate a property'). Related queued: ask-animates-what-it-makes-an-animated-svg-icon (Ask setting keys) should use the same model.",
@@ -73,6 +73,10 @@
     {
       "t": "2026-11-06T01:13:55.851Z",
       "note": "Design finished and with the user: interactive prototype at docs/design/mocks/pages/picture-keys.html (commit 93f105a6), card animating-a-picture-is-as-simple-as-setting-a-mo-should-animating-a-picture-work with a marked picture and a brief. The task's own checklist says to wait for approval before building, so nothing in the app changed."
+    },
+    {
+      "t": "2026-11-06T01:40:32.856Z",
+      "note": "decision \"Should animating a picture work like this prototype: press Add Key (1), and from then on a change to that layer lands on the hollow diamond at the playhead (2), with a slim bar (3) and the video timeline's rows (4) under the picture?\" resolved: Build it as shown, on pictures and videos: K adds a key, the Lens loses its letter, the Add Key button replaces Animate a property on video, and the pivot shows only on the Rotation row"
     }
   ],
   "started": "2026-11-06T00:50:20.003Z"

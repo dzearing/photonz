@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "blocked",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T01:36:23.358Z",
-  "updated": "2026-11-05T16:12:40.157Z",
+  "updated": "2026-11-06T01:40:35.983Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake), correcting the closed task: 'when i earlier said that i wasn't getting photos into the clipboard this was on another machine not running 2 copies of photonz, so your assumptions were wrong.' The other Mac's version and the apps pasted into are being asked; add them to this log when known. Prior work: every-screenshot-is-on-the-clipboard-every-time (done, c999166a, keep it: one running Photonz holds the capture shortcuts). Its own log admits: 'pastes were made by a second process reading the clipboard as each app kind does, not by pasting into Chrome/Preview/Slack/Mail themselves'. Code: Sources/Photonz/Capture/CaptureStore.swift, Sources/Photonz/ClipboardHandOff.swift, Sources/PhotonzRender/ClipboardPicture.swift.",
@@ -119,10 +119,15 @@
     {
       "t": "2026-11-05T16:12:40.151Z",
       "note": "Four suspects fixed and pushed (76fdef76). Not reached: 20 of 20 in every target (real Chrome 20 of 20 only) and a run with exactly one released Photonz. Cause on the other Mac still not confirmed. The card asks how to do the last check; audit queue/audits/2026-11-05-screenshot-clipboard-suspects-fixed.json."
+    },
+    {
+      "t": "2026-11-06T01:40:35.981Z",
+      "note": "Closed by the user's call, 2026-11-05 ('just fix the suspects'): all four suspects fixed and shipped in 76fdef76. If a screenshot still misses the clipboard on the other Mac after the next release, the user will say so and a new task starts from the other-mac-report."
     }
   ],
   "started": "2026-11-05T15:00:17.595Z",
   "walks": [
     "screenshot-reaches-the-clipboard-walk"
-  ]
+  ],
+  "completed": "2026-11-06T01:40:35.982Z"
 }
