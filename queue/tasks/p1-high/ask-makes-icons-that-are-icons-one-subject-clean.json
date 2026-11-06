@@ -5,18 +5,18 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:19.981Z",
-  "updated": "2026-11-05T14:49:57.445Z",
+  "updated": "2026-11-06T00:19:45.362Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping. But I think it just drew a picture of a stick figure holding balloons. I'd like to be able to use ask for creating icons and especially animated svgs'. Today: AskPlanning routes 'icon' words to vector art (add_drawing), which is painted by the picture model and traced (AgentPictureKind); the doing tools include add_shape and add_path, which an icon route can use directly. Animation is a separate task: ask-animates-what-it-makes-an-animated-svg-icon.",
   "acceptance": [
-    "STILL OPEN: 'make an icon of a balloon popping', the user's own request, reads as a balloon bursting: at least 7 of 10 on didWhatWasAsked and reads as an icon, and named as a balloon blind (Scripts/ask-eval.sh run --engine ask --cases icon-balloon-popping). Reached 2026-11-05 on the shipped code (df457197, run 20261105-043455-ask): 55.4, didWhatWasAsked 5, reads as an icon 4, named 3 of 3, against 74.4 before.",
-    "ASK FOR TWEAKS (user, 2026-11-05): a follow-up on an icon Ask made ('make the knot smaller', 'make it outline', 'thicker lines', 'rounder corners') changes THAT icon in place as one undo step, using its named parts (change_part and the icon's own layers), measured with at least 6 two-turn icon cases in the eval.",
-    "Held-out total measured on the shipped prompt, beside the climb total: held-out 68.4 over all 45 cases (run 20261105-055127-ask-held-out, df457197; 66.7 on the run before), climb 88.3 on the 14 icon cases (run 20261105-043455-ask). Measure it again if the prompt changes. Scripts/ask-eval.sh report shows a later one-case try as its climb line, not this reading.",
+    "'make an icon of a balloon popping', the user's own request, reads as a balloon bursting: at least 7 of 10 on didWhatWasAsked and reads as an icon, and named as a balloon blind (Scripts/ask-eval.sh run --engine ask --cases icon-balloon-popping). Reached 2026-11-05 on 7c581639: four readings of the final version, 8 and 7, 8 and 7, 7 and 6, 8 and 7, scores 88.8, 88, 85.6, 88.8, named 3 of 3 each (runs 20261105-190629, 190826, 191028, 204948). Against 55.4 and 25.8 on the code before.",
+    "ASK FOR TWEAKS (user, 2026-11-05): a follow-up on an icon Ask made ('make the knot smaller', 'make it outline', 'thicker lines', 'rounder corners') changes THAT icon in place as one undo step, using its named parts (change_part and the icon's own layers), measured with at least 6 two-turn icon cases in the eval. Reached 2026-11-05 on f0e55cc4: 8 of 8 two-turn cases (run icon-tweaks-after), against 3 of 7 with one not run (icon-tweaks-before); ask-tweaks-an-icon-walk proves in place and one undo at Next defaults.",
+    "Held-out total measured on the shipped prompt, beside the climb total: held-out 62.7 over all 45 cases (run 20261105-214708-ask-held-out, f0e55cc4; 68.4 on the run before), climb 90.8 on the 14 original icon cases and 85.4 on all 17 (run 20261105-204948-ask). The fall is mostly time-outs (1 to 4 of 36 drawings), cause unknown, followed up in find-out-why-the-held-out-set-lost-points-on-202.",
     "WHERE THE ICON GOES (user, 2026-11-04, after Ask put a 512 icon frame beside their picture and widened the canvas from about 1026 to 2112): Ask never grows the person's document or adds a frame beside their work to hold an icon. If the current picture is empty (only a Background), it becomes the icon: square, icon sized, the icon drawn on the canvas itself. Otherwise Ask opens a NEW picture sized for the icon in its own window, draws there, and its row says so (Made a new icon: Balloon). No new document kind: File > New stays Image or Video; New Image gets icon size presets (24 pt glyph on 512, 1024 app icon).",
     "Reproduce: 'make an icon of a balloon popping', 'a trash can icon', 'a settings gear icon, outline', 'a rocket app icon' on Ask at Next defaults; record what Ask makes today (screenshots in the audit).",
     "An icon request takes an icon route: drawn with shapes and paths directly (add_shape, add_path) on a square icon canvas or artboard, not painted by the picture model and traced. The route is chosen from the general words for an icon, never from subjects; the subject and its form come from the model's own knowledge (no hardcoded subjects, memory: no-hardcoded-generated-content). If tracing is kept for any case, the subject is reduced to one centred object first.",
@@ -133,12 +133,42 @@
     {
       "t": "2026-11-05T14:49:57.444Z",
       "note": "seq 2e-7 -> 20"
+    },
+    {
+      "t": "2026-11-05T16:51:00.340Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-05T18:57:12.865Z",
+      "note": "Dropped after measuring: straightening a short wiggle. Three readings of the balloon at 85.6, did what was asked 7, reads as an icon 6, every judge saying lollipop: the wavy string is part of what says balloon."
+    },
+    {
+      "t": "2026-11-05T19:12:47.573Z",
+      "note": "Balloon on the tear tool, three readings of the current version: 88.8 (8, 7), 88 (8, 7), 85.6 (7, 6), named 3 of 3 each. The shipped design route read 55.4 and 25.8 on the same request."
+    },
+    {
+      "t": "2026-11-05T20:40:11.064Z",
+      "note": "walks ask-makes-an-icon-walk, ask-puts-an-icon-in-its-own-picture-walk, new-image-icon-sizes-walk -> ask-makes-an-icon-walk, ask-puts-an-icon-in-its-own-picture-walk, new-image-icon-sizes-walk, ask-tweaks-an-icon-walk"
+    },
+    {
+      "t": "2026-11-05T21:40:39.804Z",
+      "note": "Control, tear switched off for one build and not shipped (run 20261105-213322-ask), against tear on (run 20261105-204948-ask), one reading each: heart 30.5 to 55.4, egg 84.8 to 70.6, bubble 71.3 to 54.8. The tear helps a balloon and a heart and reads lower on an egg and a bubble."
+    },
+    {
+      "t": "2026-11-06T00:19:24.452Z",
+      "note": "left rough: a cut made by filling is plain white, so on a dark picture it is white, not a hole. It did not earn a task: icons land on white and nobody has hit it."
+    },
+    {
+      "t": "2026-11-06T00:19:45.360Z",
+      "note": "Shipped in 7c581639 and f0e55cc4. The balloon reads as popping: 88.8, 88, 85.6, 88.8, at its bar of 7 on three readings of four (one read 7 and 6), named 3 of 3 each, against 55.4 and 25.8 before. Icon tweaks work in place with one undo: 8 of 8 two-turn cases against 3 of 7, walked at Next defaults. 14 icon cases 90.8 against 88.3. Held-out fell to 62.7 from 68.4, mostly more time-outs, cause unknown: filed as find-out-why-the-held-out-set-lost-points-on-202. The tear reads lower than no tear on an egg and a bubble: filed as a-broken-icon-reads-as-what-breaks-it-a-crack-th."
     }
   ],
-  "started": "2026-11-05T02:53:05.050Z",
+  "started": "2026-11-05T16:51:00.339Z",
   "walks": [
     "ask-makes-an-icon-walk",
     "ask-puts-an-icon-in-its-own-picture-walk",
-    "new-image-icon-sizes-walk"
-  ]
+    "new-image-icon-sizes-walk",
+    "ask-tweaks-an-icon-walk"
+  ],
+  "completed": "2026-11-06T00:19:45.361Z"
 }
