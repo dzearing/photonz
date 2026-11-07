@@ -163,7 +163,10 @@ extension CanvasNSView {
             hideDragReadout()
             return
         }
-        var words = DragReadout.text(subject.reading)
+        // The crop box and a region are boxes of the picture's own pixels, and
+        // the canvas size is said in points on every picture.
+        let lengths = cropDrag == nil && regionDrag == nil ? document?.lengthUnit ?? .point : .point
+        var words = DragReadout.text(subject.reading, in: Experiments.shared.iconFramesEnabled ? lengths : .point)
         // The reworked selection's tag carries on as the readout through a
         // drag: the same accent pill in the same place, so the one label under
         // the layer never changes voice (`CanvasSelectionGrips`). A drag on

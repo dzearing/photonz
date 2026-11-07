@@ -31,6 +31,12 @@ extension EditorState {
     /// from a picked size brings the camera with it (`next-icon-frames`).
     var iconFramesEnabled: Bool { Experiments.shared.iconFramesEnabled }
 
+    /// What this picture's lengths read in where a person meets them. Points
+    /// in any release that does not draw icons.
+    var lengthUnit: LengthUnit {
+        iconFramesEnabled ? document?.lengthUnit ?? .point : .point
+    }
+
     /// Whether Layer ▸ Frame Selection would do anything: one unlocked layer
     /// is enough, because putting a single thing on a screen of its own is a
     /// normal way to start.

@@ -4842,7 +4842,7 @@ final class EditorState {
                                                  slack: layer.boxSlack,
                                                  angle: previewedAngle(of: layer.id))
         }
-        return LayerGeometrySelection(members)
+        return LayerGeometrySelection(members, lengths: lengthUnit)
     }
 
     /// A typed geometry field landing (Return, Tab, or a click away): every

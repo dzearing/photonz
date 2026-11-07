@@ -1,0 +1,63 @@
+{
+  "feature": "An Icon picture's lengths read in its units",
+  "epic": "icon-grid",
+  "summary": "On a File, New, Image, Icon picture you can type 1.75 into Width and get the icon's 1.75 line, in the canvas, the previews and the SVG. Corner Radius, the Info values, the Effects rows and the pill under a reshape now read the same units as the tag above the shape.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is Scripts/playtest/an-icon-picture-reads-in-units-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose File, New, Image, Icon, draw three Pen points and press Return.",
+      "shot": "2026-11-07-icon-lengths-1-width-starts-in-units-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type 1.75 into Width and press Return.",
+      "shot": "2026-11-07-icon-lengths-2-typed-175-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type 1.5 into Corner Radius and press Return.",
+      "shot": "2026-11-07-icon-lengths-3-corner-radius-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Info in the tool bar and type 12 into W.",
+      "shot": "2026-11-07-icon-lengths-4-transform-values-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Add a Glow from Effects and type 2 into its Size.",
+      "shot": "2026-11-07-icon-lengths-5-glow-size-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the path's last point up and read the pill.",
+      "shot": "2026-11-07-icon-lengths-6-mid-reshape-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open a 24 unit SVG, click one of its lines and read Width."
+    },
+    {
+      "do": "Compare the Width row with the mock's Stroke section.",
+      "shot": "2026-11-07-icon-lengths-beside-the-mock.png"
+    }
+  ],
+  "evaluate": [
+    "Does a bare 1.75 with no px beside it read right on an Icon picture?",
+    "Does a pull on the Width knob stepping in quarters of a unit feel fine enough?",
+    "Is 12 units a sensible top for Width on an icon?",
+    "Is it right that the Canvas row still says 512 x 512 while everything on it reads units?"
+  ],
+  "rough": [
+    "Width stays a slider with a typed number where the mock draws a dropdown of weights, as card a-drawn-path-s-outline-settings-read-like-the-ic-the-icon-mock-calls-a-path-s-lin answered.",
+    "The mock's Stroke section is a Line row here: the rows come from card one-way-to-add-colour-and-remove-any-part-of-a-s-how-should-a-shape-s-parts-its-f, and the word Line from task a-path-says-what-its-colour-paints-how-thick-its.",
+    "The mock's note under Stroke is left out because no saved stroke exists yet: task a-glyph-takes-the-icon-set-s-saved-stroke-in-one covers it.",
+    "A Pen line starts at 2 units where an outline starts at 1.75. The 40 in the task's notes was the panel's old limit, not the line: it was 2 units all along, and the panel now says so.",
+    "These stay in points on purpose: the Canvas size, the crop box and a region, because they are the file's own pixels; Text size, because type is sized in points; Padding, Gap and a copy's room, because they count in whole numbers; and Measure, because a redline reads px.",
+    "A group's Corner Radius refusal sentence still says px, on the rare group whose contents are already rounded.",
+    "Effect rows such as Glow Size read units, but a pull on their knobs still lands on whole points, so a pull can read 0.47 where a typed number reads 0.5.",
+    "During a point reshape the tag and the pill both show the size, so the same numbers appear twice.",
+    "Sweeping with the arrow tool shows no pill on an Icon picture, and I have not found out why. It is filed; my change only alters a pill's words."
+  ]
+}

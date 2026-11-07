@@ -32,6 +32,9 @@ struct FourSidedPopout: View {
     /// The four, in the order the shape draws them: clockwise from the top for
     /// sides, clockwise from the top left for corners.
     let numbers: [Number]
+    /// What these numbers read in. Padding and a copy's room stay in points;
+    /// corners follow the picture.
+    var lengths = LengthUnit.point
 
     /// Which four, and the picture they make.
     enum Shape {
@@ -147,21 +150,26 @@ struct FourSidedPopout: View {
     /// One number, with its own word under it. The word is small and quiet
     /// because the position has already said which one it is; it is there for
     /// the reading that is not a glance.
+    private func showing(_ number: Number) -> NumberBox.Showing {
+        if let value = number.value, !lengths.isPoint { return .number(lengths.spell(value)) }
+        return NumberBox.showing(number.value,
+                                 standingIn: FourSidedNumber.standIn(uniform: number.value))
+    }
+
     @ViewBuilder private func box(_ index: Int) -> some View {
         if numbers.indices.contains(index) {
             let number = numbers[index]
             VStack(spacing: 1) {
                 HStack(spacing: 2) {
                     PanelNumberField(
-                        showing: NumberBox.showing(
-                            number.value,
-                            standingIn: FourSidedNumber.standIn(uniform: number.value)),
+                        showing: showing(number),
                         label: number.title,
                         width: .fitting(least: 62, most: 148),
                         floor: 0,
-                        wholeNumbers: true,
+                        wholeNumbers: lengths.isPoint,
                         help: number.help,
                         isFollowing: !number.isOwn,
+                        spell: lengths.spell,
                         land: { number.commit($0); return nil }
                     )
                     .playtestField(number.title)

@@ -51,7 +51,7 @@ extension PhotonzDocument {
     /// handing the file over expects a 24 by 24 icon. App Icon keeps its own
     /// 1024 numbers, and so does an icon frame somewhere on a bigger picture.
     public var pictureIconUnit: CGFloat? {
-        guard opensAsIcon, canvasSize.width == IconUnits.pictureSide else { return nil }
+        guard canvasSize.width == IconUnits.pictureSide, opensAsIcon else { return nil }
         return IconUnits.pictureSide / IconKeylines.artboardSide
     }
 

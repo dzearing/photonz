@@ -305,6 +305,8 @@ struct CornerRadiusRow: View {
     /// selection moves on rather than hanging over a row that is now about
     /// something else.
     @State private var cornersOpen = false
+    /// What this picture's lengths read in.
+    @Environment(\.lengthUnit) private var lengths
 
     /// Whether the four corners can be opened at all. This row is shared with
     /// the release that came before Appearance and Effects split, and setting a
@@ -329,7 +331,10 @@ struct CornerRadiusRow: View {
     /// Padding's single field does, on purpose (`ArrangementInspector.swift`).
     private var showing: NumberBox.Showing {
         if showsMixed { return .standIn(LayerStyleSelection.mixedText) }
-        guard selection.hasUnevenCorners else { return .number(String(Int(knob.rounded()))) }
+        guard selection.hasUnevenCorners else {
+            return .number(lengths.isPoint ? String(Int(knob.rounded()))
+                                           : lengths.spell(lengths.reading(CGFloat(knob))))
+        }
         // Next opens the four in a popout, so the row says the house word every
         // other control in the dock says and the numbers themselves are one
         // press away, and in the tooltip in words (`FourSidedNumber`). The
@@ -348,7 +353,7 @@ struct CornerRadiusRow: View {
     /// that quotes the row read this.
     private var readout: String {
         switch showing {
-        case .number(let digits): DocumentUnit.text(digits: digits)
+        case .number(let digits): lengths.isPoint ? DocumentUnit.text(digits: digits) : digits
         case .standIn(let text): text
         case .nothing: ""
         }
@@ -405,7 +410,7 @@ struct CornerRadiusRow: View {
             showing: showing,
             label: "Corner Radius",
             identity: selection.layerIDs,
-            suffix: DocumentUnit.word,
+            suffix: lengths.word,
             // Grown only for the four numbers written out, which is
             // the one thing here that is longer than a word.
             width: .fitting(least: 48, most: 110),
@@ -416,19 +421,20 @@ struct CornerRadiusRow: View {
             // bottom, because there is no such thing as a corner
             // rounded less than square.
             floor: 0,
-            ceiling: CGFloat(selection.limit),
-            wholeNumbers: true,
-            help: sliderHelp
+            ceiling: lengths.reading(CGFloat(selection.limit)),
+            wholeNumbers: lengths.isPoint,
+            help: sliderHelp,
+            spell: lengths.spell
         ) { number in
-            let took = selection.typed(number)
+            let took = selection.typed(lengths.stored(number))
             if took.refused { answer = selection.wallSentence }
             // Landing the number it already wears would be an undo
             // step that changes nothing you can see, which is what a
             // down arrow held against the wall would otherwise spend.
-            if took.radius != CGFloat(knob.rounded()) {
-                editorState.commitCornerRadius(ids: ids, took.radius.rounded())
-            }
-            return .number(String(Int(took.radius.rounded())))
+            let landing = lengths.isPoint ? took.radius.rounded() : lengths.typedLength(took.radius)
+            let wearing = lengths.isPoint ? CGFloat(knob.rounded()) : lengths.typedLength(CGFloat(knob))
+            if landing != wearing { editorState.commitCornerRadius(ids: ids, landing) }
+            return .number(lengths.spell(lengths.reading(landing)))
         }
         .disabled(ids.isEmpty)
         .panelReadout(readout)
@@ -439,7 +445,7 @@ struct CornerRadiusRow: View {
                 control: "Twist", detail: cornersOpen ? "open" : "shut"
             ) {
                 FourSidedPopout(heading: "Corner Radius", shape: .corners,
-                                numbers: cornerNumbers(ids: ids))
+                                numbers: cornerNumbers(ids: ids), lengths: lengths)
             }
         }
     }
@@ -450,10 +456,10 @@ struct CornerRadiusRow: View {
             get: { knob },
             set: { v in
                 draft = v
-                editorState.previewCornerRadius(ids: ids, CGFloat(v.rounded()))
+                editorState.previewCornerRadius(ids: ids, lengths.pulled(CGFloat(v)))
             }), in: range) { editing in
             if !editing {
-                editorState.commitCornerRadius(ids: ids, CGFloat((draft ?? knob).rounded()))
+                editorState.commitCornerRadius(ids: ids, lengths.pulled(CGFloat(draft ?? knob)))
                 draft = nil
             }
         }
@@ -549,8 +555,9 @@ struct CornerRadiusRow: View {
             return FourSidedPopout.Number(
                 title: corner.title,
                 help: "How round the \(corner.spoken) corner is.",
-                value: reading.value.map { CGFloat($0) },
-                commit: { typed in
+                value: reading.value.map { lengths.reading(CGFloat($0)) },
+                commit: { number in
+                    let typed = lengths.stored(number)
                     editorState.commitCornerRadius(ids: ids, corner: corner, typed)
                     // Typing a number under the wall lands ON the wall, and
                     // saying so is how a person learns where the wall is.

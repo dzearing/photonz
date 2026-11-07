@@ -230,11 +230,23 @@ struct LayerStyleSlider: View, Equatable {
             && a.field == b.field && a.keyed == b.keyed
     }
 
+    /// What this picture's lengths read in. A row left on the default says
+    /// its length that way; one that says otherwise is not a length.
+    @Environment(\.lengthUnit) private var lengths
+    private var shownTyping: SliderNumber { typing == .points ? lengths.length : typing }
+    /// The ends this row runs between: a length's stretch on a picture counted
+    /// in units (`LengthUnit.reach`), and its own everywhere else.
+    private var shownRange: ClosedRange<Double> {
+        guard typing == .points else { return range }
+        let reach = lengths.reach(of: CGFloat(range.lowerBound)...CGFloat(range.upperBound))
+        return Double(reach.lowerBound)...Double(reach.upperBound)
+    }
+
     /// Where the knob sits. Over layers that differ this is the first picked
     /// layer's number, and it is a starting point rather than a claim: the
     /// readout beside it says Mixed.
     private var knob: Double {
-        min(max(reading.value ?? range.lowerBound, range.lowerBound), range.upperBound)
+        min(max(reading.value ?? shownRange.lowerBound, shownRange.lowerBound), shownRange.upperBound)
     }
 
     var body: some View {
@@ -285,9 +297,9 @@ struct LayerStyleSlider: View, Equatable {
         let reach = reach
         let apply = apply
         return SliderReadout(
-            typing: typing, label: label, value: CGFloat(knob),
+            typing: shownTyping, label: label, value: CGFloat(knob),
             isMixed: reading.isMixed,
-            range: CGFloat(range.lowerBound)...CGFloat(range.upperBound),
+            range: CGFloat(shownRange.lowerBound)...CGFloat(shownRange.upperBound),
             identity: reach, isEnabled: isEnabled,
             // A keyed row names its box, so a walk can type an exact number
             // where a click on a short track cannot land one.
@@ -310,7 +322,7 @@ struct LayerStyleSlider: View, Equatable {
             set: { v in
                 state.previewLayerStyle(ids: state.layerIDs(reaching: reach)) { apply(&$0, v) }
             }),
-               in: range) { editing in
+               in: shownRange) { editing in
             if !editing { state.commitLayerStyle(ids: state.layerIDs(reaching: reach)) }
         }
         .controlSize(.small)

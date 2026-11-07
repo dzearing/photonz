@@ -14,13 +14,18 @@ public enum LayerGeometryReading: Hashable, Sendable {
     case empty
     /// Every layer this field acts on has the same number.
     case agreed(CGFloat)
+    /// The same, on a picture counted in units, where a number keeps its
+    /// fraction (`LengthUnit`).
+    case agreedInUnits(CGFloat)
     /// They differ.
     case mixed
 
     /// The number to show, or nil when there is not one.
     public var number: CGFloat? {
-        if case .agreed(let value) = self { return value }
-        return nil
+        switch self {
+        case .agreed(let value), .agreedInUnits(let value): value
+        case .empty, .mixed: nil
+        }
     }
 
     public var isMixed: Bool { self == .mixed }
@@ -32,6 +37,7 @@ public enum LayerGeometryReading: Hashable, Sendable {
         case .empty: return ""
         case .mixed: return LayerGeometrySelection.mixedText
         case .agreed(let value): return String(Int(value.rounded()))
+        case .agreedInUnits(let value): return LengthUnit.spellUnits(value)
         }
     }
 
@@ -116,10 +122,11 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         }
 
         /// The number this field shows for this layer: whole points off the
-        /// box, or whole degrees off the angle.
-        func displayNumber(_ field: LayerGeometryField) -> CGFloat {
-            field.isFrameNumber ? LayerGeometry.displayValue(field, of: frame)
-                                : LayerAngle.display(angle)
+        /// box, or the picture's own units, or whole degrees off the angle.
+        func displayNumber(_ field: LayerGeometryField, in lengths: LengthUnit) -> CGFloat {
+            guard field.isFrameNumber else { return LayerAngle.display(angle) }
+            return lengths.isPoint ? LayerGeometry.displayValue(field, of: frame)
+                                   : lengths.reading(LayerGeometry.value(field, of: frame))
         }
 
         /// `box` turned back into the box to store.
@@ -141,9 +148,13 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     public static let blankText = "\u{2013}"
 
     public let members: [Member]
+    /// What the four box numbers read and are typed in. The frames stay in
+    /// points; only the numbers a person meets change.
+    public let lengths: LengthUnit
 
-    public init(_ members: [Member]) {
+    public init(_ members: [Member], lengths: LengthUnit = .point) {
         self.members = members
+        self.lengths = lengths
     }
 
     public var count: Int { members.count }
@@ -297,11 +308,11 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     private func reading(_ field: LayerGeometryField,
                          over members: [Member]) -> LayerGeometryReading {
         guard let first = members.first else { return .empty }
-        let value = first.displayNumber(field)
-        for member in members.dropFirst() where member.displayNumber(field) != value {
+        let value = first.displayNumber(field, in: lengths)
+        for member in members.dropFirst() where member.displayNumber(field, in: lengths) != value {
             return .mixed
         }
-        return .agreed(value)
+        return field.isFrameNumber && !lengths.isPoint ? .agreedInUnits(value) : .agreed(value)
     }
 
     /// Whether this field takes no typing at all: the number in it, if it has
@@ -358,6 +369,8 @@ public struct LayerGeometrySelection: Hashable, Sendable {
                         landedOn landed: LayerGeometryReading) -> String? {
         guard !isEmpty, field.isSize, value.isFinite else { return nil }
         guard landed != .agreed(value.rounded()) else { return nil }
+        // Read to two places, so a typed 1.755 that landed reads 1.76.
+        if case .agreedInUnits(let number) = landed, abs(number - value) < 0.01 { return nil }
         guard reading(field) == landed else { return nil }
         // With several picked the first reason stands for all of them, the same
         // way `fixedReason` settles it: they are all being held by something,
@@ -430,7 +443,11 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         // through `turning(to:)` instead, and the panel routes it there.
         guard field.isFrameNumber else { return [:] }
         return moves(for: field) { frame, member in
-            let sized = LayerGeometry.applying(value, to: field, of: frame,
+            // Units are read to two places, so the number on screen is rarely
+            // the exact one behind it. Landing it again would shift the layer
+            // a hair and spend an undo step on nothing.
+            if !lengths.isPoint, member.displayNumber(field, in: lengths) == value { return frame }
+            let sized = LayerGeometry.applying(lengths.stored(value), to: field, of: frame,
                                                notBelow: member.editing.minimum(for: field),
                                                notAbove: member.editing.maximum(for: field))
             return inProportion ? Self.inProportion(sized, from: frame, typed: field, member) : sized
@@ -475,8 +492,12 @@ public struct LayerGeometrySelection: Hashable, Sendable {
                          coarse: Bool, inProportion: Bool = false) -> [UUID: CGRect] {
         guard field.isFrameNumber else { return [:] }
         return moves(for: field) { frame, member in
-            let stepped = LayerGeometry.stepped(LayerGeometry.value(field, of: frame),
-                                                direction: direction, coarse: coarse)
+            let stepped = lengths.isPoint
+                ? LayerGeometry.stepped(LayerGeometry.value(field, of: frame),
+                                        direction: direction, coarse: coarse)
+                : lengths.stored(member.displayNumber(field, in: lengths)
+                                 + CGFloat(direction.signum())
+                                 * (coarse ? LayerGeometry.coarseStep : LayerGeometry.step))
             let sized = LayerGeometry.applying(stepped, to: field, of: frame,
                                                notBelow: member.editing.minimum(for: field),
                                                notAbove: member.editing.maximum(for: field))
@@ -543,7 +564,7 @@ extension LayerGeometryReading {
         switch self {
         case .empty: .nothing
         case .mixed: .standIn(MixedValue.text)
-        case .agreed: .number(draftText(for: field))
+        case .agreed, .agreedInUnits: .number(draftText(for: field))
         }
     }
 }

@@ -151,7 +151,7 @@ extension EditorState {
                                               textTakesAHeight: Experiments.shared.placementEnabled),
                 slack: layer.boxSlack, angle: angle)
         }
-        return LayerGeometrySelection(members)
+        return LayerGeometrySelection(members, lengths: lengthUnit)
     }
 
     /// What one field shows.

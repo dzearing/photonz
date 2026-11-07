@@ -1,0 +1,256 @@
+{
+ "out": "/tmp/photonz-playtest/an-icon-picture-reads-in-units",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "startFromEmpty",
+   "row": "New image",
+   "answer": [
+    "Icon",
+    "Create"
+   ],
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "tool",
+   "tool": "pen"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    200,
+    200
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "click",
+   "at": [
+    400,
+    200
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "click",
+   "at": [
+    400,
+    400
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "snapshot",
+   "name": "1-width-starts-in-units"
+  },
+  {
+   "do": "expect",
+   "field": "Width",
+   "reads": "2"
+  },
+  {
+   "do": "focus",
+   "field": "Width"
+  },
+  {
+   "do": "type",
+   "text": "1.75"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "snapshot",
+   "name": "2-typed-175"
+  },
+  {
+   "do": "expect",
+   "field": "Width",
+   "reads": "1.75"
+  },
+  {
+   "do": "expectSVG",
+   "contains": "stroke-width=\"1.75\""
+  },
+  {
+   "do": "focus",
+   "field": "Corner Radius"
+  },
+  {
+   "do": "type",
+   "text": "1.5"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Corner Radius",
+   "reads": "1.5"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-corner-radius"
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Transform W",
+   "reads": "10"
+  },
+  {
+   "do": "expect",
+   "field": "Transform X",
+   "reads": "9"
+  },
+  {
+   "do": "press",
+   "control": "Transform W"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "12"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Transform W",
+   "reads": "12"
+  },
+  {
+   "do": "expect",
+   "field": "Transform H",
+   "reads": "12"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-transform-values"
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Glow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "focus",
+   "field": "Size"
+  },
+  {
+   "do": "type",
+   "text": "2"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Size",
+   "reads": "2"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-glow-size"
+  },
+  {
+   "do": "drag",
+   "from": [
+    448,
+    448
+   ],
+   "to": [
+    448,
+    320
+   ],
+   "steps": 14,
+   "readout": "12 \u00d7 6",
+   "hold": "6-mid-reshape"
+  }
+ ],
+ "seed": "On a File, New, Image, Icon picture at Next defaults every length reads in the 24 units the tag above the shape reads in: Width, Corner Radius and the transform values, proved by the SVG it writes."
+}

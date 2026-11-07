@@ -16,6 +16,7 @@
     { "do": "click", "at": [256, 384] },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expectPicked", "layers": ["cloud-upload 2"] },
+    { "do": "expect", "field": "Width", "reads": "1.75" },
     { "do": "describe", "stage": "2-a-line-picked", "note": "THE SECOND TEST: a click on the arrow's stem picks that line and only that line, as a person's would" },
     { "do": "snapshot", "name": "2-a-line-picked" },
     { "do": "action", "action": "zoomIn" },

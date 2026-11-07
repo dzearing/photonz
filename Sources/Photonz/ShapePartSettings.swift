@@ -27,6 +27,8 @@ import SwiftUI
 /// rather than left to be worked out from the order.
 struct ShapePartSettings: View {
     @Environment(EditorState.self) private var editorState
+    /// What this picture's lengths read in.
+    @Environment(\.lengthUnit) private var lengths
     /// The row these belong to, which is also what decides what they ARE.
     let row: LayerPartRow
     /// Laid flat under an arrow's Advanced, in the mock's order (Thickness,
@@ -148,16 +150,18 @@ struct ShapePartSettings: View {
     }
 
     private func thickness(_ selection: OutlineThicknessSelection) -> some View {
+        let lengths = self.lengths
         // Width, the word the icon mock's Stroke section uses, on every outline
         // (settled 2026-10-20). A pull lands on whole points as it always has;
         // a typed number keeps its fraction, because the set's weight is 1.75.
-        ShapeSlider(reach: .partThickness(row.id), isEnabled: !selection.isEmpty,
+        return ShapeSlider(reach: .partThickness(row.id), isEnabled: !selection.isEmpty,
                     label: "Width",
                     reading: selection.reading,
-                    range: AnnotationStyles.strokeWidthRange,
+                    range: lengths.strokeWidthRange,
                     format: { DocumentUnit.text($0) },
-                    typing: .lineWidth,
-                    roundTyped: { ($0 * 100).rounded() / 100 },
+                    typing: lengths.lineWidth,
+                    round: lengths.pulled,
+                    roundTyped: lengths.typedLength,
                     preview: { editorState.previewOutlineWidth(ids: $0, $1) },
                     commit: { editorState.commitOutlineWidth(ids: $0, $1) })
             .equatable()

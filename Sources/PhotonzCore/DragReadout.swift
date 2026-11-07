@@ -58,14 +58,20 @@ public enum DragReadout {
     /// into a spec — which is the job the caliper readouts do, and they say the
     /// unit. "580 × 448" is also the form every tool that draws writes a size
     /// in, so it needs no teaching.
-    public static func text(_ subject: Subject) -> String {
-        switch subject {
-        case .position(let point): "\(whole(point.x)), \(whole(point.y))"
-        case .size(let size): "\(whole(size.width)) × \(whole(size.height))"
+    ///
+    /// `lengths` is what the picture counts in, so a pill on an icon says the
+    /// numbers the panel will read when the button comes up.
+    public static func text(_ subject: Subject, in lengths: LengthUnit = .point) -> String {
+        func length(_ value: CGFloat) -> String {
+            lengths.isPoint ? whole(value) : lengths.spell(lengths.reading(value))
+        }
+        return switch subject {
+        case .position(let point): "\(length(point.x)), \(length(point.y))"
+        case .size(let size): "\(length(size.width)) × \(length(size.height))"
         // Named, because one bare number under a shape could be anything.
         // Half points stay, since a radius of 1.5 is an ordinary one on an
         // icon grid.
-        case .radius(let radius): "Radius \(halves(radius))"
+        case .radius(let radius): "Radius \(lengths.isPoint ? halves(radius) : length(radius))"
         case .space(let handle, let turn): SpaceDrag.readout(handle, turn)
         }
     }

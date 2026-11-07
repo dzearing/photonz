@@ -251,6 +251,9 @@ struct GeometryInspector: View {
                 stepEach: { direction, coarse in
                     editorState.stepLayerGeometry(field: field, direction: direction, coarse: coarse)
                 },
+                // A picture counted in units has fractions to show. The angle
+                // is degrees on every picture.
+                spell: (field.isFrameNumber ? selection.lengths : .point).spell,
                 // The layers first, then the layers READ AGAIN. Never the
                 // other way round: what the field shows is whatever they are
                 // in once the change has been made.

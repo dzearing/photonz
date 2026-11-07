@@ -228,6 +228,7 @@ struct EditorView: View {
                             // Nothing handed in, so nothing to draw it again for
                             // when this closure runs (`InspectorPanel: Equatable`).
                             .equatable()
+                            .modifier(PanelLengthUnit())
                             .frame(width: panelWidth)
                             .tutorialAnchor(.panel)
                     }
@@ -3112,26 +3113,27 @@ struct EditorView: View {
                 // A fraction where there are icons: an outline set to the set's
                 // 1.75 arms the tool at it, and this row must not call that 2.
                 let fractions = Experiments.shared.iconFramesEnabled
+                let lengths = editorState.lengthUnit
                 SliderReadout(
-                    typing: fractions ? .lineWidth : .points, label: "Width", value: value,
+                    typing: fractions ? lengths.lineWidth : .points, label: "Width", value: value,
                     isMixed: false,
-                    range: AnnotationStyles.strokeWidthRange,
+                    range: lengths.strokeWidthRange,
                     // The tool's own Width, not a layer's, so there is one
                     // thing for it to speak for however the selection moves.
                     identity: "tool-stroke-width",
                     // A typed width is ONE undo step, the same as letting go
                     // of the knob is.
                     land: { editorState.setAnnotationStrokeWidth(
-                        fractions ? ($0 * 100).rounded() / 100 : $0.rounded()) })
+                        fractions ? lengths.typedLength($0) : $0.rounded()) })
             }
             .font(.callout)
             Slider(value: Binding(
                 get: { strokeWidthDraft ?? editedStrokeWidth },
                 set: { v in
                     strokeWidthDraft = v
-                    editorState.previewAnnotationRestyle(strokeWidth: v.rounded())
+                    editorState.previewAnnotationRestyle(strokeWidth: editorState.lengthUnit.pulled(v))
                 }
-            ), in: AnnotationStyles.strokeWidthRange, onEditingChanged: { editing in
+            ), in: editorState.lengthUnit.strokeWidthRange, onEditingChanged: { editing in
                 if !editing {
                     editorState.setAnnotationStrokeWidth(
                         (strokeWidthDraft ?? editedStrokeWidth).rounded())

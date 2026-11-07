@@ -22713,3 +22713,11 @@ Ask was never told what was picked: with a circle picked, make this red recolour
 Four `picked-*` eval cases total 87.6, all 10 on the rules. Held-out 66.4 on 9b54cd17 against 59.7 before; with nothing picked the prompts are unchanged, so read that as no drop, not a gain (recent runs span 59.7 to 68.4).
 
 Next: `the-agent-panel-shows-what-ask-will-work-on-as-i`. Open: a pick on a video and several picks at once are untried with the model.
+
+## 2026-11-07: An Icon picture's lengths read in its units
+
+Typing 1.75 into Width on an Icon picture gave a hairline, because the panel read the picture's 512 points while the tag read 24 units. `LengthUnit` (PhotonzCore) now says what a length means where a person meets it; the document still holds points. Width, Corner Radius and its four corners, the Info values, the Effects length rows and the pill read units, and Width writes `stroke-width="1.75"`. It reaches the panel as an environment value, so a row redraws only when the unit changes. Length rows reach 12 units there, since their 40 point tops held a 2 unit edge at 1.88. Canvas size, crop, regions, Text size, Padding, Gap and Measure stay in points; the audit says why.
+
+The task's Pen at 40 points was the panel's limit: the line was 2 units all along.
+
+Next: `find-out-why-sweeping-with-the-arrow-tool-shows`. Open: `ask-tweaks-an-icon-walk` was stopped unfinished, and four walks owned by `walks-that-fail-in-the-full-sweep-26` still fail at the steps they failed at before this work.
