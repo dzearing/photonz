@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-22T16:33:50.886Z",
-  "updated": "2026-11-06T18:49:52.598Z",
+  "updated": "2026-11-07T15:28:03.692Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence (read, 2026-10-22, HEAD b5be5bb0): Sources/PhotonzCore/AgentDocumentRead.swift carries no selection field (grep selected|selection|picked: nothing), AskPlanning.swift instructions never mention it, and AskViews.swift draws only the Agent title, on-device and the close button. Mock: docs/design/mocks/pages/agent-edit.html, the Agent group header reads 1 selected over the typed request make the CTA bigger and use the accent color round the corners more and add a soft shadow; the mock proposal and Accept card are NOT wanted (the user replaced Run plan with straight-away changes and rows on 2026-10-20). Competitors: Photoshop generative fill and Canva Magic Edit act on what is selected; Figma AI acts on the selection. Shared path: AgentTools.request and AgentWork.run serve both Ask and the server, so add it to the read once. Hard rule from queue/bin/runner-prompt.md: nothing stored or coded for any subject or request.",
@@ -82,6 +82,51 @@
     {
       "t": "2026-11-06T18:49:52.597Z",
       "note": "seq 140 -> 90"
+    },
+    {
+      "t": "2026-11-07T11:54:24.610Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T11:58:02.240Z",
+      "note": "Reproduced at Next defaults on the probe, qwen3.8-27b, walk /tmp/ask-picked-repro/repro.json: blank 1000x700, rectangle and ellipse drawn, ellipse picked, asked make this red. Trace: set_layer fill+stroke #FF0000 on BOTH 97D0FF3F (rectangle) and 5D016B68 (ellipse); the model said: I'll turn both the rectangle and the ellipse red. 129.8 s, phase ran. So the guess hit the wrong layer as well as the right one. New shapes start reddish, so the pictures barely show it: the walk must use a colour that differs. Side effect seen: stroke on the ellipse added a Border effect."
+    },
+    {
+      "t": "2026-11-07T12:19:02.810Z",
+      "note": "owns these walks: ask-changes-what-is-picked-walk"
+    },
+    {
+      "t": "2026-11-07T12:39:33.870Z",
+      "note": "Found by the new corners case: read_document never reported a rectangle's corners. set_layer cornerRadius writes the shape's own cornerRadii, the read looked only at the layer mask's, so a rounded rectangle read as square to Ask and to outside agents. Picture and trace showed Ask had done it right (cornerRadius 16, picked id only). Fixed in the read with a test, rule left as it was."
+    },
+    {
+      "t": "2026-11-07T15:27:39.264Z",
+      "note": "left rough: asked for a colour, the model set stroke as well as fill, so a filled shape gained a Border effect. Prompt-level nit on set_layer use, not about picks; in the audit's rough list."
+    },
+    {
+      "t": "2026-11-07T15:27:39.332Z",
+      "note": "left rough: a read_document the model calls mid-plan reports the live selection, not the send-time pick. The instructions' rule still names the send-time pick, so it only matters if the person picks something else during a run."
+    },
+    {
+      "t": "2026-11-07T15:27:39.399Z",
+      "note": "left rough: timelinePicks (pieces of cut clips a box picked) are not counted as picked; only whole layers are."
+    },
+    {
+      "t": "2026-11-07T15:27:39.465Z",
+      "note": "Not measured: the four picked cases with the rule switched off, so the climb has no before number of its own. The before evidence is the reproduction: same request, both layers changed, against one layer after. Held-out 66.4 (45 cases, 20261107-130822-ask-held-out, 9b54cd17) against 59.7; climb 87.6 (4 cases, 20261107-124831-ask). The WORSE line printed by compare on the picked run compared against a run with no case in common and means nothing."
+    },
+    {
+      "t": "2026-11-07T15:27:39.531Z",
+      "note": "Chose plain text for 1 selected in the composer over the mock's pill because it sits beside on-device, which is plain in the same row; the pill belongs to the panel header, which the follow-up covers. Rough items: panel scope and placeholder filed as the-agent-panel-shows-what-ask-will-work-on-as-i; the rest stay in this log and the audit."
+    },
+    {
+      "t": "2026-11-07T15:28:03.690Z",
+      "note": "Ask now changes what is picked. read_document carries selected (ids and names) for Ask and outside agents; with something picked Ask's instructions aim this, it and these at it, a named layer still wins, and with nothing picked the request is unchanged. Composer shows 1 selected. A waiting request keeps what was picked when sent. Also fixed the read never reporting a rectangle's corners. Verified at Next defaults on the model: the reproduced make this red changed both layers before and only the circle after; walk ask-changes-what-is-picked-walk passes, focus drill clean; four picked eval cases 87.6, all 10 on the rules; held-out 66.4 against 59.7, read as no drop; Scripts/test.sh green. Commit 9b54cd17. Audit queue/audits/2026-11-07-ask-works-on-what-you-have-picked.json. Follow-up the-agent-panel-shows-what-ask-will-work-on-as-i."
     }
-  ]
+  ],
+  "started": "2026-11-07T11:54:24.609Z",
+  "walks": [
+    "ask-changes-what-is-picked-walk"
+  ],
+  "completed": "2026-11-07T15:28:03.691Z"
 }

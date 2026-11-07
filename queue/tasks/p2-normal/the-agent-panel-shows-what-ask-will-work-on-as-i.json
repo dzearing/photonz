@@ -1,0 +1,27 @@
+{
+  "id": "the-agent-panel-shows-what-ask-will-work-on-as-i",
+  "title": "The Agent panel shows what Ask will work on, as its own field does not today",
+  "goal": "Ask has two places to type: the composer over the canvas and the field in the Agent panel. The composer now says 1 selected, but the panel field acts on the same picked layers without saying so, and the agent-edit mock prints 1 selected in the Agent panel header. Show the same scope there.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 4100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T13:08:47.309Z",
+  "updated": "2026-11-07T13:08:47.312Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by ask-works-on-what-you-have-picked-so-make-this-b, which put the scope in the composer as its checklist said (AskViews.swift, AskPicked.scope, editor.pickedForAsk). Mock: docs/design/mocks/pages/agent-edit.html line 179, span.cnt.val beside the Agent title, and its placeholder Ask for a change to the selection where ours reads Ask, or type / for a command. Not built in that task: the held-out run was already going on the probe, and a rebuild would have replaced the app under it.",
+  "acceptance": [
+    "With one layer picked the Agent panel header reads 1 selected, with three it reads 3 selected, and it shows nothing with nothing picked",
+    "The header keeps its count of requests, or the audit says why the scope replaces it, with pictures beside the agent-edit mock",
+    "A walk at Next defaults reads the scope in the panel with something picked and with nothing picked"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T13:08:47.311Z",
+      "note": "created (manual)"
+    }
+  ]
+}
