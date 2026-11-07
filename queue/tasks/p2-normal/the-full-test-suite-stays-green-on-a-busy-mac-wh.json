@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-02T22:47:36.700Z",
-  "updated": "2026-11-07T15:49:06.434Z",
+  "updated": "2026-11-07T18:37:32.090Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-02 in asking-for-a-sheet-of-components-gives-a-clean-t, tree with only Agent component planner changes:\n  $ Scripts/test.sh\n  ✘ Test dragTheWidth() recorded an issue at ShapeBorderRenderTests.swift:262:13: Expectation failed: (median → 52.961916) < (48 → 48.0)\n  ✘ Test dragTheWidth() failed after 181.377 seconds with 1 issue.\n  ✘ Test run with 1331 tests in 207 suites failed after 219.950 seconds with 1 issue.\nSame tree:\n  $ Scripts/test.sh --filter ShapeBorderRenderTests  ->  ✔ dragTheWidth() passed after 0.351 seconds; 8 tests passed\n  $ Scripts/test.sh  ->  all five groups passed (15,197 tests)\nThe check is `if MachineSpeed.isGating { #expect(median < 48) }` in the suite \"A Width drag on a drawn package stays inside a frame\" (Tests/PhotonzRenderTests/ShapeBorderRenderTests.swift:201), which runs in the rest group beside three other swift test processes, not with the stopwatch suites. CLAUDE.md: a speed budget goes in a ...PerfTests suite and is judged against a ruler taken beside it, never a flat millisecond count.\n\nFolded in 2026-11-03 from the-full-test-run-never-fails-on-a-video-check-t:\nSeen while measuring the-full-test-run-never-fails-on-a-speed-budget, 2026-10-30, in about 25 full Scripts/test.sh runs on this Mac (16 cores, go loop idle):\n- BusyVideoSizeTests.swift:251 (A long recording that is quiet and then busy is weighed from stretches of it): near(landed 2102302, weighed 1597442) failed, once.\n- BusyVideoSizeTests.swift:148 (Where the budget cannot hold, what the sheet weighs is what lands, speed 900): near(landed 1712276, weighed 1339509) failed, once.\n- VideoCutExportTests.swift:35 (Exporting a recording with the middle dropped writes only what is left): Caught error .readerGaveUp(\"no picture came out of the recording for 30 seconds\"), once.\nBoth BusyVideoSizeTests are in the .serialized run (Scripts/test.sh side run). Command: Scripts/test.sh with no arguments; output lines above are verbatim from those runs. Neither is a speed budget, so they were left out of the speed-budget task.",
@@ -77,6 +77,10 @@
     {
       "t": "2026-11-07T15:49:06.433Z",
       "note": "seq 160 -> 150"
+    },
+    {
+      "t": "2026-11-07T18:37:32.089Z",
+      "note": "2026-11-07 evidence: nothing outside the suite was loading the Mac (load 20 to 40 came from the suite itself). VideoCutExportTests readerGaveUp failed in 3 of 5 full runs on a tree with only SVG opening changes, 0 of 2 on clean 93572bcc, and passes alone 7 of 7. LiveBackdropRenderTests 'Every look draws a 1080p frame inside 16 ms' failed once in a full run, passes alone. dragTheWidth failed once on clean HEAD."
     }
   ]
 }

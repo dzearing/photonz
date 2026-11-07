@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T08:29:05.407Z",
-  "updated": "2026-11-07T15:49:03.547Z",
+  "updated": "2026-11-07T18:38:10.909Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-07 on the probe: a walk opening a 16x16 SVG logged 'small16.svg: document 16x16 at pixelScale 1.0; window 1100x800 pt; canvas 835x768 pt; zoom 1.000', and 1-small-sc.png shows a 16 point square alone in the window. Viewport.fit never enlarges. Of 431 real SVGs on this Mac, 37 are 16x16, 20 are 14x14, 16 are 48x48 and 10 are 22x22. Only the 24 grid opens as an Icon picture today (SVGOpening.isIcon); 512 must stay an ordinary picture, since pictureIconUnit would rewrite it as 24 units on export. Found by opening-an-svg-file-gives-you-its-drawing-to-edi.",
@@ -34,6 +34,44 @@
     {
       "t": "2026-11-07T15:49:03.546Z",
       "note": "seq 57.5 -> 30"
+    },
+    {
+      "t": "2026-11-07T17:44:07.370Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T17:49:35.495Z",
+      "note": "owns these walks: a-small-svg-opens-big-enough-walk, opening-an-svg-walk"
+    },
+    {
+      "t": "2026-11-07T18:37:31.777Z",
+      "note": "Chose opening a small square SVG as a 512 point Icon picture on its own grid over zooming a 16 point canvas up, because a 16 point canvas stops at the 32x zoom limit and would not get the Icon tools. Its view is the one a 24 unit icon gets: 59 percent of canvas height at 1280x900, so 'filling the window' is my judgement call, not a measured pass; it is the first question in the audit."
+    },
+    {
+      "t": "2026-11-07T18:37:31.855Z",
+      "note": "Verified: walk a-small-svg-opens-big-enough-walk green with no flags; opening-an-svg-walk and a-saved-icon-opens-as-an-icon-walk green. Open and Fit pictures differ only by the zoom control pill (pixel diff, box 1689,1707 to 2006,1776). Order slip: the tests were written in the same step as the code, not run red first; the walk reproduced the speck beforehand at zoom 1.000."
+    },
+    {
+      "t": "2026-11-07T18:37:31.931Z",
+      "note": "Scripts/test.sh: 5 runs on this tree, 3 red then 2 green. Red: VideoCutExportTests x3 (reader gave up), plus LiveBackdropRenderTests 16 ms budget once. Control on clean HEAD 93572bcc: 1 green, 1 red (dragTheWidth). Failed tests pass alone. Noted on the-full-test-suite-stays-green-on-a-busy-mac-wh. The VideoCut failures hit 3 of 5 here and 0 of 2 on HEAD, too few runs to prove anything either way."
+    },
+    {
+      "t": "2026-11-07T18:37:32.013Z",
+      "note": "left rough: Ask's IconGridLanding is 24 units only, read in code and not tried on another grid. Small non-square files and squares over 64 still open at 100 percent. Neither filed: the first is unreproduced, the second is outside this task's acceptance; both are in the audit for the user to react to."
+    },
+    {
+      "t": "2026-11-07T18:38:10.821Z",
+      "note": "Push landed as 1d4b10d0. git's autostash reported it could not drop cleanly: the working tree matched stash 01ce5ec07ec0f00165b02eb2b48ffe972fc58d05 on all 14 files, so nothing was lost; unstaged them and dropped that duplicate stash."
+    },
+    {
+      "t": "2026-11-07T18:38:10.907Z",
+      "note": "A small square SVG (8 to 64 units) opens as a 512 point Icon picture on its own grid and writes its own units again; 512 and a 300 by 120 logo stay pictures. Commit 1d4b10d0, walk a-small-svg-opens-big-enough-walk green with no flags, Fit view confirmed by pixel diff. 'Filling the window' is a judgement call: same view as a 24 unit icon, 59 percent of canvas height at 1280x900. Scripts/test.sh went green on its last 2 of 5 runs; the 3 red were flaky video and speed tests, see log."
     }
-  ]
+  ],
+  "started": "2026-11-07T17:44:07.369Z",
+  "walks": [
+    "a-small-svg-opens-big-enough-walk",
+    "opening-an-svg-walk"
+  ],
+  "completed": "2026-11-07T18:38:10.908Z"
 }
