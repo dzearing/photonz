@@ -2122,6 +2122,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// frozen while a walk keeps the probe behind other apps, so a walk throws
     /// the same switch the row does.
     case snapToGeometryOff, snapToGeometryOn
+    /// View ▸ Snap in Icons ▸ Grid, the same way.
+    case snapToGridOff, snapToGridOn
     /// Put the grid ON, or OFF, whichever it already is. `toggleGrid` flips,
     /// which leaves a walk's outcome depending on what the last walk left
     /// behind; these two make a starting point a walk can rely on.

@@ -262,6 +262,7 @@ struct EditorCanvasSurface: View {
                    isCanvasSelected: editorState.isCanvasSelected,
                    canvasGrid: editorState.drawnCanvasGrid,
                    iconKeylines: editorState.iconKeylinesShowing,
+                   iconSnapsToUnits: editorState.iconSnapChoices.grid,
                    canvasGridOrigin: editorState.canvasGridOrigin,
                    canvasGuides: editorState.canvasGuides,
                    gridAdjust: editorState.gridAdjustment?.origin,

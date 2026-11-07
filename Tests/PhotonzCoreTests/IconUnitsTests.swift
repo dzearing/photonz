@@ -255,4 +255,49 @@ struct IconUnitsTests {
         picture.madeAsIcon = true
         #expect(picture.shownIconIDs == [PhotonzDocument.iconCanvasID])
     }
+
+    // MARK: The dots on the crossings
+
+    @Test func aDotSitsOnEveryCrossingOfTheLiveArea() throws {
+        let box = CGRect(x: 100, y: 200, width: 24, height: 24)
+        let ruling = try #require(IconUnits.ruling(of: box, zoom: 16, showing: everywhere))
+        let dots = IconUnits.crossings(of: ruling, zoom: 16)
+        #expect(dots.count == 441)
+        #expect(dots.first == CGPoint(x: 102, y: 202))
+        #expect(dots.last == CGPoint(x: 122, y: 222))
+    }
+
+    @Test func noDotSitsInTheMargin() throws {
+        let box = CGRect(x: 0, y: 0, width: 24, height: 24)
+        let ruling = try #require(IconUnits.ruling(of: box, zoom: 16, showing: everywhere))
+        let dots = IconUnits.crossings(of: ruling, zoom: 16)
+        #expect(dots.allSatisfy { (2...22).contains($0.x) && (2...22).contains($0.y) })
+    }
+
+    @Test func onlyTheDotsInViewAreDrawn() throws {
+        let box = CGRect(x: 0, y: 0, width: 24, height: 24)
+        let showing = CGRect(x: 1.5, y: 1.5, width: 3, height: 3)
+        let ruling = try #require(IconUnits.ruling(of: box, zoom: 16, showing: showing))
+        #expect(IconUnits.crossings(of: ruling, zoom: 16).count == 9)
+    }
+
+    @Test func unitsTooCloseForADotHaveNone() throws {
+        let box = CGRect(x: 0, y: 0, width: 24, height: 24)
+        let ruling = try #require(IconUnits.ruling(of: box, zoom: 8, showing: everywhere))
+        #expect(IconUnits.crossings(of: ruling, zoom: 8).isEmpty)
+        #expect(!IconUnits.crossings(of: ruling, zoom: 10).isEmpty)
+    }
+
+    @Test func aPictureCountsItsDotsInItsOwnUnits() throws {
+        let unit = IconUnits.pictureSide / 24
+        let box = CGRect(x: 0, y: 0, width: IconUnits.pictureSide, height: IconUnits.pictureSide)
+        let ruling = try #require(IconUnits.ruling(of: box, zoom: 1, showing: everywhere, unit: unit))
+        #expect(IconUnits.crossings(of: ruling, zoom: 1, unit: unit).count == 441)
+    }
+
+    @Test func moreDotsThanAFrameCanDrawCheaplyAreLeftOut() throws {
+        let box = CGRect(x: 0, y: 0, width: 1024, height: 1024)
+        let ruling = try #require(IconUnits.ruling(of: box, zoom: 10, showing: everywhere))
+        #expect(IconUnits.crossings(of: ruling, zoom: 10).isEmpty)
+    }
 }

@@ -42,6 +42,7 @@ extension CanvasNSView {
                isCanvasSelected: Bool,
                canvasGrid: CanvasGridSettings?,
                iconKeylines: Bool,
+               iconSnapsToUnits: Bool,
                canvasGridOrigin: CGPoint,
                canvasGuides: [CanvasGuide],
                selectedGuideID: UUID?,
@@ -53,6 +54,7 @@ extension CanvasNSView {
         self.motionPath = motionPath
         self.canvasGrid = canvasGrid
         self.iconKeylines = iconKeylines
+        self.iconSnapsToUnits = iconSnapsToUnits
         self.canvasGridOrigin = canvasGridOrigin
         self.canvasGuides = canvasGuides
         self.selectedGuideID = selectedGuideID

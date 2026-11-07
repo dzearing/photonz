@@ -3008,6 +3008,10 @@ avoids it the same five ways:
   drag lands on the lines it can see. The lines stop short of the frame's edges,
   so they close no rectangle, and under six points a unit they leave the canvas
   grid to run across as it did (`IconUnits`).
+  While the units pull (View ▸ Snap in Icons ▸ Grid) a dot sits on every crossing
+  of the live area, over the keylines, so the lines say where the units are and
+  the dots say a point will land there. Under ten points a unit the dots go and
+  the lines stay.
 - **Ink sunk out of the way.** The canvas grid is the accent colour mixed most
   of the way into grey; the columns are a soft warm wash. Nothing saturated,
   nothing a layer would plausibly be painted.

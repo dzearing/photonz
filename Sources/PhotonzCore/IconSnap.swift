@@ -63,6 +63,10 @@ public struct IconSnap: Equatable, Sendable {
     /// Whether a point nothing else caught rounds to a whole unit. Off, it
     /// stays exactly where it was put.
     public let grid: Bool
+    /// The frame's two centre lines, while they pull and sit on whole units.
+    /// The readout names them (`readout(for:)`).
+    private let centreX: CGFloat?
+    private let centreY: CGFloat?
 
     /// - Parameters:
     ///   - keylines: whether the frame's keylines pull (only while shown).
@@ -83,7 +87,10 @@ public struct IconSnap: Equatable, Sendable {
         }
         var xs: [CGFloat] = []
         var ys: [CGFloat] = []
-        if keylines, let guides = IconKeylines.guides(in: frame, unit: unit) {
+        let guides = keylines ? IconKeylines.guides(in: frame, unit: unit) : nil
+        centreX = guides.map(\.centerX).flatMap { whole($0, from: origin.x) ? $0 : nil }
+        centreY = guides.map(\.centerY).flatMap { whole($0, from: origin.y) ? $0 : nil }
+        if let guides {
             xs += [frame.minX, frame.maxX, guides.liveArea.minX, guides.liveArea.maxX,
                       guides.centerX]
             ys += [frame.minY, frame.maxY, guides.liveArea.minY, guides.liveArea.maxY,
@@ -152,7 +159,19 @@ public struct IconSnap: Equatable, Sendable {
     /// The place a point is at, in the icon's own units counted from its
     /// corner, the way the readout beside the pointer says it: "15, 13".
     /// Whole units print whole; a point nothing rounded prints to two places.
+    /// A point on one of the frame's centre lines says that as well, the icon
+    /// mock's "12, 16 · center", since half a unit off centre is the slip a
+    /// person is watching for. Only while that line pulls, so the words never
+    /// name something the point was not caught by.
     public func readout(for point: CGPoint) -> String {
+        let tolerance = unit * 1e-6
+        let onCentre = [(point.x, centreX), (point.y, centreY)].contains { value, line in
+            line.map { abs($0 - value) < tolerance } ?? false
+        }
+        return onCentre ? "\(place(of: point)) · center" : place(of: point)
+    }
+
+    private func place(of point: CGPoint) -> String {
         "\(Self.units((point.x - frame.minX) / unit)), \(Self.units((point.y - frame.minY) / unit))"
     }
 
@@ -163,7 +182,7 @@ public struct IconSnap: Equatable, Sendable {
         let width = Self.units(abs(corner.x - centre.x) * 2 / unit)
         let height = Self.units(abs(corner.y - centre.y) * 2 / unit)
         let size = shape == .ellipse && width == height ? "d \(width)" : "\(width) × \(height)"
-        return "center \(readout(for: centre)) · \(size)"
+        return "center \(place(of: centre)) · \(size)"
     }
 
     /// A length in units: whole units print whole, anything else to two places.

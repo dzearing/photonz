@@ -1,0 +1,53 @@
+{
+  "feature": "Icon snapping reaches what the icon mock draws",
+  "epic": "icon-grid",
+  "summary": "With the Grid on, every crossing of an icon's live area now carries a dot, the pill says when a point is on the centre line, and Command is proven to free boxes, Pen points and moves inside an icon.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: dots-on-an-icon-s-crossings-walk and command-frees-snapping-in-an-icon-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose File, New Frame, pick 24 under Icons, press Add Frame, then choose View, Show Grid.",
+      "shot": "2026-11-07-icon-snap-dots-on-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Choose View, Snap in Icons, Grid to turn it off: the dots go and the lines stay.",
+      "shot": "2026-11-07-icon-snap-dots-off-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Turn it back on, then compare with the mock, which is on the left here.",
+      "shot": "2026-11-07-icon-snap-beside-the-mock.png"
+    },
+    {
+      "do": "Pick the Pen and hover on the vertical centre line: the pill reads 12, 16 · center.",
+      "shot": "2026-11-07-icon-snap-center-readout-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick Rectangle, hold Command and drag: the box stays off the units and the pill reads 15.2, 13.1.",
+      "shot": "2026-11-07-icon-snap-command-free-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick Ellipse, hold Option and drag out from the box's top left corner: a circle starts there, with no Escape first."
+    }
+  ],
+  "evaluate": [
+    "Do the dots tell you a point will land there, or are they just more marks on top of the lines?",
+    "Are the dots strong enough over a white frame, where the app is lighter than the mock's dark board?",
+    "Is it right that dots go away under ten points a unit while the lines stay?",
+    "Does · center in the pill help, or is it noise while you drag along the centre line?"
+  ],
+  "rough": [
+    "The mock's Grid and snap group sits in the right panel; the Snap to choices are View, Snap in Icons (UX-PATTERNS placement contract, View menu row), and where the grid is worked from was your call on 2026-10-20.",
+    "The mock says Control suspends snapping; the app uses Command, your call on 2026-10-20.",
+    "The mock marks the landing spot with an accent cross; the app keeps its landing ring from the-grid-line-under-a-pen-point-lights-up-while and adds the mock's pill beside it.",
+    "The mock labels a picked shape 9, 10 · 6 × 3 above it; the app shows no such label yet, covered by a-shape-picked-in-an-icon-names-its-place-and-si.",
+    "The mock traces the live area and the square as closed dashed outlines; the app keeps its wash and hairlines, per UX-PATTERNS §D16.",
+    "With the Grid hidden, whole units still pull and no dots show. Chose this because a dot with no line through it is a mark with no meaning.",
+    "Dots draw over a filled shape, as the unit lines do, where the mock's sit under what is drawn, per UX-PATTERNS §D16 (a guide draws over your work).",
+    "With the Pen in hand, a press on a corner of the path it just closed still grabs that corner and starts nothing, as an active path's anchor does in Photoshop and Illustrator. Escape first starts a new path. Left as it is on purpose.",
+    "Very large frames zoomed in show lines without dots above 4,000 crossings, to keep panning smooth."
+  ]
+}

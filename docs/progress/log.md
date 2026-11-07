@@ -22686,3 +22686,13 @@ real SVGs: 322 open as shapes, 319 of those within 12 levels of macOS's drawing.
 SVG is declared as Viewer and Alternate: Editor at Alternate rank took the default
 from the browser. Next: four p2 follow-ups, small icons opening as specks the one
 most felt. Open question: whether boxes Ask draws land half a line small.
+
+## 2026-11-07: icon snapping reaches the mock
+
+With the Grid on, a dot sits on every crossing of an icon's live area while Snap
+in Icons Grid is on (`IconUnits.crossings`), measured at 441 on a real capture by
+`Scripts/measure-icon-dots.py`. The pill names the centre line, 12, 16 · center.
+Command was already freeing boxes, Pen points and moves; a new walk now proves it.
+A press on a corner with a shape tool already started a shape; the walk does it
+with no Escape. Next: the picked shape's place and size label, filed as p1.
+Open question: none.

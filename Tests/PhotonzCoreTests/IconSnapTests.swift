@@ -408,4 +408,30 @@ struct IconSnapTests {
         #expect(snap.readout(centre: CGPoint(x: 105, y: 118), corner: CGPoint(x: 108, y: 121),
                              shape: .rectangle) == "center 5, 18 · 6 × 6")
     }
+
+    // MARK: The readout names the centre line
+
+    private var centred: IconSnap {
+        IconSnap(frame: CGRect(x: 100, y: 200, width: 24, height: 24))
+    }
+
+    @Test func aPointOnTheCentreLineSaysSo() {
+        #expect(centred.readout(for: CGPoint(x: 112, y: 216)) == "12, 16 · center")
+        #expect(centred.readout(for: CGPoint(x: 108, y: 212)) == "8, 12 · center")
+    }
+
+    @Test func aPointOffTheCentreLinesIsJustItsPlace() {
+        #expect(centred.readout(for: CGPoint(x: 109, y: 210)) == "9, 10")
+    }
+
+    @Test func theCentreLineIsOnlyNamedWhileItPulls() {
+        let plain = IconSnap(frame: CGRect(x: 100, y: 200, width: 24, height: 24), keylines: false)
+        #expect(plain.readout(for: CGPoint(x: 112, y: 216)) == "12, 16")
+    }
+
+    @Test func aShapeDrawnFromItsCentreKeepsItsOwnWords() {
+        let words = centred.readout(centre: CGPoint(x: 112, y: 208), corner: CGPoint(x: 116, y: 212),
+                                    shape: .ellipse)
+        #expect(words == "center 12, 8 · d 8")
+    }
 }

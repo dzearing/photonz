@@ -64,6 +64,30 @@ public enum IconUnits {
                               strongRows: rows.filter(strong).map { position($0, from: box.minY) })
     }
 
+    /// Closer together than this on screen a dot on every crossing is speckle
+    /// over the lines, so the crossings go undotted and the lines carry on.
+    public static let smallestDotGap: CGFloat = 10
+
+    /// More dots than this at once is a big frame zoomed in, where nobody is
+    /// counting and each pan would pay for all of them. The lines carry on.
+    public static let mostDots = 4_000
+
+    /// The targets the icon mock lights on the artboard while the units pull
+    /// (icon-draw-wt.html step 3, `igDots`): every crossing of the ruled lines
+    /// inside the live area, in canvas coordinates. The margin has none, since
+    /// a glyph is not drawn out there, though a point still lands on its units.
+    /// Only the crossings `ruling` found in view come back, row by row.
+    public static func crossings(of ruling: IconUnitRuling, zoom: CGFloat,
+                                 unit: CGFloat = 1) -> [CGPoint] {
+        guard zoom.isFinite, zoom * unit >= smallestDotGap - 1e-6,
+              let live = IconKeylines.guides(in: ruling.frame, unit: unit)?.liveArea else { return [] }
+        let slack = unit * 1e-6
+        let columns = ruling.columns.filter { $0 >= live.minX - slack && $0 <= live.maxX + slack }
+        let rows = ruling.rows.filter { $0 >= live.minY - slack && $0 <= live.maxY + slack }
+        guard columns.count * rows.count <= mostDots else { return [] }
+        return rows.flatMap { y in columns.map { x in CGPoint(x: x, y: y) } }
+    }
+
     /// The whole units strictly inside a side of `length`, counted from
     /// `start`, that fall between two canvas positions.
     private static func units(across length: CGFloat, from start: CGFloat,

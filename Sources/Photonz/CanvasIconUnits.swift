@@ -18,6 +18,10 @@ import PhotonzCore
 /// - **In the canvas grid's place.** It steps round whatever is ruled, because
 ///   two grids counted from different places cannot be read at once. Too far
 ///   out to rule, it runs across the artboard as it always did.
+/// - **A dot on every crossing of the live area while the units pull**, the
+///   mock's step 3: the lines say where the units are, the dots say a point
+///   will land on them. View ▸ Snap in Icons ▸ Grid off takes the dots away and
+///   leaves the lines, which is how the two read apart.
 extension CanvasNSView {
 
     /// Whether the Grid has asked for units at all. While the grid's zero point
@@ -45,6 +49,8 @@ extension CanvasNSView {
 
         let units = CGMutablePath()
         let strong = CGMutablePath()
+        let dots = CGMutablePath()
+        var dotCount = 0
         var ruled: [CGRect] = []
         for id in document.shownIconIDs {
             // A frame's box follows a drag; a canvas made as an icon has no layer.
@@ -59,6 +65,12 @@ extension CanvasNSView {
                              across: onScreen, to: units, in: viewport)
             addIconUnitLines(columns: ruling.strongColumns, rows: ruling.strongRows,
                              across: onScreen, to: strong, in: viewport)
+            if iconSnapsToUnits {
+                let unit = document.iconUnit(of: id)
+                let crossings = IconUnits.crossings(of: ruling, zoom: viewport.zoom, unit: unit)
+                addIconUnitDots(crossings, gap: viewport.zoom * unit, to: dots, in: viewport)
+                dotCount += crossings.count
+            }
             drawnIconUnits.append(ruling)
             ruled.append(onScreen)
         }
@@ -69,7 +81,30 @@ extension CanvasNSView {
             shape.opacity = Float(CanvasGridLevels.maximumOpacity)
             shape.isHidden = path.isEmpty
         }
+        iconUnitDotLayer.path = dots
+        iconUnitDotLayer.fillColor = NSColor.controlAccentColor.cgColor
+        iconUnitDotLayer.opacity = Self.iconUnitDotOpacity
+        iconUnitDotLayer.isHidden = dots.isEmpty
+        drawnIconUnitDots = dotCount
         return ruled
+    }
+
+    /// The mock's dots at the mock's strength (`.ig-dots`).
+    private static let iconUnitDotOpacity: Float = 0.34
+
+    /// Each dot sits where its two lines cross on screen, rounded the way
+    /// `addIconUnitLines` rounds them, so a dot is never a pixel beside its
+    /// crossing. The mock's radius is seven hundredths of a unit; it is held
+    /// between one point and two so it stays a dot at every zoom one is drawn.
+    private func addIconUnitDots(_ crossings: [CGPoint], gap: CGFloat,
+                                 to path: CGMutablePath, in viewport: Viewport) {
+        let radius = min(max(gap * 0.07, 1), 2)
+        for crossing in crossings {
+            let view = viewport.viewPoint(fromDocument: crossing)
+            path.addEllipse(in: CGRect(x: view.x.rounded() + 0.5 - radius,
+                                       y: view.y.rounded() + 0.5 - radius,
+                                       width: radius * 2, height: radius * 2))
+        }
     }
 
     /// A line on every position, edge to edge of the artboard, snapped exactly
@@ -90,10 +125,11 @@ extension CanvasNSView {
     }
 
     private func hideIconUnitChrome() {
-        for shape in iconUnitLayers where !shape.isHidden {
+        for shape in iconUnitLayers + [iconUnitDotLayer] where !shape.isHidden {
             shape.path = nil
             shape.isHidden = true
         }
+        drawnIconUnitDots = 0
     }
 
     // MARK: What a drag lands on
@@ -136,6 +172,6 @@ extension CanvasNSView {
             "\(Int(ruling.frame.width)) unit artboard · \(ruling.columns.count) columns"
                 + " \(ruling.rows.count) rows · \(ruling.strongColumns.count) strong"
                 + " columns \(ruling.strongRows.count) strong rows"
-        }.joined(separator: " | ") + " · \(gap) points apart"
+        }.joined(separator: " | ") + " · \(gap) points apart · \(drawnIconUnitDots) dots"
     }
 }

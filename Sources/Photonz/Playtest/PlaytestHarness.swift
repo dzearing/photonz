@@ -8337,6 +8337,10 @@ private final class Run {
                 if editor.iconSnapChoices.geometry { editor.toggleIconSnap(\.geometry) }
             case .snapToGeometryOn:
                 if !editor.iconSnapChoices.geometry { editor.toggleIconSnap(\.geometry) }
+            case .snapToGridOff:
+                if editor.iconSnapChoices.grid { editor.toggleIconSnap(\.grid) }
+            case .snapToGridOn:
+                if !editor.iconSnapChoices.grid { editor.toggleIconSnap(\.grid) }
             case .adjustGrid: editor.beginGridAdjustment()
             case .showGridSettings: editor.showGridSettings()
             case .selectCanvas: editor.selectCanvas()

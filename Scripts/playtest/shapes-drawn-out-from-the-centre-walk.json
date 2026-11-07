@@ -27,7 +27,7 @@
     { "do": "tool", "tool": "ellipse" },
     { "do": "move", "at": [800.4, 546.2] },
     { "do": "wait", "seconds": 0.3 },
-    { "do": "expectLanding", "near": [800, 546], "within": 0.01, "says": "12, 8" },
+    { "do": "expectLanding", "near": [800, 546], "within": 0.01, "says": "12, 8 · center" },
     { "do": "drag", "from": [800.4, 546.2], "to": [804.3, 550.2], "steps": 10, "modifiers": ["option"], "hold": "centre-1-crown-dragging" },
     { "do": "wait", "seconds": 0.4 },
 

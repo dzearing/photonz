@@ -397,6 +397,9 @@ struct CanvasView: NSViewRepresentable {
     /// Whether an icon frame draws the space an icon has to live inside
     /// (Next, `next-icon-frames`).
     let iconKeylines: Bool
+    /// Whether a point in an icon lands on whole units (View ▸ Snap in Icons ▸
+    /// Grid), which is what the dots on a ruled artboard's crossings say.
+    let iconSnapsToUnits: Bool
     /// Where the grid counts from, in document points. It comes from the
     /// DOCUMENT, or from the marker being held while the grid is adjusted.
     let canvasGridOrigin: CGPoint
@@ -475,6 +478,7 @@ struct CanvasView: NSViewRepresentable {
                    measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
                    lumaField: lumaField, isCanvasSelected: isCanvasSelected,
                    canvasGrid: canvasGrid, iconKeylines: iconKeylines,
+                   iconSnapsToUnits: iconSnapsToUnits,
                    canvasGridOrigin: canvasGridOrigin,
                    canvasGuides: canvasGuides, selectedGuideID: selectedGuideID,
                    gridAdjust: gridAdjust,
@@ -1034,12 +1038,19 @@ final class CanvasNSView: NSView {
     /// An icon's artboard ruled into units: every unit, then every fourth unit
     /// drawn again on top. See `CanvasIconUnits.swift`.
     let iconUnitLayers = [CAShapeLayer(), CAShapeLayer()]
+    /// A dot on every crossing of those lines the Pen and the shapes land on,
+    /// while the units pull. See `CanvasIconUnits.swift`.
+    let iconUnitDotLayer = CAShapeLayer()
+    /// How many dots that layer last drew, for a scripted walk to read.
+    var drawnIconUnitDots = 0
     /// What those two were last drawn with, for a scripted walk to read.
     var drawnIconUnits: [IconUnitRuling] = []
     /// Whether icon frames draw their guides, echoed from `EditorState`. A
     /// view preference rather than anything a document carries, so one switch
     /// covers every frame in every window.
     var iconKeylines = false
+    /// Echoed from `EditorState`, as the keylines are.
+    var iconSnapsToUnits = true
     /// A frame's name, above its top left corner: one text sublayer per frame.
     let frameChromeLayer = CALayer()
     /// The hairline at every frame's edge, so a screen has a visible boundary
@@ -2471,6 +2482,12 @@ final class CanvasNSView: NSView {
         }
         iconKeylineLayerGroup.isHidden = true
         layer?.addSublayer(iconKeylineLayerGroup)
+        // The dots go over the keylines, as the mock stacks them: a crossing on
+        // a keyline is as much a target as any other, and it is the one a
+        // person is most likely aiming at.
+        iconUnitDotLayer.strokeColor = nil
+        iconUnitDotLayer.isHidden = true
+        layer?.addSublayer(iconUnitDotLayer)
 
         // The grid sits on the canvas surface, and which side of the picture
         // that is depends on whether it is switched on over it: see
