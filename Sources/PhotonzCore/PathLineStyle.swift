@@ -287,6 +287,9 @@ extension PhotonzDocument {
     /// the middle of its edge with round corners and caps, whatever Union left
     /// on it: centred is also what lets an exported icon draw its line with no
     /// clip path. Off an icon it changes nothing.
+    ///
+    /// An icon that already has a line in it has answered that better: the new
+    /// outline takes that line, saved stroke included (`IconLine.swift`).
     @discardableResult
     public mutating func setPathOutline(layerIDs: [UUID], on: Bool,
                                         width: CGFloat = PathContent.defaultStrokeWidth,
@@ -299,10 +302,16 @@ extension PhotonzDocument {
                     IconStrokeWeight.outlineWidth(iconSized: $0, unit: iconUnit(of: icon))
                 }
             }
+            let inUse = icon.flatMap { self.iconLine(inIcon: $0, picked: nil) }
             changed += changePaths([id]) { path in
                 guard (path.strokeWidth > 0) != on else { return }
                 guard on else {
                     path.strokeWidth = 0
+                    return
+                }
+                if let inUse {
+                    path.follow(inUse)
+                    path.gainingALineThatReads(width: inUse.look.width)
                     return
                 }
                 path.gainingALineThatReads(width: iconWeight ?? max(width, 1))

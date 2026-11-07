@@ -450,11 +450,23 @@ struct LibraryPanel: View {
         }
     }
 
+    /// ...and the saved strokes, for the same reason.
+    private var visibleSavedStrokes: [(entry: LibraryEntry, stroke: SavedStroke)] {
+        guard scope == .styles, let document = editorState.document else { return [] }
+        let hits = LibrarySearch.filter(editorState.savedStrokeEntries, query: query)
+        return hits.prefix(Self.maxTiles).compactMap { entry in
+            guard let id = UUID(uuidString: entry.id),
+                  let stroke = document.savedStroke(id: id) else { return nil }
+            return (entry, stroke)
+        }
+    }
+
     /// Whether this scope has anything to show at all, whatever the search
     /// says. The empty state and the resize grabber both hang off this.
     private var isEmpty: Bool {
         visibleBrushes.isEmpty && visibleClips.isEmpty && visibleMedia.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
-            && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty && catalogGroups.isEmpty
+            && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty
+            && visibleSavedStrokes.isEmpty && catalogGroups.isEmpty
     }
 
     /// How many tiles the shelf is showing right now, whatever scope they came
@@ -462,7 +474,8 @@ struct LibraryPanel: View {
     private var tileCount: Int {
         visibleBrushes.count + visibleClips.count + visibleMedia.count + visibleComponents.count
             + visibleStyles.count
-            + visibleTextStyles.count + visibleEffectStyles.count + catalogItemCount
+            + visibleTextStyles.count + visibleEffectStyles.count + visibleSavedStrokes.count
+            + catalogItemCount
     }
 
     /// The height the shelf takes: its tiles, capped at the LOWER of the two
@@ -664,6 +677,9 @@ struct LibraryPanel: View {
         }
         ForEach(visibleEffectStyles, id: \.entry.id) { pair in
             LibraryEffectStyleTile(entry: pair.entry, style: pair.style)
+        }
+        ForEach(visibleSavedStrokes, id: \.entry.id) { pair in
+            LibrarySavedStrokeTile(entry: pair.entry, stroke: pair.stroke)
         }
     }
 

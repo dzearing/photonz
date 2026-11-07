@@ -23,12 +23,19 @@ extension EditorState {
     /// It arrives with the fade, line and effects the last of its kind was
     /// left with (`RememberedLooks`), unless `remembering` is off: a paste is a copy of
     /// the thing it came from, not a new one drawn.
-    func addDrawnLayer(_ layer: Layer, remembering: Bool = true) {
+    ///
+    /// `keepingItsLine` is a path that already wears the line it should: the
+    /// one its icon is using, which outranks the last path's.
+    func addDrawnLayer(_ layer: Layer, remembering: Bool = true, keepingItsLine: Bool = false) {
         let moment = documentTimeMS
         let placing = placesDrawingsInTime
         // ...and the line and effects it was last left with: a Pen path's
         // shadow, an arrow's square ends.
-        let layer = remembering ? rememberedLooks.wearingLine(rememberedLooks.wearing(layer)) : layer
+        var layer = layer
+        if remembering {
+            layer = rememberedLooks.wearing(layer)
+            if !keepingItsLine { layer = rememberedLooks.wearingLine(layer) }
+        }
         let fade = remembering ? rememberedFade(for: layer) : nil
         perform { $0.addLayerDrawn(layer, atTimeMS: moment, placingInTime: placing, fade: fade) }
     }

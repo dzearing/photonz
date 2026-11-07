@@ -1190,6 +1190,7 @@ final class EditorState {
             if colorStyleNaming != nil { colorStyleNaming = nil }
             if isNamingTextStyle { isNamingTextStyle = false }
             if namingEffectStyleRow != nil { namingEffectStyleRow = nil }
+            if namingSavedStrokeRow != nil { namingSavedStrokeRow = nil }
             // ...and so does a folded effect: the Effects list is about to be
             // some other shape's.
             forgetEffectFolds()
@@ -1226,6 +1227,7 @@ final class EditorState {
                 colorStyleNaming = nil
                 isNamingTextStyle = false
                 namingEffectStyleRow = nil
+                namingSavedStrokeRow = nil
                 forgetEffectFolds()
                 noteSelectionForHistory()
                 // A guide step waiting on "pick a layer" moves on here as well
@@ -3500,6 +3502,14 @@ final class EditorState {
     /// lives here for the same two reasons: one field open at a time, and a
     /// walk can open it.
     var isNamingTextStyle = false
+    /// The Line row whose saved stroke is being named, or nil.
+    var namingSavedStrokeRow: String?
+    /// Whether the Pen's Width, and its ink, were set by hand on the tool bar
+    /// since the last path landed. The icon's line gives way to both for the
+    /// next path (`IconLine.swift`); a weight remembered from last week does
+    /// not count, or that row's number would outrank every icon there is.
+    var penKeepsOwnWidth = false
+    var penKeepsOwnInk = false
 
     /// Which effect row's Style field is asking for a name right now, by
     /// `LayerEffectRow.id`. Unlike the text one it needs an address: the

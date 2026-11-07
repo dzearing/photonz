@@ -58,6 +58,7 @@ extension EditorState {
         guard effectStylesEnabled else { return }
         colorStyleNaming = nil
         isNamingTextStyle = false
+        namingSavedStrokeRow = nil
         namingEffectStyleRow = row.id
     }
 

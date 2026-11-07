@@ -412,6 +412,7 @@ extension EditorState {
             // A plain colour is a plain colour: this is where a tool holding a
             // saved one lets go of it, so it is where the app says so.
             pickingPlainColor(slot: .stroke) { annotationStyles.setPaint(paint, for: activeTool) }
+            if activeTool == .pen { penKeepsOwnInk = true }
         }
         saveAnnotationStyles()
         // The recents row is a row of colors, so a gradient leaves its flat
@@ -502,6 +503,7 @@ extension EditorState {
             annotationStyles.armEdge(width: width, forShape: shape)
         } else if penIsTheOneBeingStyled {
             annotationStyles.setStrokeWidth(width, for: .pen)
+            penKeepsOwnWidth = true
         }
         saveAnnotationStyles()
     }
@@ -536,6 +538,7 @@ extension EditorState {
             // so a drag the popover dismisses part way through still leaves
             // the Pen holding the weight the number was showing.
             annotationStyles.setStrokeWidth(strokeWidth, for: .pen)
+            penKeepsOwnWidth = true
         }
         guard let layer = selectedAnnotationLayer, var doc = document else { return }
         discardDragPreview()

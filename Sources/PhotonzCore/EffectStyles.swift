@@ -369,8 +369,9 @@ extension PhotonzDocument {
 
     /// Every layer in the tree run through a mutation in place. Named for what
     /// effect styles use it for; it walks everything, because an effect can be
-    /// on any layer anywhere in the tree.
-    private mutating func mapEffectLayers(_ body: (inout Layer) -> Void) {
+    /// on any layer anywhere in the tree. Saved strokes walk the same tree
+    /// (`SavedStrokes.swift`).
+    mutating func mapEffectLayers(_ body: (inout Layer) -> Void) {
         func walk(_ list: inout [Layer]) {
             for index in list.indices {
                 body(&list[index])

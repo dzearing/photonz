@@ -76,6 +76,8 @@ extension CanvasNSView {
         penPathLayer.strokeColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b,
                                            alpha: rgba.a)
         penPathLayer.lineWidth = max(1, content.strokeWidth * zoom)
+        penPathLayer.lineJoin = content.lineCorner.shapeLayerJoin
+        penPathLayer.lineCap = content.lineEnd.shapeLayerCap
         // A path that would close is shown filled, faintly: the shape you get
         // rather than the line you drew.
         if content.isClosed, let fill = content.fill, let ink = RGBA(hex: fill.hex) {
@@ -214,6 +216,9 @@ extension CanvasNSView {
             // reason and at the same moment: one path is one colour, so the
             // whole drawing wears what the Pen was armed with when it started.
             penSession.startingPaint = penPaint
+            // ...unless the icon under it already has a line, which is a
+            // better answer than a preference (`IconLine.swift`).
+            penSession.follow(iconLineToFollow(at: p))
         }
         penSession.press(at: p, constrained: event.modifierFlags.contains(.shift),
                          breaking: event.modifierFlags.contains(.option),
@@ -375,10 +380,21 @@ extension CanvasNSView {
     }
 
     private func commitPen(_ content: PathContent) {
+        let line = penSession.startingLine
         penSession.discard()
         refreshPenChrome()
         refreshPenHint()
-        onPathCommit(content)
+        onPathCommit(content, line)
+    }
+
+    /// The line a path starting here takes from its icon, after whatever was
+    /// set by hand on the tool bar since the last path landed.
+    private func iconLineToFollow(at point: CGPoint) -> IconLine? {
+        guard Experiments.shared.iconFramesEnabled,
+              var line = document?.iconLine(drawnAt: point, picked: selectedLayerID) else { return nil }
+        if penKeepsOwnWidth { line = line.keeping(width: penSession.startingStrokeWidth) }
+        if penKeepsOwnInk { line = line.keeping(paint: penPaint) }
+        return line
     }
 
     /// Wipes the chrome and puts the hint back to its opening line, without
@@ -401,5 +417,27 @@ extension CanvasNSView {
         guard hint != lastPenHint else { return }
         lastPenHint = hint
         onPenHintChange(hint)
+    }
+}
+
+private extension PathLineCorner {
+    /// The draft's corner, so the line under the hand turns as the line that
+    /// lands will.
+    var shapeLayerJoin: CAShapeLayerLineJoin {
+        switch self {
+        case .sharp: return .miter
+        case .round: return .round
+        case .flat: return .bevel
+        }
+    }
+}
+
+private extension PathLineEnd {
+    var shapeLayerCap: CAShapeLayerLineCap {
+        switch self {
+        case .flat: return .butt
+        case .round: return .round
+        case .square: return .square
+        }
     }
 }

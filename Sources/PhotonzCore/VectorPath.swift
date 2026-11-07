@@ -377,6 +377,10 @@ public struct PathContent: Hashable, Codable, Sendable {
     /// The brush the line is painted with instead of a plain stroke
     /// (`PathBrush.swift`). Nil is the plain line every path starts with.
     public var brush: PathBrush?
+    /// The saved stroke this line wears (`SavedStrokes.swift`), or nil for a
+    /// line of its own. The values are all here on the path as well: this only
+    /// says where they came from.
+    public var savedStrokeID: UUID?
 
     public init(anchors: [PathAnchor],
                 isClosed: Bool = false,
@@ -628,7 +632,7 @@ public struct PathContent: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case anchors, closed, ringStarts, paint, strokeWidth, strokePosition, fill, fillRule
-        case lineEnd, lineCorner, linePattern, trim, brush
+        case lineEnd, lineCorner, linePattern, trim, brush, savedStrokeID
     }
 
     public init(from decoder: any Decoder) throws {
@@ -655,6 +659,7 @@ public struct PathContent: Hashable, Codable, Sendable {
         trim = try c.decodeIfPresent(StrokeTrim.self, forKey: .trim)
         // A file written before a line could be brushed has a plain one.
         brush = try c.decodeIfPresent(PathBrush.self, forKey: .brush)
+        savedStrokeID = try c.decodeIfPresent(UUID.self, forKey: .savedStrokeID)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -674,6 +679,7 @@ public struct PathContent: Hashable, Codable, Sendable {
         try c.encode(linePattern, forKey: .linePattern)
         try c.encodeIfPresent(trim, forKey: .trim)
         try c.encodeIfPresent(brush, forKey: .brush)
+        try c.encodeIfPresent(savedStrokeID, forKey: .savedStrokeID)
     }
 }
 

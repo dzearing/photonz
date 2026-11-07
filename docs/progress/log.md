@@ -2,6 +2,25 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-11-07: a glyph takes the set's saved stroke in one click
+
+A path's line can be saved as a style: width, caps, corners and side, the mock's
+four values (`SavedStrokes.swift`). Another path takes it from a button on its
+Style row in one click, the stroke's own section on the Styles shelf re-sets every
+path wearing it as one undo step, and a line tuned by hand lets go with a notice.
+A new Pen line on an icon starts in the line the icon is using, colour, saved
+stroke and all, unless the tool bar was set by hand since (`IconLine.swift`). The
+mock's note moved behind the Appearance question mark. Walk:
+`a-glyph-takes-the-saved-stroke-walk`.
+
+Found on the real window, not in the tests: the Style row went below the fold
+once the shelf opened, and its button and menu wrapped to two lines. With nothing
+saved the row now sits under Align so Width, Caps and Align keep their place.
+
+Open: with four or more layers the row needs a scroll at 900 points
+(`the-saved-stroke-button-stays-on-screen-beside-a`); lines and ovals cannot wear
+a stroke yet (`a-straight-line-and-an-oval-in-a-glyph-can-wear`).
+
 ## 2026-11-06: Ask animates what it makes
 
 One request now gives an animated SVG icon that loops and stays editable: Ask

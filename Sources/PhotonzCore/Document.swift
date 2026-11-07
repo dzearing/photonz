@@ -25,6 +25,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// shadow, a glow, a border or a blur somebody tuned once and gave a name
     /// to, kept in the document it was made in like the other two.
     public var effectStyles: [EffectStyle]
+    /// The named lines this document's paths point at (`SavedStrokes.swift`).
+    public var savedStrokes: [SavedStroke] = []
     /// The guides pinned onto this picture (`CanvasGuide`). They live here
     /// rather than in the app's settings because a guide marking the left
     /// margin of one screenshot means nothing in another: two windows on two
@@ -142,7 +144,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
+        case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, savedStrokes, guides
         case gridOriginX, gridOriginY, motionCycleMS, keyLap, readWords, durationMS
         case tracks, trackGroups, media, markers, markInMS, markOutMS
         case captionLook, captionsListenedTo, componentOriginals, camera, madeAsIcon, iconPictureGrid
@@ -159,6 +161,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         if !colorStyles.isEmpty { try c.encode(colorStyles, forKey: .colorStyles) }
         if !textStyles.isEmpty { try c.encode(textStyles, forKey: .textStyles) }
         if !effectStyles.isEmpty { try c.encode(effectStyles, forKey: .effectStyles) }
+        if !savedStrokes.isEmpty { try c.encode(savedStrokes, forKey: .savedStrokes) }
         if !guides.isEmpty { try c.encode(guides, forKey: .guides) }
         if gridOrigin != .zero {
             try c.encode(gridOrigin.x, forKey: .gridOriginX)
@@ -219,6 +222,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // The named effects postdate both; a document written before them has
         // none.
         effectStyles = try c.decodeIfPresent([EffectStyle].self, forKey: .effectStyles) ?? []
+        savedStrokes = try c.decodeIfPresent([SavedStroke].self, forKey: .savedStrokes) ?? []
         // ...and so do the guides and the grid's zero point.
         guides = try c.decodeIfPresent([CanvasGuide].self, forKey: .guides) ?? []
         let x = try c.decodeIfPresent(CGFloat.self, forKey: .gridOriginX) ?? 0

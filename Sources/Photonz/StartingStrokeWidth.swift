@@ -74,7 +74,11 @@ extension EditorState {
     /// draw, and the line lands at 2 because the drawing asks about the point
     /// it is landing on, while the row had nothing to ask and went on reading
     /// the armed 4.
+    ///
+    /// With the Pen on an icon that already has a line, that line's weight is
+    /// the answer (`IconLine.swift`).
     var startedStrokeWidth: CGFloat {
+        if let width = penWidthFromIcon { return width }
         let armed = annotationStyles.strokeWidth(for: activeTool)
         guard Experiments.shared.iconFramesEnabled, let document else { return armed }
         return document.startingStrokeWidth(armed: armed,

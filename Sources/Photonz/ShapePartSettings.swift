@@ -86,6 +86,7 @@ struct ShapePartSettings: View {
                 // the switch exists to replace: off has to LOOK off, exactly as
                 // a switched-off Fill does (`LayerPartRow.showsSettings`).
                 if row.showsSettings, !thickness.isEmpty, flat {
+                    SavedStrokeRow(rowID: row.id, selection: lineStyle)
                     self.thickness(thickness)
                     if selection.members.contains(where: { !$0.content.thicknessFollowsSize }) {
                         SizeOverrideNote {
@@ -95,14 +96,21 @@ struct ShapePartSettings: View {
                     }
                     PathLineStyleSettings(rowID: row.id, selection: lineStyle)
                     ShapeLineEndSettings(rowID: row.id, selection: selection)
+                    SavedStrokeRow(rowID: row.id, selection: lineStyle, atTheFoot: true)
                 } else if row.showsSettings, !thickness.isEmpty {
                     OwnedSettings(owner: row.title) {
                         // What the line is painted with first, as the mock's
                         // Stroke group lists it (`PathBrushSettings.swift`).
+                        // The saved stroke above everything it sets, and high
+                        // enough to stay on screen with the Styles shelf open,
+                        // which is where saving one leaves you: the mock's one
+                        // click is no click at all if it needs a scroll first.
+                        SavedStrokeRow(rowID: row.id, selection: lineStyle)
                         PathBrushSettings(rowID: row.id, selection: lineStyle)
                         self.thickness(thickness)
                         PathLineStyleSettings(rowID: row.id, selection: lineStyle)
                         ShapeLineEndSettings(rowID: row.id, selection: selection)
+                        SavedStrokeRow(rowID: row.id, selection: lineStyle, atTheFoot: true)
                     }
                 }
             case .captionText where !selection.isEmpty:

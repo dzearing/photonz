@@ -1720,14 +1720,15 @@ struct InspectorPanel: View {
         // The cut's two sections carry their own marks inside Properties; the
         // keying one on its header would be about something not picked.
         if id == .keys, cutFillsProperties { return furniture }
-        guard let help = Self.sectionHelp(id) else { return furniture }
+        let lineNote = id == .color ? editorState.savedStrokeNote : nil
+        guard let help = lineNote ?? Self.sectionHelp(id) else { return furniture }
         // With the mock's headings the group's own buttons end the row (the
         // Properties menu is the last thing on it), so the mark goes first.
         let helpFirst = Experiments.shared.dockHeadersEnabled
         return AnyView(HStack(spacing: 6) {
-            if helpFirst { SectionHelpMark(section: id.title, text: help) }
+            if helpFirst { SectionHelpMark(section: sectionTitle(id), text: help) }
             if let furniture { furniture }
-            if !helpFirst { SectionHelpMark(section: id.title, text: help) }
+            if !helpFirst { SectionHelpMark(section: sectionTitle(id), text: help) }
         })
     }
 
@@ -2176,6 +2177,8 @@ struct InspectorPanel: View {
                 LibraryTextStyleInspector()
             } else if editorState.selectedEffectStyle != nil {
                 LibraryEffectStyleInspector()
+            } else if editorState.selectedSavedStroke != nil {
+                LibrarySavedStrokeInspector()
             } else {
                 LibraryItemInspector()
             }

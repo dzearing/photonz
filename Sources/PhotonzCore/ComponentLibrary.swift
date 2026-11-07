@@ -336,7 +336,7 @@ extension PhotonzDocument {
     /// The named styles an editing space changed, replayed on this document
     /// through the same commands the Library uses, so every layer bound to one
     /// is repainted here as it was there.
-    private mutating func adoptStyles(from space: PhotonzDocument) {
+    mutating func adoptStyles(from space: PhotonzDocument) {
         for style in space.colorStyles {
             guard let mine = colorStyle(id: style.id) else { colorStyles.append(style); continue }
             if mine.paint != style.paint { setColorStylePaint(styleID: style.id, paint: style.paint) }
@@ -361,6 +361,11 @@ extension PhotonzDocument {
             }
             if mine.effect != style.effect { setEffectStyle(styleID: style.id, effect: style.effect) }
             if mine.name != style.name { renameEffectStyle(id: style.id, to: style.name) }
+        }
+        for stroke in space.savedStrokes {
+            guard let mine = savedStroke(id: stroke.id) else { savedStrokes.append(stroke); continue }
+            if mine.look != stroke.look { setSavedStroke(styleID: stroke.id, look: stroke.look) }
+            if mine.name != stroke.name { renameSavedStroke(id: stroke.id, to: stroke.name) }
         }
     }
 }

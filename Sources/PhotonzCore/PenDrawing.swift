@@ -116,6 +116,12 @@ public struct PenSession: Equatable, Sendable {
     /// under your hand is the colour that lands.
     public var startingPaint: Paint = Paint(hex: PathContent.defaultColorHex)
 
+    /// The line the icon being drawn on is already using, or nil where there
+    /// is none (`IconLine.swift`). Set with `follow`, as the first anchor goes
+    /// down, and held for the whole path for the same reason the two above
+    /// are. Everything the session hands back wears it.
+    public private(set) var startingLine: IconLine?
+
     /// The press in progress, nil between clicks.
     private var press: Press?
 
@@ -565,17 +571,46 @@ public struct PenSession: Equatable, Sendable {
     ///
     /// An OPEN path is untouched. A line IS its stroke, so a line of no width
     /// is not a shape with no edge, it is nothing at all.
+    ///
+    /// Following an icon's line, a closed path is the next part of that
+    /// drawing rather than a first shape: it keeps the line, and takes the fill
+    /// a closed part beside it has, which on a drawing of bare lines is none.
     private func content(_ anchors: [PathAnchor], closed: Bool) -> PathContent {
-        PathContent(anchors: anchors, isClosed: closed,
-                    paint: startingPaint,
-                    strokeWidth: closed ? 0 : startingStrokeWidth,
-                    fill: closed ? startingPaint : nil)
+        var content = PathContent(anchors: anchors, isClosed: closed,
+                                  paint: startingPaint,
+                                  strokeWidth: closed ? 0 : startingStrokeWidth,
+                                  fill: closed ? startingPaint : nil)
+        if let startingLine {
+            content.follow(startingLine)
+            content.fill = closed ? startingLine.fill : nil
+        }
+        return content
+    }
+
+    /// Starts the path in the line an icon is using, or in what the Pen is
+    /// armed with where `line` is nil.
+    public mutating func follow(_ line: IconLine?) {
+        startingLine = line
+        guard let line else { return }
+        startingPaint = line.paint
+        startingStrokeWidth = line.look.width
     }
 
     /// The layer a finished path becomes, boxed round the shape it covers and
     /// left where it was drawn.
     public static func layer(from content: PathContent) -> Layer {
         PathBuilder.layer(content, at: content.bounds.origin)
+    }
+
+    /// The same, for a path that followed an icon's line: it wears the saved
+    /// colours that line wears as well as its values, so it follows them too.
+    public static func layer(from content: PathContent, following line: IconLine?) -> Layer {
+        var layer = self.layer(from: content)
+        if let id = line?.inkStyleID { layer.bindColorStyle(id, for: .stroke) }
+        if content.isClosed, content.fill != nil, let id = line?.fillStyleID {
+            layer.bindColorStyle(id, for: .fill)
+        }
+        return layer
     }
 
     // MARK: - The words on screen

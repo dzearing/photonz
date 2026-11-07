@@ -2801,6 +2801,7 @@ struct EditorView: View {
             return Paint(hex: activeToolColorHex)
         }
         if let selected = selectedAnnotation { return selected.paint }
+        if let ink = editorState.penInkFromIcon { return ink }
         return editorState.annotationStyles.paint(for: editorState.activeTool)
             ?? Paint(hex: activeToolColorHex)
     }

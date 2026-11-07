@@ -30,6 +30,8 @@ public enum LinkBreakKind: String, Hashable, Sendable, CaseIterable {
     case textStyle
     /// An effect that was wearing a named style was tuned some other way.
     case effectStyle
+    /// A line that was wearing a saved stroke was tuned some other way.
+    case savedStroke
     /// One part of a copy's look was set by hand, so it stopped following.
     case instanceStyle
     /// A component that followed the shared shelf is no longer on it, so this
@@ -46,7 +48,8 @@ public enum LinkBreakKind: String, Hashable, Sendable, CaseIterable {
         case .colorStyle: return 3
         case .textStyle: return 4
         case .effectStyle: return 5
-        case .instanceStyle: return 6
+        case .savedStroke: return 6
+        case .instanceStyle: return 7
         }
     }
 }
@@ -84,6 +87,8 @@ public struct LinkBreak: Hashable, Sendable {
             return count == 1 ? "1 piece of text" : "\(count) pieces of text"
         case .effectStyle:
             return count == 1 ? "1 effect" : "\(count) effects"
+        case .savedStroke:
+            return count == 1 ? "1 line" : "\(count) lines"
         case .instanceStyle:
             if count == 1, let part { return "\(part) on this copy" }
             let parts = "\(count) parts"
@@ -103,7 +108,7 @@ public struct LinkBreak: Hashable, Sendable {
         switch kind {
         case .instanceUngrouped: return true
         case .instanceStyle: return count != 1
-        case .colorStyle, .textStyle, .effectStyle, .originalDeleted,
+        case .colorStyle, .textStyle, .effectStyle, .savedStroke, .originalDeleted,
              .sharedOriginalMissing: return count != 1
         }
     }
@@ -161,7 +166,8 @@ extension LinkBreakReport {
                                _ after: PhotonzDocument) -> LinkBreakReport {
         let holdsCopies = before.holdsComponentInstance
         guard !before.colorStyles.isEmpty || !before.textStyles.isEmpty
-                || !before.effectStyles.isEmpty || holdsCopies else {
+                || !before.effectStyles.isEmpty || !before.savedStrokes.isEmpty
+                || holdsCopies else {
             return LinkBreakReport()
         }
 
@@ -178,6 +184,7 @@ extension LinkBreakReport {
         breaks.append(contentsOf: colorBreaks(before, after, edited, afterByID))
         breaks.append(contentsOf: textBreaks(before, after, edited, afterByID))
         breaks.append(contentsOf: effectBreaks(before, after, edited, afterByID))
+        breaks.append(contentsOf: savedStrokeBreaks(before, after, edited, afterByID))
         if holdsCopies {
             breaks.append(contentsOf: componentBreaks(before, after, edited, afterByID))
         }
@@ -313,6 +320,27 @@ extension LinkBreakReport {
         return order.map { LinkBreak(kind: .effectStyle, count: lost[$0] ?? 0, source: names[$0]) }
     }
 
+    /// A line that drifted off its saved stroke. Switching the line off is not
+    /// a break: that is a choice to have no line, and repeating it back is not
+    /// news.
+    private static func savedStrokeBreaks(_ before: PhotonzDocument, _ after: PhotonzDocument,
+                                          _ edited: [Layer],
+                                          _ afterByID: [UUID: Layer]) -> [LinkBreak] {
+        guard !before.savedStrokes.isEmpty else { return [] }
+        let names = Dictionary(after.savedStrokes.map { ($0.id, $0.name) },
+                               uniquingKeysWith: { first, _ in first })
+        var lost: [UUID: Int] = [:]
+        var order: [UUID] = []
+        for layer in edited {
+            guard let id = layer.path?.savedStrokeID, names[id] != nil,
+                  let now = afterByID[layer.id]?.path, now.savedStrokeID != id,
+                  now.strokeWidth > 0 else { continue }
+            if lost[id] == nil { order.append(id) }
+            lost[id, default: 0] += 1
+        }
+        return order.map { LinkBreak(kind: .savedStroke, count: lost[$0] ?? 0, source: names[$0]) }
+    }
+
     /// The three ways a copy stops following its original.
     private static func componentBreaks(_ before: PhotonzDocument, _ after: PhotonzDocument,
                                         _ edited: [Layer],
@@ -378,7 +406,7 @@ extension LinkBreakReport {
             case .originalDeleted:
                 guard let count = stranded[componentID] else { return nil }
                 return LinkBreak(kind: kind, count: count, source: name)
-            case .colorStyle, .textStyle, .effectStyle, .sharedOriginalMissing:
+            case .colorStyle, .textStyle, .effectStyle, .savedStroke, .sharedOriginalMissing:
                 // Not something a diff of one document can see: the shelf lives
                 // outside it, so the sync that reads it reports its own break
                 // (`SharedComponentSyncReport`).

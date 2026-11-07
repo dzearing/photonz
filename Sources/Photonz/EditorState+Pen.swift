@@ -26,7 +26,12 @@ extension EditorState {
     /// What the sticky Pen landed alongside stays: a picked path shows its
     /// points under the Pen as well as under Select (`CanvasPathEdit`), so
     /// pressing P over a finished shape still reaches its anchors.
-    func addPath(_ content: PathContent) {
+    ///
+    /// `line` is the line of the icon the path followed (`IconLine.swift`).
+    /// That was decided as the first anchor went down and the path already
+    /// wears it, so neither the frame's starting weight nor the last path's
+    /// remembered line gets a say.
+    func addPath(_ content: PathContent, following line: IconLine? = nil) {
         guard content.anchors.count >= 2 else { return }
         // The canvas already drew it at this weight, read from the frame the
         // first anchor landed on; asked again here from the frame the finished
@@ -34,11 +39,15 @@ extension EditorState {
         // to hand it to. The same answer every ordinary time, and the right one
         // for a path that wandered onto a different canvas on its way round.
         var content = content
-        content.strokeWidth = startingPathStrokeWidth(
-            armed: content.strokeWidth,
-            drawnAt: CGPoint(x: content.bounds.midX, y: content.bounds.midY))
-        let layer = PenSession.layer(from: content)
-        addDrawnLayer(layer)
+        if line == nil {
+            content.strokeWidth = startingPathStrokeWidth(
+                armed: content.strokeWidth,
+                drawnAt: CGPoint(x: content.bounds.midX, y: content.bounds.midY))
+        }
+        let layer = PenSession.layer(from: content, following: line)
+        addDrawnLayer(layer, keepingItsLine: line != nil)
+        penKeepsOwnWidth = false
+        penKeepsOwnInk = false
         finishCreating(layer.id,
                        tool: ArrowCaptionEntry.toolAfterLanding(activeTool,
                                                              offersCaption: false))

@@ -228,6 +228,10 @@ struct CanvasView: NSViewRepresentable {
     /// reason as the ink: the draft under your hand is the weight that lands
     /// (`EditorState.armedPenStrokeWidth`).
     var penStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
+    /// Whether the Width and the ink were set by hand on the tool bar since
+    /// the last path landed (`EditorState.penKeepsOwnWidth`).
+    var penKeepsOwnWidth = false
+    var penKeepsOwnInk = false
     /// Whether the weight the tool in hand is armed with is one somebody asked
     /// for, echoed from EditorState. A weight nobody chose is the one an icon
     /// frame is allowed to thin (`IconStrokeWeight`), and the draft under your
@@ -244,7 +248,7 @@ struct CanvasView: NSViewRepresentable {
     var onBrushStroke: (BrushStroke) -> Void = { _ in }
     /// A path finished with the Pen (Next, `next-pen`), in document
     /// coordinates: one layer, one undo step.
-    let onPathCommit: (PathContent) -> Void
+    let onPathCommit: (PathContent, IconLine?) -> Void
     /// What the Pen's chip under the canvas should say now, which changes as
     /// the path grows.
     let onPenHintChange: (String) -> Void
@@ -495,6 +499,8 @@ struct CanvasView: NSViewRepresentable {
         view.setPreviewing(isPreviewing)
         view.penPaint = penPaint
         view.penStrokeWidth = penStrokeWidth
+        view.penKeepsOwnWidth = penKeepsOwnWidth
+        view.penKeepsOwnInk = penKeepsOwnInk
         view.armedStrokeWidthIsChosen = armedStrokeWidthIsChosen
         view.brushSettings = brushSettings
         view.brushColorHex = brushColorHex
@@ -712,7 +718,7 @@ final class CanvasNSView: NSView {
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onFrameCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onLensCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
-    var onPathCommit: ((PathContent) -> Void) = { _ in }
+    var onPathCommit: ((PathContent, IconLine?) -> Void) = { _, _ in }
     var onBrushStroke: ((BrushStroke) -> Void) = { _ in }
     var onPenHintChange: ((String) -> Void) = { _ in }
     var onPenCloseRefused: (() -> Void) = {}
@@ -1502,6 +1508,10 @@ final class CanvasNSView: NSView {
     /// How thick, echoed the same way and read at the same moment; see
     /// `PenSession.startingStrokeWidth`.
     var penStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
+    /// Whether the Width and the ink were set by hand on the tool bar since
+    /// the last path landed (`EditorState.penKeepsOwnWidth`).
+    var penKeepsOwnWidth = false
+    var penKeepsOwnInk = false
     /// Whether that weight is one somebody asked for, echoed the same way. Only
     /// a weight nobody chose is an icon frame's to thin (`IconStrokeWeight`).
     var armedStrokeWidthIsChosen: Bool = false

@@ -109,6 +109,8 @@ public struct History: Sendable {
         // ...and an effect that was tuned some other way lets go of its name
         // too, for the same reason and at the same moment.
         next.reconcileEffectStyles()
+        // ...and a line tuned some other way lets go of its saved stroke.
+        next.reconcileSavedStrokes()
         // Every stack and grid puts its contents back in order inside the same
         // step, BEFORE the copies are refilled, so a copy of a component is
         // rebuilt from an original that has already settled. It happens here

@@ -1,0 +1,70 @@
+{
+  "feature": "A glyph takes the icon set's saved stroke in one click",
+  "epic": "icon-vector",
+  "summary": "A path's line can be saved as a style, another path takes it with one click, and changing its weight moves every path using it in one undo step. A new Pen line on an icon starts in the colour, width and corners the icon already uses.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is Scripts/playtest/a-glyph-takes-the-saved-stroke-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose File, New, Image, Icon, draw three Pen points, press Return, then set Width to 1.75 and Corners to Round.",
+      "shot": "2026-11-07-saved-stroke-1-save-row-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Save as Style under Align, then Return to keep the name it offers.",
+      "shot": "2026-11-07-saved-stroke-2-saved-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press P and draw a second line, setting nothing.",
+      "shot": "2026-11-07-saved-stroke-3-next-line-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type 3 into that line's Width.",
+      "shot": "2026-11-07-saved-stroke-4-one-click-row-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click Glyph / stroke 1.75 on the Style row.",
+      "shot": "2026-11-07-saved-stroke-5-clicked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click an empty part of the canvas, click the stroke's tile on the Styles shelf and type 2.5 into Width.",
+      "shot": "2026-11-07-saved-stroke-6-every-glyph-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once."
+    },
+    {
+      "do": "Press P, set Width to 3 on the tool bar and draw a line.",
+      "shot": "2026-11-07-saved-stroke-7-width-by-hand-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Compare the Line settings and the tile with the mock's Stroke section.",
+      "shot": "2026-11-07-saved-stroke-beside-the-mock.png"
+    }
+  ],
+  "evaluate": [
+    "Does a button with the stroke's name on the Style row read as one click to apply it?",
+    "Is Save as Style easy enough to find under Align, where it sits until the first stroke is saved?",
+    "Should a new Pen line follow the picked path first, or always the topmost line?",
+    "Is it right that a closed Pen shape on a drawing of bare lines now lands with no fill?",
+    "Should a dashed path keep wearing the saved stroke, as it does now?"
+  ],
+  "rough": [
+    "Width stays a slider with a typed number where the mock draws a dropdown of weights, as card a-drawn-path-s-outline-settings-read-like-the-ic-the-icon-mock-calls-a-path-s-lin answered.",
+    "The mock's Stroke section is a Line row here: the rows come from card one-way-to-add-colour-and-remove-any-part-of-a-s-how-should-a-shape-s-parts-its-f, and the word Line from task a-path-says-what-its-colour-paints-how-thick-its.",
+    "The mock's note under Stroke moved behind the question mark on the Appearance header, in the mock's words, shown only over a line in an icon.",
+    "The mock draws a saved style on the Styles shelf as a row with a swatch where this is a tile, the form task a-color-can-be-saved-as-a-named-style-and-reused gave every saved style. It does print the mock's use count.",
+    "With four or more layers and the Styles shelf open in a 900 point window, Appearance is squeezed so far that the Style row needs a scroll first: task the-saved-stroke-button-stays-on-screen-beside-a covers it.",
+    "A saved stroke reaches Pen paths only. A Line tool line and an outlined box or oval keep their own width: task a-straight-line-and-an-oval-in-a-glyph-can-wear covers it.",
+    "With a stroke saved, the Style row sits above Brush and can push Align 13 points below the fold at 1000 points tall. With none saved it sits under Align, so that promise still holds on a first line.",
+    "Copying a path to another document, or sharing a component, keeps the line and drops the name, because the stroke is not carried across.",
+    "Ask and the agent tools cannot list or apply a saved stroke yet.",
+    "Three of the 37 walks run for this change still fail, none from it: icon-stroke-weight-walk and outline-width-walk failed the same way before it, and border-follows-the-path-walk looks like the Thickness to Width rename of 2026-11-06, not confirmed on an older build. All three are on task walks-that-fail-in-the-full-sweep-26."
+  ]
+}
