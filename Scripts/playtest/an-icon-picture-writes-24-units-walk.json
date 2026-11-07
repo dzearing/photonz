@@ -1,0 +1,216 @@
+{
+  "out": "/tmp/photonz-playtest/an-icon-picture-writes-24-units",
+  "seed": "File, New, Image, Icon, at Next defaults with nothing switched on. Three Pen points put down part way through a unit and an Ellipse drag land on units of 512 / 24, and the SVG that leaves says 24 by 24 in whole numbers, by Export and by Copy Merged byte for byte. The Grid on rules 23 lines across the picture. The PNG of the same picture is still 512.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "startFromEmpty",
+      "row": "New image",
+      "answer": [
+        "Icon",
+        "Create"
+      ],
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "tool",
+      "tool": "pen"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        105,
+        130
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        385,
+        130
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        385,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": false,
+      "anchor": 0,
+      "near": [
+        106.667,
+        128
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": false,
+      "anchor": 2,
+      "near": [
+        384,
+        405.333
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        128.5,
+        212.5
+      ],
+      "to": [
+        298.5,
+        384.5
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse",
+      "at": [
+        128,
+        213.333
+      ],
+      "size": [
+        170.667,
+        170.667
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "1-drawn"
+    },
+    {
+      "do": "action",
+      "action": "showGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "2-ruled"
+    },
+    {
+      "do": "action",
+      "action": "showGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSVG",
+      "pictured": 0,
+      "contains": "width=\"24\" height=\"24\" viewBox=\"0 0 24 24\""
+    },
+    {
+      "do": "writeSVG",
+      "name": "icon",
+      "carries": "viewBox=\"0 0 24 24\""
+    },
+    {
+      "do": "clearClipboard"
+    },
+    {
+      "do": "shortcut",
+      "key": "c",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Copy Merged"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "3-copied",
+      "behind": "empty",
+      "svgSameAs": "icon"
+    },
+    {
+      "do": "writePicture",
+      "name": "icon-png",
+      "format": "png",
+      "scale": 1
+    }
+  ]
+}

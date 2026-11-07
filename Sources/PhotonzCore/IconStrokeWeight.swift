@@ -48,10 +48,18 @@ public enum IconStrokeWeight {
     /// `chosen` is whether the weight in `armed` is one somebody asked for. A
     /// weight somebody picked is theirs, whatever number it happens to be; only
     /// a weight nobody has picked is the app's to decide.
+    ///
+    /// `unit` is how long a unit is where it is not a point. On a picture 24
+    /// units across the rule is said in units, so the line starts at the two
+    /// it has on a 24 frame, and that is the one place it may be heavier than
+    /// the armed weight: four points there is a fifth of a unit, gone at 24.
     public static func startingWidth(armed: CGFloat, chosen: Bool,
-                                     onFrameSized size: CGSize?) -> CGFloat {
+                                     onFrameSized size: CGSize?, unit: CGFloat = 1) -> CGFloat {
         guard !chosen else { return armed }
         guard let size, IconPreviews.isIconSize(size) else { return armed }
+        guard unit == 1 else {
+            return max(1, (size.width / unit / linesAcrossAnIcon).rounded()) * unit
+        }
         return min(armed, max(1, (size.width / linesAcrossAnIcon).rounded()))
     }
 }
@@ -84,7 +92,8 @@ extension PhotonzDocument {
     public func startingStrokeWidth(armed: CGFloat, chosen: Bool,
                                     drawnAt point: CGPoint) -> CGFloat {
         IconStrokeWeight.startingWidth(armed: armed, chosen: chosen,
-                                       onFrameSized: iconFrameSize(under: point))
+                                       onFrameSized: iconFrameSize(under: point),
+                                       unit: iconFrameID(under: point).map(iconUnit(of:)) ?? 1)
     }
 
     /// The weight a freshly drawn line takes in the frame this layer is in.
@@ -96,7 +105,8 @@ extension PhotonzDocument {
     public func startingStrokeWidth(armed: CGFloat, chosen: Bool,
                                     drawingInside id: UUID) -> CGFloat {
         IconStrokeWeight.startingWidth(armed: armed, chosen: chosen,
-                                       onFrameSized: iconFrameSize(containing: id))
+                                       onFrameSized: iconFrameSize(containing: id),
+                                       unit: iconFrameID(containing: id).map(iconUnit(of:)) ?? 1)
     }
 
     /// The icon the Width row is speaking for, from the two things that can
@@ -126,7 +136,9 @@ extension PhotonzDocument {
                                     picked: UUID?, pointerIn hovered: UUID?) -> CGFloat {
         IconStrokeWeight.startingWidth(armed: armed, chosen: chosen,
                                        onFrameSized: iconFrameSize(picked: picked,
-                                                                   pointerIn: hovered))
+                                                                   pointerIn: hovered),
+                                       unit: (picked ?? hovered).flatMap(iconFrameID(containing:))
+                                           .map(iconUnit(of:)) ?? 1)
     }
 
     /// A freshly drawn shape's line, started at the weight the canvas under

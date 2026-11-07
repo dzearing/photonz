@@ -177,12 +177,16 @@ public enum SVGExport {
                              flatImages: [UUID: RGBA] = [:],
                              background: Background = .keep) -> Result {
         let gone = leftOut(of: document, flatImages: flatImages, background: background)
-        var writer = Writer(picture: picture, outlineText: outlineText,
+        let prepared = animation == .still ? document.keyedStill : document.lappingKeys
+        let inUnits = prepared.inIconUnits
+        var writer = Writer(picture: inUnits.picture(from: prepared, picture),
+                            outlineText: inUnits.outline(from: prepared, outlineText),
                             pictureEdge: pictureEdge,
                             type: typeSetter,
                             animation: animation, flatImages: flatImages,
                             omitLayer: gone.layerID, omitSurfaces: gone.surfaces)
-        return writer.run(animation == .still ? document.keyedStill : document.lappingKeys)
+        writer.onIconGrid = inUnits.document.isIconCanvas
+        return writer.run(inUnits.document)
     }
 
     /// The layer that is nothing but the canvas the drawing sits on: the
@@ -647,8 +651,9 @@ public enum SVGExport {
         guard num(origin.x) != num(placed.x) || num(origin.y) != num(placed.y) else { return nil }
         let shift = CGPoint(x: origin.x - placed.x, y: origin.y - placed.y)
         let shifted = content.offsetBy(dx: shift.x, dy: shift.y)
-        guard SVGWholeUnits.fractionalCoordinates(in: "d=\"\(pathData(shifted))\"").isEmpty
-        else { return nil }
+        // Its points, not its handles: a curve's own handles may need a fraction.
+        func whole(_ value: CGFloat) -> Bool { num(value) == num(value.rounded()) }
+        guard shifted.anchors.allSatisfy({ whole($0.point.x) && whole($0.point.y) }) else { return nil }
         var moved = layer
         moved.content = .path(shifted)
         moved.frame.origin = placed

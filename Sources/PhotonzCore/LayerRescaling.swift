@@ -32,6 +32,9 @@ extension Layer {
         out.crop = crop?.magnified(by: scale)
         out.style = style.magnified(by: scale)
         out.heightChosenByHand = heightChosenByHand.map { $0 * scale }
+        out.motionSmear = motionSmear?.magnified(by: scale)
+        out.turn3D = turn3D?.magnified(by: Double(scale))
+        out.motions = motions?.map { $0.rescaled(by: scale) }
         out.content = content.rescaled(by: scale)
         return out
     }
@@ -54,6 +57,9 @@ extension LayerContent {
             return self
         case .text(var text):
             text.fontSize *= scale
+            if case .path(let guide)? = text.onPath.map({ LayerContent.path($0.guide).rescaled(by: scale) }) {
+                text.onPath?.guide = guide
+            }
             return .text(text)
         case .annotation(var annotation):
             annotation.strokeWidth *= scale
@@ -109,6 +115,43 @@ extension LayerContent {
             group.overrides = group.overrides.map { $0.rescaled(by: scale) }
             return .group(group)
         }
+    }
+}
+
+extension LayerMotion {
+    /// This motion with every length it holds restated: the places a move
+    /// runs through and how its path bends, a length that is keyed, and a
+    /// turn's middle where that is a place. A turn, a fade or a growth has no
+    /// length in it, and a fraction of a box or of a lap stays that.
+    func rescaled(by scale: CGFloat) -> LayerMotion {
+        guard scale > 0, scale != 1, scale.isFinite else { return self }
+        let carriesALength = property == .position || property.isLength || property.isCrop
+        func restated(_ value: MotionValue) -> MotionValue {
+            guard carriesALength else { return value }
+            switch value {
+            case .number(let number): return .number(number * Double(scale))
+            case .point(let point): return .point(point.magnified(by: scale))
+            case .color: return value
+            }
+        }
+        func restated(_ pivot: MotionPivot?) -> MotionPivot? {
+            guard var pivot else { return nil }
+            pivot.artboard = pivot.artboard?.magnified(by: scale)
+            return pivot
+        }
+        var out = self
+        out.from = restated(from)
+        out.to = restated(to)
+        out.fromBend = fromBend?.magnified(by: scale)
+        out.pivot = restated(pivot)
+        out.ownPivot = restated(ownPivot)
+        out.stops = stops?.map { stop in
+            var key = stop
+            key.value = restated(stop.value)
+            key.bend = stop.bend?.magnified(by: scale)
+            return key
+        }
+        return out
     }
 }
 

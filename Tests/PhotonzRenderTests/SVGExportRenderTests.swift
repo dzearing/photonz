@@ -397,6 +397,111 @@ struct SVGExportRenderTests {
         try Self.expectTheSamePicture(of: document, name: "text")
     }
 
+    // MARK: - A 512 icon picture, written in 24 units
+
+    /// A bit of everything an icon holds, placed in units.
+    static func iconPicture() -> PhotonzDocument {
+        let unit: CGFloat = 512.0 / 24
+        func at(_ units: CGFloat) -> CGFloat { units * unit }
+        let outline = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: at(4), y: at(5))),
+            PathAnchor(point: CGPoint(x: at(12), y: at(3)), handleIn: CGPoint(x: -at(4), y: 0),
+                       handleOut: CGPoint(x: at(4), y: 0), kind: .smooth),
+            PathAnchor(point: CGPoint(x: at(20), y: at(5)))
+        ], isClosed: false, paint: Paint(hex: "#101820"), strokeWidth: at(2))
+        let ring = AnnotationContent(shape: .ellipse, strokeWidth: at(2), colorHex: "#2E6BFF",
+                                     start: .zero, end: CGPoint(x: at(10), y: at(10)))
+        var box = AnnotationContent(shape: .rectangle, strokeWidth: 0, colorHex: "#FF9500",
+                                    start: .zero, end: CGPoint(x: at(6), y: at(4)),
+                                    cornerRadii: CornerRadii(at(1)), fillColorHex: "#FF9500")
+        box.strokePosition = .inside
+        var lifted = Layer(name: "Box", content: .annotation(box),
+                           frame: CGRect(x: at(4), y: at(16), width: at(6), height: at(4)))
+        lifted.style.effects = [.shadow(ShadowStyle(radius: 12, offset: CGSize(width: 8, height: 12),
+                                                    colorHex: "#000000", opacity: 0.5))]
+        let words = TextContent(string: "Ab", fontName: "Helvetica", fontSize: at(4), colorHex: "#111111")
+        var document = PhotonzDocument(canvasSize: CGSize(width: 512, height: 512), layers: [
+            PathBuilder.layer(outline, at: outline.bounds.origin),
+            Layer(name: "Ring", content: .annotation(ring),
+                  frame: CGRect(x: at(7), y: at(7), width: at(10), height: at(10))),
+            lifted,
+            Layer(name: "Words", content: .text(words),
+                  frame: CGRect(x: at(12), y: at(16), width: at(8), height: at(6)))
+        ])
+        document.madeAsIcon = true
+        return document
+    }
+
+    @Test func aFileWrittenInUnitsDrawsWhatThe512CanvasDraws() throws {
+        var document = Self.iconPicture()
+        // Apple's reader works a filter out at the file's own 24 pixels and
+        // stretches the answer, so a shadow is judged on its own below.
+        document.layers[2].style.effects = []
+        let text = SVGExporter.export(document, store: ImageStore()).text
+        #expect(text.contains("viewBox=\"0 0 24 24\""))
+        // The same bar as any other file: the canvas, drawn at 512, against
+        // the file, drawn at 512.
+        try Self.expectTheSamePicture(of: document, name: "icon-in-units")
+    }
+
+    @Test func aShadowWrittenInUnitsStaysWithinWhatApplesReaderCanDraw() throws {
+        // Chrome draws this file and the same one in points 0.0002 apart at
+        // 512 (measured 2026-11-06). Apple's reader blurs at 24 pixels and
+        // stretches, which reads 1.04 on this shape alone: a softer shadow
+        // when enlarged in Preview, in the right place and the right size.
+        var document = Self.iconPicture()
+        document.layers = [document.layers[2]]
+        try Self.expectTheSamePicture(of: document, name: "icon-in-units-shadow", tolerance: 1.5)
+    }
+
+    @Test func aFileWrittenInUnitsHoldsAtEverySize() throws {
+        // Before against after: the same drawing written in points and in
+        // units, each drawn at the size an icon is used at.
+        var units = Self.iconPicture()
+        units.layers[2].style.effects = []
+        var points = units
+        points.madeAsIcon = false
+        let store = ImageStore()
+        func file(_ document: PhotonzDocument) throws -> URL {
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent("photonz-svg-units-\(UUID().uuidString).svg")
+            try SVGExporter.export(document, store: store).text.write(to: url, atomically: true, encoding: .utf8)
+            return url
+        }
+        let after = try file(units), before = try file(points)
+        defer {
+            try? FileManager.default.removeItem(at: after)
+            try? FileManager.default.removeItem(at: before)
+        }
+        for side in [16, 24, 32, 48, 64, 128, 512] as [CGFloat] {
+            let size = CGSize(width: side, height: side)
+            let mine = try #require(Self.rasterize(after, size: size))
+            let theirs = try #require(Self.rasterize(before, size: size))
+            let difference = Self.meanDifference(between: mine, and: theirs)
+            #expect(difference <= 1, "at \(side): \(difference)")
+        }
+    }
+
+    @Test func aMovingFileWrittenInUnitsStartsWhereTheCanvasStarts() throws {
+        var document = Self.iconPicture()
+        document.layers[2].style.effects = []
+        let unit: CGFloat = 512.0 / 24
+        document.layers[1].motions = [
+            LayerMotion(property: .position, from: .point(CGPoint(x: 7 * unit, y: 7 * unit)),
+                        to: .point(CGPoint(x: 9 * unit, y: 3 * unit)),
+                        timing: MotionTiming(startMS: 0, durationMS: 600), curve: .linear, repeats: .forever),
+            LayerMotion(property: .rotation, from: .number(0), to: .number(90),
+                        timing: MotionTiming(startMS: 0, durationMS: 600), curve: .linear, repeats: .forever)
+        ]
+        document.motionCycleMS = 1200
+        let result = SVGExporter.export(document, store: ImageStore(), animation: .moving(cycleMS: 1200))
+        #expect(result.text.contains("viewBox=\"0 0 24 24\""))
+        #expect(result.text.contains("<animateTransform"))
+        #expect(result.unmoved.isEmpty)
+        try Self.expectTheSamePicture(of: document, name: "icon-in-units-moving",
+                                      animation: .moving(cycleMS: 1200))
+    }
+
     // MARK: - What has no vector answer
 
     @Test func aShapeWearingAShadowThrowsTheSameShadowInTheFile() throws {

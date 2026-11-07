@@ -80,7 +80,8 @@ extension CanvasNSView {
         // is an icon of its own, and it has no layer to be asked about.
         if let canvas = document.iconBox(of: PhotonzDocument.iconCanvasID) { spaces.insert((nil, canvas), at: 0) }
         for (frame, box) in spaces {
-            guard let guides = IconKeylines.guides(in: box) else { continue }
+            guard let guides = IconKeylines.guides(in: box, unit: document.iconUnit(ofBox: box))
+            else { continue }
             let onScreen = viewRect(forDocRect: box, in: viewport)
             guard onScreen.intersects(bounds),
                   onScreen.width >= Self.smallestDrawableIcon else { continue }

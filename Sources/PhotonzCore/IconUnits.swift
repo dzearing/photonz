@@ -29,11 +29,17 @@ public enum IconUnits {
     /// mock's own major line (`igMajorPat`).
     public static let strongEvery = 4
 
-    /// Whether there is room on screen to rule units at this zoom.
-    public static func fit(zoom: CGFloat) -> Bool {
+    /// The side of the picture File, New, Image, Icon makes. It is 24 units
+    /// across at this size, which does not divide: one unit there is 512 / 24
+    /// points, and only the SVG says the units as numbers
+    /// (`PhotonzDocument.pictureIconUnit`).
+    public static let pictureSide: CGFloat = 512
+
+    /// Whether there is room on screen to rule units this long at this zoom.
+    public static func fit(zoom: CGFloat, unit: CGFloat = 1) -> Bool {
         // A pinch comes to rest a rounding error either side of the zoom it
         // was heading for, and six is six.
-        zoom.isFinite && zoom >= smallestOnScreenGap - 1e-6
+        zoom.isFinite && zoom * unit >= smallestOnScreenGap - 1e-6
     }
 
     /// The lines ruled on an icon sitting at `box`, in canvas coordinates, or
@@ -41,15 +47,16 @@ public enum IconUnits {
     ///
     /// Only the lines inside `showing` come back, so a big icon zoomed right in
     /// costs what the window holds rather than what the icon holds.
-    public static func ruling(of box: CGRect, zoom: CGFloat, showing: CGRect) -> IconUnitRuling? {
-        guard fit(zoom: zoom), box.minX.isFinite, box.minY.isFinite,
+    public static func ruling(of box: CGRect, zoom: CGFloat, showing: CGRect,
+                              unit: CGFloat = 1) -> IconUnitRuling? {
+        guard fit(zoom: zoom, unit: unit), box.minX.isFinite, box.minY.isFinite,
               IconPreviews.isIconSize(box.size) else { return nil }
         let columns = units(across: box.width, from: box.minX,
-                            showing: showing.minX, to: showing.maxX)
+                            showing: showing.minX, to: showing.maxX, unit: unit)
         let rows = units(across: box.height, from: box.minY,
-                         showing: showing.minY, to: showing.maxY)
-        func position(_ unit: Int, from start: CGFloat) -> CGFloat { start + CGFloat(unit) }
-        func strong(_ unit: Int) -> Bool { unit % strongEvery == 0 }
+                         showing: showing.minY, to: showing.maxY, unit: unit)
+        func position(_ count: Int, from start: CGFloat) -> CGFloat { start + CGFloat(count) * unit }
+        func strong(_ count: Int) -> Bool { count % strongEvery == 0 }
         return IconUnitRuling(frame: box,
                               columns: columns.map { position($0, from: box.minX) },
                               rows: rows.map { position($0, from: box.minY) },
@@ -60,10 +67,12 @@ public enum IconUnits {
     /// The whole units strictly inside a side of `length`, counted from
     /// `start`, that fall between two canvas positions.
     private static func units(across length: CGFloat, from start: CGFloat,
-                              showing low: CGFloat, to high: CGFloat) -> [Int] {
-        guard low.isFinite, high.isFinite else { return [] }
-        let first = max(1, (low - start).rounded(.up))
-        let last = min(length.rounded(.up) - 1, (high - start).rounded(.down))
+                              showing low: CGFloat, to high: CGFloat, unit: CGFloat) -> [Int] {
+        guard low.isFinite, high.isFinite, unit > 0 else { return [] }
+        let first = max(1, ((low - start) / unit).rounded(.up))
+        // A side of 24 units divides back to a hair over or under 24.
+        let across = ((length / unit) * 1e6).rounded() / 1e6
+        let last = min(across.rounded(.up) - 1, ((high - start) / unit).rounded(.down))
         guard first <= last else { return [] }
         return Array(Int(first)...Int(last))
     }
@@ -151,8 +160,9 @@ extension PhotonzDocument {
     /// A drag lands on lines it can see, so wherever the units replace the
     /// canvas grid they replace its pull as well.
     public func iconUnitBox(holding ids: [UUID], zoom: CGFloat) -> CGRect? {
-        guard IconUnits.fit(zoom: zoom), let first = ids.first,
+        guard let first = ids.first,
               let icon = iconFrameID(containing: first), !ids.contains(icon),
+              IconUnits.fit(zoom: zoom, unit: iconUnit(of: icon)),
               ids.allSatisfy({ iconFrameID(containing: $0) == icon }),
               shownIconIDs.contains(icon) else { return nil }
         return iconBox(of: icon)
@@ -160,7 +170,8 @@ extension PhotonzDocument {
 
     /// The artboard whose units a point put down here lands on, at this zoom.
     public func iconUnitBox(under point: CGPoint, zoom: CGFloat) -> CGRect? {
-        guard IconUnits.fit(zoom: zoom), let icon = iconFrameID(under: point),
+        guard let icon = iconFrameID(under: point),
+              IconUnits.fit(zoom: zoom, unit: iconUnit(of: icon)),
               shownIconIDs.contains(icon) else { return nil }
         return iconBox(of: icon)
     }

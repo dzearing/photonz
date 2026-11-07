@@ -80,6 +80,16 @@ public enum AskIconBreak {
         in Z, with an id, and no transform. Call add_drawing once more with the whole svg drawn again.
         """
 
+    /// What every mark flying from a tear is named from, which is also how a
+    /// torn drawing is told from one drawn on the grid.
+    public static let markName = "burst-"
+
+    /// Whether a part of a drawing is one of those marks. A part's id comes
+    /// back tidied into a name, so "burst-1" reads "Burst 1" here.
+    public static func isMark(_ name: String?) -> Bool {
+        name?.lowercased().hasPrefix(markName.replacingOccurrences(of: "-", with: " ")) == true
+    }
+
     /// `svg` with its biggest outline torn at the upper right and marks flying
     /// from the tear, or nil when it has no closed outline to tear.
     public static func applied(to svg: String) -> String? {
@@ -103,7 +113,7 @@ public enum AskIconBreak {
             let edge = reach(of: runs, from: centre, along: way)
             let start = CGPoint(x: edge.x + way.x * size * markGap, y: edge.y + way.y * size * markGap)
             let end = CGPoint(x: start.x + way.x * size * markLength, y: start.y + way.y * size * markLength)
-            return #"<path id="burst-\#(index + 1)" d="M\#(text(start)) L\#(text(end))" fill="none" stroke="\#(ink)" "#
+            return #"<path id="\#(markName)\#(index + 1)" d="M\#(text(start)) L\#(text(end))" fill="none" stroke="\#(ink)" "#
                 + #"stroke-width="\#(number(weight))" stroke-linecap="round"/>"#
         }
         var out = svg

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/icon-picture-from-the-new-sheet",
-  "seed": "File, New, Image, Icon, Create, draw a circle with the Ellipse tool, at Next defaults with nothing switched on. The picture is the icon: the chip reads Icon, the keylines are on the canvas with no frame in the layers list, nothing is previewed until something is drawn, and then the strip shows the circle at real sizes. The drag starts and ends part way through a unit and lands on whole units. Mirror Across Center and Center on the Artboard work about the middle of the picture. Then App Icon from a window already holding a picture: it lands in a window of its own, in Icon too.",
+  "seed": "File, New, Image, Icon, Create, draw a circle with the Ellipse tool, at Next defaults with nothing switched on. The picture is the icon: the chip reads Icon, the keylines are on the canvas with no frame in the layers list, nothing is previewed until something is drawn, and then the strip shows the circle at real sizes. The drag starts and ends part way through a unit and lands on whole units, which at 512 points are 512 / 24 long. Mirror Across Center and Center on the Artboard work about the middle of the picture. Then App Icon from a window already holding a picture: it lands in a window of its own, in Icon too.",
   "setup": {
     "forget": [
       "all"
@@ -87,12 +87,12 @@
       "do": "expectBox",
       "layer": "Ellipse",
       "at": [
-        171,
-        171
+        170.667,
+        170.667
       ],
       "size": [
-        60,
-        60
+        64,
+        64
       ],
       "within": 0.01
     },
@@ -167,12 +167,12 @@
       "do": "expectBox",
       "layer": "Ellipse 2",
       "at": [
-        281,
-        171
+        277.333,
+        170.667
       ],
       "size": [
-        60,
-        60
+        64,
+        64
       ],
       "within": 0.01
     },
@@ -196,12 +196,12 @@
       "do": "expectBox",
       "layer": "Ellipse 2",
       "at": [
-        226,
-        226
+        224,
+        224
       ],
       "size": [
-        60,
-        60
+        64,
+        64
       ],
       "within": 0.01
     },
@@ -257,8 +257,8 @@
       "closed": false,
       "anchor": 0,
       "near": [
-        151,
-        401
+        149.333,
+        405.333
       ],
       "within": 0.01
     },

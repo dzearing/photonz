@@ -45,6 +45,28 @@ extension PhotonzDocument {
         isIconCanvas || iconFrameFillingCanvas != nil
     }
 
+    /// How long one unit is on a picture that is an icon at the Icon row's
+    /// size, by its canvas or by the frame Ask lands filling it, or nil on any
+    /// other picture. Such a picture is 24 units across at 512 points: a person
+    /// handing the file over expects a 24 by 24 icon. App Icon keeps its own
+    /// 1024 numbers, and so does an icon frame somewhere on a bigger picture.
+    public var pictureIconUnit: CGFloat? {
+        guard opensAsIcon, canvasSize.width == IconUnits.pictureSide else { return nil }
+        return IconUnits.pictureSide / IconKeylines.artboardSide
+    }
+
+    /// How many canvas points one unit of this icon is. One, except on a
+    /// picture that has 24 units across (`pictureIconUnit`).
+    public func iconUnit(of id: UUID) -> CGFloat {
+        guard let unit = pictureIconUnit else { return 1 }
+        return id == Self.iconCanvasID || id == iconFrameFillingCanvas?.id ? unit : 1
+    }
+
+    /// The same, for an icon known by its box.
+    public func iconUnit(ofBox box: CGRect) -> CGFloat {
+        box == canvasBox ? pictureIconUnit ?? 1 : 1
+    }
+
     /// The box of an icon in canvas coordinates, the canvas included.
     public func iconBox(of id: UUID) -> CGRect? {
         guard isIconFrame(id: id) else { return nil }

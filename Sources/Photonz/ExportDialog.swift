@@ -696,7 +696,7 @@ struct ExportDialog: View {
     /// not be said in shapes.
     @ViewBuilder private var vectorNote: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if let size = exportedSize {
+            if let size = target?.svgSize ?? exportedSize {
                 Label("Shapes, sharp at any size. Drawn at \(Int(size.width)) × \(Int(size.height)).",
                       systemImage: "square.on.circle")
                     .font(.caption)

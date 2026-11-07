@@ -51,7 +51,8 @@ extension CanvasNSView {
             guard let box = id == PhotonzDocument.iconCanvasID ? document.iconBox(of: id)
                                                                : liveCanvasBounds(of: id),
                   box.intersects(showing),
-                  let ruling = IconUnits.ruling(of: box, zoom: viewport.zoom, showing: showing)
+                  let ruling = IconUnits.ruling(of: box, zoom: viewport.zoom, showing: showing,
+                                                unit: document.iconUnit(of: id))
             else { continue }
             let onScreen = viewRect(forDocRect: box, in: viewport)
             addIconUnitLines(columns: ruling.columns, rows: ruling.rows,
@@ -119,7 +120,8 @@ extension CanvasNSView {
     private func gridPull(onUnitsOf box: CGRect?) -> CanvasGridPull {
         guard iconUnitsAsked, let box else { return plainCanvasGridPull }
         let pulls = canvasGrid?.snapsToGrid == true && IconSnapStore.shared.choices.grid
-        return CanvasGridPull(spacing: pulls ? 1 : nil, origin: box.origin, axes: .columnsAndRows)
+        let unit = document?.iconUnit(ofBox: box) ?? 1
+        return CanvasGridPull(spacing: pulls ? unit : nil, origin: box.origin, axes: .columnsAndRows)
     }
 
     /// What is ruled RIGHT NOW, for a scripted walk to read: the counts each

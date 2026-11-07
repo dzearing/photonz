@@ -1616,7 +1616,7 @@ public struct AskConversation: Sendable {
         Material Symbols and Lucide are drawn. It lands as real shape and path layers. Send no frame unless the \
         person says where in this picture it goes. Never add_photo. Change an icon that is already there with the \
         editing tools instead.
-        - The grid: <svg viewBox="0 0 24 24">, the drawing about 20 across, centred. Whole or half numbers. Use \
+        - The grid: <svg viewBox="0 0 24 24">, the drawing about 20 across, centred. Every point on a whole number; only a curve's handles may be fractions. Use \
         rect, circle, line and short paths with arcs, as an icon designer does.
         - One subject: the one object the request names, reduced to the simplest silhouette that still says what it \
         is, in 2 to 8 shapes. No person, no hand, no ground, no scene, no shadow, no words, no backdrop unless asked. \

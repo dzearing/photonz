@@ -136,28 +136,35 @@ public struct SVGArtwork: Hashable, Sendable {
     /// centred in it. Bottom first.
     /// `within` is the part of the drawing that fills `box`: all of what is
     /// drawn when left out.
-    public func layers(named name: String, fitting box: CGRect, within: CGRect? = nil) -> [Layer] {
+    ///
+    /// `grid` puts every point, box and line weight on whole units of an icon
+    /// (`IconGridLanding`); handles stay as the curve needs them.
+    public func layers(named name: String, fitting box: CGRect, within: CGRect? = nil,
+                       grid: IconGridLanding? = nil) -> [Layer] {
         let from = within ?? bounds
         guard !from.isNull, from.width > 0 || from.height > 0, box.width > 0, box.height > 0 else { return [] }
         let scale = min(from.width > 0 ? box.width / from.width : .infinity,
                         from.height > 0 ? box.height / from.height : .infinity)
         let offset = CGPoint(x: box.midX - from.width * scale / 2, y: box.midY - from.height * scale / 2)
         func map(_ p: CGPoint) -> CGPoint {
-            CGPoint(x: (p.x - from.minX) * scale + offset.x, y: (p.y - from.minY) * scale + offset.y)
+            let placed = CGPoint(x: (p.x - from.minX) * scale + offset.x, y: (p.y - from.minY) * scale + offset.y)
+            return grid?.landing(placed) ?? placed
         }
         func mapHandle(_ h: CGPoint?) -> CGPoint? { h.map { CGPoint(x: $0.x * scale, y: $0.y * scale) } }
         func mapRect(_ r: CGRect) -> CGRect {
             let o = map(r.origin)
-            return CGRect(x: o.x, y: o.y, width: r.width * scale, height: r.height * scale)
+            guard let grid else { return CGRect(x: o.x, y: o.y, width: r.width * scale, height: r.height * scale) }
+            let far = map(CGPoint(x: r.maxX, y: r.maxY))
+            return CGRect(x: o.x, y: o.y, width: max(far.x - o.x, grid.unit), height: max(far.y - o.y, grid.unit))
         }
         return parts.enumerated().map { index, part in
             let partName = part.name ?? "\(name) \(index + 1)"
-            let strokeWidth = part.stroke == nil ? 0 : part.strokeWidth * scale
+            let strokeWidth = part.stroke == nil ? 0 : grid?.length(part.strokeWidth * scale) ?? part.strokeWidth * scale
             var layer: Layer
             switch part.shape {
             case .ellipse(let rect), .rect(let rect, _):
                 var radius: CGFloat = 0
-                if case .rect(_, let r) = part.shape { radius = r * scale }
+                if case .rect(_, let r) = part.shape, r > 0 { radius = grid?.length(r * scale) ?? r * scale }
                 let look = AgentLook(fill: part.fill.map { .hex($0) } ?? AgentInk.none,
                                      stroke: part.stroke.map { .hex($0) },
                                      strokeWidth: part.stroke == nil ? nil : strokeWidth,
@@ -255,6 +262,30 @@ public struct SVGArtwork: Hashable, Sendable {
         return layer.localBounds
     }
 
+    /// Where a drawing made on the 24 grid goes on a 24 unit picture when it
+    /// can keep the whole numbers it was drawn in: at exactly one unit to its
+    /// unit, moved by whole units to the middle. Stretching it to the live
+    /// area would turn every one of those numbers into a fraction. Nil where
+    /// it is not on that grid, or is too big for the live area or too small to
+    /// read, which is what fitting is for.
+    private func keptOnItsGrid(side: CGFloat) -> (box: CGRect, within: CGRect)? {
+        let grid = IconKeylines.artboardSide
+        guard side == IconUnits.pictureSide, let viewBox, viewBox.size == CGSize(width: grid, height: grid),
+              !bounds.isNull else { return nil }
+        // Its points are what the live area holds, as the model is told: a line
+        // along the edge of it reaches a unit past, and that is still the grid.
+        let points = parts.reduce(CGRect.null) { $0.union(Self.shapeBounds($1.shape)) }
+        let reach = max(points.width, points.height)
+        guard reach >= Self.smallestKeptReach, reach <= IconKeylines.liveAreaSide else { return nil }
+        let shift = CGPoint(x: (viewBox.midX - points.midX).rounded(), y: (viewBox.midY - points.midY).rounded())
+        let unit = side / grid
+        return (CGRect(x: shift.x * unit, y: shift.y * unit, width: side, height: side), viewBox)
+    }
+
+    /// Under this many units across, a drawing is fitted up to the live area
+    /// rather than left small on its grid.
+    private static let smallestKeptReach: CGFloat = 16
+
     /// The drawing as an icon: a square frame of `side` points with the
     /// drawing filling its live area, the margin every icon in a set keeps
     /// (`IconKeylines`).
@@ -266,12 +297,27 @@ public struct SVGArtwork: Hashable, Sendable {
     public func iconFrame(named name: String, side: CGFloat, origin: CGPoint, onGrid: Bool = false) -> Layer {
         let size = CGSize(width: side, height: side)
         guard onGrid, let viewBox, viewBox.width > 0, viewBox.height > 0 else {
-            let margin = IconKeylines.margin(forSide: side)
+            // A tear is cut where the outline runs and its marks fly at their
+            // own angles, nowhere near a grid, and rounding them takes away what
+            // says torn: a bubble read 85.6 fitted and 40.6 rounded (the eval,
+            // 2026-11-06). It keeps its fractions.
+            let torn = parts.contains { AskIconBreak.isMark($0.name) }
+            if !torn, let kept = keptOnItsGrid(side: side) {
+                return Layer.frameLayer(name: name, origin: origin, size: size,
+                                        children: layers(named: name, fitting: kept.box, within: kept.within,
+                                                         grid: IconGridLanding(side: side)),
+                                        backgroundHex: nil)
+            }
+            let unit = side == IconUnits.pictureSide ? side / IconKeylines.artboardSide : 1
+            let margin = IconKeylines.margin(forSide: side, unit: unit)
             let live = CGRect(x: margin, y: margin, width: side - 2 * margin, height: side - 2 * margin)
             return Layer.frameLayer(name: name, origin: origin, size: size,
-                                    children: layers(named: name, fitting: live), backgroundHex: nil)
+                                    children: layers(named: name, fitting: live,
+                                                     grid: torn ? nil : IconGridLanding(side: side)),
+                                    backgroundHex: nil)
         }
-        let drawn = layers(named: name, fitting: CGRect(origin: .zero, size: size), within: viewBox)
+        let drawn = layers(named: name, fitting: CGRect(origin: .zero, size: size), within: viewBox,
+                           grid: IconGridLanding(side: side))
         var children = drawn
         if parts.contains(where: { !$0.groups.isEmpty }),
            let top = Self.nest(name: name, Array(zip(drawn, parts.map(\.groups))), depth: 0) {
@@ -1113,4 +1159,39 @@ enum SVGColor {
         "cornsilk": "#FFF8DC", "lemonchiffon": "#FFFACD", "darkslategray": "#2F4F4F", "cadetblue": "#5F9EA0",
         "lightskyblue": "#87CEFA", "powderblue": "#B0E0E6", "darkolivegreen": "#556B2F", "darkkhaki": "#BDB76B",
     ]
+}
+
+/// Landing a drawing on the whole units of a 24 unit picture, the pass an icon
+/// designer makes by hand so each edge falls on the grid.
+///
+/// Every point rounds AWAY FROM THE MIDDLE of the artboard rather than from its
+/// corner, so a drawing that mirrors keeps mirroring: 10.5 and 13.5 land on 10
+/// and 14, where rounding from the corner gives 11 and 14 and leaves it half a
+/// unit off centre. Nothing here knows what is drawn.
+public struct IconGridLanding: Sendable {
+    public let unit: CGFloat
+    let middle: CGFloat
+
+    /// The landing for an icon of this side, or nil where it has no 24 units.
+    public init?(side: CGFloat) {
+        guard side == IconUnits.pictureSide else { return nil }
+        unit = side / IconKeylines.artboardSide
+        middle = side / 2
+    }
+
+    func landing(_ point: CGPoint) -> CGPoint {
+        CGPoint(x: middle + units(point.x - middle) * unit, y: middle + units(point.y - middle) * unit)
+    }
+
+    /// A line weight or a corner, never rounded away to nothing.
+    func length(_ value: CGFloat) -> CGFloat {
+        max(1, units(value)) * unit
+    }
+
+    /// Whole units in `value`. A number that has been through a scale sits a
+    /// hair either side of a half, so the hair goes first: both sides of a
+    /// mirror have to round the same way.
+    private func units(_ value: CGFloat) -> CGFloat {
+        ((value / unit * 1e6).rounded() / 1e6).rounded()
+    }
 }

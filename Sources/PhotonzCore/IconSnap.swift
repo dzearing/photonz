@@ -49,6 +49,8 @@ public struct IconSnap: Equatable, Sendable {
 
     /// The icon frame, in canvas coordinates. Units count from its corner.
     public let frame: CGRect
+    /// How many canvas points one unit is (`PhotonzDocument.iconUnit(of:)`).
+    public let unit: CGFloat
     /// The keylines running down the frame (their x) and across it (their y),
     /// on whole units only. Empty when the guides are switched off.
     public let xLines: [CGFloat]
@@ -68,18 +70,20 @@ public struct IconSnap: Equatable, Sendable {
     ///   - shapes: the boxes of the shapes already drawn: their edges and
     ///     middle lines pull each axis, their centres pull both.
     ///   - grid: whether everything else lands on a whole unit.
+    ///   - unit: how many canvas points one unit is.
     public init(frame: CGRect, keylines: Bool = true, anchors: [CGPoint] = [],
-                shapes: [CGRect] = [], grid: Bool = true) {
+                shapes: [CGRect] = [], grid: Bool = true, unit: CGFloat = 1) {
         self.frame = frame
         self.grid = grid
+        self.unit = unit
         let origin = frame.origin
         func whole(_ value: CGFloat, from start: CGFloat) -> Bool {
-            let offset = value - start
+            let offset = (value - start) / unit
             return offset.isFinite && abs(offset - offset.rounded()) < 1e-6
         }
         var xs: [CGFloat] = []
         var ys: [CGFloat] = []
-        if keylines, let guides = IconKeylines.guides(in: frame) {
+        if keylines, let guides = IconKeylines.guides(in: frame, unit: unit) {
             xs += [frame.minX, frame.maxX, guides.liveArea.minX, guides.liveArea.maxX,
                       guides.centerX]
             ys += [frame.minY, frame.maxY, guides.liveArea.minY, guides.liveArea.maxY,
@@ -108,7 +112,7 @@ public struct IconSnap: Equatable, Sendable {
     /// How far a magnet reaches at this zoom, in document points.
     func reach(zoom: CGFloat) -> CGFloat {
         let scale = zoom.isFinite && zoom > 0 ? zoom : 1
-        return min(Self.pullRadius / scale, Self.largestPull)
+        return min(Self.pullRadius / scale, Self.largestPull * unit)
     }
 
     /// Where a point put down at `point` lands: on another shape's point or
@@ -142,22 +146,22 @@ public struct IconSnap: Equatable, Sendable {
                       reach: CGFloat) -> (value: CGFloat, caught: Bool) {
         let nearest = lines.min { abs($0 - value) < abs($1 - value) }
         if let nearest, abs(nearest - value) <= reach { return (nearest, true) }
-        return (grid ? start + (value - start).rounded() : value, false)
+        return (grid ? start + ((value - start) / unit).rounded() * unit : value, false)
     }
 
     /// The place a point is at, in the icon's own units counted from its
     /// corner, the way the readout beside the pointer says it: "15, 13".
     /// Whole units print whole; a point nothing rounded prints to two places.
     public func readout(for point: CGPoint) -> String {
-        "\(Self.units(point.x - frame.minX)), \(Self.units(point.y - frame.minY))"
+        "\(Self.units((point.x - frame.minX) / unit)), \(Self.units((point.y - frame.minY) / unit))"
     }
 
     /// A shape being drawn out from its centre (⌥), named the way the icon
     /// mock names its crown: by the centre and the size, "center 12, 8 · d 8"
     /// for a circle and "center 12, 8 · 8 × 6" for anything else.
     public func readout(centre: CGPoint, corner: CGPoint, shape: AnnotationShape) -> String {
-        let width = Self.units(abs(corner.x - centre.x) * 2)
-        let height = Self.units(abs(corner.y - centre.y) * 2)
+        let width = Self.units(abs(corner.x - centre.x) * 2 / unit)
+        let height = Self.units(abs(corner.y - centre.y) * 2 / unit)
         let size = shape == .ellipse && width == height ? "d \(width)" : "\(width) × \(height)"
         return "center \(readout(for: centre)) · \(size)"
     }
@@ -178,10 +182,10 @@ public struct IconSnap: Equatable, Sendable {
     public func offset(_ offset: CGPoint) -> CGPoint {
         guard grid, offset.x.isFinite, offset.y.isFinite else { return offset }
         if offset.x != 0, offset.y != 0, abs(abs(offset.x) - abs(offset.y)) < 1e-6 {
-            let side = abs(offset.x).rounded()
+            let side = (abs(offset.x) / unit).rounded() * unit
             return CGPoint(x: offset.x < 0 ? -side : side, y: offset.y < 0 ? -side : side)
         }
-        return CGPoint(x: offset.x.rounded(), y: offset.y.rounded())
+        return CGPoint(x: (offset.x / unit).rounded() * unit, y: (offset.y / unit).rounded() * unit)
     }
 }
 
@@ -246,7 +250,8 @@ extension PhotonzDocument {
         }
         if choices.geometry { gather(iconContents(of: id), at: box.origin) }
         return IconSnap(frame: box, keylines: keylines && choices.keylines,
-                        anchors: anchors, shapes: shapes, grid: choices.grid)
+                        anchors: anchors, shapes: shapes, grid: choices.grid,
+                        unit: iconUnit(of: id))
     }
 
     private static func bounds(of points: [CGPoint]) -> CGRect? {

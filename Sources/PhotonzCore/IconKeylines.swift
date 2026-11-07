@@ -71,17 +71,18 @@ public enum IconKeylines {
     public static let keylineSquareSide: CGFloat = 18
 
     /// The margin between a frame's edge and its live area, on every side, in
-    /// document points. A twelfth of the frame, on whole points.
-    public static func margin(forSide side: CGFloat) -> CGFloat {
-        guard side.isFinite, side > 0 else { return 0 }
-        return (side * (artboardSide - liveAreaSide) / (2 * artboardSide)).rounded()
+    /// document points. A twelfth of the frame, on whole units of `unit`
+    /// points: whole points on a frame, two units on a 512 icon picture.
+    public static func margin(forSide side: CGFloat, unit: CGFloat = 1) -> CGFloat {
+        guard side.isFinite, side > 0, unit > 0 else { return 0 }
+        return (side / unit * (artboardSide - liveAreaSide) / (2 * artboardSide)).rounded() * unit
     }
 
     /// The gap between a frame's edge and its square keyline, on every side, in
     /// document points. Rounded for the same reason the margin is.
-    public static func squareInset(forSide side: CGFloat) -> CGFloat {
-        guard side.isFinite, side > 0 else { return 0 }
-        return (side * (artboardSide - keylineSquareSide) / (2 * artboardSide)).rounded()
+    public static func squareInset(forSide side: CGFloat, unit: CGFloat = 1) -> CGFloat {
+        guard side.isFinite, side > 0, unit > 0 else { return 0 }
+        return (side / unit * (artboardSide - keylineSquareSide) / (2 * artboardSide)).rounded() * unit
     }
 
     /// Everything drawn on a frame sitting here on the canvas, or nil for a
@@ -91,11 +92,11 @@ public enum IconKeylines {
     /// drawn: a frame that is not the shape and size an icon is drawn at, a
     /// frame too small for a margin anybody could see, and a size that is not a
     /// number.
-    public static func guides(in box: CGRect) -> IconKeylineGuides? {
+    public static func guides(in box: CGRect, unit: CGFloat = 1) -> IconKeylineGuides? {
         guard box.width.isFinite, box.height.isFinite,
               box.minX.isFinite, box.minY.isFinite,
               IconPreviews.isIconSize(box.size) else { return nil }
-        let margin = margin(forSide: box.width)
+        let margin = margin(forSide: box.width, unit: unit)
         // A live area exactly on the frame's edge is the frame's own hairline
         // drawn a second time, not a margin.
         guard margin >= 1 else { return nil }
@@ -103,7 +104,7 @@ public enum IconKeylines {
         // A square that rounded onto the live area is that guide drawn twice,
         // which happens on the very smallest frames; there the margin and the
         // circle are the whole story.
-        let inset = squareInset(forSide: box.width)
+        let inset = squareInset(forSide: box.width, unit: unit)
         let square = inset > margin ? box.insetBy(dx: inset, dy: inset) : nil
         return IconKeylineGuides(frame: box,
                                  liveArea: live,

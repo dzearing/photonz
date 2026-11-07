@@ -70,7 +70,10 @@ struct IconCanvasTests {
         let document = iconPicture()
         let snap = try #require(document.iconSnap(at: CGPoint(x: 100.4, y: 200.3), keylines: false))
         #expect(snap.frame == CGRect(x: 0, y: 0, width: 512, height: 512))
-        #expect(snap.point(nearest: CGPoint(x: 100.4, y: 200.3), zoom: 8) == CGPoint(x: 100, y: 200))
+        // 24 units across 512 points: these are units five and nine.
+        let unit: CGFloat = 512.0 / 24
+        let landed = snap.point(nearest: CGPoint(x: 100.4, y: 200.3), zoom: 8)
+        #expect(abs(landed.x - 5 * unit) < 1e-9 && abs(landed.y - 9 * unit) < 1e-9)
     }
 
     @Test("Off the picture there is nothing to snap to")
@@ -81,10 +84,14 @@ struct IconCanvasTests {
     @Test("A shape already drawn pulls the next point, as it does in a frame")
     func shapesPull() throws {
         var document = iconPicture()
-        document.addLayerDrawnOnFrame(oval())
-        let snap = try #require(document.iconSnap(at: CGPoint(x: 200.4, y: 100.4), keylines: false))
-        #expect(snap.centers.contains(CGPoint(x: 200, y: 200)))
-        #expect(snap.anchors.contains(CGPoint(x: 200, y: 100)))
+        let unit: CGFloat = 512.0 / 24
+        document.addLayerDrawnOnFrame(oval(at: CGRect(x: 4 * unit, y: 4 * unit, width: 8 * unit, height: 8 * unit)))
+        let snap = try #require(document.iconSnap(at: CGPoint(x: 8 * unit + 0.4, y: 4 * unit + 0.4), keylines: false))
+        func near(_ a: CGPoint, _ x: CGFloat, _ y: CGFloat) -> Bool {
+            abs(a.x - x * unit) < 1e-6 && abs(a.y - y * unit) < 1e-6
+        }
+        #expect(snap.centers.contains { near($0, 8, 8) })
+        #expect(snap.anchors.contains { near($0, 8, 4) })
     }
 
     @Test("A line starts at the weight an icon of this size starts it at")

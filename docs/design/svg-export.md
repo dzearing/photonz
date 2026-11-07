@@ -456,3 +456,26 @@ covers the writing itself.
 * **A colour or a line width on a shape the file draws in two halves** — an
   inside or an outside line — is dropped the same way, because the width a
   group hands down would reach the wrong one of the two.
+
+## A 512 icon picture writes 24 units
+
+A picture that is an icon at the Icon row's size, by its canvas or by the frame
+Ask lands filling it, is 24 units across: one unit is 512 / 24 points
+(`PhotonzDocument.pictureIconUnit`). The Pen, the shape tools, the keylines, the
+ruling, the readout and a first line's weight all count in that unit, so a person
+can draw on whole units at all. The document stays 512: a PNG is 512, and the
+panel still reads points. Only the SVG says units, through a copy of the document
+rescaled for the file (`SVGIconUnits.swift`, `Layer.rescaled(by:)`).
+
+- App Icon keeps its 1024 numbers, and an icon frame on a bigger picture keeps its own.
+- A picture and a word's outline are made at their drawn size and only placed in
+  units: a 24 unit picture would be 48 pixels, and letters change shape with size.
+- A picture holding a measure stays in points, because a measure's label is a fixed size.
+- Apple's reader works a filter out at the file's own 24 pixels, so a shadow goes
+  soft when Preview enlarges the file. Chrome draws it the same as the points file.
+
+Ask's icons land on those units too (`IconGridLanding`): a drawing made on the 24
+grid keeps its numbers, moved to the middle by whole units, and every point rounds
+away from the artboard's middle so a mirrored drawing stays mirrored. A torn icon
+is left as it was fitted: its tear and marks are not on any grid, and rounding them
+took a bubble from 85.6 to 40.6 on the eval.
