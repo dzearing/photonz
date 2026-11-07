@@ -1,0 +1,29 @@
+{
+  "id": "the-saved-stroke-button-stays-on-screen-beside-a",
+  "title": "The saved stroke button stays on screen beside a long layers list",
+  "goal": "On an icon with four or more layers and the Styles shelf open, the Appearance section is squeezed so far that the one click button for a saved stroke needs a scroll first, in a window 900 points tall. A person building a glyph should reach it without scrolling.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 47.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T20:50:43.132Z",
+  "updated": "2026-11-07T20:50:43.135Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen in queue/audits/2026-11-07-saved-stroke-7-width-by-hand-sc.png: with four layers Line is the last visible row. Reproduce: Scripts/playtest.sh Scripts/playtest/a-glyph-takes-the-saved-stroke-walk.json --no-build, picture 11-a-width-set-by-hand-wins-sc.png. The Layers list takes the room, so moving the row further cannot fix it. The row is already directly under Line.",
+  "acceptance": [
+    "With five layers and the Styles shelf open in a 900 point window, the Line Style row is on screen with a path picked",
+    "A walk at Next defaults claims it with expectInView on the Style control"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T20:50:43.134Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "a-glyph-takes-the-saved-stroke-walk"
+  ]
+}

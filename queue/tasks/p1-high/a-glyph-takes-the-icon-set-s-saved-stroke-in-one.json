@@ -5,14 +5,14 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T07:13:42.402Z",
-  "updated": "2026-11-07T17:38:05.230Z",
+  "updated": "2026-11-07T20:55:34.967Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found comparing the outline settings with icon-draw-wt.html #secStroke (note pStrokeNote) under a-drawn-path-s-outline-settings-read-like-the-ic. Colour styles already bind by name (bindColorStyle); nothing does that for width, caps and corners.",
+  "notes": "Found comparing the outline settings with icon-draw-wt.html #secStroke (note pStrokeNote) under a-drawn-path-s-outline-settings-read-like-the-ic. Colour styles already bind by name (bindColorStyle); nothing does that for width, caps and corners.\n\nShipped: core Sources/PhotonzCore/SavedStrokes.swift (SavedStroke, StrokeLook, PathContent.savedStrokeID, reconcile in History, LinkBreakKind.savedStroke, Edit Original adopts them) and IconLine.swift (the line an icon uses; PenSession.follow; setPathOutline on an icon takes it). App: EditorState+SavedStrokes.swift, SavedStrokePanel.swift (Style row with up to 3 one-click buttons, the menu beside the word Style; under Align until a stroke is saved; shelf tile; section with Width preview + one commit), Pen wiring in CanvasPen/EditorState+Pen (penKeepsOwnWidth/Ink reset when a path lands). Tests: SavedStrokeTests, IconLineTests (47 + the note test). Walk a-glyph-takes-the-saved-stroke-walk at Next defaults.",
   "acceptance": [
     "A stroke saved from a picked path can be applied to another path in one click",
     "Changing the saved stroke's weight changes every path using it, as one undo step",
@@ -39,6 +39,39 @@
     {
       "t": "2026-11-07T17:38:05.229Z",
       "note": "also, from the whole-workflow walk on 2026-11-07: a Pen line drawn after a 1.75 round outline comes out red, 2 units and sharp cornered (queue/audits/2026-11-07-icon-workflow-arrow-mismatch-sc.png), so a glyph's second part never matches its first until three rows are set again"
+    },
+    {
+      "t": "2026-11-07T18:59:51.595Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T19:02:25.635Z",
+      "note": "Adversarial read of the idea before building. (1) One click: the effect Style row is a menu, which is two clicks, and a shelf tile opens its section rather than applying, so neither meets the mock's one click; a saved stroke needs a button on the Line settings itself. (2) Open paths always draw centred, so a saved stroke's Align has to be kept on them without showing, or closing the path would break the link. (3) A person's tool bar Width has to still win over the icon's line for the next path, otherwise that row is dead. (4) Width has to be read in units on an Icon picture."
+    },
+    {
+      "t": "2026-11-07T19:28:58.715Z",
+      "note": "Found on the real window, not in the tests: saving a stroke opens the Styles shelf, which squeezes Appearance, and at 900 points tall the Style row sat 15 points below the fold (panel-4 dump says inWindow false), so the one click needed a scroll first while the walk stayed green because press reaches it anyway. Chose the Style row above Brush over leaving it under Brush because it is the shortest way to set the rows below it and has to be on screen."
+    },
+    {
+      "t": "2026-11-07T19:39:35.113Z",
+      "note": "Correction to my own reading: the Style row's 40 points was real, not a quirk of the walk marker. I had compared the wearing state's picture with a failure in the not-wearing state, where the button and the menu wrapped to two lines. Chose the menu beside the word Style over beside the button, so the name is never squeezed in the 135 point value column."
+    },
+    {
+      "t": "2026-11-07T20:01:23.854Z",
+      "note": "Correction: press does refuse a control below the fold. The earlier press on the Style row landed because the focus on Width just before it had scrolled the panel, not because press reaches hidden controls. The finding stands: with the Styles shelf open the row was below the fold until something scrolled it."
+    },
+    {
+      "t": "2026-11-07T20:50:43.387Z",
+      "note": "owns these walks: a-glyph-takes-the-saved-stroke-walk"
+    },
+    {
+      "t": "2026-11-07T20:55:34.965Z",
+      "note": "Saved strokes (width, caps, corners, side) on Pen paths in Next: Save as Style on a path's Line settings, a one-click button per saved stroke on its Style row, the stroke's section on the Styles shelf re-sets every wearer in one undo step, and a new Pen line or outline on an icon starts in the line the icon already uses. Commit 046f2075. Verified by Scripts/test.sh (green), SavedStrokeTests + IconLineTests, a-glyph-takes-the-saved-stroke-walk at Next defaults with pointer clicks and real captures, and 34 of 37 affected walks (3 failed before). Audit queue/audits/2026-11-07-a-glyph-takes-the-icon-set-s-saved-stroke-in-one.json. Follow-ups: the-saved-stroke-button-stays-on-screen-beside-a, a-straight-line-and-an-oval-in-a-glyph-can-wear."
     }
-  ]
+  ],
+  "started": "2026-11-07T18:59:51.594Z",
+  "walks": [
+    "a-glyph-takes-the-saved-stroke-walk"
+  ],
+  "completed": "2026-11-07T20:55:34.966Z"
 }

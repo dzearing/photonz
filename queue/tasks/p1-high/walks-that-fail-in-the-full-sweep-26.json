@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-10-17T18:11:57.395Z",
-  "updated": "2026-11-07T16:32:31.328Z",
+  "updated": "2026-11-07T20:00:32.836Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-05T14:41:19Z DID NOT FINISH (the run was interrupted: whoever was running it went away): it reached 951 of 1096 walks in 395 minutes, of which 910 passed. The walks it never reached are unknown, not passing.\n\nFailing walks (41): a-click-on-the-cut-opens-its-tiles-walk, a-cut-opens-into-its-two-clips-walk, a-dip-fades-out-and-back-in-walk, a-notice-lets-a-click-through-walk, arrow-parts-walk, ask-draws-an-illustration-walk, ask-finds-nothing-off-walk, ask-makes-it-again-as-a-photo-walk, caption-lines-join-and-a-word-moves-back-walk, caption-two-lines-walk, color-row-reaches-what-is-picked-walk, component-drag-lands-a-copy-walk, copy-and-paste-a-range-walk, design-mode-tool-strip-walk, drop-hands-you-the-pointer-walk, every-panel-keeps-its-margins-walk, expand-the-cut-from-its-menus-walk, find-what-stayed-a-picture-walk, frame-live-other-kinds-walk, icon-stroke-weight-walk, insert-a-title-before-a-clip-walk, layer-row-lifts-at-scale-walk, layers-list-follows-pick-walk, measure-row-menu-walk, name-field-handback-redline, one-unit-word-walk, outline-width-walk, panel-takes-picture-walk, pick-leaves-settings-alone-walk, roll-the-cut-between-two-clips-from-the-menu-bar-walk, roll-the-cut-between-two-clips-walk, saved-colour-cannot-come-walk, section-fold-motion-walk, segment-tooltips-walk, segmented-chip-refraction-film-walk, segmented-thumb-film-walk, separate-shadow-walk, text-style-comes-away-walk, tile-comes-away-walk, title-pages-and-name-cards-walk, title-presets-library-shelf-walk\n\nThose 41 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: titles-move-in-parts-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nNot run this time and still failing from the last check (6): tool-settings-capsule-walk, transition-edge-follows-the-pointer-walk, transition-picker-at-a-cut-walk, transition-placement-and-hold-walk, transition-tile-comes-away-walk, transitions-where-clips-meet-walk\nThis run was interrupted before reaching them. They are unread, not fixed.\n\nAlready named by another open task, so read that one before re-diagnosing (8):\n  a-click-on-the-cut-opens-its-tiles-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  a-cut-opens-into-its-two-clips-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  copy-and-paste-a-range-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  expand-the-cut-from-its-menus-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  insert-a-title-before-a-clip-walk -> a-clip-or-title-held-as-an-insert-shows-what-mov (guessed from its wording, so read it before believing it)\n  roll-the-cut-between-two-clips-from-the-menu-bar-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  roll-the-cut-between-two-clips-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  section-fold-motion-walk -> folding-a-section-that-lets-the-panel-fit-again (that task says it owns this walk)\n\n1 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 33: a-dip-fades-out-and-back-in-walk, a-notice-lets-a-click-through-walk, arrow-parts-walk, ask-draws-an-illustration-walk, ask-finds-nothing-off-walk, ask-makes-it-again-as-a-photo-walk, caption-lines-join-and-a-word-moves-back-walk, caption-two-lines-walk, color-row-reaches-what-is-picked-walk, component-drag-lands-a-copy-walk, design-mode-tool-strip-walk, drop-hands-you-the-pointer-walk, every-panel-keeps-its-margins-walk, find-what-stayed-a-picture-walk, frame-live-other-kinds-walk, icon-stroke-weight-walk, layer-row-lifts-at-scale-walk, layers-list-follows-pick-walk, measure-row-menu-walk, name-field-handback-redline, one-unit-word-walk, outline-width-walk, panel-takes-picture-walk, pick-leaves-settings-alone-walk, saved-colour-cannot-come-walk, segment-tooltips-walk, segmented-chip-refraction-film-walk, segmented-thumb-film-walk, separate-shadow-walk, text-style-comes-away-walk, tile-comes-away-walk, title-pages-and-name-cards-walk, title-presets-library-shelf-walk\n\nFull output: queue/sweep/2026-11-05-000550.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -100,13 +100,9 @@
       "note": "seq 40 -> 80"
     },
     {
-      "t": "2026-11-07T16:32:31.327Z",
-      "note": "... 22 earlier entries elided",
-      "elided": 22
-    },
-    {
-      "t": "2026-10-27T03:48:42.838Z",
-      "note": "rotating check 2026-10-27T03:48:42Z, 30 walks run from 153 onward in the rotation: border-effect-walk, border-follows-the-shape-walk, border-off-keeps-its-row-walk, border-offset-walk, border-width-keys-walk, box-over-zooms-and-keys-keeps-both-walk, box-pick-copied-and-rippled-whole-walk, box-scrolls-at-the-edge-by-hand-walk, brush-dry-media-and-smudge-walk, brush-settings-on-a-click-walk, brushes-picked-from-tiles-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+      "t": "2026-11-07T20:00:32.835Z",
+      "note": "... 23 earlier entries elided",
+      "elided": 23
     },
     {
       "t": "2026-10-27T06:23:46.820Z",
@@ -499,6 +495,10 @@
     {
       "t": "2026-11-07T16:32:31.326Z",
       "note": "Seen 2026-11-07 on the working tree of typing-1-75-into-width-on-an-icon-picture-gives: one-unit-word-walk (step 20), outline-width-walk (step 72), icon-stroke-weight-walk (step 26) and pick-leaves-settings-alone-walk (step 29, Width reads 25 not 26) still fail, at the same steps and in the same words as their 07:42 runs, before that task changed any code. So that task did not cause them."
+    },
+    {
+      "t": "2026-11-07T20:00:32.834Z",
+      "note": "border-follows-the-path-walk fails at step 20 (2 controls called Slider in Width: Slider (Width), Slider (Border, Width)). It was ok in the 2026-11-05 sweep. Likely cause, not reproduced on an older build: 8a6363c4 on 2026-11-06 renamed the Line slider from Thickness to Width and did not touch this walk, so its in: Width now matches two rows. Seen while running a-glyph-takes-the-icon-set-s-saved-stroke-in-one, whose diff does not touch that slider."
     }
   ],
   "standing": "walk-sweep",

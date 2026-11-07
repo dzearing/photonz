@@ -1,0 +1,26 @@
+{
+  "id": "a-straight-line-and-an-oval-in-a-glyph-can-wear",
+  "title": "A straight line and an oval in a glyph can wear the saved stroke too",
+  "goal": "Only lines drawn with the Pen can wear a saved stroke today. A glyph that uses the Line tool, or a box or an oval with an outline, keeps its own width, so changing the set's weight misses those parts.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 48.75,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T20:50:43.260Z",
+  "updated": "2026-11-07T20:50:43.263Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Saved strokes live on PathContent (Sources/PhotonzCore/SavedStrokes.swift). A box and an oval wear their edge as a Border effect (OutlineRetirement.swift) and a line is AnnotationContent, so each needs its own binding. Not a bug in what shipped: the task asks for paths.",
+  "acceptance": [
+    "A Line tool line and an outlined box or oval on an icon can take a saved stroke in one click",
+    "Changing the saved stroke's weight moves them with the paths, as one undo step"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T20:50:43.262Z",
+      "note": "created (manual)"
+    }
+  ]
+}
