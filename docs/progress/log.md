@@ -22729,3 +22729,15 @@ Next: `find-out-why-sweeping-with-the-arrow-tool-shows`. Open: `ask-tweaks-an-ic
 Walking it found three bugs, fixed here. A group drawn at 2x sized its picture by its parts' lines at 1x, so a turned group sliced thick lines off flat (`Layer.renderBounds(contentScale:)`). A dead straight line's box has no area, so it baked at 1x and lost its tile (`bakeScale`, `renderSprite`). The Export sheet read keys as `once` and said a looping icon stops (`SVGHandoff.repeatText`).
 
 Next: `a-playing-icon-stays-sharp-on-a-zoomed-canvas`, `a-looping-turn-comes-home-and-spins-evenly-witho`, `a-group-in-an-icon-shows-what-an-icon-needs-not`. Open: the walk writes the file with `writeSVG` after opening the real sheet, because a save panel cannot be driven.
+
+## 2026-11-07: a rectangle rounds on the grid
+
+A pull on a rectangle's corner dot now lands on the grid steps a drawn shape's
+knob lands on, and Command frees it (`CornerRadiusHandles.radius`, through
+`PathContent.landedCornerRadius`). On an Icon with the grid on the steps are
+whole units. Walks: `a-rectangle-rounds-on-the-grid-walk`,
+`a-rectangle-rounds-on-an-icon-walk`.
+
+Open question, asked in the audit: on an Icon with the grid hidden, rounding
+lands between units on both kinds of shape, though drawing there lands on whole
+units.
