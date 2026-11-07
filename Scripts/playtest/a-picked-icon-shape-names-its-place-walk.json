@@ -1,0 +1,63 @@
+{
+  "out": "/tmp/photonz-playtest/a-picked-icon-shape-names-its-place-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "24", "in": "Icons" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "pinch", "to": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-frame", "note": "a 24 unit icon frame at 800%, Next defaults, nothing switched on: units run 788 to 812 across and 538 to 562 down" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [797.3, 548.4], "to": [803.2, 551.1], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [800, 549.5] },
+    { "do": "move", "at": [780, 575] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectPlaceTag", "says": "9, 10 · 6 × 3" },
+    { "do": "snapshot", "name": "place-1-box" },
+
+    { "do": "drag", "from": [800, 549.5], "to": [804, 555.5], "steps": 10, "placeTag": "13, 16 · 6 × 3", "hold": "place-2-moving" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectPlaceTag", "says": "13, 16 · 6 × 3" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectPlaceTag", "says": "9, 10 · 6 × 3" },
+
+    { "do": "grip", "grip": "bottomRight", "by": [16, 8], "hold": "place-2b-resizing" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "move", "at": [780, 575] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectPlaceTag", "says": "9, 10 · 8 × 4" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectPlaceTag", "absent": true },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [796.1, 542.1], "to": [804.2, 549.9], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [800, 543] },
+    { "do": "move", "at": [780, 575] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectPlaceTag", "says": "center 12, 8 · d 8" },
+    { "do": "snapshot", "name": "place-3-circle" },
+
+    { "do": "click", "at": [789, 561] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectPlaceTag", "absent": true }
+  ]
+}

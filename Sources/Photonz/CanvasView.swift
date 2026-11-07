@@ -2106,6 +2106,11 @@ final class CanvasNSView: NSView {
     var onTransformResetRow: (TransformReset, UUID) -> Void = { _, _ in }
     let gripTagLayer = CAShapeLayer()
     let gripTagTextLayer = CATextLayer()
+    /// The tag above a shape picked in an icon (`CanvasSelectionGrips`).
+    let iconPlaceTagLayer = CAShapeLayer()
+    let iconPlaceTagTextLayer = CATextLayer()
+    /// What it says right now, and where, for a scripted walk to read back.
+    var iconPlaceTagShown: (words: String, plate: CGRect)?
     /// The perspective pill beside the chip in 3D, and the dashed lines to
     /// the vanishing point while the perspective is scrubbed.
     let perspectivePlateLayer = CAShapeLayer()

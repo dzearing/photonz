@@ -185,6 +185,19 @@ public struct IconSnap: Equatable, Sendable {
         return "center \(place(of: centre)) · \(size)"
     }
 
+    /// A shape already drawn, named the way the icon mock's tag names it: an
+    /// oval by its centre and size, because that is what somebody drawing a
+    /// circle is aiming at, and everything else by its corner and size,
+    /// "9, 10 · 6 × 3". `box` is on the canvas.
+    public func readout(box: CGRect, shape: AnnotationShape?) -> String {
+        if shape == .ellipse {
+            return readout(centre: CGPoint(x: box.midX, y: box.midY),
+                           corner: CGPoint(x: box.maxX, y: box.maxY), shape: .ellipse)
+        }
+        let size = "\(Self.units(box.width / unit)) × \(Self.units(box.height / unit))"
+        return "\(place(of: box.origin)) · \(size)"
+    }
+
     /// A length in units: whole units print whole, anything else to two places.
     private static func units(_ value: CGFloat) -> String {
         let hundredths = (value * 100).rounded() / 100
@@ -271,6 +284,17 @@ extension PhotonzDocument {
         return IconSnap(frame: box, keylines: keylines && choices.keylines,
                         anchors: anchors, shapes: shapes, grid: choices.grid,
                         unit: iconUnit(of: id))
+    }
+
+    /// What the tag above a picked layer says, or nil when the layer is not a
+    /// shape drawn on an icon on show: a layer on no icon, or the icon itself.
+    /// `box` is the box in the hand, on the canvas, so the words keep up with a
+    /// drag the document has not heard about yet.
+    public func iconPlaceWords(of id: UUID, box: CGRect) -> String? {
+        guard let icon = iconFrameID(containing: id), icon != id,
+              shownIconIDs.contains(icon), let frame = iconBox(of: icon) else { return nil }
+        return IconSnap(frame: frame, keylines: false, unit: iconUnit(of: icon))
+            .readout(box: box, shape: layer(id: id)?.annotation?.shape)
     }
 
     private static func bounds(of points: [CGPoint]) -> CGRect? {

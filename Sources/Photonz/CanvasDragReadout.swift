@@ -82,6 +82,9 @@ extension CanvasNSView {
             if case .move = cropDrag.kind { return (.move, box, DragReadout.subject(.move, box: box)) }
             return (.sweep, box, DragReadout.subject(.sweep, box: box))
         }
+        // A shape on an icon: the tag above it is reading this drag already, in
+        // the icon's units, and two labels on one box is one too many.
+        if iconPlaceTagShown != nil, resizeDrag != nil || moveDrag?.copying == false { return nil }
         if !barCarries, let resizeDrag, resizeDrag.frame != resizeDrag.startFrame {
             return reading(.resize, canvasBox: resizeDrag.frame, of: resizeDrag.layerID)
         }

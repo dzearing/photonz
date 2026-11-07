@@ -386,6 +386,67 @@ public struct SelectionGrips: Hashable, Sendable {
         return CGRect(x: clampedX(left), y: max(bounds.minY, y), width: size.width, height: size.height)
     }
 
+    /// Everything drawn round the frame, as boxes: what a label beside the
+    /// selection has to keep off.
+    public var occupied: [CGRect] {
+        func around(_ p: CGPoint, _ half: CGFloat) -> CGRect {
+            CGRect(x: p.x - half, y: p.y - half, width: half * 2, height: half * 2)
+        }
+        var boxes = corners.map { around($0.center, Self.cornerSide / 2 + Self.lineWidth) }
+        // A pill is long one way and thin the other, turned with its edge.
+        boxes += edges.map { edge in
+            let across = abs(cos(edge.angle)), down = abs(sin(edge.angle))
+            let halfWidth = (across * Self.pillLength + down * Self.pillThickness) / 2 + Self.lineWidth
+            let halfHeight = (down * Self.pillLength + across * Self.pillThickness) / 2 + Self.lineWidth
+            return CGRect(x: edge.center.x - halfWidth, y: edge.center.y - halfHeight,
+                          width: halfWidth * 2, height: halfHeight * 2)
+        }
+        if let knob { boxes.append(around(knob, Self.knobRadius + Self.lineWidth)) }
+        for line in [stem, depthStem].compactMap({ $0 }) {
+            boxes.append(CGRect(x: min(line.from.x, line.to.x), y: min(line.from.y, line.to.y),
+                                width: abs(line.to.x - line.from.x),
+                                height: abs(line.to.y - line.from.y)).insetBy(dx: -1, dy: -1))
+        }
+        if let depth { boxes.append(around(depth, Self.depthSize.height / 2)) }
+        return boxes + [chipPlate, perspective].compactMap { $0 }
+    }
+
+    /// Where the label naming a shape's place goes, or nil when nowhere is
+    /// clear of the shape, its grips and the row the hints use: covering what
+    /// is being manipulated is worse than not saying (the panel still does).
+    ///
+    /// Above is the icon mock's place. Centred when nothing stands there, then
+    /// at the frame's left edge, then hard against the knob, which is how a
+    /// shape narrower than its label keeps the label off the stem. Flipped
+    /// under the hint's row when the top of the view is in the way, and beside
+    /// the frame when both are.
+    public func placeTagFrame(size: CGSize, in bounds: CGRect) -> CGRect? {
+        let xs = quad.map(\.x), ys = quad.map(\.y)
+        let left = xs.min() ?? 0, right = xs.max() ?? 0
+        let top = ys.min() ?? 0, bottom = ys.max() ?? 0
+        // Past the furthest grip on an edge, which is its pill.
+        let reach = Self.pillOffset + Self.pillThickness / 2 + Self.lineWidth + Self.tagAboveGap
+        let hint = tagFrame(size: size, in: CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width,
+                                                   height: .greatestFiniteMagnitude))
+        let above = top - reach - size.height
+        var spots = [CGPoint(x: (left + right - size.width) / 2, y: above),
+                     CGPoint(x: left, y: above)]
+        if let knob {
+            let beside = knob.x - Self.knobRadius - Self.lineWidth - Self.tagAboveGap - size.width
+            spots.append(CGPoint(x: beside, y: above))
+        }
+        let under = hint.maxY + Self.tagAboveGap
+        let middle = (top + bottom - size.height) / 2
+        spots += [CGPoint(x: (left + right - size.width) / 2, y: under),
+                  CGPoint(x: left - reach - size.width, y: middle),
+                  CGPoint(x: right + reach, y: middle)]
+        let box = CGRect(x: left, y: top, width: right - left, height: bottom - top)
+        let kept = occupied + [box]
+        return spots.lazy.map { CGRect(origin: $0, size: size) }.first { plate in
+            bounds.contains(plate) && !kept.contains { $0.intersects(plate) }
+        }
+    }
+
     // MARK: Geometry
 
     /// `p` in a frame centred on `centre` and turned by `angle`.
@@ -436,6 +497,15 @@ public enum SelectionTag {
             if turned != 0, turned.truncatingRemainder(dividingBy: 360) != 0 { words += " · \(whole(turned))°" }
             return words
         }
+    }
+
+    /// The tag above a shape picked in an icon: its place and size in units
+    /// (`IconSnap.readout(box:shape:)`), and any turn, which the tag under the
+    /// frame would have said.
+    public static func iconPlace(_ words: String, rotation: Double) -> String {
+        let turned = rotation.rounded()
+        guard turned != 0, turned.truncatingRemainder(dividingBy: 360) != 0 else { return words }
+        return "\(words) · \(whole(turned))°"
     }
 
     /// What resting on `grip` says it does, in `mode`.

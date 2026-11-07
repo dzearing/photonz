@@ -3053,7 +3053,7 @@ public enum PlaytestStep: Sendable, Equatable {
               modifiers: [PlaytestModifier], halfway: [PlaytestModifier]?,
               hold: String?, readout: String?, wobble: CGFloat, cancel: Bool,
               showsBox: Bool?, expectFresh: Double? = nil, landsAsHeld: Bool = false,
-              pause: PlaytestDragPause? = nil)
+              pause: PlaytestDragPause? = nil, placeTag: String? = nil)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Give the keyboard to a named text field in the inspector (its label, as
@@ -4336,6 +4336,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// beside the mark inside an icon frame ("15, 13", the place in the
     /// icon's own units); left out, the pill is not asked about.
     case expectLanding(near: PlaytestPoint?, within: CGFloat, absent: Bool, says: String? = nil)
+    /// The tag above a shape picked in an icon: `says` claims its words and
+    /// that it is clear of the shape and every grip, measured on screen.
+    /// `absent: true` claims no tag at all. A drag's `placeTag` claims the same
+    /// with the button still down.
+    case expectPlaceTag(says: String?, absent: Bool)
     /// How many layers the document must hold right now, counting the ones
     /// inside groups.
     ///
@@ -4787,7 +4792,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectOpenRefused", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectPlaceTag", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectOpenRefused", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4934,6 +4939,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .spaceHandle: "spaceHandle"
         case .hoverHandles: "hoverHandles"
         case .expectLanding: "expectLanding"
+        case .expectPlaceTag: "expectPlaceTag"
         case .expectHint: "expectHint"
         case .expectCue: "expectCue"
         case .expectClickReaches: "expectClickReaches"
@@ -5156,7 +5162,8 @@ public enum PlaytestStep: Sendable, Equatable {
                          showsBox: try f.optionalFlag("showsBox"),
                          expectFresh: try f.optionalNumber("expectFresh"),
                          landsAsHeld: try f.optionalFlag("landsAsHeld") ?? false,
-                         pause: try Self.dragPause(f))
+                         pause: try Self.dragPause(f),
+                         placeTag: try f.optionalString("placeTag"))
         case "expectFresh":
             self = .expectFresh(percent: try f.optionalNumber("percent") ?? 0.5)
         case "expectBrushResponsive":
@@ -5963,6 +5970,15 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             let says = try f.optionalString("says")
             self = .expectLanding(near: near, within: CGFloat(within), absent: absent, says: says)
+        case "expectPlaceTag":
+            let says = try f.optionalString("says")
+            let absent = try f.optionalFlag("absent") ?? false
+            guard absent != (says != nil) else {
+                throw f.invalid("says", "expectPlaceTag claims one of two things: \"says\" with "
+                    + "the words above the picked shape, or \"absent\": true for no tag at all. "
+                    + "It cannot claim both and it has to claim one")
+            }
+            self = .expectPlaceTag(says: says, absent: absent)
         case "expectChrome":
             let within = try f.optionalNumber("within") ?? 1
             guard within >= 0 else {

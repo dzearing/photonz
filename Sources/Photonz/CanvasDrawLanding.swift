@@ -201,7 +201,7 @@ extension CanvasNSView {
 
     /// The type on the pill. On the view rather than in the enum because a
     /// font is not `Sendable`.
-    static let iconSnapReadoutFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .semibold)
+    static let iconSnapReadoutFont = NSFont.monospacedSystemFont(ofSize: 10, weight: .semibold)
 
     func setUpIconSnapReadoutChrome() {
         iconSnapReadoutLayer.fillColor = NSColor.controlAccentColor.cgColor

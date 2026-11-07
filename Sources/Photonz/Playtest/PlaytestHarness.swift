@@ -1537,7 +1537,7 @@ private final class Run {
 
         case .drag(let from, let to, let steps, let modifiers, let halfway, let hold,
                    let readout, let wobble, let cancel, let showsBox, let expectFresh, let landsAsHeld,
-                   let pause):
+                   let pause, let placeTag):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
             let flags = eventFlags(modifiers)
@@ -1630,6 +1630,9 @@ private final class Run {
             var said = ""
             if let readout {
                 said = ", " + (try checkDragReadout(says: readout, absent: false))
+            }
+            if let placeTag {
+                said += ", " + (try checkPlaceTag(says: placeTag, absent: false))
             }
             // The box the canvas is outlining for the container in hand, read
             // with the button still down and settled against where the thing
@@ -3967,6 +3970,9 @@ private final class Run {
                 said += ", and the pill beside it says \"\(says)\""
             }
             note(number, step.name, said, state: describe())
+
+        case .expectPlaceTag(let says, let absent):
+            note(number, step.name, try checkPlaceTag(says: says, absent: absent), state: describe())
 
         case .expectHint(let contains):
             note(number, step.name, try checkHint(contains: contains), state: describe())
@@ -11630,6 +11636,38 @@ private final class Run {
         }
         return "a press would land on \(short(landing)), "
             + "\(Self.round1(off))pt from the \(short(wanted)) claimed"
+    }
+
+    /// What the tag above a shape picked in an icon says, and that it keeps
+    /// off the shape and every grip. It reads the words and the plate the canvas
+    /// actually drew, so the claim is about what a person can see.
+    private func checkPlaceTag(says: String?, absent: Bool) throws -> String {
+        let canvas = try requireCanvas()
+        let shown = canvas.iconPlaceTagShown
+        if absent {
+            guard let shown else { return "no tag above the picked shape" }
+            throw Failure(description: "nothing should be named above the picked shape, and the "
+                + "tag says \"\(shown.words)\"")
+        }
+        guard let shown else {
+            throw Failure(description: "no tag above the picked shape, and the walk expects "
+                + "\"\(says ?? "")\". It shows in Size, on a shape on an icon, with the Select tool.")
+        }
+        guard shown.words == says else {
+            throw Failure(description: "the tag says \"\(shown.words)\", and the walk expects "
+                + "\"\(says ?? "")\"")
+        }
+        guard let grips = canvas.drawnSelectionGrips?.grips else {
+            throw Failure(description: "the tag is up with no grips drawn for it to keep off")
+        }
+        let xs = grips.quad.map(\.x), ys = grips.quad.map(\.y)
+        let shape = CGRect(x: xs.min() ?? 0, y: ys.min() ?? 0,
+                           width: (xs.max() ?? 0) - (xs.min() ?? 0),
+                           height: (ys.max() ?? 0) - (ys.min() ?? 0))
+        guard !(grips.occupied + [shape]).contains(where: { $0.intersects(shown.plate) }) else {
+            throw Failure(description: "the tag at view \(shown.plate) sits on the shape or a grip")
+        }
+        return "the tag says \"\(shown.words)\", clear of the shape and every grip"
     }
 
     /// What the pill riding under a drag says right now.

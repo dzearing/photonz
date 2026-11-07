@@ -30,6 +30,12 @@ extension CanvasNSView {
         static let chipButtonRadius: CGFloat = 5
     }
 
+    /// The mock's `.mtag`: three points above and below its figures, eight
+    /// either side.
+    enum IconPlaceTag {
+        static let inset = CGSize(width: 8, height: 3)
+    }
+
     var transformModesOffered: Bool { Experiments.shared.transformModesEnabled && tool == .select }
 
     /// The modes the chip offers on `layer`: Skew & distort only on a layer
@@ -69,7 +75,7 @@ extension CanvasNSView {
         for shape in [gripStemsLayer, gripsShapeLayer, gripGlyphsLayer, litGripLayer, litGripGlyphLayer,
                       chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer,
                       chipDotsLayer, chipPickedDotLayer,
-                      perspectivePlateLayer, perspectiveIconLayer, gripTagLayer] {
+                      perspectivePlateLayer, perspectiveIconLayer, gripTagLayer, iconPlaceTagLayer] {
             shape.lineWidth = SelectionGrips.lineWidth
             shape.lineCap = .round
             shape.lineJoin = .round
@@ -120,12 +126,18 @@ extension CanvasNSView {
         gripTagTextLayer.alignmentMode = .center
         gripTagTextLayer.foregroundColor = CGColor(gray: 1, alpha: 1)
         gripTagLayer.addSublayer(gripTagTextLayer)
+        iconPlaceTagLayer.strokeColor = nil
+        iconPlaceTagTextLayer.alignmentMode = .center
+        iconPlaceTagTextLayer.foregroundColor = CGColor(gray: 1, alpha: 1)
+        iconPlaceTagLayer.addSublayer(iconPlaceTagTextLayer)
         // Nothing here eases: a tag that cross-fades its words reads a beat
         // behind the pointer.
         let still: [String: any CAAction] = ["contents": NSNull(), "string": NSNull(), "bounds": NSNull(),
                                              "position": NSNull(), "frame": NSNull(), "path": NSNull(),
                                              "hidden": NSNull()]
         gripTagTextLayer.actions = still
+        iconPlaceTagTextLayer.actions = still
+        iconPlaceTagLayer.actions = still
         perspectiveTextLayer.actions = still
         for shape in [gripStemsLayer, gripsShapeLayer, gripGlyphsLayer, litGripLayer, litGripGlyphLayer,
                       chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer, gripTagLayer,
@@ -140,6 +152,7 @@ extension CanvasNSView {
         drawnSelectionGrips = nil
         markHandles([], on: selectionGripsLayer)
         gripTagShown = nil
+        iconPlaceTagShown = nil
         // With nothing picked there is no pill for the popover to hang from.
         if perspectivePopoverAnchor != nil { askPerspectivePopover(nil) }
     }
@@ -281,6 +294,9 @@ extension CanvasNSView {
         drawVanishingLines(grips)
         selectionGripsLayer.isHidden = false
         styleLitGrip()
+        // Before the tag under the frame, which stands down at rest when this
+        // one is saying the size.
+        refreshIconPlaceTag(for: layer, box: box)
         refreshGripTag(for: layer)
     }
 
@@ -412,6 +428,8 @@ extension CanvasNSView {
             if let scrub = perspectiveScrub, scrub.moved { return SelectionTag.perspective(scrub.value) }
             if let grip = hoveredGrip { return SelectionTag.does(grip, mode: shown.grips.mode) }
             if let said = gripTagSaid, said.until > Date() { return said.words }
+            // The tag above is already saying the size, in the icon's units.
+            if iconPlaceTagShown != nil { return "" }
             let size = selectedLayerFrame.flatMap { frame in
                 document?.parentSpaceFrame(layer.withSlack(frame), of: layer.id)?.size
             } ?? layer.frame.size
@@ -421,6 +439,10 @@ extension CanvasNSView {
                                                                                atDocumentTimeMS: documentTimeMS) },
                                         name: layer.name)
         }()
+        guard !words.isEmpty else {
+            hideGripTag()
+            return
+        }
         let font = Self.dragReadoutFont
         let inset = GripLook.tagInset
         let text = CGSize(width: (words as NSString).size(withAttributes: [.font: font]).width.rounded(.up),
@@ -437,6 +459,47 @@ extension CanvasNSView {
                                         width: text.width, height: text.height)
         gripTagLayer.isHidden = false
         gripTagShown = words
+    }
+
+    /// The tag above a shape picked in an icon: where it sits and how big it
+    /// is, in units, as the icon mock's `#igTag` says it. It rides with the
+    /// grips, so it follows a drag on the same frame and reads the box in the
+    /// hand. In Size only: Skew and 3D have their own reading under the frame.
+    /// With nowhere clear of the shape it says nothing, and the panel does.
+    func refreshIconPlaceTag(for layer: Layer, box: CGRect) {
+        guard let shown = drawnSelectionGrips, shown.layerID == layer.id, shown.grips.mode == .size,
+              let place = document?.iconPlaceWords(of: layer.id, box: box) else {
+            hideIconPlaceTag()
+            return
+        }
+        let words = SelectionTag.iconPlace(place, rotation: Double(layer.transform.rotation) * 180 / .pi)
+        let font = Self.iconSnapReadoutFont
+        let inset = IconPlaceTag.inset
+        let text = CGSize(width: (words as NSString).size(withAttributes: [.font: font]).width.rounded(.up),
+                          height: (font.ascender - font.descender).rounded(.up))
+        guard let plate = shown.grips.placeTagFrame(size: CGSize(width: text.width + inset.width * 2,
+                                                                 height: text.height + inset.height * 2),
+                                                    in: bounds) else {
+            hideIconPlaceTag()
+            return
+        }
+        iconPlaceTagLayer.fillColor = NSColor.controlAccentColor.cgColor
+        iconPlaceTagLayer.path = CGPath(roundedRect: plate, cornerWidth: GripLook.tagRadius,
+                                        cornerHeight: GripLook.tagRadius, transform: nil)
+        iconPlaceTagTextLayer.string = words
+        iconPlaceTagTextLayer.font = font
+        iconPlaceTagTextLayer.fontSize = font.pointSize
+        iconPlaceTagTextLayer.contentsScale = window?.backingScaleFactor ?? 2
+        iconPlaceTagTextLayer.frame = CGRect(x: plate.minX + inset.width, y: plate.minY + inset.height,
+                                             width: text.width, height: text.height)
+        iconPlaceTagLayer.isHidden = false
+        iconPlaceTagShown = (words, plate)
+    }
+
+    func hideIconPlaceTag() {
+        iconPlaceTagLayer.isHidden = true
+        iconPlaceTagLayer.path = nil
+        iconPlaceTagShown = nil
     }
 
     func hideGripTag() {

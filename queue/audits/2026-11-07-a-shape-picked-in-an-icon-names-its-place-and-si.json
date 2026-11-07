@@ -1,0 +1,27 @@
+{
+  "feature": "A picked shape in an icon says where it sits and how big it is",
+  "epic": "icon-grid",
+  "summary": "Pick a shape in an icon and a tag above it reads its place and size in units, 9, 10 · 6 × 3, or center 12, 8 · d 8 for a circle. It keeps up with a move or a resize, so you no longer look at the panel to check a shape landed where you meant.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A 24 unit icon frame at 800%. Walk: a-picked-icon-shape-names-its-place-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Add a 24 unit icon frame, draw a rectangle in it, press V and click the rectangle.", "shot": "2026-11-07-icon-place-tag-1-box-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the rectangle somewhere else and watch the tag while the button is down.", "shot": "2026-11-07-icon-place-tag-2-moving-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pull the bottom right corner.", "shot": "2026-11-07-icon-place-tag-2b-resizing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Rest the pointer on a corner without pressing, and see the hint come up under the shape." },
+    { "do": "Draw a circle and click it: the tag names its centre and diameter.", "shot": "2026-11-07-icon-place-tag-3-circle-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare with the mock: mock on the left, app on the right, steps 4 and 5.", "shot": "2026-11-07-icon-place-tag-beside-the-mock.png" }
+  ],
+  "evaluate": [
+    "Does the tag land where your eye already is, with the rotate knob beside it?",
+    "Is it right that the pill under a drag goes away in an icon, leaving this tag as the one reading?",
+    "With a shape near the top of an icon, does the tag crowding the frame's name bother you?"
+  ],
+  "rough": [
+    "The mock centres the tag above the shape; the app puts it above and to the left, because the rotate knob and the mode chip stand in that spot and the mock draws neither. Settled by UX-PATTERNS §D12, the placement law: never cover the subject, and flip or move before anything else.",
+    "A shape near the top of an icon puts the tag right up against the frame's name label. It does not cover the shape or a grip, and it can touch that label.",
+    "With a shape filling the view there is nowhere clear, so no tag shows and the panel carries the numbers.",
+    "The tag shows in Size only. Skew and 3D keep their own reading under the frame.",
+    "A move with the Grid off can stop on a half unit: the box caught the icon's centre line and the tag honestly read 9, 10.5."
+  ]
+}
