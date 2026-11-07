@@ -15510,7 +15510,7 @@
 {"t":"2026-11-04T07:07:52.091Z","ev":"task_note","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon"}
 {"t":"2026-11-04T07:07:52.178Z","ev":"task_done","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","from":"in_progress","note":"Thin line gone: DocumentRenderer.wrapped holds each bitmap's edge. Real app at Next defaults, levels off white along the outline: 25% 31 to 0, 50% 64 to 0, export 1x 64 to 0, the rest 0; with next-crisp-zoom off 79% 63 to 0, 100% 46 to 0. TurnedEdgeSeamTests plus a-turned-layer-has-no-seam-walk; Scripts/test.sh exit 0; 12MP/10-layer edit 7.8ms."}
 {"t":"2026-11-04T14:06:37.018Z","ev":"sweep_pass","walks":1088,"seconds":25076,"passed":1041,"failed":47,"complete":true,"total":1088}
-{"t":"2026-11-04T14:06:37.210Z","ev":"task_started","id":"typing-in-ask-lists-the-commands-you-can-run","title":"Typing / in Ask lists the commands you can run","priority":"p1-high"}
+{"t":"2026-11-04T14:06:37.210Z","ev":"task_started","id":"typing-in-ask-lists-the-commands-you-can-run","title":"Typing / in Ask lists the commands you can run","priority":"p1-high","repeats":1,"until":"2026-11-04T14:06:37.210Z","rolledUp":true}
 {"t":"2026-11-04T14:10:35.277Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
 {"t":"2026-11-04T14:42:04.131Z","ev":"task_walks","id":"typing-in-ask-lists-the-commands-you-can-run","walks":["ask-slash-lists-commands-walk","ask-stays-up-after-asking-walk","ask-narrow-window-has-no-dock-walk"]}
 {"t":"2026-11-04T14:43:35.106Z","ev":"task_created","id":"ask-chat-has-the-mock-s-new-conversation-button","priority":"p1-high","title":"Ask chat has the mock's New Conversation button, its whole transcript, and an icon for each command"}
@@ -15594,7 +15594,7 @@
 {"t":"2026-11-04T16:08:49.854Z","ev":"task_resequenced","id":"picking-a-perspective-preset-or-sliding-it-keeps","from":600,"to":610}
 {"t":"2026-11-04T16:08:49.971Z","ev":"triage","summary":"filed 1 (an unmanned session opens the installed app, reproduced), merged 0, dropped 0, moved 0, reset 0, groomed 0; 5 findings folded onto owning tasks; p1 and p2 renumbered in steps of 10; two new loop-filed p1 tasks spot checked and kept; open 85 to 86"}
 {"t":"2026-11-04T16:10:15.443Z","ev":"digest","file":"2026-11-04.md"}
-{"t":"2026-11-04T16:10:30.084Z","ev":"task_started","id":"when-ask-stops-part-way-it-says-so-and-one-refus","title":"When Ask stops part way it says so, and one refused step no longer ends the change","priority":"p1-high"}
+{"t":"2026-11-04T16:10:30.084Z","ev":"task_started","id":"when-ask-stops-part-way-it-says-so-and-one-refus","title":"When Ask stops part way it says so, and one refused step no longer ends the change","priority":"p1-high","repeats":1,"until":"2026-11-04T16:10:30.084Z","rolledUp":true}
 {"t":"2026-11-04T16:17:37.045Z","ev":"task_note","id":"when-ask-stops-part-way-it-says-so-and-one-refus"}
 {"t":"2026-11-04T16:24:19.985Z","ev":"task_created","id":"ask-makes-icons-that-are-icons-one-subject-clean","priority":"p1-high","title":"Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px"}
 {"t":"2026-11-04T16:24:20.104Z","ev":"task_created","id":"ask-animates-what-it-makes-an-animated-svg-icon","priority":"p1-high","title":"Ask animates what it makes: an animated SVG icon from one request"}
@@ -15617,7 +15617,7 @@
 {"t":"2026-11-04T19:57:49.650Z","ev":"task_note","id":"when-ask-stops-part-way-it-says-so-and-one-refus"}
 {"t":"2026-11-04T19:57:49.945Z","ev":"task_done","id":"when-ask-stops-part-way-it-says-so-and-one-refus","from":"in_progress","note":"Ask leaves out a call it keeps getting refused and goes on, for every tool; a failed step and what names it are left out and the rest land as one undo step; the row says what landed with the left out line under it, and Ask answers with it (c7f497ee; AskLeftOut.swift, AskPlanning, AskSession). Verified: Scripts/test.sh green, ask-says-what-it-left-out-walk and ask-makes-a-pricing-section-walk pass at Next defaults. Not clean: held-out layout read 48 against 66.3, one of three cases out of time, cause not proved; pricing-section read 58.3, 59.3, 60.7 against 60, taken as spread because the model is sent the same messages (task log)."}
 {"t":"2026-11-04T20:15:10.850Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":867,"of":1092,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-04T20:15:11.260Z","ev":"task_started","id":"one-agent-pane-on-the-right-a-plain-history-of-r","title":"One Agent pane, on the right: a plain history of requests, details on hover, the live request with Stop","priority":"p1-high"}
+{"t":"2026-11-04T20:15:11.260Z","ev":"task_started","id":"one-agent-pane-on-the-right-a-plain-history-of-r","title":"One Agent pane, on the right: a plain history of requests, details on hover, the live request with Stop","priority":"p1-high","repeats":1,"until":"2026-11-04T20:15:11.260Z","rolledUp":true}
 {"t":"2026-11-04T21:11:22.662Z","ev":"task_note","id":"stop-while-ask-s-model-is-still-loading-lets-the"}
 {"t":"2026-11-04T21:12:22.989Z","ev":"task_walks","id":"one-agent-pane-on-the-right-a-plain-history-of-r","walks":["ask-one-agent-pane-walk","ask-live-request-at-the-top-walk"]}
 {"t":"2026-11-04T21:56:46.780Z","ev":"task_note","id":"one-agent-pane-on-the-right-a-plain-history-of-r"}
@@ -15625,7 +15625,7 @@
 {"t":"2026-11-04T21:56:46.915Z","ev":"task_note","id":"one-agent-pane-on-the-right-a-plain-history-of-r"}
 {"t":"2026-11-04T21:56:46.995Z","ev":"task_done","id":"one-agent-pane-on-the-right-a-plain-history-of-r","from":"in_progress","note":"Shipped in 3bc0e202. Left dock and composer conversation gone; Agent group holds the live request with Stop and a plain history with no switch or trash; hover card left of the panel with plan lines, before and after pictures and thumbs; Clear History in the group menu, row right-click and Edit, with a yes in the group; Ask mocks changed to match. Verified: Scripts/test.sh exit 0; ask-one-agent-pane-walk 77 steps and ask-live-request-at-the-top-walk at Next defaults; 18 other Ask walks green; focus-drill clean 0/149 ticks lost; audit pictures opened and read. ask-stops-a-running-request-walk passes warm and fails cold, owned by stop-while-ask-s-model-is-still-loading-lets-the."}
 {"t":"2026-11-04T22:27:23.414Z","ev":"slice_pass","walks":18,"passed":18,"failed":0,"seconds":1806,"of":1093,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-04T22:27:23.592Z","ev":"task_started","id":"ask-makes-icons-that-are-icons-one-subject-clean","title":"Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px","priority":"p1-high"}
+{"t":"2026-11-04T22:27:23.592Z","ev":"task_started","id":"ask-makes-icons-that-are-icons-one-subject-clean","title":"Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px","priority":"p1-high","repeats":1,"until":"2026-11-04T22:27:23.592Z","rolledUp":true}
 {"t":"2026-11-04T22:31:06.952Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T01:44:10.404Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T02:22:11.316Z","ev":"task_walks","id":"ask-makes-icons-that-are-icons-one-subject-clean","walks":["ask-makes-an-icon-walk","ask-puts-an-icon-in-its-own-picture-walk","new-image-icon-sizes-walk"]}
@@ -15638,7 +15638,7 @@
 {"t":"2026-11-05T02:22:32.833Z","ev":"task_pending","id":"ask-makes-icons-that-are-icons-one-subject-clean","from":"in_progress","note":"Most icons now read and land in the right place (69.3 to 86.5, shipped), but the user's own balloon reads as a sun at 29.7 and the held-out set was not run: both are open on the checklist."}
 {"t":"2026-11-05T02:53:04.791Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-05T02:53:04.880Z","ev":"slice_pass","walks":13,"passed":12,"failed":1,"seconds":1803,"of":1096,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-05T02:53:05.056Z","ev":"task_started","id":"ask-makes-icons-that-are-icons-one-subject-clean","title":"Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px","priority":"p1-high"}
+{"t":"2026-11-05T02:53:05.056Z","ev":"task_started","id":"ask-makes-icons-that-are-icons-one-subject-clean","title":"Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px","priority":"p1-high","repeats":2,"until":"2026-11-05T16:51:00.348Z","rolledUp":true}
 {"t":"2026-11-05T03:12:16.006Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T04:23:09.175Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T05:17:20.193Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
@@ -15751,7 +15751,7 @@
 {"t":"2026-11-05T14:59:11.295Z","ev":"task_resequenced","id":"an-icon-picture-s-svg-reads-in-24-whole-units","from":139.375,"to":79}
 {"t":"2026-11-05T15:00:03.481Z","ev":"manager","filed":5,"readyBefore":90,"readyAfter":94,"report":"queue/manager/2026-11-05-0659.md"}
 {"t":"2026-11-05T15:00:17.527Z","ev":"manager_pass","exit":0,"ready":94}
-{"t":"2026-11-05T15:00:17.601Z","ev":"task_started","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","title":"A screenshot is on the clipboard every time on a Mac running ONE Photonz, the released app","priority":"p1-high"}
+{"t":"2026-11-05T15:00:17.601Z","ev":"task_started","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","title":"A screenshot is on the clipboard every time on a Mac running ONE Photonz, the released app","priority":"p1-high","repeats":1,"until":"2026-11-05T15:00:17.601Z","rolledUp":true}
 {"t":"2026-11-05T15:04:25.903Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
 {"t":"2026-11-05T15:04:25.977Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
 {"t":"2026-11-05T16:10:51.944Z","ev":"task_walks","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","walks":["screenshot-reaches-the-clipboard-walk"]}
@@ -15760,7 +15760,6 @@
 {"t":"2026-11-05T16:12:24.067Z","ev":"decision_opened","id":"a-screenshot-is-on-the-clipboard-every-time-on-a-the-fixes-are-in-and-the-rows-ma","taskId":"a-screenshot-is-on-the-clipboard-every-time-on-a","question":"The fixes are in, and the rows marked here are the likeliest cause. How should the last check be done?"}
 {"t":"2026-11-05T16:12:40.158Z","ev":"task_blocked","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":"in_progress","note":"Four suspects fixed and pushed (76fdef76). Not reached: 20 of 20 in every target (real Chrome 20 of 20 only) and a run with exactly one released Photonz. Cause on the other Mac still not confirmed. The card asks how to do the last check; audit queue/audits/2026-11-05-screenshot-clipboard-suspects-fixed.json."}
 {"t":"2026-11-05T16:51:00.156Z","ev":"slice_pass","walks":14,"passed":14,"failed":0,"seconds":1806,"of":1097,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-05T16:51:00.348Z","ev":"task_started","id":"ask-makes-icons-that-are-icons-one-subject-clean","title":"Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px","priority":"p1-high"}
 {"t":"2026-11-05T18:57:12.867Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T19:12:47.575Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T20:40:11.066Z","ev":"task_walks","id":"ask-makes-icons-that-are-icons-one-subject-clean","walks":["ask-makes-an-icon-walk","ask-puts-an-icon-in-its-own-picture-walk","new-image-icon-sizes-walk","ask-tweaks-an-icon-walk"]}
@@ -16215,3 +16214,16 @@
 {"t":"2026-11-07T16:51:56.294Z","ev":"task_created","id":"find-out-why-sweeping-with-the-arrow-tool-shows","priority":"p2-normal","title":"Find out why sweeping with the arrow tool shows no size pill on an Icon picture"}
 {"t":"2026-11-07T16:53:02.585Z","ev":"task_note","id":"typing-1-75-into-width-on-an-icon-picture-gives"}
 {"t":"2026-11-07T16:53:02.684Z","ev":"task_done","id":"typing-1-75-into-width-on-an-icon-picture-gives","from":"in_progress","note":"Shipped in 8bc3771c. On an Icon picture Width, Corner Radius, the Info values, Effects length rows and the pill read 24 units; typed 1.75 writes stroke-width 1.75 and an opened 24 unit SVG reads 1.75. A 24 unit frame on a bigger canvas is unchanged. Verified: Scripts/test.sh green (15,866 tests), an-icon-picture-reads-in-units-walk at Next defaults with no flags, opening-an-svg-walk, drag-readout-walk and the Icon picture walks. Canvas size, crop, regions, Text size, Padding, Gap and Measure stay in points, and the audit says why. Four walks owned by walks-that-fail-in-the-full-sweep-26 still fail as they did before; ask-tweaks-an-icon-walk was not finished."}
+{"t":"2026-11-07T16:53:32.334Z","ev":"task_started","id":"the-whole-icon-workflow-runs-start-to-finish-in","title":"The whole icon workflow runs start to finish in one walk at Next defaults","priority":"p1-high"}
+{"t":"2026-11-07T17:38:04.861Z","ev":"task_created","id":"a-playing-icon-stays-sharp-on-a-zoomed-canvas","priority":"p1-high","title":"A playing icon stays sharp on a zoomed canvas"}
+{"t":"2026-11-07T17:38:04.986Z","ev":"task_created","id":"a-looping-turn-comes-home-and-spins-evenly-witho","priority":"p1-high","title":"A looping turn comes home and spins evenly without extra keys"}
+{"t":"2026-11-07T17:38:05.113Z","ev":"task_created","id":"a-group-in-an-icon-shows-what-an-icon-needs-not","priority":"p2-normal","title":"A group in an icon shows what an icon needs, not page layout rows"}
+{"t":"2026-11-07T17:38:05.231Z","ev":"task_note","id":"a-glyph-takes-the-icon-set-s-saved-stroke-in-one"}
+{"t":"2026-11-07T17:38:05.327Z","ev":"task_walks","id":"the-whole-icon-workflow-runs-start-to-finish-in","walks":["the-whole-icon-workflow-walk","the-whole-icon-workflow-on-a-frame-walk"]}
+{"t":"2026-11-07T17:38:54.598Z","ev":"task_note","id":"a-looping-turn-comes-home-and-spins-evenly-witho"}
+{"t":"2026-11-07T17:38:54.675Z","ev":"task_note","id":"the-whole-icon-workflow-runs-start-to-finish-in"}
+{"t":"2026-11-07T17:38:54.753Z","ev":"task_note","id":"the-whole-icon-workflow-runs-start-to-finish-in"}
+{"t":"2026-11-07T17:38:54.832Z","ev":"task_note","id":"the-whole-icon-workflow-runs-start-to-finish-in"}
+{"t":"2026-11-07T17:38:54.911Z","ev":"task_note","id":"the-whole-icon-workflow-runs-start-to-finish-in"}
+{"t":"2026-11-07T17:38:54.989Z","ev":"task_note","id":"the-whole-icon-workflow-runs-start-to-finish-in"}
+{"t":"2026-11-07T17:43:40.652Z","ev":"task_done","id":"the-whole-icon-workflow-runs-start-to-finish-in","from":"in_progress","note":"Two walks at Next defaults go from an empty window to an animated SVG, on File, New, Image, Icon and on a 24 unit frame (the-whole-icon-workflow-walk, -on-a-frame-walk). Both files play and loop in real time Chrome and WebKit, with live angles read and a contact sheet in the audit. Fixed three faults it found: a turned group cropping thick lines at 2x, a straight line drawn soft with an empty tile, the Export sheet saying a looping icon stops. Filed a-playing-icon-stays-sharp-on-a-zoomed-canvas, a-looping-turn-comes-home-and-spins-evenly-witho, a-group-in-an-icon-shows-what-an-icon-needs-not; folded the Pen mismatch into a-glyph-takes-the-icon-set-s-saved-stroke-in-one. Scripts/test.sh exit 0. The save panel itself was not driven: the walk opens the real sheet and writes the file with writeSVG."}

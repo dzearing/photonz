@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T15:48:22.529Z",
-  "updated": "2026-11-07T15:49:03.470Z",
+  "updated": "2026-11-07T17:43:40.651Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the digest of 2026-11-07. The focus in queue/objectives.json names the workflow: start a 24 unit icon, keylines and snapping on, draw a cloud-download glyph from shapes and the Pen, union it, give it a 1.75 round stroke, check it at 16, 24 and 48, make it swing or spin forever, export an animated SVG for a web page. No walk under Scripts/playtest does more than a part of this (grep for cloud finds only opening-an-svg-walk and border-follows-the-shape-walk). Stepping along the first half by hand found the typed Width fault at once, so expect more. While walking, judge the panel too: a rectangle in an icon frame shows Columns and Layout sections that say little about an icon (queue/audits/2026-11-07-icon-place-tag-1-box-sc.png, and the same on 2026-11-06). Seen twice now. If it gets in the way, say so in the audit. Each fault this finds that is not a one line fix gets its own task; do not fold them all in here.",
@@ -27,6 +27,44 @@
     {
       "t": "2026-11-07T15:49:03.469Z",
       "note": "seq 2 -> 20"
+    },
+    {
+      "t": "2026-11-07T16:53:32.329Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T17:38:05.325Z",
+      "note": "owns these walks: the-whole-icon-workflow-walk, the-whole-icon-workflow-on-a-frame-walk"
+    },
+    {
+      "t": "2026-11-07T17:38:54.673Z",
+      "note": "Before building: walked the flow as a first-time user. The stops I expected were where to find Join, how to swing a whole glyph when Add Key takes one layer, and how a loop gets home. All three turned out to be real."
+    },
+    {
+      "t": "2026-11-07T17:38:54.751Z",
+      "note": "Chose fixing the crop, the straight line and its tile in the shared renderer over a Next flag, because they are plain drawing bugs and a flag would keep a wrong picture on purpose; Current gets the same correct pixels."
+    },
+    {
+      "t": "2026-11-07T17:38:54.830Z",
+      "note": "Chose to keep the walks on front:true, because SwiftUI takes these clicks only in the app in front and it gives pictures in the real colours; they wait for the Mac like the 27 others."
+    },
+    {
+      "t": "2026-11-07T17:38:54.909Z",
+      "note": "Browser proof: real time headless Chrome over its debugging port and a WKWebView, reading the live angle of the animated group. Virtual time was tried first and read nothing, so it is not used."
+    },
+    {
+      "t": "2026-11-07T17:38:54.987Z",
+      "note": "left rough: a part's tile in a 24 point frame is blurry because tiles never upscale; two snapping rows in View (Snap to Grid is dimmed on an Icon picture, Snap in Icons is live); Applies to 1 of the 3 selected layers shows under Fill when three lines are picked. None stopped the walk."
+    },
+    {
+      "t": "2026-11-07T17:43:40.649Z",
+      "note": "Two walks at Next defaults go from an empty window to an animated SVG, on File, New, Image, Icon and on a 24 unit frame (the-whole-icon-workflow-walk, -on-a-frame-walk). Both files play and loop in real time Chrome and WebKit, with live angles read and a contact sheet in the audit. Fixed three faults it found: a turned group cropping thick lines at 2x, a straight line drawn soft with an empty tile, the Export sheet saying a looping icon stops. Filed a-playing-icon-stays-sharp-on-a-zoomed-canvas, a-looping-turn-comes-home-and-spins-evenly-witho, a-group-in-an-icon-shows-what-an-icon-needs-not; folded the Pen mismatch into a-glyph-takes-the-icon-set-s-saved-stroke-in-one. Scripts/test.sh exit 0. The save panel itself was not driven: the walk opens the real sheet and writes the file with writeSVG."
     }
-  ]
+  ],
+  "started": "2026-11-07T16:53:32.328Z",
+  "walks": [
+    "the-whole-icon-workflow-walk",
+    "the-whole-icon-workflow-on-a-frame-walk"
+  ],
+  "completed": "2026-11-07T17:43:40.650Z"
 }

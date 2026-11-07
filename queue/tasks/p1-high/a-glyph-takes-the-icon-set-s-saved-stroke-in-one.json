@@ -9,14 +9,15 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-07T07:13:42.402Z",
-  "updated": "2026-11-07T15:49:03.698Z",
+  "updated": "2026-11-07T17:38:05.230Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found comparing the outline settings with icon-draw-wt.html #secStroke (note pStrokeNote) under a-drawn-path-s-outline-settings-read-like-the-ic. Colour styles already bind by name (bindColorStyle); nothing does that for width, caps and corners.",
   "acceptance": [
     "A stroke saved from a picked path can be applied to another path in one click",
     "Changing the saved stroke's weight changes every path using it, as one undo step",
-    "A walk at Next defaults proves both with a pointer click"
+    "A walk at Next defaults proves both with a pointer click",
+    "A new Pen line on an icon starts in the line the icon is already using, colour, width and corners, with nothing to set"
   ],
   "log": [
     {
@@ -34,6 +35,10 @@
     {
       "t": "2026-11-07T15:49:03.697Z",
       "note": "seq 55 -> 50"
+    },
+    {
+      "t": "2026-11-07T17:38:05.229Z",
+      "note": "also, from the whole-workflow walk on 2026-11-07: a Pen line drawn after a 1.75 round outline comes out red, 2 units and sharp cornered (queue/audits/2026-11-07-icon-workflow-arrow-mismatch-sc.png), so a glyph's second part never matches its first until three rows are set again"
     }
   ]
 }

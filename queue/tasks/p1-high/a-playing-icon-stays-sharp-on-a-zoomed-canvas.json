@@ -1,0 +1,31 @@
+{
+  "id": "a-playing-icon-stays-sharp-on-a-zoomed-canvas",
+  "title": "A playing icon stays sharp on a zoomed canvas",
+  "goal": "Pressing play on an icon zoomed in on the canvas turns it into big square pixels until it stops, and on a 512 Icon picture it goes soft. Someone judging their animation is looking at a blurred stand-in for it, so playing should look as sharp as the stopped picture.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 85,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T17:38:04.857Z",
+  "updated": "2026-11-07T17:38:04.860Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the-whole-icon-workflow-on-a-frame-walk. Reproduce: Scripts/playtest.sh Scripts/playtest/the-whole-icon-workflow-on-a-frame-walk.json --no-build, then open 13-playing-sc.png: the icon is drawn in 24 blocks across; 12-keys-set-sc.png, the same moment stopped, is sharp. Picture: queue/audits/2026-11-07-icon-workflow-playing-blocks-sc.png. Cause: EditorState.letGoOfCrispTileForPlay drops the sharp tile for play and refreshCrispTile only draws one after a settle, so frames are the 1x composite, magnified nearest past 2x (viewport.zoom >= 2). Fix wants a per-frame render at the view's scale for a small canvas area, inside the frame budget. Renderer change, so it needs a perf note.",
+  "acceptance": [
+    "While playing at 800% on a 24 unit frame, a stroke's edge is as sharp as the same frame stopped, measured on a capture of the window",
+    "A 512 unit Icon picture playing at its fit zoom shows no softer an edge than when stopped",
+    "Playing still holds its frame rate on a 10 layer icon, with the number in the audit",
+    "A filmed reel of the zoomed frame playing is in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T17:38:04.859Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "the-whole-icon-workflow-on-a-frame-walk"
+  ]
+}
