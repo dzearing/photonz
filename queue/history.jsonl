@@ -16071,3 +16071,12 @@
 {"t":"2026-11-07T10:06:14.863Z","ev":"task_note","id":"copying-an-icon-carries-the-white-canvas-the-exp"}
 {"t":"2026-11-07T10:06:14.939Z","ev":"task_note","id":"copying-an-icon-carries-the-white-canvas-the-exp"}
 {"t":"2026-11-07T10:06:28.094Z","ev":"task_done","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":"in_progress","note":"Edit > Copy Merged with Background sits under Copy Merged on Control Option Command C (the card's Control Shift Command C is Copy Video), and plain Command C with nothing picked now hands other apps a see-through icon while Photonz's own paste keeps the canvas. Commit 47b8aa02. Verified: Scripts/test.sh exit 0; copy-leaves-the-canvas-out-walk and copy-merged-with-background-from-the-edit-menu-walk green at Next defaults, the second choosing the row from the real Edit menu; five neighbouring copy walks green. Audit: queue/audits/2026-11-07-copy-merged-with-background.json."}
+{"t":"2026-11-07T10:06:50.942Z","ev":"task_started","id":"rounding-corners-works-the-same-way-on-a-rectang","title":"Rounding corners works the same way on a rectangle and on a drawn shape","priority":"p1-high"}
+{"t":"2026-11-07T11:02:40.726Z","ev":"task_walks","id":"rounding-corners-works-the-same-way-on-a-rectang","walks":["corner-drag-rounds-walk","round-a-path-s-corners-walk"]}
+{"t":"2026-11-07T11:02:59.279Z","ev":"task_created","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s","priority":"p2-normal","title":"A rectangle rounds on the grid the way a drawn shape does"}
+{"t":"2026-11-07T11:04:07.138Z","ev":"task_note","id":"rounding-corners-works-the-same-way-on-a-rectang"}
+{"t":"2026-11-07T11:04:07.213Z","ev":"task_note","id":"rounding-corners-works-the-same-way-on-a-rectang"}
+{"t":"2026-11-07T11:04:07.288Z","ev":"task_note","id":"rounding-corners-works-the-same-way-on-a-rectang"}
+{"t":"2026-11-07T11:04:07.363Z","ev":"task_note","id":"rounding-corners-works-the-same-way-on-a-rectang"}
+{"t":"2026-11-07T11:04:07.439Z","ev":"task_note","id":"rounding-corners-works-the-same-way-on-a-rectang"}
+{"t":"2026-11-07T11:04:07.527Z","ev":"task_done","id":"rounding-corners-works-the-same-way-on-a-rectang","from":"in_progress","note":"A plain pull rounds every corner and Option rounds the pulled one, on rectangles and drawn shapes alike, with the Radius pill on both and the row reading one number or Mixed. Commit 2939521a. Scripts/test.sh exit 0, 29 related walks ok, audit queue/audits/2026-11-07-corners-round-the-same-way.json."}

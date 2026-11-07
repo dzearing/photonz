@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T12:51:27.995Z",
-  "updated": "2026-11-06T18:49:52.522Z",
+  "updated": "2026-11-07T11:04:07.526Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-10-05 digest's design review, from two audits. Rectangle: drag-a-shapes-corner-to-round-it (2026-09-09, PhotonzCore/CornerRadiusHandles.swift) pulls one corner, Option for all four; its runner noted at the time that this is the reverse of Photoshop and Figma and built it as the task asked. Drawn shape: round-a-path-s-corners-by-pulling-a-knob-in-from (2026-10-05, the user's ask, PathCornerRounding.swift, CanvasPathEdit) pulls all, Option for one; its audit queue/audits/2026-10-04-round-a-path-s-corners.json asks in evaluate whether the two should agree. Photoshop live shape corners, Figma and Illustrator live corners all round every corner on a plain drag and isolate one with Option/Alt.",
@@ -162,6 +162,44 @@
     {
       "t": "2026-11-06T18:49:52.521Z",
       "note": "seq 120 -> 80"
+    },
+    {
+      "t": "2026-11-07T10:06:50.937Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T11:02:40.724Z",
+      "note": "owns these walks: corner-drag-rounds-walk, round-a-path-s-corners-walk"
+    },
+    {
+      "t": "2026-11-07T11:04:07.136Z",
+      "note": "Before building: a press that wobbles was the risk the flip adds. A plain pull rewrites all four corners and a square corner's dot rests 12 in, so the first point of travel asked for about 13 on every corner, and a mixed shape would be flattened by a shaky click. Chose a four point start threshold (the drag threshold used elsewhere on the canvas) over the path's radius-changed latch because a square dot's first move always changes the radius."
+    },
+    {
+      "t": "2026-11-07T11:04:07.211Z",
+      "note": "Reproduced first: corner-drag-rounds-walk and round-a-path-s-corners-walk both passed unchanged, proving plain = one corner on a rectangle and plain = all on a path. The 2026-10-31 rotating check failure of round-a-path-s-corners-walk did not reproduce: it passed every run today, before and after the change, and in the sweeps of 11-01 to 11-05."
+    },
+    {
+      "t": "2026-11-07T11:04:07.286Z",
+      "note": "Verified: Scripts/test.sh exit 0. Mutation check: with the threshold at 0 corner-drag-rounds-walk failed at step 43, Corner Radius reads 25 not Mixed, so the wobble step is a real test. 29 related walks read ok. The first broad run was killed at its background limit with its summary lost, so 19 results came from each walk's done.json and the rest were rerun by name (12 passed, 0 failed). That is a named set, not the whole walk set; committing starts the rotating check."
+    },
+    {
+      "t": "2026-11-07T11:04:07.361Z",
+      "note": "Looked at the pictures: 2-mid-pull (rectangle, all four round, pill Radius 50, row 50), 3-mid-option-pull (one corner moves, one dot, pill Radius 25, row Mixed), path 5-mid-option-pull (one knob, pill Radius 80). All match the goal. All show the window behind another app."
+    },
+    {
+      "t": "2026-11-07T11:04:07.437Z",
+      "note": "left rough: a path's Corner Radius row lags until release while a rectangle's follows live (the pill is right on both; already in the 2026-10-04 audit). A square dot's first pull jumps to about 15 where a path knob grows from nothing (already so). Option pressed or released with the pointer still does nothing until the next move, both shapes. None stops anyone, so no task. Filed a-rectangle-rounds-on-the-grid-the-way-a-drawn-s for the grid gap, reproduced."
+    },
+    {
+      "t": "2026-11-07T11:04:07.524Z",
+      "note": "A plain pull rounds every corner and Option rounds the pulled one, on rectangles and drawn shapes alike, with the Radius pill on both and the row reading one number or Mixed. Commit 2939521a. Scripts/test.sh exit 0, 29 related walks ok, audit queue/audits/2026-11-07-corners-round-the-same-way.json."
     }
-  ]
+  ],
+  "started": "2026-11-07T10:06:50.936Z",
+  "walks": [
+    "corner-drag-rounds-walk",
+    "round-a-path-s-corners-walk"
+  ],
+  "completed": "2026-11-07T11:04:07.525Z"
 }
