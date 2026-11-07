@@ -35,7 +35,7 @@
       "do": "Press Shift Command C and paste into a code editor: the same file."
     },
     {
-      "do": "Ask for an animated icon, Copy SVG, and open it in Safari and in Chrome: 2026-11-06-icon-24-units-moving-webkit-and-chrome.png is the same file in both.",
+      "do": "Ask for an animated icon, Copy SVG, and open it in Safari and in Chrome. The picture is the same file in WebKit, above, and Chrome, below.",
       "shot": "2026-11-06-icon-24-units-moving-webkit-and-chrome.png"
     }
   ],
@@ -49,10 +49,11 @@
     "NOT FINISHED: a torn Ask icon (a popping balloon, a broken heart) still writes fractions. Rounding the tear took the bubble from 85.6 to 40.6, so torn icons keep them for now, and this task stays open for that.",
     "Ask scored lower. The 17 icon cases read 84.4 against 85.4 on 2026-11-05. The duotone heart fell 85.6 to 68.6 and the camera 85.6 to 80.8; the cracked egg rose 70.6 to 83.2. That 84.4 joins two runs: 14 cases from one and the 4 torn cases from a run on the final code.",
     "The held-out total fell to 59.7 from 62.7 (best 68.4): drawing 62.9 from 66.1, layout 47.7 from 49.7, redline 30.3 from 33.8, video 63.1 from 63.8. This change cannot reach layout, redline or video, so part of that is something else, but how much of the drawing drop is mine is not known. Logged on find-out-why-the-held-out-set-lost-points-on-202.",
-    "A circle an odd number of units across keeps a half at its centre, though its edges are whole: the camera's lens says cy 4.5. Off centre by half a unit is the same limit: the calendar and cracked egg lost a little on the centring rule for it.",
+    "A circle an odd number of units across keeps a half at its centre, though its edges are whole: the camera's lens says cy 4.5. Off centre by half a unit is the same limit: the calendar lost a little on the centring rule for it.",
     "The model still writes half units despite being told whole numbers, so rounding does the work and the prompt line may not be earning its place.",
     "The mock's title reads 24 × 24 while the Layers panel here reads Canvas 512 × 512: an-icon-picture-s-svg-reads-in-24-whole-units decided to keep the 512 canvas.",
     "A picture holding a measurement stays at 512 in its SVG, because a measure's label is a fixed size and would cover a 24 unit icon.",
-    "Enlarged in Preview, a shadow in the file goes soft: Apple's reader blurs at 24 pixels and stretches. Chrome draws it the same as a 512 file, 0.0002 apart. Safari's own rendering of a shadow was not checked."
+    "Enlarged in Preview, a shadow in the file goes soft: Apple's reader blurs at 24 pixels and stretches. Chrome draws it the same as a 512 file, 0.0002 apart. Safari's own rendering of a shadow was not checked.",
+    "The moving file was compared in Chrome and in WebKit, Safari's engine, not in the Safari app: eight moments of one Ask icon, 0.24 to 1.31 apart out of 255."
   ]
 }
