@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T11:02:59.275Z",
-  "updated": "2026-11-07T15:49:03.623Z",
+  "updated": "2026-11-07T18:59:28.185Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while building rounding-corners-works-the-same-way-on-a-rectang. Reading the code: CanvasPathCorners.pathCornerMouseDragged runs the radius through PathContent.landedCornerRadius with canvasNudgeGrid spacing, the rectangle branch in CanvasPointerDrags.mouseDragged (cornerRadiusDrag) only rounds to whole points in CornerRadiusHandles.radius. Shown by round-a-path-s-corners-walk stage 7-grid (a pull asking 50.6 lands on 64); Reproduced 2026-11-07 with a throwaway walk: blank 900x600, draw a rectangle 320,260 to 600,460, selectCanvas, press Show grid, click the rectangle, drag the top left dot 332,272 to 370,310 with readout \"Radius 50\" and expect Corner Radius reads 50. Scripts/playtest.sh /tmp/rect-on-grid-walk.json --no-build printed exit 0, status ok, 15 steps: the rectangle landed on 50 with the grid on, where the path walk lands the same size of pull on 64.",
@@ -34,6 +34,48 @@
     {
       "t": "2026-11-07T15:49:03.622Z",
       "note": "seq 59.84375 -> 40"
+    },
+    {
+      "t": "2026-11-07T18:38:39.083Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T18:39:12.844Z",
+      "note": "owns these walks: a-rectangle-rounds-on-the-grid-walk"
+    },
+    {
+      "t": "2026-11-07T18:52:10.337Z",
+      "note": "walks a-rectangle-rounds-on-the-grid-walk -> a-rectangle-rounds-on-the-grid-walk, a-rectangle-rounds-on-an-icon-walk"
+    },
+    {
+      "t": "2026-11-07T18:59:06.489Z",
+      "note": "Reproduced first: /tmp/rect-on-grid-walk.json exit 0, landed on 50 with the grid on. Fix: CornerRadiusHandles.radius takes gridSpacing and lands through PathContent.landedCornerRadius; the drag passes canvasNudgeGrid spacing unless Command is held."
+    },
+    {
+      "t": "2026-11-07T18:59:06.565Z",
+      "note": "Chose whole points over a drawn shape's half points for a free pull on a rectangle because the panel's box on a picture shows whole numbers, so a held 30.5 would read as something else."
+    },
+    {
+      "t": "2026-11-07T18:59:06.643Z",
+      "note": "Checked on an Icon: grid hidden, the default, both kinds land between units (rectangle 2.34, drawn shape 1.83), so they agree and nothing pulls. Grid on, both land on 2 units and Command frees the rectangle to 2.34. The drawn shape run was throwaway (/tmp/icon-path-parity-walk.json)."
+    },
+    {
+      "t": "2026-11-07T18:59:06.720Z",
+      "note": "left rough: rounding on an Icon with the grid hidden lands between units though drawing there lands on whole units. Same on both shapes, outside this task's 'with the grid on', and asked as a question in the audit rather than filed."
+    },
+    {
+      "t": "2026-11-07T18:59:06.796Z",
+      "note": "Looked at 1-mid-pull and 2-off-the-grid on the picture walk and 1-mid-pull on the Icon walk: pill and panel read 64, 51 and 2, dots follow the curve."
+    },
+    {
+      "t": "2026-11-07T18:59:28.183Z",
+      "note": "With the grid on, a pull on a rectangle's corner dot lands on the steps a drawn shape's knob lands on and the pill reads that number; Command frees it. Commit d5139ae4. Verified at Next defaults by a-rectangle-rounds-on-the-grid-walk (64 on the grid, 51 with Command) and a-rectangle-rounds-on-an-icon-walk (2 units, 2.34 with Command), 13 corner walks green, Scripts/test.sh exit 0. Audit: queue/audits/2026-11-07-a-rectangle-rounds-on-the-grid.json"
     }
-  ]
+  ],
+  "started": "2026-11-07T18:38:39.082Z",
+  "walks": [
+    "a-rectangle-rounds-on-the-grid-walk",
+    "a-rectangle-rounds-on-an-icon-walk"
+  ],
+  "completed": "2026-11-07T18:59:28.184Z"
 }

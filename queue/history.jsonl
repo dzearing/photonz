@@ -16236,3 +16236,12 @@
 {"t":"2026-11-07T18:37:32.091Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-07T18:38:10.823Z","ev":"task_note","id":"a-small-svg-icon-opens-big-enough-to-work-on"}
 {"t":"2026-11-07T18:38:10.910Z","ev":"task_done","id":"a-small-svg-icon-opens-big-enough-to-work-on","from":"in_progress","note":"A small square SVG (8 to 64 units) opens as a 512 point Icon picture on its own grid and writes its own units again; 512 and a 300 by 120 logo stay pictures. Commit 1d4b10d0, walk a-small-svg-opens-big-enough-walk green with no flags, Fit view confirmed by pixel diff. 'Filling the window' is a judgement call: same view as a 24 unit icon, 59 percent of canvas height at 1280x900. Scripts/test.sh went green on its last 2 of 5 runs; the 3 red were flaky video and speed tests, see log."}
+{"t":"2026-11-07T18:38:39.088Z","ev":"task_started","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s","title":"A rectangle rounds on the grid the way a drawn shape does","priority":"p1-high"}
+{"t":"2026-11-07T18:39:12.846Z","ev":"task_walks","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s","walks":["a-rectangle-rounds-on-the-grid-walk"]}
+{"t":"2026-11-07T18:52:10.339Z","ev":"task_walks","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s","walks":["a-rectangle-rounds-on-the-grid-walk","a-rectangle-rounds-on-an-icon-walk"]}
+{"t":"2026-11-07T18:59:06.491Z","ev":"task_note","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s"}
+{"t":"2026-11-07T18:59:06.567Z","ev":"task_note","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s"}
+{"t":"2026-11-07T18:59:06.645Z","ev":"task_note","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s"}
+{"t":"2026-11-07T18:59:06.722Z","ev":"task_note","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s"}
+{"t":"2026-11-07T18:59:06.798Z","ev":"task_note","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s"}
+{"t":"2026-11-07T18:59:28.186Z","ev":"task_done","id":"a-rectangle-rounds-on-the-grid-the-way-a-drawn-s","from":"in_progress","note":"With the grid on, a pull on a rectangle's corner dot lands on the steps a drawn shape's knob lands on and the pill reads that number; Command frees it. Commit d5139ae4. Verified at Next defaults by a-rectangle-rounds-on-the-grid-walk (64 on the grid, 51 with Command) and a-rectangle-rounds-on-an-icon-walk (2 units, 2.34 with Command), 13 corner walks green, Scripts/test.sh exit 0. Audit: queue/audits/2026-11-07-a-rectangle-rounds-on-the-grid.json"}
