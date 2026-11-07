@@ -16207,3 +16207,11 @@
 {"t":"2026-11-07T15:50:23.114Z","ev":"task_resequenced","id":"building-the-app-stops-running-a-second-build-an","from":40,"to":625}
 {"t":"2026-11-07T15:50:35.315Z","ev":"triage","summary":"open 88 to 89; filed 2 (focus), closed 1 (held-out, chance), moved 6 (p2 to p1 for the focus), retitled 1, epic fixed 1, merged 0, dropped 0, reset 0, renumbered 87"}
 {"t":"2026-11-07T15:50:35.344Z","ev":"digest","file":"2026-11-07.md"}
+{"t":"2026-11-07T15:50:53.019Z","ev":"task_started","id":"typing-1-75-into-width-on-an-icon-picture-gives","title":"Typing 1.75 into Width on an Icon picture gives the icon's 1.75 line, not a hairline","priority":"p1-high"}
+{"t":"2026-11-07T15:52:15.487Z","ev":"task_note","id":"typing-1-75-into-width-on-an-icon-picture-gives"}
+{"t":"2026-11-07T15:55:48.218Z","ev":"task_note","id":"typing-1-75-into-width-on-an-icon-picture-gives"}
+{"t":"2026-11-07T16:17:48.913Z","ev":"task_walks","id":"typing-1-75-into-width-on-an-icon-picture-gives","walks":["an-icon-picture-reads-in-units-walk"]}
+{"t":"2026-11-07T16:32:31.329Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-07T16:51:56.294Z","ev":"task_created","id":"find-out-why-sweeping-with-the-arrow-tool-shows","priority":"p2-normal","title":"Find out why sweeping with the arrow tool shows no size pill on an Icon picture"}
+{"t":"2026-11-07T16:53:02.585Z","ev":"task_note","id":"typing-1-75-into-width-on-an-icon-picture-gives"}
+{"t":"2026-11-07T16:53:02.684Z","ev":"task_done","id":"typing-1-75-into-width-on-an-icon-picture-gives","from":"in_progress","note":"Shipped in 8bc3771c. On an Icon picture Width, Corner Radius, the Info values, Effects length rows and the pill read 24 units; typed 1.75 writes stroke-width 1.75 and an opened 24 unit SVG reads 1.75. A 24 unit frame on a bigger canvas is unchanged. Verified: Scripts/test.sh green (15,866 tests), an-icon-picture-reads-in-units-walk at Next defaults with no flags, opening-an-svg-walk, drag-readout-walk and the Icon picture walks. Canvas size, crop, regions, Text size, Padding, Gap and Measure stay in points, and the audit says why. Four walks owned by walks-that-fail-in-the-full-sweep-26 still fail as they did before; ask-tweaks-an-icon-walk was not finished."}

@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T15:48:22.407Z",
-  "updated": "2026-11-07T15:49:03.394Z",
+  "updated": "2026-11-07T16:53:02.683Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-07 at 9b54cd17 on the probe at Next defaults. Command: Scripts/playtest.sh queue/evidence/2026-11-07-icon-picture-typed-width-walk.json --no-build. It makes File, New, Image, Icon, draws three Pen points, types 1.75 into Width and presses Return. Output: status ok, exit 0, because the walk's last step expects the wrong thing on purpose: expect Width reads 1.75 passes and expectSVG contains stroke-width=\"0.08 passes, so the file holds a line of about 0.08 units. The same walk expecting stroke-width=\"1.75\" printed '[22 expectSVG] FAILED: the file does not carry \"stroke-width=\"1.75\"\"', exit 1. Pictures: queue/audits/2026-11-07-icon-picture-width-40-before-sc.png (tag 9, 9 · 10 × 10 beside Width 40 px) and queue/audits/2026-11-07-icon-picture-width-typed-175-sc.png (the hairline, previews almost empty). A 24 unit icon FRAME is not affected, its unit is one point, which is why path-outline-width-caps-walk passes. Also seen: a Pen line in an Icon picture starts at 40 points, which is 1.875 units, where an outline starts at 1.75, and an SVG opened as an Icon reads Width 37.33 px on a 1.75 line (queue/audits/2026-11-07-opening-an-svg-1-icon.png). Corner Radius and the drawing pill read points too. Check every length row on an Icon picture, not just Width.",
@@ -28,6 +28,35 @@
     {
       "t": "2026-11-07T15:49:03.393Z",
       "note": "seq 1 -> 10"
+    },
+    {
+      "t": "2026-11-07T15:50:53.014Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T15:52:15.485Z",
+      "note": "Reproduced: evidence walk at 9b54cd17+ on the probe at Next defaults still passes its expectSVG stroke-width=\"0.08, so typed 1.75 lands as 1.75 points on a 512 point picture."
+    },
+    {
+      "t": "2026-11-07T15:55:48.216Z",
+      "note": "Chose one LengthUnit carried down the panel over converting row by row, because Width, Corner Radius, X/Y/W/H and the pills must never disagree with the tag. Chose no px word on an Icon picture's rows because the icon mock prints Width as a bare 1.75. Width's range on an Icon picture is 0.25 to 12 units: the 1 to 40 point range would have clamped a typed 2 at 1.875. The Pen's 40 in the task notes was the panel's clamp; the line really starts at 2 units, which stays."
+    },
+    {
+      "t": "2026-11-07T16:17:48.911Z",
+      "note": "owns these walks: an-icon-picture-reads-in-units-walk"
+    },
+    {
+      "t": "2026-11-07T16:53:02.583Z",
+      "note": "Left rough, in this log only: a group's Corner Radius refusal sentence still says px; effect knobs pull on whole points, so a pull can read 0.47; the tag and pill both show during a point reshape. Width is proved by keyboard focus, not a pointer click on its face: the number box itself did not change. ask-tweaks-an-icon-walk was stopped unfinished after several minutes and has no answer; it does not touch panel lengths. queue/evidence/2026-11-07-icon-picture-typed-width-walk.json expects the old 0.08 on purpose and now fails, which is the fix showing."
+    },
+    {
+      "t": "2026-11-07T16:53:02.681Z",
+      "note": "Shipped in 8bc3771c. On an Icon picture Width, Corner Radius, the Info values, Effects length rows and the pill read 24 units; typed 1.75 writes stroke-width 1.75 and an opened 24 unit SVG reads 1.75. A 24 unit frame on a bigger canvas is unchanged. Verified: Scripts/test.sh green (15,866 tests), an-icon-picture-reads-in-units-walk at Next defaults with no flags, opening-an-svg-walk, drag-readout-walk and the Icon picture walks. Canvas size, crop, regions, Text size, Padding, Gap and Measure stay in points, and the audit says why. Four walks owned by walks-that-fail-in-the-full-sweep-26 still fail as they did before; ask-tweaks-an-icon-walk was not finished."
     }
-  ]
+  ],
+  "started": "2026-11-07T15:50:53.013Z",
+  "walks": [
+    "an-icon-picture-reads-in-units-walk"
+  ],
+  "completed": "2026-11-07T16:53:02.682Z"
 }

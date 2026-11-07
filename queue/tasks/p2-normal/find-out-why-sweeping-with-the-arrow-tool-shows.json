@@ -1,0 +1,27 @@
+{
+  "id": "find-out-why-sweeping-with-the-arrow-tool-shows",
+  "title": "Find out why sweeping with the arrow tool shows no size pill on an Icon picture",
+  "goal": "Dragging a selection band with the arrow tool on an Icon picture draws the band but no size label under it. The code says this drag should have one. Nobody has checked yet whether this happens on every picture or only on icons.",
+  "epic": "icon-grid",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T16:51:56.290Z",
+  "updated": "2026-11-07T16:51:56.293Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-07. Command: Scripts/playtest.sh queue/evidence/2026-11-07-arrow-sweep-pill-walk.json --no-build. Output: [52 drag] FAILED: nothing on the canvas is saying what this drag is doing, and the walk expects \"6 × 3\". The mid-drag picture shows the dashed band with no pill. Cause unknown: not compared against a build without typing-1-75-into-width-on-an-icon-picture-gives, whose change touches only the words of a pill that exists, not whether one shows (dragReadoutSubject is unchanged). drag-readout-walk passes, but it sweeps with rectSelect, not the arrow tool.",
+  "acceptance": [
+    "The same sweep is tried on an ordinary picture and an Icon picture, and the result is written in the task log",
+    "Either the band shows its size in the picture's own numbers, or the log says why it should not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T16:51:56.292Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}
