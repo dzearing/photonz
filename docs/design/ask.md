@@ -1053,6 +1053,33 @@ change it through its colour grade (the Effects list's own), and a colour to
 recolour toward is refused. One part of a photo needs an edit model (the
 Qwen-Image measuring task).
 
+## What is picked (2026-11-07)
+
+Ask works on what is picked, the way generative fill works on a selection in
+Photoshop and the way the mock `agent-edit.html` draws it with its `1 selected`.
+Before this Ask was never told: with a circle picked beside a rectangle, "make
+this red" recoloured both, and the model said so.
+
+* **The read says it.** `read_document` carries `selected`, each picked layer's
+  id and name, nested ones included, in the order of the stack, and leaves it
+  out when nothing is picked. It is apart from `layers` so a pick still reads
+  when a long list, or the fit to the model's window, stops short of that layer.
+  Ask and an outside agent read the same field.
+* **The rule aims the words** (`AskPicked.rule`). With something picked, the
+  instructions gain one line naming it: this, it, these, them and a change that
+  names no layer mean the picked layers, and every other layer stays as it is. A
+  request that names another layer goes to that layer; a request to make
+  something new, or about the whole picture, is still that.
+* **Nothing picked changes nothing.** There is no rule and no field, and the
+  sentence in `read_document`'s description is for outside agents only: a tool's
+  words go with every request, so Ask is not sent it (`AskTools.modelTool`). A
+  request with nothing picked is sent word for word as before.
+* **A request keeps what it was sent with.** What is picked is taken when the
+  request is sent, not when it starts, so one waiting in line still means what
+  it meant after the person has moved on (`AskRequestLine.Request.picked`).
+* **The composer shows the scope** beside its title (`1 selected`, `3 selected`)
+  and shows nothing with nothing picked.
+
 ## Fitting the window (2026-10-31)
 
 A change to a traced Statue of Liberty failed with the server's own words,

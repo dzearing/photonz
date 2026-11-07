@@ -1,0 +1,75 @@
+{
+  "request": "make it blue",
+  "group": "change",
+  "from": "Ask works on what you have picked (queue task ask-works-on-what-you-have-picked-so-make-this-b, 2026-11-07)",
+  "start": {
+    "blank": [
+      1000,
+      700
+    ],
+    "steps": [
+      {
+        "do": "tool",
+        "tool": "rectangle"
+      },
+      {
+        "do": "drag",
+        "from": [
+          200,
+          200
+        ],
+        "to": [
+          420,
+          340
+        ]
+      },
+      {
+        "do": "tool",
+        "tool": "ellipse"
+      },
+      {
+        "do": "drag",
+        "from": [
+          560,
+          220
+        ],
+        "to": [
+          720,
+          380
+        ]
+      },
+      {
+        "do": "tool",
+        "tool": "select"
+      },
+      {
+        "do": "selectRow",
+        "row": "Rectangle"
+      },
+      {
+        "do": "wait",
+        "seconds": 0.4
+      }
+    ]
+  },
+  "context": "a canvas holding a red rectangle and a red circle, with the rectangle picked",
+  "expect": {
+    "picked": {
+      "layer": "Rectangle",
+      "changes": {
+        "hue": "blue"
+      },
+      "others": {
+        "Ellipse": {
+          "frame": {
+            "x": 560,
+            "y": 220,
+            "width": 160,
+            "height": 160
+          },
+          "fill": "#FF3B30"
+        }
+      }
+    }
+  }
+}

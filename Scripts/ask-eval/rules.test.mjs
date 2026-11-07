@@ -285,3 +285,49 @@ test("iconCraft: two stroke weights is not one weight", () => {
   const read = { canvas: { width: 512, height: 512 }, layerCount: 2, layers: [part("Rim", 40), part("Handle", 12)] };
   assert.match(iconCraft(flatten(read.layers), read).note, /stroke weights/);
 });
+
+// A request about what is picked: the picked layer changed the way the case
+// says, and every other layer is as it was.
+const fill = (name, x, y, width, height, color, extra = {}) =>
+  ({ id: name, name, kind: "shape", frame: { x, y, width, height }, shape: { shape: "rectangle", fill: color, stroke: "#000000", strokeWidth: 2 }, ...extra });
+const box = { x: 100, y: 100, width: 200, height: 120 };
+const pickedCase = (changes) => ({ group: "change", expect: { picked: { layer: "Picked", changes, others: { Other: { frame: box, fill: "#EC4E3C" } } } } });
+const other = fill("Other", 100, 100, 200, 120, "#EC4E3C");
+
+test("the picked layer grown and the other left alone passes", () => {
+  const result = score(read([fill("Picked", 400, 100, 240, 240, "#EC4E3C"), other]), pickedCase({ wider: 160 }));
+  assert.equal(result.rules.asked.score, 10, result.rules.asked.note);
+});
+
+test("the picked layer left as it was fails what was asked", () => {
+  const result = score(read([fill("Picked", 400, 100, 160, 160, "#EC4E3C"), other]), pickedCase({ wider: 160 }));
+  assert.ok(result.rules.asked.score < 10, result.rules.asked.note);
+  assert.match(result.rules.asked.note, /Picked/);
+});
+
+test("the user's guess, both layers changed, fails what was asked", () => {
+  // The repro of 2026-11-07: make this red, one picked, both recoloured.
+  const result = score(read([fill("Picked", 400, 100, 160, 160, "#2060FF"), fill("Other", 100, 100, 200, 120, "#2060FF")]), pickedCase({ hue: "blue" }));
+  assert.ok(result.rules.asked.score < 10, result.rules.asked.note);
+  assert.match(result.rules.asked.note, /Other/);
+});
+
+test("a colour is judged by its hue, so any honest blue passes and red does not", () => {
+  for (const blue of ["#0000FF", "#2060FF", "#007AFF"]) {
+    assert.equal(score(read([fill("Picked", 400, 100, 160, 160, blue), other]), pickedCase({ hue: "blue" })).rules.asked.score, 10, blue);
+  }
+  assert.ok(score(read([fill("Picked", 400, 100, 160, 160, "#FF0000"), other]), pickedCase({ hue: "blue" })).rules.asked.score < 10);
+});
+
+test("rounder asks for a corner radius on the picked layer, and on no other", () => {
+  const rounded = fill("Picked", 400, 100, 160, 160, "#EC4E3C", { cornerRadius: 24 });
+  assert.equal(score(read([rounded, other]), pickedCase({ rounder: 0 })).rules.asked.score, 10);
+  const both = fill("Other", 100, 100, 200, 120, "#EC4E3C", { cornerRadius: 24 });
+  assert.ok(score(read([rounded, both]), pickedCase({ rounder: 0 })).rules.asked.score < 10);
+});
+
+test("a picked layer that is gone is said, and fails", () => {
+  const result = score(read([other]), pickedCase({ wider: 160 }));
+  assert.ok(result.rules.asked.score < 10, result.rules.asked.note);
+  assert.match(result.rules.asked.note, /no layer Picked/);
+});

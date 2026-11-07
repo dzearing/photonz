@@ -286,9 +286,45 @@ function asked(nodes, read, expect) {
     check(count >= expect.minMeasurements && count <= (expect.maxMeasurements ?? Infinity),
       `${count} measurements (${expect.minMeasurements} to ${expect.maxMeasurements ?? "any"} wanted)`);
   }
+  if (expect.picked) aimedAtThePick(nodes, expect.picked, check);
   if (!checks.length) return null;
   const passed = checks.filter((c) => c.ok).length;
   return { score: 10 * passed / checks.length, note: checks.map((c) => `${c.ok ? "ok" : "MISS"} ${c.note}`).join("; ") };
+}
+
+/// The colour family of a hex colour, by its hue; grey has none.
+function hueOf(hex) {
+  const value = parseInt(String(hex ?? "").replace("#", "").slice(0, 6), 16);
+  if (Number.isNaN(value)) return null;
+  const [r, g, b] = [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), span = max - min;
+  if (span < 24) return null;
+  const degrees = max === r ? ((g - b) / span + 6) % 6 * 60 : max === g ? ((b - r) / span + 2) * 60 : ((r - g) / span + 4) * 60;
+  return degrees < 20 || degrees >= 335 ? "red" : degrees < 70 ? "yellow" : degrees < 170 ? "green" : degrees < 255 ? "blue" : "purple";
+}
+
+/// A request about one layer (`expect.picked`): `layer` is the one it should
+/// have changed, `changes` how (`wider` than a width, a `hue`, `rounder` than
+/// a radius), and `others` every other layer as it stood, each of which must
+/// still stand that way. A picture cannot tell a judge that a second layer
+/// moved, so this is read from the document.
+function aimedAtThePick(nodes, { layer: name, changes, others = {} }, check) {
+  const find = (wanted) => nodes.find((n) => n.layer.name === wanted);
+  const target = find(name);
+  if (!target) check(false, `no layer ${name}`);
+  else {
+    if (changes.wider !== undefined) check(target.frame.width > changes.wider + 1, `${name} is ${target.frame.width} wide (over ${changes.wider} wanted)`);
+    if (changes.hue) check(hueOf(target.layer.shape?.fill) === changes.hue, `${name} is ${target.layer.shape?.fill} (${changes.hue} wanted)`);
+    if (changes.rounder !== undefined) check((target.layer.cornerRadius ?? 0) > changes.rounder, `${name} has corner radius ${target.layer.cornerRadius ?? 0} (over ${changes.rounder} wanted)`);
+  }
+  for (const [otherName, was] of Object.entries(others)) {
+    const other = find(otherName);
+    if (!other) { check(false, `no layer ${otherName}`); continue; }
+    const same = ["x", "y", "width", "height"].every((key) => Math.abs(other.frame[key] - was.frame[key]) <= 1)
+      && (was.fill === undefined || other.layer.shape?.fill === was.fill)
+      && (other.layer.cornerRadius ?? 0) === (was.cornerRadius ?? 0);
+    check(same, `${otherName} ${same ? "left alone" : "was changed"}`);
+  }
 }
 
 function askedOfVideoRule(read, expect, clips) {

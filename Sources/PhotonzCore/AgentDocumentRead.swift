@@ -24,14 +24,29 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         public var playheadMS: Int
         public var canUndo: Bool
         public var canRedo: Bool
+        /// The layers picked in the window, in any order.
+        public var selected: [UUID]
 
-        public init(id: String, title: String, file: String?, playheadMS: Int, canUndo: Bool, canRedo: Bool) {
+        public init(id: String, title: String, file: String?, playheadMS: Int, canUndo: Bool, canRedo: Bool,
+                    selected: [UUID] = []) {
             self.id = id
             self.title = title
             self.file = file
             self.playheadMS = playheadMS
             self.canUndo = canUndo
             self.canRedo = canRedo
+            self.selected = selected
+        }
+    }
+
+    /// A layer the person has picked.
+    public struct Picked: Codable, Hashable, Sendable {
+        public var id: String
+        public var name: String
+
+        public init(id: String, name: String) {
+            self.id = id
+            self.name = name
         }
     }
 
@@ -359,6 +374,10 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
     public var layerCount: Int
     /// Top of the stack first, each group's children nested inside it.
     public var layers: [Layer]
+    /// What the person has picked in the window, in the order of the stack,
+    /// nested layers included. Left out when nothing is. Kept apart from
+    /// `layers` so a pick still reads when a long list stops short of it.
+    public var selected: [Picked]?
     /// Layers past `mostLayersListed`, counted and not listed.
     public var layersNotListed: Int?
     /// Top to bottom, as the timeline shows them.
@@ -399,6 +418,9 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             canUndo: context.canUndo, canRedo: context.canRedo,
             layerCount: count, layers: layers,
             layersNotListed: only == nil && count > mostLayersListed ? count - mostLayersListed : nil)
+        let wanted = Set(context.selected)
+        let picked = wanted.isEmpty ? [] : document.allLayers.filter { wanted.contains($0.id) }
+        read.selected = picked.isEmpty ? nil : picked.map { Picked(id: $0.id.uuidString, name: cut($0.name)) }
         if !hasTime, let lap = document.keyLap {
             read.lap = Lap(seconds: seconds(document.motionCycleLengthMS), loop: lap.repeats)
         }
@@ -504,6 +526,9 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         let degrees = Double(layer.transform.rotation) * 180 / .pi
         // A group's stored size is unused: its frame here is the box it covers.
         let box = AgentDrawing.box(of: layer)
+        // A shape rounds its own outline; any layer can also be masked round.
+        var corners = style.cornerRadius
+        if case .annotation(let annotation) = layer.content { corners = max(corners, annotation.cornerRadius) }
         var node = Layer(
             id: layer.id.uuidString, name: layer.name, kind: kind(of: layer),
             frame: Rect(x: tidy(box.minX), y: tidy(box.minY), width: tidy(box.width), height: tidy(box.height)),
@@ -511,7 +536,7 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             locked: layer.isLocked ? true : nil,
             opacity: style.opacity < 1 ? (style.opacity * 100).rounded() / 100 : nil,
             rotation: abs(degrees) < 0.05 ? nil : tidy(degrees),
-            cornerRadius: style.cornerRadius > 0 ? tidy(style.cornerRadius) : nil,
+            cornerRadius: corners > 0 ? tidy(corners) : nil,
             effects: style.effects.isEmpty ? nil : style.effects.map(\.kind.rawValue),
             time: layer.time.map { Time(inSeconds: seconds($0.inMS), outSeconds: seconds($0.outMS)) })
         let flips = FlipAxis.allCases.filter { layer.transform.isFlipped($0) }.map(\.rawValue)

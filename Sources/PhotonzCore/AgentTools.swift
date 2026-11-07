@@ -27,7 +27,9 @@ public enum AgentRequest: Hashable, Sendable {
     case listDocuments
     case listHistory(limit: Int)
     case openDocument(OpenTarget)
-    case readDocument(document: String?, layer: String?)
+    /// `picked` stands in for what is picked in the window now: Ask's, for a
+    /// request that was sent with something else picked.
+    case readDocument(document: String?, layer: String?, picked: [UUID]? = nil)
     case renderPicture(document: String?, layer: String?, region: CGRect?, maxSize: Int)
     case videoFrame(document: String?, atMS: Int, region: CGRect?, maxSize: Int)
     case contactSheet(document: String?, fromMS: Int?, toMS: Int?, count: Int, columns: Int?, cellWidth: Int)
@@ -241,7 +243,7 @@ public enum AgentTools {
             ])),
         AgentTool(
             name: "read_document",
-            description: "The document as structured data: canvas, layers top first with frames (a group's is the box it covers; the layers inside a group are measured from the group's top left), text, styles and a group's layout, and on a video the tracks with each clip's times, the cuts with their transitions, markers and the playhead. Times are in seconds.",
+            description: "The document as structured data: canvas, layers top first with frames (a group's is the box it covers; the layers inside a group are measured from the group's top left), text, styles and a group's layout, and on a video the tracks with each clip's times, the cuts with their transitions, markers and the playhead. Times are in seconds." + AskTools.readSaysWhatIsPicked,
             inputSchema: schema([
                 "document": documentProperty,
                 "layer": ["type": "string", "description": "Only this layer and everything inside it, listed in full. Use it for a group or component when the whole read stops listing (past 400 layers)."],

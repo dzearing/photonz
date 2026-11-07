@@ -153,6 +153,8 @@ struct AskRowWordsTests {
         // A video request's own verbs: "Put my latest recording after this
         // one", "Zoomed in on the clicks", "Cut this clip where...".
         "Put", "Zoomed", "Cut",
+        // A change to what is picked: "Rounded the corners".
+        "Rounded",
     ]
 
     static func checkForm(_ row: String, _ context: String) {

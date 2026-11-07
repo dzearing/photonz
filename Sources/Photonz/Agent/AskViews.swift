@@ -121,6 +121,14 @@ struct AskComposerOverlay: View {
             HStack(spacing: 6) {
                 Image(systemName: "sparkles").font(.system(size: 12, weight: .semibold))
                 Text(AskCopy.composerHeader).font(.system(size: 12, weight: .semibold))
+                // What the request will work on, the mock's `1 selected`.
+                if let scope = AskPicked.scope(count: editorState.pickedForAsk.count) {
+                    Text(scope)
+                        .font(.system(size: 11))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .playtestControl("Ask Scope", detail: scope)
+                }
                 Spacer()
                 Text(AskCopy.onDevice).font(.system(size: 11)).foregroundStyle(.secondary)
                 Button { ask.closeComposer() } label: {

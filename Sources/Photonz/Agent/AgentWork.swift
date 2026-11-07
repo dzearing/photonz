@@ -50,7 +50,7 @@ enum AgentWork {
             return try listHistory(limit: limit)
         case .openDocument(let target):
             return try await open(target)
-        case .readDocument(let id, let layer):
+        case .readDocument(let id, let layer, let picked):
             let editor = try AgentDocuments.editor(id).get()
             let document = try document(of: editor)
             var only: UUID?
@@ -60,7 +60,9 @@ enum AgentWork {
                 }
                 only = found
             }
-            let read = AgentDocumentRead.make(document, context: context(of: editor), only: only)
+            var context = context(of: editor)
+            if let picked { context.selected = picked }
+            let read = AgentDocumentRead.make(document, context: context, only: only)
             return Answer(content: [.text(String(decoding: try read.encoded(), as: UTF8.self))])
         case .renderPicture(let id, let layer, let region, let maxSize):
             let editor = try AgentDocuments.editor(id).get()
@@ -211,7 +213,8 @@ enum AgentWork {
     private static func context(of editor: EditorState) -> AgentDocumentRead.Context {
         AgentDocumentRead.Context(id: editor.agentID ?? "?", title: title(of: editor), file: file(of: editor),
                                   playheadMS: editor.documentTimeMS,
-                                  canUndo: editor.canUndo, canRedo: editor.canRedo)
+                                  canUndo: editor.canUndo, canRedo: editor.canRedo,
+                                  selected: editor.pickedForAsk)
     }
 
     struct HistoryItem: Encodable {

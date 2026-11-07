@@ -115,6 +115,12 @@ public enum AskTools {
     /// not what a person asks Ask for; the schema still takes them.
     static let outsideOnly: [String: Set<String>] = ["set_layer": ["rotation", "tip", "swing", "depth"], "add_drawing": ["forMotion"]]
 
+    /// The sentence an agent outside the app reads in read_document's
+    /// description. Ask is not sent it: a tool's words go with every request
+    /// whether anything is picked or not, and Ask is told what is picked by
+    /// `AskPicked.rule`, only when something is.
+    static let readSaysWhatIsPicked = " selected lists what is picked: \"this\" and \"it\" mean those."
+
     static func modelTool(_ name: String) -> AgentJSON? {
         guard let tool = AgentTools.tool(named: name) else { return nil }
         var schema = tool.inputSchema
@@ -126,7 +132,8 @@ public enum AskTools {
         }
         let parameters = modelSchema(schema, top: true)
         return ["type": "function",
-                "function": ["name": .string(tool.name), "description": .string(tool.description),
+                "function": ["name": .string(tool.name),
+                             "description": .string(tool.description.replacingOccurrences(of: readSaysWhatIsPicked, with: "")),
                              "parameters": name == "set_keys" ? keyShapes(parameters) : parameters]]
     }
 
@@ -1511,6 +1518,8 @@ public struct AskConversation: Sendable {
         var iconRules = Self.iconRules + (iconLook.map { "\n- " + $0 } ?? "")
         if drawsMotion { iconRules = iconRules.replacingOccurrences(of: Self.iconActionRule, with: "") + "\n\(AskMotion.drawRules)" }
         let drawingRules = icon ? iconRules : painting ? Self.brushRules : paints ? Self.paintingRules : Self.drawingRules
+        // Nothing at all with nothing picked: those instructions stay word for word.
+        let pickedRule = AskPicked.rule(documentRead: documentRead).map { $0 + "\n" } ?? ""
         return """
         You are Ask, the helper inside Photonz, a Mac picture and video editor. The person typed \
         a request about the document in front of them. Turn it into a plan of tool calls on that document.
@@ -1546,7 +1555,7 @@ public struct AskConversation: Sendable {
         what it will do, and call no more tools.
         - If the request cannot be done with these tools, call no editing tools and answer with one \
         short plain sentence that starts "I can't".
-        The document now (read_document):
+        \(pickedRule)The document now (read_document):
         \(documentRead)
         """
     }

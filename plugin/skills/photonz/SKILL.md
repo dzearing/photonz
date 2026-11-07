@@ -19,6 +19,7 @@ only what the tools hand back, so looking is how you know.
 1. **Read** what is there: `list_documents`, then `read_document` (layers top first
    with frames, text, styles, a group's layout; on a video the tracks, clips, cuts and
    transitions, all times in seconds).
+   Its `selected` lists what the person has picked: "this" and "it" mean those layers.
 2. **Do** one thing: draw, place, style, cut, title.
 3. **Look**: `render_picture` (whole canvas, one `layer`, or a `region` to zoom in),
    `video_frame` at a moment, or `contact_sheet` across a stretch of video.

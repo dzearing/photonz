@@ -281,3 +281,11 @@ picture or a `.photonz` document) or `{ "sample": "recording" }` (above) (give i
 a `context` line, "a screenshot of a settings screen", for the judge and the
 agent). `timeout` and `skillTimeout` are in seconds. A new case changes the set,
 so compare the next run with the next run, not with the old best.
+
+A `change` case is about a layer that is already there, usually the one picked
+(`picked-*`). Its blank `start` has `steps`, walk steps that draw the layers and
+pick one, and its `expect.picked` is scored from the document, because a picture
+cannot tell a judge that a second layer moved: `layer` is the one the request
+should change, `changes` how (`wider` than a width, a `hue`, `rounder` than a
+radius), and `others` every other layer as it stood, each of which must still
+stand that way.

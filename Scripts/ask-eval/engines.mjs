@@ -36,7 +36,10 @@ function startSteps(testCase, { waitForCopies = false } = {}) {
     return [{ do: "open", file: path.resolve(repo, testCase.start.open), width: 1280, height: 840 }, { do: "wait", seconds: 1 }];
   }
   const [width, height] = testCase.start.blank;
-  return [{ do: "blank", canvasWidth: width, canvasHeight: height, width: 1280, height: 840 }, { do: "wait", seconds: 1 }];
+  // `steps`: what the case does by hand before asking, such as drawing a few
+  // shapes and picking one.
+  return [{ do: "blank", canvasWidth: width, canvasHeight: height, width: 1280, height: 840 }, { do: "wait", seconds: 1 },
+    ...(testCase.start.steps ?? [])];
 }
 
 /// Runs a walk and leaves the probe up. Exit 3 is a locked screen, 6 a person

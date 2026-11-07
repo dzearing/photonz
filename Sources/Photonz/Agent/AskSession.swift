@@ -359,14 +359,16 @@ final class AskSession {
         editor.bringAgentAreaForward()
         isRevealPending = true
         revealPass &+= 1
+        // What "this" means is settled now, however long the request waits.
+        let picked = editor.pickedForAsk
         if isBusy {
-            line.add(words)
+            line.add(words, picked: picked)
             return
         }
-        start(words, in: editor)
+        start(words, picked: picked, in: editor)
     }
 
-    private func start(_ typed: String, in editor: EditorState) {
+    private func start(_ typed: String, picked: [UUID], in editor: EditorState) {
         // "As a photo" makes the last request again that way.
         let words = AgentPictureKind.remade(typed, after: changes.rows.first?.asked) ?? typed
         said = nil
@@ -394,7 +396,7 @@ final class AskSession {
         lastSources = []
         work = Task { [weak self, weak editor] in
             if let editor {
-                await self?.carryOut(words, in: editor, started: started)
+                await self?.carryOut(words, picked: picked, in: editor, started: started)
             }
             self?.finished(in: editor)
         }
@@ -410,7 +412,7 @@ final class AskSession {
         current = nil
         work = nil
         guard let editor, let next = line.next() else { return }
-        start(next.words, in: editor)
+        start(next.words, picked: next.picked, in: editor)
     }
 
     /// Takes a waiting request out of line before it starts.
@@ -427,7 +429,7 @@ final class AskSession {
 
     /// Plans, runs, and for a drawing looks at what it made, drawing it again
     /// at most twice when it does not read (`AskDrawingCheck`).
-    private func carryOut(_ words: String, in editor: EditorState, started: Date) async {
+    private func carryOut(_ words: String, picked: [UUID], in editor: EditorState, started: Date) async {
         let began = Date()
         let note: (String) -> Void = { [weak self] line in
             self?.trace.append(String(format: "%.1fs ", Date().timeIntervalSince(began)) + line)
@@ -500,7 +502,7 @@ final class AskSession {
                 return
             }
         }
-        let opened = await Self.conversation(words, in: editor, model: model, memory: memory, web: webRead,
+        let opened = await Self.conversation(words, picked: picked, in: editor, model: model, memory: memory, web: webRead,
                                              lookedUp: lookedUp, note: note, say: say)
         guard !Task.isCancelled else { return }
         guard var talk = opened else {
@@ -1002,13 +1004,13 @@ final class AskSession {
 
     /// The talk with the model, opened with the document read and the
     /// Library handed over up front: "on brand" is its components and styles.
-    private static func conversation(_ words: String, in editor: EditorState, model: String, memory: String = "",
+    private static func conversation(_ words: String, picked: [UUID], in editor: EditorState, model: String, memory: String = "",
                                      web: AskWebReader.Read? = nil, lookedUp: AskLookup.Found? = nil,
                                      note: (String) -> Void, say: (AskStage) -> Void) async -> AskConversation? {
         guard let document = editor.agentID else { return nil }
         say(.reading(video: editor.documentHasTime))
         note("model \(model), reading \(document)")
-        let read = await AgentWork.run(.readDocument(document: document, layer: nil))
+        let read = await AgentWork.run(.readDocument(document: document, layer: nil, picked: picked))
         note("read \(Self.text(of: read).count) characters")
         let components = await AgentWork.run(.listComponents(document: document))
         let styles = await AgentWork.run(.listStyles(document: document))

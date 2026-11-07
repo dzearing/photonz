@@ -12,6 +12,9 @@ public struct AskRequestLine: Hashable, Sendable {
         public let id: UUID
         /// What was asked, in the person's words.
         public let words: String
+        /// What was picked when it was sent: the person may have moved on by
+        /// the time its turn comes, and "this" still means what it meant.
+        public let picked: [UUID]
     }
 
     /// Waiting, in the order they will run.
@@ -26,10 +29,10 @@ public struct AskRequestLine: Hashable, Sendable {
 
     /// Puts a request at the back of the line. Nil for blank words.
     @discardableResult
-    public mutating func add(_ words: String) -> Request? {
+    public mutating func add(_ words: String, picked: [UUID] = []) -> Request? {
         let trimmed = words.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        let request = Request(id: UUID(), words: trimmed)
+        let request = Request(id: UUID(), words: trimmed, picked: picked)
         waiting.append(request)
         return request
     }

@@ -56,3 +56,11 @@ enum AgentDocuments {
             .compactMap { $0?.standardizedFileURL }
     }
 }
+
+extension EditorState {
+    /// Every layer picked in this window, one or a band's worth: what Ask
+    /// works on and what `read_document` says is picked.
+    var pickedForAsk: [UUID] {
+        Array(multiSelectedLayerIDs.union(selectedLayerID.map { [$0] } ?? []))
+    }
+}
