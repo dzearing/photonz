@@ -385,6 +385,33 @@ struct SVGHandoffTests {
         return PhotonzDocument(canvasSize: CGSize(width: 48, height: 48), layers: [layer])
     }
 
+    /// A picture animated with keys: stored `once`, which is what makes them
+    /// keys, and played round the lap unless Repeat was turned off.
+    static func keyedDocument(repeats: Bool) -> PhotonzDocument {
+        var document = movingDocument()
+        document.layers[0].motions = [SVGMotionExportTests.turn(-12, 12, repeats: .once)]
+        var lap = KeyLap()
+        lap.repeats = repeats
+        document.keyLap = lap
+        document.motionCycleMS = 2000
+        return document
+    }
+
+    @Test("Keys on a repeating lap are said to repeat, as the file does")
+    func aRepeatingLapSaysItRepeats() throws {
+        let document = Self.keyedDocument(repeats: true)
+        let lines = SVGHandoff.lines(for: .webPage, in: document).map(\.text)
+        #expect(lines.contains("It repeats on its own, for ever"))
+        #expect(!lines.contains("It plays and then stops where it landed"))
+    }
+
+    @Test("Keys with Repeat turned off are said to stop")
+    func aLapPlayedOnceSaysItStops() {
+        let document = Self.keyedDocument(repeats: false)
+        let lines = SVGHandoff.lines(for: .webPage, in: document).map(\.text)
+        #expect(lines.contains("It plays and then stops where it landed"))
+    }
+
     @Test("A web page is the one destination that runs the motion")
     func aWebPageCarriesTheMotion() {
         let document = Self.movingDocument()

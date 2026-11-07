@@ -13,6 +13,25 @@ struct GroupRenderBoundsTests {
         Layer(name: name, content: .text(TextContent(string: name)), frame: frame, style: style)
     }
 
+    /// A magnified document has its boxes and effects grown and its lines
+    /// left in points, because a line is drawn at the render's scale. So what a
+    /// part's line reaches has to be grown here.
+    @Test func aMagnifiedGroupMakesRoomForItsPartsLinesAtThatScale() {
+        let line = PathContent(anchors: [PathAnchor(point: .zero),
+                                         PathAnchor(point: CGPoint(x: 40, y: 0)),
+                                         PathAnchor(point: CGPoint(x: 40, y: 40))],
+                               isClosed: true, strokeWidth: 20, fill: nil, lineCorner: .round)
+        let part = Layer(name: "Line", content: .path(line),
+                         frame: CGRect(x: 10, y: 10, width: 40, height: 40))
+        let group = Layer(name: "Group", content: .group(GroupContent(children: [part])),
+                          frame: .zero)
+        let magnified: Layer = group.magnified(by: 2)
+        let reach = magnified.renderBounds(contentScale: 2)
+        // Ten points of line past the box, at twice the size.
+        #expect(reach == CGRect(x: 0, y: 0, width: 120, height: 120))
+        #expect(group.renderBounds(contentScale: 1) == group.renderBounds)
+    }
+
     @Test func aPlainLeafReachesExactlyItsFrame() {
         let layer = leaf("Box", CGRect(x: 10, y: 20, width: 30, height: 40))
         #expect(layer.renderBounds == CGRect(x: 10, y: 20, width: 30, height: 40))

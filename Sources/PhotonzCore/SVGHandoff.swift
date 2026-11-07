@@ -174,8 +174,12 @@ public enum SVGHandoff {
     }
 
     /// How the loop is described, in the drawing's own terms.
+    ///
+    /// Read off the document as it PLAYS: keys are stored `once` however they
+    /// go round (`PhotonzDocument.lappingKeys`), and the file writes them from
+    /// the same reading, so the sheet and the file cannot disagree.
     static func repeatText(in document: PhotonzDocument) -> String {
-        let repeats = document.allLayers
+        let repeats = document.lappingKeys.allLayers
             .flatMap { ($0.motions ?? []).filter(\.isOn) }
             .map(\.repeats)
         if repeats.contains(where: { $0.cycles == nil }) {

@@ -151,7 +151,12 @@ extension Layer {
     /// Everything this layer's own drawing can add past its frame: the reach of
     /// its effects plus the reach of its outline. What a drag sprite is padded
     /// by, what a dirty rect grows by, and what `renderBounds` starts from.
-    public var reachPadding: CGFloat {
-        (style.previewPadding(aroundOpenLine: ringsAnOpenLine) + contentOutset).rounded(.up)
+    public var reachPadding: CGFloat { reachPadding(contentScale: 1) }
+
+    /// `reachPadding` of a layer in a document magnified by `contentScale`,
+    /// where the style has been grown and the content's own line has not.
+    public func reachPadding(contentScale: CGFloat) -> CGFloat {
+        (style.previewPadding(aroundOpenLine: ringsAnOpenLine)
+            + contentOutset * contentScale).rounded(.up)
     }
 }

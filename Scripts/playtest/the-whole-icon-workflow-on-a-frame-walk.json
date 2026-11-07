@@ -1,0 +1,783 @@
+{
+  "out": "/tmp/photonz-playtest/the-whole-icon-workflow-on-a-frame-walk",
+  "seed": "The whole icon workflow from the focus, end to end, at Next defaults with nothing switched on: a 24 unit frame on a picture, keylines and snapping already on, a cloud of three circles and a Pen box joined from right-click, a 1.75 round outline, a Pen arrow brought into line with it, checked at real sizes, grouped, spun a whole turn each lap, forever, and written as an animated SVG. Points are off the unit on purpose: every one lands on a whole unit. Tools are picked by their keys, panel controls by real clicks.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "24",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "pinch",
+      "to": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "menus",
+      "stage": "1-keylines-and-snapping",
+      "menu": "View"
+    },
+    {
+      "do": "describe",
+      "stage": "1-empty",
+      "note": "THE START. The keylines are on the canvas and View says keylines and snapping are on, with nothing to turn on first."
+    },
+    {
+      "do": "snapshot",
+      "name": "1-empty-icon"
+    },
+    {
+      "do": "key",
+      "key": "o"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        791.1,
+        550.1
+      ],
+      "to": [
+        797.1,
+        556.1
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "o"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        794.1,
+        544.1
+      ],
+      "to": [
+        804.1,
+        554.1
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "o"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        801.1,
+        548.1
+      ],
+      "to": [
+        809.1,
+        556.1
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse 2",
+      "at": [
+        794,
+        544
+      ],
+      "size": [
+        10,
+        10
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "snapshot",
+      "name": "2-three-circles"
+    },
+    {
+      "do": "key",
+      "key": "p"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        794.1,
+        550.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "click",
+      "at": [
+        805.1,
+        550.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "click",
+      "at": [
+        805.1,
+        556.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "click",
+      "at": [
+        794.1,
+        556.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "click",
+      "at": [
+        794.1,
+        550.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPath",
+      "anchors": 4,
+      "closed": true
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-pieces",
+      "note": "three circles and a closed Pen box, every point on a whole unit though no drag or click was."
+    },
+    {
+      "do": "snapshot",
+      "name": "3-the-pieces"
+    },
+    {
+      "do": "selectRow",
+      "row": "Ellipse"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "selectRow",
+      "row": "Ellipse 2",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "selectRow",
+      "row": "Ellipse 3",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "selectRow",
+      "row": "Path",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Ellipse",
+        "Ellipse 2",
+        "Ellipse 3",
+        "Path"
+      ]
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        800.1,
+        550.1
+      ],
+      "choose": "Combine Shapes > Join"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expectNotice",
+      "says": "Joined"
+    },
+    {
+      "do": "expectBox",
+      "layer": "Path",
+      "at": [
+        791,
+        544
+      ],
+      "size": [
+        18,
+        12
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "snapshot",
+      "name": "4-joined"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Outline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "snapshot",
+      "name": "5-outlined"
+    },
+    {
+      "do": "key",
+      "key": "p"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        800.1,
+        547.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "click",
+      "at": [
+        800.1,
+        553.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "p"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        797.1,
+        550.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "click",
+      "at": [
+        800.1,
+        553.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "click",
+      "at": [
+        803.1,
+        550.1
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-arrow",
+      "note": "CLUMSY: the arrow comes out red, 2 units and sharp cornered beside a black 1.75 round cloud, so all three have to be set again."
+    },
+    {
+      "do": "snapshot",
+      "name": "6-arrow-does-not-match"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "selectRow",
+      "row": "Path"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "selectRow",
+      "row": "Path 2",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "selectRow",
+      "row": "Path 3",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "panel",
+      "stage": "7-all-three"
+    },
+    {
+      "do": "focus",
+      "field": "Width"
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "1.75"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Round",
+      "in": "Corners"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Color"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "HEX",
+      "in": "Color format"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "focus",
+      "field": "Hex value"
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "1C1C1E"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Close",
+      "in": "the picker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "7-one-stroke"
+    },
+    {
+      "do": "writeSVG",
+      "name": "still",
+      "carries": "stroke-width=\"1.75\"",
+      "lacks": "#FF3B30",
+      "frame": "Frame"
+    },
+    {
+      "do": "expectSVG",
+      "contains": "stroke-linejoin=\"round\""
+    },
+    {
+      "do": "expectSVG",
+      "contains": "stroke-linecap=\"round\""
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "bothGrounds": true,
+      "inked": true
+    },
+    {
+      "do": "describe",
+      "stage": "8-sizes",
+      "note": "CHECK IT AT 16, 24 AND 48: the Actual sizes card shows it on both grounds."
+    },
+    {
+      "do": "snapshot",
+      "name": "8-at-real-sizes"
+    },
+    {
+      "do": "key",
+      "key": "g",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "9-grouped"
+    },
+    {
+      "do": "shortcut",
+      "key": "k",
+      "modifiers": [],
+      "menuItem": "Add Key"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Key Menu",
+      "choose": "Animate a Property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Rotation",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Rotation Value"
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "360"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "10-eases",
+      "note": "CLUMSY: a new stretch eases in and out, so a spin slows to a stop every lap until Curve is set to Linear."
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Curve",
+      "choose": "Linear",
+      "at": [
+        "centre"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "10-a-quarter-of-the-way-round"
+    },
+    {
+      "do": "snapshot",
+      "name": "12-keys-set"
+    },
+    {
+      "do": "press",
+      "control": "Real Size Preview"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "snapshot",
+      "name": "13-playing"
+    },
+    {
+      "do": "press",
+      "control": "Real Size Preview"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panel",
+      "stage": "13-rows"
+    },
+    {
+      "do": "menus",
+      "stage": "14-file",
+      "choose": "File > Export\u2026"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "snapshot",
+      "name": "14-export-sheet"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "writeSVG",
+      "name": "cloud-download",
+      "carries": "repeatCount=\"indefinite\"",
+      "lacks": "<image",
+      "frame": "Frame"
+    }
+  ]
+}

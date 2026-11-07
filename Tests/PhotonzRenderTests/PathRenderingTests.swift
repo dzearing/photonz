@@ -10,6 +10,61 @@ import PhotonzCore
 @Suite("Path rendering")
 struct PathRenderingTests {
 
+    // MARK: A dead straight line
+
+    /// A Pen line straight up and down has a box with no width, so a box's area
+    /// said there was nothing to bake and it went out at 1x: on a zoomed canvas
+    /// a 1.75 point line was a two pixel smear blown up eight times, grey with
+    /// square ends beside the sharp shapes next to it.
+    @Test("A dead straight line is as sharp as any other when zoomed in")
+    func aStraightLineIsSharpZoomedIn() throws {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 24, height: 24, gray: 255))
+        var doc = PhotonzDocument.withBaseImage(base)
+        let stem = PathContent(anchors: [PathAnchor(point: CGPoint(x: 0, y: 0)),
+                                         PathAnchor(point: CGPoint(x: 0, y: 6))],
+                               paint: Paint(hex: "#000000"), strokeWidth: 1.75, fill: nil)
+        doc.addLayer(Layer(name: "Stem", content: .path(stem),
+                           frame: CGRect(x: 12, y: 9, width: 0, height: 6)))
+        let scale: CGFloat = 8
+        let output = try #require(DocumentRenderer().render(doc, store: store, scale: scale))
+        func at(_ x: CGFloat, _ y: CGFloat) -> (r: UInt8, g: UInt8, b: UInt8, a: UInt8) {
+            pixel(output, x: Int(x * scale), y: Int(y * scale))
+        }
+        // Black right out to just inside the line's edge...
+        #expect(at(12, 12).r < 20)
+        #expect(at(12.75, 12).r < 20)
+        // ...white just outside it...
+        #expect(at(13, 12).r > 235)
+        // ...and the end is round: the corner a square end would fill is clear.
+        #expect(at(12.75, 8.25).r > 235)
+    }
+
+    /// Its row in the layers list was an empty grey tile, because a box with no
+    /// width was taken for a layer with nothing to draw.
+    @Test("A dead straight line has a tile in the layers list")
+    func aStraightLineHasATile() throws {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 100, height: 100, gray: 255))
+        var doc = PhotonzDocument.withBaseImage(base)
+        let stem = PathContent(anchors: [PathAnchor(point: CGPoint(x: 0, y: 0)),
+                                         PathAnchor(point: CGPoint(x: 0, y: 60))],
+                               paint: Paint(hex: "#000000"), strokeWidth: 10, fill: nil)
+        let layer = Layer(name: "Stem", content: .path(stem),
+                          frame: CGRect(x: 50, y: 20, width: 0, height: 60))
+        doc.addLayer(layer)
+        let tile = try #require(DocumentRenderer().thumbnail(for: layer.id, in: doc, store: store,
+                                                             maxDimension: 80, minimumAspect: 0.25))
+        let middle = pixel(tile, x: tile.width / 2, y: tile.height / 2)
+        #expect(middle.a > 200 && middle.r < 40)
+    }
+
+    @Test("A line with no width or height still bakes at the scale it is shown")
+    func aBoxWithNoAreaBakesAtItsScale() {
+        #expect(DocumentRenderer.bakeScale(8, box: CGSize(width: 0, height: 6)) == 8)
+        #expect(DocumentRenderer.bakeScale(8, box: CGSize(width: 6, height: 0)) == 8)
+    }
+
     // MARK: Helpers
 
     private func pixel(_ image: CGImage, x: Int, y: Int) -> (r: UInt8, g: UInt8, b: UInt8, a: UInt8) {

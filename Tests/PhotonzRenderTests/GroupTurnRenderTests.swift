@@ -51,6 +51,47 @@ struct GroupTurnRenderTests {
         return DocumentRenderer().render(doc, store: store)!
     }
 
+    /// A white 200x200 canvas holding a turned group of one hollow box, 100 by
+    /// 60, drawn with a 20 point line: half of that line hangs 10 points past
+    /// the group's box on every side.
+    private func strokedGroup(rotation: CGFloat) -> (PhotonzDocument, ImageStore) {
+        let store = ImageStore()
+        let base = store.register(solid(200, 200, r: 1, g: 1, b: 1))
+        var doc = PhotonzDocument.withBaseImage(base)
+        let box = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0)),
+            PathAnchor(point: CGPoint(x: 100, y: 0)),
+            PathAnchor(point: CGPoint(x: 100, y: 60)),
+            PathAnchor(point: CGPoint(x: 0, y: 60))
+        ], isClosed: true, paint: Paint(hex: "#000000"), strokeWidth: 20, fill: nil)
+        let child = Layer(name: "Box", content: .path(box),
+                          frame: CGRect(x: 50, y: 70, width: 100, height: 60))
+        let group = Layer(name: "Glyph", content: .group(GroupContent(children: [child])),
+                          frame: CGRect(x: 0, y: 0, width: 0, height: 0),
+                          transform: LayerTransform(rotation: rotation))
+        doc.addLayer(group)
+        return (doc, store)
+    }
+
+    /// The canvas draws at 2x on a Retina screen, and 2x export takes the same
+    /// road. A group turned there used to size its picture by its parts' line
+    /// reach at 1x, so the outer half of a thick line was sliced off flat all
+    /// the way round the moment the group was turned.
+    @Test("A line past the group's box survives the turn at every scale",
+          arguments: [CGFloat(1), 2, 3])
+    func aTurnedGroupKeepsItsLineAtAnyScale(scale: CGFloat) throws {
+        let angle = CGFloat.pi / 12
+        let (doc, store) = strokedGroup(rotation: angle)
+        let output = try #require(DocumentRenderer().render(doc, store: store, scale: scale))
+        // Eight points out from the middle of the box's top edge, inside the
+        // outer half of the line, carried round the box's own middle.
+        let reach: CGFloat = 38
+        let x = (100 + reach * sin(angle)) * scale
+        let y = (100 - reach * cos(angle)) * scale
+        let ink = pixel(output, x: Int(x), y: Int(y))
+        #expect(ink.r < 40 && ink.g < 40 && ink.b < 40)
+    }
+
     @Test("A quarter turn stands the group's contents on end")
     func aQuarterTurnStandsTheBarUp() {
         let output = renderGroup(rotation: .pi / 2)

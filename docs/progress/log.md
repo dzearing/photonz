@@ -22721,3 +22721,11 @@ Typing 1.75 into Width on an Icon picture gave a hairline, because the panel rea
 The task's Pen at 40 points was the panel's limit: the line was 2 units all along.
 
 Next: `find-out-why-sweeping-with-the-arrow-tool-shows`. Open: `ask-tweaks-an-icon-walk` was stopped unfinished, and four walks owned by `walks-that-fail-in-the-full-sweep-26` still fail at the steps they failed at before this work.
+
+## 2026-11-07: the whole icon workflow, walked end to end
+
+`the-whole-icon-workflow-walk` (File, New, Image, Icon) and `the-whole-icon-workflow-on-a-frame-walk` (a 24 unit frame) go from an empty window to an animated SVG at Next defaults: a cloud joined from three circles and a Pen box, a 1.75 round line, a Pen arrow, real sizes, keys, the Export sheet. The swing and the spin play and loop in real time Chrome and in WebKit, read as live angles.
+
+Walking it found three bugs, fixed here. A group drawn at 2x sized its picture by its parts' lines at 1x, so a turned group sliced thick lines off flat (`Layer.renderBounds(contentScale:)`). A dead straight line's box has no area, so it baked at 1x and lost its tile (`bakeScale`, `renderSprite`). The Export sheet read keys as `once` and said a looping icon stops (`SVGHandoff.repeatText`).
+
+Next: `a-playing-icon-stays-sharp-on-a-zoomed-canvas`, `a-looping-turn-comes-home-and-spins-evenly-witho`, `a-group-in-an-icon-shows-what-an-icon-needs-not`. Open: the walk writes the file with `writeSVG` after opening the real sheet, because a save panel cannot be driven.

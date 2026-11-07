@@ -277,8 +277,9 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// kept is the one it reads (`PaintRasterCache`).
     public static func bakeScale(_ scale: CGFloat, box: CGSize) -> CGFloat {
         guard scale > 1, scale.isFinite else { return 1 }
-        let area = box.width * box.height
-        guard area > 0 else { return 1 }
+        // A dead straight line has a box with no width or no height and still
+        // draws a stroke, so a side of nothing counts as a side of one point.
+        let area = max(box.width, 1) * max(box.height, 1)
         let affordable = (Self.crispRasterCap / area).squareRoot()
         guard affordable >= 2 else { return 1 }
         return min(scale, affordable)
@@ -942,7 +943,8 @@ public final class DocumentRenderer: @unchecked Sendable {
         // that reaches past the edge is simply not in the picture, which is the
         // whole of what clipping means here. `rounded` then cuts the buffer
         // with the corner, so a rounded card cuts round rather than square.
-        let reach = layer.clipsToBounds ? layer.localBounds : layer.renderBounds
+        let reach = layer.clipsToBounds ? layer.localBounds
+            : layer.renderBounds(contentScale: contentScale)
         let buffer = flipped(reach.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
         guard buffer.width >= 1, buffer.height >= 1 else { return nil }
 
@@ -1109,8 +1111,10 @@ public final class DocumentRenderer: @unchecked Sendable {
         // The box the layer occupies: its frame, or for a group the box its
         // contents make (a group's own frame is an anchor with no size). Slide
         // it so that box starts `padding` in from the top left.
+        // A dead straight line has no width or no height of its own, and the
+        // padding holds its stroke, so it is the padded box that has to exist.
         let box = layer.localBounds
-        guard box.width >= 1, box.height >= 1 else { return nil }
+        guard box.width + padding * 2 >= 1, box.height + padding * 2 >= 1 else { return nil }
         layer.frame = layer.frame.offsetBy(dx: padding - box.minX, dy: padding - box.minY)
         // The capture's pixel scale comes along too: a measurement reads its
         // number through it, so without it a layers-list thumbnail on a 2x

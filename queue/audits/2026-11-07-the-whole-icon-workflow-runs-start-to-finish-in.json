@@ -1,0 +1,40 @@
+{
+  "feature": "The whole icon workflow, start to finish",
+  "epic": "icon-svg",
+  "summary": "You can go from an empty window to a moving SVG in one sitting: a cloud-download icon drawn on the 24 unit grid, joined, stroked at 1.75 round, checked at real sizes, swung or spun forever and written out. It plays and loops in Chrome and in Safari's engine, on an Icon picture and on a 24 unit frame.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walks are Scripts/playtest/the-whole-icon-workflow-walk.json and the-whole-icon-workflow-on-a-frame-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Choose File, New, Image, Icon, then open View: keylines and snapping are already on.", "shot": "2026-11-07-icon-workflow-empty-sc.png" },
+    { "do": "Press O and drag three circles, press P and click a closed box, press Command A, right-click and choose Combine Shapes, Join.", "shot": "2026-11-07-icon-workflow-joined-sc.png" },
+    { "do": "Tick Outline, untick Fill, then press P and draw the arrow as two lines.", "shot": "2026-11-07-icon-workflow-arrow-mismatch-sc.png" },
+    { "do": "Press Command A, set Width to 1.75, Corners to Round and Color to the cloud's colour, then read the Actual sizes card.", "shot": "2026-11-07-icon-workflow-real-sizes-sc.png" },
+    { "do": "Press Command G to group it, then press K.", "shot": "2026-11-07-icon-workflow-group-panel-sc.png" },
+    { "do": "Click 0.5s on the ruler and turn it on the canvas, click 1.5s and type -15, click 2s and type 0.", "shot": "2026-11-07-icon-workflow-keys-sc.png" },
+    { "do": "Choose File, Export, keep A web page, and read what the sheet promises.", "shot": "2026-11-07-icon-workflow-export-sheet-sc.png" },
+    { "do": "Open the file in a browser and watch it loop.", "shot": "2026-11-07-icon-workflow-in-the-browsers.png" }
+  ],
+  "evaluate": [
+    "Is right-click the place you would look for Join, or do you want it in the panel as well?",
+    "Should the icon's first outline set the line for everything drawn after it?",
+    "With three parts picked, does One layer at a time tell you to group them?",
+    "Is typing 0 at the end of the lap acceptable until the loop comes home by itself?",
+    "Does the Actual sizes card sitting over the corner of the artboard bother you at this window size?"
+  ],
+  "rough": [
+    "Fixed here: a group turned on a Retina canvas or sent out at 2x sliced the outer half of a thick line off flat, because its picture measured its parts' lines at 1x.",
+    "Fixed here: the Export sheet said a repeating icon plays and then stops, while the file repeats forever. Keys now read the way the file does.",
+    "Fixed here: a dead straight Pen line drew grey with square ends on a zoomed canvas and had an empty tile in the layers list (2026-11-07-icon-workflow-on-a-frame-sc.png shows it sharp again).",
+    "Clumsy, open: the arrow comes out red, 2 units and sharp beside a dark 1.75 round cloud, so three rows need setting again. Folded into task a-glyph-takes-the-icon-set-s-saved-stroke-in-one (2026-11-07-icon-workflow-arrow-mismatch-sc.png).",
+    "Broken, open: pressing play on a zoomed frame shows the icon as big square pixels, and a 512 picture goes soft. Task a-playing-icon-stays-sharp-on-a-zoomed-canvas (2026-11-07-icon-workflow-playing-blocks-sc.png).",
+    "Clumsy, open: a swing needs a third key typed at the end of the lap or it jumps 15 degrees every lap, and a spin stops each lap until Curve is Linear. Task a-looping-turn-comes-home-and-spins-evenly-withou (2026-11-07-icon-workflow-keys-sc.png).",
+    "Clumsy, open: a picked group shows Arrangement, Hug, Fixed, Padding and Scale rows that say nothing about an icon and push the keys down the panel. Task a-group-in-an-icon-shows-what-an-icon-needs-not-p (2026-11-07-icon-workflow-group-panel-sc.png).",
+    "Surprising, left alone: Add Key is not offered with several parts picked, so the whole glyph has to be grouped first; the panel only says One layer at a time (2026-11-07-icon-workflow-real-sizes-sc.png).",
+    "Surprising, left alone: the Actual sizes card overlaps the top left of the artboard's margin at 1280 by 900, though not the live area (2026-11-07-icon-workflow-empty-sc.png shows the room, 2026-11-07-icon-workflow-real-sizes-sc.png the overlap).",
+    "Surprising, left alone: a picked path's box is drawn round its ink while the tag above it reads the path itself, and a group's box reads the path, so the two boxes differ on the same drawing (2026-11-07-icon-workflow-joined-sc.png).",
+    "Surprising, left alone: everything stays called Path, Path 2 and Path 3 unless renamed, and a joined shape keeps the name Path.",
+    "The mock's Grid and snap group sits in the right panel; the Snap to choices are View, Snap in Icons (UX-PATTERNS placement contract, View menu row), and where the grid is worked from was your call on 2026-10-20. Side by side in 2026-11-07-icon-workflow-beside-the-mock.png.",
+    "The save panel cannot be driven from a walk, so the walk opens the real Export sheet and writes the same file with the step the sheet's answer uses. I did not press Export... and pick a folder by hand.",
+    "The Safari reading is WebKit in a small test window, the engine Safari runs, not the Safari app itself. Chrome's was headless Chrome in real time."
+  ]
+}

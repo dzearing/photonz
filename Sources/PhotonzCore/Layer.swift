@@ -2375,9 +2375,17 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// bigger than `localBounds` wherever a shadow or a blur reaches past the
     /// box. A group renders into a buffer this size, so nothing inside it is
     /// clipped: its own reach unioned with the reach of everything it holds.
-    public var renderBounds: CGRect {
+    public var renderBounds: CGRect { renderBounds(contentScale: 1) }
+
+    /// `renderBounds` of a layer in a document magnified by `contentScale`
+    /// (`DocumentMagnification.swift`). Its boxes and effects have been grown
+    /// and its lines have not, because a line is stated in points and drawn at
+    /// the render's scale, so a part's line has to be grown here. Sized without
+    /// that, a group turned on a Retina canvas or sent out at 2x cuts the outer
+    /// half of a thick line off flat.
+    public func renderBounds(contentScale: CGFloat) -> CGRect {
         let box = localBounds
-        let pad = reachPadding
+        let pad = reachPadding(contentScale: contentScale)
         guard let group else { return box.insetBy(dx: -pad, dy: -pad) }
         // Nothing inside a clipping container can draw past its edge, so its
         // reach is its box plus whatever its own shadow and its own ring add.
@@ -2389,7 +2397,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             // Through the child's own TURN: a card on a slant reaches corners
             // its upright box never had, and a buffer sized without them cuts
             // the card off at the moment it is turned.
-            reach = reach.union(child.turnedReach
+            reach = reach.union(child.turnedReach(contentScale: contentScale)
                 .offsetBy(dx: frame.origin.x, dy: frame.origin.y))
         }
         return reach.insetBy(dx: -pad, dy: -pad)
@@ -2398,8 +2406,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// `renderBounds` with this layer's own turn taken into account: the
     /// upright box around everything the turned drawing can touch, in its
     /// parent's space. What a container has to make room for.
-    public var turnedReach: CGRect {
-        let reach = renderBounds
+    public var turnedReach: CGRect { turnedReach(contentScale: 1) }
+
+    /// `turnedReach` of a layer in a document magnified by `contentScale`.
+    public func turnedReach(contentScale: CGFloat) -> CGRect {
+        let reach = renderBounds(contentScale: contentScale)
         guard !transform.isIdentity else { return reach }
         return reach.applying(transform.affineTransform(around: turnPivot))
     }
