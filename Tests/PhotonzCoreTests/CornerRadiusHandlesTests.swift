@@ -146,6 +146,45 @@ struct CornerRadiusHandlesTests {
         #expect(r == 30)
     }
 
+    // MARK: A pull with the grid on
+
+    @Test func withTheGridPullingAPullLandsOnWholeGridSteps() {
+        let r = CornerRadiusHandles.radius(draggingTo: CGPoint(x: box.minX + 25,
+                                                               y: box.minY + 25),
+                                           corner: .topLeft, in: box, gridSpacing: 8)
+        #expect(r == 24)
+    }
+
+    @Test func aRectangleLandsOnTheStepADrawnShapeLandsOnForTheSamePull() {
+        for asked: CGFloat in [3, 11.9, 12, 25, 37.4, 50.6] {
+            let r = CornerRadiusHandles.radius(draggingTo: CGPoint(x: box.minX + asked,
+                                                                   y: box.minY + asked),
+                                               corner: .topLeft, in: box, gridSpacing: 8)
+            #expect(r == PathContent.landedCornerRadius(asked, gridSpacing: 8, zoom: 1))
+        }
+    }
+
+    @Test func aGridStepPastFullyRoundStopsAtFullyRound() {
+        // Fully round here is 60, and the nearest step of 40 to it is 80.
+        let r = CornerRadiusHandles.radius(draggingTo: CGPoint(x: box.midX, y: box.midY),
+                                           corner: .topLeft, in: box, gridSpacing: 40)
+        #expect(r == 60)
+    }
+
+    @Test func withTheGridPullingAPullShortOfHalfAStepStaysSquare() {
+        let r = CornerRadiusHandles.radius(draggingTo: CGPoint(x: box.minX + 15,
+                                                               y: box.minY + 15),
+                                           corner: .topLeft, in: box, gridSpacing: 32)
+        #expect(r == 0)
+    }
+
+    @Test func withNothingPullingAPullStaysOnWholePoints() {
+        let r = CornerRadiusHandles.radius(draggingTo: CGPoint(x: box.minX + 30.4,
+                                                               y: box.minY + 30.4),
+                                           corner: .topLeft, in: box, gridSpacing: nil)
+        #expect(r == 30)
+    }
+
     // MARK: The whole gesture
 
     @Test func aPlainPullTakesAllFourTogether() {

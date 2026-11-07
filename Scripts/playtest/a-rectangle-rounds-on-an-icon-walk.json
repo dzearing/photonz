@@ -1,0 +1,131 @@
+{
+  "out": "/tmp/photonz-playtest/a-rectangle-rounds-on-an-icon",
+  "seed": "File, New, Image, Icon, Create, View, Show Grid, at Next defaults with nothing switched on. A rectangle drawn on the icon rounds in whole icon units when its corner dot is pulled, as a drawn shape's knob does, and Command frees the pull.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "startFromEmpty",
+      "row": "New image",
+      "answer": [
+        "Icon",
+        "Create"
+      ],
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        128,
+        128
+      ],
+      "to": [
+        384,
+        384
+      ]
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "0"
+    },
+    {
+      "do": "action",
+      "action": "showGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "0-drawn"
+    },
+    {
+      "do": "drag",
+      "from": [
+        140,
+        140
+      ],
+      "to": [
+        178,
+        178
+      ],
+      "steps": 14,
+      "readout": "Radius 2",
+      "hold": "1-mid-pull"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "2"
+    },
+    {
+      "do": "describe",
+      "stage": "1-units",
+      "note": "a pull that asked for 2.34 units landed on 2, a whole unit of the icon's 24, and the pill said so while the button was down"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-whole-units"
+    },
+    {
+      "do": "drag",
+      "from": [
+        170.7,
+        170.7
+      ],
+      "to": [
+        178,
+        178
+      ],
+      "steps": 8,
+      "modifiers": [
+        "command"
+      ],
+      "hold": "2-mid-free-pull"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "2.34"
+    },
+    {
+      "do": "describe",
+      "stage": "2-command-frees",
+      "note": "holding Command freed the same pull from the units: it landed on 2.34"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-between-units"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "feature": "A rectangle rounds on the grid",
+  "epic": "icon-vector",
+  "summary": "With the grid on, pulling a rectangle's corner dot now lands on the same grid steps as a drawn shape's knob, and Command frees it. On an Icon picture those steps are whole icon units.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walks: a-rectangle-rounds-on-the-grid-walk and a-rectangle-rounds-on-an-icon-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Make a blank 900 by 600 picture and draw a rectangle with R."
+    },
+    {
+      "do": "Turn on Show grid, then click the rectangle with the Select tool."
+    },
+    {
+      "do": "Pull the top left dot inward about 50 points. It lands on 64 and the pill reads Radius 64.",
+      "shot": "2026-11-07-rectangle-grid-1-pull.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Hold Command and pull the same dot. It lands on 51, between the grid steps.",
+      "shot": "2026-11-07-rectangle-grid-2-command.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Let go of Command and pull again. It is back on grid steps."
+    },
+    {
+      "do": "Choose File, New, Image, Icon, turn on View, Show Grid, draw a rectangle and pull a dot. It lands on whole units.",
+      "shot": "2026-11-07-rectangle-grid-3-icon.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does a rectangle's corner feel the same under your hand as a drawn shape's on the grid?",
+    "On a 32 point grid, are steps that coarse right for rounding, or should a pull land on something finer?",
+    "On an Icon with the grid hidden, should a pull still land on whole units, the way drawing there does?"
+  ],
+  "rough": [
+    "No mock covers rounding on the grid, so the drawn shape's knob was the standard to match.",
+    "On an Icon with the grid hidden, which is how a new Icon opens, rounding lands between units on both kinds of shape (2.34 and 1.83 in the walks), though drawing there lands on whole units.",
+    "With the grid on, fully round can sit between steps: by the rule, a corner that could reach 100 stops at 96 on a 32 point grid, and Command gets the rest. A drawn shape does the same. Not walked on a rectangle.",
+    "With nothing pulling and zoomed to 400 percent or more, a rectangle still lands on whole points while a drawn shape lands on half points, because the panel's box on a picture shows whole numbers."
+  ]
+}

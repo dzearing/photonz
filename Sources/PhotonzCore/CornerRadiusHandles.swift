@@ -102,13 +102,21 @@ public enum CornerRadiusHandles {
     /// along the diagonal the handle travels. Pulled back out past the corner
     /// the corner squares off; pushed past fully round it stops there.
     ///
-    /// Whole points, because whole points are what the panel shows: a corner
-    /// dragged to 30 must not read 30 while holding 30.4.
+    /// With the grid pulling (`gridSpacing`), whole grid steps, by the rule a
+    /// drawn path's corner knob lands by (`PathContent.landedCornerRadius`), so
+    /// the same pull rounds a rectangle and a drawn shape to the same number.
+    /// With nothing pulling, whole points, because whole points are what the
+    /// panel shows: a corner dragged to 30 must not read 30 while holding 30.4.
+    /// That is why no zoom comes in here: a path's half points at high zoom
+    /// have no place on a rectangle.
     public static func radius(draggingTo p: CGPoint, corner: CornerRadii.Corner,
-                              in frame: CGRect) -> CGFloat {
+                              in frame: CGRect, gridSpacing: CGFloat? = nil) -> CGFloat {
         let dx = isLeft(corner) ? p.x - frame.minX : frame.maxX - p.x
         let dy = isTop(corner) ? p.y - frame.minY : frame.maxY - p.y
-        return min(max(((dx + dy) / 2).rounded(), 0), limit(in: frame))
+        let round = limit(in: frame)
+        let landed = PathContent.landedCornerRadius(min((dx + dy) / 2, round),
+                                                    gridSpacing: gridSpacing, zoom: 1)
+        return min(landed, round)
     }
 
     /// How far the hand travels, in screen points, before a press on a dot

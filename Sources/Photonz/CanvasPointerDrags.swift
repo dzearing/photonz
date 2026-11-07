@@ -1104,8 +1104,12 @@ extension CanvasNSView {
             drag.moved = drag.moved || CornerRadiusHandles.pullHasBegun(
                 from: drag.press, to: local, zoom: viewport.zoom)
             if drag.moved {
-                let wanted = CornerRadiusHandles.radius(draggingTo: local, corner: drag.corner,
-                                                        in: frame)
+                // ⌘ frees the pull from the grid, as it does a drawn shape's
+                // corner knob (`pathCornerMouseDragged`).
+                let free = event.modifierFlags.contains(.command)
+                let wanted = CornerRadiusHandles.radius(
+                    draggingTo: local, corner: drag.corner, in: frame,
+                    gridSpacing: free ? nil : canvasNudgeGrid?.spacing)
                 drag.radii = CornerRadiusHandles.radii(drag.startRadii, corner: drag.corner,
                                                        to: wanted, oneCorner: drag.oneCorner)
             }
