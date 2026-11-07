@@ -10,12 +10,12 @@ import Foundation
 /// instead (`VectorArt`), because a drawing that opens looking wrong is worse
 /// than one that opens whole.
 ///
-/// **An icon on the 24 grid opens as an Icon picture**: 512 points across and
-/// 24 units across, what File, New, Image, Icon makes
+/// **A small square icon opens as an Icon picture**: 512 points across, what
+/// File, New, Image, Icon makes, and as many units across as its file says
 /// (`PhotonzDocument.pictureIconUnit`). It gets the keylines, the previews and
-/// the units, and writes its file in 24 units again. Taken at its word it would
-/// be a canvas 24 points wide, a speck in the window, since a fit never
-/// enlarges (`Viewport.fit`).
+/// the units, and writes its file in those units again. Taken at its word it
+/// would be a canvas 16 or 24 points wide, a speck in the window, since a fit
+/// never enlarges (`Viewport.fit`).
 ///
 /// **Nothing lands on the grid.** Fitting a new drawing to an icon's units is
 /// for drawings made for it (`IconGridLanding`); here the numbers are somebody
@@ -37,7 +37,9 @@ public struct SVGOpening: Sendable {
     /// The canvas, in points.
     public let canvasSize: CGSize
     /// Whether it opens as an Icon picture.
-    public let isIcon: Bool
+    public var isIcon: Bool { iconGrid != nil }
+    /// The units across it opens with as an Icon picture, or nil for a picture.
+    public let iconGrid: CGFloat?
     /// The drawing as layers on that canvas, bottom first.
     public let layers: [Layer]
     /// What those layers do not carry, one word each; empty when they are the
@@ -51,18 +53,17 @@ public struct SVGOpening: Sendable {
     /// A drawing only macOS could read, at the size it said it was.
     public init(pictureOfSize size: CGSize) {
         canvasSize = Self.canvas(for: size)
-        isIcon = false
+        iconGrid = nil
         layers = []
         leftOut = []
         knowsItsSize = true
     }
 
     private init(_ artwork: SVGArtwork, named name: String) {
-        let grid = CGSize(width: IconKeylines.artboardSide, height: IconKeylines.artboardSide)
         let drawn = artwork.bounds
         let asked = artwork.ownSize ?? artwork.viewBox?.size ?? drawn.size
-        isIcon = artwork.ownSize == grid || artwork.viewBox?.size == grid
-        canvasSize = isIcon ? CGSize(width: IconUnits.pictureSide, height: IconUnits.pictureSide)
+        iconGrid = Self.iconGrid(of: artwork)
+        canvasSize = iconGrid != nil ? CGSize(width: IconUnits.pictureSide, height: IconUnits.pictureSide)
                             : Self.canvas(for: asked)
         let box = CGRect(origin: .zero, size: canvasSize)
         layers = artwork.nested(artwork.layers(named: name, fitting: box, within: artwork.viewBox ?? drawn)
@@ -70,6 +71,26 @@ public struct SVGOpening: Sendable {
                                 named: name)
         leftOut = artwork.leftOut
         knowsItsSize = artwork.ownSize != nil || artwork.viewBox != nil || !drawn.isNull
+    }
+
+    /// The sides a square file is an icon at. Below this it is a mark, and above
+    /// the biggest size an interface shows one it is a picture that happens to
+    /// be square: a 512 file taken for 24 units would be rewritten on export.
+    static let iconGrids: ClosedRange<CGFloat> = 8...(IconPreviews.interfaceSides.last ?? 64)
+
+    /// The grid a file was drawn on: its view box, which is what its numbers
+    /// are in, or failing that its own size.
+    private static func iconGrid(of artwork: SVGArtwork) -> CGFloat? {
+        for size in [artwork.viewBox?.size, artwork.ownSize] {
+            guard let size, isIconGrid(size) else { continue }
+            return size.width
+        }
+        return nil
+    }
+
+    private static func isIconGrid(_ size: CGSize) -> Bool {
+        let side: CGFloat = size.width
+        return side == size.height && iconGrids.contains(side) && side == side.rounded()
     }
 
     /// An SVG's line rides the edge of its shape, half each side. A box or an
@@ -122,7 +143,7 @@ public struct SVGOpening: Sendable {
     public func document(on ground: ImageRef) -> PhotonzDocument {
         var document = PhotonzDocument.withBaseImage(ground)
         document.layers += layers
-        document.madeAsIcon = isIcon
+        markIcon(&document)
         return document
     }
 
@@ -130,7 +151,13 @@ public struct SVGOpening: Sendable {
     public func pictureDocument(of picture: ImageRef, named name: String, on ground: ImageRef) -> PhotonzDocument {
         var document = PhotonzDocument.withBaseImage(ground)
         document.layers.append(Layer(name: name, content: .image(picture), frame: CGRect(origin: .zero, size: canvasSize)))
-        document.madeAsIcon = isIcon
+        markIcon(&document)
         return document
+    }
+
+    /// A 24 unit icon says nothing new, so its file is what it always was.
+    private func markIcon(_ document: inout PhotonzDocument) {
+        document.madeAsIcon = isIcon
+        document.iconPictureGrid = iconGrid == IconKeylines.artboardSide ? nil : iconGrid
     }
 }

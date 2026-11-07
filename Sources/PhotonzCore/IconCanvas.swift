@@ -47,12 +47,13 @@ extension PhotonzDocument {
 
     /// How long one unit is on a picture that is an icon at the Icon row's
     /// size, by its canvas or by the frame Ask lands filling it, or nil on any
-    /// other picture. Such a picture is 24 units across at 512 points: a person
-    /// handing the file over expects a 24 by 24 icon. App Icon keeps its own
+    /// other picture. Such a picture is 24 units across at 512 points, or the
+    /// units of the grid its SVG came from (`iconPictureGrid`): a person handing
+    /// the file over expects the icon they opened. App Icon keeps its own
     /// 1024 numbers, and so does an icon frame somewhere on a bigger picture.
     public var pictureIconUnit: CGFloat? {
         guard canvasSize.width == IconUnits.pictureSide, opensAsIcon else { return nil }
-        return IconUnits.pictureSide / IconKeylines.artboardSide
+        return IconUnits.pictureSide / (iconPictureGrid ?? IconKeylines.artboardSide)
     }
 
     /// How many canvas points one unit of this icon is. One, except on a

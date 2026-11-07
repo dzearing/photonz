@@ -1,0 +1,45 @@
+{
+  "feature": "A small SVG icon opens big enough to work on",
+  "epic": "icon-svg",
+  "summary": "A small square SVG now opens as an Icon picture, the same size a 24 unit icon opens, instead of a speck. It keeps its own units, so a 16 by 16 file reads and writes 16 units.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-small-svg-opens-big-enough-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a 16 by 16 SVG with File, Open.",
+      "shot": "2026-11-07-small-svg-1-opened.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Plus, then Command 0, and check you land on the same view."
+    },
+    {
+      "do": "Click one line of the icon with the Select tool.",
+      "shot": "2026-11-07-small-svg-2-line-picked.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read Width in the panel and the place label on the canvas: they are in the file's units."
+    },
+    {
+      "do": "Export it as SVG and check the file says viewBox 0 0 16 16."
+    },
+    {
+      "do": "Open a 300 by 120 logo.",
+      "shot": "2026-11-07-small-svg-3-logo.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Is the icon big enough to work on as it opens, or should it grow to the full height of the window?",
+    "Is 64 the right top size, or should a 96 or 128 point square file open as an icon too?",
+    "Should a small file that is not square, such as 20 by 16, also open bigger?"
+  ],
+  "rough": [
+    "The icon does not literally fill the window. It opens at 512 points, the view a 24 unit icon gets: 59 percent of the canvas height in a 1280 by 900 window and 67 percent in 1100 by 800.",
+    "A small file that is not square still opens at 100 percent as a speck, and so does a square file over 64 points or under 8.",
+    "Ask's own drawing lands on 24 units. On a picture of another grid that was not tried, so it may land between that picture's units.",
+    "The Actual sizes card sits over the top left corner of the canvas at 1280 wide. A 24 unit icon shows the same overlap, so this change did not cause it.",
+    "No mock covers opening a small SVG file."
+  ]
+}

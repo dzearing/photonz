@@ -66,6 +66,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// document, and judging by size instead would give every square PNG
     /// keylines.
     public var madeAsIcon = false
+    /// How many units across an icon picture is when that is not the usual 24:
+    /// an SVG opened from another grid (`SVGOpening`). Nil on everything else.
+    public var iconPictureGrid: CGFloat?
     /// How long this document runs for, in milliseconds, or nil for a document
     /// with no time in it: the far commoner case, and every document anybody
     /// has today (`DocumentTime.swift`).
@@ -142,7 +145,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
         case gridOriginX, gridOriginY, motionCycleMS, keyLap, readWords, durationMS
         case tracks, trackGroups, media, markers, markInMS, markOutMS
-        case captionLook, captionsListenedTo, componentOriginals, camera, madeAsIcon
+        case captionLook, captionsListenedTo, componentOriginals, camera, madeAsIcon, iconPictureGrid
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -196,6 +199,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // Only a picture made as an icon says so, so every other file is byte
         // for byte what it was.
         if madeAsIcon { try c.encode(madeAsIcon, forKey: .madeAsIcon) }
+        try c.encodeIfPresent(iconPictureGrid, forKey: .iconPictureGrid)
     }
 
     public init(from decoder: Decoder) throws {
@@ -246,6 +250,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             .map { $0.retiringItsOutline() } ?? []
         camera = try c.decodeIfPresent(SceneCamera.self, forKey: .camera)
         madeAsIcon = try c.decodeIfPresent(Bool.self, forKey: .madeAsIcon) ?? false
+        iconPictureGrid = try c.decodeIfPresent(CGFloat.self, forKey: .iconPictureGrid)
         // Captions saved as a plain group of cues open as one Captions layer.
         adoptingCaptionGroups()
         // A zoom written before zooms were aimed at what is seen opens showing

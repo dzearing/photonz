@@ -1,0 +1,37 @@
+{
+  "out": "/tmp/photonz-playtest/a-small-svg-opens-big-enough",
+  "seed": "A 16 by 16 SVG opens as an Icon picture the size a 24 unit one is, with nothing to zoom, and Fit gives the same view. It keeps its own 16 units in the file it writes. A 300 by 120 logo still opens at 100 percent at its own size. No switches: this is Next as it comes.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/svg/small-16.svg", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expect", "control": "Mode", "reads": "Icon" },
+    { "do": "expectLayers", "count": 4 },
+    { "do": "expectIconPreviews", "sides": [16, 24, 32, 48, 64], "bothGrounds": true, "inked": true },
+    { "do": "waitFor", "condition": "displayZoom", "value": 100, "timeout": 3 },
+    { "do": "describe", "stage": "1-opened", "note": "THE FIRST TEST: a 16 point file opened big, in Icon, with no zoom step" },
+    { "do": "snapshot", "name": "1-opened" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "waitFor", "condition": "displayZoom", "value": 100, "timeout": 3 },
+    { "do": "describe", "stage": "2-fit", "note": "THE SECOND TEST: Fit lands on the view it opened at" },
+    { "do": "snapshot", "name": "2-fit" },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [192, 256] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPicked", "layers": ["small-16 3"] },
+    { "do": "expect", "field": "Width", "reads": "1.5" },
+    { "do": "describe", "stage": "2b-a-line-picked", "note": "a click picks one line, and its Width reads in the file's own 16 units" },
+    { "do": "snapshot", "name": "2b-a-line-picked" },
+    { "do": "writeSVG", "name": "small-16-again" },
+    { "do": "expectSVG", "pictured": 0, "contains": "viewBox=\"0 0 16 16\"" },
+    { "do": "open", "file": "fixtures/svg/Wide logo 300x120.svg", "width": 1100, "height": 800 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expect", "control": "Mode", "reads": "Image" },
+    { "do": "waitFor", "condition": "displayZoom", "value": 100, "timeout": 3 },
+    { "do": "describe", "stage": "3-a-logo", "note": "THE THIRD TEST: a logo is not an icon, and opens at 100 percent at its own size" },
+    { "do": "snapshot", "name": "3-a-logo" }
+  ]
+}
