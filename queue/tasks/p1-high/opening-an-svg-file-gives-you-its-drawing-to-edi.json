@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.488Z",
-  "updated": "2026-11-06T18:49:52.288Z",
+  "updated": "2026-11-07T08:30:07.110Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-10-16-svg-logo.json: 'Opening an SVG with no document open (Finder > Open With) still does nothing; only bringing one into an open document is covered.' NOT reproduced by the manager, hence p2 and the first checklist item. Evidence it is likely: the built probe's Info.plist CFBundleDocumentTypes lists png/jpeg/tiff/heic/gif, recordings and the Photonz document, no public.svg-image (plutil -p 'dist/Photonz Probe.app/Contents/Info.plist'). File Open allows [.image, photonzType] (Sources/Photonz/AppCoordinator.swift:992-1001) and .svg conforms to public.image, so File Open probably lists SVGs and then openWindow(.file(url)) tries to load it as a bitmap. Library import already keeps an SVG as VectorArt (Sources/Photonz/EditorState+LibraryImport.swift:20-25, 115-130): reuse that, do not write a second SVG reader. Whether the drawing should come in as editable shapes rather than one vector layer is a later question; one sharp vector layer is enough here. Info.plist source lives with Scripts/build-app.sh.",
@@ -108,6 +108,39 @@
     {
       "t": "2026-11-06T18:49:52.287Z",
       "note": "seq 90 -> 50"
+    },
+    {
+      "t": "2026-11-07T07:18:25.446Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T07:20:32.521Z",
+      "note": "Reproduced 2026-11-06 on the probe at 1869c67d, fixture /tmp/svgrepro/arrow.svg (24x24 stroke icon). (1) File Open: the panel's allowed types are [.image, photonz] and UTType.svg conforms to .image, so SVGs are listed and pickable; picking one goes openFileWindow -> .file(url) -> openImageOrSidecar -> openImage, where CGImageSourceCreateImageAtIndex returns nil for an SVG (standalone check printed 'arrow.svg CGImageSource: true type: nil image: nil NSImage: (24.0, 24.0)') and the guard returns with no message. A walk with one open step on that exact door printed: '[1 open] FAILED: an editor for arrow.svg did not appear within 15.0s'. The panel itself could not be driven unmanned; the walk's open step hands the same .file id the panel does. (2) Dropped on the app icon: the Dock only takes files the app declares, and Info.plist declares no public.svg-image, so the icon refuses it; the same open-documents event sent with 'Scripts/probe-app.sh <file>' (open -a) left one 1240x900 window with no document and no message (CGWindowList, one layer 0 window; a real Dock drag cannot be made here, Ghoztty Accessibility denied). (3) Open With: NSWorkspace.urlsForApplications(toOpen:) on arrow.svg listed Edge, Chrome, Safari, VS Code, TextEdit, Notes, Image Playground and no Photonz. Also: arrow.svgz and a truncated broken.svg both give NSImage nil, and .svgz is public.svg-image too, so both are pickable and fail the same silent way."
+    },
+    {
+      "t": "2026-11-07T08:29:05.989Z",
+      "note": "owns these walks: opening-an-svg-walk"
+    },
+    {
+      "t": "2026-11-07T08:30:06.547Z",
+      "note": "Chose editable shapes over the one vector layer the notes settled for, because the title says to edit and the reader could do it; one sharp picture stays as the fallback when shapes would lose part of a file. Chose an Icon picture at 512 for a 24 unit file over a literal 24 point canvas, because Viewport.fit never enlarges; the file still writes 24 by 24. Chose the white blank canvas under the drawing, as New Icon has, because Export leaves it out by default and dark ink on the dark window would be unreadable. Chose Viewer plus Alternate in Info.plist: measured with NSWorkspace, Editor+Alternate made the probe the default for .svg over Edge, None dropped it from Open With, Viewer+Alternate lists it and Edge stays default."
+    },
+    {
+      "t": "2026-11-07T08:30:06.623Z",
+      "note": "Verified: walk opening-an-svg-walk green with no flags (Icon, click picks one line, expectSharp at zoom on shapes and on the picture, 24 unit export, logo size, refusals), library-svg-logo, copy-an-icon-as-svg and a-saved-icon-opens walks green, Scripts/test.sh exit 0. Looked at 1-icon, 2-a-line-picked, 2b-close-up, 3-a-logo, 4-words-stay-whole, 4b-picture-close-up and a real Lucide mail: each matched its file. Second file while one is open gets its own window. NOT verified by hand: a real Dock drag and pressing the alert's button (Ghoztty Accessibility denied); both are in the audit's rough list. A runner slip, no harm: ran Scripts/build-app.sh --help without reading it first, which targets the dev app by default; it only printed usage and the dev binary's time stayed 23:18."
+    },
+    {
+      "t": "2026-11-07T08:30:06.700Z",
+      "note": "left rough: gradients placed by absolute numbers (userSpaceOnUse) are read as box fractions, close not exact, JetBrains logo 10.7 of 255; stroke-dasharray and use open as a picture though both could become shapes; a white logo is white on white; rect with stroke-linejoin round keeps square outer corners. None earned a task yet: the first shows in few files and the rest fall back honestly. Filed: a-small-svg-icon-opens-big-enough-to-work-on, a-see-through-shape-looks-the-same-on-the-canvas, building-the-app-stops-running-a-second-build-an, find-out-whether-boxes-and-ovals-ask-draws-land."
+    },
+    {
+      "t": "2026-11-07T08:30:07.108Z",
+      "note": "File Open, Open With and the app's open event give a document holding the SVG's drawing: shapes on layers at its own size, a 24 unit file as an Icon picture, a picture with a pill when shapes would lose part of it, a plain alert for a damaged or compressed file. Commit f2525894. Verified by opening-an-svg-walk with no flags, Scripts/test.sh exit 0, and 431 real SVGs compared with macOS's drawing. Audit: queue/audits/2026-11-07-opening-an-svg.json"
     }
-  ]
+  ],
+  "started": "2026-11-07T07:18:25.445Z",
+  "walks": [
+    "opening-an-svg-walk"
+  ],
+  "completed": "2026-11-07T08:30:07.109Z"
 }

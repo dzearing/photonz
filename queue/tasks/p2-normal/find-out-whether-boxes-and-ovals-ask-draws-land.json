@@ -1,0 +1,26 @@
+{
+  "id": "find-out-whether-boxes-and-ovals-ask-draws-land",
+  "title": "Find out whether boxes and ovals Ask draws land half a line too small",
+  "goal": "When an SVG holding an outlined box or oval was read into layers, its line sat inside the box, so the shape came out half a line too small and lines meant to meet it stuck out. Opening a file now puts the line where the file says; Ask reads SVG through the same reader and may still have the fault, which would show on any outline icon it draws. Find out, and fix it if so.",
+  "epic": "icon-svg",
+  "priority": "p2-normal",
+  "seq": 59.6875,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T08:29:05.863Z",
+  "updated": "2026-11-07T08:29:05.866Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Not reproduced through Ask itself, hence p2 and a question. Seen through SVGArtwork.layers, which Ask also uses: lucide mail.svg scored 53.08 of 255 mean difference from macOS's drawing with the line inside the box and left the worst of the list once SVGOpening set style.borderPosition = .center. Ask's path was left alone on purpose: its grid landing and tests are pinned to today's numbers.",
+  "acceptance": [
+    "An Ask drawing of an outlined box is compared with the SVG the model wrote, and the log says whether the box moved",
+    "If it did, the box lands where the SVG says, and the eval's climb and held-out totals are both reported"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T08:29:05.865Z",
+      "note": "created (manual)"
+    }
+  ]
+}
