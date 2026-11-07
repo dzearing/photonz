@@ -3,13 +3,13 @@
   "title": "A glyph takes the icon set's saved stroke in one click",
   "goal": "The icon drawing mock says the set's 1.75 round stroke is saved as a style, so giving a glyph that stroke is one click, and changing the set's weight changes every glyph. Today each outline is set on its own, so a person changing the set's weight has to visit every glyph.",
   "epic": "icon-vector",
-  "priority": "p2-normal",
-  "seq": 55,
+  "priority": "p1-high",
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T07:13:42.402Z",
-  "updated": "2026-11-07T07:13:42.405Z",
+  "updated": "2026-11-07T15:49:03.698Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found comparing the outline settings with icon-draw-wt.html #secStroke (note pStrokeNote) under a-drawn-path-s-outline-settings-read-like-the-ic. Colour styles already bind by name (bindColorStyle); nothing does that for width, caps and corners.",
@@ -22,6 +22,18 @@
     {
       "t": "2026-11-07T07:13:42.404Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-07T15:49:02.401Z",
+      "note": "digest 2026-11-07: moved to p1 for the focus. It is the mock's Stroke note and a step of the focus workflow. Land it after the typed Width task, since a saved stroke has to mean units on an Icon picture."
+    },
+    {
+      "t": "2026-11-07T15:49:02.751Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-11-07T15:49:03.697Z",
+      "note": "seq 55 -> 50"
     }
   ]
 }

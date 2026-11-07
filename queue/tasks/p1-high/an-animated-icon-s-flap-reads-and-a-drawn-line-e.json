@@ -3,13 +3,13 @@
   "title": "An animated icon's flap reads, and a drawn line ends its lap cleanly",
   "goal": "Ask's moving icons still fall short on a few kinds of motion: an envelope's flap crosses its body, a plane stops cut off at the top edge, and lines that draw themselves jump when the loop restarts. Make these read as well as the rest, and measure the work on requests nobody tuned for.",
   "epic": "icon-animate",
-  "priority": "p2-normal",
-  "seq": 40,
+  "priority": "p1-high",
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T18:22:08.469Z",
-  "updated": "2026-11-06T18:51:39.086Z",
+  "updated": "2026-11-07T15:49:03.930Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ask-animates-what-it-makes-an-animated-svg-icon, run 20261106-171511-ask: envelope 4, plane 6, wifi loops 3. AskMotionCheck leaves trimStart and trimEnd out of its loop check on purpose, since a checkmark set to end where it began never drew. Rules in AskMotion.principles must stay general: nothing per subject. Pictures: queue/audits/2026-11-06-ask-animates-after-envelope-opening.png and -after-wifi-signal.png.",
@@ -31,6 +31,14 @@
     {
       "t": "2026-11-06T18:51:39.085Z",
       "note": "digest 2026-11-06, seen by eye, not measured: the same balloon's edges are crisp stopped (2026-11-06-ask-animates-1-icon-and-keys-sc.png) and softer while playing (-2-playing-sc.png). It may be the canvas drawing at a lower size during play. Did not earn a task from two pictures; if the user notices it, it has."
+    },
+    {
+      "t": "2026-11-07T15:49:02.985Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-11-07T15:49:03.929Z",
+      "note": "seq 40 -> 80"
     }
   ]
 }

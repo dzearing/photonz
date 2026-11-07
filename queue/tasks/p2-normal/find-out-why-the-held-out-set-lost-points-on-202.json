@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T00:19:24.333Z",
-  "updated": "2026-11-07T04:13:35.074Z",
+  "updated": "2026-11-07T15:49:02.016Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced, one reading. Scripts/ask-eval.sh time 20261105-214708-ask-held-out 20261105-055127-ask-held-out printed drawing 4 of 36 ran out of time, 3 stopped part way, 149s median, against 1 of 36, 2 stopped, 147s; redline 33.8 against 44.1 over 3 cases, a group that read 33.2 and 33.6 earlier this week. Three extra zeros are about 4.7 of the 5.7 points. Prompts for anything but an icon did not change in 7c581639 or f0e55cc4, and restyle_icon is offered only on a picture holding an icon. Held-out icon requests of something breaking would take the new route, which cannot be told from totals. The run was resumed in about sixteen pieces of six minutes, each restarting the probe; that is a guess at the cause, not a finding.",
@@ -34,6 +34,11 @@
     {
       "t": "2026-11-07T04:13:35.073Z",
       "note": "Another reading: 20261107-013327-ask-held-out, on an-icon-picture-s-svg-reads-in-24-whole-units, total 59.7 against 62.7 on 2026-11-05 (drawing 62.9 from 66.1, layout 47.7 from 49.7, redline 30.3 from 33.8, video 63.1 from 63.8). That change only touches icons, so layout, redline and video falling too points at something else as well. No control run on the parent commit was made, so its share of the drawing drop is not known."
+    },
+    {
+      "t": "2026-11-07T15:49:02.014Z",
+      "note": "Closed as chance, as its checklist says. Held-out read again on current code: 20261107-130822-ask-held-out (9b54cd17) total 66.4, drawing 70.8, 0 of 36 ran out of time, 2 stopped part way, 148 s median. The two low readings were 62.7 (4 of 36 out of time) and 59.7 (2 of 36, plus 1 of 3 on layout, 170 s median); the high was 68.4 (1 of 36). So the drop was time-outs and has gone, with no change aimed at it. Layout at 44.6 and redline at 33.9 are one reading each; redline stays on ask-s-redlines-do-at-least-as-well-on-unseen-req."
     }
-  ]
+  ],
+  "completed": "2026-11-07T15:49:02.015Z"
 }

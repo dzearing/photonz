@@ -3,13 +3,13 @@
   "title": "A small SVG icon opens big enough to work on",
   "goal": "An SVG of 16, 20, 32 or 48 points opens at 100 percent as a speck in the middle of the window, so someone who opens an icon has to zoom before they can see it. It should open filling the window, and a square icon on another grid should get the Icon tools a 24 unit one gets.",
   "epic": "icon-svg",
-  "priority": "p2-normal",
-  "seq": 57.5,
+  "priority": "p1-high",
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T08:29:05.407Z",
-  "updated": "2026-11-07T08:29:05.410Z",
+  "updated": "2026-11-07T15:49:03.547Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-07 on the probe: a walk opening a 16x16 SVG logged 'small16.svg: document 16x16 at pixelScale 1.0; window 1100x800 pt; canvas 835x768 pt; zoom 1.000', and 1-small-sc.png shows a 16 point square alone in the window. Viewport.fit never enlarges. Of 431 real SVGs on this Mac, 37 are 16x16, 20 are 14x14, 16 are 48x48 and 10 are 22x22. Only the 24 grid opens as an Icon picture today (SVGOpening.isIcon); 512 must stay an ordinary picture, since pictureIconUnit would rewrite it as 24 units on export. Found by opening-an-svg-file-gives-you-its-drawing-to-edi.",
@@ -22,6 +22,18 @@
     {
       "t": "2026-11-07T08:29:05.409Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-07T15:49:02.598Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-11-07T15:49:03.062Z",
+      "note": "digest 2026-11-07 spot check, moved to p1 for the focus: a walk opening a 16 by 16 SVG logged 'small16.svg: document 16x16 at pixelScale 1.0 ... zoom 1.000' at ce764ec4, so it still opens as a speck."
+    },
+    {
+      "t": "2026-11-07T15:49:03.546Z",
+      "note": "seq 57.5 -> 30"
     }
   ]
 }

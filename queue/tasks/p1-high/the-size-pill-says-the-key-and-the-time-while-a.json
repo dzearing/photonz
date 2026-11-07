@@ -3,13 +3,13 @@
   "title": "The size pill says the key and the time while a hand is on a keyed layer",
   "goal": "The approved Animate a picture design shows a diamond and the time in the size pill while you drag a layer that has keys, so you can see where the change lands without looking down. The build shows only the size today.",
   "epic": "icon-animate",
-  "priority": "p2-normal",
-  "seq": 30,
+  "priority": "p1-high",
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T04:10:43.796Z",
-  "updated": "2026-11-06T18:49:54.107Z",
+  "updated": "2026-11-07T15:49:03.777Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up of animating-a-picture-is-as-simple-as-setting-a-mo. docs/design/mocks/pages/picture-keys.html, Showing that a change will key. The other signals in that row are built: hollow diamond at the playhead, the pop, the panel row diamond, the diamond in Layers.",
@@ -26,6 +26,14 @@
     {
       "t": "2026-11-06T18:49:54.106Z",
       "note": "seq 8.75 -> 30"
+    },
+    {
+      "t": "2026-11-07T15:49:02.827Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-11-07T15:49:03.776Z",
+      "note": "seq 30 -> 60"
     }
   ]
 }

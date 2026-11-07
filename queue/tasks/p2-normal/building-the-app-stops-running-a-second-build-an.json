@@ -2,14 +2,14 @@
   "id": "building-the-app-stops-running-a-second-build-an",
   "title": "Building the app stops running a second build and pasting its log into Info.plist",
   "goal": "Every app bundle build quietly runs an extra debug build and writes that build's log into the app's Info.plist, because of a comment in the build script. Each build the loop makes costs extra time, and the file is not valid XML to a strict reader.",
-  "epic": "icon-svg",
+  "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 59.375,
+  "seq": 625,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T08:29:05.714Z",
-  "updated": "2026-11-07T08:29:05.717Z",
+  "updated": "2026-11-07T15:50:23.113Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-07. Scripts/build-app.sh line 302, inside the unquoted PLIST heredoc, is a comment holding backticks round swift build, so bash runs it. dist/Photonz Probe.app/Contents/Info.plist lines 27 to 30 read 'plain [0/1] Planning build / Building for debugging... / [0/7] Write swift-version--58304C5D6DBC2206.txt / Build complete! (0.59s) dev runs behave the same. -->'. Python plistlib failed on it: 'ExpatError: not well-formed (invalid token): line 29, column 27' (the -- inside a comment). plutil and Launch Services tolerate it, so nothing has failed visibly. In the script since e50b69c4 (2026-06-20). Check before removing it that nothing leans on the debug build this happens to make. Serves the loop's build time, which every icon-svg task pays.",
@@ -21,6 +21,18 @@
     {
       "t": "2026-11-07T08:29:05.716Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-07T15:55:00.000Z",
+      "note": "digest 2026-11-07: epic icon-svg to unmanned-loop. This is the build, not an icon, and it should not jump the queue as focus work. Confirmed: plistlib on the probe's Info.plist still fails, not well-formed at line 29, column 27."
+    },
+    {
+      "t": "2026-11-07T15:49:05.567Z",
+      "note": "seq 59.375 -> 40"
+    },
+    {
+      "t": "2026-11-07T15:50:23.112Z",
+      "note": "seq 40 -> 625"
     }
   ]
 }

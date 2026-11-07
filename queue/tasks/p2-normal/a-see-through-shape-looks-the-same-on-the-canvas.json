@@ -1,27 +1,35 @@
 {
   "id": "a-see-through-shape-looks-the-same-on-the-canvas",
-  "title": "A see-through shape looks the same on the canvas as in its exported file",
-  "goal": "A shape at 30 percent opacity shows much lighter on the canvas than macOS or a browser draws the same shape, so someone tuning a translucent icon sees one thing in Photonz and gets a darker result in the file they hand over. The two should match.",
+  "title": "Find out whether any see-through shape differs between the canvas and its file at Next defaults",
+  "goal": "A note said a shape at 30 percent opacity shows lighter on the canvas than macOS or a browser draws it, but the same test in the real window at Next defaults matched. Find out whether any translucent shape still differs, and fix it if one does, so someone tuning a translucent icon sees what they will hand over.",
   "epic": "icon-svg",
   "priority": "p2-normal",
-  "seq": 58.75,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T08:29:05.561Z",
-  "updated": "2026-11-07T08:29:05.564Z",
+  "updated": "2026-11-07T15:49:05.415Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-07. Fixture: <svg width=100 height=100><rect width=100 height=100 fill=#000000 fill-opacity=0.3/></svg>. DocumentRenderer on white printed 'OURS 30% black on white: 218 218 218 layer opacity 0.3'; NSImage of the same file on white printed 'macOS 30% black on white: 178 178 178'. 178 is 0.7 x 255, a blend of the encoded values; 218 is what a blend in linear light gives. Seen on real files in the comparison: VS Code letterpress, ONNX logo, a record button's halo. Not diagnosed further: DocumentRenderer sets workingColorSpace extendedSRGB at line 193, so the cause is still to find. A renderer wide change, hence not done inside the SVG task.",
   "acceptance": [
-    "30 percent black over white reads the same on the canvas as macOS draws it from the exported SVG, within 3 levels of 255",
-    "Existing pictures with translucent layers are checked for what the change does to them, and the audit shows a before and after",
-    "Render performance budgets still pass"
+    "A shape drawn in Photonz at 30 percent, and the real files the notes name, are read on the canvas and against macOS's drawing, and the log gives the numbers",
+    "If nothing differs by more than 3 levels of 255 this closes with those numbers",
+    "If something does, it is fixed, the audit shows a before and after of existing translucent pictures, and render speed budgets still pass"
   ],
   "log": [
     {
       "t": "2026-11-07T08:29:05.563Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-07T15:49:02.480Z",
+      "note": "digest 2026-11-07: did not reproduce in the app. Opened the note's fixture (100 by 100, black at fill-opacity 0.3) on the probe at Next defaults with a walk (open, then snapshot) and read the window: 178,178,178 over 40004 pixels of see-sc.png, the same 178 macOS gives, not 218. Next has see-through paint mixed the browser's way (next-web-compositing), so the 218 looks like the renderer's standard space called directly. Moved nothing, kept at p2, retitled as the question it is, and not raised with the other focus work. Not tried: a shape drawn in Photonz at 30 percent, or the three real files named in the notes."
+    },
+    {
+      "t": "2026-11-07T15:49:05.414Z",
+      "note": "seq 58.75 -> 20"
     }
   ]
 }

@@ -1,0 +1,114 @@
+{
+ "out": "/tmp/photonz-playtest/digest-icon-pic-width3",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "startFromEmpty",
+   "row": "New image",
+   "answer": [
+    "Icon",
+    "Create"
+   ],
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "tool",
+   "tool": "pen"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    200,
+    200
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "click",
+   "at": [
+    400,
+    200
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "click",
+   "at": [
+    400,
+    400
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "focus",
+   "field": "Width"
+  },
+  {
+   "do": "type",
+   "text": "1.75"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "snapshot",
+   "name": "typed-175"
+  },
+  {
+   "do": "expect",
+   "field": "Width",
+   "reads": "1.75"
+  },
+  {
+   "do": "expectSVG",
+   "contains": "stroke-width=\"0.08"
+  }
+ ]
+}

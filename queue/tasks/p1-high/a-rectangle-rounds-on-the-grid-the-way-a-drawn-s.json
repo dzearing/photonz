@@ -3,13 +3,13 @@
   "title": "A rectangle rounds on the grid the way a drawn shape does",
   "goal": "With the grid on, pulling a corner on a shape drawn with the Pen lands on grid steps and Command frees it, but pulling a corner on a rectangle ignores the grid. Someone rounding an icon on a grid gets radii that do not line up, depending on which kind of shape they picked.",
   "epic": "icon-vector",
-  "priority": "p2-normal",
-  "seq": 59.84375,
+  "priority": "p1-high",
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T11:02:59.275Z",
-  "updated": "2026-11-07T11:02:59.278Z",
+  "updated": "2026-11-07T15:49:03.623Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while building rounding-corners-works-the-same-way-on-a-rectang. Reading the code: CanvasPathCorners.pathCornerMouseDragged runs the radius through PathContent.landedCornerRadius with canvasNudgeGrid spacing, the rectangle branch in CanvasPointerDrags.mouseDragged (cornerRadiusDrag) only rounds to whole points in CornerRadiusHandles.radius. Shown by round-a-path-s-corners-walk stage 7-grid (a pull asking 50.6 lands on 64); Reproduced 2026-11-07 with a throwaway walk: blank 900x600, draw a rectangle 320,260 to 600,460, selectCanvas, press Show grid, click the rectangle, drag the top left dot 332,272 to 370,310 with readout \"Radius 50\" and expect Corner Radius reads 50. Scripts/playtest.sh /tmp/rect-on-grid-walk.json --no-build printed exit 0, status ok, 15 steps: the rectangle landed on 50 with the grid on, where the path walk lands the same size of pull on 64.",
@@ -22,6 +22,18 @@
     {
       "t": "2026-11-07T11:02:59.277Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-07T15:49:02.675Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-11-07T15:49:03.139Z",
+      "note": "digest 2026-11-07 spot check, moved to p1 for the focus: Scripts/playtest.sh /tmp/rect-on-grid-walk.json --no-build exit 0 at ce764ec4, status ok, the rectangle still lands on 50 with the grid on."
+    },
+    {
+      "t": "2026-11-07T15:49:03.622Z",
+      "note": "seq 59.84375 -> 40"
     }
   ]
 }

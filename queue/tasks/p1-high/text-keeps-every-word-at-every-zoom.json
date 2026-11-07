@@ -4,12 +4,12 @@
   "goal": "At some zoom levels the last word of a line disappears from the canvas: a one line subtitle that fits its box wraps at that zoom and its second line is cut off. Words on the canvas should read the same at every zoom.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 150,
+  "seq": 140,
   "status": "pending",
   "release": "current",
   "area": "app",
   "created": "2026-11-04T00:17:55.310Z",
-  "updated": "2026-11-06T18:49:53.045Z",
+  "updated": "2026-11-07T15:49:04.399Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-on-the-local-model-makes-results-that-look-f, 2026-11-03, seen in the pricing walk at Next defaults (queue/audits/2026-11-03-ask-layout-look-after-sc.png: the subtitle ends at cancel). Shared renderer, so it was not fixed there: that task may not change Current. TextRasterizer.rasterize (Sources/PhotonzRender/TextRasterizer.swift) sets width = Int((size.width * scale).rounded()) and lays out in CGRect(width: CGFloat(width) / scale), so a rounded-down pixel width narrows the layout box below the measured one; the doc comment above it promises line breaks are identical at every scale. Fix to try: lay out in size, not pixels / scale. Reproduced with a throwaway Swift test: naturalSize 526 x 26 for that line (SF Pro 18 regular, alignment center), then rasterize at each scale and measure ink width. Output: scale 1.0 pixels 526 layout 526.0 ink 519.0; scale 2.0 pixels 1052 layout 526.0 ink 520.0; scale 0.6715 pixels 353 layout 525.689 ink 445.3; scale 1.343 pixels 706 layout 525.689 ink 447.5; scale 1.25 pixels 658 layout 526.4 ink 520.0; scale 1.7 pixels 894 layout 525.882 ink 519.4. Cut at 0.6715 and 1.343 only. A move is not the cause: the same line placed by add_text and moved with set_layer shows every word in render_picture at 100%.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-11-06T18:49:53.044Z",
       "note": "seq 200 -> 150"
+    },
+    {
+      "t": "2026-11-07T15:49:04.398Z",
+      "note": "seq 150 -> 140"
     }
   ]
 }

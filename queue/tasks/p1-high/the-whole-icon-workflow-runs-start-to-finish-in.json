@@ -1,0 +1,32 @@
+{
+  "id": "the-whole-icon-workflow-runs-start-to-finish-in",
+  "title": "The whole icon workflow runs start to finish in one walk at Next defaults",
+  "goal": "Every step of making an icon has been proved on its own, but nothing has yet gone from an empty window to a moving SVG in one go, and the focus says it must be walked end to end. Doing it once, the way a person would, shows what still trips someone up between the steps.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T15:48:22.529Z",
+  "updated": "2026-11-07T15:49:03.470Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the digest of 2026-11-07. The focus in queue/objectives.json names the workflow: start a 24 unit icon, keylines and snapping on, draw a cloud-download glyph from shapes and the Pen, union it, give it a 1.75 round stroke, check it at 16, 24 and 48, make it swing or spin forever, export an animated SVG for a web page. No walk under Scripts/playtest does more than a part of this (grep for cloud finds only opening-an-svg-walk and border-follows-the-shape-walk). Stepping along the first half by hand found the typed Width fault at once, so expect more. While walking, judge the panel too: a rectangle in an icon frame shows Columns and Layout sections that say little about an icon (queue/audits/2026-11-07-icon-place-tag-1-box-sc.png, and the same on 2026-11-06). Seen twice now. If it gets in the way, say so in the audit. Each fault this finds that is not a one line fix gets its own task; do not fold them all in here.",
+  "acceptance": [
+    "One walk at Next defaults with no flags does every step of the focus workflow, on File, New, Image, Icon and again on a 24 unit frame, through pointer clicks and keys, and exports an animated SVG",
+    "The exported SVG is opened in a browser and plays, and the audit says so with a picture",
+    "The audit lists every step that was clumsy, surprising or took a second try, as a person trying it would see them, with a picture for each",
+    "Any step that fails either passes before this closes or has its own open task named in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T15:48:22.531Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-11-07T15:49:03.469Z",
+      "note": "seq 2 -> 20"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "typing-1-75-into-width-on-an-icon-picture-gives",
+  "title": "Typing 1.75 into Width on an Icon picture gives the icon's 1.75 line, not a hairline",
+  "goal": "On a picture made with File, New, Image, Icon, the tag on the canvas reads in the icon's 24 units but the panel reads in the picture's 512 points. A Pen line shows Width 40, and typing the set's weight of 1.75 turns the line into a hairline that nearly vanishes from the previews and the file. Someone building an icon should be able to type 1.75 and get a 1.75 line.",
+  "epic": "icon-grid",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T15:48:22.407Z",
+  "updated": "2026-11-07T15:49:03.394Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-07 at 9b54cd17 on the probe at Next defaults. Command: Scripts/playtest.sh queue/evidence/2026-11-07-icon-picture-typed-width-walk.json --no-build. It makes File, New, Image, Icon, draws three Pen points, types 1.75 into Width and presses Return. Output: status ok, exit 0, because the walk's last step expects the wrong thing on purpose: expect Width reads 1.75 passes and expectSVG contains stroke-width=\"0.08 passes, so the file holds a line of about 0.08 units. The same walk expecting stroke-width=\"1.75\" printed '[22 expectSVG] FAILED: the file does not carry \"stroke-width=\"1.75\"\"', exit 1. Pictures: queue/audits/2026-11-07-icon-picture-width-40-before-sc.png (tag 9, 9 · 10 × 10 beside Width 40 px) and queue/audits/2026-11-07-icon-picture-width-typed-175-sc.png (the hairline, previews almost empty). A 24 unit icon FRAME is not affected, its unit is one point, which is why path-outline-width-caps-walk passes. Also seen: a Pen line in an Icon picture starts at 40 points, which is 1.875 units, where an outline starts at 1.75, and an SVG opened as an Icon reads Width 37.33 px on a 1.75 line (queue/audits/2026-11-07-opening-an-svg-1-icon.png). Corner Radius and the drawing pill read points too. Check every length row on an Icon picture, not just Width.",
+  "acceptance": [
+    "On a File, New, Image, Icon picture, typing 1.75 into Width gives a line the previews and canvas show at the icon's 1.75 unit weight, and its SVG says stroke-width 1.75",
+    "A 24 unit SVG opened in Photonz reads Width 1.75 for a 1.75 line, not 37.33",
+    "Corner Radius, the size pill and every other length on an Icon picture read in the same units as the tag above the shape, or the audit says why one stays in points",
+    "A 24 unit icon frame on a bigger canvas reads as it does today",
+    "A walk at Next defaults with no flags proves the typed width by the SVG it writes, and its pictures go in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T15:48:22.409Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-11-07T15:49:03.393Z",
+      "note": "seq 1 -> 10"
+    }
+  ]
+}
