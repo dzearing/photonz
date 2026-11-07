@@ -476,6 +476,15 @@ rescaled for the file (`SVGIconUnits.swift`, `Layer.rescaled(by:)`).
 
 Ask's icons land on those units too (`IconGridLanding`): a drawing made on the 24
 grid keeps its numbers, moved to the middle by whole units, and every point rounds
-away from the artboard's middle so a mirrored drawing stays mirrored. A torn icon
-is left as it was fitted: its tear and marks are not on any grid, and rounding them
-took a bubble from 85.6 to 40.6 on the eval.
+away from the artboard's middle so a mirrored drawing stays mirrored.
+
+A torn icon is placed before it is torn (`AskIconBreak.Placing`). Rounding after a
+fit is what hurt it: a fit is a fraction, so small parts squashed and a line went
+from 1.5 to 1. So the tool works out the size that gets the drawing and its marks
+into the live area, tears there on whole units, and sends the whole drawing there
+through one group, so the landing keeps it and fits nothing. A round outline takes
+an even number of units so its middle is whole too. A mark is the whole number run
+nearest its heading, not two ends rounded alone. A line weight may land on a half
+unit (`IconGridLanding.weight`): it is not a place, and 2 is too heavy on a balloon
+brought down to fit. A curve's handles stay fractions, and a span that will not come
+out even sits up to a unit off centre.

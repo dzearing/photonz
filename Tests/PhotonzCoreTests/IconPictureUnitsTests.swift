@@ -316,21 +316,6 @@ struct IconPictureUnitsTests {
         #expect(SVGWholeUnits.fractionalCoordinates(in: text) == [])
     }
 
-    @Test("A torn icon keeps the slant of its marks")
-    func askTornKeepsItsAngles() throws {
-        let torn = try #require(AskIconBreak.applied(to: """
-        <svg viewBox="0 0 24 24"><circle id="bubble" cx="12" cy="12" r="9" fill="none" stroke="#000000" stroke-width="2"/></svg>
-        """))
-        let art = try Self.artwork(torn)
-        #expect(art.parts.contains { AskIconBreak.isMark($0.name) })
-        let frame = art.iconFrame(named: "Icon", side: 512, origin: .zero)
-        let mark = try #require(frame.children.first { $0.path?.anchors.count == 2 }?.path,
-                                "layers: \(frame.children.map(\.name))")
-        let run = CGPoint(x: mark.anchors[1].point.x - mark.anchors[0].point.x,
-                          y: mark.anchors[1].point.y - mark.anchors[0].point.y)
-        #expect(abs(run.x / Self.unit - (run.x / Self.unit).rounded()) > 0.01)
-    }
-
     @Test("An app icon keeps the numbers it was fitted to")
     func appIconIsNotLanded() {
         #expect(IconGridLanding(side: 1024) == nil)

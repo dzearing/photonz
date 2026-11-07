@@ -1,8 +1,8 @@
 {
   "feature": "An icon picture's SVG reads in 24 whole units",
   "epic": "icon-export",
-  "summary": "Draw in a File, New, Image, Icon picture and the SVG comes out 24 by 24 in whole numbers, ready to hand to a developer. The Pen and shapes now land on 24 units across the 512 canvas, and PNG stays 512.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: an-icon-picture-writes-24-units-walk, icon-picture-from-the-new-sheet-walk, pen-lands-on-whole-units-in-an-icon-walk, copy-an-icon-as-svg-walk, ask-makes-an-icon-walk, ask-animates-an-icon-walk.",
+  "summary": "Draw in a File, New, Image, Icon picture and the SVG comes out 24 by 24 in whole numbers, ready to hand to a developer. The Pen and shapes now land on 24 units across the 512 canvas, and PNG stays 512. Icons Ask tears now write whole numbers too, at a cost on the eval set out below.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: an-icon-picture-writes-24-units-walk, icon-picture-from-the-new-sheet-walk, pen-lands-on-whole-units-in-an-icon-walk, copy-an-icon-as-svg-walk, ask-makes-an-icon-walk, ask-animates-an-icon-walk, a-torn-icon-writes-whole-units-walk.",
   "switched": {},
   "try": [
     {
@@ -37,21 +37,32 @@
     {
       "do": "Ask for an animated icon, Copy SVG, and open it in Safari and in Chrome. The picture is the same file in WebKit, above, and Chrome, below.",
       "shot": "2026-11-06-icon-24-units-moving-webkit-and-chrome.png"
+    },
+    {
+      "do": "Ask for an icon of a balloon popping, export it as SVG and read the file: whole numbers here too, apart from a curve's handles. Ours is 2026-11-06-torn-icon-24-units.svg beside this audit.",
+      "shot": "2026-11-06-torn-icon-24-units-window-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
     }
   ],
   "evaluate": [
     "Is it right that the panel still reads points (a line of 2 units reads about 43) while the file says 2?",
     "A first line in an icon picture now starts at 2 units, far heavier than the 4 points it had. Is that the weight you expect?",
     "Ask's icons are nudged by up to half a unit to land on the grid. Do any look worse to you for it?",
-    "Is whole numbers worth about one point on the icon eval, or would you rather keep Ask's half units?"
+    "Torn icons lost more than the rest: the egg fell 83 to 56 for whole numbers. Look at 2026-11-06-torn-icon-24-units-compare.png, today's row above and the whole unit row below. Is the file worth that, or should torn icons keep fractions?",
+    "A torn balloon's line is stroke-width 1.5, since 2 was too heavy on it. Is one half number in the file fine, given every place is whole?"
   ],
   "rough": [
-    "NOT FINISHED: a torn Ask icon (a popping balloon, a broken heart) still writes fractions. Rounding the tear took the bubble from 85.6 to 40.6, so torn icons keep them for now, and this task stays open for that.",
-    "Ask scored lower. The 17 icon cases read 84.4 against 85.4 on 2026-11-05. The duotone heart fell 85.6 to 68.6 and the camera 85.6 to 80.8; the cracked egg rose 70.6 to 83.2. That 84.4 joins two runs: 14 cases from one and the 4 torn cases from a run on the final code.",
+    "Torn icons now write whole numbers and it cost points. Same model drawings, fractions then whole units: balloon 88.8 to 84, heart 56 to 43, egg 83.2 to 56. The bubble read 54.8 to 44.9, but the model drew it with a droplet this time, and that drawing read 40.6 to 45.7 before. One reading of each. The egg's fall is nearly all one judge line going from 7 to 5, which scales the whole score. Pictures: 2026-11-06-torn-icon-24-units-compare.png and 2026-11-06-torn-icon-24-units-eval.png.",
+    "That takes the 17 icon cases from 84.4 to about 81, worked out from those four cases and not from a fresh run of all 17. Before this the 14 untorn cases and the torn four were joined from two runs, as the 84.4 was.",
+    "The held-out total below is from before this change and was not run again: it takes about two and a half hours, and only a torn icon moves. How much a torn icon moves it is not known.",
+    "A correction: this audit and the code said rounding took a bubble from 85.6 to 40.6. It did not, not on its own. The 40.6 readings were a different drawing, the one with a droplet, and most of the swing was blind naming. Rounding after a fit did real harm (squashed parts, a line of 1.5 going to 1), and that is what was fixed.",
+    "A torn icon's line can be 1.5 in the file, so that one number is not whole. Every place is. Any icon the model draws at 1.5 now stays 1.5 rather than rounding to 2; none of the last 18 cases drew one.",
+    "Two of nine drawings tried sit a unit off centre top to bottom, because their span would not come out even: the heart reads 9.5 on rules for it.",
+    "A mark's length changes a little with its slant: on a 24 grid a slanted mark is 1.4 or 2.8 long where a straight one is 2.",
     "The held-out total fell to 59.7 from 62.7 (best 68.4): drawing 62.9 from 66.1, layout 47.7 from 49.7, redline 30.3 from 33.8, video 63.1 from 63.8. This change cannot reach layout, redline or video, so part of that is something else, but how much of the drawing drop is mine is not known. Logged on find-out-why-the-held-out-set-lost-points-on-202.",
     "A circle an odd number of units across keeps a half at its centre, though its edges are whole: the camera's lens says cy 4.5. Off centre by half a unit is the same limit: the calendar lost a little on the centring rule for it.",
     "The model still writes half units despite being told whole numbers, so rounding does the work and the prompt line may not be earning its place.",
-    "The mock's title reads 24 × 24 while the Layers panel here reads Canvas 512 × 512: an-icon-picture-s-svg-reads-in-24-whole-units decided to keep the 512 canvas.",
+    "The mock's title reads 24 × 24 while the Layers panel here reads Canvas 512 × 512: the user asked for a 24 pt glyph on 512 on 2026-11-04, in ask-makes-icons-that-are-icons-one-subject-clean, so the canvas stays 512 and only the file says 24.",
     "A picture holding a measurement stays at 512 in its SVG, because a measure's label is a fixed size and would cover a 24 unit icon.",
     "Enlarged in Preview, a shadow in the file goes soft: Apple's reader blurs at 24 pixels and stretches. Chrome draws it the same as a 512 file, 0.0002 apart. Safari's own rendering of a shadow was not checked.",
     "The moving file was compared in Chrome and in WebKit, Safari's engine, not in the Safari app: eight moments of one Ask icon, 0.24 to 1.31 apart out of 255."

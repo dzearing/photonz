@@ -1,0 +1,24 @@
+{
+  "out": "/tmp/photonz-playtest/a-torn-icon-writes-whole-units-walk",
+  "seed": "an-icon-picture-s-svg-reads-in-24-whole-units, at Next defaults with no flag touched. An icon Ask tears is worked out on whole units where it lands, so the file says 24 by 24 and Copy says the same as Export.",
+  "clock": 420,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "an icon of a balloon popping" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-the-torn-icon", "note": "the blank picture became the icon, torn at its upper right with three marks" },
+    { "do": "snapshot", "name": "1-the-torn-icon" },
+    { "do": "writeSVG", "name": "icon", "carries": "viewBox=\"0 0 24 24\"" },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command"], "menuItem": "Copy" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "2-copied", "svg": true, "svgFitted": true, "svgSameAs": "icon" }
+  ]
+}

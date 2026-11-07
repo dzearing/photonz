@@ -34,6 +34,23 @@ public enum AskIconBreak {
     /// A closed outline under this share of the drawing clots: its line fills
     /// it, so it lands solid (`AskIcon.smallParts` says the same to the model).
     static let smallestOutline: CGFloat = 4.0 / 24
+    /// Under this many units across, a torn drawing is brought up to it.
+    static let smallestReach: CGFloat = 18
+    /// How many sizes are tried before settling.
+    static let mostTries = 6
+    /// How far an outer mark may step, in units, to even a drawing's span.
+    static let stepsToEven: [CGFloat] = [0, 1, -1]
+    /// How far a mark's whole run may stray from its length, as shares of it,
+    /// and what a share of that is worth against a radian of its heading.
+    static let shortestMark: CGFloat = 0.75
+    static let longestMark: CGFloat = 1.5
+    static let markLengthWeighs: CGFloat = 0.5
+    /// The shortest run a tear leaves at either end of what it kept, in units.
+    static let shortestRun: CGFloat = 1.5
+    /// The air a mark keeps from the outline's line, in units, and how many
+    /// units it may step out to find that.
+    static let markClearance: CGFloat = 0.5
+    static let mostSteps = 4
     /// Where it tears: the upper right, the way a mark is read in an icon,
     /// away from whatever an object hangs or stands on.
     static let tearAngle: CGFloat = -.pi / 4
@@ -80,45 +97,106 @@ public enum AskIconBreak {
         in Z, with an id, and no transform. Call add_drawing once more with the whole svg drawn again.
         """
 
-    /// What every mark flying from a tear is named from, which is also how a
-    /// torn drawing is told from one drawn on the grid.
-    public static let markName = "burst-"
-
-    /// Whether a part of a drawing is one of those marks. A part's id comes
-    /// back tidied into a name, so "burst-1" reads "Burst 1" here.
-    public static func isMark(_ name: String?) -> Bool {
-        name?.lowercased().hasPrefix(markName.replacingOccurrences(of: "-", with: " ")) == true
-    }
-
     /// `svg` with its biggest outline torn at the upper right and marks flying
     /// from the tear, or nil when it has no closed outline to tear.
+    ///
+    /// On the 24 grid the tear is worked out where it will land, on whole units
+    /// (`Placing`), so an icon picture writes it in whole numbers and nothing
+    /// after this has to round what was cut.
     public static func applied(to svg: String) -> String? {
         guard !svg.contains("transform"), case .success(let art) = SVGArtwork.parse(svg) else { return nil }
+        let grid = IconKeylines.artboardSide
         let drawn = art.parts.filter { $0.name?.lowercased() != "tile" }
-        guard let body = drawn.max(by: { area($0) < area($1) }), let name = body.name,
-              let runs = runs(of: body.shape), let tag = tag(named: name, in: svg) else { return nil }
+        guard let asDrawn = torn(svg, art, drawn, Placing()) else { return nil }
+        guard drawn.count == art.parts.count, art.viewBox?.size == CGSize(width: grid, height: grid),
+              let reached = points(of: asDrawn) else { return asDrawn }
+
+        guard let body = biggest(of: drawn) else { return asDrawn }
         let box = SVGArtwork.shapeBounds(body.shape)
-        let size = (box.width + box.height) / 2
-        let centre = CGPoint(x: box.midX, y: box.midY)
-        guard size > 0, let outline = torn(runs, centre: centre, size: size) else { return nil }
+        let reach = max(reached.width, reached.height), live = IconKeylines.liveAreaSide
+        let scale = reach > live ? live / reach : reach < smallestReach ? smallestReach / reach : 1
+        let long = max(box.width, box.height)
+        // A round outline takes an even number of units, so its middle is whole
+        // as well as its ends: the sides of a circle 15 across sit on a half,
+        // and go their own ways when rounded. Whole units can reach past what
+        // that sum said, so each try is the next size down.
+        var step: CGFloat = 1
+        if case .ellipse = body.shape { step = 2 }
+        var placed = asDrawn
+        for fewer in 0..<mostTries {
+            let units = max(((long * scale) / step).rounded() * step - CGFloat(fewer) * step, step)
+            var best: (svg: String, odd: Int)?
+            // A drawing an odd number of units across cannot sit in the middle
+            // of 24, so the two outer marks may each step a unit to even it.
+            for across in stepsToEven {
+                for down in stepsToEven {
+                    var placing = Placing(drawing: reached, body: box, scale: units / long, side: grid)
+                    placing.markSteps = CGPoint(x: across, y: down)
+                    guard let fitted = torn(svg, art, drawn, placing), let landed = points(of: fitted) else { return asDrawn }
+                    placed = fitted
+                    guard max(landed.width, landed.height) <= live + 1e-3 else { continue }
+                    let odd = oddSpans(of: fitted)
+                    if odd < best?.odd ?? .max { best = (fitted, odd) }
+                }
+            }
+            if let best { return best.svg }
+        }
+        return placed
+    }
+
+    /// How many of a drawing's two spans come to an odd number of units, read
+    /// from where it really lands: rounding away from the middle depends on
+    /// where the drawing ends up, so a sum here would disagree with it.
+    private static func oddSpans(of svg: String) -> Int {
+        guard case .success(let art) = SVGArtwork.parse(svg) else { return 2 }
+        let side = IconUnits.pictureSide, unit = side / IconKeylines.artboardSide
+        let box = art.iconFrame(named: "", side: side, origin: .zero).children.reduce(CGRect.null) { $0.union($1.frame) }
+        return [box.width, box.height].filter { Int(($0 / unit).rounded()) % 2 != 0 }.count
+    }
+
+    private static func biggest(of parts: [SVGArtwork.Part]) -> SVGArtwork.Part? {
+        parts.max { area($0) < area($1) }
+    }
+
+    /// The box of the points in a drawing, which is what the live area holds.
+    private static func points(of svg: String) -> CGRect? {
+        guard case .success(let art) = SVGArtwork.parse(svg) else { return nil }
+        let box = art.parts.reduce(CGRect.null) { $0.union(SVGArtwork.shapeBounds($1.shape)) }
+        return box.isNull ? nil : box
+    }
+
+    /// `svg` torn as `placing` says.
+    private static func torn(_ svg: String, _ art: SVGArtwork, _ drawn: [SVGArtwork.Part], _ placing: Placing) -> String? {
+        guard let body = biggest(of: drawn), let name = body.name,
+              let drawnRuns = runs(of: body.shape), let tag = tag(named: name, in: svg) else { return nil }
+        let box = SVGArtwork.shapeBounds(body.shape)
+        let size = (box.width + box.height) / 2 * placing.scale
+        let centre = placing.placed(CGPoint(x: box.midX, y: box.midY))
+        let runs = drawnRuns.map(placing.placed)
+        guard size > 0, let outline = torn(runs, centre: centre, size: size, placing: placing) else { return nil }
 
         let weighted = art.parts.first { $0.stroke != nil && $0.strokeWidth > 0 }
         guard let ink = weighted?.stroke ?? drawn.last(where: { $0.fill != nil })?.fill else { return nil }
-        let drawnWeight = weighted?.strokeWidth
-        let weight = drawnWeight.map { min($0, size * lineShare) } ?? size * markWeight
+        let drawnWeight = weighted.map { $0.strokeWidth * placing.scale }
+        let weight = placing.line(drawnWeight.map { min($0, size * lineShare) } ?? size * markWeight)
+        let said = placing.number(weight / placing.scale)
+        let clearance = (body.stroke == nil ? weight / 2 : weight) + markClearance
         let marks = (0..<markCount).map { index -> String in
             let turn = (CGFloat(index) - CGFloat(markCount - 1) / 2) * markSpread
             let angle = tearAngle + turn
             let way = CGPoint(x: cos(angle), y: sin(angle))
             let edge = reach(of: runs, from: centre, along: way)
-            let start = CGPoint(x: edge.x + way.x * size * markGap, y: edge.y + way.y * size * markGap)
-            let end = CGPoint(x: start.x + way.x * size * markLength, y: start.y + way.y * size * markLength)
-            return #"<path id="\#(markName)\#(index + 1)" d="M\#(text(start)) L\#(text(end))" fill="none" stroke="\#(ink)" "#
-                + #"stroke-width="\#(number(weight))" stroke-linecap="round"/>"#
+            let run = placing.run(along: way, length: size * markLength)
+            let start = placing.stepped(placing.point(CGPoint(x: edge.x + way.x * size * markGap, y: edge.y + way.y * size * markGap)),
+                                        mark: index)
+            let flying = placing.clear(start, run: run, along: way, of: outline.line, by: clearance)
+            let end = CGPoint(x: flying.x + run.x, y: flying.y + run.y)
+            return #"<path id="burst-\#(index + 1)" d="M\#(placing.text(flying)) L\#(placing.text(end))" fill="none" stroke="\#(ink)" "#
+                + #"stroke-width="\#(said)" stroke-linecap="round"/>"#
         }
         var out = svg
-        out.replaceSubrange(tag.range, with: tag.asPath(outline))
-        if let drawnWeight, weight < drawnWeight { out = thinned(out, to: weight) }
+        out.replaceSubrange(tag.range, with: tag.asPath(outline.d))
+        if let drawnWeight, weight != drawnWeight { out = thinned(out, to: said) }
         let small = (art.viewBox?.width ?? max(art.bounds.width, art.bounds.height)) * smallestOutline
         for part in drawn where part != body && part.fill == nil && part.stroke != nil && isClosed(part.shape) {
             let own = SVGArtwork.shapeBounds(part.shape)
@@ -127,7 +205,7 @@ public enum AskIconBreak {
         }
         guard let close = out.range(of: "</svg>", options: .backwards) else { return nil }
         out.insert(contentsOf: marks.joined() , at: close.lowerBound)
-        return out
+        return placing.wrapping(out)
     }
 
     private static func isClosed(_ shape: SVGArtwork.Shape) -> Bool {
@@ -136,8 +214,8 @@ public enum AskIconBreak {
     }
 
     /// Every line in `svg` at `weight`.
-    private static func thinned(_ svg: String, to weight: CGFloat) -> String {
-        svg.replacingOccurrences(of: #"stroke-width\s*=\s*"[^"]*""#, with: #"stroke-width="\#(number(weight))""#,
+    private static func thinned(_ svg: String, to weight: String) -> String {
+        svg.replacingOccurrences(of: #"stroke-width\s*=\s*"[^"]*""#, with: #"stroke-width="\#(weight)""#,
                                  options: .regularExpression)
     }
 
@@ -163,6 +241,19 @@ public enum AskIconBreak {
             let a = mix(start, control1), b = mix(control1, control2), c = mix(control2, end)
             let d = mix(a, b), e = mix(b, c), f = mix(d, e)
             return (Run(start: start, control1: a, control2: d, end: f), Run(start: f, control1: e, control2: c, end: end))
+        }
+
+        /// The run with its start on `point`, its handle going with it so the
+        /// curve keeps the way it leaves.
+        func starting(at point: CGPoint) -> Run {
+            Run(start: point, control1: CGPoint(x: control1.x + point.x - start.x, y: control1.y + point.y - start.y),
+                control2: control2, end: end)
+        }
+
+        /// The run with its end on `point`, its handle going with it.
+        func ending(at point: CGPoint) -> Run {
+            Run(start: start, control1: control1,
+                control2: CGPoint(x: control2.x + point.x - end.x, y: control2.y + point.y - end.y), end: point)
         }
 
         var isStraight: Bool {
@@ -277,8 +368,10 @@ public enum AskIconBreak {
     }
 
     /// The loop with a stretch of it gone and two teeth across the gap, as
-    /// the `d` of a path. Curves stay curves.
-    private static func torn(_ runs: [Run], centre: CGPoint, size: CGFloat) -> String? {
+    /// the `d` of a path, and the line that draws, in points along it. Curves
+    /// stay curves.
+    private static func torn(_ runs: [Run], centre: CGPoint, size: CGFloat,
+                             placing: Placing) -> (d: String, line: [CGPoint])? {
         let lengths = lengths(runs)
         let total = lengths.reduce(0, +)
         guard total > 0 else { return nil }
@@ -293,29 +386,199 @@ public enum AskIconBreak {
             index = (index + 1) % runs.count
         }
         kept.append(runs[to.run].between(0, to.t))
-        guard let first = kept.first?.start, let last = kept.last?.end else { return nil }
+        if placing.whole {
+            // Rounded, what is left of a run cut near its end is a stub of curve
+            // dragged a long way for its length, and reads as a lump.
+            while kept.count > 2, kept[0].end.distance(to: placing.point(kept[0].start)) < shortestRun { kept.removeFirst() }
+            while kept.count > 2, let end = kept.last, end.start.distance(to: placing.point(end.end)) < shortestRun { kept.removeLast() }
+        }
+        guard let start = kept.first?.start, let stop = kept.last?.end else { return nil }
+        let first = placing.point(start), last = placing.point(stop)
+        kept[0] = kept[0].starting(at: first)
+        kept[kept.count - 1] = kept[kept.count - 1].ending(at: last)
         let teeth = (1...3).map { step -> CGPoint in
             let t = CGFloat(step) / 4
             let across = CGPoint(x: last.x + (first.x - last.x) * t, y: last.y + (first.y - last.y) * t)
             let inward = CGPoint(x: centre.x - across.x, y: centre.y - across.y)
             let length = max(hypot(inward.x, inward.y), 1e-6)
             let depth = size * tearDepth * (step == 2 ? tearReturn : 1)
-            return CGPoint(x: across.x + inward.x / length * depth, y: across.y + inward.y / length * depth)
+            return placing.point(CGPoint(x: across.x + inward.x / length * depth, y: across.y + inward.y / length * depth))
         }
-        var d = "M\(text(first))"
+        var d = "M\(placing.text(first))"
         for run in kept where hypot(run.end.x - run.start.x, run.end.y - run.start.y) > 1e-6 {
-            d += run.isStraight ? " L\(text(run.end))" : " C\(text(run.control1)) \(text(run.control2)) \(text(run.end))"
+            d += run.isStraight ? " L\(placing.text(run.end))"
+                : " C\(placing.text(run.control1)) \(placing.text(run.control2)) \(placing.text(run.end))"
         }
-        for tooth in teeth { d += " L\(text(tooth))" }
-        return d + " Z"
+        let notched = placing.notched(teeth, from: last, to: first, centre: centre)
+        for tooth in notched { d += " L\(placing.text(tooth))" }
+        let curve = kept.flatMap { run in (0...16).map { run.point(at: CGFloat($0) / 16) } }
+        let across = zip([last] + notched, notched + [first]).flatMap { from, to in
+            (0...8).map { step -> CGPoint in
+                let t = CGFloat(step) / 8
+                return CGPoint(x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t)
+            }
+        }
+        return (d + " Z", curve + across)
     }
 
-    private static func number(_ value: CGFloat) -> String {
-        let shown = (value * 100).rounded() / 100
-        return shown == shown.rounded() ? String(Int(shown)) : String(format: "%.2f", Double(shown))
-    }
+    // MARK: Where it lands
 
-    private static func text(_ point: CGPoint) -> String { "\(number(point.x)) \(number(point.y))" }
+    /// What a tear is worked out in. Left alone it is the drawing's own
+    /// numbers. On the 24 grid it is where the drawing will land: the scale
+    /// that gets it and its marks into the live area, with every point the tear
+    /// adds on a whole unit. The outline the model drew and everything else in
+    /// the file go there through one group, so what comes back holds still in
+    /// the live area and nothing is fitted to it afterwards: a fit is a
+    /// fraction, and rounding after one is what squashed small parts and took a
+    /// line from 1.5 to 1 (2026-11-06).
+    ///
+    /// The outline's own box lands on whole units too. A circle drawn on a half
+    /// keeps its four ends where they belong that way, and stays a circle;
+    /// rounded one point at a time it went lopsided.
+    struct Placing {
+        var scale: CGFloat = 1
+        var offset = CGPoint.zero
+        var whole = false
+        /// How far the marks at the right go right and the ones at the top go up.
+        var markSteps = CGPoint.zero
+
+        init() {}
+
+        /// `drawing` centred on a square of `side` at `scale`, as near as the
+        /// corner of `body` landing on a whole unit lets it.
+        init(drawing: CGRect, body: CGRect, scale: CGFloat, side: CGFloat) {
+            self.scale = (scale * 1e5).rounded() / 1e5
+            func shift(_ middle: CGFloat, _ corner: CGFloat) -> CGFloat {
+                let centred = (side / 2 - middle * self.scale).rounded()
+                let landed = corner * self.scale + centred
+                return ((centred - (landed - landed.rounded())) * 1e5).rounded() / 1e5
+            }
+            offset = CGPoint(x: shift(drawing.midX, body.minX), y: shift(drawing.midY, body.minY))
+            whole = true
+        }
+
+        func placed(_ point: CGPoint) -> CGPoint {
+            CGPoint(x: point.x * scale + offset.x, y: point.y * scale + offset.y)
+        }
+
+        func placed(_ run: Run) -> Run {
+            Run(start: placed(run.start), control1: placed(run.control1), control2: placed(run.control2), end: placed(run.end))
+        }
+
+        /// A point the tear adds, on a whole unit where there are units.
+        func point(_ point: CGPoint) -> CGPoint {
+            whole ? CGPoint(x: point.x.rounded(), y: point.y.rounded()) : point
+        }
+
+        /// A mark's start with its share of `markSteps`. The one in the middle
+        /// can reach as far as either of the others, so it goes with both.
+        func stepped(_ start: CGPoint, mark index: Int) -> CGPoint {
+            CGPoint(x: start.x + (index > 0 ? markSteps.x : 0),
+                    y: start.y - (index < markCount - 1 ? markSteps.y : 0))
+        }
+
+        /// A line weight. Where there are units it is a half unit at the finest,
+        /// as `IconGridLanding` lands one: a weight is not a place, and a whole
+        /// one is too heavy on an object brought down to fit its marks.
+        func line(_ weight: CGFloat) -> CGFloat {
+            whole ? max(1, (weight * 2).rounded() / 2) : weight
+        }
+
+        /// A stroke `length` long heading along `way`. Where there are units
+        /// it is the whole number run nearest that heading, of about that
+        /// length: rounding each end alone turns a mark to whatever the two
+        /// roundings happen to give.
+        func run(along way: CGPoint, length: CGFloat) -> CGPoint {
+            guard whole else { return CGPoint(x: way.x * length, y: way.y * length) }
+            let reach = Int((length * longestMark).rounded(.up))
+            let heading = atan2(way.y, way.x)
+            var best = (run: CGPoint(x: way.x.rounded(), y: way.y.rounded()), off: CGFloat.infinity)
+            for x in -reach...reach {
+                for y in -reach...reach {
+                    let run = CGPoint(x: x, y: y), long = hypot(run.x, run.y)
+                    guard long >= min(length * shortestMark, 2), long <= length * longestMark else { continue }
+                    let turned = abs(atan2(sin(atan2(run.y, run.x) - heading), cos(atan2(run.y, run.x) - heading)))
+                    let off = turned + abs(long - length) / length * markLengthWeighs
+                    if off < best.off { best = (run, off) }
+                }
+            }
+            return best.run
+        }
+
+        /// Where a mark starting at `start` stands clear of `line` by `clearance`,
+        /// stepping out along `way`. Its gap is counted from where the outline
+        /// would have been: beside the end of a tear, rounded, it can land on
+        /// what is still there.
+        func clear(_ start: CGPoint, run: CGPoint, along way: CGPoint, of line: [CGPoint], by clearance: CGFloat) -> CGPoint {
+            guard whole else { return start }
+            let step = CGPoint(x: way.x.rounded(), y: way.y.rounded())
+            var flying = start
+            for _ in 0..<mostSteps {
+                let nearest = (0...8).map { index -> CGFloat in
+                    let t = CGFloat(index) / 8
+                    let along = CGPoint(x: flying.x + run.x * t, y: flying.y + run.y * t)
+                    return line.map { hypot($0.x - along.x, $0.y - along.y) }.min() ?? .infinity
+                }.min() ?? .infinity
+                if nearest >= clearance { break }
+                flying = CGPoint(x: flying.x + step.x, y: flying.y + step.y)
+            }
+            return flying
+        }
+
+        /// `teeth` as they cross from `from` to `to`, with the middle one still
+        /// standing proud of the two beside it: rounded, it can land level with
+        /// them and the tear reads as one straight bite.
+        func notched(_ teeth: [CGPoint], from: CGPoint, to: CGPoint, centre: CGPoint) -> [CGPoint] {
+            guard whole, teeth.count == 3 else { return teeth }
+            let across = CGPoint(x: to.x - from.x, y: to.y - from.y)
+            let long = max(hypot(across.x, across.y), 1e-6)
+            var inward = CGPoint(x: -across.y / long, y: across.x / long)
+            if (centre.x - from.x) * inward.x + (centre.y - from.y) * inward.y < 0 {
+                inward = CGPoint(x: -inward.x, y: -inward.y)
+            }
+            func depth(_ point: CGPoint) -> CGFloat { (point.x - from.x) * inward.x + (point.y - from.y) * inward.y }
+            func moved(_ point: CGPoint, inwards: Bool) -> CGPoint {
+                let sign: CGFloat = inwards ? 1 : -1
+                return abs(inward.x) > abs(inward.y)
+                    ? CGPoint(x: point.x + sign * (inward.x < 0 ? -1 : 1), y: point.y)
+                    : CGPoint(x: point.x, y: point.y + sign * (inward.y < 0 ? -1 : 1))
+            }
+            var out = teeth
+            for index in [0, 2] {
+                while depth(out[index]) < 1 { out[index] = moved(out[index], inwards: true) }
+            }
+            // A whole unit back: any less and it rounds to a staircase of right
+            // angles, which reads as a step cut in it and not as a tear.
+            while depth(out[1]) > min(depth(out[0]), depth(out[2])) - 1 { out[1] = moved(out[1], inwards: false) }
+            return out
+        }
+
+        /// A number as `svg` says it: in the file's own numbers, so a point on
+        /// a whole unit needs the places to come back to one.
+        func number(_ value: CGFloat) -> String {
+            let places: CGFloat = whole ? 1e5 : 100
+            let shown = (value * places).rounded() / places
+            if shown == shown.rounded() { return String(Int(shown)) }
+            return whole ? String(format: "%.5f", Double(shown)) : String(format: "%.2f", Double(shown))
+        }
+
+        /// A placed point as the file's own numbers, inside the group.
+        func text(_ point: CGPoint) -> String {
+            "\(number((point.x - offset.x) / scale)) \(number((point.y - offset.y) / scale))"
+        }
+
+        /// `svg` with everything in it brought to where this puts it.
+        func wrapping(_ svg: String) -> String {
+            guard scale != 1 || offset != .zero, let open = svg.range(of: "<svg"),
+                  let opened = svg.range(of: ">", range: open.upperBound..<svg.endIndex),
+                  let close = svg.range(of: "</svg>", options: .backwards) else { return svg }
+            var out = svg
+            out.insert(contentsOf: "</g>", at: close.lowerBound)
+            out.insert(contentsOf: #"<g transform="translate(\#(offset.x) \#(offset.y)) scale(\#(scale))">"#,
+                       at: opened.upperBound)
+            return out
+        }
+    }
 
     // MARK: The SVG's text
 
@@ -353,4 +616,8 @@ public enum AskIconBreak {
         }
         return nil
     }
+}
+
+private extension CGPoint {
+    func distance(to other: CGPoint) -> CGFloat { hypot(x - other.x, y - other.y) }
 }

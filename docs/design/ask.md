@@ -420,7 +420,8 @@ Either way:
   and draws it whole, the way it draws every icon well, and a vector tool tears
   the outline it drew: the biggest closed shape loses a stretch at its upper
   right, two teeth cross the gap, three marks fly out, lines thin in proportion
-  and a small closed outline lands solid. The tool reads only shapes and knows
+  and a small closed outline lands solid. On the 24 grid all of that is worked
+  out where it will land, on whole units (`docs/design/svg-export.md`). The tool reads only shapes and knows
   nothing of what they are. The model could not write that geometry itself: on
   "a balloon popping" it scored from 25 to 85 on the same words, and told to tear
   a clean balloon it lost the balloon. That route lands without being looked at

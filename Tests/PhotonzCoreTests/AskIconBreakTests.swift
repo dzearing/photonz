@@ -20,6 +20,12 @@ struct AskIconBreakTests {
         </svg>
         """
 
+    /// The same drawing off the 24 grid, where the tear stays in the drawing's
+    /// own numbers. On the grid it is placed first (`AskIconBreakUnitsTests`).
+    static func offGrid(_ svg: String) -> String {
+        svg.replacingOccurrences(of: "0 0 24 24", with: "0 0 25 25")
+    }
+
     static func parts(_ svg: String?) -> [SVGArtwork.Part] {
         guard case .success(let art)? = svg.map({ SVGArtwork.parse($0) }) else { return [] }
         return art.parts
@@ -61,7 +67,7 @@ struct AskIconBreakTests {
 
     @Test("The biggest outline is torn, and every other part stays as it was")
     func tearsTheBody() throws {
-        let broken = try #require(AskIconBreak.applied(to: Self.kite))
+        let broken = try #require(AskIconBreak.applied(to: Self.offGrid(Self.kite)))
         let parts = Self.parts(broken)
         let body = try #require(parts.first { $0.name == "Kite sail" || $0.name == "kite-sail" })
         guard case .path(let outline) = body.shape else { Issue.record("the sail is not a path"); return }
@@ -91,7 +97,7 @@ struct AskIconBreakTests {
     @Test("An outline of long and short runs tears in the same place: the shape the model really drew")
     func tearsAcrossUnevenRuns() throws {
         let svg = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><path id="sail" d="M12 2.5 C8.5 2.5 5.5 5.5 5.5 9.5 C5.5 13.5 8.5 16.5 11 17.5 L11 18.5 L13 18.5 L13 17.5 C15.5 16.5 18.5 13.5 18.5 9.5 C18.5 5.5 15.5 2.5 12 2.5 Z"/></svg>"##
-        let body = try #require(Self.parts(AskIconBreak.applied(to: svg)).first)
+        let body = try #require(Self.parts(AskIconBreak.applied(to: Self.offGrid(svg))).first)
         guard case .path(let outline) = body.shape else { Issue.record("not a path"); return }
         let content = PathContent(anchors: outline.rings[0], isClosed: true)
         let drawn = content.flattened()
@@ -113,7 +119,7 @@ struct AskIconBreakTests {
 
     @Test("Three short marks fly out from the tear, clear of the object and of each other")
     func marks() throws {
-        let broken = try #require(AskIconBreak.applied(to: Self.kite))
+        let broken = try #require(AskIconBreak.applied(to: Self.offGrid(Self.kite)))
         let parts = Self.parts(broken)
         let marks = parts.filter { $0.name?.lowercased().contains("burst") == true }
         #expect(marks.count == AskIconBreak.markCount)
@@ -137,7 +143,7 @@ struct AskIconBreakTests {
             <svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round">\
             <circle id="drum" cx="12" cy="9" r="6"/><path id="cord" stroke-width="2" d="M12 15 V21"/></svg>
             """
-        let parts = Self.parts(AskIconBreak.applied(to: svg))
+        let parts = Self.parts(AskIconBreak.applied(to: Self.offGrid(svg)))
         #expect(parts.count == 2 + AskIconBreak.markCount)
         let weights = Set(parts.map(\.strokeWidth))
         #expect(weights.count == 1)
@@ -163,7 +169,7 @@ struct AskIconBreakTests {
 
     @Test("A line is never made heavier than the model drew it")
     func neverHeavier() throws {
-        let parts = Self.parts(AskIconBreak.applied(to: Self.kite))
+        let parts = Self.parts(AskIconBreak.applied(to: Self.offGrid(Self.kite)))
         #expect(parts.allSatisfy { $0.strokeWidth == 2 })
     }
 

@@ -159,7 +159,7 @@ public struct SVGArtwork: Hashable, Sendable {
         }
         return parts.enumerated().map { index, part in
             let partName = part.name ?? "\(name) \(index + 1)"
-            let strokeWidth = part.stroke == nil ? 0 : grid?.length(part.strokeWidth * scale) ?? part.strokeWidth * scale
+            let strokeWidth = part.stroke == nil ? 0 : grid?.weight(part.strokeWidth * scale) ?? part.strokeWidth * scale
             var layer: Layer
             switch part.shape {
             case .ellipse(let rect), .rect(let rect, _):
@@ -276,7 +276,8 @@ public struct SVGArtwork: Hashable, Sendable {
         // along the edge of it reaches a unit past, and that is still the grid.
         let points = parts.reduce(CGRect.null) { $0.union(Self.shapeBounds($1.shape)) }
         let reach = max(points.width, points.height)
-        guard reach >= Self.smallestKeptReach, reach <= IconKeylines.liveAreaSide else { return nil }
+        // A drawing placed exactly across the live area reads back a hair over.
+        guard reach >= Self.smallestKeptReach, reach <= IconKeylines.liveAreaSide + 1e-3 else { return nil }
         let shift = CGPoint(x: (viewBox.midX - points.midX).rounded(), y: (viewBox.midY - points.midY).rounded())
         let unit = side / grid
         return (CGRect(x: shift.x * unit, y: shift.y * unit, width: side, height: side), viewBox)
@@ -297,12 +298,7 @@ public struct SVGArtwork: Hashable, Sendable {
     public func iconFrame(named name: String, side: CGFloat, origin: CGPoint, onGrid: Bool = false) -> Layer {
         let size = CGSize(width: side, height: side)
         guard onGrid, let viewBox, viewBox.width > 0, viewBox.height > 0 else {
-            // A tear is cut where the outline runs and its marks fly at their
-            // own angles, nowhere near a grid, and rounding them takes away what
-            // says torn: a bubble read 85.6 fitted and 40.6 rounded (the eval,
-            // 2026-11-06). It keeps its fractions.
-            let torn = parts.contains { AskIconBreak.isMark($0.name) }
-            if !torn, let kept = keptOnItsGrid(side: side) {
+            if let kept = keptOnItsGrid(side: side) {
                 return Layer.frameLayer(name: name, origin: origin, size: size,
                                         children: layers(named: name, fitting: kept.box, within: kept.within,
                                                          grid: IconGridLanding(side: side)),
@@ -313,7 +309,7 @@ public struct SVGArtwork: Hashable, Sendable {
             let live = CGRect(x: margin, y: margin, width: side - 2 * margin, height: side - 2 * margin)
             return Layer.frameLayer(name: name, origin: origin, size: size,
                                     children: layers(named: name, fitting: live,
-                                                     grid: torn ? nil : IconGridLanding(side: side)),
+                                                     grid: IconGridLanding(side: side)),
                                     backgroundHex: nil)
         }
         let drawn = layers(named: name, fitting: CGRect(origin: .zero, size: size), within: viewBox,
@@ -1183,9 +1179,18 @@ public struct IconGridLanding: Sendable {
         CGPoint(x: middle + units(point.x - middle) * unit, y: middle + units(point.y - middle) * unit)
     }
 
-    /// A line weight or a corner, never rounded away to nothing.
+    /// A corner, never rounded away to nothing.
     func length(_ value: CGFloat) -> CGFloat {
         max(1, units(value)) * unit
+    }
+
+    /// A line weight: one already on a half unit stays there, since a weight is
+    /// not a place on the grid and 1.5 is a line icon sets use. Anything else
+    /// comes to a whole unit, as a corner does.
+    func weight(_ value: CGFloat) -> CGFloat {
+        let halves = value / unit * 2
+        guard abs(halves - halves.rounded()) < 1e-3 else { return length(value) }
+        return max(1, halves.rounded() / 2) * unit
     }
 
     /// Whole units in `value`. A number that has been through a scale sits a

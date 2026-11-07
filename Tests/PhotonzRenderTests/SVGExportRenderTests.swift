@@ -444,6 +444,23 @@ struct SVGExportRenderTests {
         try Self.expectTheSamePicture(of: document, name: "icon-in-units")
     }
 
+    @Test func aTornIconWrittenInUnitsDrawsWhatThe512CanvasDraws() throws {
+        // Its outline, marks and line all arrive through one group, placed
+        // where they land. The file has to draw what the canvas draws.
+        let torn = try #require(AskIconBreak.applied(to: """
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path id="body" d="M12 2 C15.5 2 18 5 18 9 C18 12.5 15.5 15.5 13 16.5 L13 17.5 L11 17.5 L11 16.5 C8.5 15.5 6 12.5 6 9 C6 5 8.5 2 12 2 Z"/><path id="string" d="M12 19 C12 20.5 11 21.5 12 23"/></svg>
+        """))
+        guard case .success(let art) = SVGArtwork.parse(torn) else {
+            Issue.record("the torn drawing did not read back")
+            return
+        }
+        var document = PhotonzDocument(canvasSize: CGSize(width: 512, height: 512),
+                                       layers: [art.iconFrame(named: "Icon", side: 512, origin: .zero)])
+        document.madeAsIcon = true
+        #expect(SVGExporter.export(document, store: ImageStore()).text.contains("viewBox=\"0 0 24 24\""))
+        try Self.expectTheSamePicture(of: document, name: "torn-icon-in-units")
+    }
+
     @Test func aShadowWrittenInUnitsStaysWithinWhatApplesReaderCanDraw() throws {
         // Chrome draws this file and the same one in points 0.0002 apart at
         // 512 (measured 2026-11-06). Apple's reader blurs at 24 pixels and
