@@ -16016,3 +16016,13 @@
 {"t":"2026-11-07T04:13:35.075Z","ev":"task_note","id":"find-out-why-the-held-out-set-lost-points-on-202"}
 {"t":"2026-11-07T04:14:12.792Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
 {"t":"2026-11-07T04:14:12.869Z","ev":"task_pending","id":"an-icon-picture-s-svg-reads-in-24-whole-units","from":"in_progress","note":"Shipped in a3de88c3: icon pictures write 24 whole units, audit written. Stays open: a torn Ask icon still writes fractions, so acceptance item 2 is not met for it."}
+{"t":"2026-11-07T04:22:04.470Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-07T04:24:08.676Z","ev":"slice_pass","walks":24,"passed":23,"failed":1,"seconds":443,"of":1116,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-07T04:24:08.854Z","ev":"task_started","id":"an-icon-picture-s-svg-reads-in-24-whole-units","title":"An icon picture's SVG reads in 24 whole units","priority":"p1-high"}
+{"t":"2026-11-07T06:03:21.604Z","ev":"task_walks","id":"an-icon-picture-s-svg-reads-in-24-whole-units","walks":["an-icon-picture-writes-24-units-walk","icon-picture-from-the-new-sheet-walk","a-torn-icon-writes-whole-units-walk"]}
+{"t":"2026-11-07T06:14:08.899Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
+{"t":"2026-11-07T06:14:08.974Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
+{"t":"2026-11-07T06:14:09.050Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
+{"t":"2026-11-07T06:14:09.126Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
+{"t":"2026-11-07T06:14:09.201Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
+{"t":"2026-11-07T06:14:57.780Z","ev":"task_done","id":"an-icon-picture-s-svg-reads-in-24-whole-units","from":"in_progress","note":"A torn Ask icon now exports viewBox 0 0 24 24 with every place whole (00ece83e), so all six checklist items are met. Proved in the real app by a-torn-icon-writes-whole-units-walk: 48 end point numbers whole, Copy byte for byte the export; a torn file also drawn against its 512 canvas in the suite. Scripts/test.sh exit 0, six walks ok. Cost, one reading each: balloon 88.8 to 84, heart 56 to 43, egg 83.2 to 56; icon group about 84.4 to 81 by sum, not a fresh 17 case run. Held-out not rerun (59.7 is from a3de88c3). The audit asks the user whether the file is worth the points."}

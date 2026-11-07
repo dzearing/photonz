@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:58:50.222Z",
-  "updated": "2026-11-07T04:14:12.868Z",
+  "updated": "2026-11-07T06:14:57.779Z",
   "deps": [
     "a-picture-made-for-an-icon-works-like-an-icon-gu"
   ],
@@ -67,11 +67,45 @@
     {
       "t": "2026-11-07T04:14:12.867Z",
       "note": "Shipped in a3de88c3: icon pictures write 24 whole units, audit written. Stays open: a torn Ask icon still writes fractions, so acceptance item 2 is not met for it."
+    },
+    {
+      "t": "2026-11-07T04:24:08.848Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T06:03:21.602Z",
+      "note": "walks an-icon-picture-writes-24-units-walk, icon-picture-from-the-new-sheet-walk -> an-icon-picture-writes-24-units-walk, icon-picture-from-the-new-sheet-walk, a-torn-icon-writes-whole-units-walk"
+    },
+    {
+      "t": "2026-11-07T06:14:08.897Z",
+      "note": "Chose placing the tear on whole units over keeping torn icons in fractions because the checklist names every Ask icon, and the file is what this task is for. It costs points and the audit asks the user whether that is worth it: balloon 88.8 to 84, heart 56 to 43, egg 83.2 to 56, bubble 54.8 to 44.9 on a different drawing. One reading each, runs 20261107-010556-ask against 20261107-053736-ask."
+    },
+    {
+      "t": "2026-11-07T06:14:08.972Z",
+      "note": "Corrects this task's earlier log: 'rounding took the bubble from 85.6 to 40.6' was not what happened. 40.6 was the model's droplet drawing, and the swing was mostly blind naming plus the didWhatWasAsked scale (scoring.mjs). Same input through both landings showed the real harm: rounding after a fit squashes small parts and takes a line of 1.5 to 1."
+    },
+    {
+      "t": "2026-11-07T06:14:09.048Z",
+      "note": "Also found: the landing refused a drawing placed exactly at 20 units because 5 decimal text reads back as 20.00001, so it was fitted and rounded again. It takes a 0.001 tolerance now. Chose stopping after three eval rounds over chasing the egg's flat cut because that would be tuning to one case."
+    },
+    {
+      "t": "2026-11-07T06:14:09.124Z",
+      "note": "Verified on final code: Scripts/test.sh exit 0, with a torn icon's file drawn against its 512 canvas. Real app, a-torn-icon-writes-whole-units-walk: viewBox 0 0 24 24, 48 end point numbers all whole, Copy byte for byte the export. Six walks ok: an-icon-picture-writes-24-units, icon-picture-from-the-new-sheet, pen-lands-on-whole-units-in-an-icon, copy-an-icon-as-svg, ask-makes-an-icon, ask-animates-an-icon. NOT rerun: the other icon named walks and the held-out set (59.7 stands from a3de88c3). Looked at the compare sheet, the eval sheet and the walk's window picture: whole unit tear, round bubble, clear marks."
+    },
+    {
+      "t": "2026-11-07T06:14:09.199Z",
+      "note": "left rough: the knot of a torn balloon is a small stroked outline that reads as a blob at 1.5; the small outline rule did not make it solid in the walk's drawing. Part of the same drawing today, so it did not earn a task."
+    },
+    {
+      "t": "2026-11-07T06:14:57.777Z",
+      "note": "A torn Ask icon now exports viewBox 0 0 24 24 with every place whole (00ece83e), so all six checklist items are met. Proved in the real app by a-torn-icon-writes-whole-units-walk: 48 end point numbers whole, Copy byte for byte the export; a torn file also drawn against its 512 canvas in the suite. Scripts/test.sh exit 0, six walks ok. Cost, one reading each: balloon 88.8 to 84, heart 56 to 43, egg 83.2 to 56; icon group about 84.4 to 81 by sum, not a fresh 17 case run. Held-out not rerun (59.7 is from a3de88c3). The audit asks the user whether the file is worth the points."
     }
   ],
-  "started": "2026-11-06T21:54:44.982Z",
+  "started": "2026-11-07T04:24:08.847Z",
   "walks": [
     "an-icon-picture-writes-24-units-walk",
-    "icon-picture-from-the-new-sheet-walk"
-  ]
+    "icon-picture-from-the-new-sheet-walk",
+    "a-torn-icon-writes-whole-units-walk"
+  ],
+  "completed": "2026-11-07T06:14:57.778Z"
 }
