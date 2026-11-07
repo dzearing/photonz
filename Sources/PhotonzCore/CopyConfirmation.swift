@@ -250,6 +250,13 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// on the canvas or the timeline moves, so without a word an Import
         /// reads as a menu row that did nothing.
         case broughtIntoLibrary(LibraryImport)
+        /// An SVG opened whole, as one picture, because its shapes alone would
+        /// have lost part of it (`SVGOpening.leftOut`). Somebody who came to
+        /// edit a path would otherwise click it and wonder why it will not.
+        case svgOpenedAsAPicture
+        /// An SVG opened as the shapes that could be read, with the rest gone,
+        /// because nothing here could draw it whole.
+        case svgOpenedInPart
         /// The mix was written out as one sound file, or could not be.
         case mixWritten(file: String?)
         /// The mix was written, and it had to be held down to fit in a file
@@ -383,6 +390,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         // Something that would not open is a sentence worth reading.
         case .broughtIntoLibrary(let outcome):
             return outcome.unreadable.isEmpty ? Self.lifetime : Self.breakLifetime
+        case .svgOpenedAsAPicture, .svgOpenedInPart: return Self.breakLifetime
         // Still working: it waits for its own answer (see `workingLifetime`).
         case .readingTheWords: return Self.workingLifetime
         // Cuts left hard are worth a second look before the pill goes.
@@ -432,6 +440,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
         case .mediaWouldNotOpen: return "Not added"
         case .broughtIntoLibrary(let outcome): return outcome.title
+        case .svgOpenedAsAPicture: return "Opened as a picture"
+        case .svgOpenedInPart: return "Opened in part"
         case .mixWritten(let file): return file == nil ? "Not written" : "Mix written"
         case .mixHeldDown: return "Mix written, held down"
         case .captionsWritten: return "Captions written"
@@ -522,6 +532,10 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "There is nothing in \(name) the app can play"
         case .broughtIntoLibrary(let outcome):
             return outcome.detail
+        case .svgOpenedAsAPicture:
+            return "Its shapes can't be edited"
+        case .svgOpenedInPart:
+            return "Some of it could not be read"
         case .mixWritten(let file):
             guard let file else { return "The mix could not be written" }
             return file

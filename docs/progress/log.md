@@ -22673,3 +22673,16 @@ round, so the SVG needs no clip path; Width types to two places. Columns and
 Layout now go below the fold rather than cut Appearance. Next: a saved stroke a
 glyph takes in one click is filed at p2. Open question: whether a Pen line in an
 icon should move from 2 to 1.75 as well.
+
+
+## 2026-11-07: opening an SVG
+
+File Open, Open With and the app icon's open event now give a document holding
+the drawing (`SVGOpening`, Next behind `next-opening-an-svg`): shapes on layers,
+a 24 unit file as an Icon picture at 512, anything shapes would lose as one sharp
+picture with a pill, and a plain alert for what cannot be read. The reader gained
+class style sheets, whole canvas clips and a working rgb(). Checked against 431
+real SVGs: 322 open as shapes, 319 of those within 12 levels of macOS's drawing.
+SVG is declared as Viewer and Alternate: Editor at Alternate rank took the default
+from the browser. Next: four p2 follow-ups, small icons opening as specks the one
+most felt. Open question: whether boxes Ask draws land half a line small.

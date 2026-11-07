@@ -1,0 +1,56 @@
+{
+  "feature": "Opening an SVG file",
+  "epic": "icon-export",
+  "summary": "File, Open on an SVG now gives you its drawing as layers you can pick and edit. Before, the window stayed empty and nothing said why. Photonz also shows up under Open With in the Finder, and a 24 unit icon opens as an Icon.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Fixtures are in Scripts/playtest/fixtures/svg/. The walk is Scripts/playtest/opening-an-svg-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose File, Open and pick cloud-upload.svg.",
+      "shot": "2026-11-07-opening-an-svg-1-icon.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the arrow's stem: that one line is picked."
+    },
+    {
+      "do": "Press Command Plus three times: the edges stay hard.",
+      "shot": "2026-11-07-opening-an-svg-2-close-up.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open Wide logo 300x120.svg: the canvas reads 300 x 120 and Mark is a group.",
+      "shot": "2026-11-07-opening-an-svg-3-logo.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open Badge with words.svg: it opens as one picture and the pill says so.",
+      "shot": "2026-11-07-opening-an-svg-4-picture.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open damaged.svg: an alert says why and no window stays behind."
+    },
+    {
+      "do": "In the Finder, right click an .svg and look under Open With."
+    }
+  ],
+  "evaluate": [
+    "Does a 24 unit icon opening as a 512 point Icon picture feel right, given the Canvas row reads 512 x 512 while its file writes 24 by 24?",
+    "Is a white canvas behind an opened drawing what you expect, or should it show as transparent?",
+    "When a file comes in as one picture, does Opened as a picture tell you enough?",
+    "Does an icon from your own tools open as layers, or does it fall back to a picture?"
+  ],
+  "rough": [
+    "No mock covers opening an SVG; the Icon window it lands in is the one File, New, Image, Icon gives.",
+    "Chose an Icon picture at 512 points for a 24 unit file over a literal 24 point canvas, because a fit never enlarges and 24 points is a speck. The file still writes 24 by 24.",
+    "A real drag onto the Dock icon was not tried: this Mac denies the access a drag needs. The same open event sent with open -a works, and the file type the Dock checks is declared.",
+    "The alert itself was seen only as a 260 by 234 window on screen, not read or pressed: nothing here can click it. A walk proves the words and that the empty window goes.",
+    "Files using filters, masks, text, use, a clip smaller than the canvas or dashes open as one picture you cannot reshape. That was 107 of 431 real SVGs on this Mac.",
+    "Against macOS's own drawing, 319 of 322 files that open as shapes are within 12 levels of 255. A see-through fill reads lighter (task a-see-through-shape-looks-the-same-on-the-canvas) and gradients placed by absolute numbers are close, not exact.",
+    "A 16 point SVG opens as a speck at 100 percent (task a-small-svg-icon-opens-big-enough-to-work-on).",
+    "A white logo opens white on the white canvas, so it looks empty until you change the canvas.",
+    "The Width row reads 37.33 px on a 1.75 unit line, in points as on any Icon picture.",
+    "Open With lists Photonz in the Current release too, since one app has one list, and there an SVG still opens an empty window. That is Current's behaviour unchanged."
+  ]
+}

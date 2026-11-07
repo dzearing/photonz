@@ -2496,6 +2496,12 @@ final class EditorState {
             openPackage(at: url)
             return
         }
+        // ImageIO reads no SVG, so this is the one picture that needs asking
+        // about before it is read as pixels and comes back as nothing.
+        if Experiments.shared.openingAnSVG, SVGOpening.isSVGFile(url) {
+            openSVG(at: url)
+            return
+        }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
         // A Retina screenshot embeds 144 DPI (2×); honor it so 100% = its on-
@@ -2534,6 +2540,12 @@ final class EditorState {
     /// (`handOverPointer`).
     func addImageLayerOrOpen(at url: URL, droppedAt point: CGPoint? = nil,
                              landingAt landing: LayerDrop? = nil) {
+        // Let go on an empty window somebody already had open: a file that
+        // cannot be read leaves them that window.
+        if document == nil, Experiments.shared.openingAnSVG, SVGOpening.isSVGFile(url) {
+            openSVG(at: url, keepingTheWindow: true)
+            return
+        }
         if url.pathExtension.lowercased() == "photonz" || document == nil {
             openImage(at: url)
             return

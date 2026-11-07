@@ -338,6 +338,21 @@ cat > "$APP/Contents/Info.plist" <<PLIST
             </array>
         </dict>
         <dict>
+            <!-- A drawing: Photonz joins Finder's "Open With" for an .svg, and
+                 declaring it is what lets the Dock icon take one, while
+                 whatever opens SVGs today goes on opening them. Viewer as well
+                 as Alternate, and that is measured: as an Editor at Alternate
+                 rank Launch Services made this the default over a browser's
+                 Viewer claim, and rank None drops it from the list. -->
+            <key>CFBundleTypeName</key><string>SVG Drawing</string>
+            <key>CFBundleTypeRole</key><string>Viewer</string>
+            <key>LSHandlerRank</key><string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.svg-image</string>
+            </array>
+        </dict>
+        <dict>
             <key>CFBundleTypeName</key><string>Photonz Document</string>
             <key>CFBundleTypeRole</key><string>Editor</string>
             <key>LSTypeIsPackage</key><true/>

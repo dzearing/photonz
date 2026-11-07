@@ -689,6 +689,9 @@ extension Experiments {
     /// where you left it.
     var openingARecording: Bool { isEnabled(FeatureCatalog.openingARecordingFlag) }
 
+    /// `next-opening-an-svg`: whether an SVG opens as a document of its own.
+    var openingAnSVG: Bool { isEnabled(FeatureCatalog.openingAnSVGFlag) }
+
     /// `next-a-recording-is-ready-at-stop`: whether Stop lands the stream's
     /// last frame on the recording's tile at once, whether opening a recording
     /// macOS is still closing opens on that frame instead of waiting, and

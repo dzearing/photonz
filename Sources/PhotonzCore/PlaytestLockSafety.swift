@@ -129,6 +129,9 @@ public enum PlaytestLockSafety {
         "action", "appKey", "holdAppKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
         "expectMeasures", "expectNotice",
+        // Added 2026-11-06 by reading: it opens a file and reads what the app
+        // said about it, and never a name.
+        "expectOpenRefused",
         // Added 2026-11-06 by reading: it asks the app's own Preview state and
         // the document, and never a name.
         "expectPreview",

@@ -276,6 +276,8 @@ public enum FeatureCatalog {
 
     public static let openingARecordingFlag = "next-opening-a-recording"
 
+    public static let openingAnSVGFlag = "next-opening-an-svg"
+
     public static let recordingReadyAtStopFlag = "next-a-recording-is-ready-at-stop"
 
     public static let twoSoundsMixedAsYouRecordFlag = "next-two-sounds-mixed-as-you-record"
@@ -978,6 +980,16 @@ public enum FeatureCatalog {
                     title: "Opening a recording lands you somewhere you can work",
                     description: "File ▸ Open and Open With in the Finder open a movie as a recording, a missing file says so, and a recording reopens where you left it. Off means History is the only way in.",
                     area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: openingAnSVGFlag,
+                    title: "Opening an SVG gives you its drawing",
+                    description: "File ▸ Open and Open With in the Finder open an SVG as a document at its own size, its shapes on layers, and a file that cannot be read says so. Off means nothing opens.",
+                    area: .canvas,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

@@ -2274,6 +2274,30 @@ private final class Run {
             note(number, step.name, try await dropOnLibrary(file: file, hold: hold, release: release),
                  state: describe())
 
+        case .expectOpenRefused(let file, let says):
+            let url = try fileURL(file)
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                throw Failure(description: "no file at \(url.path)")
+            }
+            let before = Set(PlaytestHarness.readyEditors.map { ObjectIdentifier($0) })
+            let windows = coordinatorWindowCount()
+            EditorState.lastOpenRefusal = nil
+            coordinator.openWindowAction?(.file(url))
+            try await poll("the app to turn down \(url.lastPathComponent)", within: 10) {
+                EditorState.lastOpenRefusal?.file == url.lastPathComponent
+            }
+            let said = EditorState.lastOpenRefusal?.message ?? ""
+            guard said.localizedCaseInsensitiveContains(says) else {
+                throw Failure(description: "the app said \"\(said)\", not \"\(says)\"")
+            }
+            try await poll("the window opened for \(url.lastPathComponent) to go", within: 5) {
+                coordinatorWindowCount() <= windows
+            }
+            let appeared = PlaytestHarness.readyEditors.filter { !before.contains(ObjectIdentifier($0)) }
+            guard appeared.isEmpty else {
+                throw Failure(description: "\(url.lastPathComponent) was refused and a document opened anyway")
+            }
+            actionDetail = said
         case .importPicks(let files):
             let editor = try requireEditor()
             let urls = try files.map { try fileURL($0) }
@@ -16688,6 +16712,11 @@ private final class Run {
     }
 
     // MARK: - Opening
+
+    /// The editor windows standing, shown or not yet closed.
+    private func coordinatorWindowCount() -> Int {
+        NSApp.windows.count { !($0 is NSPanel) && $0.styleMask.contains(.titled) && $0.isVisible }
+    }
 
     private func open(_ url: URL, size: CGSize?, number: Int) async throws {
         guard FileManager.default.fileExists(atPath: url.path) else {

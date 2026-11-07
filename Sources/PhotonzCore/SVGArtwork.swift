@@ -61,6 +61,15 @@ public struct SVGArtwork: Hashable, Sendable {
 
     public let viewBox: CGRect?
 
+    /// The size the file says it is, from its width and height, in points
+    /// (`SVGNumbers.absoluteLength`). Nil when it gives neither, or only a
+    /// percentage, and its view box or what it draws has to answer.
+    public internal(set) var ownSize: CGSize?
+
+    /// What the file draws that these parts do not carry, one word each
+    /// ("text", "clip-path"): empty when the parts are the whole drawing.
+    public internal(set) var leftOut: Set<String> = []
+
     /// How an id reads as a part's name.
     static func readableID(_ id: String) -> String { SVGReader.readable(id) }
     public private(set) var parts: [Part]
@@ -80,6 +89,16 @@ public struct SVGArtwork: Hashable, Sendable {
     /// `keepingGroups` keeps each `<g id>` as a group of layers (an
     /// painted drawing's colour layers) instead of one flat group.
     public static func parse(_ text: String, keepingGroups: Bool = false) -> Result<SVGArtwork, SVGArtworkError> {
+        read(text, keepingGroups: keepingGroups).flatMap { artwork in
+            artwork.parts.isEmpty
+                ? .failure(SVGArtworkError("That SVG draws nothing Photonz can draw: no paths or shapes."))
+                : .success(artwork)
+        }
+    }
+
+    /// `parse`, with a file that holds no shapes coming back holding none, so
+    /// what else it holds can still be asked (`leftOut`).
+    static func read(_ text: String, keepingGroups: Bool) -> Result<SVGArtwork, SVGArtworkError> {
         guard let start = text.range(of: "<svg") else {
             return .failure(SVGArtworkError("That is not an SVG: it has no <svg> element."))
         }
@@ -90,10 +109,10 @@ public struct SVGArtwork: Hashable, Sendable {
         var reader = SVGReader(root: root)
         reader.keepsGroups = keepingGroups
         reader.read()
-        guard !reader.parts.isEmpty else {
-            return .failure(SVGArtworkError("That SVG draws nothing Photonz can draw: no paths or shapes."))
-        }
-        return .success(SVGArtwork(viewBox: reader.viewBox, parts: reader.parts))
+        var artwork = SVGArtwork(viewBox: reader.viewBox, parts: reader.parts)
+        artwork.ownSize = reader.ownSize
+        artwork.leftOut = reader.leftOut
+        return .success(artwork)
     }
 
     // MARK: Size
@@ -314,16 +333,20 @@ public struct SVGArtwork: Hashable, Sendable {
         }
         let drawn = layers(named: name, fitting: CGRect(origin: .zero, size: size), within: viewBox,
                            grid: IconGridLanding(side: side))
-        var children = drawn
-        if parts.contains(where: { !$0.groups.isEmpty }),
-           let top = Self.nest(name: name, Array(zip(drawn, parts.map(\.groups))), depth: 0) {
-            children = top.children.map { child in
-                var moved = child
-                moved.frame = child.frame.offsetBy(dx: top.frame.minX, dy: top.frame.minY)
-                return moved
-            }
+        return Layer.frameLayer(name: name, origin: origin, size: size,
+                                children: nested(drawn, named: name), backgroundHex: nil)
+    }
+
+    /// `drawn`, one layer a part, with the parts read keeping their groups
+    /// gathered into those groups and every layer left where it stands.
+    func nested(_ drawn: [Layer], named name: String) -> [Layer] {
+        guard parts.contains(where: { !$0.groups.isEmpty }),
+              let top = Self.nest(name: name, Array(zip(drawn, parts.map(\.groups))), depth: 0) else { return drawn }
+        return top.children.map { child in
+            var moved = child
+            moved.frame = child.frame.offsetBy(dx: top.frame.minX, dy: top.frame.minY)
+            return moved
         }
-        return Layer.frameLayer(name: name, origin: origin, size: size, children: children, backgroundHex: nil)
     }
 }
 
@@ -335,6 +358,8 @@ struct SVGTree {
     var name: String
     var attributes: [String: String]
     var children: [SVGTree] = []
+    /// The words directly inside it, which only a style sheet is asked for.
+    var text = ""
 
     static func parse(_ text: String) -> SVGTree? {
         let builder = Builder()
@@ -359,6 +384,16 @@ struct SVGTree {
             guard let done = stack.popLast() else { return }
             if stack.isEmpty { root = done } else { stack[stack.count - 1].children.append(done) }
         }
+
+        func parser(_ parser: XMLParser, foundCharacters string: String) {
+            guard let open = stack.last, open.name == "style" else { return }
+            stack[stack.count - 1].text = open.text + string
+        }
+
+        func parser(_ parser: XMLParser, foundCDATA CDATABlock: Data) {
+            guard let open = stack.last, open.name == "style" else { return }
+            stack[stack.count - 1].text = open.text + String(decoding: CDATABlock, as: UTF8.self)
+        }
     }
 }
 
@@ -368,6 +403,12 @@ private struct SVGReader {
     let root: SVGTree
     var parts: [SVGArtwork.Part] = []
     var viewBox: CGRect?
+    var ownSize: CGSize?
+    var leftOut: Set<String> = []
+    /// What the style sheets say about each class.
+    private var classRules: [String: [String: String]] = [:]
+    /// Clip ids to the element they name.
+    private var clips: [String: SVGTree] = [:]
     /// Gradient ids to their first colour.
     var gradients: [String: String] = [:]
     /// Gradient ids to the paint they are.
@@ -393,16 +434,24 @@ private struct SVGReader {
         var groups: [String] = []
         var lineEnd: PathLineEnd?
         var lineCorner: PathLineCorner?
+        /// Inside the outermost `svg`, where another one is a drawing placed
+        /// in this one.
+        var insideSVG = false
     }
 
     mutating func read() {
+        if let w = root.attributes["width"].flatMap(SVGNumbers.absoluteLength),
+           let h = root.attributes["height"].flatMap(SVGNumbers.absoluteLength), w > 0, h > 0 {
+            ownSize = CGSize(width: w, height: h)
+        }
         if let box = root.attributes["viewBox"].map(SVGNumbers.list), box.count == 4, box[2] > 0, box[3] > 0 {
             viewBox = CGRect(x: box[0], y: box[1], width: box[2], height: box[3])
-        } else if let w = root.attributes["width"].flatMap(SVGNumbers.length),
-                  let h = root.attributes["height"].flatMap(SVGNumbers.length), w > 0, h > 0 {
-            viewBox = CGRect(x: 0, y: 0, width: w, height: h)
+        } else if let ownSize {
+            viewBox = CGRect(origin: .zero, size: ownSize)
         }
         collectGradients(root)
+        collectClips(root)
+        readStyleSheets(root)
         countGroups(root, group: nil)
         walk(root, Inherited())
     }
@@ -480,6 +529,76 @@ private struct SVGReader {
 
     private static let drawn: Set<String> = ["path", "circle", "ellipse", "rect", "line", "polyline", "polygon"]
 
+    /// What is `skipped` and is seen when the file is shown: the rest of that
+    /// list only ever lends itself to something else.
+    private static let shownButNotRead: Set<String> = ["text", "image", "use", "foreignObject"]
+
+    /// Settings that change how a thing is drawn and that no part holds.
+    private static let unreadSettings = ["clip-path", "mask", "filter", "stroke-dasharray",
+                                         "marker-start", "marker-mid", "marker-end"]
+
+    /// Reads the file's style sheets. The one kind of rule a drawing tool
+    /// writes is read, `.st0{fill:none}`, which is how Illustrator paints every
+    /// shape it saves; a sheet saying anything else (an animation, a hover, a
+    /// rule about what sits inside what) is left out whole.
+    private mutating func readStyleSheets(_ node: SVGTree) {
+        if node.name == "style", !readClassRules(node.text) { leftOut.insert("style") }
+        for child in node.children { readStyleSheets(child) }
+    }
+
+    /// Takes in every rule in `sheet`, and says whether that was all of it.
+    private mutating func readClassRules(_ sheet: String) -> Bool {
+        let bare = sheet.replacing(/\/\*[\s\S]*?\*\//, with: "")
+        var rest = Substring(bare)
+        while let open = rest.firstIndex(of: "{") {
+            guard let close = rest[open...].firstIndex(of: "}") else { return false }
+            let selectors = rest[..<open].split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            guard !selectors.isEmpty,
+                  selectors.allSatisfy({ $0.wholeMatch(of: /\.[A-Za-z_][\w-]*/) != nil }) else { return false }
+            let declarations = Self.declarations(String(rest[rest.index(after: open)..<close]))
+            for selector in selectors { classRules[String(selector.dropFirst()), default: [:]].merge(declarations) { $1 } }
+            rest = rest[rest.index(after: close)...]
+        }
+        return rest.allSatisfy(\.isWhitespace)
+    }
+
+    /// What is said about this element: its classes, in the order the sheet
+    /// gave them, and then its own style attribute over the top.
+    private func style(of node: SVGTree) -> [String: String] {
+        var said: [String: String] = [:]
+        for name in (node.attributes["class"] ?? "").split(whereSeparator: \.isWhitespace) {
+            said.merge(classRules[String(name)] ?? [:]) { $1 }
+        }
+        return said.merging(Self.style(of: node)) { $1 }
+    }
+
+    private func isHidden(_ node: SVGTree) -> Bool {
+        let style = style(of: node)
+        func value(_ key: String) -> String? { style[key] ?? node.attributes[key] }
+        return value("display") == "none" || value("visibility") == "hidden"
+    }
+
+    /// Whether the clip `reference` names cuts nothing the canvas shows, seen
+    /// through `transform`: one square cornered box reaching past every edge.
+    /// A design tool wraps whatever it exports in one, and so does a frame.
+    private func clipCoversTheCanvas(_ reference: String, through transform: CGAffineTransform) -> Bool {
+        let word = reference.trimmingCharacters(in: .whitespaces)
+        guard word.hasPrefix("url("), let viewBox else { return false }
+        let id = word.dropFirst(4).prefix { $0 != ")" }.trimmingCharacters(in: CharacterSet(charactersIn: "#'\" "))
+        guard let clip = clips[id], clip.children.count == 1, let box = clip.children.first, box.name == "rect",
+              clip.attributes["clipPathUnits"] == nil, clip.attributes["transform"] == nil,
+              box.attributes["transform"] == nil, box.attributes["rx"] == nil, box.attributes["ry"] == nil
+        else { return false }
+        func number(_ key: String) -> CGFloat { box.attributes[key].flatMap(SVGNumbers.length) ?? 0 }
+        let rect = CGRect(x: number("x"), y: number("y"), width: number("width"), height: number("height"))
+        return rect.applying(transform).insetBy(dx: -0.01, dy: -0.01).contains(viewBox)
+    }
+
+    private mutating func collectClips(_ node: SVGTree) {
+        if node.name == "clipPath", let id = node.attributes["id"] { clips[id] = node }
+        for child in node.children { collectClips(child) }
+    }
+
     /// How many drawn things with no id of their own each named group holds,
     /// so a group of one gives its name whole and a group of two numbers them.
     private mutating func countGroups(_ node: SVGTree, group: String?) {
@@ -493,16 +612,34 @@ private struct SVGReader {
     }
 
     private mutating func walk(_ node: SVGTree, _ given: Inherited) {
-        if Self.skipped.contains(node.name) { return }
-        let style = Self.style(of: node)
+        if isHidden(node) { return }
+        if Self.skipped.contains(node.name) {
+            if Self.shownButNotRead.contains(node.name) { leftOut.insert(node.name) }
+            return
+        }
+        let style = style(of: node)
         func value(_ key: String) -> String? { style[key] ?? node.attributes[key] }
-        if value("display") == "none" || value("visibility") == "hidden" { return }
         var state = given
+        let own = node.attributes["transform"].map(SVGTransform.parse) ?? .identity
+        for setting in Self.unreadSettings {
+            guard let said = value(setting), said.trimmingCharacters(in: .whitespaces) != "none" else { continue }
+            if setting == "clip-path", clipCoversTheCanvas(said, through: own.concatenating(given.transform)) { continue }
+            leftOut.insert(setting.hasPrefix("marker") ? "marker" : setting)
+        }
+        if node.name == "svg" {
+            if given.insideSVG { leftOut.insert("svg") }
+            state.insideSVG = true
+        }
         if let fill = value("fill") {
             state.fill = paint(fill)
             state.fillPaint = gradient(fill)
+            if Self.isReference(fill), state.fillPaint == nil { leftOut.insert("paint") }
         }
-        if let stroke = value("stroke") { state.stroke = paint(stroke) }
+        if let stroke = value("stroke") {
+            state.stroke = paint(stroke)
+            // A line paints with one colour, so a gradient on one is lost too.
+            if Self.isReference(stroke) { leftOut.insert("paint") }
+        }
         if let width = value("stroke-width").flatMap(SVGNumbers.length) { state.strokeWidth = width }
         if let o = value("opacity").flatMap(SVGNumbers.length) { state.opacity *= o }
         if let o = value("fill-opacity").flatMap(SVGNumbers.length) { state.fillOpacity = o }
@@ -530,6 +667,10 @@ private struct SVGReader {
         default:
             return
         }
+    }
+
+    private static func isReference(_ paint: String) -> Bool {
+        paint.trimmingCharacters(in: .whitespaces).hasPrefix("url(")
     }
 
     /// The gradient a `url(#id)` fill names, following links to its stops.
@@ -676,12 +817,16 @@ private struct SVGReader {
     }
 
     static func style(of node: SVGTree) -> [String: String] {
-        guard let text = node.attributes["style"] else { return [:] }
+        node.attributes["style"].map(declarations) ?? [:]
+    }
+
+    /// `fill:none;stroke:#000` as what it says.
+    static func declarations(_ text: String) -> [String: String] {
         var out: [String: String] = [:]
         for declaration in text.split(separator: ";") {
             let pair = declaration.split(separator: ":", maxSplits: 1)
             guard pair.count == 2 else { continue }
-            out[pair[0].trimmingCharacters(in: .whitespaces)] = pair[1].trimmingCharacters(in: .whitespaces)
+            out[pair[0].trimmingCharacters(in: .whitespacesAndNewlines)] = pair[1].trimmingCharacters(in: .whitespacesAndNewlines)
         }
         return out
     }
@@ -979,6 +1124,21 @@ enum SVGNumbers {
         return scanner.number()
     }
 
+    /// A width or height as a size in points, at the 96 to the inch SVG counts
+    /// in: "24", "24px", "2in", "210mm". Nil for a percentage, or an em, which
+    /// are about something outside the file.
+    static func absoluteLength(_ text: String) -> CGFloat? {
+        let trimmed = text.trimmingCharacters(in: .whitespaces).lowercased()
+        let unit = String(trimmed.reversed().prefix { $0.isLetter || $0 == "%" }.reversed())
+        guard let scale = pointsPerUnit[unit] else { return nil }
+        var scanner = Scanner(String(trimmed.dropLast(unit.count)))
+        return scanner.number().map { $0 * scale }
+    }
+
+    private static let pointsPerUnit: [String: CGFloat] = [
+        "": 1, "px": 1, "pt": 4.0 / 3, "pc": 16, "in": 96, "cm": 96 / 2.54, "mm": 96 / 25.4,
+    ]
+
     struct Scanner {
         private let characters: [Character]
         private var index = 0
@@ -1120,7 +1280,7 @@ enum SVGColor {
             }
         }
         if word.hasPrefix("rgb") {
-            let values = SVGNumbers.list(String(word.drop { $0 != "(" }))
+            let values = SVGNumbers.list(String(word.drop { $0 != "(" }.dropFirst()).replacing("%", with: " "))
             guard values.count >= 3 else { return nil }
             let percent = word.contains("%")
             let channels = values.prefix(3).map { value -> Int in

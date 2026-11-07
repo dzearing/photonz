@@ -639,6 +639,12 @@ struct EditorView: View {
             coordinator.openRecording(url)
             return
         }
+        // Into an empty window it fills it; over a document it goes in a
+        // window of its own, since nothing in an SVG is worth losing this one.
+        if Experiments.shared.openingAnSVG, SVGOpening.isSVGFile(url), editorState.document != nil {
+            coordinator.openFileWindow(url)
+            return
+        }
         editorState.openImage(at: url)
         if editorState.document != nil { RecentDocumentsStore.shared.note(url) }
     }
