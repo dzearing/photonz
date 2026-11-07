@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T18:52:37.115Z",
-  "updated": "2026-11-06T18:49:52.214Z",
+  "updated": "2026-11-07T07:15:11.674Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Align row (task a-drawn-path-takes-an-outline-inside-centred-or, 2026-10-08). Mock: docs/design/mocks/pages/icon-draw-wt.html ~line 411 (#secStroke: Width select reading 1.75, Caps seg Butt/Round/Square with Round on, Align select Center). App: Sources/Photonz/ShapePartSettings.swift .stroke slot (thickness slider labelled Thickness) and Sources/Photonz/PathLineStylePickers.swift (Pattern, Ends, Corners picture segments, Align dropdown). Ends is hidden on a closed solid path by design (PathContent.showsLineEnds) while the mock always shows Caps. Thickness and Ends are the words lines and arrows use too, so renaming for paths alone splits the vocabulary: that is a card for the user, not a runner guess. Pattern and Corners go further than the mock and are not differences.",
@@ -160,10 +160,71 @@
     {
       "t": "2026-11-06T18:49:52.213Z",
       "note": "seq 80 -> 40"
+    },
+    {
+      "t": "2026-11-07T06:15:25.913Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T06:16:47.078Z",
+      "note": "Reproduced at Next defaults with the manager's m3 walk: Union in a 24 frame, Outline on reads Thickness 4 px, the SVG says stroke-width 8 with a clip path, and Appearance cuts off at Pattern with Columns and Layout open below it."
+    },
+    {
+      "t": "2026-11-07T07:02:29.898Z",
+      "note": "Walk triage: arrow-parts, icon-stroke-weight, one-unit-word, outline-width, pick-leaves-settings-alone and section-fold-motion failed the same way in the 2026-11-05 sweep (queue/sweep/2026-11-05-000550.log) and belong to walks-that-fail-in-the-full-sweep-26; their old words are renamed here. ask-shows-the-agent-group-when-folded-walk sits in Getting the model ready with the request waiting, no outline code on that path, same owner. opening-a-section-folds-the-near-side-walk was mine: the first fold change sent Motion off the bottom, so only Columns and Layout give way now, and it passes."
+    },
+    {
+      "t": "2026-11-07T07:13:21.134Z",
+      "note": "walks path-outline-align-walk -> path-outline-width-caps-walk, path-outline-align-walk, path-outline-align-click-walk, shape-line-ends-walk, path-line-style-walk"
+    },
+    {
+      "t": "2026-11-07T07:13:42.605Z",
+      "note": "Compared side by side with icon-draw-wt.html #secStroke: picture in queue/audits/2026-11-06-path-outline-beside-mock.png, every difference is in the audit's rough list."
+    },
+    {
+      "t": "2026-11-07T07:13:42.672Z",
+      "note": "Chose 1.75 scaled to the icon over the Pen's 2 because the checklist and the mock name 1.75 as the set's weight."
+    },
+    {
+      "t": "2026-11-07T07:13:42.738Z",
+      "note": "Chose a fixed starting weight over the Pen's remembered weight because a remembered 4 or 9 would bring the blob back on an icon."
+    },
+    {
+      "t": "2026-11-07T07:13:42.805Z",
+      "note": "Chose to keep Width a slider with a typed number over the mock's dropdown because card option a answered that; typing now keeps two places."
+    },
+    {
+      "t": "2026-11-07T07:13:42.871Z",
+      "note": "Chose Pattern above Caps over the mock's Width, Caps order because Dashed is what brings Caps in on a closed path and the row under the pointer would jump."
+    },
+    {
+      "t": "2026-11-07T07:13:42.937Z",
+      "note": "Chose to let only Columns and Layout go below the fold over all forms under the pair because sending Motion off the bottom failed opening-a-section-folds-the-near-side-walk, the user's 2026-10-24 rule."
+    },
+    {
+      "t": "2026-11-07T07:13:43.017Z",
+      "note": "Chose to keep Thickness on a component's number knob because Width there reads as the component's size, and in Current's AnnotationInspector and MeasureInspector because Current does not change."
+    },
+    {
+      "t": "2026-11-07T07:13:43.087Z",
+      "note": "left rough: a Pen line in an icon starts at 2 and an outline at 1.75; off then on resets Align, Corners and Caps; arrow Width and Caps sit under Advanced. All in the audit, none a defect or a new task."
+    },
+    {
+      "t": "2026-11-07T07:13:43.161Z",
+      "note": "Looked at 2-outline-on, 4-dashed-caps, 6-open-path, 7-line, 8-arrow and the beside-mock picture: the panel, weights and words match the goal. All are pictures of the window behind another app (the walk does not set front)."
+    },
+    {
+      "t": "2026-11-07T07:15:11.672Z",
+      "note": "Every Next outline says Width and Caps, Caps as the words Butt, Round and Square, on paths, lines, arrows and measurements. An outline turned on in an icon starts at 1.75 on 24, Center and round, and its SVG has no clip path. Columns and Layout go below the fold so Width, Caps and Align show without a scroll in a 1000 point window. Commit 8a6363c4. Verified by Scripts/test.sh (all passed), path-outline-width-caps-walk at Next defaults and the walks that read the old words. Five renamed walks and section-fold-motion still fail as they did on 2026-11-05, under walks-that-fail-in-the-full-sweep-26. Audit: queue/audits/2026-11-06-a-drawn-path-s-outline-settings-read-like-the-ic.json"
     }
   ],
-  "started": "2026-10-08T19:08:27.440Z",
+  "started": "2026-11-07T06:15:25.912Z",
   "walks": [
-    "path-outline-align-walk"
-  ]
+    "path-outline-width-caps-walk",
+    "path-outline-align-walk",
+    "path-outline-align-click-walk",
+    "shape-line-ends-walk",
+    "path-line-style-walk"
+  ],
+  "completed": "2026-11-07T07:15:11.673Z"
 }

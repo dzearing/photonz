@@ -1,0 +1,27 @@
+{
+  "id": "a-glyph-takes-the-icon-set-s-saved-stroke-in-one",
+  "title": "A glyph takes the icon set's saved stroke in one click",
+  "goal": "The icon drawing mock says the set's 1.75 round stroke is saved as a style, so giving a glyph that stroke is one click, and changing the set's weight changes every glyph. Today each outline is set on its own, so a person changing the set's weight has to visit every glyph.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 55,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T07:13:42.402Z",
+  "updated": "2026-11-07T07:13:42.405Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found comparing the outline settings with icon-draw-wt.html #secStroke (note pStrokeNote) under a-drawn-path-s-outline-settings-read-like-the-ic. Colour styles already bind by name (bindColorStyle); nothing does that for width, caps and corners.",
+  "acceptance": [
+    "A stroke saved from a picked path can be applied to another path in one click",
+    "Changing the saved stroke's weight changes every path using it, as one undo step",
+    "A walk at Next defaults proves both with a pointer click"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T07:13:42.404Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -16026,3 +16026,19 @@
 {"t":"2026-11-07T06:14:09.126Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
 {"t":"2026-11-07T06:14:09.201Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
 {"t":"2026-11-07T06:14:57.780Z","ev":"task_done","id":"an-icon-picture-s-svg-reads-in-24-whole-units","from":"in_progress","note":"A torn Ask icon now exports viewBox 0 0 24 24 with every place whole (00ece83e), so all six checklist items are met. Proved in the real app by a-torn-icon-writes-whole-units-walk: 48 end point numbers whole, Copy byte for byte the export; a torn file also drawn against its 512 canvas in the suite. Scripts/test.sh exit 0, six walks ok. Cost, one reading each: balloon 88.8 to 84, heart 56 to 43, egg 83.2 to 56; icon group about 84.4 to 81 by sum, not a fresh 17 case run. Held-out not rerun (59.7 is from a3de88c3). The audit asks the user whether the file is worth the points."}
+{"t":"2026-11-07T06:15:25.919Z","ev":"task_started","id":"a-drawn-path-s-outline-settings-read-like-the-ic","title":"A drawn path's outline settings read like the icon drawing mock's Stroke section","priority":"p1-high"}
+{"t":"2026-11-07T06:16:47.080Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:02:29.900Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:13:21.136Z","ev":"task_walks","id":"a-drawn-path-s-outline-settings-read-like-the-ic","walks":["path-outline-width-caps-walk","path-outline-align-walk","path-outline-align-click-walk","shape-line-ends-walk","path-line-style-walk"]}
+{"t":"2026-11-07T07:13:42.406Z","ev":"task_created","id":"a-glyph-takes-the-icon-set-s-saved-stroke-in-one","priority":"p2-normal","title":"A glyph takes the icon set's saved stroke in one click"}
+{"t":"2026-11-07T07:13:42.607Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:13:42.674Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:13:42.740Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:13:42.807Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:13:42.873Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:13:42.939Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:13:43.019Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:13:43.089Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:13:43.163Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-07T07:15:11.597Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-07T07:15:11.675Z","ev":"task_done","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":"in_progress","note":"Every Next outline says Width and Caps, Caps as the words Butt, Round and Square, on paths, lines, arrows and measurements. An outline turned on in an icon starts at 1.75 on 24, Center and round, and its SVG has no clip path. Columns and Layout go below the fold so Width, Caps and Align show without a scroll in a 1000 point window. Commit 8a6363c4. Verified by Scripts/test.sh (all passed), path-outline-width-caps-walk at Next defaults and the walks that read the old words. Five renamed walks and section-fold-motion still fail as they did on 2026-11-05, under walks-that-fail-in-the-full-sweep-26. Audit: queue/audits/2026-11-06-a-drawn-path-s-outline-settings-read-like-the-ic.json"}
