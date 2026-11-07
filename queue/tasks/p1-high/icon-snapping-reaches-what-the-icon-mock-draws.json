@@ -5,19 +5,22 @@
   "epic": "icon-grid",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T07:41:10.756Z",
-  "updated": "2026-11-06T21:44:30.340Z",
+  "updated": "2026-11-07T09:38:19.398Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Mock: docs/design/mocks/pages/icon-draw-wt.html (Grid & snap group, steps 3 to 6 and 10). Built so far: Sources/PhotonzCore/IconSnap.swift (whole units from the frame corner, keylines while shown, other paths' anchors; reach 6 view points capped at 1 unit) handed to PenSession.iconSnap by CanvasPen.refreshPenSnapping. Only the Pen uses it; rectangle/ellipse drags in icon frames still use their own magnets. Also seen: right after a shape closes it stays picked, so a Pen press on its corner grabs that corner (path edit owns the press) instead of starting a new shape there, which is exactly how the mock starts its second circle (step 6); the walk works round it with Escape. 2026-10-15: IconSnapChoices + shape edges/centres + readout in Sources/PhotonzCore/IconSnap.swift; IconSnapStore (Sources/Photonz/IconSnapStore.swift); View > Snap in Icons in EditorCommands; shape drags in icons via CanvasNSView.snappedAnnotationPoint; pill in CanvasDrawLanding.swift. Walk shapes-snap-in-an-icon-walk. Only Command vs Control (the card) is left.",
+  "notes": "Mock: docs/design/mocks/pages/icon-draw-wt.html (Grid & snap group, steps 3 to 6 and 10). Built so far: Sources/PhotonzCore/IconSnap.swift (whole units from the frame corner, keylines while shown, other paths' anchors; reach 6 view points capped at 1 unit) handed to PenSession.iconSnap by CanvasPen.refreshPenSnapping. Only the Pen uses it; rectangle/ellipse drags in icon frames still use their own magnets. Also seen: right after a shape closes it stays picked, so a Pen press on its corner grabs that corner (path edit owns the press) instead of starting a new shape there, which is exactly how the mock starts its second circle (step 6); the walk works round it with Escape. 2026-10-15: IconSnapChoices + shape edges/centres + readout in Sources/PhotonzCore/IconSnap.swift; IconSnapStore (Sources/Photonz/IconSnapStore.swift); View > Snap in Icons in EditorCommands; shape drags in icons via CanvasNSView.snappedAnnotationPoint; pill in CanvasDrawLanding.swift. Walk shapes-snap-in-an-icon-walk. Only Command vs Control (the card) is left. 2026-11-07: dots on crossings are IconUnits.crossings, drawn in CanvasIconUnits.swift by iconUnitDotLayer above the keylines; Grid choice reaches the canvas as iconSnapsToUnits; readout centre words in IconSnap.readout(for:); actions snapToGridOff/On. Measure: Scripts/measure-icon-dots.py with two captures and the artboard box.",
   "acceptance": [
     "The mock's Snap to choices exist and each one turns its pull on or off, placed where the placement contract puts them",
     "While a point is being placed in an icon frame, a readout beside the pointer names the whole-unit place it will land, as in the mock's step 4",
     "A point near another shape's edge or centre lands on it, as the mock's step 6 shows",
-    "Command suspends snapping inside an icon frame, as everywhere else on the canvas (settled on 2026-10-20, when the waiting cards were taken as recommended), and the mock's Control is not used for it"
+    "Command suspends snapping inside an icon frame, as everywhere else on the canvas (settled on 2026-10-20, when the waiting cards were taken as recommended), and the mock's Control is not used for it",
+    "MEASURED, and today's window fails it (0 dots): with the Grid on and Snap in Icons Grid on, a capture of a 24 unit artboard shows a dot on each of the 441 unit crossings of the live area, none outside it, and none with Snap in Icons Grid off",
+    "A point that lands on the artboard's centre line says so in the readout, as the mock's step 10 does: 12, 16 · center",
+    "Pressing on a shape's corner with a shape tool in hand starts the new shape there, as the mock's step 6 does, with no Escape first"
   ],
   "log": [
     {
@@ -187,11 +190,50 @@
     {
       "t": "2026-11-06T21:44:30.339Z",
       "note": "also from the mock's step 3: with Snap to Grid on, a dot lights on every crossing (igDots), and the app draws none yet. Found while ruling the artboard into units (a-24-unit-artboard-rules-itself-into-units)."
+    },
+    {
+      "t": "2026-11-07T08:42:13.854Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T09:34:05.786Z",
+      "note": "walks shapes-snap-in-an-icon-walk, pen-lands-on-whole-units-in-an-icon-walk -> shapes-snap-in-an-icon-walk, pen-lands-on-whole-units-in-an-icon-walk, command-frees-snapping-in-an-icon-walk, dots-on-an-icon-s-crossings-walk"
+    },
+    {
+      "t": "2026-11-07T09:34:29.601Z",
+      "note": "Reproduced before building: pen-lands-on-whole-units-in-an-icon-walk and shapes-snap-in-an-icon-walk both pass on today's build, so the 2026-10-31 rotating check failure no longer happens. Command needed no code: command-frees-snapping-in-an-icon-walk proves a box, Pen points and a move stay put with it held (SVG translate(10.6 11.6), 5.9 x 2.7; path 4.3, 17.4 and 8.6, 17.7) and the next point without it goes back to a whole unit."
+    },
+    {
+      "t": "2026-11-07T09:34:29.672Z",
+      "note": "Measured dots with Scripts/measure-icon-dots.py on dots-1-on-sc.png against the same window with Snap in Icons Grid off, box 591 518 1359 1286: 441 dots, 0 in the margin, 0 pixels changed off a crossing, PASS. The weak version (no dots) reads 0 and FAILS. First pass had the dots under the keylines, hiding those crossings; moved over them, as the mock stacks them."
+    },
+    {
+      "t": "2026-11-07T09:34:29.739Z",
+      "note": "Chose to leave a Pen press on a corner of the path it just closed as it is (grabs the corner) over starting a new path, because an active path's anchor answers the Pen in Photoshop and Illustrator too and a picked path is reachable with the Pen on purpose. Reproduced: two clicks from the corner of a just closed triangle gave no second path; Escape first works. Shape tools were never affected: a press on a picked box's corner with Ellipse starts the circle there, now walked with no Escape."
+    },
+    {
+      "t": "2026-11-07T09:34:29.809Z",
+      "note": "Chose dots only inside the live area, as the mock's igDots rect does, and none under 10 points a unit or above 4000 crossings because they turn to speckle and cost every pan. Looked at pictures: dots-on, dots-off, beside-the-mock, center-readout, command-free, and a-24's 10-dark-frame: dots read on white, near black and over a filled shape, on the crossings."
+    },
+    {
+      "t": "2026-11-07T09:34:29.876Z",
+      "note": "Two walks read CRASHED during this run (dots-on-an-icon-s-crossings-walk, command-frees-snapping-in-an-icon-walk) with no crash report. That was me: killing a run stopped only its child, so two playtest-all runs shared the probe and quit each other's app. Each passed in the other run, the dots walk passed three times alone, ask-tweaks-an-icon-walk (which I killed) passed on rerun. Not an app bug."
+    },
+    {
+      "t": "2026-11-07T09:34:29.943Z",
+      "note": "Rough items: picked shape label filed as a-shape-picked-in-an-icon-names-its-place-and-si; the rest stay in the audit's rough list, each settled or a logged choice. Left rough, not filed: dragging a path's existing point in an icon still uses the canvas nudge grid rather than IconSnap, so it ignores keylines and geometry; nobody has hit it and the mock does not show it."
+    },
+    {
+      "t": "2026-11-07T09:38:19.396Z",
+      "note": "Dots on every crossing of an icon's live area with the Grid and Snap in Icons Grid on (441 measured on a capture, 0 in the margin), the pill says 12, 16 · center, Command proven for boxes, Pen points and moves, a shape tool press on a corner needs no Escape. af203960. Verified by Scripts/test.sh, dots-on-an-icon-s-crossings-walk and command-frees-snapping-in-an-icon-walk at Next defaults and 6 related walks. Picked shape label filed as a-shape-picked-in-an-icon-names-its-place-and-si."
     }
   ],
   "walks": [
     "shapes-snap-in-an-icon-walk",
-    "pen-lands-on-whole-units-in-an-icon-walk"
+    "pen-lands-on-whole-units-in-an-icon-walk",
+    "command-frees-snapping-in-an-icon-walk",
+    "dots-on-an-icon-s-crossings-walk"
   ],
-  "started": "2026-10-15T11:19:19.058Z"
+  "started": "2026-11-07T08:42:13.853Z",
+  "completed": "2026-11-07T09:38:19.397Z"
 }

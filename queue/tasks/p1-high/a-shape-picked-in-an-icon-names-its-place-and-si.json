@@ -1,0 +1,27 @@
+{
+  "id": "a-shape-picked-in-an-icon-names-its-place-and-si",
+  "title": "A shape picked in an icon names its place and size above it",
+  "goal": "The icon drawing mock labels a picked shape with where it sits and how big it is, in units, right above it (9, 10 · 6 × 3). In the app a picked shape in an icon shows no such label, so you have to look at the panel to check a shape landed where you meant.",
+  "epic": "icon-grid",
+  "priority": "p1-high",
+  "seq": 85,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-07T09:34:05.635Z",
+  "updated": "2026-11-07T09:34:05.638Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-11-07: temp walk drawing a box at 9, 10 to 15, 13 in a 24 frame at 800%, then the Select tool: capture queue/audits/2026-11-07-icon-snap-picked-box-sc.png shows handles and no place or size label. Mock: docs/design/mocks/pages/icon-draw-wt.html #igTag, steps 4 to 6, 9 and 10, seen at http://127.0.0.1:8791/pages/icon-draw-wt.html?step=4. Words already exist: IconSnap.readout(centre:corner:shape:). Check it against the never-cover-the-object rule and the handle hint pill that sits under the shape.",
+  "acceptance": [
+    "A shape picked in an icon shows its place and size in units beside it, as the mock steps 4 to 6 do: 9, 10 · 6 × 3, and center 12, 8 · d 8 for a circle",
+    "The label moves with a drag and never sits over the shape or its handles",
+    "A walk at Next defaults proves it, with a picture beside the mock in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-11-07T09:34:05.637Z",
+      "note": "created (manual)"
+    }
+  ]
+}
