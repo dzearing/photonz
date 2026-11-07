@@ -111,11 +111,28 @@ public enum CornerRadiusHandles {
         return min(max(((dx + dy) / 2).rounded(), 0), limit(in: frame))
     }
 
-    /// The four corners after this pull: one of them alone, or all four
-    /// together while the modifier is held.
+    /// How far the hand travels, in screen points, before a press on a dot
+    /// counts as a pull: the distance every other drag on the canvas waits for.
+    public static let pullThreshold: CGFloat = 4
+
+    /// Whether a press has become a pull.
+    ///
+    /// A plain pull rewrites all four corners, and a dot on a square corner
+    /// rests a little way in, so the first point of travel already asks for a
+    /// radius. Without this a press that merely wobbled would round a square
+    /// shape, or cost a card its rounded top and square foot.
+    public static func pullHasBegun(from press: CGPoint, to p: CGPoint, zoom: CGFloat) -> Bool {
+        let z = zoom > 0 ? zoom : 1
+        return hypot(p.x - press.x, p.y - press.y) * z >= pullThreshold
+    }
+
+    /// The four corners after this pull: all four together, or the pulled one
+    /// alone while ⌥ is held. The way round Photoshop's live shapes have it,
+    /// and the way a drawn path's corner knobs do (`PathCornerDrag`), so what
+    /// a hand learns on one shape holds on the other.
     public static func radii(_ radii: CornerRadii, corner: CornerRadii.Corner,
-                             to radius: CGFloat, allCorners: Bool) -> CornerRadii {
-        guard !allCorners else { return CornerRadii(radius) }
+                             to radius: CGFloat, oneCorner: Bool) -> CornerRadii {
+        guard oneCorner else { return CornerRadii(radius) }
         var updated = radii
         updated[corner] = radius
         return updated

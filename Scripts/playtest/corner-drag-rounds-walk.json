@@ -64,7 +64,10 @@
       "to": [
         370,
         310
-      ]
+      ],
+      "steps": 14,
+      "readout": "Radius 50",
+      "hold": "2-mid-pull"
     },
     {
       "do": "wait",
@@ -72,16 +75,21 @@
     },
     {
       "do": "describe",
-      "stage": "2-one-corner",
-      "note": "THE TEST: pulling the top left dot in rounds the TOP LEFT corner alone to 50, and leaves the other three square"
+      "stage": "2-all-four",
+      "note": "THE TEST: a plain pull on the top left dot rounds ALL FOUR corners to 50, the way a drawn shape's knob does, the pill under the shape read Radius 50 while the button was down, and the row reads one number"
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "50"
     },
     {
       "do": "snapshot",
-      "name": "2-one-corner"
+      "name": "2-all-four"
     },
     {
       "do": "render",
-      "name": "2-canvas-one-corner"
+      "name": "2-canvas-all-four"
     },
     {
       "do": "press",
@@ -100,21 +108,21 @@
     {
       "do": "expect",
       "field": "Top Right",
-      "reads": "0"
+      "reads": "50"
     },
     {
       "do": "expect",
       "field": "Bottom Right",
-      "reads": "0"
+      "reads": "50"
     },
     {
       "do": "expect",
       "field": "Bottom Left",
-      "reads": "0"
+      "reads": "50"
     },
     {
       "do": "panel",
-      "stage": "2-one-corner"
+      "stage": "2-all-four"
     },
     {
       "do": "key",
@@ -127,16 +135,19 @@
     {
       "do": "drag",
       "from": [
-        588,
-        272
+        550,
+        310
       ],
       "to": [
         575,
         285
       ],
+      "steps": 14,
       "modifiers": [
         "option"
-      ]
+      ],
+      "readout": "Radius 25",
+      "hold": "3-mid-option-pull"
     },
     {
       "do": "wait",
@@ -144,70 +155,13 @@
     },
     {
       "do": "describe",
-      "stage": "3-all-four",
-      "note": "THE TEST: holding Option while pulling the top right dot takes all four corners together, so every one of them reads 25"
-    },
-    {
-      "do": "press",
-      "control": "Twist",
-      "in": "Corner Radius"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.5
+      "stage": "3-one-corner",
+      "note": "THE TEST: holding Option while pulling the top right dot takes that corner alone to 25, the other three stay at 50, and the row reads Mixed"
     },
     {
       "do": "expect",
-      "field": "Top Left",
-      "reads": "25"
-    },
-    {
-      "do": "expect",
-      "field": "Top Right",
-      "reads": "25"
-    },
-    {
-      "do": "expect",
-      "field": "Bottom Right",
-      "reads": "25"
-    },
-    {
-      "do": "expect",
-      "field": "Bottom Left",
-      "reads": "25"
-    },
-    {
-      "do": "snapshot",
-      "name": "3-all-four"
-    },
-    {
-      "do": "render",
-      "name": "3-canvas-all-four"
-    },
-    {
-      "do": "panel",
-      "stage": "3-all-four"
-    },
-    {
-      "do": "key",
-      "key": "escape"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.4
-    },
-    {
-      "do": "action",
-      "action": "undo"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.8
-    },
-    {
-      "do": "describe",
-      "stage": "4-undone",
-      "note": "THE TEST: ONE undo takes back the whole Option pull and no more, so the shape is the 50/0/0/0 the first drag made. Undo is driven straight on the editor rather than with command Z: the probe is never the frontmost app, so a synthesized chord never reaches its Edit menu"
+      "field": "Corner Radius",
+      "reads": "Mixed"
     },
     {
       "do": "press",
@@ -226,7 +180,110 @@
     {
       "do": "expect",
       "field": "Top Right",
-      "reads": "0"
+      "reads": "25"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Right",
+      "reads": "50"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Left",
+      "reads": "50"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-one-corner"
+    },
+    {
+      "do": "render",
+      "name": "3-canvas-one-corner"
+    },
+    {
+      "do": "panel",
+      "stage": "3-one-corner"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        575,
+        285
+      ],
+      "to": [
+        577,
+        286
+      ],
+      "steps": 3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3b-wobble",
+      "note": "THE TEST: a press on a dot that only wobbled two points is not a pull, so a plain press does not flatten the four different corners"
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "Mixed"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-undone",
+      "note": "THE TEST: ONE undo takes back the whole Option pull and no more, so all four are the 50 the first pull made, and the wobble left no step of its own. Undo is driven straight on the editor rather than with command Z: the probe is never the frontmost app, so a synthesized chord never reaches its Edit menu"
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "50"
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Corner Radius"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Top Left",
+      "reads": "50"
+    },
+    {
+      "do": "expect",
+      "field": "Top Right",
+      "reads": "50"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Right",
+      "reads": "50"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Left",
+      "reads": "50"
     },
     {
       "do": "snapshot",
@@ -249,7 +306,8 @@
       "to": [
         300,
         240
-      ]
+      ],
+      "steps": 14
     },
     {
       "do": "wait",
@@ -258,7 +316,7 @@
     {
       "do": "describe",
       "stage": "5-squared-again",
-      "note": "pulling the same dot back out past the corner squares it off rather than going negative"
+      "note": "pulling the same dot back out past the corner squares every corner off rather than going negative"
     },
     {
       "do": "press",
@@ -272,6 +330,21 @@
     {
       "do": "expect",
       "field": "Top Left",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Top Right",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Right",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Left",
       "reads": "0"
     },
     {

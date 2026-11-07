@@ -22696,3 +22696,12 @@ Command was already freeing boxes, Pen points and moves; a new walk now proves i
 A press on a corner with a shape tool already started a shape; the walk does it
 with no Escape. Next: the picked shape's place and size label, filed as p1.
 Open question: none.
+
+## 2026-11-07: corners round the same way on every shape
+
+A plain pull on a rectangle's corner dot now rounds all four and Option rounds
+the one pulled, matching a drawn shape's knobs and Photoshop's live shapes
+(`CornerRadiusHandles.radii`, `oneCorner`). A rectangle's pull now feeds the
+Radius pill, keeps only the pulled dot on screen with Option, and waits for four
+points of travel, so a wobble cannot flatten a shape with mixed corners. Next:
+a rectangle landing on the grid, filed at p2. Open question: none.

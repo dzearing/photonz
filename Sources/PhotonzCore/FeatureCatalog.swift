@@ -505,7 +505,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: cornerHandlesFlag,
                     title: "Drag a corner to round it",
-                    description: "A picked shape shows a dot inside each corner: drag one to round that corner, or hold Option to round all four. Off means corners round only from the panel.",
+                    description: "A picked shape shows a dot inside each corner: drag one to round all four, or hold Option to round just that corner. Off means corners round only from the panel.",
                     area: .selecting,
                     isEnabled: false,
                     parameters: []),

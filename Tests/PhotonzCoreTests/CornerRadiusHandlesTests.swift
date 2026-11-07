@@ -148,16 +148,51 @@ struct CornerRadiusHandlesTests {
 
     // MARK: The whole gesture
 
-    @Test func aPullOnOneHandleLeavesTheOtherThreeAlone() {
+    @Test func aPlainPullTakesAllFourTogether() {
+        let start = CornerRadii(topLeft: 8, topRight: 2, bottomRight: 0, bottomLeft: 40)
+        let after = CornerRadiusHandles.radii(start, corner: .topRight, to: 24, oneCorner: false)
+        #expect(after == CornerRadii(24))
+    }
+
+    @Test func holdingTheModifierLeavesTheOtherThreeAlone() {
         let start = CornerRadii(topLeft: 8, topRight: 8, bottomRight: 8, bottomLeft: 8)
-        let after = CornerRadiusHandles.radii(start, corner: .topRight, to: 24, allCorners: false)
+        let after = CornerRadiusHandles.radii(start, corner: .topRight, to: 24, oneCorner: true)
         #expect(after == CornerRadii(topLeft: 8, topRight: 24, bottomRight: 8, bottomLeft: 8))
     }
 
-    @Test func holdingTheModifierTakesAllFourTogether() {
+    @Test func lettingGoOfTheModifierPartWayTakesAllFourAgain() {
+        // Every frame is worked out from the corners at the press, so the key
+        // can come and go during a pull without leaving anything behind.
         let start = CornerRadii(topLeft: 8, topRight: 2, bottomRight: 0, bottomLeft: 40)
-        let after = CornerRadiusHandles.radii(start, corner: .topRight, to: 24, allCorners: true)
-        #expect(after == CornerRadii(24))
+        let held = CornerRadiusHandles.radii(start, corner: .topRight, to: 24, oneCorner: true)
+        #expect(held.bottomLeft == 40)
+        let released = CornerRadiusHandles.radii(start, corner: .topRight, to: 24, oneCorner: false)
+        #expect(released == CornerRadii(24))
+    }
+
+    // MARK: When a press becomes a pull
+
+    @Test func aHandThatStaysPutHasNotStartedAPull() {
+        // A plain pull rewrites all four corners, so a press that wobbles must
+        // not cost a card its rounded top and square foot.
+        let press = CGPoint(x: 120, y: 120)
+        let wobble = CGPoint(x: 122, y: 121)
+        #expect(!CornerRadiusHandles.pullHasBegun(from: press, to: wobble, zoom: 1))
+    }
+
+    @Test func aHandThatTravelsHasStartedAPull() {
+        let press = CGPoint(x: 120, y: 120)
+        let pulled = CGPoint(x: 120 + CornerRadiusHandles.pullThreshold, y: 120)
+        #expect(CornerRadiusHandles.pullHasBegun(from: press, to: pulled, zoom: 1))
+    }
+
+    @Test func thePullIsMeasuredOnScreenSoZoomDoesNotChangeIt() {
+        let press = CGPoint(x: 120, y: 120)
+        // One document point is eight on screen at 800 per cent, and an eighth
+        // of one on screen when zoomed well out.
+        let moved = CGPoint(x: 121, y: 120)
+        #expect(CornerRadiusHandles.pullHasBegun(from: press, to: moved, zoom: 8))
+        #expect(!CornerRadiusHandles.pullHasBegun(from: press, to: moved, zoom: 0.125))
     }
 
     // MARK: Which layers wear them at all

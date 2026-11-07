@@ -205,6 +205,11 @@
       "note": "pulling the top knob in rounded all five corners together to 52, the pill under the shape read Radius 52 while the button was down, and the five points did not move"
     },
     {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "52"
+    },
+    {
       "do": "snapshot",
       "name": "3-all-corners-rounded"
     },
@@ -297,6 +302,11 @@
       "do": "describe",
       "stage": "5-one-corner",
       "note": "with Option held only the pulled corner rounded further, to 80; the other four stayed at 52, and the panel's Corner Radius reads Mixed"
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "Mixed"
     },
     {
       "do": "snapshot",

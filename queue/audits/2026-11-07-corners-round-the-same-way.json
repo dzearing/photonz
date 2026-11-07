@@ -1,0 +1,29 @@
+{
+  "feature": "Rounding corners works the same way on every shape",
+  "epic": "icon-vector",
+  "summary": "A plain pull on a corner now rounds every corner and Option rounds only the one you pulled, on a rectangle exactly as on a shape drawn with the Pen. A rectangle's pull also shows the radius in the pill under the shape, which it never did before.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: corner-drag-rounds-walk, round-a-path-s-corners-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Press R and drag out a rectangle, then press V." },
+    { "do": "Drag the dot inside the top left corner in towards the middle. All four corners round together, the pill under the shape reads the radius, and Corner Radius reads one number.", "shot": "2026-11-07-corners-round-the-same-way-1-rect-plain-pull.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Hold Option and drag the top right dot back towards its corner. Only that corner changes, only its dot stays on screen, and the pill reads that corner's radius.", "shot": "2026-11-07-corners-round-the-same-way-2-rect-option-pull.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Let go and read Corner Radius in Appearance: it says Mixed.", "shot": "2026-11-07-corners-round-the-same-way-3-rect-mixed.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press on a dot and wobble a point or two without really pulling. Nothing changes, and the corners stay Mixed." },
+    { "do": "Press P, click five points round a pentagon, and click the first point again to close it. Rest the pointer over it and drag the top knob down: every corner rounds and the pill reads the radius.", "shot": "2026-11-07-corners-round-the-same-way-4-path-plain-pull.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Hold Option and drag another knob further in: only that corner rounds, the pill reads its radius, and Corner Radius says Mixed once you let go.", "shot": "2026-11-07-corners-round-the-same-way-5-path-option-pull.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does a plain pull on a rectangle's dot do what your hand expected, coming from Photoshop?",
+    "On a shape with four different corners, is it fine that a plain pull makes all four the same the moment it starts?",
+    "Is four points of travel before a pull starts about right, or does a very small adjustment feel stuck?",
+    "With Option held, does the pill reading only the pulled corner say enough?"
+  ],
+  "rough": [
+    "No mock covers rounding by pulling a corner, so this follows the settled answer and Photoshop's live shapes.",
+    "With the grid on, a path's knob lands on grid steps and Command frees it, but a rectangle's dot still lands on whole points. Left alone because the task was about which corners a pull takes.",
+    "Corner Radius follows a rectangle's pull live but only catches up on a path when you let go, so a path's row still shows the old number during the pull. The pill is right throughout.",
+    "A square corner's dot rests a little way in, so the first real pull jumps to about 15 rather than growing from nothing. On a path the knob grows from nothing. It was already like this, and it now shows on all four corners.",
+    "Holding or letting go of Option with the pointer perfectly still changes nothing until the pointer next moves, on both shapes."
+  ]
+}

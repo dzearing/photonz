@@ -1332,8 +1332,8 @@ extension CanvasNSView {
             }
 
             // Four dots just inside the corners of a shape that HAS corners,
-            // each one rounding the corner it sits in. A dot sits at the
-            // centre of the curve it controls, so it keeps up with the hand
+            // each one rounding all four, or with ⌥ the corner it sits in. A
+            // dot sits at the centre of the curve it controls, so it keeps up with the hand
             // holding it; on a square corner it rests a fixed distance in,
             // clear of the resize square sitting on the corner itself. A shape
             // too cramped to keep its edge handles wears none of them
@@ -1345,6 +1345,11 @@ extension CanvasNSView {
                 var marks: [HandleMark] = []
                 let radii = liveRadii ?? selectedLayer.roundedCornerRadii
                 for corner in CornerRadii.Corner.allCases {
+                    // While one is in hand with ⌥, only that corner is moving,
+                    // so only its dot is drawn, as on a path's corner knobs.
+                    if let drag = cornerRadiusDrag, drag.oneCorner, corner != drag.corner {
+                        continue
+                    }
                     let p = chromePoint(CornerRadiusHandles.point(for: corner, in: frame,
                                                                   radii: radii,
                                                                   zoom: viewport.zoom))

@@ -2006,9 +2006,14 @@ final class CanvasNSView: NSView {
         let corner: CornerRadii.Corner
         let startRadii: CornerRadii
         var radii: CornerRadii
-        /// ⌥ is held: all four corners travel together. Read on every move,
-        /// so the key can be taken up or let go part way through a pull.
-        var allCorners: Bool
+        /// Where the button went down, in the handle's own space.
+        let press: CGPoint
+        /// ⌥ is held: only the pulled corner moves. Read on every move, so the
+        /// key can be taken up or let go part way through a pull.
+        var oneCorner: Bool
+        /// Latched once the hand has really travelled, so a press that wobbled
+        /// leaves the corners as they were (`CornerRadiusHandles.pullHasBegun`).
+        var moved = false
         /// True once the pull actually changed something, so a press that
         /// never moved commits nothing and leaves no empty undo step.
         var changed: Bool { radii != startRadii }

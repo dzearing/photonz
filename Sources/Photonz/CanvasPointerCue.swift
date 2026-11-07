@@ -243,8 +243,8 @@ extension CanvasNSView {
         // ⌥ on a path's corner knob rounds that corner alone, so it is not a
         // copy drag either.
         if pathCornerKnobHit(at: p) != nil { return false }
-        // ⌥ on a rounding dot takes all four corners, so it is not a copy drag
-        // either — the badge would promise the wrong gesture.
+        // ⌥ on a rounding dot takes that corner alone, so it is not a copy
+        // drag either: the badge would promise the wrong gesture.
         if Experiments.shared.cornerHandlesEnabled, let selected,
            selected.offersCornerRadiusHandles,
            CornerRadiusHandles.hit(at: local, frame: frame, radii: selected.roundedCornerRadii,

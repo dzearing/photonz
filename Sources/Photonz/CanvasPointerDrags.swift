@@ -582,21 +582,22 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
-        // The four dots inside a shape's corners, each rounding the corner it
-        // sits in (`next-corner-handles`). Read BEFORE the frame handles: they
-        // sit inside the outline rather than on it, so nothing is taken from a
-        // resize, and ⌥ over a dot has to mean all four corners rather than the
-        // skew it means on a corner square.
+        // The four dots inside a shape's corners, each rounding all four
+        // (`next-corner-handles`). Read BEFORE the frame handles: they sit
+        // inside the outline rather than on it, so nothing is taken from a
+        // resize, and ⌥ over a dot has to mean that corner alone rather than
+        // the skew it means on a corner square.
         if Experiments.shared.cornerHandlesEnabled, tool == .select,
            let id = selectedLayerID, let layer = selectedLayer, let frame = selectedLayerFrame,
            offersOwnHandles(layer), layer.offersCornerRadiusHandles,
-           let corner = CornerRadiusHandles.hit(at: handleSpacePoint(p, layer: layer),
-                                                frame: frame, radii: layer.roundedCornerRadii,
+           case let press = handleSpacePoint(p, layer: layer),
+           let corner = CornerRadiusHandles.hit(at: press, frame: frame,
+                                                radii: layer.roundedCornerRadii,
                                                 zoom: viewport.zoom) {
             let radii = layer.roundedCornerRadii
             cornerRadiusDrag = CornerRadiusDrag(
-                layerID: id, corner: corner, startRadii: radii, radii: radii,
-                allCorners: event.modifierFlags.contains(.option))
+                layerID: id, corner: corner, startRadii: radii, radii: radii, press: press,
+                oneCorner: event.modifierFlags.contains(.option))
             if grabCue(at: p) != nil { applyGrabCursor(.closedHand) }
             refreshOverlays()
             return
@@ -1093,19 +1094,26 @@ extension CanvasNSView {
             refreshOverlays()
         } else if var drag = cornerRadiusDrag {
             // ⌥ is read on every move rather than latched at the press, so
-            // taking hold of one corner and then deciding you meant all four
-            // does not cost you the drag — and letting go of the key hands the
-            // other three straight back.
-            drag.allCorners = event.modifierFlags.contains(.option)
+            // taking hold of all four and then deciding you meant one corner
+            // does not cost you the drag, and letting go of the key takes the
+            // other three up again.
+            drag.oneCorner = event.modifierFlags.contains(.option)
             let layer = document?.canvasLayer(id: drag.layerID)
             let frame = selectedLayerFrame ?? layer?.frame ?? .zero
-            let wanted = CornerRadiusHandles.radius(draggingTo: handleSpacePoint(p, layer: layer),
-                                                    corner: drag.corner, in: frame)
-            drag.radii = CornerRadiusHandles.radii(drag.startRadii, corner: drag.corner,
-                                                   to: wanted, allCorners: drag.allCorners)
+            let local = handleSpacePoint(p, layer: layer)
+            drag.moved = drag.moved || CornerRadiusHandles.pullHasBegun(
+                from: drag.press, to: local, zoom: viewport.zoom)
+            if drag.moved {
+                let wanted = CornerRadiusHandles.radius(draggingTo: local, corner: drag.corner,
+                                                        in: frame)
+                drag.radii = CornerRadiusHandles.radii(drag.startRadii, corner: drag.corner,
+                                                       to: wanted, oneCorner: drag.oneCorner)
+            }
             cornerRadiusDrag = drag
-            onCornerRadiiPreview(drag.layerID, drag.radii)
-            refreshOverlays()
+            if drag.moved {
+                onCornerRadiiPreview(drag.layerID, drag.radii)
+                refreshOverlays()
+            }
         } else if var drag = resizeDrag {
             let layer = document?.canvasLayer(id: drag.layerID)
             let p = CGPoint(x: p.x + drag.grabOffset.x, y: p.y + drag.grabOffset.y)

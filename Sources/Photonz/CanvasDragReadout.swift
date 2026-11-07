@@ -71,6 +71,10 @@ extension CanvasNSView {
         if let drag = pathCornerDrag, drag.moved, let box = selectedLayerFrame {
             return (.reshape, box, .radius(drag.radius))
         }
+        // So does a rectangle's corner dot.
+        if let drag = cornerRadiusDrag, drag.moved, let box = selectedLayerFrame {
+            return (.reshape, box, .radius(drag.radii[drag.corner]))
+        }
         // The crop box, drawn or pulled by a handle, says the size it will
         // keep; carried, where it now sits. It is a box on the picture, so the
         // picture's own numbers are the reading.
