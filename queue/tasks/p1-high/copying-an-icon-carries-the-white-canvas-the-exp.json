@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T05:51:54.319Z",
-  "updated": "2026-11-06T18:49:52.447Z",
+  "updated": "2026-11-07T10:06:28.093Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing an-icon-exported-as-a-picture-can-come-out-with (2026-09-17). Repro of the composite that Copy puts on the clipboard: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh /tmp/tmp-png-bg-forced.json --no-build wrote png-export-background-3-file-with-canvas.png, which is the same render EditorState.copyCompositeToClipboard uses (previewRenderer.render(document, store:), no background answer anywhere on that path), and reading its corner back gave top-left (5,5) rgba [255, 255, 255, 255]. The export path in the same walk wrote [0, 0, 0, 0]. The smallest fix is to let the copy take the same SVGExport.Background answer the sheet holds, through PhotonzDocument.drawn(with:flatImages:) (PhotonzCore) the way ExportSizer does; the open question is whether a copy should ask at all or simply always leave a flat canvas out, which is a UX call worth a decision card rather than a guess. PNG and TIFF both go on the pasteboard and both hold alpha.",
@@ -299,10 +299,36 @@
     {
       "t": "2026-11-06T18:49:52.446Z",
       "note": "seq 110 -> 70"
+    },
+    {
+      "t": "2026-11-07T09:38:49.425Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T10:06:14.709Z",
+      "note": "walks copy-leaves-the-canvas-out-walk -> copy-leaves-the-canvas-out-walk, copy-merged-with-background-from-the-edit-menu-walk"
+    },
+    {
+      "t": "2026-11-07T10:06:14.784Z",
+      "note": "Reproduced before building: plain Command C with nothing picked still handed other apps a picture with a background (scratch walk, stage plain-copy-nothing-picked, 'picture with a background behind the drawing'), though acceptance 1 says copying an icon leaves nothing behind. Fixed for the no-marquee case: PNG, TIFF and SVG drop a blank canvas, Photonz's own layer payload keeps it, so Command V still lands what you see. Chose this over leaving plain Copy alone because Command C is the copy a person presses first."
+    },
+    {
+      "t": "2026-11-07T10:06:14.861Z",
+      "note": "Chose Control Option Command C over no key because the card promised a key and that chord is free; the card's Control Shift Command C has been Copy Video since 2026-10-05 (adb729d6). Chose a lit row on a screenshot over dimming it because dimming means reading the bottom bitmap each time the menu updates, and the row still does what it says there."
+    },
+    {
+      "t": "2026-11-07T10:06:14.937Z",
+      "note": "Walk action copyImageWithCanvas renamed copyMergedWithBackground; only copy-leaves-the-canvas-out-walk used it. Looked at the Edit menu picture: row sits under Copy Merged with its key printed. left rough: no canvas right-click row, because that menu has no Copy Merged to sit beside; stays here, no task. Rough lines on marquee and screenshot behaviour stay in the audit and this log, neither clears the follow-up bar."
+    },
+    {
+      "t": "2026-11-07T10:06:28.091Z",
+      "note": "Edit > Copy Merged with Background sits under Copy Merged on Control Option Command C (the card's Control Shift Command C is Copy Video), and plain Command C with nothing picked now hands other apps a see-through icon while Photonz's own paste keeps the canvas. Commit 47b8aa02. Verified: Scripts/test.sh exit 0; copy-leaves-the-canvas-out-walk and copy-merged-with-background-from-the-edit-menu-walk green at Next defaults, the second choosing the row from the real Edit menu; five neighbouring copy walks green. Audit: queue/audits/2026-11-07-copy-merged-with-background.json."
     }
   ],
-  "started": "2026-09-30T10:33:28.595Z",
+  "started": "2026-11-07T09:38:49.424Z",
   "walks": [
-    "copy-leaves-the-canvas-out-walk"
-  ]
+    "copy-leaves-the-canvas-out-walk",
+    "copy-merged-with-background-from-the-edit-menu-walk"
+  ],
+  "completed": "2026-11-07T10:06:28.092Z"
 }
