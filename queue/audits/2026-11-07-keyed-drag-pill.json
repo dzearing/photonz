@@ -1,0 +1,48 @@
+{
+  "feature": "The pill under a drag says the key and the time on a keyed layer",
+  "epic": "icon-animate",
+  "summary": "While you drag, resize or turn a layer that has keys, the pill under it now reads a diamond and the playhead time before the size, so you can see where the change lands without looking down at the strip. A layer with no keys reads exactly as before.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: a-keyed-drag-says-the-key-and-the-time-walk (picture) and a-keyed-drag-on-a-video-says-the-key-and-the-time-walk (video).",
+  "switched": {},
+  "try": [
+    {
+      "do": "New picture, draw a rectangle, pick it, and pull its bottom right corner: the pill says only the size.",
+      "shot": "2026-11-07-keyed-drag-pill-1-no-keys.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press K (Add Key), then click 1s on the strip's ruler."
+    },
+    {
+      "do": "Drag the rectangle and hold: the pill says the diamond, 0:01.00, then its size.",
+      "shot": "2026-11-07-keyed-drag-pill-2-move.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pull a corner and hold: the diamond, the time, then the size.",
+      "shot": "2026-11-07-keyed-drag-pill-3-resize.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the round turn knob above the layer and hold: the diamond, the time, the size and the turn.",
+      "shot": "2026-11-07-keyed-drag-pill-4-turn.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "On a video, add a title at 1 second, press Add Key, and drag the title: the same pill.",
+      "shot": "2026-11-07-keyed-drag-pill-5-video.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does the diamond and time at the front of the pill tell you the change is about to key, without a glance at the strip?",
+    "Is hundredths of a second (0:01.00) the right precision under the hand, even on a video whose transport says 0:01?",
+    "On a keyed layer a move reads the size rather than where it is going, as the mock draws it. Do you miss the position while moving?",
+    "Does the pill stay out of the way of a corner swung down by a turn?"
+  ],
+  "rough": [
+    "Matches the mock: on a keyed layer the pill reads the size for a move, a resize and a turn alike. A layer with no keys keeps today's readings (a move says where it is going, a turn says nothing), so the same move reads differently once the layer has keys.",
+    "A whole selection moved at once, a copy dragged off with Option, a path point and a corner radius drag keep their plain readings; only one layer in the hand says where its own key lands.",
+    "With the transform values popover open, a move, a resize and a turn are read there and no pill shows, keyed or not, as before."
+  ]
+}

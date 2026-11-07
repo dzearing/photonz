@@ -76,6 +76,34 @@ public enum DragReadout {
         }
     }
 
+    /// The pill for a hand on a layer whose changes key themselves: the
+    /// diamond and the playhead time, then the size pill's words (`sizeTag`),
+    /// so where the change lands is read without looking down at the strip
+    /// (`picture-keys.html`, "Showing that a change will key"). Hundredths,
+    /// as the strip writes a key's time, because whole seconds cannot tell
+    /// two keys apart.
+    public static func keyed(_ words: String, atMS ms: Int) -> String {
+        "\(keyMark) \(KeyLap.timecode(ms: ms)) · \(words)"
+    }
+
+    /// The diamond a keyed reading starts with: the strip's key, in type.
+    public static let keyMark = "◆"
+
+    /// The size pill's words for one layer: its size, and any turn the way
+    /// the tag at rest writes one (`SelectionTag.resting`), so the label
+    /// under the layer keeps one voice from rest to drag. It is what a hand
+    /// on a keyed layer reads, whether it moves, pulls or turns it: the mock
+    /// draws the size pill for all three.
+    public static func sizeTag(_ size: CGSize, rotation degrees: Double,
+                               in lengths: LengthUnit = .point) -> String {
+        var words = text(.size(size), in: lengths)
+        let turned = degrees.rounded()
+        if turned != 0, turned.truncatingRemainder(dividingBy: 360) != 0 {
+            words += " · \(whole(CGFloat(turned)))°"
+        }
+        return words
+    }
+
     /// Where the pill goes, in the same space `box` and `bounds` are in: the
     /// canvas view's own, top-left origin, y growing downward.
     ///

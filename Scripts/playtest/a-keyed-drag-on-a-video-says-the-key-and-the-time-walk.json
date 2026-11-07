@@ -1,0 +1,31 @@
+{
+  "out": "/tmp/photonz-playtest/a-keyed-drag-on-a-video-says-the-key-and-the-time-walk",
+  "seed": "On a video too, the pill under a drag says where the change lands on a layer with keys: a diamond and the playhead time, then the reading (docs/design/mocks/pages/picture-keys.html, Showing that a change will key). At Next defaults: a title on the sample recording reads its place alone, then after Add Key at one second a move reads the diamond and 0:01.00 with the button still down.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "key", "key": "t" },
+    { "do": "click", "at": [620, 330] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Lift off" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-no-keys", "note": "a title with no keys: a move reads where it is going and nothing else." },
+    { "do": "drag", "from": [640, 340], "to": [660, 350], "steps": 10, "readout": "640, 340", "hold": "1-a-title-with-no-keys" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "reveal", "control": "Properties section" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Add Key" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-keyed-move", "note": "THE TEST: the title has a key at one second. A move reads the diamond and 0:01.00 before the size." },
+    { "do": "drag", "from": [660, 350], "to": [720, 400], "steps": 10, "readout": "◆ 0:01.00 · 285 × 95", "hold": "2-a-keyed-title-says-the-key-and-the-time" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectReadout", "absent": true }
+  ]
+}

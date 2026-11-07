@@ -85,6 +85,19 @@ extension CanvasNSView {
         // A shape on an icon: the tag above it is reading this drag already, in
         // the icon's units, and two labels on one box is one too many.
         if iconPlaceTagShown != nil, resizeDrag != nil || moveDrag?.copying == false { return nil }
+        // A turn by the knob on a layer with keys: the size pill carries on
+        // through it with the key and the time, as the mock draws it, under
+        // the box the turned layer takes up so it never lands on a corner
+        // swung down into it. A layer with no keys says nothing while it
+        // turns, as before.
+        if !barCarries, let drag = transformDrag, case .rotate = drag.kind,
+           drag.transform.rotation != drag.startTransform.rotation,
+           document?.isAnimating(layerID: drag.layerID) == true, let frame = selectedLayerFrame {
+            let c = drag.center
+            let spin = CGAffineTransform(translationX: c.x, y: c.y)
+                .rotated(by: drag.transform.rotation).translatedBy(x: -c.x, y: -c.y)
+            return (.resize, frame.applying(spin), reading(.resize, canvasBox: frame, of: drag.layerID).reading)
+        }
         if !barCarries, let resizeDrag, resizeDrag.frame != resizeDrag.startFrame {
             return reading(.resize, canvasBox: resizeDrag.frame, of: resizeDrag.layerID)
         }
@@ -129,6 +142,43 @@ extension CanvasNSView {
               let parent = document.parentSpaceFrame(layer.withSlack(canvasBox), of: id)
         else { return (kind, canvasBox, DragReadout.subject(kind, box: canvasBox)) }
         return (kind, canvasBox, DragReadout.subject(kind, box: parent))
+    }
+
+    /// The one layer in the hand when its changes key themselves: moved,
+    /// pulled by a handle, turned, or turned in space, on a document where
+    /// it is animating. Nil for anything else, so a layer with no keys, a
+    /// sweep, a crop, a path point, a corner or a whole selection reads as it
+    /// always has, and so does a copy dragged off with Option, which is a
+    /// layer that does not exist yet.
+    private var keyedLayerInHand: UUID? {
+        guard pathAnchorDrag == nil, pathCornerDrag == nil, cornerRadiusDrag == nil,
+              cropDrag == nil, regionDrag == nil else { return nil }
+        let id: UUID? = {
+            if let drag = transformDrag, case .rotate = drag.kind { return drag.layerID }
+            if let drag = spaceHandleDrag { return drag.layerID }
+            if let resizeDrag { return resizeDrag.layerID }
+            if let moveDrag, !moveDrag.copying { return moveDrag.layerID }
+            return nil
+        }()
+        guard let id, document?.isAnimating(layerID: id) == true else { return nil }
+        return id
+    }
+
+    /// The size pill's words for the keyed layer in the hand: its size and
+    /// any turn, in its parent's numbers, the box it is standing on right
+    /// now. The mock's pill says the size whether the hand moves, pulls or
+    /// turns the layer, so a move here says the size too, not where it goes.
+    private func keyedSizeTag(of id: UUID, in lengths: LengthUnit) -> String? {
+        let rotation = document?.layer(id: id)?.transform.rotation ?? 0
+        let held: (box: CGRect, rotation: CGFloat)? = {
+            if let drag = transformDrag, let frame = selectedLayerFrame { return (frame, drag.transform.rotation) }
+            if let resizeDrag { return (resizeDrag.frame, rotation) }
+            if let moveDrag { return (CGRect(origin: moveDrag.snapped.origin, size: moveDrag.size), rotation) }
+            return nil
+        }()
+        guard let held, case .size(let size) = reading(.resize, canvasBox: held.box, of: id).reading
+        else { return nil }
+        return DragReadout.sizeTag(size, rotation: Double(held.rotation) * 180 / .pi, in: lengths)
     }
 
     /// The words the pill is carrying RIGHT NOW, for a scripted walk to read
@@ -176,6 +226,18 @@ extension CanvasNSView {
         dragReadoutLayer.fillColor = reworked ? NSColor.controlAccentColor.cgColor : CGColor(gray: 0, alpha: 0.82)
         if reworked, let drag = spaceHandleDrag, let grip = drag.grip {
             words = SelectionTag.dragging(grip, turn: drag.turn)
+        }
+        // On a layer with keys every change lands at the playhead, so the
+        // pill is the size pill led by the diamond and the time, whatever the
+        // hand is doing (`picture-keys.html`, "Showing that a change will key").
+        // A 3D handle keeps its own reading, the one its mode's tag says.
+        if let id = keyedLayerInHand {
+            let shown = Experiments.shared.iconFramesEnabled ? lengths : .point
+            if spaceHandleDrag != nil {
+                words = DragReadout.keyed(words, atMS: documentTimeMS)
+            } else if let tag = keyedSizeTag(of: id, in: shown) {
+                words = DragReadout.keyed(tag, atMS: documentTimeMS)
+            }
         }
         let font = Self.dragReadoutFont
         let inset = DragReadoutPill.inset

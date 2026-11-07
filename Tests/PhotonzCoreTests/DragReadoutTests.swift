@@ -14,6 +14,37 @@ struct DragReadoutTests {
         #expect(DragReadout.text(.position(CGPoint(x: 240, y: 120))) == "240, 120")
     }
 
+    // MARK: A hand on a layer whose changes key themselves
+
+    /// On a layer with keys every change lands at the playhead, and the pill
+    /// says so where the eye already is: a diamond and the time, then the
+    /// reading the drag is changing (`picture-keys.html`, "Showing that a
+    /// change will key").
+    @Test func aKeyedDragSaysTheDiamondAndTheTimeFirst() {
+        #expect(DragReadout.keyed("580 × 448", atMS: 1200) == "◆ 0:01.20 · 580 × 448")
+        #expect(DragReadout.keyed("240, 120", atMS: 0) == "◆ 0:00.00 · 240, 120")
+        #expect(DragReadout.keyed("190 × 190 · 54°", atMS: 65_430) == "◆ 1:05.43 · 190 × 190 · 54°")
+    }
+
+    /// Under a hand on a keyed layer the pill is the size pill, whatever the
+    /// hand is doing, as the mock draws it: the size, and any turn the way
+    /// the tag at rest says one.
+    @Test func aKeyedHandReadsTheSizeAndAnyTurn() {
+        #expect(DragReadout.sizeTag(CGSize(width: 190, height: 190), rotation: 0) == "190 × 190")
+        #expect(DragReadout.sizeTag(CGSize(width: 190, height: 190), rotation: 54.4) == "190 × 190 · 54°")
+        #expect(DragReadout.sizeTag(CGSize(width: 190, height: 190), rotation: -30) == "190 × 190 · -30°")
+        #expect(DragReadout.sizeTag(CGSize(width: 190, height: 190), rotation: 360) == "190 × 190")
+        #expect(DragReadout.sizeTag(CGSize(width: 190, height: 190), rotation: 0.3) == "190 × 190")
+    }
+
+    /// The pill is chrome, held to thirty characters: the longest ordinary
+    /// keyed reading, a turned four figure size nine minutes into a video, fits.
+    @Test func aKeyedReadingFitsTheChrome() {
+        let longest = DragReadout.keyed(DragReadout.sizeTag(CGSize(width: 1280, height: 800), rotation: -45),
+                                        atMS: 599_990)
+        #expect(longest.count <= 30, "\(longest) is \(longest.count) characters")
+    }
+
     @Test func aResizeSaysHowBigItIsBecoming() {
         #expect(DragReadout.text(.size(CGSize(width: 580, height: 448))) == "580 × 448")
     }

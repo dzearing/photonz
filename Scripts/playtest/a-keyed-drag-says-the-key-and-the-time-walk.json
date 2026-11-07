@@ -1,0 +1,185 @@
+{
+  "out": "/tmp/photonz-playtest/a-keyed-drag-says-the-key-and-the-time-walk",
+  "seed": "The pill under a drag says where the change lands on a layer with keys: a diamond and the playhead time, then the reading (docs/design/mocks/pages/picture-keys.html, Showing that a change will key). At Next defaults, with no flag changed: a layer with no keys reads its size alone; after Add Key and a step along the ruler, a move, a resize and a turn each read the diamond and the time before the size with the button still down.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1420,
+      "height": 980
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        230
+      ],
+      "to": [
+        260,
+        370
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        190,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-no-keys",
+      "note": "a layer with no keys: a resize reads the size alone, no diamond, no time."
+    },
+    {
+      "do": "grip",
+      "grip": "bottomRight",
+      "by": [
+        20,
+        20
+      ],
+      "steps": 10,
+      "readout": "160 × 160",
+      "hold": "1-no-keys-reads-the-size-alone"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectReadout",
+      "absent": true
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1282,
+        543
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expect",
+      "field": "Key Time",
+      "reads": "0:00.00"
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        626,
+        938
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Key Time",
+      "reads": "0:01.00"
+    },
+    {
+      "do": "describe",
+      "stage": "2-keyed-move",
+      "note": "THE TEST: the layer has keys and the playhead is at one second. A move reads the diamond and 0:01.00 before the size, the size pill the mock draws for every hand."
+    },
+    {
+      "do": "drag",
+      "from": [
+        190,
+        300
+      ],
+      "to": [
+        260,
+        340
+      ],
+      "steps": 10,
+      "readout": "◆ 0:01.00 · 160 × 160",
+      "hold": "2-a-keyed-move-says-the-key-and-the-time"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-keyed-resize",
+      "note": "a corner pulled on the keyed layer reads the diamond, the time and the size."
+    },
+    {
+      "do": "grip",
+      "grip": "bottomRight",
+      "by": [
+        30,
+        30
+      ],
+      "steps": 10,
+      "readout": "◆ 0:01.00 · 190 × 190",
+      "hold": "3-a-keyed-resize-says-the-key-and-the-time"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-keyed-turn",
+      "note": "the knob turned on the keyed layer reads the diamond, the time, the size and the turn."
+    },
+    {
+      "do": "grip",
+      "grip": "knob",
+      "by": [
+        90,
+        60
+      ],
+      "steps": 10,
+      "readout": "◆ 0:01.00 · 190 × 190 · 54°",
+      "hold": "4-a-keyed-turn-says-the-key-and-the-time"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectReadout",
+      "absent": true
+    },
+    {
+      "do": "snapshot",
+      "name": "5-let-go"
+    }
+  ]
+}
