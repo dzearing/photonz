@@ -475,6 +475,15 @@ struct EditorCommands: Commands {
                 Button("Copy Merged") { editor?.run(.copyMerged) }
                     .keyboardShortcut("c", modifiers: [.command, .shift])
                     .disabled(editor?.document == nil)
+                // Copy Merged leaves a blank canvas out; this is the same copy
+                // with it, for a wireframe on white going somewhere dark.
+                // ⌃⌥⌘C, the last ⌘C chord with two modifiers: ⌥⇧⌘C is Copy
+                // Look and ⌃⇧⌘C is Copy Video.
+                if Experiments.shared.copyLeavesTheCanvasOutEnabled {
+                    Button("Copy Merged with Background") { editor?.run(.copyMergedWithBackground) }
+                        .keyboardShortcut("c", modifiers: [.command, .control, .option])
+                        .disabled(editor?.document == nil)
+                }
             }
             // A drawing's code as text, for a code editor: Photoshop's Copy
             // SVG, under the copies it sits beside. No key; dimmed on a
@@ -485,8 +494,7 @@ struct EditorCommands: Commands {
             }
             // The edit onto the clipboard as a file, to paste into a chat
             // without exporting one first: Current's recording window had
-            // these on its own bar. Every Copy key with ⌘ and one or two of
-            // ⇧ ⌥ ⌃ is taken, so ⌃⇧⌘, with G for the GIF.
+            // these on its own bar. ⌃⇧⌘, with G for the GIF.
             if Experiments.shared.videoExportEnabled {
                 Button("Copy Video") { editor?.run(.copyVideo) }
                     .keyboardShortcut("c", modifiers: [.command, .shift, .control])

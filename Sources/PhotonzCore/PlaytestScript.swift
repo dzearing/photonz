@@ -918,9 +918,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     }
 
     case copySpecList, copyImage, hideAllMeasurements, showAllMeasurements
-    /// The whole picture copied WITH the canvas it was drawn on, where
-    /// `copyImage` leaves a blank canvas out (`next-copy-leaves-the-canvas-out`).
-    case copyImageWithCanvas
+    /// Edit ▸ Copy Merged with Background, called directly: the whole picture
+    /// WITH the canvas it was drawn on, where `copyMerged` leaves a blank
+    /// canvas out (`next-copy-leaves-the-canvas-out`).
+    case copyMergedWithBackground
     /// The two copies, called directly: ⌘C takes the layer you picked and
     /// ⇧⌘C takes every layer flattened together. A walk asks for them here
     /// because both are menu chords, and because what they leave on the

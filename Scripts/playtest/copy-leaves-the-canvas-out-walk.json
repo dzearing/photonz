@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/copy-leaves-the-canvas-out-walk",
-  "seed": "An icon drawn on a blank canvas used to copy with the white canvas behind it, while Export left the canvas out, so the icon you pasted and the icon you saved were two different pictures. The walk draws a triangle on a blank canvas, presses Copy Merged (Shift Command C) exactly as a person would, and reads the four corners of the picture that landed on the clipboard; then it copies with the canvas asked for, and finally copies a screenshot, which is never a blank canvas and must come whole.",
+  "seed": "An icon drawn on a blank canvas used to copy with the white canvas behind it, while Export left the canvas out, so the icon you pasted and the icon you saved were two different pictures. The walk draws a triangle on a blank canvas, presses Copy Merged (Shift Command C) exactly as a person would, and reads the four corners of the picture that landed on the clipboard; then plain Copy with nothing picked, which hands other apps the same picture; then Copy Merged with Background (Control Option Command C), and finally copies a screenshot, which is never a blank canvas and must come whole.",
   "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
@@ -30,7 +30,15 @@
     },
     { "do": "snapshot", "name": "copy-canvas-2-copied" },
     { "do": "clearClipboard" },
-    { "do": "action", "action": "copyImageWithCanvas" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command"], "menuItem": "Copy" },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "readClipboard",
+      "stage": "2b-plain-copy-see-through",
+      "behind": "empty"
+    },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "control", "option"], "menuItem": "Copy Merged with Background" },
     { "do": "wait", "seconds": 0.5 },
     {
       "do": "readClipboard",

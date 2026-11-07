@@ -1,0 +1,27 @@
+{
+  "feature": "Copy Merged with Background, and plain Copy leaves a blank canvas behind too",
+  "epic": "icon-export",
+  "summary": "Edit now has Copy Merged with Background under Copy Merged, for when you want the white. Plain Command C with nothing picked now hands other apps the same see-through icon Copy Merged does, and pasting it back into Photonz still lands the canvas too.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. The walks are copy-leaves-the-canvas-out-walk and copy-merged-with-background-from-the-edit-menu-walk.",
+  "switched": {},
+  "try": [
+    { "do": "File > New, draw a shape on the white canvas, then press Escape so nothing is picked." },
+    { "do": "Open the Edit menu and find Copy Merged with Background under Copy Merged.", "shot": "2026-11-07-copy-merged-with-background-0-edit-menu.png" },
+    { "do": "Press Control Option Command C and paste into something dark: the white comes with it." },
+    { "do": "Press Shift Command C and paste into the same place: only the shape comes." },
+    { "do": "Press Command C and paste into the same place: only the shape comes." },
+    { "do": "Press Command V back in Photonz: a new layer lands with the canvas in it.", "shot": "2026-11-07-copy-merged-with-background-2-pasted-back.png" }
+  ],
+  "evaluate": [
+    "Does Copy Merged with Background sit where you would look for the white version?",
+    "Is it right that Command C pasted into another app has no canvas while Command V in Photonz still has it?",
+    "Is Control Option Command C a key you would use, or is the menu row enough?"
+  ],
+  "rough": [
+    "The card put this row on Control Shift Command C, but Copy Video has held that key since 2026-10-05, so the row went to the free Control Option Command C (UX-PATTERNS §7).",
+    "A marquee still copies the white inside it, with every copy, because you picked that region and it pastes back as a layer. On a marquee, Copy Merged with Background does the same as Copy Merged.",
+    "On a screenshot the new row does the same as Copy Merged, since there is no blank canvas to leave out. It stays lit rather than reading pixels each time the menu updates.",
+    "The row is in the Edit menu only: the canvas right-click has no Copy Merged for it to sit beside.",
+    "No mock covers this surface. The clipboard's contents were checked by the walks reading the corners of the copied PNG, not photographed on a dark page."
+  ]
+}

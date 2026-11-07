@@ -165,6 +165,7 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case cut = "cut"
     case copy = "copy"
     case copyMerged = "copy_merged"
+    case copyMergedWithBackground = "copy_merged_with_background"
     case copySVG = "copy_svg"
     case copyVideo = "copy_video"
     case copyAsGIF = "copy_as_gif"
@@ -884,6 +885,7 @@ public enum AppCommandTable {
             make(.cut, "Cut", edit, .edit, needs: inHand, picks: .clipAtPlayhead),
             make(.copy, "Copy", edit, .edit, needs: inHand, picks: .clipAtPlayhead),
             make(.copyMerged, "Copy Merged", edit, .edit, needs: "a document"),
+            make(.copyMergedWithBackground, "Copy Merged with Background", edit, .edit, needs: "a document"),
             make(.copySVG, "Copy SVG", edit, .edit, needs: "a drawing: shapes, paths or text", picks: .layers),
             make(.copyVideo, "Copy Video", edit, .edit, needs: aVideo),
             make(.copyAsGIF, "Copy as GIF", edit, .edit, needs: aVideo),

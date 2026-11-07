@@ -19,7 +19,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "readClipboard", "stage": "a" },
                      { "do": "readClipboard", "stage": "b", "behind": "empty" },
-                     { "do": "action", "action": "copyImageWithCanvas" } ] }
+                     { "do": "action", "action": "copyMergedWithBackground" } ] }
         """)
         guard case .readClipboard(let first, let unclaimed, _, _) = script.steps[0],
               case .readClipboard(_, let claimed, _, _) = script.steps[1],
@@ -29,7 +29,7 @@ struct PlaytestScriptTests {
         #expect(first == "a")
         #expect(unclaimed == nil)
         #expect(claimed == .empty)
-        #expect(action == .copyImageWithCanvas)
+        #expect(action == .copyMergedWithBackground)
     }
 
     @Test("A readClipboard step can claim the copy carries the drawing as SVG")

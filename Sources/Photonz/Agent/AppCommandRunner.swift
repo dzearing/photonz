@@ -311,6 +311,7 @@ extension EditorState {
         case .cut: cutWhatIsInHand()
         case .copy: copyWhatIsInHand()
         case .copyMerged: copyMerged()
+        case .copyMergedWithBackground: copyMergedWithBackground()
         case .copySVG: copySVG(around: pickedLayerID)
         case .copyVideo: copyVideo(as: .mp4)
         case .copyAsGIF: copyVideo(as: .gif)
@@ -573,7 +574,7 @@ extension EditorState {
         case .importMedia: return canImportMedia
         case .resizeImage, .canvasSize, .newFrame: return hasDocument
         case .cut, .copy, .paste: return hasDocument
-        case .copyMerged: return hasDocument
+        case .copyMerged, .copyMergedWithBackground: return hasDocument
         case .copySVG: return canCopySVG(around: pickedLayerID)
         case .copyVideo, .copyAsGIF: return canCopyVideo
         case .selectAll, .newLayer, .newCollageLayer: return hasDocument

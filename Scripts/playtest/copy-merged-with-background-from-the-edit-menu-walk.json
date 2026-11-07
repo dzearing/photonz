@@ -1,0 +1,32 @@
+{
+  "out": "/tmp/photonz-playtest/copy-merged-with-background-from-the-edit-menu-walk",
+  "seed": "Edit > Copy Merged with Background sits directly under Copy Merged and is the way to keep the white. The walk draws a shape on a blank canvas at Next defaults, chooses the row from the real Edit menu, and reads a painted corner off the clipboard, then copies plainly with nothing picked and pastes it back, which still lands what you see, canvas and all, as one more layer. The menu bar is only live with the app in front, so this walk takes the front.",
+  "setup": { "forget": ["all"], "front": true },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [500, 350], "to": [700, 550] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectLayers", "count": 2 },
+
+    { "do": "menuShot", "name": "copy-with-background-0-edit-menu", "menu": "Edit" },
+    { "do": "clearClipboard" },
+    { "do": "menus", "stage": "1-the-row", "menu": "Edit", "choose": "Edit > Copy Merged with Background" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "1-copied-with-the-canvas", "behind": "painted" },
+    { "do": "snapshot", "name": "copy-with-background-1-copied" },
+
+    { "do": "clearClipboard" },
+    { "do": "action", "action": "copy" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "2-plain-copy-leaves-it-for-other-apps", "behind": "empty" },
+    { "do": "action", "action": "paste" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectLayers", "count": 3 },
+    { "do": "snapshot", "name": "copy-with-background-2-pasted-back" }
+  ]
+}

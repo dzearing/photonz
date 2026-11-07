@@ -38,7 +38,8 @@ extension EditorState {
     /// layer flattened together inside the marquee — or, with no marquee
     /// either, the whole canvas. So ⌘A → ⌘C → ⌘V with nothing picked
     /// duplicates what you see, background included, and the PNG also pastes
-    /// into other apps.
+    /// into other apps. With no marquee, another app gets what Copy Merged
+    /// hands it: a blank canvas stays behind (`copyMergedRegion`).
     ///
     /// Everything flattened together is ⇧⌘C (`copyMerged`).
     @discardableResult
@@ -68,6 +69,16 @@ extension EditorState {
         switch CopyRoute.copyMerged(pixelRegion: hasPixelRegion, hasDocument: document != nil) {
         case .mergedRegion: copyMergedRegion()
         case .mergedImage: copyCompositeToClipboard()
+        default: return
+        }
+    }
+
+    /// Edit ▸ Copy Merged with Background: Copy Merged with the canvas a
+    /// drawing was made on. A marquee's copy already carries what is inside it.
+    func copyMergedWithBackground() {
+        switch CopyRoute.copyMerged(pixelRegion: hasPixelRegion, hasDocument: document != nil) {
+        case .mergedRegion: copyMergedRegion()
+        case .mergedImage: copyCompositeToClipboard(background: .keep)
         default: return
         }
     }
@@ -226,18 +237,31 @@ extension EditorState {
         let clipped = ClipboardPicture(making: {
             RegionOps.extracted(composite, path: marquee?.path ?? CGPath(rect: canvas, transform: nil))
         })
-        // The whole canvas, with nothing marqueed, is the whole drawing: it
-        // carries its SVG, canvas and all, the same picture the PNG is.
-        let svg = selection == nil ? clipboardSVG(of: document, background: .keep) : nil
+        // The whole canvas, with nothing marqueed, is the whole drawing, and
+        // another app gets it as Copy Merged hands it over: a blank canvas
+        // stays behind, in the picture and the SVG alike. Photonz's own paste
+        // still lands what you see, canvas and all.
+        let svg = selection == nil ? clipboardSVG(of: document, background: copyBackground) : nil
         return put(Layer(name: "Copied Selection", content: .image(ImageRef(pixelSize: frame.size)),
                          frame: frame),
-                   picture: clipped, svg: svg)
+                   picture: clipped, forOtherApps: selection == nil ? bareDrawing(of: document) : nil, svg: svg)
+    }
+
+    /// `target` with its blank canvas left out, or nil when it has none to
+    /// leave: a screenshot, a photograph, or the canvas switch turned off.
+    private func bareDrawing(of target: PhotonzDocument) -> ClipboardPicture? {
+        let still = target.keyedStill
+        let bare = still.copied(with: copyBackground, store: store)
+        guard bare != still, let image = previewRenderer.render(bare, store: store) else { return nil }
+        return ClipboardPicture(image)
     }
 
     /// A copied piece of picture on the pasteboard: the Photonz payload first,
     /// so ⌘V lands it back as a layer over the spot it came from, then PNG and
-    /// TIFF so it pastes into other apps as the picture it is.
-    private func put(_ layer: Layer, picture: ClipboardPicture, svg: String? = nil) -> Bool {
+    /// TIFF so it pastes into other apps as the picture it is, or as
+    /// `forOtherApps` when they get a different one.
+    private func put(_ layer: Layer, picture: ClipboardPicture, forOtherApps: ClipboardPicture? = nil,
+                     svg: String? = nil) -> Bool {
         // On the clipboard now: the PNG is made in the background, and the
         // layer, which carries that PNG inside it, is written from it when a
         // paste asks (`ClipboardHandOff`), Photonz's own ⌘V included.
@@ -246,8 +270,8 @@ extension EditorState {
                 guard let png = picture.png else { return nil }
                 return try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png))
             },
-            .png(picture),
-            .tiff(picture),
+            .png(forOtherApps ?? picture),
+            .tiff(forOtherApps ?? picture),
         ]
         if let svg { flavors.append(.string(Self.svgPasteboardType, svg)) }
         return ClipboardHandOff.write(flavors)

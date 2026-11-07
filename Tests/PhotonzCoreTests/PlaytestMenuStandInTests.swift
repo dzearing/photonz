@@ -43,6 +43,8 @@ struct PlaytestMenuStandInTests {
     func clipboard() {
         #expect(PlaytestMenuStandIn.action(for: key("c"), modifiers: [.command]) == .copy)
         #expect(PlaytestMenuStandIn.action(for: key("c"), modifiers: [.command, .shift]) == .copyMerged)
+        #expect(PlaytestMenuStandIn.action(for: key("c"), modifiers: [.command, .control, .option])
+                == .copyMergedWithBackground)
         #expect(PlaytestMenuStandIn.action(for: key("x"), modifiers: [.command]) == .cut)
         // A copy with no paste to go with it: `keys-copy-between-layers-walk`
         // copied keys with ⌘C and then stopped on ⌘V (2026-09-26).

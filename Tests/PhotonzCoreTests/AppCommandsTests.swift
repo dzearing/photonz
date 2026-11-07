@@ -221,7 +221,7 @@ struct AppCommandsTests {
 
     @Test("The clipboard commands are in Edit, beside Select All")
     func clipboard() {
-        for id: AppCommandID in [.cut, .copy, .paste, .copyMerged, .copySVG] {
+        for id: AppCommandID in [.cut, .copy, .paste, .copyMerged, .copyMergedWithBackground, .copySVG] {
             #expect(AppCommandTable.command(id)?.menu == "Edit", "\(id.rawValue)")
         }
         #expect(AppCommandTable.command(.paste)?.arguments.contains { $0.name == "track" } == true,

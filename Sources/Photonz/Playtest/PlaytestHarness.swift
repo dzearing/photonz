@@ -7749,10 +7749,10 @@ private final class Run {
                  .captionsExpectSRTMatchesLines: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
-            case .copyImageWithCanvas: editor.copyCompositeToClipboard(background: .keep)
             // The same order Edit ▸ Copy, Cut and Paste take things in.
             case .copy: editor.copyWhatIsInHand()
             case .copyMerged: editor.copyMerged()
+            case .copyMergedWithBackground: editor.copyMergedWithBackground()
             case .cut: editor.cutWhatIsInHand()
             case .paste: editor.pasteWhatIsOnTheClipboard()
             case .hideAllMeasurements: editor.setAllMeasurementsVisible(false)
