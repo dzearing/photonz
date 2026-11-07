@@ -16008,3 +16008,11 @@
 {"t":"2026-11-06T21:48:25.302Z","ev":"task_note","id":"a-24-unit-artboard-rules-itself-into-units"}
 {"t":"2026-11-06T21:48:25.365Z","ev":"task_note","id":"a-24-unit-artboard-rules-itself-into-units"}
 {"t":"2026-11-06T21:48:25.440Z","ev":"task_done","id":"a-24-unit-artboard-rules-itself-into-units","from":"in_progress","note":"With the Grid on, icon frames and icon pictures are ruled one line per unit from the corner, a stronger line every fourth, under the keylines; the canvas grid steps round them and drags, arrow keys and text land on the units. bbf1f6c8. Verified by a-24-unit-artboard-rules-itself-walk at Next defaults, 23 lines each way measured on the capture, Scripts/test.sh green."}
+{"t":"2026-11-06T21:54:44.988Z","ev":"task_started","id":"an-icon-picture-s-svg-reads-in-24-whole-units","title":"An icon picture's SVG reads in 24 whole units","priority":"p1-high"}
+{"t":"2026-11-06T21:59:05.402Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
+{"t":"2026-11-06T23:06:38.973Z","ev":"task_walks","id":"an-icon-picture-s-svg-reads-in-24-whole-units","walks":["an-icon-picture-writes-24-units-walk","icon-picture-from-the-new-sheet-walk"]}
+{"t":"2026-11-06T23:55:03.111Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
+{"t":"2026-11-07T02:29:27.963Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
+{"t":"2026-11-07T04:13:35.075Z","ev":"task_note","id":"find-out-why-the-held-out-set-lost-points-on-202"}
+{"t":"2026-11-07T04:14:12.792Z","ev":"task_note","id":"an-icon-picture-s-svg-reads-in-24-whole-units"}
+{"t":"2026-11-07T04:14:12.869Z","ev":"task_pending","id":"an-icon-picture-s-svg-reads-in-24-whole-units","from":"in_progress","note":"Shipped in a3de88c3: icon pictures write 24 whole units, audit written. Stays open: a torn Ask icon still writes fractions, so acceptance item 2 is not met for it."}
