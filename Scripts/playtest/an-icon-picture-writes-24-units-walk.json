@@ -211,6 +211,38 @@
       "name": "icon-png",
       "format": "png",
       "scale": 1
+    },
+    {
+      "do": "action",
+      "action": "exportDialogToWebPage"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "3-export-sheet-png"
+    },
+    {
+      "do": "press",
+      "control": "SVG"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "4-export-sheet-svg"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
     }
   ]
 }

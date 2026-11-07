@@ -1,0 +1,58 @@
+{
+  "feature": "An icon picture's SVG reads in 24 whole units",
+  "epic": "icon-export",
+  "summary": "Draw in a File, New, Image, Icon picture and the SVG comes out 24 by 24 in whole numbers, ready to hand to a developer. The Pen and shapes now land on 24 units across the 512 canvas, and PNG stays 512.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: an-icon-picture-writes-24-units-walk, icon-picture-from-the-new-sheet-walk, pen-lands-on-whole-units-in-an-icon-walk, copy-an-icon-as-svg-walk, ask-makes-an-icon-walk, ask-animates-an-icon-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose File, New, Image, pick Icon, press Create."
+    },
+    {
+      "do": "Press P, click three points anywhere, press Return.",
+      "shot": "2026-11-06-icon-24-units-1-drawn-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Choose View, Show Grid: 23 lines each way, a stronger one every fourth unit.",
+      "shot": "2026-11-06-icon-24-units-2-ruled-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Shift Command E, pick SVG, and read the line under Format: Drawn at 24 × 24.",
+      "shot": "2026-11-06-icon-24-units-3-sheet-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Export it and open the file in a text editor: viewBox 0 0 24 24, and whole numbers. Ours is 2026-11-06-icon-24-units.svg beside this audit."
+    },
+    {
+      "do": "Pick PNG on the same sheet: it still reads 512 × 512.",
+      "shot": "2026-11-06-icon-24-units-4-png-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Shift Command C and paste into a code editor: the same file."
+    },
+    {
+      "do": "Ask for an animated icon, Copy SVG, and open it in Safari and in Chrome: 2026-11-06-icon-24-units-moving-webkit-and-chrome.png is the same file in both.",
+      "shot": "2026-11-06-icon-24-units-moving-webkit-and-chrome.png"
+    }
+  ],
+  "evaluate": [
+    "Is it right that the panel still reads points (a line of 2 units reads about 43) while the file says 2?",
+    "A first line in an icon picture now starts at 2 units, far heavier than the 4 points it had. Is that the weight you expect?",
+    "Ask's icons are nudged by up to half a unit to land on the grid. Do any look worse to you for it?",
+    "Is whole numbers worth about one point on the icon eval, or would you rather keep Ask's half units?"
+  ],
+  "rough": [
+    "NOT FINISHED: a torn Ask icon (a popping balloon, a broken heart) still writes fractions. Rounding the tear took the bubble from 85.6 to 40.6, so torn icons keep them for now, and this task stays open for that.",
+    "Ask scored lower. The 17 icon cases read 84.4 against 85.4 on 2026-11-05. The duotone heart fell 85.6 to 68.6 and the camera 85.6 to 80.8; the cracked egg rose 70.6 to 83.2. That 84.4 joins two runs: 14 cases from one and the 4 torn cases from a run on the final code.",
+    "The held-out total fell to 59.7 from 62.7 (best 68.4): drawing 62.9 from 66.1, layout 47.7 from 49.7, redline 30.3 from 33.8, video 63.1 from 63.8. This change cannot reach layout, redline or video, so part of that is something else, but how much of the drawing drop is mine is not known. Logged on find-out-why-the-held-out-set-lost-points-on-202.",
+    "A circle an odd number of units across keeps a half at its centre, though its edges are whole: the camera's lens says cy 4.5. Off centre by half a unit is the same limit: the calendar and cracked egg lost a little on the centring rule for it.",
+    "The model still writes half units despite being told whole numbers, so rounding does the work and the prompt line may not be earning its place.",
+    "The mock's title reads 24 × 24 while the Layers panel here reads Canvas 512 × 512: an-icon-picture-s-svg-reads-in-24-whole-units decided to keep the 512 canvas.",
+    "A picture holding a measurement stays at 512 in its SVG, because a measure's label is a fixed size and would cover a 24 unit icon.",
+    "Enlarged in Preview, a shadow in the file goes soft: Apple's reader blurs at 24 pixels and stretches. Chrome draws it the same as a 512 file, 0.0002 apart. Safari's own rendering of a shadow was not checked."
+  ]
+}

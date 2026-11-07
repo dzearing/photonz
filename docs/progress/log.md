@@ -22652,3 +22652,14 @@ resizes, arrow keys and text inside it land on those units. Under six points a
 unit the canvas grid runs across as before. `IconUnits`, `CanvasIconUnits.swift`,
 `Scripts/measure-icon-units.py`. Next: the snap dots belong to the icon snapping
 task. No open questions.
+
+
+## 2026-11-06: an icon picture's SVG reads in 24 whole units
+
+A 512 icon picture is 24 units across, one unit being 512 / 24 points: the Pen,
+shape tools, keylines, ruling, readout and a first line's weight all count in it,
+and the SVG writes `viewBox 0 0 24 24` in whole numbers, moving files included.
+PNG stays 512, App Icon keeps 1024. Ask's icons land on those units, rounding
+away from the artboard's middle (`IconGridLanding`, `SVGIconUnits.swift`). Next:
+torn icons still write fractions, so the task stays open for them. Open question:
+held-out read 59.7 against 62.7, and how much of that is this change is not known.
