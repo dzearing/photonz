@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T04:10:43.796Z",
-  "updated": "2026-11-07T15:49:03.777Z",
+  "updated": "2026-11-07T22:03:08.146Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up of animating-a-picture-is-as-simple-as-setting-a-mo. docs/design/mocks/pages/picture-keys.html, Showing that a change will key. The other signals in that row are built: hollow diamond at the playhead, the pop, the panel row diamond, the diamond in Layers.",
@@ -34,6 +34,48 @@
     {
       "t": "2026-11-07T15:49:03.776Z",
       "note": "seq 30 -> 60"
+    },
+    {
+      "t": "2026-11-07T21:06:07.817Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T21:39:09.892Z",
+      "note": "owns these walks: a-keyed-drag-says-the-key-and-the-time-walk, a-keyed-drag-on-a-video-says-the-key-and-the-time-walk"
+    },
+    {
+      "t": "2026-11-07T22:02:41.897Z",
+      "note": "Review before building: the mock's pill (picture-keys.html .pk-tag) reads '◆ time · W × H' whenever a hand is on a keyed layer, a move and a turn included. The app's pill read position on a move and nothing at all during a turn (the resting tag hides and nothing took over)."
+    },
+    {
+      "t": "2026-11-07T22:02:41.974Z",
+      "note": "Chose the mock's size reading on keyed hands over keeping the move's position reading because the mock is the floor; I first built '◆ time · x, y' and the mock gate rightly refused it (I had wrongly cited a user answer for the position rule; git shows it was a runner's rule from 2026-09-15, so I took that line out). Layers with no keys read exactly as before."
+    },
+    {
+      "t": "2026-11-07T22:02:42.052Z",
+      "note": "Chose hundredths (KeyLap.timecode, 0:01.00) on video too, over the transport's whole seconds (0:01), because whole seconds cannot tell two keys apart and the strip writes key times in hundredths."
+    },
+    {
+      "t": "2026-11-07T22:02:42.129Z",
+      "note": "Diamond is the ◆ glyph: measured 9 pt wide in the 2x capture against the mock's 9.9 pt (7 pt square turned 45°), same white, same place, so the audit lists it as no difference."
+    },
+    {
+      "t": "2026-11-07T22:02:42.205Z",
+      "note": "Built: DragReadout.keyed / sizeTag / keyMark (core, tested in DragReadoutTests), CanvasDragReadout keyedLayerInHand + keyedSizeTag, and a pill for a keyed turn under the turned layer's bounds. Walks: a-keyed-drag-says-the-key-and-the-time-walk (picture: no keys '160 × 160'; keyed move '◆ 0:01.00 · 160 × 160', resize '◆ 0:01.00 · 190 × 190', turn '◆ 0:01.00 · 190 × 190 · 54°') and a-keyed-drag-on-a-video-says-the-key-and-the-time-walk (title no keys '640, 340'; keyed '◆ 0:01.00 · 285 × 95'), both at Next defaults, mid-drag captures in the audit. 13 neighbouring walks green, Scripts/test.sh exit 0. Looked at audit shots 1-5: each keyed one shows the accent pill with the diamond and time before the size."
+    },
+    {
+      "t": "2026-11-07T22:02:42.282Z",
+      "note": "left rough: a keyed 3D handle drag prefixes its tip/swing reading rather than the size, since the 3D mode's own tag says tip and swing; whole selections, Option copies, path points and corner drags keep their plain readings. None earned a task: no mock covers them."
+    },
+    {
+      "t": "2026-11-07T22:03:08.144Z",
+      "note": "Dragging, resizing or turning a layer with keys now shows the mock's size pill led by a diamond and the playhead time ('◆ 0:01.00 · 160 × 160'), on a picture and a video; layers with no keys read as before. Commit 9e83d1a84: DragReadout.keyed/sizeTag (core, tested), CanvasDragReadout. Verified by a-keyed-drag-says-the-key-and-the-time-walk and a-keyed-drag-on-a-video-says-the-key-and-the-time-walk at Next defaults (pill photographed mid drag), 13 neighbouring walks green, Scripts/test.sh exit 0. Audit: queue/audits/2026-11-07-keyed-drag-pill.json."
     }
-  ]
+  ],
+  "started": "2026-11-07T21:06:07.816Z",
+  "walks": [
+    "a-keyed-drag-says-the-key-and-the-time-walk",
+    "a-keyed-drag-on-a-video-says-the-key-and-the-time-walk"
+  ],
+  "completed": "2026-11-07T22:03:08.145Z"
 }
