@@ -40,7 +40,7 @@ struct ShapeLineEndTests {
 
     @Test("The three answers are the path's three answers, named the same way")
     func sharesThePathsModel() {
-        #expect(PathLineEnd.allCases.map(\.title) == ["Flat", "Round", "Square"])
+        #expect(PathLineEnd.allCases.map(\.title) == ["Butt", "Round", "Square"])
     }
 
     // MARK: Where the setting can act

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/one-unit-word",
-  "seed": "The right hand panel measures one space, so it says one word for it. The walk draws a rectangle with a border and reads Corner Radius, the border's Width and the Position and Size rows back; then it draws a captioned arrow and reads Thickness and Label size, which used to sit one under the other saying pt and px. Every stage asks the panel itself rather than naming rows, so a row added later is checked the day it arrives.",
+  "seed": "The right hand panel measures one space, so it says one word for it. The walk draws a rectangle with a border and reads Corner Radius, the border's Width and the Position and Size rows back; then it draws a captioned arrow and reads Width and Label size, which used to sit one under the other saying pt and px. Every stage asks the panel itself rather than naming rows, so a row added later is checked the day it arrives.",
   "setup": {
     "forget": [
       "shapes",
@@ -108,7 +108,7 @@
     {
       "do": "describe",
       "stage": "2-label",
-      "note": "a captioned arrow: Thickness and Label size are the two rows that used to disagree, one under the other"
+      "note": "a captioned arrow: Width and Label size are the two rows that used to disagree, one under the other"
     },
     {
       "do": "expectOneUnit"

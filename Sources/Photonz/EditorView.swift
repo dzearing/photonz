@@ -3103,8 +3103,11 @@ struct EditorView: View {
             HStack {
                 Label("Width", systemImage: "lineweight").labelStyle(.titleOnly)
                 Spacer()
+                // A fraction where there are icons: an outline set to the set's
+                // 1.75 arms the tool at it, and this row must not call that 2.
+                let fractions = Experiments.shared.iconFramesEnabled
                 SliderReadout(
-                    typing: .points, label: "Width", value: value,
+                    typing: fractions ? .lineWidth : .points, label: "Width", value: value,
                     isMixed: false,
                     range: AnnotationStyles.strokeWidthRange,
                     // The tool's own Width, not a layer's, so there is one
@@ -3112,7 +3115,8 @@ struct EditorView: View {
                     identity: "tool-stroke-width",
                     // A typed width is ONE undo step, the same as letting go
                     // of the knob is.
-                    land: { editorState.setAnnotationStrokeWidth($0.rounded()) })
+                    land: { editorState.setAnnotationStrokeWidth(
+                        fractions ? ($0 * 100).rounded() / 100 : $0.rounded()) })
             }
             .font(.callout)
             Slider(value: Binding(

@@ -50,8 +50,8 @@
 
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "field": "Thickness", "reads": "2" },
-    { "do": "describe", "stage": "6-agrees", "note": "the drawn path's own Thickness row says the same number the Pen's Width did, so the two places cannot disagree about one line" },
+    { "do": "expect", "field": "Width", "reads": "2" },
+    { "do": "describe", "stage": "6-agrees", "note": "the drawn path's own Width row says the same number the Pen's Width did, so the two places cannot disagree about one line" },
 
     { "do": "key", "key": "p" },
     { "do": "waitFor", "condition": "tool", "value": "pen" },

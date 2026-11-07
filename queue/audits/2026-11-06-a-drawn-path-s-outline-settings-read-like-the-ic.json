@@ -1,0 +1,57 @@
+{
+  "feature": "Width and Caps on every outline, and an icon's first outline",
+  "epic": "icon-vector",
+  "summary": "Every outline now says Width and Caps, with Caps as the words Butt, Round and Square. Turning the outline on for a path in an icon starts it at 1.75, Center and round, so its SVG is one stroked path with no clip path.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Window about 1000 points tall. The walk is path-outline-width-caps-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose New Frame, pick 24 under Icons, and draw an ellipse and a rectangle that overlap in it.",
+      "shot": "2026-11-06-path-outline-before-sc.png"
+    },
+    {
+      "do": "Pick both and choose Union from the Layers menu."
+    },
+    {
+      "do": "Tick the Outline row in Appearance.",
+      "shot": "2026-11-06-path-outline-2-outline-on-sc.png"
+    },
+    {
+      "do": "Type 2.5 into Width and press Return."
+    },
+    {
+      "do": "Press Dashed under Pattern, then click Square under Caps.",
+      "shot": "2026-11-06-path-outline-4-dashed-caps-sc.png"
+    },
+    {
+      "do": "Draw an open path in the frame with the Pen and click Butt under Caps.",
+      "shot": "2026-11-06-path-outline-6-open-path-sc.png"
+    },
+    {
+      "do": "Draw a line on the canvas and pick it: it says the same Width and Caps.",
+      "shot": "2026-11-06-path-outline-7-line-sc.png"
+    },
+    {
+      "do": "Compare the panel with the mock's Stroke section.",
+      "shot": "2026-11-06-path-outline-beside-mock.png"
+    }
+  ],
+  "evaluate": [
+    "Does a first outline of 1.75 look right on your icons, or should it match the 2 a Pen line starts at?",
+    "Is Butt clear enough, with its tip, for someone who only redlines screenshots?",
+    "With Columns and Layout going below the fold, is Appearance now the right thing to keep whole?",
+    "Is it fine that switching an icon's outline off and on starts it at 1.75, Center and round again?"
+  ],
+  "rough": [
+    "Width stays a slider with a typed number where the mock draws a dropdown of weights, as card a-drawn-path-s-outline-settings-read-like-the-ic-the-icon-mock-calls-a-path-s-lin answered.",
+    "Caps stays hidden on a closed solid path where the mock always shows it, as card a-drawn-path-s-outline-settings-read-like-the-ic-the-icon-mock-calls-a-path-s-lin answered: it would change nothing on the canvas.",
+    "The mock's Stroke section is an Outline row here, your call on 2026-09-06.",
+    "The mock's note under Stroke, that the weight is saved as a style and every glyph follows it, is left out because no saved stroke exists yet: task a-glyph-takes-the-icon-set-s-saved-stroke-in-one covers it.",
+    "Pattern and Corners go further than the mock. Pattern sits above Caps so that pressing Dashed does not move the row under the pointer.",
+    "A pull on the Width slider still lands on whole points. Only a typed number keeps a fraction.",
+    "A Pen line in an icon still starts at 2 while an outline starts at 1.75, so one icon can hold both weights until you set them.",
+    "Switching an icon's outline off and on again resets Align, Corners and Caps, because nothing records whether they were chosen by hand.",
+    "On an arrow, Width and Caps stay under Advanced, and that block can need a scroll inside Appearance.",
+    "A component's number knob and the Current release keep the word Thickness."
+  ]
+}

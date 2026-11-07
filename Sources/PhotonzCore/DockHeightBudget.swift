@@ -66,12 +66,18 @@ public enum DockHeightBudget {
         /// The least that scrollable part may be squeezed to before the budget
         /// gives up and lets the dock scroll instead.
         public let floor: CGFloat
+        /// Whether this is an open section about what is AROUND the pick
+        /// rather than the pick itself. Under the promised pair, it goes below
+        /// the fold rather than have the pair cut for it.
+        public let givesWayToTheFold: Bool
 
-        public init(key: String, fixed: CGFloat, flexible: CGFloat, floor: CGFloat) {
+        public init(key: String, fixed: CGFloat, flexible: CGFloat, floor: CGFloat,
+                    givesWayToTheFold: Bool = false) {
             self.key = key
             self.fixed = max(0, fixed)
             self.flexible = max(0, flexible)
             self.floor = max(0, floor)
+            self.givesWayToTheFold = givesWayToTheFold
         }
 
         /// The shortest this group's list can be drawn: its floor, or its own
@@ -278,8 +284,20 @@ public enum DockHeightBudget {
     /// needed, and a pane list's floor (the room to draw one open effect whole)
     /// can be 292 points of a 649 point dock all by itself.
     ///
-    /// This is the second pass, and it runs only when the first one leaves a
-    /// promised section hanging past the bottom edge. It re-shares the dock
+    /// This is the second pass, and it runs when the first one leaves a promised
+    /// section hanging past the bottom edge, or CUTS one to make room for the
+    /// sections under the pair: the first pass pays every form in the dock
+    /// before it shares anything out, so Columns and Layout under the pair
+    /// could leave Appearance fading out at Pattern, with its Align and Corners
+    /// in a scroller of their own, in a dock with nothing else wrong with it
+    /// (reproduced 2026-11-06). The user's sentence decides that one: what goes
+    /// below the fold is the sections under the pair. Only a section that
+    /// `givesWayToTheFold` buys this, and only with no list open under the
+    /// pair: a folded section costs its header, which is how you get back to
+    /// it, and Motion or a list opened at the foot keep their place, since what
+    /// you open takes its room from above and leaves what is under it alone
+    /// (the user, 2026-10-24, `opening-a-section-folds-the-near-side-walk`).
+    /// It re-shares the dock
     /// down to the LAST promised section — everything above the pair, which the
     /// order rule has already decided, plus the pair itself — out of the room
     /// the dock really has, with the promised sections allowed under their own
@@ -301,15 +319,26 @@ public enum DockHeightBudget {
                                    promised: Set<String>,
                                    from heights: [String: CGFloat]) -> [String: CGFloat]? {
         guard !promised.isEmpty,
-              let fold = groups.lastIndex(where: { promised.contains($0.key) })
+              let last = groups.lastIndex(where: { promised.contains($0.key) })
         else { return nil }
-        let above = groups[...fold]
-        func bottom(_ drawn: [String: CGFloat]) -> CGFloat {
-            above.reduce(0) { $0 + $1.fixed + (drawn[$1.key] ?? $1.flexible) }
+        // Where the dock is re-shared down to. For a cut pair that runs on to
+        // the first section giving way, so what sits between keeps its room.
+        let under = groups[(last + 1)...]
+        let giving = under.contains { $0.flexible > 0 }
+            ? nil : under.firstIndex(where: \.givesWayToTheFold)
+        func bottom(_ drawn: [String: CGFloat], through end: Int) -> CGFloat {
+            groups[...end].reduce(0) { $0 + $1.fixed + (drawn[$1.key] ?? $1.flexible) }
         }
+        let hanging = bottom(heights, through: last) > room
+        let fold = hanging ? last : (giving.map { $0 - 1 } ?? last)
+        let above = groups[...fold]
         // The promise is already kept: the pair's own last point is inside the
-        // dock, so there is nothing to buy and nothing to spend.
-        guard bottom(heights) > room else { return nil }
+        // dock and neither of them was cut, so there is nothing to buy and
+        // nothing to spend.
+        let cut = above.contains { group in
+            promised.contains(group.key) && (heights[group.key] ?? group.flexible) < group.flexible
+        }
+        guard hanging || (cut && giving != nil) else { return nil }
 
         let lists = above.filter { $0.flexible > 0 }.map { list in
             guard promised.contains(list.key) else { return list }
@@ -317,7 +346,7 @@ public enum DockHeightBudget {
                          floor: min(list.floor, foldFloor))
         }
         var rescued = share(lists, room: room - above.reduce(0) { $0 + $1.fixed })
-        guard bottom(rescued) <= room else { return nil }
+        guard bottom(rescued, through: fold) <= room else { return nil }
         for group in groups[(fold + 1)...] where group.flexible > 0 {
             rescued[group.key] = group.squeezed
         }

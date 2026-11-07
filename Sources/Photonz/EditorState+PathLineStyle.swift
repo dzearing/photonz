@@ -11,11 +11,13 @@ import PhotonzCore
 extension EditorState {
 
     /// The Outline switch on a closed path: takes the line away, or hands one
-    /// back at the weight a freshly drawn shape wears.
+    /// back at the weight a freshly drawn shape wears, or in an icon with the
+    /// line the icon mock gives a glyph.
     func setPathOutline(ids: [UUID], on: Bool) {
         guard !ids.isEmpty else { return }
         discardDragPreview()
-        perform { _ = $0.setPathOutline(layerIDs: ids, on: on) }
+        let iconLook = Experiments.shared.iconFramesEnabled
+        perform { _ = $0.setPathOutline(layerIDs: ids, on: on, iconLook: iconLook) }
     }
 
     /// What the ends of the line look like.

@@ -106,7 +106,7 @@ Colour, because calling a line's one colour an outline is a small lie
 | Part | Switch | Colour | Its own settings |
 | --- | --- | --- | --- |
 | Fill | on/off | the fill colour | none yet (a gradient is a kind of colour, not a setting) |
-| Outline | on/off | the outline colour | Thickness |
+| Outline | on/off | the outline colour | Width |
 | Shadow | on/off | the shadow colour | Blur, Size, Distance, Direction, Opacity |
 
 **Off means off, everywhere.** A part that is switched off shows its switch and
@@ -283,7 +283,7 @@ above them and the caliper's own settings under it:
 | Row | Switch | Its settings |
 | --- | --- | --- |
 | *(Role, above the list)* | none, two positions | — |
-| **Caliper** | none, a measurement IS its caliper | Thickness |
+| **Caliper** | none, a measurement IS its caliper | Width |
 | **Chip** | none, it is what the chip reads | Chip size, Unit |
 | **Chip Fill** | yes | — |
 | **Chip Edge** | yes | Width |
@@ -972,7 +972,7 @@ Now an arrow is five parts, in Appearance, in this order:
 
 | Row | Switch | Its settings |
 | --- | --- | --- |
-| **Line** | none, the arrow IS its line | Thickness |
+| **Line** | none, the arrow IS its line | Width |
 | **Head** | none, the Ending picker is the switch | Ending, Head Size |
 | **Caption** | none, it is where the words are typed | the words, Label size, Label corners |
 | **Label Fill** | yes | — |

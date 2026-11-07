@@ -79,8 +79,9 @@ struct EffectsInspector: View {
         guard !borders.isEmpty, borders.count < selection.count else { return nil }
         let shapes = selection.count - borders.count
         let verb = shapes == 1 ? "draws its own outline" : "draw their own outline"
+        let row = Experiments.shared.shapePartsEnabled ? "Width" : "Thickness"
         return (line: "Reaches \(borders.count) of \(selection.count) layers",
-                help: "The other \(shapes == 1 ? "one" : "\(shapes)") \(verb): use Thickness")
+                help: "The other \(shapes == 1 ? "one" : "\(shapes)") \(verb): use \(row)")
     }
 }
 

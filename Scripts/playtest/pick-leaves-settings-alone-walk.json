@@ -107,7 +107,7 @@
   },
   {
    "do": "expect",
-   "field": "Thickness",
+   "field": "Width",
    "reads": "4"
   },
   {
@@ -129,7 +129,7 @@
   },
   {
    "do": "expect",
-   "field": "Thickness",
+   "field": "Width",
    "reads": "4"
   },
   {
@@ -139,12 +139,12 @@
   {
    "do": "describe",
    "stage": "2-thickness-reaches-what-is-picked-now",
-   "note": "THE TEST: a pull on Thickness straight after that click changes the arrow clicked LAST. The other one keeps its 4."
+   "note": "THE TEST: a pull on Width straight after that click changes the arrow clicked LAST. The other one keeps its 4."
   },
   {
    "do": "press",
    "control": "Slider",
-   "in": "Thickness",
+   "in": "Width",
    "across": 0.6
   },
   {
@@ -153,7 +153,7 @@
   },
   {
    "do": "expect",
-   "field": "Thickness",
+   "field": "Width",
    "reads": "26"
   },
   {
@@ -169,7 +169,7 @@
   },
   {
    "do": "expect",
-   "field": "Thickness",
+   "field": "Width",
    "reads": "4"
   },
   {
@@ -190,7 +190,7 @@
   },
   {
    "do": "expect",
-   "field": "Thickness",
+   "field": "Width",
    "reads": "26"
   },
   {
@@ -206,7 +206,7 @@
   },
   {
    "do": "expect",
-   "field": "Thickness",
+   "field": "Width",
    "reads": "4"
   },
   {

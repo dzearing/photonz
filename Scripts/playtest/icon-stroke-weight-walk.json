@@ -135,7 +135,7 @@
     },
     {
       "do": "expect",
-      "field": "Thickness",
+      "field": "Width",
       "reads": "2"
     },
     {
@@ -183,11 +183,11 @@
     {
       "do": "describe",
       "stage": "5-line",
-      "note": "a line, at the same 2 points, and its Thickness row is right there to change it"
+      "note": "a line, at the same 2 points, and its Width row is right there to change it"
     },
     {
       "do": "expect",
-      "field": "Thickness",
+      "field": "Width",
       "reads": "2"
     },
     {
@@ -209,7 +209,7 @@
     },
     {
       "do": "expect",
-      "field": "Thickness",
+      "field": "Width",
       "reads": "3"
     },
     {
@@ -246,7 +246,7 @@
     },
     {
       "do": "expect",
-      "field": "Thickness",
+      "field": "Width",
       "reads": "3"
     },
     {

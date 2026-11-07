@@ -6,11 +6,12 @@ import SwiftUI
 /// Appearance: whether it is solid, dashed or dotted, what its ends look like,
 /// and how its corners turn (`PhotonzCore/PathLineStyle.swift`).
 ///
-/// Pictures rather than words, the bargain the arrow's Ending row already
-/// makes: three shapes side by side are compared in one glance, where three
-/// words have to be read one at a time. The picked one is named in words beside
-/// the caption, which is what you read three minutes later to remember which
-/// one you are looking at.
+/// Pattern and Corners are pictures rather than words, the bargain the arrow's
+/// Ending row already makes: three shapes side by side are compared in one
+/// glance, where three words have to be read one at a time. The picked one is
+/// named in words beside the caption, which is what you read three minutes
+/// later to remember which one you are looking at. Caps is the exception: the
+/// icon mock prints it as the words Butt, Round and Square (`LineCapsRow`).
 ///
 /// Each picture is DRAWN with the setting it stands for — a round end is a real
 /// round end, a dashed line is really dashed — so the control cannot drift away
@@ -24,19 +25,6 @@ enum PathLineStyleGlyph {
     /// How big each picture is, in points. Wide enough for two dashes and a
     /// gap, short enough that three of them fit a panel row.
     private static let size = CGSize(width: 22, height: 14)
-
-    /// A stub of a thick line with one end shaped. Thick and short on purpose:
-    /// the whole difference between the three is what happens in the last half
-    /// width, so a hairline would show nothing at all.
-    static func end(_ end: PathLineEnd, named: String) -> NSImage {
-        draw(named: named) { context in
-            context.setLineCap(end == .flat ? .butt : (end == .round ? .round : .square))
-            context.setLineWidth(8)
-            context.move(to: CGPoint(x: 3, y: 7))
-            context.addLine(to: CGPoint(x: 14, y: 7))
-            context.strokePath()
-        }
-    }
 
     /// A right-angled corner, turned the way the setting turns it.
     ///
@@ -141,9 +129,57 @@ where Value.AllCases: RandomAccessCollection {
     }
 }
 
-/// All three, in the order a person works through them: what the line is made
+/// The Caps row: the three words the icon mock prints, across the row under
+/// their caption, on a path, a line and an arrow alike. Each word's tip says
+/// what it does to the end of the line, since Butt is a word a screenshot user
+/// may not know (the card's own mitigation, 2026-10-20).
+struct LineCapsRow: View, Equatable {
+    let reading: StyleReading<PathLineEnd>
+    let pick: (PathLineEnd) -> Void
+
+    /// What a person can see: see `PathLineStyleRow`.
+    nonisolated static func == (a: LineCapsRow, b: LineCapsRow) -> Bool {
+        a.reading == b.reading
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Text("Caps").font(.caption).foregroundStyle(.secondary)
+                if reading.isMixed { MixedWord() }
+                Spacer(minLength: 0)
+            }
+            SegmentedControl("Caps", selection: reading.isMixed ? nil : reading.value,
+                             options: PathLineEnd.allCases.map {
+                                 .init($0, $0.title, help: Self.help($0))
+                             },
+                             form: .fill,
+                             systemHelp: reading.isMixed
+                             ? "The picked shapes differ. Choosing one sets all of them."
+                             : (reading.value.map(Self.help) ?? ""),
+                             pick: pick)
+            .controlSize(.small)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .playtestField("Caps")
+    }
+
+    private static func help(_ end: PathLineEnd) -> String {
+        switch end {
+        case .flat: return "The line stops dead on its last point"
+        case .round: return "A half circle past the last point"
+        case .square: return "A half square past the last point"
+        }
+    }
+}
+
+/// All of them, in the order a person works through them: what the line is made
 /// of, then what its ends look like once there are ends to see, then how it
 /// turns a corner.
+///
+/// Pattern stays above Caps rather than the mock's Width, Caps, Align, because
+/// picking Dashed is what brings Caps in on a closed path: with Caps above it,
+/// the row under the pointer would jump as it was pressed.
 struct PathLineStyleSettings: View {
     @Environment(EditorState.self) private var editorState
     /// Which part row these hang under, which is how a press finds the paths
@@ -155,7 +191,7 @@ struct PathLineStyleSettings: View {
 
     var body: some View {
         // Nothing to say about a line that is not there. A path with its
-        // outline switched off shows no colour and no thickness either, and a
+        // outline switched off shows no colour and no width either, and a
         // picker over nothing is a control that cannot act.
         if !selection.isEmpty, selection.hasALine {
             let state = editorState
@@ -174,12 +210,8 @@ struct PathLineStyleSettings: View {
             // so over brushed lines alone those rows would do nothing.
             let brushed = selection.isAllBrushed
             if selection.showsLineEnds, !brushed {
-                PathLineStyleRow(label: "Ends",
-                                 reading: selection.reading(\.lineEnd),
-                                 title: \.title,
-                                 glyph: { PathLineStyleGlyph.end($0, named: $0.title) },
-                                 help: { Self.endHelp($0) },
-                                 pick: { state.setPathLineEnd(ids: state.layerIDs(reaching: reach), $0) })
+                LineCapsRow(reading: selection.reading(\.lineEnd),
+                            pick: { state.setPathLineEnd(ids: state.layerIDs(reaching: reach), $0) })
                     .equatable()
             }
             if !brushed {
@@ -199,16 +231,8 @@ struct PathLineStyleSettings: View {
     private static func patternHelp(_ pattern: PathLinePattern) -> String {
         switch pattern {
         case .solid: return "An unbroken line"
-        case .dashed: return "Broken into dashes, which grow with the thickness"
-        case .dotted: return "Broken into dots, which grow with the thickness"
-        }
-    }
-
-    private static func endHelp(_ end: PathLineEnd) -> String {
-        switch end {
-        case .flat: return "The line stops dead on its last point"
-        case .round: return "A half circle past the last point"
-        case .square: return "A half square past the last point"
+        case .dashed: return "Broken into dashes, which grow with the width"
+        case .dotted: return "Broken into dots, which grow with the width"
         }
     }
 
@@ -272,7 +296,7 @@ struct PathStrokeAlignRow: View {
 // MARK: - The same question, asked of a line or an arrow
 
 /// What the ends of a LINE or an ARROW look like, under the Outline row in
-/// Appearance beside its Thickness — the very spot a drawn path keeps the same
+/// Appearance beside its Width — the very spot a drawn path keeps the same
 /// picker (`PhotonzCore/PathLineStyle.swift`).
 ///
 /// One row rather than three. A path can be dashed and can turn a corner
@@ -294,21 +318,9 @@ struct ShapeLineEndSettings: View {
         if Experiments.shared.lineEndsEnabled, selection.rows.contains(.lineEnds) {
             let state = editorState
             let reach = PanelReach.partShapes(rowID)
-            PathLineStyleRow(label: "Ends",
-                             reading: selection.reading(\.lineEnd),
-                             title: \.title,
-                             glyph: { PathLineStyleGlyph.end($0, named: $0.title) },
-                             help: { Self.help($0) },
-                             pick: { state.setShapeLineEnd(ids: state.layerIDs(reaching: reach), $0) })
+            LineCapsRow(reading: selection.reading(\.lineEnd),
+                        pick: { state.setShapeLineEnd(ids: state.layerIDs(reaching: reach), $0) })
                 .equatable()
-        }
-    }
-
-    private static func help(_ end: PathLineEnd) -> String {
-        switch end {
-        case .flat: return "The line stops dead on its last point"
-        case .round: return "A half circle past the last point"
-        case .square: return "A half square past the last point"
         }
     }
 }

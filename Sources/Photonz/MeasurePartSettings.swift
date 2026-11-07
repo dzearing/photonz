@@ -92,19 +92,19 @@ struct MeasurePartSettings: View {
     private func thickness(_ ids: [UUID]) -> some View {
         let reading = editorState.measureReading(ids) { $0.strokeWidth }
         return HStack(spacing: 8) {
-            Text("Thickness").font(.caption).foregroundStyle(.secondary)
+            Text("Width").font(.caption).foregroundStyle(.secondary)
             // Nil while the calipers disagree, so no segment is lit: Mixed.
-            SegmentedControl("Thickness", selection: reading,
+            SegmentedControl("Width", selection: reading,
                              options: [.init(CGFloat(1), "1 px"), .init(CGFloat(2), "2 px"),
                                        .init(CGFloat(3), "3 px")],
                              form: .natural) {
                 editorState.setMeasureThickness(ids: ids, $0)
             }
             .controlSize(.small)
-            .panelHelp("How thick the caliper is drawn. Its colour is the row above.")
+            .panelHelp("How wide the caliper's line is. Its colour is the row above.")
             Spacer(minLength: 0)
         }
-        .playtestField("Thickness")
+        .playtestField("Width")
     }
 
     /// How thick the ring round the chip is. It never reaches zero: taking the

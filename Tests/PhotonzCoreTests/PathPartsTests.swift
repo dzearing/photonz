@@ -136,6 +136,87 @@ struct PathPartsTests {
         #expect(doc.layer(id: layer.id)?.path?.strokeWidth == PathContent.defaultStrokeWidth)
     }
 
+    /// A closed path with no line, as Union leaves one: Inside, because the
+    /// box it was made from wore its ring inside, and with sharp corners.
+    private func unionedPath() -> Layer {
+        var content = PathContent(anchors: [PathAnchor(point: .zero),
+                                            PathAnchor(point: CGPoint(x: 16, y: 0)),
+                                            PathAnchor(point: CGPoint(x: 8, y: 16))],
+                                  isClosed: true, fill: Paint(hex: "#FF3B30"))
+        content.strokeWidth = 0
+        content.strokePosition = .inside
+        content.lineCorner = .sharp
+        content.lineEnd = .flat
+        return Layer(name: "Path", content: .path(content),
+                     frame: CGRect(x: 4, y: 4, width: 16, height: 16))
+    }
+
+    /// `child` inside a frame `side` across.
+    private func document(frameSide side: CGFloat, holding child: Layer) -> PhotonzDocument {
+        let frame = Layer.frameLayer(name: "Frame", origin: CGPoint(x: 100, y: 100),
+                                     size: CGSize(width: side, height: side),
+                                     children: [child])
+        return PhotonzDocument(canvasSize: CGSize(width: 3000, height: 3000), layers: [frame])
+    }
+
+    @Test("Switched on in an icon, the outline starts as the mock's: 1.75, Center, round")
+    func iconOutlineStartsAtTheIconsLook() {
+        let layer = unionedPath()
+        var doc = document(frameSide: 24, holding: layer)
+        #expect(doc.setPathOutline(layerIDs: [layer.id], on: true, iconLook: true) == 1)
+        let path = doc.layer(id: layer.id)?.path
+        #expect(path?.strokeWidth == 1.75)
+        #expect(path?.strokePosition == .center)
+        #expect(path?.lineCorner == .round)
+        #expect(path?.lineEnd == .round)
+    }
+
+    @Test("Away from an icon the outline starts exactly as it always did")
+    func screenOutlineStartsAsItDid() {
+        let layer = unionedPath()
+        var doc = document(frameSide: 2000, holding: layer)
+        #expect(doc.setPathOutline(layerIDs: [layer.id], on: true, iconLook: true) == 1)
+        let path = doc.layer(id: layer.id)?.path
+        #expect(path?.strokeWidth == PathContent.defaultStrokeWidth)
+        #expect(path?.strokePosition == .inside)
+        #expect(path?.lineCorner == .sharp)
+        #expect(path?.lineEnd == .flat)
+    }
+
+    @Test("A release without icon frames starts an outline in an icon as it always did")
+    func iconLookIsAskedFor() {
+        let layer = unionedPath()
+        var doc = document(frameSide: 24, holding: layer)
+        #expect(doc.setPathOutline(layerIDs: [layer.id], on: true) == 1)
+        #expect(doc.layer(id: layer.id)?.path?.strokeWidth == PathContent.defaultStrokeWidth)
+        #expect(doc.layer(id: layer.id)?.path?.strokePosition == .inside)
+    }
+
+    @Test("A line already on is left alone, whatever it wears")
+    func iconLookLeavesALineThatIsOn() {
+        var layer = unionedPath()
+        if var path = layer.path {
+            path.strokeWidth = 6
+            layer.content = .path(path)
+        }
+        var doc = document(frameSide: 24, holding: layer)
+        #expect(doc.setPathOutline(layerIDs: [layer.id], on: true, iconLook: true) == 0)
+        #expect(doc.layer(id: layer.id)?.path?.strokeWidth == 6)
+        #expect(doc.layer(id: layer.id)?.path?.strokePosition == .inside)
+    }
+
+    @Test("A colour let go of on a switched off Outline in an icon starts the same line")
+    func colourDropStartsTheIconsLook() {
+        let layer = unionedPath()
+        var doc = document(frameSide: 24, holding: layer)
+        #expect(doc.turnOnPart(.outline, layerIDs: [layer.id], paint: Paint(hex: "#2D7FF9"),
+                               iconLook: true) == 1)
+        let path = doc.layer(id: layer.id)?.path
+        #expect(path?.strokeWidth == 1.75)
+        #expect(path?.strokePosition == .center)
+        #expect(path?.colorHex == "#2D7FF9")
+    }
+
     @Test("The FIRST outline a path is asked for reads against its own fill, never matches it")
     func firstOutlineStandsOut() {
         // A closed path arrives filled and unlined, both in the one ink the Pen

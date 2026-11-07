@@ -56,7 +56,7 @@
   {
    "do": "describe",
    "stage": "1-plain-arrow",
-   "note": "one section says how the arrow looks. Appearance lists Opacity, Line with its Thickness, Head with its Ending and Head Size, and the Caption field. There is no separate arrow section under it any more."
+   "note": "one section says how the arrow looks. Appearance lists Opacity, Line with its Width, Head with its Ending and Head Size, and the Caption field. There is no separate arrow section under it any more."
   },
   {
    "do": "press",
@@ -76,7 +76,7 @@
   {
    "do": "expect",
    "control": "Slider",
-   "in": "Thickness",
+   "in": "Width",
    "present": true
   },
   {

@@ -64,6 +64,30 @@ public enum IconStrokeWeight {
     }
 }
 
+extension IconStrokeWeight {
+
+    /// The icon set's own weight on its 24 unit grid: the mock's Stroke section
+    /// and UX-PATTERNS section 8 both say 1.75.
+    public static let outlineOnTwentyFour: CGFloat = 1.75
+
+    /// The weight an OUTLINE switched on in an icon starts at: the set's weight,
+    /// scaled to the icon and held to quarters so the Width row reads a number
+    /// somebody would type. Never under the one point that row stops at.
+    ///
+    /// Not `startingWidth`, which is the weight a line DRAWN on an icon takes. A
+    /// drawn line is the whole mark and lands on whole pixels; an outline goes
+    /// round a shape that is already there, and is the step the mock calls
+    /// giving a glyph the set's weight.
+    ///
+    /// `unit` is how long a unit is where it is not a point: on a picture 24
+    /// units across the answer is 1.75 units, however long a unit is.
+    public static func outlineWidth(iconSized size: CGSize, unit: CGFloat = 1) -> CGFloat {
+        let units = size.width / unit
+        let weight = (units / 24 * outlineOnTwentyFour * 4).rounded() / 4
+        return max(1, weight) * unit
+    }
+}
+
 extension PhotonzDocument {
 
     /// The size of the icon frame a shape centred on this point would join, or

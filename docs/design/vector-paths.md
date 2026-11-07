@@ -90,7 +90,7 @@ other filled shape had its edge retired into Effects
 the layer's BOX, and a box round an arbitrary outline is a rectangle round a
 shape that is not one — the exact bug an ellipse hit on 2026-09-08
 (`RingShape.swift`). So a path joins the line and the arrow as a shape that IS
-its stroke, `drawsItsOwnOutline` is true for it, and the Thickness and Colour
+its stroke, `drawsItsOwnOutline` is true for it, and the Width and Colour
 rows read the shape's own settings. What those rows are CALLED, and what else
 sits under them, is "What its colours are called" and "What kind of line it is"
 below.
@@ -134,7 +134,7 @@ back in the colour it had, and an open path — which has no fill to be lost
 against — is never repainted at all.
 
 The row's settings go with the switch. A path with no outline used to keep a
-Thickness reading 0 px under a colour well that painted nothing, which is the
+Width reading 0 px under a colour well that painted nothing, which is the
 dead control the switch exists to replace: off has to LOOK off.
 
 A path picked ALONGSIDE a line falls back to the plain word Color and loses the
@@ -148,7 +148,7 @@ one would promise to delete it.
 | Row | Answers |
 | --- | --- |
 | **Pattern** | Solid, Dashed, Dotted |
-| **Ends** | Flat, Round, Square |
+| **Caps** | Butt, Round, Square, as words (the icon mock's row, settled 2026-10-20) |
 | **Corners** | Sharp, Round, Flat |
 
 Named as shapes rather than as drawing-engine words: nobody choosing between
@@ -162,9 +162,9 @@ dashed icon look the same at every weight. A dash pattern you type numbers into
 is a power tool with nowhere to live in this panel, and it is not what an icon
 needs.
 
-**Ends and dashes COMPOSE rather than override.** A dot is one width of mark, so
+**Caps and dashes COMPOSE rather than override.** A dot is one width of mark, so
 with round ends it is a dot, with flat ends a small square, and with square ends
-a slightly bigger one. That is why the Ends row is offered as soon as dashes are
+a slightly bigger one. That is why the Caps row is offered as soon as dashes are
 on, even on a closed shape that has no ends of its own: every dash has two
 (`PathContent.showsLineEnds`). A closed SOLID shape is not asked, because there
 it is a control that cannot act.
@@ -195,8 +195,8 @@ to them, so nothing anybody has already drawn changes.
 
 ### The same question, asked of a line and an arrow
 
-A line and an arrow are asked **Ends** and nothing else, in the same spot under
-Outline beside their Thickness, reading the same `PathLineEnd`
+A line and an arrow are asked **Caps** and nothing else, in the same spot under
+Outline beside their Width, reading the same `PathLineEnd`
 (`AnnotationContent.lineEnd`, behind `next-line-ends`). Round is what they have
 always drawn and what an older file opens as, the choice is one undo step, and
 it is written into an exported SVG as `stroke-linecap`.
@@ -1056,3 +1056,13 @@ two straight runs and cut into the curve itself where a curve meets the corner.
   shape belongs to the box that sweeps up points (above).
 * **A turned path shows no points at all.** Straightening it is the way in, and
   nothing on screen says so.
+
+## An outline switched on in an icon
+
+The icon mock's Stroke section gives a glyph the set's weight: 1.75 on the 24
+unit grid, centred, round corners and caps. So the Outline switch on a path
+inside an icon starts it there, scaled to the icon and held to quarters
+(`IconStrokeWeight.outlineWidth`), and Center is what lets the SVG draw the line
+as one stroked path with no clip path. A line DRAWN on an icon is a different
+question and keeps its whole pixels (`IconStrokeWeight.startingWidth`). Width is
+typed to two places; a pull on its slider still lands on whole points.

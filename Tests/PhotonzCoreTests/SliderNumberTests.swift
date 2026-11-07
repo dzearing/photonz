@@ -80,4 +80,24 @@ struct SliderNumberTests {
             }
         }
     }
+
+    @Test("A line's width is typed to the quarter an icon needs, and a whole one stays whole")
+    func lineWidthKeepsItsFraction() {
+        let width = SliderNumber.lineWidth
+        // The mock's weight has to survive being written down: 1.75 in the box
+        // and in the row a person reads, never the 2 it rounds to.
+        #expect(width.spell(1.75) == "1.75")
+        #expect(width.readout(1.75) == "1.75 \(DocumentUnit.word)")
+        #expect(width.spell(17.5) == "17.5")
+        // ...and a redline weight reads as it always did.
+        #expect(width.spell(4) == "4")
+        #expect(width.spell(40) == "40")
+        #expect(!width.wholeNumbers)
+    }
+
+    @Test("Every other number in the panel spells as it did")
+    func otherNumbersKeepTheirZeros() {
+        #expect(SliderNumber.times.spell(2) == "2.0")
+        #expect(SliderNumber.points.spell(1.75) == "2")
+    }
 }

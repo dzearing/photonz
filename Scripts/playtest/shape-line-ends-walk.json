@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/shape-line-ends",
- "seed": "A line and an arrow have always ended in a half circle, with nothing anywhere to say otherwise, so a line drawing built out of the shape tools could never be made to match one drawn with the Pen. The walk draws a line, finds Ends under Outline beside its Thickness, switches it between flat, round and square, checks one undo puts it back, does the same to an arrow's tail, and confirms a box is not asked a question it cannot answer.",
+ "seed": "A line and an arrow have always ended in a half circle, with nothing anywhere to say otherwise, so a line drawing built out of the shape tools could never be made to match one drawn with the Pen. The walk draws a line, finds Ends under Outline beside its Width, switches it between flat, round and square, checks one undo puts it back, does the same to an arrow's tail, and confirms a box is not asked a question it cannot answer.",
  "setup": {
   "forget": [
    "shapes",
@@ -56,19 +56,19 @@
   },
   {
    "do": "expect",
-   "field": "Thickness",
+   "field": "Width",
    "present": true
   },
   {
    "do": "expect",
    "control": "Round",
-   "in": "Ends",
+   "in": "Caps",
    "present": true
   },
   {
    "do": "describe",
    "stage": "1-ends-row",
-   "note": "THE TEST: a line you drew is asked what its ends look like, under Outline right beside its Thickness. Before this the row was not there at all and a line ended in a half circle whatever anybody wanted."
+   "note": "THE TEST: a line you drew is asked what its ends look like, under Outline right beside its Width. Before this the row was not there at all and a line ended in a half circle whatever anybody wanted."
   },
   {
    "do": "panel",
@@ -101,8 +101,8 @@
   },
   {
    "do": "press",
-   "control": "Flat",
-   "in": "Ends"
+   "control": "Butt",
+   "in": "Caps"
   },
   {
    "do": "wait",
@@ -124,7 +124,7 @@
   {
    "do": "press",
    "control": "Square",
-   "in": "Ends"
+   "in": "Caps"
   },
   {
    "do": "wait",
@@ -213,7 +213,7 @@
   {
    "do": "expect",
    "control": "Round",
-   "in": "Ends",
+   "in": "Caps",
    "present": true
   },
   {
@@ -226,8 +226,8 @@
   },
   {
    "do": "press",
-   "control": "Flat",
-   "in": "Ends"
+   "control": "Butt",
+   "in": "Caps"
   },
   {
    "do": "wait",
@@ -286,7 +286,7 @@
   {
    "do": "expect",
    "control": "Round",
-   "in": "Ends",
+   "in": "Caps",
    "present": false
   },
   {

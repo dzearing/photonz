@@ -26,7 +26,7 @@
     { "do": "expectPath", "anchors": 3, "closed": true, "width": 4 },
     { "do": "action", "action": "paintSelectionColor" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expect", "field": "Thickness", "reads": "4" },
+    { "do": "expect", "field": "Width", "reads": "4" },
     { "do": "expect", "control": "Align", "reads": "Center" },
     { "do": "describe", "stage": "1-center", "note": "THE FIRST TEST: a closed shape off the Pen, given a 4pt outline, shows Align under its outline settings, reading Center, the way the mock's Stroke section draws it" },
     { "do": "panel", "stage": "1-center" },

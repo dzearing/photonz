@@ -39,7 +39,8 @@ extension EditorState {
         guard let drop, drop.answer.lightsUp else { return false }
         discardDragPreview()
         var painted = 0
-        perform { painted = $0.paint(drop) }
+        let iconLook = Experiments.shared.iconFramesEnabled
+        perform { painted = $0.paint(drop, iconLook: iconLook) }
         guard painted > 0 else { return false }
         // The colour is in your hand now whatever row it landed on, so it joins
         // the recents the way every other way of painting does. Nothing is

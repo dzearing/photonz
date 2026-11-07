@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/type-into-an-effects-slider",
- "seed": "Every setting in the Effects list was a slider you drag, and nothing else: a border width of exactly 12 was a matter of nudging the knob until the readout agreed. The number beside each slider is now the app's one number box. This walk types into a border's Width and Offset, refuses a word, holds a number past the end of the range back to the end, checks that one typed number is one undo step, turns a shadow past the end of its dial, and types into an arrow's Thickness and Head Size in Appearance.",
+ "seed": "Every setting in the Effects list was a slider you drag, and nothing else: a border width of exactly 12 was a matter of nudging the knob until the readout agreed. The number beside each slider is now the app's one number box. This walk types into a border's Width and Offset, refuses a word, holds a number past the end of the range back to the end, checks that one typed number is one undo step, turns a shadow past the end of its dial, and types into an arrow's Width and Head Size in Appearance.",
  "setup": {
   "forget": [
    "shapes",
@@ -405,7 +405,7 @@
   },
   {
    "do": "focus",
-   "field": "Thickness"
+   "field": "Width"
   },
   {
    "do": "type",
@@ -426,7 +426,7 @@
   },
   {
    "do": "expect",
-   "field": "Thickness",
+   "field": "Width",
    "reads": "9"
   },
   {

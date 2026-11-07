@@ -767,9 +767,10 @@ extension EditorState {
         let ids = row.switchIDs.filter { document.layer(id: $0)?.isLocked == false }
         guard !ids.isEmpty else { return }
         discardDragPreview()
+        let iconLook = Experiments.shared.iconFramesEnabled
         perform { doc in
             _ = doc.turnOnPart(part, layerIDs: ids, paint: landing.paint,
-                               index: row.index ?? 0)
+                               index: row.index ?? 0, iconLook: iconLook)
             guard let brings = landing.brings else { return }
             for (slot, group) in Self.styleSlots(part, ids: ids, in: doc) {
                 _ = doc.bindColorStyle(layerIDs: group, slot: slot, styleID: brings.id)

@@ -1376,7 +1376,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: lineEndsFlag,
                     title: "Say how a line and an arrow end",
-                    description: "A picked line or arrow gets an Ends row under Outline: Flat, Round or Square. Off means a line and an arrow always end round.",
+                    description: "A picked line or arrow gets a Caps row under Outline: Butt, Round or Square. Off means a line and an arrow always end round.",
                     area: .drawing,
                     isEnabled: false,
                     parameters: []),

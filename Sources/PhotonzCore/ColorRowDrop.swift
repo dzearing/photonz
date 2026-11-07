@@ -123,7 +123,7 @@ extension PhotonzDocument {
     /// can slip past a refusal and land anyway, and a row that stayed dark
     /// paints nothing. Returns how many layers took it.
     @discardableResult
-    public mutating func paint(_ drop: ColorRowDrop) -> Int {
+    public mutating func paint(_ drop: ColorRowDrop, iconLook: Bool = false) -> Int {
         guard let landing = drop.answer.landing, let slot = drop.slot,
               !drop.layerIDs.isEmpty else { return 0 }
         let ids = drop.layerIDs
@@ -131,7 +131,8 @@ extension PhotonzDocument {
         // colour, which is one move rather than a switch followed by a repaint
         // of whatever came back.
         let painted = drop.turnsOn.map {
-            turnOnPart($0, layerIDs: ids, paint: landing.paint, index: drop.index)
+            turnOnPart($0, layerIDs: ids, paint: landing.paint, index: drop.index,
+                       iconLook: iconLook)
         } ?? setPaint(layerIDs: ids, slot: slot, paint: landing.paint)
         // A colour that arrived under a NAME points the part at the name, the
         // same way the row's own menu does. After the paint, because painting

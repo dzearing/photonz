@@ -1,0 +1,462 @@
+{
+ "out": "/tmp/photonz-playtest/path-outline-width-caps",
+ "seed": "The icon mock's Stroke section says Width and Caps, with Caps as the words Butt, Round and Square. A unioned glyph in a 24 frame turns its outline on at the mock's 1.75, Center and round, so its SVG needs no clip path, and Width, Caps and Align all sit on screen without a scroll inside Appearance. No flags: this is what a person running Next gets.",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1100,
+   "width": 1280,
+   "height": 1000
+  },
+  {
+   "do": "action",
+   "action": "newFrameDialog"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.9
+  },
+  {
+   "do": "press",
+   "control": "24",
+   "in": "Icons"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Add Frame"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "snapshot",
+   "name": "1-frame"
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    792,
+    542
+   ],
+   "to": [
+    804,
+    554
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    798,
+    548
+   ],
+   "to": [
+    808,
+    558
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "selectRow",
+   "row": "Ellipse"
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Layers Menu",
+   "choose": "Union"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-union"
+  },
+  {
+   "do": "action",
+   "action": "togglePathOutline"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "expectPath",
+   "closed": true,
+   "width": 1.75
+  },
+  {
+   "do": "expect",
+   "field": "Width",
+   "reads": "1.75"
+  },
+  {
+   "do": "expect",
+   "control": "Align",
+   "reads": "Center"
+  },
+  {
+   "do": "expect",
+   "control": "Round",
+   "in": "Corners",
+   "present": true
+  },
+  {
+   "do": "expectInView",
+   "field": "Width",
+   "whole": true
+  },
+  {
+   "do": "expectInView",
+   "field": "Corners",
+   "whole": true
+  },
+  {
+   "do": "expectInView",
+   "field": "Align",
+   "whole": true
+  },
+  {
+   "do": "describe",
+   "stage": "2-outline-on",
+   "note": "THE TEST: a unioned glyph in a 24 frame turns its outline on at 1.75, Center, round, and Width and Align are on screen with no scroll inside Appearance"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-outline-on"
+  },
+  {
+   "do": "panel",
+   "stage": "2"
+  },
+  {
+   "do": "writeSVG",
+   "name": "3-outline",
+   "frame": "Frame",
+   "lacks": "clip-path"
+  },
+  {
+   "do": "expectSVG",
+   "contains": "stroke-width=\"1.75\""
+  },
+  {
+   "do": "expectSVG",
+   "contains": "stroke-linejoin=\"round\""
+  },
+  {
+   "do": "expectSVG",
+   "contains": "stroke-linecap=\"round\""
+  },
+  {
+   "do": "focus",
+   "field": "Width"
+  },
+  {
+   "do": "type",
+   "text": "2.5"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "field": "Width",
+   "reads": "2.5"
+  },
+  {
+   "do": "expectPath",
+   "closed": true,
+   "width": 2.5
+  },
+  {
+   "do": "press",
+   "control": "Dashed",
+   "in": "Pattern"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "expect",
+   "control": "Square",
+   "in": "Caps",
+   "present": true
+  },
+  {
+   "do": "expectInView",
+   "field": "Caps",
+   "whole": true
+  },
+  {
+   "do": "expectInView",
+   "field": "Align",
+   "whole": true
+  },
+  {
+   "do": "press",
+   "control": "Square",
+   "in": "Caps"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "4-caps",
+   "note": "a dashed outline has ends on every dash, so Caps comes in as the words Butt, Round and Square, and a click on Square takes"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-dashed-caps"
+  },
+  {
+   "do": "writeSVG",
+   "name": "5-dashed",
+   "frame": "Frame"
+  },
+  {
+   "do": "expectSVG",
+   "contains": "stroke-linecap=\"square\""
+  },
+  {
+   "do": "tool",
+   "tool": "pen"
+  },
+  {
+   "do": "click",
+   "at": [
+    792,
+    544
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    806,
+    544
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    799,
+    556
+   ]
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectPath",
+   "closed": false
+  },
+  {
+   "do": "expect",
+   "control": "Square",
+   "in": "Caps",
+   "present": true
+  },
+  {
+   "do": "expectInView",
+   "field": "Width",
+   "whole": true
+  },
+  {
+   "do": "expectInView",
+   "field": "Caps",
+   "whole": true
+  },
+  {
+   "do": "expectInView",
+   "field": "Align",
+   "whole": true
+  },
+  {
+   "do": "press",
+   "control": "Butt",
+   "in": "Caps"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "6-open-path",
+   "note": "THE TEST: an open path in the icon frame shows Width, Caps and Align with no scroll inside Appearance"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-open-path"
+  },
+  {
+   "do": "tool",
+   "tool": "line"
+  },
+  {
+   "do": "drag",
+   "from": [
+    200,
+    850
+   ],
+   "to": [
+    500,
+    850
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Width",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Butt",
+   "in": "Caps",
+   "present": true
+  },
+  {
+   "do": "press",
+   "control": "Square",
+   "in": "Caps"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "7-line",
+   "note": "a line says the same two words as a path"
+  },
+  {
+   "do": "snapshot",
+   "name": "7-line"
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    200,
+    750
+   ],
+   "to": [
+    500,
+    750
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Advanced",
+   "in": "Advanced"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Width",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Butt",
+   "in": "Caps",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "8-arrow",
+   "note": "an arrow says them too"
+  },
+  {
+   "do": "snapshot",
+   "name": "8-arrow"
+  }
+ ]
+}

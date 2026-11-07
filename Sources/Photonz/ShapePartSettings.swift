@@ -89,7 +89,7 @@ struct ShapePartSettings: View {
                         SizeOverrideNote {
                             editorState.resetArrowPart(ids: ids, .thickness)
                         }
-                        .playtestField("Thickness Override")
+                        .playtestField("Width Override")
                     }
                     PathLineStyleSettings(rowID: row.id, selection: lineStyle)
                     ShapeLineEndSettings(rowID: row.id, selection: selection)
@@ -148,16 +148,20 @@ struct ShapePartSettings: View {
     }
 
     private func thickness(_ selection: OutlineThicknessSelection) -> some View {
+        // Width, the word the icon mock's Stroke section uses, on every outline
+        // (settled 2026-10-20). A pull lands on whole points as it always has;
+        // a typed number keeps its fraction, because the set's weight is 1.75.
         ShapeSlider(reach: .partThickness(row.id), isEnabled: !selection.isEmpty,
-                    label: "Thickness",
+                    label: "Width",
                     reading: selection.reading,
                     range: AnnotationStyles.strokeWidthRange,
                     format: { DocumentUnit.text($0) },
-                    typing: .points,
+                    typing: .lineWidth,
+                    roundTyped: { ($0 * 100).rounded() / 100 },
                     preview: { editorState.previewOutlineWidth(ids: $0, $1) },
                     commit: { editorState.commitOutlineWidth(ids: $0, $1) })
             .equatable()
-            .panelHelp("How thick the line is. Its colour is the row above.")
+            .panelHelp("How wide the line is. Its colour is the row above.")
     }
 
     private func ending(_ selection: ShapeSelection) -> some View {

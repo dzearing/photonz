@@ -503,10 +503,13 @@ extension PhotonzDocument {
     /// some do not already promises: its switch resolves to ON for all of them
     /// rather than stripping the ones that have it.
     ///
+    /// `iconLook` is `setPathOutline`'s: an outline that arrives this way in an
+    /// icon starts the way the switch starts it.
+    ///
     /// Returns how many layers changed.
     @discardableResult
     public mutating func turnOnPart(_ part: LayerPart, layerIDs: [UUID], paint: Paint,
-                                    index: Int = 0) -> Int {
+                                    index: Int = 0, iconLook: Bool = false) -> Int {
         var changed = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
@@ -524,7 +527,7 @@ extension PhotonzDocument {
                 // shape wears, painted the colour that was let go of.
                 guard layer.path != nil else { continue }
                 if !layer.hasOutline {
-                    _ = setPathOutline(layerIDs: [id], on: true)
+                    _ = setPathOutline(layerIDs: [id], on: true, iconLook: iconLook)
                 }
                 updateLayer(id: id) {
                     $0.unbindColorStyle(for: .stroke)

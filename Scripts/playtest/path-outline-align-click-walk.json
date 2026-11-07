@@ -111,7 +111,7 @@
     },
     {
       "do": "expect",
-      "field": "Thickness",
+      "field": "Width",
       "reads": "4"
     },
     {

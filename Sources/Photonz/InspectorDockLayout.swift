@@ -232,6 +232,13 @@ enum DockMetrics {
         return sections
     }
 
+    /// The sections about what is AROUND the pick rather than the pick itself:
+    /// the screen's columns and how the pick sits in its frame. Paid in full
+    /// like any form they used to cut Appearance short with a path picked in a
+    /// frame, so they go below the fold instead
+    /// (`DockHeightBudget.Group.givesWayToTheFold`).
+    static let aroundThePick: Set<InspectorSectionID> = [.columns, .placement]
+
     /// The sections the dock PROMISES are whole on screen, whatever it costs
     /// the ones under them: Appearance and Effects, the two touched on every
     /// single layer (the user, 2026-09-07). `DockHeightBudget.foldRescue` is
@@ -321,7 +328,9 @@ struct DockBudgetScratch: Equatable {
             return DockHeightBudget.Group(key: id.rawValue,
                                           fixed: header + DockMetrics.sectionDividerHeight + paid,
                                           flexible: scrolls ? body : 0,
-                                          floor: squeezeFloor(for: id, room: room))
+                                          floor: squeezeFloor(for: id, room: room),
+                                          givesWayToTheFold: open && body > 0
+                                              && DockMetrics.aroundThePick.contains(id))
         }
         let heights = DockHeightBudget.flexibleHeights(
             groups, viewport: room, promised: promised(in: sections))

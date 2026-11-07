@@ -84,7 +84,7 @@
   {
    "do": "describe",
    "stage": "1-measurement",
-   "note": "one section says how the measurement looks. Appearance lists Role, Caliper with its Thickness, a Chip block with its size and its unit, and then Chip Fill, Chip Edge and Chip Text. The Measurement section under it keeps only the name and the details fold."
+   "note": "one section says how the measurement looks. Appearance lists Role, Caliper with its Width, a Chip block with its size and its unit, and then Chip Fill, Chip Edge and Chip Text. The Measurement section under it keeps only the name and the details fold."
   },
   {
    "do": "press",

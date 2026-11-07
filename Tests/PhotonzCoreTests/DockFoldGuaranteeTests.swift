@@ -419,3 +419,100 @@ import Testing
         #expect(bottom(of: "effects", in: clip, viewport: railed) <= railed)
     }
 }
+
+extension DockFoldGuaranteeTests {
+
+    // MARK: A form under the pair
+
+    /// A path picked in an icon frame, at a 1000 point tall window: Layers,
+    /// Arrange, Appearance 340 with the outline's rows open, an empty Effects,
+    /// then Motion, Columns and Layout, three forms the budget pays for first.
+    /// Read off the running app on 2026-11-06, where Appearance was cut at
+    /// Pattern with Align and Corners under its fold.
+    var pathInAnIconFrame: [DockHeightBudget.Group] {
+        [list("layers", chrome: 51, body: 155, floor: 112), form("arrange", height: 115),
+         appearanceAsList(340), effectsEmpty, motion,
+         aroundThePick("columns", height: 72), aroundThePick("placement", height: 220)]
+    }
+
+    /// An open section about what is around the pick, as the dock reports one.
+    func aroundThePick(_ key: String, height: CGFloat) -> DockHeightBudget.Group {
+        .init(key: key, fixed: height, flexible: 0, floor: 0, givesWayToTheFold: true)
+    }
+
+    @Test("A form under the pair goes below the fold before Appearance is cut for it")
+    func formsUnderThePairGiveWayFirst() {
+        let dock: CGFloat = 969 - 2 * topPadding
+        let heights = DockHeightBudget.flexibleHeights(pathInAnIconFrame, viewport: dock,
+                                                       promised: promised)
+        #expect(heights["color"] == 340)
+        #expect(heights["effects"] == 35)
+        #expect(heights["layers"] == 155)
+    }
+
+    @Test("Motion keeps its place under the pair: only what is around the pick gives way")
+    func motionStaysInView() {
+        // A short dock: Appearance whole would need Motion off the bottom as
+        // well, so it gets what is left above Motion and no more.
+        let groups = [list("layers", chrome: 51, body: 155, floor: 112),
+                      appearanceAsList(340), effectsEmpty, motion,
+                      aroundThePick("columns", height: 72)]
+        let dock: CGFloat = 600
+        let heights = DockHeightBudget.flexibleHeights(groups, viewport: dock, promised: promised)
+        let top = groups.prefix(4).reduce(0) { $0 + $1.fixed + (heights[$1.key] ?? $1.flexible) }
+        #expect(top <= dock)
+        #expect((heights["color"] ?? 0) < 340)
+    }
+
+    @Test("A folded section under the pair keeps its header on screen")
+    func foldedHeadersStay() {
+        // Folded, each costs 33 and that header is the way back to it, so
+        // Appearance stays cut rather than sending it off the bottom.
+        let groups = [list("layers", chrome: 51, body: 155, floor: 112),
+                      appearanceAsList(340), effectsEmpty,
+                      form("motion", height: 33), form("placement", height: 33)]
+        let dock: CGFloat = 500
+        let heights = DockHeightBudget.flexibleHeights(groups, viewport: dock, promised: promised)
+        #expect((heights["color"] ?? 0) < 340)
+        #expect(DockHeightBudget.overflow(groups, viewport: dock, promised: promised) == 0)
+    }
+
+    @Test("A list opened under the pair keeps its room: it takes that from above")
+    func anOpenListUnderThePairStays() {
+        let groups = [list("layers", chrome: 51, body: 155, floor: 112),
+                      appearanceAsList(340), effectsEmpty,
+                      aroundThePick("columns", height: 72),
+                      list("library", chrome: 33, body: 220, floor: 220)]
+        let dock: CGFloat = 700
+        let heights = DockHeightBudget.flexibleHeights(groups, viewport: dock, promised: promised)
+        #expect((heights["color"] ?? 0) < 340)
+        #expect(heights["library"] == 220)
+    }
+
+    @Test("Without the promise the same dock still shares itself out evenly")
+    func noPromiseNoChange() {
+        let dock: CGFloat = 969 - 2 * topPadding
+        let heights = DockHeightBudget.flexibleHeights(pathInAnIconFrame, viewport: dock)
+        #expect((heights["color"] ?? 0) < 340)
+    }
+
+    @Test("A dock with room for everything is drawn whole, under the pair included")
+    func roomForEverythingChangesNothing() {
+        let heights = DockHeightBudget.flexibleHeights(pathInAnIconFrame, viewport: 1400,
+                                                       promised: promised)
+        #expect(heights["color"] == 340)
+        #expect(DockHeightBudget.overflow(pathInAnIconFrame, viewport: 1400, promised: promised) == 0)
+    }
+
+    @Test("A list that was only ever shortened above the pair does not move the fold")
+    func aShortenedLayersListIsNotARescue() {
+        // Appearance whole, Layers squeezed to make room for Motion: nothing
+        // promised was cut, so the sections under the pair keep their place.
+        let groups = [list("layers", chrome: 51, body: 600, floor: 112),
+                      appearanceAsList(120), effectsEmpty, motion]
+        let dock: CGFloat = 500
+        let heights = DockHeightBudget.flexibleHeights(groups, viewport: dock, promised: promised)
+        #expect(DockHeightBudget.overflow(groups, viewport: dock, promised: promised) == 0)
+        #expect(heights["color"] == 120)
+    }
+}

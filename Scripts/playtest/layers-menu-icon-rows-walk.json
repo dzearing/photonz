@@ -107,7 +107,7 @@
     { "do": "action", "action": "togglePathOutline" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "control": "Color", "in": "Outline", "present": true },
-    { "do": "focus", "field": "Thickness" },
+    { "do": "focus", "field": "Width" },
     { "do": "type", "text": "1" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.3 },

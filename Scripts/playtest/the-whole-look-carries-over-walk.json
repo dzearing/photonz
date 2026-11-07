@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/the-whole-look-carries-over-walk",
- "seed": "The tutorial recording at Next defaults, nothing switched. For each kind of thing that can be drawn or placed on it (arrow, line, box, oval, highlight, Pen path, words, picture) the first one is drawn and styled from the panel: Opacity 60, Thickness 9 where it has one, a Shadow, Fade In 0.5s and Fade Out 0.25s, and on the arrow the Marker style, square ends and an open head. A second of the same kind is drawn straight after with nothing set on it. The document is saved and the two compared field by field (Scripts/playtest/look-carries-over.py): the audit table for 'The next arrow you draw keeps the last one's look' is read off it.",
+ "seed": "The tutorial recording at Next defaults, nothing switched. For each kind of thing that can be drawn or placed on it (arrow, line, box, oval, highlight, Pen path, words, picture) the first one is drawn and styled from the panel: Opacity 60, Width 9 where it has one, a Shadow, Fade In 0.5s and Fade Out 0.25s, and on the arrow the Marker style, square ends and an open head. A second of the same kind is drawn straight after with nothing set on it. The document is saved and the two compared field by field (Scripts/playtest/look-carries-over.py): the audit table for 'The next arrow you draw keeps the last one's look' is read off it.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -101,7 +101,7 @@
   },
   {
    "do": "focus",
-   "field": "Thickness"
+   "field": "Width"
   },
   {
    "do": "type",
@@ -311,7 +311,7 @@
   },
   {
    "do": "focus",
-   "field": "Thickness"
+   "field": "Width"
   },
   {
    "do": "type",
@@ -923,7 +923,7 @@
   },
   {
    "do": "focus",
-   "field": "Thickness"
+   "field": "Width"
   },
   {
    "do": "type",

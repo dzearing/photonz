@@ -349,6 +349,10 @@ struct ShapeSlider: View, Equatable {
     /// How this row rounds the number it sends. Thicknesses and radii are
     /// whole points; an arrowhead multiplier is not.
     var round: (CGFloat) -> CGFloat = { $0.rounded() }
+    /// How a TYPED number is rounded, where that is finer than a pull on the
+    /// knob: nil rounds it the way the knob does. The knob moves about half a
+    /// unit a point, so it cannot aim at a quarter; somebody typing 1.75 can.
+    var roundTyped: ((CGFloat) -> CGFloat)? = nil
     let preview: ([UUID], CGFloat) -> Void
     let commit: ([UUID], CGFloat) -> Void
 
@@ -366,6 +370,7 @@ struct ShapeSlider: View, Equatable {
     init(reach: PanelReach, isEnabled: Bool, label: String, reading: StyleReading<CGFloat>,
          range: ClosedRange<CGFloat>, format: @escaping (CGFloat) -> String,
          typing: SliderNumber? = nil, round: @escaping (CGFloat) -> CGFloat = { $0.rounded() },
+         roundTyped: ((CGFloat) -> CGFloat)? = nil,
          preview: @escaping ([UUID], CGFloat) -> Void,
          commit: @escaping ([UUID], CGFloat) -> Void) {
         self.reach = reach
@@ -376,6 +381,7 @@ struct ShapeSlider: View, Equatable {
         self.format = format
         self.typing = typing
         self.round = round
+        self.roundTyped = roundTyped
         self.preview = preview
         self.commit = commit
     }
@@ -407,6 +413,7 @@ struct ShapeSlider: View, Equatable {
         let state = editorState
         let reach = reach
         let round = round
+        let typedRound = roundTyped ?? round
         let preview = preview
         let commit = commit
         let readout = SliderReadout(
@@ -418,7 +425,7 @@ struct ShapeSlider: View, Equatable {
             // what a pull costs. The shapes clamp it to the same ends
             // the box already held it inside, so there is nothing for
             // them to refuse.
-            land: { value in commit(state.layerIDs(reaching: reach), round(value)) })
+            land: { value in commit(state.layerIDs(reaching: reach), typedRound(value)) })
         let track = Slider(value: Binding(
             get: { knob },
             set: { v in

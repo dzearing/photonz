@@ -180,7 +180,7 @@ yellow). Any marker but Accent takes the stripe or dot away.
 ## 7. Size
 
 S, M and L set the chip's type size (10.5, 12, 14 pt in the specimen) and its
-padding, and may scale the line's weight. Thickness and Head Size, set by hand
+padding, and may scale the line's weight. Width and Head Size, set by hand
 under Advanced, override Size.
 
 ## 8. Appearance
@@ -198,7 +198,7 @@ APPEARANCE
   ▸ Advanced (collapsed)
       Line, Head              from Color
       Chip Fill, Edge, Text   from style
-      Thickness, Head Size    override Size
+      Width, Head Size        override Size
       Ending                  Clean arrows only
 ```
 
@@ -209,7 +209,7 @@ In the app (2026-11-01): the simple rows show when every picked layer is an
 arrow, or every one a measurement (`PartsInspector`, `MarkupAppearance.swift`);
 a mixture keeps the full parts list. Size is not stored: a chip at 10.5, 12 or
 14 points (against the app's M) is that size, so an older mark reads M
-(`PhotonzCore/MarkSize.swift`). An arrow's Thickness follows Size until it is
+(`PhotonzCore/MarkSize.swift`). An arrow's Width follows Size until it is
 set to something else; the head follows the line until painted apart. The
 Advanced fold remembers whether it was left open. Chip Size is also on the
 arrow's and the measurement's right-click menu.

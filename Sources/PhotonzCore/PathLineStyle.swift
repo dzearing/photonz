@@ -24,9 +24,9 @@ import Foundation
 /// What the ends of an open line look like, and the ends of every dash on a
 /// dashed one.
 ///
-/// The names are the shapes, not the drawing-engine words: a person choosing
-/// between "butt" and "square" is choosing between two words that mean the same
-/// thing in English.
+/// The case names are the shapes. What a person READS is the mock's Caps row:
+/// Butt, Round and Square, the words Figma, Illustrator and Sketch use (settled
+/// on 2026-10-20). Each word's tip says what it does to the end of the line.
 public enum PathLineEnd: String, CaseIterable, Hashable, Codable, Sendable {
     /// Stops dead on the last point. ("butt" to a drawing engine.)
     case flat
@@ -39,7 +39,7 @@ public enum PathLineEnd: String, CaseIterable, Hashable, Codable, Sendable {
 
     public var title: String {
         switch self {
-        case .flat: return "Flat"
+        case .flat: return "Butt"
         case .round: return "Round"
         case .square: return "Square"
         }
@@ -281,17 +281,39 @@ extension PhotonzDocument {
     /// otherwise land in the fill's own colour and draw nothing anybody can
     /// see. It takes an ink that reads instead, exactly as a box's first border
     /// does (`BorderInk.swift`).
+    ///
+    /// `iconLook` is the release saying it draws icons. A path inside an icon
+    /// then starts with the line the mock gives a glyph, the set's weight down
+    /// the middle of its edge with round corners and caps, whatever Union left
+    /// on it: centred is also what lets an exported icon draw its line with no
+    /// clip path. Off an icon it changes nothing.
     @discardableResult
     public mutating func setPathOutline(layerIDs: [UUID], on: Bool,
-                                        width: CGFloat = PathContent.defaultStrokeWidth) -> Int {
-        changePaths(layerIDs) { path in
-            guard (path.strokeWidth > 0) != on else { return }
-            guard on else {
-                path.strokeWidth = 0
-                return
+                                        width: CGFloat = PathContent.defaultStrokeWidth,
+                                        iconLook: Bool = false) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            let icon = on && iconLook ? iconFrameID(containing: id) : nil
+            let iconWeight = icon.flatMap { icon in
+                iconSize(of: icon).map {
+                    IconStrokeWeight.outlineWidth(iconSized: $0, unit: iconUnit(of: icon))
+                }
             }
-            path.gainingALineThatReads(width: max(width, 1))
+            changed += changePaths([id]) { path in
+                guard (path.strokeWidth > 0) != on else { return }
+                guard on else {
+                    path.strokeWidth = 0
+                    return
+                }
+                path.gainingALineThatReads(width: iconWeight ?? max(width, 1))
+                if iconWeight != nil {
+                    path.strokePosition = .center
+                    path.lineCorner = .round
+                    path.lineEnd = .round
+                }
+            }
         }
+        return changed
     }
 
     /// Every unlocked picked layer that is a path, changed in place.

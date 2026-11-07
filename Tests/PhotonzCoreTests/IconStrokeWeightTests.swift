@@ -34,6 +34,22 @@ struct IconStrokeWeightTests {
         #expect(IconStrokeWeight.startingWidth(armed: stock, chosen: false, onFrameSized: square(64)) == 4)
     }
 
+    @Test("An outline switched on in an icon starts at the mock's 1.75 on 24, scaled to the icon")
+    func outlineWeightPerIconSize() {
+        // The icon set's own weight (UX-PATTERNS section 8), on quarters so the
+        // box reads a number somebody would type.
+        #expect(IconStrokeWeight.outlineWidth(iconSized: square(24)) == 1.75)
+        #expect(IconStrokeWeight.outlineWidth(iconSized: square(16)) == 1.25)
+        #expect(IconStrokeWeight.outlineWidth(iconSized: square(48)) == 3.5)
+        // Never under the one point the Width row stops at.
+        #expect(IconStrokeWeight.outlineWidth(iconSized: square(4)) == 1)
+    }
+
+    @Test("On a picture 24 units across the outline is 1.75 units, however long a unit is")
+    func outlineWeightInUnits() {
+        #expect(IconStrokeWeight.outlineWidth(iconSized: square(240), unit: 10) == 17.5)
+    }
+
     @Test("The frame can only make a line thinner, never thicker")
     func neverHeavier() {
         // An app icon is 512 across, where a sixteenth would be 32 points of

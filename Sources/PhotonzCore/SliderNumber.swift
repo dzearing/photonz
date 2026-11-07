@@ -24,13 +24,18 @@ public struct SliderNumber: Hashable, Sendable {
     /// How many places the box spells. Nought for the numbers counted in whole
     /// units, which is nearly all of them.
     public let decimals: Int
+    /// Whether the places run out with the number: 1.75 and 4 rather than 1.75
+    /// and 4.00. For a length that is nearly always whole and now and then
+    /// is not, where a row of zeros would say something false about it.
+    public let dropsTrailingZeros: Bool
 
     public init(suffix: String? = nil, leading: String? = nil,
-                scale: CGFloat = 1, decimals: Int = 0) {
+                scale: CGFloat = 1, decimals: Int = 0, dropsTrailingZeros: Bool = false) {
         self.suffix = suffix
         self.leading = leading
         self.scale = scale
         self.decimals = decimals
+        self.dropsTrailingZeros = dropsTrailingZeros
     }
 
     /// Whether the box counts in whole units, which is what decides how a
@@ -46,7 +51,12 @@ public struct SliderNumber: Hashable, Sendable {
     /// How this panel spells the number in the box.
     public func spell(_ shown: CGFloat) -> String {
         guard decimals > 0 else { return String(Int(shown.rounded())) }
-        return String(format: "%.\(decimals)f", Double(shown))
+        let spelled = String(format: "%.\(decimals)f", Double(shown))
+        guard dropsTrailingZeros else { return spelled }
+        var digits = Substring(spelled)
+        while digits.last == "0" { digits.removeLast() }
+        if digits.last == "." { digits.removeLast() }
+        return String(digits)
     }
 
     /// The number as a PERSON reads it, mark and unit word and all.
@@ -61,6 +71,12 @@ public struct SliderNumber: Hashable, Sendable {
 
     /// A length, in the app's one unit word.
     public static var points: SliderNumber { SliderNumber(suffix: DocumentUnit.word) }
+    /// How wide a line is: a length, but one an icon wants a fraction of. The
+    /// icon set's weight is 1.75 (`IconStrokeWeight.outlineWidth`), which a
+    /// whole number box would call 2.
+    public static var lineWidth: SliderNumber {
+        SliderNumber(suffix: DocumentUnit.word, decimals: 2, dropsTrailingZeros: true)
+    }
     /// A strength: a slider running 0 to 1, typed as a percentage.
     public static let percent = SliderNumber(suffix: "%", scale: 100)
     /// A turn.

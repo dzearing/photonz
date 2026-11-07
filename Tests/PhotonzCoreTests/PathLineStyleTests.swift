@@ -32,7 +32,7 @@ struct PathLineStyleTests {
 
     @Test("Every option is named in words a person recognises, not drawing-engine words")
     func titles() {
-        #expect(PathLineEnd.allCases.map(\.title) == ["Flat", "Round", "Square"])
+        #expect(PathLineEnd.allCases.map(\.title) == ["Butt", "Round", "Square"])
         #expect(PathLineCorner.allCases.map(\.title) == ["Sharp", "Round", "Flat"])
         #expect(PathLinePattern.allCases.map(\.title) == ["Solid", "Dashed", "Dotted"])
     }

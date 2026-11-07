@@ -22663,3 +22663,13 @@ PNG stays 512, App Icon keeps 1024. Ask's icons land on those units, rounding
 away from the artboard's middle (`IconGridLanding`, `SVGIconUnits.swift`). Next:
 torn icons still write fractions, so the task stays open for them. Open question:
 held-out read 59.7 against 62.7, and how much of that is this change is not known.
+
+
+## 2026-11-06: outlines say Width and Caps
+
+Every Next outline says Width and Caps, Caps as the words Butt, Round and Square.
+An outline switched on in an icon starts at 1.75 on 24 (scaled), Center and
+round, so the SVG needs no clip path; Width types to two places. Columns and
+Layout now go below the fold rather than cut Appearance. Next: a saved stroke a
+glyph takes in one click is filed at p2. Open question: whether a Pen line in an
+icon should move from 2 to 1.75 as well.
