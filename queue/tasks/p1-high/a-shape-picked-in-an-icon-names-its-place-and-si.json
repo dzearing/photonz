@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p1-high",
   "seq": 85,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T09:34:05.635Z",
-  "updated": "2026-11-07T09:34:05.638Z",
+  "updated": "2026-11-07T11:53:59.140Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-11-07: temp walk drawing a box at 9, 10 to 15, 13 in a 24 frame at 800%, then the Select tool: capture queue/audits/2026-11-07-icon-snap-picked-box-sc.png shows handles and no place or size label. Mock: docs/design/mocks/pages/icon-draw-wt.html #igTag, steps 4 to 6, 9 and 10, seen at http://127.0.0.1:8791/pages/icon-draw-wt.html?step=4. Words already exist: IconSnap.readout(centre:corner:shape:). Check it against the never-cover-the-object rule and the handle hint pill that sits under the shape.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-11-07T09:34:05.637Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-07T11:04:33.408Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-07T11:42:26.337Z",
+      "note": "owns these walks: a-picked-icon-shape-names-its-place-walk"
+    },
+    {
+      "t": "2026-11-07T11:53:35.217Z",
+      "note": "Review before building: the mock draws no rotate knob or mode chip, and the app's stand exactly where the mock centres its tag. Chose above and left of the knob over the mock's centred spot because a centred tag would sit on the knob's stem; a shape with no knob gets the mock's centred spot. Chose a second tag above over reusing the tag under the frame because the mock and the goal both say above, and hints still need that row."
+    },
+    {
+      "t": "2026-11-07T11:53:35.295Z",
+      "note": "Chose one reading per drag: the pill under a move or resize stands down in an icon while the tag reads the same drag in units; an Option copy keeps its pill. Chose Size mode only, since Skew and 3D have their own reading. Changed the icon snap pill to true monospaced too, matching the mock's figures."
+    },
+    {
+      "t": "2026-11-07T11:53:35.373Z",
+      "note": "Looked at place-1-box, place-2-moving, place-2b-resizing, place-3-circle and the side by side: tag clear of shape and grips in all, live through move and resize, no second pill. left rough: near the top of an icon the tag can touch the frame's name label; it covers no shape or grip, so it stays in the audit's rough list and did not earn a task. left rough: expectPlaceTag is refused under a lock until someone watches it run locked."
+    },
+    {
+      "t": "2026-11-07T11:53:59.138Z",
+      "note": "Shipped in ea2427e2 (Next, no flag): a tag above a shape picked in an icon reads its place and size in units, 9, 10 · 6 × 3 and center 12, 8 · d 8, and follows a move and a resize. Placed clear of the shape and grips by SelectionGrips.placeTagFrame, and hidden when nowhere is clear. Verified by a-picked-icon-shape-names-its-place-walk at Next defaults, which measures the tag clear on screen, IconPlaceTagTests (17), six neighbouring walks, and Scripts/test.sh exit 0. One earlier full run failed BusyVideoSizeTests under load; folded into the-full-test-suite-stays-green-on-a-busy-mac-wh. Audit has the picture beside the mock."
     }
-  ]
+  ],
+  "started": "2026-11-07T11:04:33.407Z",
+  "walks": [
+    "a-picked-icon-shape-names-its-place-walk"
+  ],
+  "completed": "2026-11-07T11:53:59.139Z"
 }
