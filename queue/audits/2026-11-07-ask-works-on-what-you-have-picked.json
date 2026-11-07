@@ -1,0 +1,30 @@
+{
+  "feature": "Ask works on what you have picked",
+  "epic": "agent-ask",
+  "summary": "Pick a layer and ask, and Ask changes that layer and leaves the rest alone. Before, make this red with a circle picked recoloured the rectangle beside it too.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The model built into Photonz, set up in Settings, Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot, draw a rectangle and then a circle beside it." },
+    { "do": "Click the circle in the Layers list to pick it.", "shot": "2026-11-07-ask-picked-2-before.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Ask. The composer says 1 selected beside its title.", "shot": "2026-11-07-ask-picked-3-composer-scope.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare with the mock's 1 selected, in the Agent panel header (agent-edit page).", "shot": "2026-11-07-ask-picked-mock-agent-edit.png" },
+    { "do": "Type make this bigger and press Return. Only the circle grows.", "shot": "2026-11-07-ask-picked-4-after.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once. The circle is back as it was.", "shot": "2026-11-07-ask-picked-5-undone.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "With the circle still picked, ask make the rectangle blue. The rectangle changes, not the circle." }
+  ],
+  "evaluate": [
+    "Does 1 selected in the composer tell you what the request will work on before you send it?",
+    "With a layer picked, did Ask ever change something you did not mean?",
+    "When you ask for something new with a layer picked, such as add a title, does it still make it?",
+    "Is about 100 seconds for a one layer change quick enough to reach for Ask over the panel?"
+  ],
+  "rough": [
+    "The mock prints 1 selected as a pill in the Agent panel header; the app prints it as plain text in the composer, which is where this task's checklist put it. The panel's own field acts on the pick without saying so. Covered by the-agent-panel-shows-what-ask-will-work-on-as-i.",
+    "The mock's field says Ask for a change to the selection; the app's says Ask, or type / for a command. Covered by the-agent-panel-shows-what-ask-will-work-on-as-i.",
+    "The mock shows a proposal with an Accept button; the app changes the layer straight away and adds a row, your call on 2026-10-20.",
+    "New shapes start red, so make this red on a fresh shape barely shows. Use another colour to see it.",
+    "Asked for a colour, the model set the line as well as the fill, so a filled shape gained a Border effect you did not ask for.",
+    "Not tried with the model: a title or clip picked on a video, and several layers picked at once. Only single layers on a picture were measured."
+  ]
+}

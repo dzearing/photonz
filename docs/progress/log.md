@@ -22705,3 +22705,11 @@ the one pulled, matching a drawn shape's knobs and Photoshop's live shapes
 Radius pill, keeps only the pulled dot on screen with Option, and waits for four
 points of travel, so a wobble cannot flatten a shape with mixed corners. Next:
 a rectangle landing on the grid, filed at p2. Open question: none.
+
+## 2026-11-07: Ask works on what is picked
+
+Ask was never told what was picked: with a circle picked, make this red recoloured the rectangle too (reproduced on the model). `read_document` now carries `selected`, Ask's instructions gain one line when something is picked, the composer shows `1 selected`, and a waiting request keeps what was picked when it was sent. The read also now reports a rectangle's own corners, which it never did.
+
+Four `picked-*` eval cases total 87.6, all 10 on the rules. Held-out 66.4 on 9b54cd17 against 59.7 before; with nothing picked the prompts are unchanged, so read that as no drop, not a gain (recent runs span 59.7 to 68.4).
+
+Next: `the-agent-panel-shows-what-ask-will-work-on-as-i`. Open: a pick on a video and several picks at once are untried with the model.
