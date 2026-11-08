@@ -1,0 +1,34 @@
+{
+  "id": "an-animated-icon-told-as-a-little-story-moves-th",
+  "title": "An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'",
+  "goal": "The user asked 'make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.' and got a still drawing of a trash can (Ask's row: drew a trash can), no motion. The shorter 'make an animated trash can icon where it opens, some trash is thrown in' animates in the walk. A request that tells the motion as several beats must be animated through all of them, never fall back to a still.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 5e-10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-08T07:01:36.263Z",
+  "updated": "2026-11-08T07:01:36.384Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
+  "acceptance": [
+    "Reproduce with the user's exact words, in the New window AND with Command K on an empty picture, at Next defaults, on the user's Photonz Dev setup (the shipping model). Record Ask's plan: which route it took, which tools it planned, and why no keys were set. NOTE for reproducing on this Mac: the user's Photonz Dev holds the Ask model (26 GB); a probe walk loading a second copy was quit mid-walk with no crash report on 2026-11-07 (likely memory). Reuse the running model, or run when the user's app has let it go, rather than calling it a crash.",
+    "Find why a story with several beats (open, throw, bounce, close) drew a still: the moving-icon route not taken, the plan running out of rounds or context before the keys, a refused key call dropped, or a fallback to a drawing. Say which, with the plan as evidence.",
+    "Fix: a request for an animated icon NEVER ends as a still. If the full story cannot be planned, Ask animates as many beats as it can, in order, and its row says which it left out ('Animated the lid opening and closing; left out the bounce'). New eval cases with multi-beat stories (at least 6: this one, 'a letter goes into an envelope, the flap closes and it flies off', 'a bell swings, rings twice and settles', 'a heart beats twice then breaks', 'a rocket shakes, lifts off and leaves smoke', 'a checkbox is ticked and the tick bounces'), each judged on 'every beat asked for happens, in order' from contact sheets; at least 5 of 6 at 7 or more.",
+    "The objects a story needs are drawn as their own named layers so they can move (the trash, the lid on its hinge, the can), and the beats are keyed in time order with motion principles (anticipation, overshoot, settle), from the model's own planning, no coded animations per subject.",
+    "Walk with the user's exact sentence: the picture plays every beat, Copy SVG gives an animated SVG that loops.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-08T07:01:36.265Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-08T07:01:36.383Z",
+      "note": "seq 88.75 -> 5e-10"
+    }
+  ]
+}

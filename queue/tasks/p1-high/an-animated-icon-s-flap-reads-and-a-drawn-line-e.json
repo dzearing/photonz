@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T18:22:08.469Z",
-  "updated": "2026-11-07T15:49:03.930Z",
+  "updated": "2026-11-08T06:53:41.725Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ask-animates-what-it-makes-an-animated-svg-icon, run 20261106-171511-ask: envelope 4, plane 6, wifi loops 3. AskMotionCheck leaves trimStart and trimEnd out of its loop check on purpose, since a checkmark set to end where it began never drew. Rules in AskMotion.principles must stay general: nothing per subject. Pictures: queue/audits/2026-11-06-ask-animates-after-envelope-opening.png and -after-wifi-signal.png.",
@@ -39,6 +39,19 @@
     {
       "t": "2026-11-07T15:49:03.929Z",
       "note": "seq 40 -> 80"
+    },
+    {
+      "t": "2026-11-08T06:22:09.474Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-08T06:53:41.651Z",
+      "note": "Reproduced on current code (run 20261108-062312-ask): envelope 35.9 (flap turned flat about the top edge's middle, sweeping sideways through the body), plane 38.6 (keyed 5 units up-right, capped room 1.4x, nose sliced by the top edge 0.48-1.08 s), wifi 39.3 (keyed trimStart: waves un-drew one by one and came back together). The old 'row of dots' is not reproducible: WebKit draws nothing at trim 0 (checked with svg-frames on a hand-made file)."
+    },
+    {
+      "t": "2026-11-08T06:53:41.724Z",
+      "note": "Built: (1) rotationX/rotationY offered to Ask and carried in the SVG as a one-axis scale about the hinge (cosine, sampled 48 times a lap), pivot on a fold sets LayerTurn3D.hinge; rules teach a fold over a whole edge. (2) AskMotion.leaving: a key half over the frame edge goes to the nearer of pulled-in or pushed-clear. (3) trimStart on a drawn part refused at planning; rules say lines draw from trimEnd 0, fade, reset unseen. (4) rule: what comes out of a part is drawn behind it, the front part filled white."
     }
-  ]
+  ],
+  "started": "2026-11-08T06:22:09.473Z"
 }
