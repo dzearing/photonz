@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 70,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T22:30:28.372Z",
-  "updated": "2026-11-07T23:47:41.464Z",
+  "updated": "2026-11-08T00:57:11.786Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-05. Scripts/ask-eval.sh run --engine ask --cases icon-broken-heart,icon-cracked-egg-filled,icon-soap-bubble-bursting. Tear on, run 20261105-204948-ask: heart 55.4 (asked 5, icon 4), egg 70.6 (6, 5), bubble 54.8 (6, 6, named 1 of 3 as a cracked egg). Tear off for one build, run 20261105-213322-ask: heart 30.5, egg 84.8, bubble 71.3. One reading each, and one version of the balloon has swung by 30. The bubble sheet shows the tool leaves an inner highlight poking into the tear: AskIconBreak.applied leaves parts lying in the torn stretch alone. Ideas: a crack through the object as a second tear shape, chosen by the model from a general list, and dropping parts that lie in the gap. No subject may be coded.",
@@ -46,7 +46,20 @@
     {
       "t": "2026-11-07T23:47:41.463Z",
       "note": "Tried 4 looks for a bursting bubble, one eval reading each (noise is +-20): ring in 4 pieces pushed out 62 (squarish, viewfinder), shreds at one side 32 (sun), one opening + marks 43 (spinner), ring in 4 pieces in place 33 (light bulb). Balloon in pieces 43/54, as an opening 42 (light bulb): the balloon needs its tear. Same-drawing judge A/B on the eval's bubble: tear 34.1, pieces 25.4. Chose two looks (burst = the tear, cracked) over three because no pieces look beat the tear on any drawing; the bubble's weakness is the model's drawing (a drip under it and a shine on the line), not the tear."
+    },
+    {
+      "t": "2026-11-08T00:57:11.632Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-08T00:57:11.708Z",
+      "note": "Shipped 22161619d: the model says burst or cracked; a crack runs right through the outline the short way (a jagged line in a line drawing, a jagged gap splitting a solid in two); the tear drops parts lying in its torn stretch. Readings (3 each): heart 86.5/86.5/86.5, asked 8, icon 7 (bar met; it was 43). Egg 88.8/88.8/88.8 vs 84.8 untorn (bar met). Bubble 36.3 vs 71.3 untorn: NOT met. Balloon 66.5 and 55.4 this session on the unchanged tear, 67-84 yesterday: NOT met (85). Audit queue/audits/2026-11-07-icon-break-kinds.json. Left for the next attempt: the bubble the model draws whole has a drip under it and a shine on its line, which reads as a light bulb or balloon whatever breaks it; the balloon's swing is the model's drawing, not the tear."
+    },
+    {
+      "t": "2026-11-08T00:57:11.785Z",
+      "note": "Heart and egg bars met (86.5 and 88.8, three readings each, shipped 22161619d). Bubble (36 vs 71 untorn) and balloon (55 to 66 vs 85) bars not reached; open for them."
     }
   ],
-  "started": "2026-11-07T22:03:40.142Z"
+  "started": "2026-11-07T22:03:40.142Z",
+  "walks": []
 }
