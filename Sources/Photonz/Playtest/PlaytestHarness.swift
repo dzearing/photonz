@@ -17061,6 +17061,10 @@ private final class Run {
             return made != nil
         }
         guard let made else { throw Failure(description: "\"\(text)\" made no picture") }
+        if let document = made.document {
+            note(number, step, "made a \(Int(document.canvasSize.width)) by \(Int(document.canvasSize.height)) picture"
+                 + (document.madeAsIcon ? ", as an icon" : ""))
+        }
         if place == .newWindow {
             try await poll("the New window to close on its own", within: 5) { !(window.isVisible) }
         }

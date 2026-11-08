@@ -28,6 +28,9 @@ struct FrontDoorTests {
         #expect(FrontDoorKind.image.sizes.map(\.size) == BlankCanvas.presets.map(\.size))
         #expect(FrontDoorKind.video.sizes.map(\.id) == BlankVideo.presets.map(\.id))
         #expect(FrontDoorKind.video.sizes.map(\.size) == BlankVideo.presets.map(\.size))
+        #expect(FrontDoorKind.image.sizes(withIcons: true).map(\.id) == BlankCanvas.presets(withIcons: true).map(\.id))
+        #expect(FrontDoorKind.image.sizes(withIcons: true).map(\.id).suffix(2) == ["icon", "app-icon"])
+        #expect(FrontDoorKind.video.sizes(withIcons: true).map(\.id) == BlankVideo.presets.map(\.id))
         #expect(FrontDoorKind.image.defaultSize == BlankCanvas.defaultPreset.size)
         #expect(FrontDoorKind.video.defaultSize == BlankVideo.defaultPreset.size)
     }

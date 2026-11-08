@@ -14,7 +14,7 @@ struct AskFromNothingTests {
 
     @Test("A request to make a picture makes one at the size picked")
     func pictures() {
-        for words in ["a sunset over the sea", "draw a picture of a dog.", "create a smiley face icon",
+        for words in ["a sunset over the sea", "draw a picture of a dog.",
                       "a cat that is sleeping on a red rug", "paint a lighthouse at night",
                       "add a title that says hello", "a dog chasing its tail"] {
             #expect(AskFromNothing.start(words, picked: picked) == .picture(picked), "\(words)")
@@ -42,8 +42,8 @@ struct AskFromNothingTests {
         let wide = AskFromNothing.start("a banner for my blog", picked: picked)
         let square = AskFromNothing.start("a lighthouse in a square image", picked: picked)
         let portrait = AskFromNothing.start("a tree, portrait orientation", picked: picked)
-        guard case .picture(let t) = tall, case .picture(let w) = wide,
-              case .picture(let s) = square, case .picture(let p) = portrait else {
+        guard case .picture(let t, _) = tall, case .picture(let w, _) = wide,
+              case .picture(let s, _) = square, case .picture(let p, _) = portrait else {
             Issue.record("each makes a picture"); return
         }
         #expect(t.height > t.width)
@@ -57,10 +57,56 @@ struct AskFromNothingTests {
 
     @Test("A request for a video is one Ask cannot make yet")
     func videos() {
-        for words in ["a video of waves", "make an animated logo", "an animation of a bouncing ball",
-                      "a short movie about a fox", "a gif of a spinning star"] {
+        for words in ["a video of waves", "a short movie about a fox", "a clip of my dog running",
+                      "a screen recording of the login", "a montage of my recordings", "some footage of the sea",
+                      "a slideshow of my trip", "a trailer for my game",
+                      // Mixed: something animated FOR a video is still video work.
+                      "an animated title for my video", "make an animation for a video intro"] {
             #expect(AskFromNothing.start(words, picked: picked) == .video, "\(words)")
         }
+    }
+
+    @Test("A request for something animated makes a picture Ask animates, at the icon size")
+    func animated() {
+        let icon = BlankCanvas.iconPresets[0].size
+        for words in ["make an animated trash can icon where it opens, some trash is thrown in",
+                      "an animated loading spinner", "make an animated svg of a heart beating",
+                      "a gif of a bouncing ball", "make an animated logo", "an animation of a bouncing ball",
+                      "animate a star twinkling", "a looping wave"] {
+            guard case .picture(let size, let madeAsIcon)? = AskFromNothing.start(words, picked: picked) else {
+                Issue.record("\(words) makes a picture"); continue
+            }
+            #expect(size == icon, "\(words)")
+            // Made as an icon, so Ask draws it as a moving icon whatever the
+            // words call it (`AskMotion.drawsMotion(_:blankIcon:)`).
+            #expect(madeAsIcon, "\(words)")
+            #expect(AskFromNothing.asksForAnimation(words), "\(words)")
+        }
+        // Its own size or shape still wins.
+        #expect(AskFromNothing.start("an animated banner for my blog", picked: picked) == .picture(CGSize(width: 1500, height: 500)))
+        #expect(AskFromNothing.start("a 640x480 gif of a bouncing ball", picked: picked) == .picture(CGSize(width: 640, height: 480)))
+        for words in ["a sunset over the sea", "a motion sensor", "a moving van"] {
+            #expect(!AskFromNothing.asksForAnimation(words), "\(words)")
+        }
+    }
+
+    @Test("A request for an icon makes an icon at the icon task's sizes")
+    func icons() {
+        let icon = BlankCanvas.iconPresets[0].size
+        let appIcon = BlankCanvas.iconPresets[1].size
+        #expect(AskFromNothing.start("create a smiley face icon", picked: picked) == .picture(icon, icon: true))
+        #expect(AskFromNothing.start("make an animated trash can icon where it opens", picked: picked) == .picture(icon, icon: true))
+        #expect(AskFromNothing.start("an app icon for a weather app", picked: picked) == .picture(appIcon, icon: true))
+        // An icon is a picture, whatever it is of.
+        #expect(AskFromNothing.start("a video camera icon", picked: picked) == .picture(icon, icon: true))
+        #expect(AskFromNothing.start("a movie ticket icon", picked: picked) == .picture(icon, icon: true))
+        // An icon size picked below is kept.
+        #expect(AskFromNothing.start("a bell icon", picked: appIcon, pickedIsIcon: true) == .picture(appIcon, icon: true))
+        #expect(AskFromNothing.start("a bell", picked: icon, pickedIsIcon: true) == .picture(icon, icon: true))
+        #expect(AskFromNothing.start("a gif of a bell", picked: appIcon, pickedIsIcon: true) == .picture(appIcon, icon: true))
+        // Clip art and a paper clip are pictures.
+        #expect(AskFromNothing.start("clip art of a cat", picked: picked) == .picture(picked))
+        #expect(AskFromNothing.start("a paper clip on a desk", picked: picked) == .picture(picked))
     }
 
     @Test("A request about something already open says nothing is")

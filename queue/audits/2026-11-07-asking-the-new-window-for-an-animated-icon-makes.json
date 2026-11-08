@@ -1,0 +1,31 @@
+{
+  "feature": "The New window makes an animated icon",
+  "epic": "icon-svg",
+  "summary": "Typing something animated into the New window (an animated icon, an animated SVG, a GIF, a spinner) now makes a 512 by 512 icon that Ask draws and animates, ready to play and copy as a looping SVG, instead of 'Ask can't make videos yet.'. The Image sizes also gain Icon and App Icon, the same rows the New Image sheet has.",
+  "setup": "Photonz Next, no switch changed from its default. Walks: ask-animates-from-the-new-window-walk (the user's own words), front-door-walk (the Icon row), ask-with-nothing-open-walk (a video still refused).",
+  "switched": {},
+  "try": [
+    { "do": "File > New, type 'make an animated trash can icon where it opens, some trash is thrown in' and click Create.", "shot": "2026-11-07-new-window-animated-1-typed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Wait for Ask: a 512 by 512 picture opens in Icon with the trash can, its lid and the trash keyed on the timeline.", "shot": "2026-11-07-new-window-animated-2-trash-made-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Space: the lid swings open, the trash drops in, and it loops.", "shot": "2026-11-07-new-window-animated-3-trash-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Edit > Copy SVG and paste it into a browser: it plays and loops (2026-11-07-new-window-animated-trash.svg is the walk's file)." },
+    { "do": "Try 'an animated loading spinner' in a new New window: a spinner arc that turns and loops.", "shot": "2026-11-07-new-window-animated-4-spinner-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Try 'make an animated svg of a heart beating' and 'a gif of a bouncing ball'.", "shot": "2026-11-07-new-window-animated-6-ball-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type 'a video of waves on a beach' and click Create: it still says Ask can't make videos yet." },
+    { "do": "Click the Icon row under Size and New Image: a 512 by 512 picture opens in Icon.", "shot": "2026-11-07-new-window-animated-7-icon-row-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Is an icon-sized square the picture you expected for 'a gif of a bouncing ball', or did you want something bigger?",
+    "Does 'a video camera icon' making an icon (not a refusal) match what you meant?",
+    "Is it clear while Ask works that the new window will move, before the first Play?",
+    "Do the Icon and App Icon rows at the end of the size list read as belonging there?"
+  ],
+  "rough": [
+    "Any animated request with no size or shape named is made at the Icon size (512 by 512) and drawn as a moving icon, so 'an animated sunset' is a moving icon, not a full scene. Chosen because the moving icon is what Ask animates well; logged in the task.",
+    "'moving' and 'spinning' alone do not ask for motion ('a moving van' and 'a spinning top' stay still pictures at the size picked); 'animated', 'animation', 'looping' and 'gif' do.",
+    "'a gif' makes an animated SVG; there is no GIF export to save it as a .gif from here.",
+    "The bouncing ball came out as a ring, not a solid ball: the model's drawing, not the route.",
+    "No mock covers the New window's size list (the user's call on 2026-10-22 replaced the front door mock's templates with Image or Video); the Icon rows follow the New Image sheet's list.",
+    "Held-out Ask eval not run again (about 2.4 hours): the change to Ask is routing only ('gif' asks for motion; motion asked of a blank icon draws a moving icon); the climb set's 12 animated cases all name 'icon' or 'svg' and route as before."
+  ]
+}

@@ -5,7 +5,7 @@
       "all"
     ]
   },
-  "seed": "File > New opens the New window at Next defaults with no switch changed (the user's call on 2026-10-22: New makes an Image or a Video and nothing else). It holds the prompt bar, the two choices Image and Video, and the picked choice's sizes, and nothing about opening, capturing, UI design or Recent. Image is picked on arrival, so New Image straight away (one click) opens a 1440 by 1024 blank picture in a window of its own while the New window closes; Shift Command N then makes a new layer in it, Photoshop's key now that Command N is File > New. A second New window: Video picked by pointer renames the primary button New Video (the step finds the button by those words), HD 720p clicked by pointer, and New Video opens a 1280 by 720 video in its own window, the first picture's window still standing. The File menu is read at the end: New and New from Clipboard first, then Open and Open Recent, then the capture rows.",
+  "seed": "File > New opens the New window at Next defaults with no switch changed (the user's call on 2026-10-22: New makes an Image or a Video and nothing else). It holds the prompt bar, the two choices Image and Video, and the picked choice's sizes, and nothing about opening, capturing, UI design or Recent. Image is picked on arrival, so New Image straight away (one click) opens a 1440 by 1024 blank picture in a window of its own while the New window closes; Shift Command N then makes a new layer in it, Photoshop's key now that Command N is File > New. A second New window: Video picked by pointer renames the primary button New Video (the step finds the button by those words), HD 720p clicked by pointer, and New Video opens a 1280 by 720 video in its own window, the first picture's window still standing. The File menu is read at the end: New and New from Clipboard first, then Open and Open Recent, then the capture rows. A third New window: Icon, one of the two icon rows at the end of the Image sizes, clicked by pointer, makes a 512 by 512 picture that opens in Icon.",
   "steps": [
     {
       "do": "appearance",
@@ -77,8 +77,37 @@
       "name": "front-door-4-video"
     },
     {
+      "do": "startFromFrontDoor",
+      "tile": "Image",
+      "first": [
+        "Icon"
+      ],
+      "press": "New Image",
+      "width": 1280,
+      "height": 900,
+      "card": "front-door-5-icon"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "describe",
+      "stage": "5-icon",
+      "note": "The Image sizes end with Icon and App Icon, as the New Image sheet's do; Icon clicked by pointer and New Image opened a 512 by 512 picture made as an icon, in Icon."
+    },
+    {
+      "do": "snapshot",
+      "name": "front-door-6-icon"
+    },
+    {
       "do": "menus",
-      "stage": "5-file-menu",
+      "stage": "6-file-menu",
       "menu": "File"
     }
   ]

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <clipPath id="clip-1">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <g>
+    <g clip-path="url(#clip-1)">
+      <path transform="translate(4 20)" d="M0 0 L16 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <g opacity="0">
+        <animate attributeName="opacity" dur="1200ms" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0 0 1 1;0 0 0.2 1;0 0 0.2 1;0 0 1 1;0 0 1 1" keyTimes="0;0.333;0.333;0.375;0.5;0.999;1" values="0;0;0;1;0;0;0"/>
+        <g transform="translate(5 17)">
+          <path d="M2 1 L0 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path transform="translate(12 0)" d="M0 1 L2 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="translate" dur="1200ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0.4 0 1 1;0 0 0.2 1" keyTimes="0;0.333;0.351;0.369;0.387;0.405;0.423;0.44;0.458;0.476;0.494;0.512;0.53;0.548;0.565;0.583;0.917;1" values="0 0;0 10;0 7.611;0 5.598;0 4.097;0 2.918;0 2.121;0 1.58;0 1.298;0 1.201;0 1.249;0 1.39;0 1.59;0 1.784;0 1.941;0 2;0 10;0 0"/>
+        <g transform="translate(12 6)">
+          <g>
+            <animateTransform attributeName="transform" type="scale" dur="1200ms" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0 0 1 1;0 0 0.2 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0.4 0 0.2 1;0 0 1 1;0 0 1 1" keyTimes="0;0.333;0.333;0.375;0.381;0.387;0.393;0.399;0.405;0.411;0.417;0.423;0.429;0.435;0.44;0.446;0.452;0.458;0.583;0.999;1" values="1 1;1 1;1 1;1.3 1.3;1.151 1.151;1.03 1.03;0.935 0.935;0.855 0.855;0.806 0.806;0.774 0.774;0.756 0.756;0.75 0.75;0.753 0.753;0.761 0.761;0.775 0.775;0.787 0.787;0.796 0.796;0.8 0.8;1 1;1 1;1 1"/>
+            <g transform="translate(-12 -6)">
+              <ellipse transform="translate(9 3)" cx="3" cy="3" rx="2" ry="2" fill="none" stroke="#1D1D1F" stroke-width="2"/>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

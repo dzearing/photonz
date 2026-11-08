@@ -47,9 +47,13 @@ public enum FrontDoorKind: String, CaseIterable, Sendable {
 
     /// The sizes offered, the same lists the New Image and New Video sheets
     /// offer, so the two ways in never disagree.
-    public var sizes: [FrontDoorSize] {
+    public var sizes: [FrontDoorSize] { sizes(withIcons: false) }
+
+    /// The sizes offered where the icon sizes are (`BlankCanvas.presets(withIcons:)`):
+    /// an image's list ends with Icon and App Icon, as the New Image sheet's does.
+    public func sizes(withIcons: Bool) -> [FrontDoorSize] {
         switch self {
-        case .image: BlankCanvas.presets.map { FrontDoorSize(id: $0.id, title: $0.title, size: $0.size) }
+        case .image: BlankCanvas.presets(withIcons: withIcons).map { FrontDoorSize(id: $0.id, title: $0.title, size: $0.size) }
         case .video: BlankVideo.presets.map { FrontDoorSize(id: $0.id, title: $0.title, size: $0.size) }
         }
     }

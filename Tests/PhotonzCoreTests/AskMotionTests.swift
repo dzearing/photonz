@@ -55,13 +55,27 @@ struct AskMotionTests {
 
     @Test("Words for an animated file or an animated icon take the icon route, and animating what is here does not")
     func route() {
-        for asked in ["make an animated SVG icon of a balloon popping", "an animated svg of a kite", "animate an icon of a star", "make a looping icon of a flag"] {
+        for asked in ["make an animated SVG icon of a balloon popping", "an animated svg of a kite", "animate an icon of a star", "make a looping icon of a flag",
+                      "a gif of a bouncing ball", "an animated gif of a bell"] {
             #expect(AskConversation.takesIconRoute(asked, brushes: true, web: false), "\(asked)")
             #expect(AskMotion.drawsMotion(asked), "\(asked)")
         }
         for asked in ["animate it", "make the icon bounce", "a kite icon", "draw a kite", "an icon of a motion sensor"] {
             #expect(!AskMotion.drawsMotion(asked), "\(asked)")
         }
+        #expect(AskTools.asksForMotion("a gif of a bouncing ball"))
+        // On a picture made as an icon with nothing on it, motion asked of it is
+        // a moving icon whatever the words call it; a still request is not
+        // turned into an icon by it.
+        #expect(!AskMotion.drawsMotion("an animated loading spinner"))
+        #expect(AskMotion.drawsMotion("an animated loading spinner", blankIcon: true))
+        #expect(AskConversation.takesIconRoute("an animated loading spinner", brushes: true, web: false, blankIcon: true))
+        #expect(!AskConversation.takesIconRoute("an animated loading spinner", brushes: true, web: false))
+        #expect(!AskConversation.takesIconRoute("a bell on a desk", brushes: false, web: false, blankIcon: true))
+        let onIcon = AskConversation(request: "an animated loading spinner",
+                                     documentRead: #"{"kind":"picture","canvas":{"width":512,"height":512},"layers":[]}"#,
+                                     blankIcon: true)
+        #expect(Set(onIcon.doingTools) == Set(AskMotion.tools), "a moving icon's tools")
         #expect(!AskConversation.takesIconRoute("animate the icon", brushes: false, web: false, holdsIcon: true))
     }
 

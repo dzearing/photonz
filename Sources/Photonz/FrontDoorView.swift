@@ -48,7 +48,7 @@ struct FrontDoorView: View {
         static let customID = "custom"
 
         init(kind: FrontDoorKind) {
-            let first = kind.sizes.first { $0.size == kind.defaultSize }
+            let first = kind.sizes(withIcons: FrontDoorView.withIcons).first { $0.size == kind.defaultSize }
             selection = first?.id ?? Self.customID
             width = Double(kind.defaultSize.width)
             height = Double(kind.defaultSize.height)
@@ -192,13 +192,14 @@ struct FrontDoorView: View {
             editorState.ask.needsSetup { describe() }
             return
         }
-        switch AskFromNothing.start(prompt, picked: image.size) {
+        switch AskFromNothing.start(prompt, picked: image.size, pickedIsIcon: pickedIsIcon) {
         case nil: return
         case .video?: editorState.ask.refusal = AskFromNothing.videoSentence
         case .needsSomethingOpen?: editorState.ask.refusal = AskFromNothing.nothingOpenSentence
-        case .picture(let size)?:
+        case .picture(let size, let icon)?:
             described = true
-            editorState.createBlankCanvas(size: size, asking: prompt.trimmingCharacters(in: .whitespacesAndNewlines))
+            editorState.createBlankCanvas(size: size, asking: prompt.trimmingCharacters(in: .whitespacesAndNewlines),
+                                          asIcon: icon && Experiments.shared.iconFramesEnabled)
         }
     }
 
@@ -273,7 +274,7 @@ struct FrontDoorView: View {
             VStack(alignment: .leading, spacing: 10) {
                 sectionLabel(FrontDoor.sizeHeader)
                 VStack(spacing: 0) {
-                    ForEach(kind.sizes) { preset in
+                    ForEach(kind.sizes(withIcons: Self.withIcons)) { preset in
                         sizeRow(id: preset.id, title: preset.title,
                                 detail: FrontDoor.dimensions(preset.size)) {
                             choice.wrappedValue.width = Double(preset.size.width)
@@ -381,6 +382,15 @@ struct FrontDoorView: View {
         }
     }
 
+    /// Whether the Image size picked is one of the icon rows, which makes the
+    /// picture as an icon, as the New Image sheet's rows do.
+    private var pickedIsIcon: Bool {
+        Self.withIcons && BlankCanvas.makesAnIcon(presetID: image.selection)
+    }
+
+    /// Whether the size lists offer the icon sizes (`next-icon-frames`).
+    static var withIcons: Bool { Experiments.shared.iconFramesEnabled }
+
     private var canCreate: Bool {
         guard isAvailable(kind), kind.isValid(choice.wrappedValue.size) else { return false }
         return !kind.hasLength || BlankVideo.isValidLength(seconds: seconds)
@@ -393,7 +403,7 @@ struct FrontDoorView: View {
         guard canCreate else { return }
         let size = choice.wrappedValue.size
         switch kind {
-        case .image: editorState.createBlankCanvas(size: size)
+        case .image: editorState.createBlankCanvas(size: size, asIcon: pickedIsIcon)
         case .video: editorState.createBlankVideo(size: size, lengthMS: BlankVideo.lengthMS(seconds: seconds))
         }
     }

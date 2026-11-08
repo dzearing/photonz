@@ -264,8 +264,8 @@ final class AskSession {
             case .needsSomethingOpen?:
                 refusal = AskFromNothing.nothingOpenSentence
                 return
-            case .picture(let size)?:
-                editor.newBlankCanvas(size: size)
+            case .picture(let size, let icon)?:
+                editor.newBlankCanvas(size: size, asIcon: icon && Experiments.shared.iconFramesEnabled)
                 guard editor.document != nil else { return }
             }
         }
@@ -1032,12 +1032,17 @@ final class AskSession {
         // something is happening to it (`AskIcon.designAsk`).
         var iconDesign: String?
         var iconBreak: AskIconBreak.Answer?
-        if AskMotion.drawsMotion(words), AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil, holdsIcon: AskIcon.holdsIcon(Self.text(of: read))),
+        // A picture made as an icon with nothing on it yet: something moving
+        // asked of it is a moving icon, whatever the words call it.
+        let blankIcon = web == nil && editor.document.map { $0.isIconCanvas && $0.layers.count <= 1 } == true
+        let route = AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil,
+                                                   holdsIcon: AskIcon.holdsIcon(Self.text(of: read)), blankIcon: blankIcon)
+        if AskMotion.drawsMotion(words, blankIcon: blankIcon), route,
            !AskLocalModel.answersAreScripted {
             let answer = try? await AskLocalModel.chat(AskMotion.designBody(model: model, request: words))
             iconDesign = (answer?["message"]?["content"]?.stringValue).flatMap(AskMotion.design(fromAnswer:))
             note("icon: motion design: \(iconDesign ?? "none")")
-        } else if !AskMotion.drawsMotion(words), AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil, holdsIcon: AskIcon.holdsIcon(Self.text(of: read))),
+        } else if !AskMotion.drawsMotion(words, blankIcon: blankIcon), route,
            !AskLocalModel.answersAreScripted {
             let broken = try? await AskLocalModel.chat(AskIconBreak.questionBody(model: model, request: words))
             iconBreak = (broken?["message"]?["content"]?.stringValue).flatMap(AskIconBreak.answer(from:))
@@ -1057,7 +1062,7 @@ final class AskSession {
                                brushes: brushes,
                                memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1,
                                window: AskLocalModel.window, web: web?.page, lookedUp: lookedUp, iconDesign: iconDesign,
-                               iconBreak: iconBreak)
+                               iconBreak: iconBreak, blankIcon: blankIcon)
     }
 
     /// The longest side of the canvas picture the planning model is shown:

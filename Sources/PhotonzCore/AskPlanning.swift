@@ -59,7 +59,7 @@ public enum AskTools {
     }
     private static let motionWords: Set<String> = [
         "animate", "animates", "animated", "animating", "animation", "animations",
-        "keyframe", "keyframes", "motion", "looping",
+        "keyframe", "keyframes", "motion", "looping", "gif", "gifs",
     ]
 
     /// Whether the words of a request are about motion.
@@ -541,7 +541,8 @@ public struct AskConversation: Sendable {
                 titles: String = "", paints: Bool = false, brushes: Bool = false,
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
                 window: Int = AskConversation.contextWindow, web: AskWebPage? = nil,
-                lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil, iconBreak: AskIconBreak.Answer? = nil) {
+                lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil, iconBreak: AskIconBreak.Answer? = nil,
+                blankIcon: Bool = false) {
         self.request = request
         self.placeable = Self.placeable(in: library)
         self.web = web
@@ -549,10 +550,10 @@ public struct AskConversation: Sendable {
         self.window = window
         let painting = brushes && AgentPictureKind.asked(in: request) == .paint
         let holdsIcon = web == nil && AskIcon.holdsIcon(documentRead)
-        let icon = Self.takesIconRoute(request, brushes: brushes, web: web != nil, holdsIcon: holdsIcon)
+        let icon = Self.takesIconRoute(request, brushes: brushes, web: web != nil, holdsIcon: holdsIcon, blankIcon: blankIcon)
         self.icon = icon
         self.holdsIcon = holdsIcon
-        let drawsMotion = icon && AskMotion.drawsMotion(request)
+        let drawsMotion = icon && AskMotion.drawsMotion(request, blankIcon: blankIcon)
         self.drawsMotion = drawsMotion
         // A drawing with its hidden pieces all showing is no still to look at.
         landsAsDrawn = icon && (iconDesign != nil || iconBreak != nil || drawsMotion)
@@ -608,9 +609,12 @@ public struct AskConversation: Sendable {
     }
 
     /// Whether `request` takes the icon route (`AskIcon`): the words for an
-    /// icon, unless it is a painting or a web page.
-    public static func takesIconRoute(_ request: String, brushes: Bool, web: Bool, holdsIcon: Bool = false) -> Bool {
-        !web && !(brushes && AgentPictureKind.asked(in: request) == .paint) && (AskIcon.asked(in: request) || AskMotion.drawsMotion(request))
+    /// icon, or for motion on a blank icon (`AskMotion.drawsMotion`), unless it
+    /// is a painting or a web page.
+    public static func takesIconRoute(_ request: String, brushes: Bool, web: Bool, holdsIcon: Bool = false,
+                                      blankIcon: Bool = false) -> Bool {
+        !web && !(brushes && AgentPictureKind.asked(in: request) == .paint)
+            && (AskIcon.asked(in: request) || AskMotion.drawsMotion(request, blankIcon: blankIcon))
             && !(holdsIcon && AskIcon.meansTheOneHere(request))
     }
 

@@ -15,17 +15,28 @@ import Foundation
 public enum AskMotion {
 
     /// The words for a file that moves, which has no other word for an icon in it.
-    static let fileWords: Set<String> = ["svg", "svgs"]
+    static let fileWords: Set<String> = ["svg", "svgs", "gif", "gifs"]
+    /// A GIF is a picture that moves: the word asks for motion on its own.
+    static let gifWords: Set<String> = ["gif", "gifs"]
     /// The words that ask for something drawn to move. Narrower than what
     /// reaches the key tools: "a motion sensor icon" is a still of a sensor.
-    static let drawingWords: Set<String> = ["animate", "animated", "animating", "animation", "looping"]
+    static let drawingWords: Set<String> = ["animate", "animated", "animating", "animation", "animations", "looping"]
+
+    /// Whether `request` asks for what is drawn to move: "animated", "a
+    /// looping", "a gif of". Whatever it is of.
+    public static func asksToMove(_ request: String) -> Bool {
+        !drawingWords.union(gifWords).isDisjoint(with: AgentDrawingWords.words(request))
+    }
 
     /// Whether `request` asks for a moving icon to be drawn: a request about
-    /// motion that names an icon or an SVG. "Animate the icon" is about the one
-    /// here, which `AskConversation.takesIconRoute` settles.
-    public static func drawsMotion(_ request: String) -> Bool {
+    /// motion that names an icon, an SVG or a GIF, or any request about motion
+    /// on a `blankIcon`, a picture made as an icon with nothing drawn on it yet
+    /// (the Icon size, or the New window asked for something animated). "Animate
+    /// the icon" is about the one here, which `AskConversation.takesIconRoute`
+    /// settles.
+    public static func drawsMotion(_ request: String, blankIcon: Bool = false) -> Bool {
         let words = AgentDrawingWords.words(request)
-        return !drawingWords.isDisjoint(with: words) && (AskIcon.asked(in: request) || !fileWords.isDisjoint(with: words))
+        return asksToMove(request) && (blankIcon || AskIcon.asked(in: request) || !fileWords.isDisjoint(with: words))
             && !AskIcon.meansTheOneHere(request)
     }
 
