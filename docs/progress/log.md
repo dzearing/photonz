@@ -22775,3 +22775,12 @@ units.
 - The New window's Image sizes end with Icon and App Icon, like the New Image sheet.
 - Verified with the user's words plus a spinner, a heart and a bouncing ball: each makes a 512 icon that plays and copies as a looping SVG. New walk `ask-animates-from-the-new-window-walk`; `front-door-walk` picks the Icon row.
 - Open: held-out Ask eval not rerun (routing-only change; no climb case moved).
+
+## 2026-11-08 — A round thing bursts open
+
+- A round line outline bursting now opens instead of tearing (`AskIconBreak.opened`, chosen by `roundness`, the outline alone): a gap of 22 per cent of it, the stretch that went flying off in three pieces along the curve, and any part under the gap dropped. A bite out of anything round read as eaten (cracked egg, bitten cookie).
+- Torn on the grid: the line lands at 1.5 at the heaviest (`heaviestTornLine`; a bubble had landed at 2 and every judge called it heavy), the tear's teeth are searched among whole points to keep off straight up and straight across legs (`Placing.notched`), marks are short whole runs of 1.4 to 2 units, and the model is told to draw no drops or drips.
+- Eval, three readings: bursting bubble 36 → 87.2, 87.2, 77.3 (untorn 71.3; bar met). Heart 86.5, egg 89.6, one reading each after the prompt change. Balloon 66.6, 68.7, 69.3 and 68.7: bar of 85 NOT met.
+- Found: the balloon fell from 84 to 89 on 2026-11-06 to 55 to 69 with the whole-units placement, on the same model drawing. Re-judged today the old picture scores 84, so judge noise is about 7 either way. Most readings now get a model balloon with a tiny open knot, read as a tulip or a plug.
+- Lab: the tear tool can be run on the model's own saved drawings (the eval's `ask-walk/log.json` trace carries every SVG it drew) and judged on a picture, about a minute a variant. Tried and dropped: a deeper bite (clock hands), a middle tooth kept inside the line (wedge), five marks (no better, bunched like fingers), slanted three marks (clumped).
+- Open: the balloon. Next: what the model draws whole, the knot above all; the tear is near the old look.

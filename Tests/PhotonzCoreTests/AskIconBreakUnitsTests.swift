@@ -39,6 +39,11 @@ struct AskIconBreakUnitsTests {
         """)
     ]
 
+    /// The drawings whose outline tears: a round line opens instead
+    /// (`AskIconBreakOpensTests`).
+    static let round: Set<String> = ["a circle with a small part inside", "a circle with a part below it", "small on its grid"]
+    static let tearing = drawings.filter { !round.contains($0.name) }
+
     static func drawing(_ name: String) -> String {
         drawings.first { $0.name == name }?.svg ?? ""
     }
@@ -129,7 +134,7 @@ struct AskIconBreakUnitsTests {
         #expect(weights.count == 1, "\(drawing.name): \(weights)")
     }
 
-    @Test("Three marks fan out, turning one way, each one a real stroke", arguments: drawings)
+    @Test("The marks fan out, turning one way, each one a real stroke", arguments: tearing)
     func theMarksFan(_ drawing: (name: String, svg: String)) throws {
         let marks = Self.marks(try Self.landed(drawing.svg).frame)
         #expect(marks.count == AskIconBreak.markCount, "\(drawing.name)")
@@ -142,7 +147,7 @@ struct AskIconBreakUnitsTests {
         }
     }
 
-    @Test("No mark touches what is left of the outline", arguments: drawings)
+    @Test("No mark touches what is left of the outline", arguments: tearing)
     func theMarksStandClear(_ drawing: (name: String, svg: String)) throws {
         let frame = try Self.landed(drawing.svg).frame
         let layer = try #require(frame.children.filter { $0.path?.isClosed == true }
@@ -171,7 +176,7 @@ struct AskIconBreakUnitsTests {
         #expect(body.frame.height / Self.unit >= 14 - 1e-6, "\(body.frame.height / Self.unit)")
     }
 
-    @Test("The tear still goes in and comes back: rounding has not flattened it", arguments: drawings)
+    @Test("The tear still goes in and comes back: rounding has not flattened it", arguments: tearing)
     func theTeethSurvive(_ drawing: (name: String, svg: String)) throws {
         let frame = try Self.landed(drawing.svg).frame
         let body = try #require(frame.children.filter { $0.path?.isClosed == true }
@@ -182,8 +187,13 @@ struct AskIconBreakUnitsTests {
         let (from, to) = (points[0], points[4])
         let across = CGPoint(x: to.x - from.x, y: to.y - from.y)
         let length = hypot(across.x, across.y)
+        // How far in from the line across the tear, toward the middle of the
+        // outline: the middle tooth may stand out past that line.
+        let middle = CGPoint(x: body.flattened().map(\.x).reduce(0, +) / CGFloat(body.flattened().count),
+                             y: body.flattened().map(\.y).reduce(0, +) / CGFloat(body.flattened().count))
+        let inward: CGFloat = ((middle.x - from.x) * across.y - (middle.y - from.y) * across.x) < 0 ? -1 : 1
         func depth(_ point: CGPoint) -> CGFloat {
-            abs((point.x - from.x) * across.y - (point.y - from.y) * across.x) / length / Self.unit
+            inward * ((point.x - from.x) * across.y - (point.y - from.y) * across.x) / length / Self.unit
         }
         #expect(depth(points[1]) >= 1, "\(drawing.name)")
         #expect(depth(points[3]) >= 1, "\(drawing.name)")
@@ -192,7 +202,7 @@ struct AskIconBreakUnitsTests {
         #expect(depth(points[2]) <= min(depth(points[1]), depth(points[3])) - 0.9, "\(drawing.name): \(points)")
     }
 
-    @Test("The tear has a real corner in it: it never goes flat", arguments: drawings)
+    @Test("The tear has a real corner in it: it never goes flat", arguments: tearing)
     func aTearHasCorners(_ drawing: (name: String, svg: String)) throws {
         let frame = try Self.landed(drawing.svg).frame
         let body = try #require(frame.children.filter { $0.path?.isClosed == true }
@@ -218,7 +228,7 @@ struct AskIconBreakUnitsTests {
         }
     }
 
-    @Test("No stub of curve is left at either end of the tear", arguments: drawings)
+    @Test("No stub of curve is left at either end of the tear", arguments: tearing)
     func noStubs(_ drawing: (name: String, svg: String)) throws {
         let frame = try Self.landed(drawing.svg).frame
         let body = try #require(frame.children.filter { $0.path?.isClosed == true }
@@ -273,7 +283,8 @@ struct AskIconBreakUnitsTests {
         }
         // Brought down to fit its marks, its line comes down with it.
         #expect(try weights(Self.drawing("hangs below the live area")) == [1.5])
-        #expect(try weights(Self.drawing("a circle with a small part inside")) == [2])
+        // Brought up to fill the live area, it lands no heavier than 1.5.
+        #expect(try weights(Self.drawing("a circle with a small part inside")) == [AskIconBreak.heaviestTornLine])
         let light = Self.drawing("a circle with a small part inside").replacingOccurrences(of: "stroke-width=\"2\"", with: "stroke-width=\"1\"")
         #expect(try weights(light) == [1])
     }

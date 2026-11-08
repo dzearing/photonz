@@ -420,8 +420,16 @@ Either way:
   from a general list ("burst" or "cracked"), and what the object is, and draws
   it whole, the way it draws every icon well; a vector tool then breaks the
   outline it drew. A burst tears it: the biggest closed shape loses a stretch at
-  its upper right, two teeth cross the gap, three marks fly out, and any part
-  lying in the torn stretch goes with it. A crack runs through it the short way
+  its upper right, three teeth cross the gap, three short marks fly out, and any
+  part lying in the torn stretch goes with it. A round line bursts open instead:
+  a bite out of anything round reads as eaten (a torn bubble was named a
+  cracked egg or a bitten cookie), so a circle loses a short stretch, its line
+  is left open, and that stretch flies off in three pieces along the curve
+  (bubble 78 against 71 drawn by the model alone, 2026-11-08). Torn on the grid
+  a line lands at 1.5 at the heaviest, the teeth keep off straight up and
+  straight across legs (rounded on their own they made a staircase), and the
+  model is told to draw no drops or drips (a drip under a bubble made every
+  judge call it a balloon). A crack runs through it the short way
   (down a wide thing, across a tall one) as a jagged line in a line drawing, or
   as a jagged gap splitting a solid one into two halves a unit apart. Either
   way lines thin in proportion and a small closed outline lands solid. One tear

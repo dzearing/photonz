@@ -117,7 +117,7 @@ struct AskIconBreakTests {
         #expect(anchors.count <= 12)
     }
 
-    @Test("Three short marks fly out from the tear, clear of the object and of each other")
+    @Test("Short marks fly out from the tear, clear of the object and of each other")
     func marks() throws {
         let broken = try #require(AskIconBreak.applied(to: Self.offGrid(Self.kite)))
         let parts = Self.parts(broken)
@@ -141,14 +141,14 @@ struct AskIconBreakTests {
     func thinsItsLines() throws {
         let svg = """
             <svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round">\
-            <circle id="drum" cx="12" cy="9" r="6"/><path id="cord" stroke-width="2" d="M12 15 V21"/></svg>
+            <ellipse id="drum" cx="12" cy="9" rx="6" ry="5"/><path id="cord" stroke-width="2" d="M12 14 V21"/></svg>
             """
         let parts = Self.parts(AskIconBreak.applied(to: Self.offGrid(svg)))
         #expect(parts.count == 2 + AskIconBreak.markCount)
         let weights = Set(parts.map(\.strokeWidth))
         #expect(weights.count == 1)
         let weight = try #require(weights.first)
-        #expect(abs(weight - 12 * AskIconBreak.lineShare) < 0.02)
+        #expect(abs(weight - 11 * AskIconBreak.lineShare) < 0.02)
     }
 
     @Test("A small closed outline clots at this weight, so it lands solid in the same ink")

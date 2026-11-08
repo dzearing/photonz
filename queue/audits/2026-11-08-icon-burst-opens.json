@@ -1,0 +1,28 @@
+{
+  "feature": "A round thing bursts open instead of looking bitten",
+  "epic": "icon-vector",
+  "summary": "Ask used to bite a jagged chunk out of anything bursting, so a soap bubble came out as a cracked egg or a bitten cookie. Now a round outline opens: a short gap in its line, and the missing stretch flies off in three pieces along the curve. The bursting bubble scored 87, 87 and 77 against 71 for the model drawing its own burst (it was 36). Torn icons on the grid also land at a 1.5 line, and the tear's teeth no longer come out as a staircase of right angles.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask with the built-in model on a blank picture. Measured with Scripts/ask-eval.sh on icon-soap-bubble-bursting, icon-balloon-popping, icon-broken-heart and icon-cracked-egg-filled.",
+  "switched": {},
+  "try": [
+    { "do": "Before: the bursting bubble as it landed yesterday, bitten at its upper right.", "shot": "2026-11-08-icon-burst-opens-0-bubble-before.png", "shotNote": "The eval's judging sheet, drawn from the app's own render of the icon, not a window capture." },
+    { "do": "Open Ask on a blank picture and type: an icon of a soap bubble bursting.", "shot": "2026-11-08-icon-burst-opens-1-bubble.png", "shotNote": "The eval's judging sheet, drawn from the app's own render of the icon, not a window capture." },
+    { "do": "Ask again with: an icon of a balloon popping. It still tears, with three short marks.", "shot": "2026-11-08-icon-burst-opens-5-window-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare the balloon's judging sheet with the bubble's.", "shot": "2026-11-08-icon-burst-opens-2-balloon.png", "shotNote": "The eval's judging sheet, drawn from the app's own render of the icon, not a window capture." },
+    { "do": "Ask for a broken heart icon and a cracked egg icon, filled: both still crack.", "shot": "2026-11-08-icon-burst-opens-3-heart.png", "shotNote": "The eval's judging sheet, drawn from the app's own render of the icon, not a window capture." },
+    { "do": "Ask for something round bursting of your own choosing, a tyre or a ball in a line, and check it opens rather than bites." }
+  ],
+  "evaluate": [
+    "Does the bubble read as bursting at 16 pixels, or does it look like a loading spinner?",
+    "Should the pieces fly further out from the gap, or sit closer as they are?",
+    "Is a 1.5 line right for torn icons, or would you rather they kept the 2 most icon sets use?",
+    "Would you want a round thing drawn solid to open the same way, or keep its bite?"
+  ],
+  "rough": [
+    "The balloon is still under its bar: 66.6, 68.7, 69.3 and 68.7 against 85. The tear itself now matches yesterday's 84 to 89 look more closely, but in most readings the model drew a balloon whose knot is a tiny open V, which lands as a blob, and the judges called it a tulip or a plug. That is the model's drawing, not the tear; the task stays open for it.",
+    "Judges still name the knot's spiky corners and an off-centre balance on the balloon: the whole drawing is centred with its marks, so the body sits low and left.",
+    "Opening is chosen by shape: a line drawing whose outline is within 6 per cent of a circle opens, anything else tears. An oval or a solid disc still gets the bite.",
+    "Five marks in a fan were tried on the balloon and scored no better (66.6 to 69.3), so it keeps three.",
+    "Pictures are the eval's judging sheets except the window capture, which shows the balloon from the whole-units walk."
+  ]
+}
