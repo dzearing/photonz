@@ -16266,3 +16266,8 @@
 {"t":"2026-11-07T22:02:42.207Z","ev":"task_note","id":"the-size-pill-says-the-key-and-the-time-while-a"}
 {"t":"2026-11-07T22:02:42.284Z","ev":"task_note","id":"the-size-pill-says-the-key-and-the-time-while-a"}
 {"t":"2026-11-07T22:03:08.147Z","ev":"task_done","id":"the-size-pill-says-the-key-and-the-time-while-a","from":"in_progress","note":"Dragging, resizing or turning a layer with keys now shows the mock's size pill led by a diamond and the playhead time ('◆ 0:01.00 · 160 × 160'), on a picture and a video; layers with no keys read as before. Commit 9e83d1a84: DragReadout.keyed/sizeTag (core, tested), CanvasDragReadout. Verified by a-keyed-drag-says-the-key-and-the-time-walk and a-keyed-drag-on-a-video-says-the-key-and-the-time-walk at Next defaults (pill photographed mid drag), 13 neighbouring walks green, Scripts/test.sh exit 0. Audit: queue/audits/2026-11-07-keyed-drag-pill.json."}
+{"t":"2026-11-07T22:03:40.149Z","ev":"task_started","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","title":"A broken icon reads as what breaks it: a crack through a heart, a split egg, a bubble in pieces","priority":"p1-high"}
+{"t":"2026-11-07T22:18:29.902Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-07T23:47:41.465Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-08T00:35:48.321Z","ev":"task_created","id":"asking-the-new-window-for-an-animated-icon-makes","priority":"p1-high","title":"Asking the New window for an animated icon makes one, instead of saying Ask can't make videos"}
+{"t":"2026-11-08T00:35:48.858Z","ev":"task_resequenced","id":"asking-the-new-window-for-an-animated-icon-makes","from":88.75,"to":1e-9}
