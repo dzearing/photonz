@@ -1031,7 +1031,7 @@ final class AskSession {
         // any other icon is designed in words before it is drawn when
         // something is happening to it (`AskIcon.designAsk`).
         var iconDesign: String?
-        var iconBreak: String?
+        var iconBreak: AskIconBreak.Answer?
         if AskMotion.drawsMotion(words), AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil, holdsIcon: AskIcon.holdsIcon(Self.text(of: read))),
            !AskLocalModel.answersAreScripted {
             let answer = try? await AskLocalModel.chat(AskMotion.designBody(model: model, request: words))
@@ -1040,8 +1040,8 @@ final class AskSession {
         } else if !AskMotion.drawsMotion(words), AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil, holdsIcon: AskIcon.holdsIcon(Self.text(of: read))),
            !AskLocalModel.answersAreScripted {
             let broken = try? await AskLocalModel.chat(AskIconBreak.questionBody(model: model, request: words))
-            iconBreak = (broken?["message"]?["content"]?.stringValue).flatMap(AskIconBreak.object(fromAnswer:))
-            note("icon: breaks: \(iconBreak ?? "no")")
+            iconBreak = (broken?["message"]?["content"]?.stringValue).flatMap(AskIconBreak.answer(from:))
+            note("icon: breaks: \(iconBreak.map { "\($0.kind.word): \($0.object)" } ?? "no")")
             if iconBreak == nil {
                 let answer = try? await AskLocalModel.chat(AskIcon.designBody(model: model, request: words))
                 iconDesign = (answer?["message"]?["content"]?.stringValue).flatMap(AskIcon.design(fromAnswer:))

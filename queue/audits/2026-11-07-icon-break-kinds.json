@@ -1,0 +1,26 @@
+{
+  "feature": "A broken icon breaks the way it was asked to",
+  "epic": "icon-vector",
+  "summary": "Ask used to bite a chunk out of the upper right of anything breaking, so a broken heart looked bitten and a cracked egg looked eaten. Now the model says how the thing breaks, burst or cracked, and a crack runs right through it: a jagged line through a line drawing, a jagged gap splitting a solid one in two. A burst still tears, and anything that sat in the torn stretch goes with it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask with the built-in model. Measured with Scripts/ask-eval.sh on the icon-broken-heart, icon-cracked-egg-filled, icon-soap-bubble-bursting and icon-balloon-popping cases.",
+  "switched": {},
+  "try": [
+    { "do": "Before: the four breaking icons as they landed this morning, every one torn at the upper right.", "shot": "2026-11-07-icon-break-kinds-0-before.png" },
+    { "do": "Open Ask on a blank picture and type: a broken heart icon.", "shot": "2026-11-07-icon-break-kinds-1-heart.png", "shotNote": "The eval's judging sheet, drawn from the app's own render of the icon, not a window capture." },
+    { "do": "Ask again with: a cracked egg icon, filled.", "shot": "2026-11-07-icon-break-kinds-2-egg.png", "shotNote": "The eval's judging sheet, drawn from the app's own render of the icon, not a window capture." },
+    { "do": "Ask again with: an icon of a soap bubble bursting. It still tears.", "shot": "2026-11-07-icon-break-kinds-3-bubble.png", "shotNote": "The eval's judging sheet, drawn from the app's own render of the icon, not a window capture." },
+    { "do": "Ask for something cracked or broken of your own choosing, in a line and filled, and check the crack runs the short way through it." }
+  ],
+  "evaluate": [
+    "Does the heart read as broken at 16 pixels, the way Lucide's does?",
+    "Does the egg split by a jagged gap read as cracked, or would you rather see a crack line on a whole egg?",
+    "Is a crack running all the way through right, or should a line drawing's crack stop part way like a hairline?",
+    "For a bursting bubble, is a tear at all the right idea, or should a round thing burst some other way?"
+  ],
+  "rough": [
+    "The soap bubble still tears and still scores low (33 to 36 against 71 for the model drawing its own burst, one reading on 2026-11-05). Four other looks were tried and none beat the tear on the same drawing; the task stays open for it.",
+    "The balloon read 55 and 66 this session on the unchanged tear, under its bar of 85; it read 67 to 84 the day before. The model's balloon drawing varies more than the tear does; the task stays open for it.",
+    "A request to shatter something is drawn as a crack. A ring of pieces was tried and read as a viewfinder, a sun or a light bulb.",
+    "No window captures: the eval drives Ask through walks that take no pictures of the window, so the pictures are the eval's judging sheets."
+  ]
+}

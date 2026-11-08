@@ -51,15 +51,78 @@ public enum AskIconBreak {
     /// units it may step out to find that.
     static let markClearance: CGFloat = 0.5
     static let mostSteps = 4
+    /// A crack: how many straight runs it zig zags in, and how far each
+    /// corner stands off its middle line, as a share of the object's size. It
+    /// runs from edge to edge: stopped part way, six of six judges read a
+    /// heart as scratched, not broken (the eval, 2026-11-07).
+    static let crackRuns = 4
+    static let crackJag: CGFloat = 0.09
+    /// How far each half of a split solid moves off the crack.
+    static let crackGap: CGFloat = 0.06
     /// Where it tears: the upper right, the way a mark is read in an icon,
     /// away from whatever an object hangs or stands on.
     static let tearAngle: CGFloat = -.pi / 4
+
+    /// How a thing breaks, which the model says and the tool draws. Each is a
+    /// look, not a subject: a tear suits something with a thin skin, and made
+    /// a broken heart look bitten and a soap bubble a cracked egg (the eval,
+    /// 2026-11-05), so the model picks the look from this list.
+    public enum Kind: String, CaseIterable, Hashable, Sendable {
+        /// It pops, bursts or tears open: a bite torn out of one edge, marks
+        /// flying from it.
+        case tear
+        /// A jagged crack through it, the short way: a line across a drawing
+        /// in a line, a gap splitting a solid one in two.
+        case crack
+
+        /// The word the model answers with.
+        public var word: String {
+            switch self {
+            case .tear: "burst"
+            case .crack: "cracked"
+            }
+        }
+
+        /// What it looks like, as the question says it.
+        var looks: String {
+            switch self {
+            case .tear: "it pops, bursts or tears open"
+            case .crack: "a crack runs through it, it is broken in two, or it shatters"
+            }
+        }
+
+        /// The kind a word of the model's means, its own word or one near it.
+        /// Breaking into pieces is drawn as a crack: a ring of pieces read as a
+        /// viewfinder, a sun or a light bulb, never better than a tear or a
+        /// crack (the eval, 2026-11-07).
+        init?(said: String) {
+            let word = said.lowercased().trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+            switch word {
+            case "burst", "bursts", "popped", "pops", "torn", "tear", "tears", "torn open": self = .tear
+            case "cracked", "crack", "cracks", "broken", "split", "shattered", "shatters", "pieces", "in pieces": self = .crack
+            default: return nil
+            }
+        }
+    }
+
+    /// What the model said: how it breaks and the object to draw whole.
+    public struct Answer: Hashable, Sendable {
+        public var kind: Kind
+        public var object: String
+
+        public init(kind: Kind, object: String) {
+            self.kind = kind
+            self.object = object
+        }
+    }
 
     /// The question, asked before anything is drawn. Its example matters:
     /// without one the model answered no to a balloon popping.
     static let question = """
         An icon was asked for. Is the one object in it bursting, popping, breaking, tearing, cracking, shattering or broken?
-        If it is, reply with only the object, whole and at rest, in a few words. For example: a kite
+        If it is, reply with how it breaks, a colon, then only the object, whole and at rest, in a few words. How it breaks is one of:
+        \(Kind.allCases.map { "\($0.word): \($0.looks)" }.joined(separator: "\n"))
+        For example: burst: a kite
         If the object is whole, or something else is happening to it, reply only: no.
 
         The request:
@@ -72,13 +135,25 @@ public enum AskIconBreak {
          "options": ["temperature": 0, "num_predict": .number(Double(mostAnswerTokens))]]
     }
 
+    /// How it breaks and the object to draw whole, or nil when nothing is
+    /// breaking. An answer that names no way to break tears, as every break
+    /// did before there was a choice.
+    public static func answer(from reply: String) -> Answer? {
+        let words = AskConversation.withoutThinking(reply).trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: .punctuationCharacters).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !words.isEmpty, words.lowercased() != "no", !words.contains("<"), Kind(said: words) == nil else { return nil }
+        var kind = Kind.tear, object = words
+        if let cut = words.range(of: ":") ?? words.range(of: " - "), let said = Kind(said: String(words[..<cut.lowerBound])) {
+            kind = said
+            object = String(words[cut.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+        }
+        guard !object.isEmpty, object.split(separator: " ").count <= 8 else { return nil }
+        return Answer(kind: kind, object: object)
+    }
+
     /// The object to draw whole, or nil when nothing is breaking.
     public static func object(fromAnswer answer: String) -> String? {
-        let words = AskConversation.withoutThinking(answer).trimmingCharacters(in: .whitespacesAndNewlines)
-            .trimmingCharacters(in: .punctuationCharacters)
-        guard !words.isEmpty, words.lowercased() != "no", !words.contains("<"),
-              words.split(separator: " ").count <= 8 else { return nil }
-        return words
+        Self.answer(from: answer)?.object
     }
 
     /// What the model is asked to draw in place of the request.
@@ -97,17 +172,17 @@ public enum AskIconBreak {
         in Z, with an id, and no transform. Call add_drawing once more with the whole svg drawn again.
         """
 
-    /// `svg` with its biggest outline torn at the upper right and marks flying
-    /// from the tear, or nil when it has no closed outline to tear.
+    /// `svg` with its biggest outline broken as `kind` says (`Kind`), or nil
+    /// when it has no closed outline to break.
     ///
-    /// On the 24 grid the tear is worked out where it will land, on whole units
-    /// (`Placing`), so an icon picture writes it in whole numbers and nothing
-    /// after this has to round what was cut.
-    public static func applied(to svg: String) -> String? {
+    /// On the 24 grid the break is worked out where it will land, on whole
+    /// units (`Placing`), so an icon picture writes it in whole numbers and
+    /// nothing after this has to round what was cut.
+    public static func applied(to svg: String, kind: Kind = .tear) -> String? {
         guard !svg.contains("transform"), case .success(let art) = SVGArtwork.parse(svg) else { return nil }
         let grid = IconKeylines.artboardSide
         let drawn = art.parts.filter { $0.name?.lowercased() != "tile" }
-        guard let asDrawn = torn(svg, art, drawn, Placing()) else { return nil }
+        guard let asDrawn = broken(svg, art, drawn, Placing(), kind) else { return nil }
         guard drawn.count == art.parts.count, art.viewBox?.size == CGSize(width: grid, height: grid),
               let reached = points(of: asDrawn) else { return asDrawn }
 
@@ -132,7 +207,7 @@ public enum AskIconBreak {
                 for down in stepsToEven {
                     var placing = Placing(drawing: reached, body: box, scale: units / long, side: grid)
                     placing.markSteps = CGPoint(x: across, y: down)
-                    guard let fitted = torn(svg, art, drawn, placing), let landed = points(of: fitted) else { return asDrawn }
+                    guard let fitted = broken(svg, art, drawn, placing, kind), let landed = points(of: fitted) else { return asDrawn }
                     placed = fitted
                     guard max(landed.width, landed.height) <= live + 1e-3 else { continue }
                     let odd = oddSpans(of: fitted)
@@ -165,37 +240,90 @@ public enum AskIconBreak {
         return box.isNull ? nil : box
     }
 
-    /// `svg` torn as `placing` says.
-    private static func torn(_ svg: String, _ art: SVGArtwork, _ drawn: [SVGArtwork.Part], _ placing: Placing) -> String? {
+    /// `svg` broken as `kind` and `placing` say.
+    private static func broken(_ svg: String, _ art: SVGArtwork, _ drawn: [SVGArtwork.Part], _ placing: Placing,
+                               _ asked: Kind) -> String? {
         guard let body = biggest(of: drawn), let name = body.name,
               let drawnRuns = runs(of: body.shape), let tag = tag(named: name, in: svg) else { return nil }
         let box = SVGArtwork.shapeBounds(body.shape)
         let size = (box.width + box.height) / 2 * placing.scale
         let centre = placing.placed(CGPoint(x: box.midX, y: box.midY))
         let runs = drawnRuns.map(placing.placed)
-        guard size > 0, let outline = torn(runs, centre: centre, size: size, placing: placing) else { return nil }
+        guard size > 0 else { return nil }
 
         let weighted = art.parts.first { $0.stroke != nil && $0.strokeWidth > 0 }
         guard let ink = weighted?.stroke ?? drawn.last(where: { $0.fill != nil })?.fill else { return nil }
         let drawnWeight = weighted.map { $0.strokeWidth * placing.scale }
         let weight = placing.line(drawnWeight.map { min($0, size * lineShare) } ?? size * markWeight)
         let said = placing.number(weight / placing.scale)
-        let clearance = (body.stroke == nil ? weight / 2 : weight) + markClearance
-        let marks = (0..<markCount).map { index -> String in
-            let turn = (CGFloat(index) - CGFloat(markCount - 1) / 2) * markSpread
-            let angle = tearAngle + turn
-            let way = CGPoint(x: cos(angle), y: sin(angle))
-            let edge = reach(of: runs, from: centre, along: way)
-            let run = placing.run(along: way, length: size * markLength)
-            let start = placing.stepped(placing.point(CGPoint(x: edge.x + way.x * size * markGap, y: edge.y + way.y * size * markGap)),
-                                        mark: index)
-            let flying = placing.clear(start, run: run, along: way, of: outline.line, by: clearance)
-            let end = CGPoint(x: flying.x + run.x, y: flying.y + run.y)
-            return #"<path id="burst-\#(index + 1)" d="M\#(placing.text(flying)) L\#(placing.text(end))" fill="none" stroke="\#(ink)" "#
-                + #"stroke-width="\#(said)" stroke-linecap="round"/>"#
-        }
+        let line = body.stroke != nil && body.strokeWidth > 0
+        // The short way across: down a wide thing, across a tall one.
+        let along = box.width >= box.height ? CGPoint(x: 0, y: 1) : CGPoint(x: 1, y: 0)
+
         var out = svg
-        out.replaceSubrange(tag.range, with: tag.asPath(outline.d))
+        // What goes on top of the drawing: the marks, or a crack's line.
+        var marks: [String] = []
+        switch asked {
+        case .tear:
+            guard let outline = torn(runs, centre: centre, size: size, placing: placing) else { return nil }
+            let clearance = (line ? weight : weight / 2) + markClearance
+            marks = (0..<markCount).map { index -> String in
+                let turn = (CGFloat(index) - CGFloat(markCount - 1) / 2) * markSpread
+                let angle = tearAngle + turn
+                let way = CGPoint(x: cos(angle), y: sin(angle))
+                let edge = reach(of: runs, from: centre, along: way)
+                let run = placing.run(along: way, length: size * markLength)
+                let start = placing.stepped(placing.point(CGPoint(x: edge.x + way.x * size * markGap, y: edge.y + way.y * size * markGap)),
+                                            mark: index)
+                let flying = placing.clear(start, run: run, along: way, of: outline.line, by: clearance)
+                let end = CGPoint(x: flying.x + run.x, y: flying.y + run.y)
+                return #"<path id="burst-\#(index + 1)" d="M\#(placing.text(flying)) L\#(placing.text(end))" fill="none" stroke="\#(ink)" "#
+                    + #"stroke-width="\#(said)" stroke-linecap="round"/>"#
+            }
+            out.replaceSubrange(tag.range, with: tag.asPath(outline.d))
+            // Whatever lay in the torn stretch goes with it: a shine left there
+            // pokes out into the tear (the eval's bubble, 2026-11-05).
+            for part in drawn where part != body {
+                let own = SVGArtwork.shapeBounds(part.shape)
+                guard let partName = part.name, contains(outline.bite, placing.placed(CGPoint(x: own.midX, y: own.midY))),
+                      let found = Self.tag(named: partName, in: out) else { continue }
+                out.removeSubrange(found.range)
+            }
+        case .crack:
+            guard let ends = crossing(runs, centre: centre, along: along) else { return nil }
+            let jag = placing.jag(size * crackJag)
+            if line {
+                // Each end in the outline's line, its round end never past it:
+                // rounded from the edge itself it stood out of a circle, and an
+                // icon's landing takes its outline in by a quarter unit more.
+                let inset = weight * 0.75
+                let a = placing.point(CGPoint(x: ends.first.point.x + along.x * inset, y: ends.first.point.y + along.y * inset))
+                let b = placing.point(CGPoint(x: ends.last.point.x - along.x * inset, y: ends.last.point.y - along.y * inset))
+                let corners = zigzag(from: a, to: b, jag: jag, placing: placing)
+                let d = "M" + corners.map(placing.text).joined(separator: " L")
+                marks = [#"<path id="crack" d="\#(d)" fill="none" stroke="\#(ink)" stroke-width="\#(said)" "#
+                         + #"stroke-linecap="round" stroke-linejoin="round"/>"#]
+            } else {
+                let a = placing.point(ends.first.point), b = placing.point(ends.last.point)
+                let corners = zigzag(from: a, to: b, jag: jag, placing: placing)
+                let normal = CGPoint(x: along.y, y: along.x)
+                let gap = placing.gap(size * crackGap)
+                let sides = along.x == 0 ? ("left", "right") : ("top", "bottom")
+                var halves: [String] = []
+                for (from, to, back) in [(ends.first, ends.last, Array(corners.reversed())), (ends.last, ends.first, corners)] {
+                    var kept = stretch(runs, from: (from.run, from.t), to: (to.run, to.t))
+                    guard !kept.isEmpty else { return nil }
+                    kept[0] = kept[0].starting(at: placing.point(from.point))
+                    kept[kept.count - 1] = kept[kept.count - 1].ending(at: placing.point(to.point))
+                    let middle = kept[kept.count / 2].point(at: 0.5)
+                    let side: CGFloat = (middle.x - centre.x) * normal.x + (middle.y - centre.y) * normal.y < 0 ? -1 : 1
+                    let shift = CGPoint(x: normal.x * gap * side, y: normal.y * gap * side)
+                    let d = path(kept, then: Array(back.dropFirst().dropLast()), shift: shift, placing: placing) + " Z"
+                    halves.append(tag.asPath(d, id: side < 0 ? sides.0 : sides.1))
+                }
+                out.replaceSubrange(tag.range, with: halves.joined())
+            }
+        }
         if let drawnWeight, weight != drawnWeight { out = thinned(out, to: said) }
         let small = (art.viewBox?.width ?? max(art.bounds.width, art.bounds.height)) * smallestOutline
         for part in drawn where part != body && part.fill == nil && part.stroke != nil && isClosed(part.shape) {
@@ -204,8 +332,105 @@ public enum AskIconBreak {
             out.replaceSubrange(found.range, with: found.asSolid(ink: ink))
         }
         guard let close = out.range(of: "</svg>", options: .backwards) else { return nil }
-        out.insert(contentsOf: marks.joined() , at: close.lowerBound)
+        out.insert(contentsOf: marks.joined(), at: close.lowerBound)
         return placing.wrapping(out)
+    }
+
+    /// `runs` as the text of a path from the first run's start, then straight
+    /// on through `corners`, all moved by `shift`.
+    private static func path(_ runs: [Run], then corners: [CGPoint], shift: CGPoint, placing: Placing) -> String {
+        func moved(_ point: CGPoint) -> String { placing.text(CGPoint(x: point.x + shift.x, y: point.y + shift.y)) }
+        guard let start = runs.first?.start else { return "" }
+        var d = "M\(moved(start))"
+        for run in runs where hypot(run.end.x - run.start.x, run.end.y - run.start.y) > 1e-6 {
+            d += run.isStraight ? " L\(moved(run.end))" : " C\(moved(run.control1)) \(moved(run.control2)) \(moved(run.end))"
+        }
+        for corner in corners { d += " L\(moved(corner))" }
+        return d
+    }
+
+    /// A jagged line from `a` to `b`, its corners standing off the straight
+    /// line by `jag`, one way then the other.
+    private static func zigzag(from a: CGPoint, to b: CGPoint, jag: CGFloat, placing: Placing) -> [CGPoint] {
+        let across = CGPoint(x: b.x - a.x, y: b.y - a.y)
+        let long = max(hypot(across.x, across.y), 1e-6)
+        let side = CGPoint(x: -across.y / long, y: across.x / long)
+        let inner = (1..<crackRuns).map { step -> CGPoint in
+            let t = CGFloat(step) / CGFloat(crackRuns)
+            let sign: CGFloat = step % 2 == 0 ? -1 : 1
+            return placing.point(CGPoint(x: a.x + across.x * t + side.x * jag * sign, y: a.y + across.y * t + side.y * jag * sign))
+        }
+        return [a] + inner + [b]
+    }
+
+    /// Where a line through `centre` going `along` crosses the outline, first
+    /// and last along it, or nil when it does not cross twice.
+    private static func crossing(_ runs: [Run], centre: CGPoint,
+                                 along: CGPoint) -> (first: Crossing, last: Crossing)? {
+        let normal = CGPoint(x: along.y, y: along.x)
+        func side(_ point: CGPoint) -> Bool { (point.x - centre.x) * normal.x + (point.y - centre.y) * normal.y >= 0 }
+        var found: [Crossing] = []
+        for (index, run) in runs.enumerated() {
+            for step in 0..<32 {
+                var low = CGFloat(step) / 32, high = CGFloat(step + 1) / 32
+                let before = side(run.point(at: low))
+                guard before != side(run.point(at: high)) else { continue }
+                for _ in 0..<24 {
+                    let mid = (low + high) / 2
+                    if side(run.point(at: mid)) == before { low = mid } else { high = mid }
+                }
+                let point = run.point(at: high)
+                found.append(Crossing(run: index, t: high, point: point,
+                                      along: (point.x - centre.x) * along.x + (point.y - centre.y) * along.y))
+            }
+        }
+        guard let first = found.min(by: { $0.along < $1.along }), let last = found.max(by: { $0.along < $1.along }),
+              last.along - first.along > 1e-6 else { return nil }
+        return (first, last)
+    }
+
+    struct Crossing {
+        var run: Int
+        var t: CGFloat
+        var point: CGPoint
+        var along: CGFloat
+    }
+
+    /// The runs of a loop from one place in it round to another.
+    private static func stretch(_ runs: [Run], from: (run: Int, t: CGFloat), to: (run: Int, t: CGFloat)) -> [Run] {
+        if from.run == to.run, to.t > from.t { return [runs[from.run].between(from.t, to.t)] }
+        var kept = [runs[from.run].between(from.t, 1)]
+        var index = (from.run + 1) % runs.count
+        while index != to.run {
+            kept.append(runs[index])
+            index = (index + 1) % runs.count
+        }
+        kept.append(runs[to.run].between(0, to.t))
+        return kept
+    }
+
+    /// Rounded, what is left of a run cut near its end is a stub of curve
+    /// dragged a long way for its length, and reads as a lump.
+    private static func withoutStubs(_ runs: [Run], placing: Placing) -> [Run] {
+        var kept = runs
+        while kept.count > 2, kept[0].end.distance(to: placing.point(kept[0].start)) < shortestRun { kept.removeFirst() }
+        while kept.count > 2, let end = kept.last, end.start.distance(to: placing.point(end.end)) < shortestRun { kept.removeLast() }
+        return kept
+    }
+
+    /// Whether `point` lies inside the loop `polygon` draws.
+    private static func contains(_ polygon: [CGPoint], _ point: CGPoint) -> Bool {
+        guard polygon.count >= 3 else { return false }
+        var inside = false
+        var previous = polygon[polygon.count - 1]
+        for current in polygon {
+            if (current.y > point.y) != (previous.y > point.y),
+               point.x < (previous.x - current.x) * (point.y - current.y) / (previous.y - current.y) + current.x {
+                inside.toggle()
+            }
+            previous = current
+        }
+        return inside
     }
 
     private static func isClosed(_ shape: SVGArtwork.Shape) -> Bool {
@@ -371,7 +596,7 @@ public enum AskIconBreak {
     /// the `d` of a path, and the line that draws, in points along it. Curves
     /// stay curves.
     private static func torn(_ runs: [Run], centre: CGPoint, size: CGFloat,
-                             placing: Placing) -> (d: String, line: [CGPoint])? {
+                             placing: Placing) -> (d: String, line: [CGPoint], bite: [CGPoint])? {
         let lengths = lengths(runs)
         let total = lengths.reduce(0, +)
         guard total > 0 else { return nil }
@@ -379,19 +604,9 @@ public enum AskIconBreak {
         let middle = furthest(of: runs, from: centre, along: way, lengths: lengths).distance
         let from = place(middle + total * tornShare / 2, lengths: lengths)
         let to = place(middle - total * tornShare / 2, lengths: lengths)
-        var kept = [runs[from.run].between(from.t, 1)]
-        var index = (from.run + 1) % runs.count
-        while index != to.run {
-            kept.append(runs[index])
-            index = (index + 1) % runs.count
-        }
-        kept.append(runs[to.run].between(0, to.t))
-        if placing.whole {
-            // Rounded, what is left of a run cut near its end is a stub of curve
-            // dragged a long way for its length, and reads as a lump.
-            while kept.count > 2, kept[0].end.distance(to: placing.point(kept[0].start)) < shortestRun { kept.removeFirst() }
-            while kept.count > 2, let end = kept.last, end.start.distance(to: placing.point(end.end)) < shortestRun { kept.removeLast() }
-        }
+        var kept = stretch(runs, from: from, to: to)
+        if placing.whole { kept = withoutStubs(kept, placing: placing) }
+        let gone = stretch(runs, from: to, to: from)
         guard let start = kept.first?.start, let stop = kept.last?.end else { return nil }
         let first = placing.point(start), last = placing.point(stop)
         kept[0] = kept[0].starting(at: first)
@@ -418,7 +633,9 @@ public enum AskIconBreak {
                 return CGPoint(x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t)
             }
         }
-        return (d + " Z", curve + across)
+        // What the tear took: the stretch that went and the teeth across it.
+        let bite = gone.flatMap { run in (0...16).map { run.point(at: CGFloat($0) / 16) } } + notched.reversed()
+        return (d + " Z", curve + across, bite)
     }
 
     // MARK: Where it lands
@@ -475,6 +692,18 @@ public enum AskIconBreak {
         func stepped(_ start: CGPoint, mark index: Int) -> CGPoint {
             CGPoint(x: start.x + (index > 0 ? markSteps.x : 0),
                     y: start.y - (index < markCount - 1 ? markSteps.y : 0))
+        }
+
+        /// How far a crack's corners stand off its line. Where there are units
+        /// it is one at the least, or rounding lays the crack straight.
+        func jag(_ length: CGFloat) -> CGFloat {
+            whole ? max(1, length.rounded()) : length
+        }
+
+        /// How far half of a split solid moves. Where there are units it is a
+        /// whole one at the least, so what moves still lands on them.
+        func gap(_ length: CGFloat) -> CGFloat {
+            whole ? max(1, length.rounded()) : length
         }
 
         /// A line weight. Where there are units it is a half unit at the finest,
@@ -590,6 +819,13 @@ public enum AskIconBreak {
         var attributes: String
 
         func asPath(_ d: String) -> String { #"<path\#(kept) d="\#(d)"/>"# }
+
+        /// One of the pieces the shape broke into: its id with `id` on the end.
+        func asPath(_ d: String, id: String) -> String {
+            let attributes = kept.replacingOccurrences(of: #"(\sid\s*=\s*")([^"]*)(")"#, with: "$1$2-\(id)$3",
+                                                       options: .regularExpression)
+            return #"<path\#(attributes) d="\#(d)"/>"#
+        }
 
         /// The same shape, solid in `ink` with no line.
         func asSolid(ink: String) -> String {

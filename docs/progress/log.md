@@ -22760,3 +22760,10 @@ whole units. Walks: `a-rectangle-rounds-on-the-grid-walk`,
 Open question, asked in the audit: on an Icon with the grid hidden, rounding
 lands between units on both kinds of shape, though drawing there lands on whole
 units.
+
+## 2026-11-07: a broken icon breaks the way it was asked to
+
+- Ask's break question now asks how the object breaks (burst or cracked, `AskIconBreak.Kind`) as well as what it is. A burst still tears; a crack runs right through the outline the short way, as a jagged line in a line drawing or a jagged gap splitting a solid into two halves. The tear now drops any part lying in the torn stretch.
+- Eval, three readings each: broken heart 43 → 86.5 (asked 8, icon 7); cracked egg 56 → 88.8 (no tear was 84.8).
+- Tried and dropped: a ring in pieces, shreds at one side, a single opening. None beat the tear on the bubble; the same-drawing judge A/B read tear 34, pieces 25.
+- Open: the soap bubble (36 against 71 untorn) and the balloon (55 to 66 this session against 85) stay under their bars; the task is left pending for them.

@@ -225,7 +225,7 @@ struct AskIconBreakTests {
 
     @Test("The model is asked for the object whole, in the look the person named, and that lands as drawn")
     func talkAsksForTheWholeObject() {
-        let talk = AskConversation(request: "a kite snapping icon, outline", documentRead: Self.read, iconBreak: "a kite")
+        let talk = AskConversation(request: "a kite snapping icon, outline", documentRead: Self.read, iconBreak: .init(kind: .tear, object: "a kite"))
         let asked = talk.chatBody(model: "m")["messages"]?.arrayValue?.dropFirst().first?["content"]?.stringValue ?? ""
         #expect(asked.contains("a kite"))
         #expect(asked.contains("whole"))
@@ -237,14 +237,14 @@ struct AskIconBreakTests {
 
     @Test("An app icon keeps its words, so it is still drawn on its tile")
     func talkKeepsTheAppIcon() {
-        let talk = AskConversation(request: "a kite snapping app icon", documentRead: Self.read, iconBreak: "a kite")
+        let talk = AskConversation(request: "a kite snapping app icon", documentRead: Self.read, iconBreak: .init(kind: .tear, object: "a kite"))
         let asked = talk.chatBody(model: "m")["messages"]?.arrayValue?.dropFirst().first?["content"]?.stringValue ?? ""
         #expect(asked.contains("app icon"))
     }
 
     @Test("What the model draws whole lands torn, as one step")
     func talkTears() throws {
-        var talk = AskConversation(request: "a kite snapping icon", documentRead: Self.read, iconBreak: "a kite")
+        var talk = AskConversation(request: "a kite snapping icon", documentRead: Self.read, iconBreak: .init(kind: .tear, object: "a kite"))
         _ = talk.take(Self.reply("add_drawing", ["subject": "kite", "svg": .string(Self.kite)]))
         #expect(talk.steps.count == 1)
         let svg = try #require(talk.steps.first?.arguments["svg"]?.stringValue)
@@ -255,7 +255,7 @@ struct AskIconBreakTests {
     @Test("An outline that cannot be torn goes back once to be closed, and an icon lands in the end")
     func talkSendsBack() {
         let open = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><path id="arc" d="M4 12 C4 4 20 4 20 12"/></svg>"##
-        var talk = AskConversation(request: "a kite snapping icon", documentRead: Self.read, iconBreak: "a kite")
+        var talk = AskConversation(request: "a kite snapping icon", documentRead: Self.read, iconBreak: .init(kind: .tear, object: "a kite"))
         _ = talk.take(Self.reply("add_drawing", ["subject": "kite", "svg": .string(open)]))
         #expect(talk.steps.isEmpty)
         #expect(talk.messages.last?["content"]?.stringValue?.contains("closed") == true)

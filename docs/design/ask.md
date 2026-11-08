@@ -416,11 +416,19 @@ Either way:
 * **An icon** (`AskIcon`, `AskIconCheck`, chosen from the general words for an
   icon, never a subject) is never painted and traced. A short question comes
   first: is the one object bursting, breaking, tearing or cracking
-  (`AskIconBreak.question`)? When it is, the model only says what the object is
-  and draws it whole, the way it draws every icon well, and a vector tool tears
-  the outline it drew: the biggest closed shape loses a stretch at its upper
-  right, two teeth cross the gap, three marks fly out, lines thin in proportion
-  and a small closed outline lands solid. On the 24 grid all of that is worked
+  (`AskIconBreak.question`)? When it is, the model only says how it breaks,
+  from a general list ("burst" or "cracked"), and what the object is, and draws
+  it whole, the way it draws every icon well; a vector tool then breaks the
+  outline it drew. A burst tears it: the biggest closed shape loses a stretch at
+  its upper right, two teeth cross the gap, three marks fly out, and any part
+  lying in the torn stretch goes with it. A crack runs through it the short way
+  (down a wide thing, across a tall one) as a jagged line in a line drawing, or
+  as a jagged gap splitting a solid one into two halves a unit apart. Either
+  way lines thin in proportion and a small closed outline lands solid. One tear
+  for everything made a broken heart look bitten (43) and a cracked egg look
+  eaten (56); cracked they scored 86 to 88 and 89 to 91 (2026-11-07). A ring
+  in pieces was tried for a bursting bubble and read as a viewfinder, a sun or
+  a light bulb, never better than the tear. On the 24 grid all of that is worked
   out where it will land, on whole units (`docs/design/svg-export.md`). The tool reads only shapes and knows
   nothing of what they are. The model could not write that geometry itself: on
   "a balloon popping" it scored from 25 to 85 on the same words, and told to tear

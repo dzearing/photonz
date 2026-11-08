@@ -505,8 +505,8 @@ public struct AskConversation: Sendable {
     /// light bulb or a magnifying glass where the judge named it popping 3 of
     /// 3; each redraw then lost the tear or the balloon (the eval, 2026-11-05).
     public let landsAsDrawn: Bool
-    /// What the model draws whole lands torn (`AskIconBreak`).
-    private let tearsTheIcon: Bool
+    /// What the model draws whole lands broken this way (`AskIconBreak`).
+    private let breaksTheIcon: AskIconBreak.Kind?
     /// The picture holds an icon, so it can be restyled (`AgentIconRestyle`).
     private let holdsIcon: Bool
     /// The request is about motion, or the document has some.
@@ -541,7 +541,7 @@ public struct AskConversation: Sendable {
                 titles: String = "", paints: Bool = false, brushes: Bool = false,
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
                 window: Int = AskConversation.contextWindow, web: AskWebPage? = nil,
-                lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil, iconBreak: String? = nil) {
+                lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil, iconBreak: AskIconBreak.Answer? = nil) {
         self.request = request
         self.placeable = Self.placeable(in: library)
         self.web = web
@@ -556,7 +556,7 @@ public struct AskConversation: Sendable {
         self.drawsMotion = drawsMotion
         // A drawing with its hidden pieces all showing is no still to look at.
         landsAsDrawn = icon && (iconDesign != nil || iconBreak != nil || drawsMotion)
-        tearsTheIcon = icon && iconBreak != nil
+        breaksTheIcon = icon ? iconBreak?.kind : nil
         self.paints = paints && !icon
         self.brushes = brushes
         let parsed = try? AgentJSON.parse(Data(documentRead.utf8))
@@ -585,7 +585,7 @@ public struct AskConversation: Sendable {
         }
         if !memory.isEmpty { instructions += "\n\(memory)" }
         // Something breaking is drawn whole and torn afterwards (`AskIconBreak`).
-        let said = icon ? iconBreak.map { AskIconBreak.wholeRequest(object: $0, request: request) } ?? request : request
+        let said = icon ? iconBreak.map { AskIconBreak.wholeRequest(object: $0.object, request: request) } ?? request : request
         var asking: AgentJSON = ["role": "user", "content": .string(said)]
         if let canvas, web != nil {
             instructions += "\nThe picture with the request is the web page as Photonz read it, one pixel a canvas point."
@@ -913,8 +913,8 @@ public struct AskConversation: Sendable {
                         continue
                     }
                 }
-                if tearsTheIcon, name == "add_drawing", var object = arguments.objectValue {
-                    if let torn = arguments["svg"]?.stringValue.flatMap(AskIconBreak.applied(to:)) {
+                if let breaksTheIcon, name == "add_drawing", var object = arguments.objectValue {
+                    if let torn = arguments["svg"]?.stringValue.flatMap({ AskIconBreak.applied(to: $0, kind: breaksTheIcon) }) {
                         object["svg"] = .string(torn)
                         arguments = .object(object)
                     } else if iconSendBacks < AskIconCheck.mostSendBacks {
