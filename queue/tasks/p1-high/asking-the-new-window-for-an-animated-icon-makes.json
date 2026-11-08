@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 1e-9,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T00:35:48.304Z",
-  "updated": "2026-11-08T00:35:48.857Z",
+  "updated": "2026-11-08T01:56:41.597Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake), screenshot attached: the New window with 'make an animated trash can icon where it opens, some trash is thrown in' answered 'Ask can't make videos yet.'. Cause: Sources/PhotonzCore/AskFromNothing.swift timeWords (line ~105) holds 'animation', 'animations', 'animated', 'animate', 'gif' beside 'video', and line ~41 sends any of them to .video. The animated picture pipeline exists: ask-animates-what-it-makes-an-animated-svg-icon, an-agent-can-set-read-and-change-a-layer-s-keys, animating-a-picture-is-as-simple-as-setting-a-mo are all done.",
@@ -29,6 +29,40 @@
     {
       "t": "2026-11-08T00:35:48.856Z",
       "note": "seq 88.75 -> 1e-9"
+    },
+    {
+      "t": "2026-11-08T00:57:45.183Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-08T01:16:32.470Z",
+      "note": "owns these walks: ask-animates-from-the-new-window-walk, ask-with-nothing-open-walk"
+    },
+    {
+      "t": "2026-11-08T01:16:32.546Z",
+      "note": "Adversarial review before building: a first-time user types 'an animated X' and expects a moving picture; a Photoshop/Illustrator user expects a small square artboard for an icon. Gaps found: (1) Ask's moving-icon route needs 'icon' or 'svg' in the words, so 'a gif of a bouncing ball' would draw a still: gif added as a word that asks for motion and a moving file. (2) 'a video camera icon' and 'a movie ticket icon' were refused as video: an icon is now a picture whatever it shows. (3) the New window's Image sizes lacked Icon and App Icon though the New Image sheet has them. Chose the icon size (512) for an animated request that names no size over the picked Desktop size because what Ask animates it draws as shapes on an icon's grid, and a GIF or spinner at 1440 by 1024 is mostly empty. Chose not to count 'moving' or 'spinning' as asking for motion because 'a moving van' and 'a spinning top' are stills, which is the rule Ask's own motion words already follow ('a motion sensor icon is a still'); they reach a picture as before."
+    },
+    {
+      "t": "2026-11-08T01:56:36.768Z",
+      "note": "Chose making an animated request a blank 512 icon, and letting Ask draw motion asked of a blank icon as a moving icon, over leaving 'an animated loading spinner' on Ask's general route, because measured: before that change the spinner came out a still 128 point arc with timing set and no keys (no Pause, nothing played); after it, a three-quarter arc turning 360 degrees in 1.2 s, looping."
+    },
+    {
+      "t": "2026-11-08T01:56:36.845Z",
+      "note": "Verified at Next defaults: the user's words, 'an animated loading spinner', 'make an animated svg of a heart beating', 'a gif of a bouncing ball' each made a 512 by 512 picture as an icon (harness note 'made a 512 by 512 picture, as an icon'), Space played it (expectPictureMoves), the SVG carries repeatCount=indefinite (trash 3 moving parts, spinner 1, heart 1, ball 3), Copy SVG put it on the clipboard. Pictures looked at: trash made and playing (lid on its hinge, trash keyed in), spinner playing, heart playing (double beat), ball playing (drops to a floor line, squash, impact marks). ask-with-nothing-open-walk still refuses 'a video of waves on a beach'; front-door-walk clicks the new Icon row and opens in Icon. Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-08T01:56:36.920Z",
+      "note": "left rough (no task earned): the ball came out as a ring, the model's drawing not the route; 'moving'/'spinning' alone stay stills by choice; held-out Ask eval not rerun (routing-only change; every climb animated case names icon or svg, none names gif, all start on a blank 1440 by 1024 so blankIcon never applies). Filed: an-animated-picture-exports-as-a-gif (p2), since 'a gif' now makes a moving picture that cannot be saved as a .gif. No whole-set sweep asked for: committing code starts the rotating check."
+    },
+    {
+      "t": "2026-11-08T01:56:41.595Z",
+      "note": "The New window makes an animated icon instead of 'Ask can't make videos yet.' (c41e1fcd3): only footage words ask for a video, an icon is a picture at the Icon row's size, anything animated is made as a 512 icon that Ask draws as a moving icon, 'gif' asks for motion, and the Image sizes gain Icon and App Icon. The user's words plus a spinner, a heart and a bouncing ball each made a 512 icon that plays and copies as a looping SVG (ask-animates-from-the-new-window-walk + three copies); front-door-walk and ask-with-nothing-open-walk pass; Scripts/test.sh exit 0. Audit queue/audits/2026-11-07-asking-the-new-window-for-an-animated-icon-makes.json."
     }
-  ]
+  ],
+  "started": "2026-11-08T00:57:45.182Z",
+  "walks": [
+    "ask-animates-from-the-new-window-walk",
+    "ask-with-nothing-open-walk"
+  ],
+  "completed": "2026-11-08T01:56:41.596Z"
 }

@@ -16274,3 +16274,11 @@
 {"t":"2026-11-08T00:57:11.634Z","ev":"task_walks","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","walks":[]}
 {"t":"2026-11-08T00:57:11.710Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-08T00:57:11.787Z","ev":"task_pending","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Heart and egg bars met (86.5 and 88.8, three readings each, shipped 22161619d). Bubble (36 vs 71 untorn) and balloon (55 to 66 vs 85) bars not reached; open for them."}
+{"t":"2026-11-08T00:57:45.188Z","ev":"task_started","id":"asking-the-new-window-for-an-animated-icon-makes","title":"Asking the New window for an animated icon makes one, instead of saying Ask can't make videos","priority":"p1-high"}
+{"t":"2026-11-08T01:16:32.472Z","ev":"task_walks","id":"asking-the-new-window-for-an-animated-icon-makes","walks":["ask-animates-from-the-new-window-walk","ask-with-nothing-open-walk"]}
+{"t":"2026-11-08T01:16:32.548Z","ev":"task_note","id":"asking-the-new-window-for-an-animated-icon-makes"}
+{"t":"2026-11-08T01:56:23.509Z","ev":"task_created","id":"an-animated-picture-exports-as-a-gif","priority":"p2-normal","title":"An animated picture exports as a GIF"}
+{"t":"2026-11-08T01:56:36.770Z","ev":"task_note","id":"asking-the-new-window-for-an-animated-icon-makes"}
+{"t":"2026-11-08T01:56:36.847Z","ev":"task_note","id":"asking-the-new-window-for-an-animated-icon-makes"}
+{"t":"2026-11-08T01:56:36.922Z","ev":"task_note","id":"asking-the-new-window-for-an-animated-icon-makes"}
+{"t":"2026-11-08T01:56:41.598Z","ev":"task_done","id":"asking-the-new-window-for-an-animated-icon-makes","from":"in_progress","note":"The New window makes an animated icon instead of 'Ask can't make videos yet.' (c41e1fcd3): only footage words ask for a video, an icon is a picture at the Icon row's size, anything animated is made as a 512 icon that Ask draws as a moving icon, 'gif' asks for motion, and the Image sizes gain Icon and App Icon. The user's words plus a spinner, a heart and a bouncing ball each made a 512 icon that plays and copies as a looping SVG (ask-animates-from-the-new-window-walk + three copies); front-door-walk and ask-with-nothing-open-walk pass; Scripts/test.sh exit 0. Audit queue/audits/2026-11-07-asking-the-new-window-for-an-animated-icon-makes.json."}
