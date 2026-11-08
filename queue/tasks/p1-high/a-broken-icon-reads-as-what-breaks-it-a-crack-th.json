@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-05T22:30:28.372Z",
-  "updated": "2026-11-08T00:57:11.786Z",
+  "updated": "2026-11-08T04:16:31.734Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-05. Scripts/ask-eval.sh run --engine ask --cases icon-broken-heart,icon-cracked-egg-filled,icon-soap-bubble-bursting. Tear on, run 20261105-204948-ask: heart 55.4 (asked 5, icon 4), egg 70.6 (6, 5), bubble 54.8 (6, 6, named 1 of 3 as a cracked egg). Tear off for one build, run 20261105-213322-ask: heart 30.5, egg 84.8, bubble 71.3. One reading each, and one version of the balloon has swung by 30. The bubble sheet shows the tool leaves an inner highlight poking into the tear: AskIconBreak.applied leaves parts lying in the torn stretch alone. Ideas: a crack through the object as a second tear shape, chosen by the model from a general list, and dropping parts that lie in the gap. No subject may be coded.",
@@ -58,8 +58,38 @@
     {
       "t": "2026-11-08T00:57:11.785Z",
       "note": "Heart and egg bars met (86.5 and 88.8, three readings each, shipped 22161619d). Bubble (36 vs 71 untorn) and balloon (55 to 66 vs 85) bars not reached; open for them."
+    },
+    {
+      "t": "2026-11-08T02:10:11.073Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-08T04:16:31.360Z",
+      "note": "Found: the balloon's model drawing is the same SVG in the 88.8 run (d1f0bb77) and the 66.5 run; the whole-units placement (00ece83e) cost it. Re-judging pictures directly: old balloon 84 today, old bubble 47 (its 85.6 was a lucky reading), untorn bubble 71.3 twice. Judge noise is about 7 either way."
+    },
+    {
+      "t": "2026-11-08T04:16:31.435Z",
+      "note": "Chose opening a round line over tearing it because a bite out of anything round reads as eaten (two judges in three named the torn bubble a cracked egg or a bitten cookie); opened it was named a bubble 8 of 9. Chose shape over a third model-picked kind because the balloon also pops and lost 30 points opened (46 to 58), and a shape rule costs no model call. Chose 3 marks over 5: five scored 66.6 to 69.3 against 69.3 and bunched like fingers."
+    },
+    {
+      "t": "2026-11-08T04:16:31.508Z",
+      "note": "Shipped bf3e65120: round line opens (gap + three pieces along the curve, part under the gap dropped), torn line at most 1.5 on the grid, teeth searched off square legs, short marks, no drops or drips asked. Eval: bubble 87.2, 87.2, 77.3 vs 71.3 untorn (bar MET). Heart 86.5, egg 89.6 one reading each (hold). Balloon 66.6, 68.7, 69.3, 68.7 vs 85 (bar NOT met). Scripts/test.sh exit 0 (two earlier runs each hit the known busy-Mac video reader flake, logged on the-full-test-suite-stays-green-on-a-busy-mac-wh). a-torn-icon-writes-whole-units-walk ok, file whole units. Audit queue/audits/2026-11-08-icon-burst-opens.json. Pictures looked at: bubble sheet (open ring, pieces, highlight clear), balloon sheet (tear W, short marks, knot still a blob), window capture."
+    },
+    {
+      "t": "2026-11-08T04:16:31.583Z",
+      "note": "Left for the next attempt (balloon): in 3 of 4 readings the model drew its knot as a tiny open V that lands as a blob, judged a tulip or a plug; the other drawing has a filled knot with spiky corners. The tear is close to the old 84-89 look now. Next lever is what the model is asked to draw whole (a knot as a small solid shape?), measured over three readings, without coding any subject. Lab method in docs/progress/log.md 2026-11-08."
+    },
+    {
+      "t": "2026-11-08T04:16:31.657Z",
+      "note": "walks none -> a-torn-icon-writes-whole-units-walk"
+    },
+    {
+      "t": "2026-11-08T04:16:31.733Z",
+      "note": "Bubble bar met (87.2, 87.2, 77.3 vs 71.3 untorn), heart and egg hold; balloon 66.6 to 69.3 against 85, still open for it"
     }
   ],
-  "started": "2026-11-07T22:03:40.142Z",
-  "walks": []
+  "started": "2026-11-08T02:10:11.072Z",
+  "walks": [
+    "a-torn-icon-writes-whole-units-walk"
+  ]
 }
