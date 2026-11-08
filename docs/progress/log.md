@@ -22767,3 +22767,11 @@ units.
 - Eval, three readings each: broken heart 43 → 86.5 (asked 8, icon 7); cracked egg 56 → 88.8 (no tear was 84.8).
 - Tried and dropped: a ring in pieces, shreds at one side, a single opening. None beat the tear on the bubble; the same-drawing judge A/B read tear 34, pieces 25.
 - Open: the soap bubble (36 against 71 untorn) and the balloon (55 to 66 this session against 85) stay under their bars; the task is left pending for them.
+
+## 2026-11-07 — The New window makes an animated icon
+
+- "make an animated trash can icon where it opens, some trash is thrown in" in the New window was refused as a video. `AskFromNothing` now sends only footage words (video, clip, recording, montage...) to the video refusal; an icon request is a picture whatever it shows, made at the Icon row's size as an icon; anything animated (animated, animation, looping, gif) with no size named is made as a 512 icon.
+- Ask: "gif" asks for motion and counts as a moving file; motion asked of a blank picture made as an icon takes the moving-icon route (`AskMotion.drawsMotion(_:blankIcon:)`), so "an animated loading spinner" turns instead of standing still.
+- The New window's Image sizes end with Icon and App Icon, like the New Image sheet.
+- Verified with the user's words plus a spinner, a heart and a bouncing ball: each makes a 512 icon that plays and copies as a looping SVG. New walk `ask-animates-from-the-new-window-walk`; `front-door-walk` picks the Icon row.
+- Open: held-out Ask eval not rerun (routing-only change; no climb case moved).
