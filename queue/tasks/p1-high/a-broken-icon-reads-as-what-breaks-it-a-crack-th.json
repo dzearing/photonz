@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-05T22:30:28.372Z",
-  "updated": "2026-11-08T04:16:31.734Z",
+  "updated": "2026-11-08T06:10:18.665Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-05. Scripts/ask-eval.sh run --engine ask --cases icon-broken-heart,icon-cracked-egg-filled,icon-soap-bubble-bursting. Tear on, run 20261105-204948-ask: heart 55.4 (asked 5, icon 4), egg 70.6 (6, 5), bubble 54.8 (6, 6, named 1 of 3 as a cracked egg). Tear off for one build, run 20261105-213322-ask: heart 30.5, egg 84.8, bubble 71.3. One reading each, and one version of the balloon has swung by 30. The bubble sheet shows the tool leaves an inner highlight poking into the tear: AskIconBreak.applied leaves parts lying in the torn stretch alone. Ideas: a crack through the object as a second tear shape, chosen by the model from a general list, and dropping parts that lie in the gap. No subject may be coded.",
@@ -86,9 +86,33 @@
     {
       "t": "2026-11-08T04:16:31.733Z",
       "note": "Bubble bar met (87.2, 87.2, 77.3 vs 71.3 untorn), heart and egg hold; balloon 66.6 to 69.3 against 85, still open for it"
+    },
+    {
+      "t": "2026-11-08T04:17:12.612Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-08T06:10:18.366Z",
+      "note": "Found: the balloon read as Pac-Man/clock because the tear crossed in two long legs to the middle and the marks landed square (up, 45, across) like clock hands. 9-look lab judge: old tear 0 of 9 at asked 7; five short teeth + fanned marks 8 of 9 (unlanded). Lab pictures must be LANDED (iconFrame + SVGExport) to match the app: landing rounded the string's end and left its handles pinned, so it came out straight (2 of 9 vs 5-6 of 9 with the bend kept)."
+    },
+    {
+      "t": "2026-11-08T06:10:18.441Z",
+      "note": "Chose a whole-unit staircase of five teeth over keeping legs off square because it scored 85.6 on 9 looks (17 of 18 at 7) where the slanted three-tooth bite scored 69.9 (0 of 9); retired the no-square-legs test. Chose not to send a small bent line back to be drawn solid: the model closed the V knot into a speck and straightened the string, judged a bitten lollipop (45.6)."
+    },
+    {
+      "t": "2026-11-08T06:10:18.514Z",
+      "note": "Shipped b491f6529: five-tooth tear (toothCount, notched searches whole points tooth by tooth), marks spread 0.45 with runs to root 5, landing stretches curve handles with rounded ends (SVGArtwork.stretchHandles, runs of 2+ units, x0.67-1.5). 18 icons of the 11-06 run re-landed old vs new: 7 ordinary icons differ, none visibly (a first version kinked the cloud; 2-unit floor fixed it). Scripts/test.sh exit 0. Walks ok: a-torn-icon-writes-whole-units, a-small-svg-opens-big-enough, opening-an-svg, copy-an-icon-as-svg. Audit queue/audits/2026-11-08-icon-tear-ragged.json; pictures looked at: balloon before/after sheets, bubble, heart, window capture, landing old/new."
+    },
+    {
+      "t": "2026-11-08T06:10:18.589Z",
+      "note": "Eval after: balloon 84.0, 83.2, 85.6, 72.0 on one identical picture (was 66.6-69.3): bar of 85 NOT met. Heart 86.5, egg 88.8, bubble 87.2 hold their bars. Every look now gives asked 7 or 6; the misses are readsAsIcon 5 and say lopsided, sits left of centre (the tear takes the upper right) and a blob knot. Next lever: centre a torn icon by its visual mass, not its box; measure on landed lab pictures with 9 looks first (/tmp/tearlab, method in docs/progress/log.md 2026-11-08)."
+    },
+    {
+      "t": "2026-11-08T06:10:18.664Z",
+      "note": "Balloon 66.6-69.3 to 72-85.6 (mean 81.2 over four readings), still under 85; heart, egg and bubble bars met and holding. Open for the balloon."
     }
   ],
-  "started": "2026-11-08T02:10:11.072Z",
+  "started": "2026-11-08T04:17:12.611Z",
   "walks": [
     "a-torn-icon-writes-whole-units-walk"
   ]

@@ -16292,3 +16292,9 @@
 {"t":"2026-11-08T04:16:31.585Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-08T04:16:31.659Z","ev":"task_walks","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","walks":["a-torn-icon-writes-whole-units-walk"]}
 {"t":"2026-11-08T04:16:31.735Z","ev":"task_pending","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Bubble bar met (87.2, 87.2, 77.3 vs 71.3 untorn), heart and egg hold; balloon 66.6 to 69.3 against 85, still open for it"}
+{"t":"2026-11-08T04:17:12.617Z","ev":"task_started","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","title":"A broken icon reads as what breaks it: a crack through a heart, a split egg, a bubble in pieces","priority":"p1-high"}
+{"t":"2026-11-08T06:10:18.368Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-08T06:10:18.443Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-08T06:10:18.516Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-08T06:10:18.591Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-08T06:10:18.666Z","ev":"task_pending","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Balloon 66.6-69.3 to 72-85.6 (mean 81.2 over four readings), still under 85; heart, egg and bubble bars met and holding. Open for the balloon."}
