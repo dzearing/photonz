@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 80,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T18:22:08.469Z",
-  "updated": "2026-11-08T06:53:41.725Z",
+  "updated": "2026-11-08T10:46:33.204Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ask-animates-what-it-makes-an-animated-svg-icon, run 20261106-171511-ask: envelope 4, plane 6, wifi loops 3. AskMotionCheck leaves trimStart and trimEnd out of its loop check on purpose, since a checkmark set to end where it began never drew. Rules in AskMotion.principles must stay general: nothing per subject. Pictures: queue/audits/2026-11-06-ask-animates-after-envelope-opening.png and -after-wifi-signal.png.",
@@ -51,6 +51,26 @@
     {
       "t": "2026-11-08T06:53:41.724Z",
       "note": "Built: (1) rotationX/rotationY offered to Ask and carried in the SVG as a one-axis scale about the hinge (cosine, sampled 48 times a lap), pivot on a fold sets LayerTurn3D.hinge; rules teach a fold over a whole edge. (2) AskMotion.leaving: a key half over the frame edge goes to the nearer of pulled-in or pushed-clear. (3) trimStart on a drawn part refused at planning; rules say lines draw from trimEnd 0, fade, reset unseen. (4) rule: what comes out of a part is drawn behind it, the front part filled white."
+    },
+    {
+      "t": "2026-11-08T10:46:32.903Z",
+      "note": "Shipped in 41f4aabbe (pushed): folds (rotationX/Y offered, hinge from pivot, SVG carries a fold as a sampled one-axis scale about the hinge), AskMotion.leaving (half-over-the-edge keys go in or wholly out; gone, it re-enters from the far side on a Hold), swingsFitted (a swing under 180 past all the room eases down to fit, not under 0.4 of itself), trimStart on drawn parts refused, AskMotion.hidden (a travelling part inside a closed outline drawn after it: that outline filled white). 123 motion tests, Scripts/test.sh green (exit 0)."
+    },
+    {
+      "t": "2026-11-08T10:46:32.979Z",
+      "note": "Measured (climb, qwen3.8-27b): envelope 35.9 -> 77.8 twice (reads as asked 7 and 7: DONE), wifi 39.3 -> 83.8 and 80.8 (8 and 8, loops 9: DONE), paper plane 38.6 -> 62.6 / 48.3 / 37.6 / 61.5 (reads as asked 6, 5, 4, 6: NOT DONE, bar 7). Held-out gained 8 animated requests (animated-h1..h8) written blind by a subagent; held-out total 56.9 over 53 (animated 37.3), run 20261108-075845-ask-held-out: DONE."
+    },
+    {
+      "t": "2026-11-08T10:46:33.054Z",
+      "note": "Left for the plane (why it stays open): the model's own design. It draws the plane nearly edge to edge (judge: touches the edges at rest), leaves its speed lines floating after the plane has gone (rule added: marks go with the part or are gone first; the model ignored it once), and exits in ~0.15 s so it looks like it vanishes (rule added: Ease in over 300-500 ms, seen the whole way: the last run read 6). Next try: a tool that fades a part with no keys of its own when what it sits beside leaves, or shrinks a drawing that fills its frame before it moves."
+    },
+    {
+      "t": "2026-11-08T10:46:33.129Z",
+      "note": "Left rough, not filed: the envelope's letter reads as a dark block rising through the open flap (judge clean 4); the wifi dot comes out a squashed oval. Both are the model's drawing, not motion, and are in the audit's rough list. Filed: find-out-why-ask-s-held-out-drawing-and-video-sc (held-out drawing and video fell between 7 and 8 Nov; this change does not reach them). Chose the flat, no-perspective fold in the SVG over trying to fake perspective because SVG has no 3D and an icon's fold reads the same. Audit: queue/audits/2026-11-08-animated-icon-flap-plane-wifi.json."
+    },
+    {
+      "t": "2026-11-08T10:46:33.203Z",
+      "note": "Envelope (7) and wifi (8) read as asked and the held-out set gained 8 blind animated requests (total 56.9). The paper plane reads 6 against a bar of 7: open for the next pass."
     }
   ],
   "started": "2026-11-08T06:22:09.473Z"

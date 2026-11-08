@@ -1,0 +1,27 @@
+{
+  "id": "find-out-why-ask-s-held-out-drawing-and-video-sc",
+  "title": "Find out why Ask's held-out drawing and video scores fell between 7 and 8 November",
+  "goal": "Ask's sealed test set scored lower on still drawings and video edits on 8 November than on 7 November, with nothing aimed at those changed on purpose. Find whether it is a real loss (and from which change) or run-to-run noise, so Ask is not quietly getting worse.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 49.6875,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-08T10:46:11.903Z",
+  "updated": "2026-11-08T10:46:11.906Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen, not explained. Scripts/ask-eval.sh time 20261108-075845-ask-held-out 20261107-130822-ask-held-out:\n  8 Nov (41f4aabbe, 53 cases): total 56.9; drawing 63.1 (1 of 36 ran out of time, 4 stopped part way, 181s median), layout 68.1, redline 31.2, video 48.7, animated 37.3 (8 new cases).\n  7 Nov (45 cases): total 66.4; drawing 70.8 (0 out of time, 2 stopped part way, 148s median), layout 44.6, redline 33.9, video 67.\nLike for like on the 45 shared cases about 60.4 vs 66.4. Commit 41f4aabbe only changes the moving-icon route (AskMotion, MotionSVG folds, set_keys pivot for rotationX/Y), which drawing and video cases never take. Landed between the two runs: c41e1fcd3 (New window makes an animated icon), bf3e65120 (a round thing bursting opens), b491f6529 (torn icon teeth), the still icon route's breaks. Video is 3 cases, so one case moves the group ~18 points. Never read held-out cases one by one: rerun the whole set and compare totals and groups only.",
+  "acceptance": [
+    "The held-out drawing and video group totals are measured again on current code and compared with runs 20261107-130822-ask-held-out and 20261108-075845-ask-held-out",
+    "The cause is named (a commit, the machine, or noise shown by a repeat run), in the task log with its numbers",
+    "If a commit caused it, a task to win it back is filed or the loss is fixed"
+  ],
+  "log": [
+    {
+      "t": "2026-11-08T10:46:11.905Z",
+      "note": "created (manual)"
+    }
+  ]
+}
