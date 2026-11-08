@@ -1210,7 +1210,24 @@ a loop, and is not told to end where it began: told that, the model set a
 checkmark's last key to 0 and it never drew. Room is not sent back. Told to fit, the
 model shrank its own motion, so `AskMotion.fitted` widens the viewBox about its
 middle to hold what the keys do, a part's turn and travel together, by at most
-`mostRoom`: whatever flies further is meant to leave.
+`mostRoom`: whatever flies further is meant to leave. And it leaves whole
+(`AskMotion.leaving`, 2026-11-08): a paper plane keyed five units up stalled for
+half a second with its nose sliced flat by the frame. Every place a part travels to
+that is neither inside the room nor wholly out of the frame goes to whichever is
+nearer, as a ratio: pulled in a little, or pushed on until it clears the frame.
+
+A flap hinged along a whole edge folds over it (`rotationX` for a level hinge,
+`rotationY` for an upright one, the pivot on that edge), never turns flat: turned
+flat, an envelope's flap swept sideways through the body like a clock hand
+(2026-11-08). A fold's pivot is the layer's hinge in space (`LayerTurn3D.hinge`),
+and the file carries it as the card seen straight on, squeezed toward the hinge by
+the cosine of its turn and mirrored past 90 degrees, drawn point by point
+(`MotionSVG.folds`). A line drawing itself is keyed on its end alone: keyed on its
+start, wifi's waves un-drew one by one and came back together, so a `trimStart` on a
+drawn part is sent back as it is planned. What comes out of another part is drawn
+before it, and `AskMotion.hidden` fills the closed outline it travels out of white,
+so it starts hidden: told to fill it itself, the model filled the letter and the flap
+and left the envelope's body empty, so the letter showed through.
 
 Two things in how a tool call reaches the model decide all of this, and both were
 wrong at first. A call is held to its schema, and `modelSchema` keeps only an
@@ -1225,7 +1242,9 @@ anything an SVG of it would leave still. A line drawing itself goes out as a das
 moving along it: `pathLength="100"` on the shape and `stroke-dashoffset` animated
 on the group around it, standing just clear of the line at nothing drawn so a
 round cap leaves no dot. Both ends of one line keyed cannot be said with one number,
-so the second is left still and named.
+so the second is left still and named. A fold goes out as a scale on one axis about
+its hinge, inside the move so the hinge travels with it; the canvas adds the camera's
+perspective, which an icon's fold reads the same without.
 
 A follow-up on a picture that moves (`AskMotion.tweakRules`) keeps the motion:
 `change_keys` for faster, slower, further and the other way, `set_timing` for a

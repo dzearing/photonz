@@ -1,0 +1,20 @@
+{
+  "request": "make a looping animation of a little seedling sprouting out of the soil and growing two leaves",
+  "group": "animated",
+  "from": "held-out animated requests by an author who never saw Ask's prompt, 2026-11-08",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "seedling",
+    "sprout"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "request": "animated icon of a padlock unlocking, the shackle swinging open",
+  "group": "animated",
+  "from": "held-out animated requests by an author who never saw Ask's prompt, 2026-11-08",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "padlock"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "request": "looping icon: a phone battery charging up from empty to full, animated",
+  "group": "animated",
+  "from": "held-out animated requests by an author who never saw Ask's prompt, 2026-11-08",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "battery"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "request": "animate an icon where a watering can tips forward and pours water",
+  "group": "animated",
+  "from": "held-out animated requests by an author who never saw Ask's prompt, 2026-11-08",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "watering can"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

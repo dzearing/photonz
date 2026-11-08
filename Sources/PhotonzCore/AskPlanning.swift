@@ -731,7 +731,7 @@ public struct AskConversation: Sendable {
             let plan = webPlan(steps, page: web, summary: summary)
             return AskPlan(steps: plan.steps, summary: plan.summary, names: plan.names, unplanned: unplanned)
         }
-        return AskPlan(steps: drawsMotion ? AskMotion.fitted(steps) : steps, summary: summary, names: names, unplanned: unplanned)
+        return AskPlan(steps: drawsMotion ? AskMotion.fitted(AskMotion.hidden(steps)) : steps, summary: summary, names: names, unplanned: unplanned)
     }
 
     /// What this plan could not make, so far.

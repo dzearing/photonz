@@ -190,7 +190,7 @@ also needs one Command Z to bring the first file back byte for byte.
 
 ## The held-out set
 
-`held-out/` is 45 requests a runner never climbs on (2026-10-20, after Ask
+`held-out/` is 53 requests a runner never climbs on (2026-10-20, after Ask
 reached 92 on the drawing cases mostly by looking nouns up in its built-in
 set, while the user found it drew one cat for every cat request):
 
@@ -202,6 +202,10 @@ set, while the user found it drew one cat for every cat request):
   a thumbs vote (`held-out/starts/*.photonz`);
 * icons, layouts and redlines on screenshots;
 * video edits of the sample recording (2026-10-21);
+* eight animated icon requests (`animated-h1` to `animated-h8`, 2026-11-08),
+  written by an agent that never saw Ask's prompt or the climb set's animated
+  cases, told only to vary the kind of motion and to keep off the twelve
+  subjects the climb set animates;
 * and every thumbs down a person gives one of Ask's rows: the app saves the
   request, the document before and what it made under
   `~/Library/Application Support/<bundle id>/Ask feedback/`, and `feedback`

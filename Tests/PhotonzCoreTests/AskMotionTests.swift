@@ -425,7 +425,7 @@ struct AskMotionTests {
             #expect(!told.contains(word), "\(word)")
         }
         #expect(told.contains("never one picture fading into another"))
-        #expect(told.contains("left end"))
+        #expect(told.contains("hinged at its end"))
     }
 
     @Test("A part that did not land is said, in words the row can show")

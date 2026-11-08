@@ -1,0 +1,19 @@
+{
+  "request": "can you make an animated svg icon of a mountain range whose outline draws itself in",
+  "group": "animated",
+  "from": "held-out animated requests by an author who never saw Ask's prompt, 2026-11-08",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "mountain"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

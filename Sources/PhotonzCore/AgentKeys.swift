@@ -203,7 +203,7 @@ extension AgentTools {
                     "required": ["seconds", "value"], "additionalProperties": false,
                 ]],
                 "replace": ["type": "boolean", "description": "Make these the only keys this value has."],
-                "pivot": ["description": "What a rotation turns about: x and y as fractions of the layer's box (0.5, 0 is the middle of its top edge; outside 0 to 1 is off the layer), or artboard for the middle of the artboard. Its middle when left out.",
+                "pivot": ["description": "What a rotation turns about: x and y as fractions of the layer's box (0.5, 0 is the middle of its top edge; outside 0 to 1 is off the layer), or artboard for the middle of the artboard. Its middle when left out. On rotationX or rotationY, the hinge it folds over.",
                           "anyOf": [
                               ["type": "string", "enum": ["artboard"]],
                               ["type": "object", "properties": ["x": ["type": "number", "description": "Across its box."],
@@ -307,8 +307,12 @@ extension AgentTools {
         }
         var pivot: AgentKeyPivot?
         if let json = args["pivot"] {
-            guard property == .rotation else { return fail("only rotation turns about a pivot.") }
+            // A fold turns in space about its hinge (`LayerTurn3D.hinge`),
+            // which is a place on its own box: there is no artboard for it.
+            let folds = property == .rotationX || property == .rotationY
+            guard property == .rotation || folds else { return fail("only rotation, rotationX and rotationY turn about a pivot.") }
             if json.stringValue != nil {
+                guard !folds else { return fail("a fold's pivot is x and y on its own box, the edge it folds over.") }
                 pivot = .artboard
             } else if let x = json["x"]?.doubleValue, let y = json["y"]?.doubleValue {
                 pivot = .unit(CGPoint(x: x, y: y))
@@ -403,9 +407,17 @@ extension PhotonzDocument {
         for (key, clock) in zip(call.keys, clocks) {
             if let curve = key.curve, let index = made.keyIndex(near: clock) { made = made.curvingStretch(index, curve) }
         }
-        if let pivot { made.pivot = pivot }
+        // A fold's pivot is the hinge it turns about in space; a flat turn's
+        // is the motion's own.
+        let hinge = call.property.isSpace ? pivot?.unit : nil
+        if let pivot, hinge == nil { made.pivot = pivot }
         let finished = made
         updateLayer(id: layer.id) { edited in
+            if let hinge {
+                var turn = edited.turn3D ?? LayerTurn3D()
+                turn.hinge = hinge
+                edited.turn3D = turn
+            }
             var motions = edited.motions ?? []
             if let index = motions.firstIndex(where: { $0.id == there?.id }) {
                 motions[index] = finished

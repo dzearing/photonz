@@ -64,7 +64,27 @@ enum MotionSVG {
 
     /// What this file can move: what Ask may key for an animated SVG, so
     /// nothing it plans is left still in the file.
-    static let carried: [MotionProperty] = [.position, .scale, .rotation, .opacity, .color, .strokeWidth, .trimStart, .trimEnd]
+    static let carried: [MotionProperty] = [.position, .scale, .rotation, .opacity, .color, .strokeWidth, .trimStart, .trimEnd,
+                                            .rotationX, .rotationY]
+
+    /// The order the file nests what it carries, outermost first: the
+    /// canvas's own (`MotionProperty.nestingOrder`), with a fold just inside
+    /// the move. The canvas folds a layer about its hinge where the layer IS,
+    /// moved or not, so in the file the hinge, said where it was drawn, has
+    /// to travel with the move.
+    static let fileOrder: [MotionProperty] = MotionProperty.nestingOrder.filter { !folds.contains($0) }
+        .flatMap { $0 == .position ? [$0] + folds : [$0] }
+
+    /// A fold: a flat card turned in space about a hinge across it (`rotationX`)
+    /// or up it (`rotationY`). SVG has no space, so the file shows it as the
+    /// card seen straight on, which is the card squeezed toward its hinge by
+    /// the cosine of its turn and mirrored past 90 degrees. The canvas adds
+    /// the camera's perspective; an icon's fold reads the same without it.
+    static let folds: [MotionProperty] = [.rotationY, .rotationX]
+
+    /// How many moments a fold is drawn with across one lap: a cosine is no
+    /// cubic, so it is stated point by point, plus every key's own moment.
+    static let foldSamples = 48
 
     /// The dash's offset for a percent of the line, 100 being all of it drawn.
     /// The dash is as long as the line: at nothing drawn it stands just before
@@ -139,7 +159,7 @@ enum MotionSVG {
         // turn, then the growth. That is the order the canvas composes them
         // in, where a move shifts the whole drawing and a turn swings what is
         // inside it (`LayerMotion.applied`).
-        for property in MotionProperty.nestingOrder {
+        for property in fileOrder {
             guard let motion = motions.first(where: { $0.property == property }) else { continue }
             guard let track = track(for: motion, layer: layer, pivot: pivot, cycleMS: cycleMS)
             else {
@@ -174,6 +194,14 @@ enum MotionSVG {
                 let base = track.base == "1 1" ? "" : " transform=\"scale(\(track.base))\""
                 push(base, [track.element])
                 push(" transform=\"translate(\(back))\"", [])
+            case .rotationX, .rotationY:
+                // Folding happens about the hinge, so the file steps out to
+                // it, squeezes, and steps back, as a grow does about the middle.
+                let hinge = layer.spacePivot
+                push(" transform=\"translate(\(SVGExport.num(hinge.x)) \(SVGExport.num(hinge.y)))\"", [])
+                let base = track.base == "1 1" ? "" : " transform=\"scale(\(track.base))\""
+                push(base, [track.element])
+                push(" transform=\"translate(\(SVGExport.num(-hinge.x)) \(SVGExport.num(-hinge.y)))\"", [])
             case .color:
                 guard !isPicture, let role = paintRole(of: layer) else {
                     drop(property, isPicture
@@ -189,7 +217,7 @@ enum MotionSVG {
              .cropLeft, .cropTop, .cropRight, .cropBottom,
              .backgroundBlur, .backgroundZoom,
              .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation,
-             .rotationX, .rotationY, .depth, .pivotDepth,
+             .depth, .pivotDepth,
              .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
                 // An animated SVG has no way to say this yet: a blur in the
                 // file is a filter, and animating its softness means writing a
@@ -309,7 +337,8 @@ enum MotionSVG {
         let lapMS = ownPace ? max(1, motion.timing.durationMS) : max(1, cycleMS)
         let played = ownPace
             ? motion.retimed(to: MotionTiming(startMS: 0, durationMS: lapMS)) : motion
-        let stops = stops(for: played, cycleMS: lapMS)
+        let stops = folds.contains(motion.property)
+            ? sampledStops(for: played, cycleMS: lapMS) : stops(for: played, cycleMS: lapMS)
         guard stops.count >= 2 else { return nil }
         let texts = stops.compactMap {
             text(of: $0.value, property: motion.property, layer: layer, pivot: pivot)
@@ -333,7 +362,7 @@ enum MotionSVG {
         case .rotation:
             element = "animateTransform"
             attributes = "attributeName=\"transform\" type=\"rotate\""
-        case .scale:
+        case .scale, .rotationX, .rotationY:
             element = "animateTransform"
             attributes = "attributeName=\"transform\" type=\"scale\""
         case .opacity:
@@ -354,7 +383,7 @@ enum MotionSVG {
              .cropLeft, .cropTop, .cropRight, .cropBottom,
              .backgroundBlur, .backgroundZoom,
              .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation,
-             .rotationX, .rotationY, .depth, .pivotDepth,
+             .depth, .pivotDepth,
              .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
             // Never reached: these are dropped before a track is asked for.
             return nil
@@ -560,6 +589,23 @@ enum MotionSVG {
         return stops
     }
 
+    /// Every moment of one lap drawn point by point, straight between them:
+    /// the motion asked at `foldSamples` even moments and at each key, and a
+    /// millisecond before each, so a Hold still jumps where it jumps.
+    static func sampledStops(for motion: LayerMotion, cycleMS: Int) -> [Stop] {
+        let lap = max(1, cycleMS)
+        var moments = Set((0...foldSamples).map { lap * $0 / foldSamples })
+        for key in motion.keyframes where key.atMS > 0 && key.atMS < lap {
+            moments.insert(key.atMS)
+            moments.insert(key.atMS - 1)
+        }
+        return moments.sorted().map { ms in
+            // The very end of the lap is where the clock has wrapped; it is
+            // asked a moment before, as `stops` does.
+            Stop(ms: Double(ms), value: motion.value(atMS: min(ms, lap - 1), cycleMS: lap), spline: hold)
+        }
+    }
+
     /// The same easing, read backwards: what the run HOME does on a
     /// there-and-back, where the value travels from To to From as time goes
     /// forward.
@@ -609,6 +655,10 @@ enum MotionSVG {
         case let (.scale, .number(percent)):
             let factor = percent / 100
             return "\(number(factor)) \(number(factor))"
+        case let (.rotationX, .number(degrees)):
+            return "1 \(number(foldShare(degrees)))"
+        case let (.rotationY, .number(degrees)):
+            return "\(number(foldShare(degrees))) 1"
         case let (.position, .point(point)):
             return "\(SVGExport.num(point.x - layer.frame.origin.x))"
                 + " \(SVGExport.num(point.y - layer.frame.origin.y))"
@@ -627,6 +677,13 @@ enum MotionSVG {
     }
 
     static func number(_ value: Double) -> String { SVGExport.num(CGFloat(value)) }
+
+    /// How much of a card turned `degrees` in space is seen straight on, with
+    /// its sign: a card past edge on shows its back, mirrored.
+    static func foldShare(_ degrees: Double) -> Double {
+        let share = cos(degrees * .pi / 180)
+        return abs(share) < 0.0005 ? 0 : share
+    }
 
     static func indent(_ level: Int) -> String { String(repeating: "  ", count: max(level, 0)) }
 }
