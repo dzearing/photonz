@@ -48,6 +48,10 @@ public enum AskStage: Hashable, Sendable {
     case checking(subject: String, part: Int, of: Int)
     case tryingAgain(Why)
     case keepingClosest
+    /// The planning model looking at frames of a moving icon it made (`AskMotionLook`).
+    case checkingMotion
+    /// The plan mending the beats that look did not see.
+    case fixingMotion
 
     /// Why a drawing is being made again.
     public enum Why: Hashable, Sendable {
@@ -120,6 +124,8 @@ public enum AskStage: Hashable, Sendable {
         case .tryingAgain(.missed(let statement)): return ("Trying again: missed ", Self.plain(statement, lower: true), "")
         case .tryingAgain(.offTheEdge): return ("Painting again: it ran off the edge", "", "")
         case .keepingClosest: return ("Keeping the closest try", "", "")
+        case .checkingMotion: return ("Checking the motion", "", "")
+        case .fixingMotion: return ("Fixing the motion", "", "")
         }
     }
 

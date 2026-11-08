@@ -22812,3 +22812,9 @@ units.
 - Eval: six `"story": true` cases judged on every beat happening in order. Baseline 63.1, 29.6, 60, 23.8, 39.3, 52.1 (reads as asked 6, 3, 6, 3, 4, 5); after the rules and first checks 66.7, 28.3, 26.4, 23.7, 25.1, 38.6. Bar (5 of 6 at 7) not reached: the task stays pending.
 - Walks: `ask-animates-a-story-walk` (the user's sentence) and `ask-animates-a-story-without-the-word-walk` both pass at Next defaults: the icon plays and Copy SVG loops.
 - Next: the model's own story design is the limit (trash fades in beside the lid, a rocket smoke dot, a checkbox that fades in whole). Try a look-and-revise pass: show the model frames of its own motion and let it fix the beats.
+
+## 2026-11-08 — A moving icon is looked at before it lands
+
+- Ask now renders twelve frames of a moving icon's lap on white (`AgentWork.lapSheet`) and asks the planning model, which can see, which frames show each beat the request tells and what looks wrong (`AskMotionLook`, tests in `AskMotionLookTests`). Anything but `All good.` comes off the canvas and goes back to the plan once, drawing kept, keys replaced (`AskConversation.reviseMotion`). Live line: Checking the motion, Fixing the motion. Only while the request is under 150 s, so a slow plan never runs past five minutes.
+- Six story cases: reads as asked 6,3,3,3,3,4 (total 34.8) before, 5,6,6,3,5,4 (49.1) with the first wording, 5,6,4,5,4 plus one timeout with the second (contact, direction, going behind; leaving the frame is no fault). Single motions 69.9 against 72.3, within noise.
+- Not at the bar (5 of 6 at 7). The user's trash sentence plans for about 265 s, so the look does not reach it. Next: make the story plan quicker (fewer rule send-back rounds) so the look fits, and judge parts' contact in the look more strictly.

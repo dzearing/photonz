@@ -466,12 +466,43 @@ enum AgentWork {
                        saying: "\(title(of: editor)): \(times.count) frames at \(said), left to right, top to bottom")
     }
 
-    private static func draw(_ text: String, in context: CGContext, at point: CGPoint) {
+    /// Frames of a keyed picture's lap at `times` on white, each with its
+    /// time under it, as a PNG: what Ask's planning model looks at before a
+    /// moving icon lands (`AskMotionLook`). On white, not black like
+    /// `contact_sheet`, since an icon's dark lines on black read as nothing.
+    static func lapSheet(of editor: EditorState, times: [Int], columns: Int, cellSide: Int) -> Data? {
+        guard let document = editor.document, document.isKeyedPicture, !times.isEmpty else { return nil }
+        let layout = AgentContactSheet.layout(count: times.count, columns: columns, cellWidth: CGFloat(cellSide),
+                                              pictureSize: document.canvasSize)
+        guard let context = CGContext(data: nil, width: Int(layout.size.width), height: Int(layout.size.height),
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return nil }
+        let height = layout.size.height
+        context.setFillColor(CGColor(gray: 0.85, alpha: 1))
+        context.fill(CGRect(origin: .zero, size: layout.size))
+        let scale = CGFloat(cellSide) / max(1, document.canvasSize.width)
+        for (index, ms) in times.enumerated() {
+            let box = layout.pictures[index]
+            let flipped = CGRect(x: box.minX, y: height - box.maxY, width: box.width, height: box.height)
+            context.setFillColor(CGColor(gray: 1, alpha: 1))
+            context.fill(flipped)
+            if let shown = lapPicture(of: document, store: editor.store, atMS: ms, scale: scale) {
+                context.draw(shown, in: flipped)
+            }
+            let label = layout.labels[index]
+            draw(String(format: "%.2f s", Double(ms) / 1000), in: context,
+                 at: CGPoint(x: label.minX + 2, y: height - label.maxY + 6), gray: 0.1)
+        }
+        return context.makeImage().flatMap { ImageCodec.encode($0, format: .png) }
+    }
+
+    private static func draw(_ text: String, in context: CGContext, at point: CGPoint, gray: CGFloat = 0.92) {
         let font = CTFontCreateUIFontForLanguage(.system, 13, nil)
             ?? CTFontCreateWithName("Helvetica" as CFString, 13, nil)
         let attributes: [NSAttributedString.Key: Any] = [
             NSAttributedString.Key(kCTFontAttributeName as String): font,
-            NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 0.92, alpha: 1),
+            NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: gray, alpha: 1),
         ]
         let line = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: attributes))
         context.textPosition = point

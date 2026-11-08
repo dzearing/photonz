@@ -529,6 +529,8 @@ final class AskSession {
         var closest: (attempt: AskDrawingCheck.Attempt, after: PhotonzDocument, ran: Ran, plan: AskPlan)?
         // A try again says why for as long as it plans the next try.
         var retrying: AskStage?
+        // How many times a moving icon's frames were looked at (`AskMotionLook`).
+        var motionLooks = 0
         while true {
             let outcome = await Self.plan(&talk, model: model, in: editor, note: note, say: say, first: retrying)
             guard !Task.isCancelled else { return }
@@ -566,6 +568,28 @@ final class AskSession {
             // the Agent group comes back into view, so its line can still be
             // read while the drawing is checked or drawn again.
             revealRows()
+            // A moving icon is looked at across its lap before it lands, and
+            // what the look did not see goes back to the plan once.
+            if talk.movesIcon, !AskLocalModel.answersAreScripted,
+               AskMotionLook.looks(after: Date().timeIntervalSince(started), looked: motionLooks) {
+                motionLooks += 1
+                let seen = await lookAtMotion(in: canvas, asked: words, model: model, note: note)
+                if Task.isCancelled {
+                    canvas.undo()
+                    closeOpened()
+                    stepsRun = 0
+                    phase = .stopped(AskCopy.stoppedSentence)
+                    return
+                }
+                if let seen {
+                    canvas.undo()
+                    talk.reviseMotion(seen: seen)
+                    retrying = .fixingMotion
+                    enter(.fixingMotion)
+                    phase = .planning
+                    continue
+                }
+            }
             let miss = talk.landsAsDrawn ? nil : await look(at: plan, made: ran.made, in: canvas, model: model, note: note, say: say)
             if Task.isCancelled {
                 // Stopped while it looked at what it drew: what ran comes
@@ -809,6 +833,26 @@ final class AskSession {
         default:
             return (.making(step: number, of: steps), nil)
         }
+    }
+
+    /// What the planning model sees wrong in frames of the moving icon that
+    /// just landed, in its words, or nil when every beat reads (or it cannot
+    /// see, or gave no answer): `AskMotionLook`.
+    private func lookAtMotion(in editor: EditorState, asked words: String, model: String,
+                              note: (String) -> Void) async -> String? {
+        guard await AskLocalModel.sees(model) else {
+            note("motion look skipped: \(model) cannot see")
+            return nil
+        }
+        guard let lap = editor.document?.motionCycleLengthMS,
+              let png = AgentWork.lapSheet(of: editor, times: AskMotionLook.times(lapMS: lap),
+                                           columns: AskMotionLook.columns, cellSide: AskMotionLook.cellSide) else { return nil }
+        enter(.checkingMotion)
+        let answer = try? await AskLocalModel.chat(AskMotionLook.body(model: model, png: png, request: words))
+        let said = answer?["message"]?["content"]?.stringValue ?? ""
+        let seen = AskMotionLook.critique(fromAnswer: said)
+        note("motion look: \(seen.map { "sent back: \($0)" } ?? (said.isEmpty ? "no answer" : "all good"))")
+        return seen
     }
 
     /// The first drawing the plan made that a model that can see does not

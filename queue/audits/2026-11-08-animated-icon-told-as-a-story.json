@@ -1,26 +1,54 @@
 {
   "feature": "An animated icon told as a little story",
   "epic": "icon-svg",
-  "summary": "Asking for an icon that tells a story of several beats now always makes a moving icon, even when your words never say animated or have a typo in it. Ask goes through the beats in order before it finishes, and its row says if it had to leave one out.",
+  "summary": "Asking for an icon that tells a story of several beats now always makes a moving icon, even when your words never say animated or have a typo in it. Before it lands, Ask now looks at frames of its own motion and mends any beat it could not see, and its row says if it had to leave one out.",
   "setup": "Photonz Dev, release Next, no flag changed from its default.",
   "switched": {},
   "try": [
-    { "do": "Close every window, then type your sentence into the New window: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Create.", "shot": "2026-11-08-animated-story-made.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Press Space and watch the lid open, the trash come in and hit the lid, drop in, and the lid shut.", "shot": "2026-11-08-animated-story-frames.png" },
-    { "do": "Open the reel to see the exported SVG playing as a browser plays it.", "shot": "2026-11-08-animated-story-reel.gif" },
-    { "do": "Try it without the word: make a trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.", "shot": "2026-11-08-animated-story-no-word-made.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Try a typo: make an anmiated bell icon that swings and rings twice." },
-    { "do": "Check a still stays still: make an icon of a balloon popping. It should be a still icon, as before." },
-    { "do": "Choose Copy SVG and paste the file into a browser: it loops." }
+    {
+      "do": "Close every window, then type your sentence into the New window: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Create.",
+      "shot": "2026-11-08-animated-story-made.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Space and watch the lid open, the trash come in and hit the lid, drop in, and the lid shut.",
+      "shot": "2026-11-08-animated-story-frames.png"
+    },
+    {
+      "do": "Ask for: make an animated heart icon where the heart beats twice and then breaks. Watch the line under the request say Checking the motion, then Fixing the motion.",
+      "shot": "2026-11-08-animated-story-heart-looked.png"
+    },
+    {
+      "do": "Open the heart's reel to see it play as a browser plays the file.",
+      "shot": "2026-11-08-animated-story-heart-looked-reel.gif"
+    },
+    {
+      "do": "Open the reel to see the exported SVG playing as a browser plays it.",
+      "shot": "2026-11-08-animated-story-reel.gif"
+    },
+    {
+      "do": "Try it without the word: make a trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.",
+      "shot": "2026-11-08-animated-story-no-word-made.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Check a still stays still: make an icon of a balloon popping. It should be a still icon, as before."
+    },
+    {
+      "do": "Choose Copy SVG and paste the file into a browser: it loops."
+    }
   ],
   "evaluate": [
     "Does every request you meant as moving now move, including ones without the word animated?",
     "Does a one-action icon you meant as a still (a bell ringing, a door opening) still come out still?",
     "In the trash reel, can you tell the trash bounces off the lid and that is what shuts it?",
-    "When Ask leaves a beat out, is the row's line ('Left out the bounce; it could not be planned.') enough to know what to ask for next?"
+    "When Ask leaves a beat out, is the row's line ('Left out the bounce; it could not be planned.') enough to know what to ask for next?",
+    "Does the heart's reel read as two beats and then a break, and is the extra 15 to 60 seconds of Checking the motion worth it?"
   ],
   "rough": [
-    "Not at the bar yet: of six new story requests (the trash, a letter into an envelope that flies off, a bell that rings twice, a heart that beats twice then breaks, a rocket that shakes and lifts off, a checkbox ticked with a bounce), none reads as asked at 7 or more; the best is the bell at 6. The task stays open for it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "Not at the bar yet: of six story requests, none reads as asked at 7 or more. Looking at the motion before it lands lifted the six from 6, 3, 3, 3, 3, 4 to 5, 6, 6, 3, 5, 4 (total 34.8 to 49.1); a second wording read 5, 6, 4, 5, 4 with one case out of time. The task stays open for it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "Your own trash sentence plans for about 265 seconds, past the 150 seconds the look waits for, so the look does not run on it yet; shorter plans get it.",
+    "In the heart, the crack floats loose between the halves instead of being their broken edges, and the broken heart holds for over a second before it snaps back whole.",
     "The trash in the reel fades in beside the lid instead of flying in from outside, and passes in front of the can's rim as it drops in.",
     "The new check that asks the model whether an icon moves costs about a second on every still icon whose words do not say animated.",
     "No mock covers how Ask plans motion; this is Ask's planning, not a surface."

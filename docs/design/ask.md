@@ -1285,6 +1285,29 @@ what a beat causes starting where the parts touch, nothing appearing out of
 nowhere, the whole object moving as one group, a shake big enough to see. The
 eval's `"story": true` cases are judged on every beat happening, in order.
 
+### Looking at the motion before it lands (2026-11-08)
+
+Rules on keys catch numbers (too quick, too small, swinging into the can), not what
+a person sees. So once a moving icon lands, twelve frames of its lap go to the
+planning model on white, four by three with their times (`AgentWork.lapSheet`), with
+the request and one question (`AskMotionLook.question`): for each beat the request
+tells, in order, which frames plainly show it, or `not seen`; a beat counts only if
+it happens the way the words say (what bounces off something touches it, what goes
+in passes behind the front, what closes ends closed, what flies off leaves the
+frame); then each thing that looks wrong (a part appearing or vanishing in place, a
+part cut off while it stays, a change too small, beats out of order, a part left
+behind, a part drawn over what it should be behind). Anything but `All good.` comes
+off the canvas and goes back to the plan once, the drawing kept, to be mended with
+keys that replace the old ones (`AskConversation.reviseMotion`), and lands. The
+live line says "Checking the motion", then "Fixing the motion". It costs about 15
+seconds and a re-plan. Nothing in it knows any subject: the request and the frames
+are all the model is shown.
+
+Measured on the six story cases: reads as asked went from 6, 3, 3, 3, 3, 4 to 5, 6,
+6, 3, 5, 4 with the first wording. Two lessons went into the second: a look that
+calls leaving the frame "cut off" talks the plan out of flying off, and a look not
+asked about contact calls a bounce seen when the trash never touches the lid.
+
 ## Try paths (walks)
 
 `ask-animates-an-icon-walk`: an animated SVG icon from one request at Next

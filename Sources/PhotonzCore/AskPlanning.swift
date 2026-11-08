@@ -1278,6 +1278,24 @@ public struct AskConversation: Sendable {
                                                                                        unmet: unmet, icon: icon && unmet.isEmpty))])
     }
 
+    /// Whether this plan draws a moving icon (`AskMotion`), so what lands is
+    /// looked at as motion (`AskMotionLook`).
+    public var movesIcon: Bool { drawsMotion }
+
+    /// What the look at the frames saw goes back (`AskMotionLook`): the
+    /// drawing and its keys stay, to be mended with keys that replace them,
+    /// the rule checks may send back once more, and the beats are not gone
+    /// through again, the look having been that.
+    public mutating func reviseMotion(seen: String) {
+        rounds = 0
+        // One more rule send-back, not a fresh two: the re-plan is time a
+        // person is already waiting.
+        motionSendBacks = AskMotionCheck.mostSendBacks - 1
+        beatsReviewed = true
+        beatsLeftOut = []
+        messages.append(["role": "user", "content": .string(AskMotionLook.sendBack(seen))])
+    }
+
     /// The drawing already planned that this one would land on top of: both
     /// centred (no frame), or their frames mostly the same place. A model
     /// that sends a scene's add_drawing again with its plan reworded would
