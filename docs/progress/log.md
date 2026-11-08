@@ -22794,3 +22794,11 @@ units.
 - Eval: balloon 84.0, 83.2, 85.6, 72.0 on one identical picture (was 66.6 to 69.3); bar of 85 still not met. Heart 86.5, egg 88.8, bubble 87.2 hold.
 - Lab: `/tmp/tearlab` has render, row and a 9-look judge (`tools/judge.mjs <label> <case> <svg> 9`); judge a picture LANDED through `iconFrame` + `SVGExport`, never the tool's raw output, or the lab reads 10 to 15 points high.
 - Next: the balloon's remaining misses say lopsided, sits left of centre (the tear takes the upper right) and a blob knot. Open: whether the visual mass, not the box, should be centred for a torn icon.
+
+## 2026-11-08 — An animated icon's flap folds, what flies off leaves whole, lines draw on
+
+- A flap hinged along an edge folds over it: Ask may key `rotationX`/`rotationY` with a pivot that becomes the layer's hinge in space, and the animated SVG carries a fold as a one-axis scale about the hinge, sampled 48 times a lap (`MotionSVG.folds`). Envelope 35.9 -> 77.8 twice, reads as asked 7.
+- `AskMotion.leaving`: a part keyed half over the frame's edge goes to the nearer of a little in or wholly out, and once gone re-enters from the far side on a Hold. `swingsFitted` eases a swing that would overflow all the room. `AskMotion.hidden` fills white the closed outline a part travels out of, so it starts hidden.
+- A line drawing itself is keyed on trimEnd alone (trimStart on a drawn part is sent back). Wifi 39.3 -> 83.8 and 80.8, reads as asked 8. The old "row of dots" did not reproduce: WebKit draws nothing at trim 0.
+- Held-out gained 8 animated requests written blind by a subagent: total 56.9 over 53 (animated 37.3). Drawing and video fell against 7 Nov, which this change does not reach: filed `find-out-why-ask-s-held-out-drawing-and-video-sc`.
+- Open: the paper plane reads 6 against a bar of 7 (model draws it edge to edge, leaves its speed lines behind, exits too fast to see). The task stays pending.
