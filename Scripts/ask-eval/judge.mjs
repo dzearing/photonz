@@ -114,9 +114,13 @@ const median = (values) => {
 };
 
 /// The rubric, `runs` times at once: each line's median, and their mean.
-export async function judgePicture({ picture, request, context, runs = 3, crafted = false, video = false, photo = false, icon = false, animated = false }) {
+/// A story's request tells several beats; it is judged on each of them happening, in order.
+export const storyLine = "The request tells a little story of several beats. didWhatWasAsked is whether every beat it asks for happens, in the order told, and reads as that beat: a beat missing, out of order or too small to read is 5 or lower.";
+
+export async function judgePicture({ picture, request, context, runs = 3, crafted = false, video = false, photo = false, icon = false, animated = false, story = false }) {
+  const said = [context ? `It was made on ${context}: judge what the request did to it, not the picture underneath.` : "", story ? storyLine : ""].filter(Boolean).join("\n");
   const prompt = rubricFor({ crafted, video, photo, icon, animated }).replaceAll("{{request}}", request)
-    .replaceAll("{{context}}", context ? `It was made on ${context}: judge what the request did to it, not the picture underneath.` : "");
+    .replaceAll("{{context}}", said);
   const answers = (await Promise.all(Array.from({ length: runs }, () => ask(picture, prompt)))).filter(Boolean);
   if (!answers.length) return { score: null, lines: {}, why: "the judge gave no answer", answers };
   const lines = {};

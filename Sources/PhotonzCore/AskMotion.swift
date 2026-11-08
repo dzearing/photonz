@@ -25,7 +25,96 @@ public enum AskMotion {
     /// Whether `request` asks for what is drawn to move: "animated", "a
     /// looping", "a gif of". Whatever it is of.
     public static func asksToMove(_ request: String) -> Bool {
-        !drawingWords.union(gifWords).isDisjoint(with: AgentDrawingWords.words(request))
+        AgentDrawingWords.words(request).contains { word in
+            drawingWords.contains(word) || gifWords.contains(word) || slipOfAnimate(word)
+        }
+    }
+
+    /// The long words for motion, which a slip of the keyboard does not turn
+    /// into another word: one letter left out, added, changed or two swapped
+    /// ("anmiated", "animted") still asks for motion. "animal", "anime" and
+    /// "animator" are two or more slips away from every one of them.
+    static let slippable = ["animate", "animated", "animating", "animation", "animations"]
+
+    static func slipOfAnimate(_ word: String) -> Bool {
+        guard word.count >= 6, word.first == "a" else { return false }
+        return slippable.contains { oneSlip(word, $0) }
+    }
+
+    /// Whether `a` is `b` with at most one letter left out, added, changed, or
+    /// two neighbours swapped.
+    static func oneSlip(_ a: String, _ b: String) -> Bool {
+        let x = Array(a), y = Array(b)
+        guard abs(x.count - y.count) <= 1 else { return false }
+        if x == y { return true }
+        var i = 0
+        while i < min(x.count, y.count), x[i] == y[i] { i += 1 }
+        if x.count == y.count {
+            if Array(x[(i + 1)...]) == Array(y[(i + 1)...]) { return true }
+            return i + 1 < x.count && x[i] == y[i + 1] && x[i + 1] == y[i] && Array(x[(i + 2)...]) == Array(y[(i + 2)...])
+        }
+        return x.count > y.count ? Array(x[(i + 1)...]) == Array(y[i...]) : Array(x[i...]) == Array(y[(i + 1)...])
+    }
+
+    // MARK: When the words do not say
+
+    /// Asked of an icon whose words name no motion, before it is drawn still:
+    /// on 2026-11-07 the user told a trash can's whole story (the lid opens,
+    /// trash is thrown in, bounces off the lid and closes it) in words the
+    /// motion check did not know, and got a still can. The model reads the
+    /// request; nothing here knows any subject. One action is still a still
+    /// (a balloon popping, a bell ringing): asked of qwen3.8-27b on 2026-11-08,
+    /// this wording read 17 stills and 9 stories right, where asking only
+    /// whether it moves turned five one-action stills into moving icons.
+    static let movesQuestion = """
+        An icon was asked for. Reply moves only if the words ask for it to move (animated, moving, playing, \
+        looping), or tell two or more things that happen one after another (this happens, then that). One thing \
+        doing one action (popping, opening, ringing, flying, taking off) is a still icon showing that action. Reply \
+        only: moves, or: still.
+
+        The request:
+        """
+
+    /// The body of the one call that asks: no tools, no document.
+    public static func movesBody(model: String, request: String) -> AgentJSON {
+        ["model": .string(model), "stream": false, "think": false, "keep_alive": "30m",
+         "messages": [["role": "user", "content": .string("\(movesQuestion) \(request)")]],
+         "options": ["temperature": 0, "num_predict": 8]]
+    }
+
+    /// Whether the answer says it moves. Anything else draws it still, as before.
+    public static func moves(fromAnswer answer: String) -> Bool {
+        let said = AskConversation.withoutThinking(answer).trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: .punctuationCharacters).lowercased()
+        return said == "moves" || said == "move"
+    }
+
+    // MARK: Every beat
+
+    /// Said once, when a designed moving icon says it is finished: the beats
+    /// it designed, in order, each keyed and seen, or named as left out.
+    static let beatsReview = """
+        Before it lands, go through the beats of your design in the order the request tells them. Each beat must \
+        be keyed and long enough to see (200 ms at the least, a journey 300 to 600 ms), each starting as the one \
+        that causes it ends. Key any beat nothing moves for yet, or set_keys again with replace true for one too \
+        quick or too small to see. If a beat cannot be shown, finish with one last line, Left out: and those beats \
+        in a few words. When every beat is there, finish with: Left out: nothing.
+        """
+
+    /// The beats the model's last words say it left out, and those words
+    /// without that line.
+    static func leftOut(in said: String) -> (beats: [String], rest: String) {
+        var beats: [String] = []
+        var kept: [Substring] = []
+        for line in said.split(separator: "\n", omittingEmptySubsequences: false) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard trimmed.lowercased().hasPrefix("left out:") else { kept.append(line); continue }
+            let named = trimmed.dropFirst("left out:".count).trimmingCharacters(in: .whitespaces)
+                .trimmingCharacters(in: CharacterSet(charactersIn: ".")).trimmingCharacters(in: .whitespaces)
+            if ["", "nothing", "none", "no beats", "no beat"].contains(named.lowercased()) { continue }
+            beats.append(named)
+        }
+        return (beats, kept.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
     /// Whether `request` asks for a moving icon to be drawn: a request about
@@ -77,7 +166,8 @@ public enum AskMotion {
         will draw the object the way you know it. Say: 1) what the eye must see for this to read as that action and \
         not a plain pulse or swap; 2) the parts: which move, everything attached to a moving part that goes with it, \
         what stays still, the hinge or centre of any turn and which way it turns, and any extra pieces and where they \
-        go; 3) the beats, each with its time in ms, across a lap that ends back at rest.
+        go; 3) the beats in the order the request tells them, each with its time in ms, across a lap that ends \
+        back at rest.
         """
 
     /// What follows the design in the talk.
@@ -114,8 +204,8 @@ public enum AskMotion {
         little, is gone within 100 ms, and at that moment separate small pieces fly out from where it was, slowing \
         and fading out within 400 ms: pieces never stand still. Three to six pieces in one <g>, drawn where they end \
         up, keyed as that one group from scale 30 to 100 and opacity 100 to 0, are two calls. A part that swings on one point, seen side on (a door seen from above, an arm), \
-        turns with rotation, hinged at its end on the object's real edge, lifting it a negative rotation, no more \
-        than it could swing. A part hinged along a whole edge facing you (a cover, a page, a door seen from the front) folds over that \
+        turns with rotation, hinged at its end on the object's real edge, no more than it could swing. Lifting is a \
+        negative rotation when the hinge is at its left end and a positive one when the hinge is at its right end. A part hinged along a whole edge facing you (a cover, a page, a door seen from the front) folds over that \
         edge: rotationX for a top or bottom edge, rotationY for a side, pivot the middle of that edge, 180 to lie \
         open; it never turns flat. What moves never crosses what stays still: it stops short of it.
         - A line that draws itself is keyed on trimEnd alone, never trimStart too: trimEnd 0 at 0 seconds, so the \
@@ -126,7 +216,18 @@ public enum AskMotion {
         its edge, seen the whole way: Ease in, speeding up over 300 to 500 ms. Then it comes back in from the other \
         side, or fades in where it rests. Marks that show a part moving (lines behind it, a trail) go with it or \
         are gone before it is, never left on their own.
-        - A lap is 1 to 3 seconds and loops unless the words say once. It must loop cleanly: set_timing seconds is \
+        - A story of several beats plays them in the order told, one after another, each long enough to read: \
+        200 ms at the least, a journey 300 to 600 ms. What a beat causes starts as that beat ends, at the key where \
+        the two parts touch. The beats fill most of a 2 to 4 second lap with a short rest at its end, never a burst \
+        at the start and a long still wait.
+        - Nothing appears out of nowhere. What is thrown, dropped or put in starts away from where it lands (in \
+        view, or outside the frame) and travels the whole way there, x and y keyed together along an arc; what goes \
+        into something passes behind its front and is gone inside it.
+        - When the whole object moves (flies off, lifts off, swings, shakes), draw all of it inside one <g> and key \
+        that <g>, so no part is left behind; a part that also moves on its own is a <g> inside it. A shake is quick \
+        turns of 5 to 10 degrees, or moves of 1 on the grid, three or four times. A thing hanging from a point swings \
+        with rotation about that point, never rotationX or rotationY, which only fold a flat cover over an edge.
+        - A lap is 1 to 3 seconds, a story 2 to 4, and loops unless the words say once. It must loop cleanly: set_timing seconds is \
         the lap, and every value's last key sits at the end of the lap with its first value, or a turn ends on a \
         whole 360. What vanishes comes back before the lap ends. Leave a beat at rest so the eye can read it. \
         An object that grows, swings or sheds pieces is drawn about 16 across, with room around it for the motion.
@@ -627,6 +728,147 @@ public enum AskMotionCheck {
         return before["value"] != last
     }
 
+    /// "trash's position starts at x 12 y 14, where it was drawn", for keys
+    /// written as where the part is on the grid rather than how far it moved:
+    /// the part lands that far again from where it was drawn, often off the
+    /// icon (2026-11-08, the trash of the user's story keyed at x 12 y 14).
+    private static func placedWhereDrawn(_ steps: [AskStep]) -> [String] {
+        guard let svg = steps.first(where: { $0.tool == "add_drawing" })?.arguments["svg"]?.stringValue,
+              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true) else { return [] }
+        return steps.compactMap { step -> String? in
+            guard step.tool == "set_keys", step.arguments["property"]?.stringValue == MotionProperty.position.rawValue,
+                  let own = box(of: name(of: step), in: art), let start = timed(step).first.flatMap({ point($0.value) }) else { return nil }
+            let middle = CGPoint(x: own.midX, y: own.midY)
+            guard hypot(middle.x, middle.y) > 4, hypot(start.x - middle.x, start.y - middle.y) <= 1.5 else { return nil }
+            func said(_ value: CGFloat) -> String { value == value.rounded() ? String(Int(value)) : String(format: "%.1f", value) }
+            return "\(name(of: step))'s position starts at x \(said(start.x)) y \(said(start.y)), where it was drawn"
+        }
+    }
+
+    /// A still thing smaller than this across or down is a mark, not
+    /// something a turning part could fall into.
+    static let solidSide: CGFloat = 4
+
+    /// "lid turning -35 swings into base", for a part keyed on rotation whose
+    /// corners, turned to its furthest key about its pivot, land inside
+    /// something that stays still and were not inside it at rest: a lid hinged
+    /// at its right end and lifted the left end's way drops into the can.
+    private static func swingsInto(_ steps: [AskStep]) -> [String] {
+        guard let svg = steps.first(where: { $0.tool == "add_drawing" })?.arguments["svg"]?.stringValue,
+              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true) else { return [] }
+        var said: [String] = []
+        for step in steps where step.tool == "set_keys" && step.arguments["property"]?.stringValue == MotionProperty.rotation.rawValue {
+            let moving = AskMotion.plain(name(of: step))
+            guard let own = box(of: name(of: step), in: art),
+                  let furthest = timed(step).compactMap({ $0.value.doubleValue }).max(by: { abs($0) < abs($1) }), abs(furthest) >= 10,
+                  let x = step.arguments["pivot"]?["x"]?.doubleValue, let y = step.arguments["pivot"]?["y"]?.doubleValue else { continue }
+            let pivot = AskMotion.isFraction(x, y) ? CGPoint(x: own.minX + own.width * x, y: own.minY + own.height * y) : CGPoint(x: x, y: y)
+            let angle = furthest * .pi / 180
+            let corners = [CGPoint(x: own.minX, y: own.minY), CGPoint(x: own.maxX, y: own.minY),
+                           CGPoint(x: own.minX, y: own.maxY), CGPoint(x: own.maxX, y: own.maxY)]
+            let turned = corners.map { corner -> CGPoint in
+                let dx = corner.x - pivot.x, dy = corner.y - pivot.y
+                return CGPoint(x: pivot.x + dx * cos(angle) - dy * sin(angle), y: pivot.y + dx * sin(angle) + dy * cos(angle))
+            }
+            // What stays still, as the largest named thing not holding the turning part.
+            var still: [String] = []
+            for part in art.parts {
+                let names = part.groups + [part.name].compactMap { $0 }
+                guard !names.contains(where: { AskMotion.plain($0) == moving }) else { continue }
+                let holding = Set(art.parts.filter { one in (one.groups + [one.name].compactMap { $0 }).contains { AskMotion.plain($0) == moving } }
+                    .flatMap { $0.groups }.map(AskMotion.plain))
+                if let unit = names.first(where: { !holding.contains(AskMotion.plain($0)) }), !still.contains(unit) { still.append(unit) }
+            }
+            for unit in still {
+                guard let solid = box(of: unit, in: art), solid.width >= solidSide, solid.height >= solidSide else { continue }
+                let inside = solid.insetBy(dx: 1, dy: 1)
+                if turned.contains(where: inside.contains), !corners.contains(where: inside.contains) {
+                    said.append("\(name(of: step)) turning \(Int(furthest.rounded())) swings into \(unit.lowercased())")
+                    break
+                }
+            }
+        }
+        return said
+    }
+
+    /// The keys of a step by time, each with its value and curve.
+    private static func timed(_ step: AskStep) -> [(seconds: Double, value: AgentJSON, curve: String?)] {
+        (step.arguments["keys"]?.arrayValue ?? []).compactMap { key in
+            guard let seconds = key["seconds"]?.doubleValue, let value = key["value"] else { return nil }
+            return (seconds, value, key["curve"]?.stringValue)
+        }.sorted { $0.seconds < $1.seconds }
+    }
+
+    private static func point(_ value: AgentJSON) -> CGPoint? {
+        guard let x = value["x"]?.doubleValue, let y = value["y"]?.doubleValue else { return nil }
+        return CGPoint(x: x, y: y)
+    }
+
+    /// The farthest a journey may go between two keys in less than
+    /// `quickest` seconds: past it, the part is there and then gone.
+    static let longJourney: CGFloat = 6
+    static let quickest = 0.25
+
+    /// "lid travels 9 on the grid in 100 ms", for a part that crosses a long
+    /// way between two keys too close together, while it can be seen and not
+    /// on a Hold (a jump back to the other side is meant).
+    private static func tooQuick(_ step: AskStep, among keyed: [AskStep]) -> String? {
+        guard step.arguments["property"]?.stringValue == MotionProperty.position.rawValue else { return nil }
+        let keys = timed(step)
+        let layer = step.arguments["layer"]?.stringValue
+        let fades = keyed.first { $0.arguments["layer"]?.stringValue == layer && $0.arguments["property"]?.stringValue == MotionProperty.opacity.rawValue }
+        for (from, to) in zip(keys, keys.dropFirst()) {
+            let gap = to.seconds - from.seconds
+            guard gap > 0, gap < quickest, from.curve?.caseInsensitiveCompare(AgentKeyCurve.hold) != .orderedSame,
+                  let a = point(from.value), let b = point(to.value) else { continue }
+            let far = hypot(b.x - a.x, b.y - a.y)
+            guard far >= longJourney else { continue }
+            if let fades, opacity(fades, at: from.seconds) < 10, opacity(fades, at: to.seconds) < 10 { continue }
+            return "\(name(of: step)) travels \(Int(far.rounded())) on the grid in \(Int((gap * 1000).rounded())) ms"
+        }
+        return nil
+    }
+
+    /// An opacity at `seconds`, straight between its keys.
+    private static func opacity(_ step: AskStep, at seconds: Double) -> Double {
+        let keys = timed(step).compactMap { key in key.value.doubleValue.map { (key.seconds, $0) } }
+        guard let first = keys.first else { return 100 }
+        if seconds <= first.0 { return first.1 }
+        for (a, b) in zip(keys, keys.dropFirst()) where seconds <= b.0 {
+            return b.0 - a.0 <= 0 ? b.1 : a.1 + (b.1 - a.1) * (seconds - a.0) / (b.0 - a.0)
+        }
+        return keys.last?.1 ?? 100
+    }
+
+    /// "body's rotation changes by only 2", for a motion that moves but by
+    /// less than an icon shows: a shake of a third of a grid unit reads as still.
+    private static func tooSmall(_ step: AskStep) -> String? {
+        let property = step.arguments["property"]?.stringValue ?? ""
+        let keys = timed(step)
+        guard let first = keys.first?.value, keys.count > 1 else { return nil }
+        let reach: Double
+        let least: Double
+        switch MotionProperty(rawValue: property) {
+        case .position?:
+            guard let start = point(first) else { return nil }
+            reach = keys.compactMap { point($0.value) }.map { Double(hypot($0.x - start.x, $0.y - start.y)) }.max() ?? 0
+            least = 0.75
+        case .rotation?:
+            guard let start = first.doubleValue else { return nil }
+            reach = keys.compactMap { $0.value.doubleValue }.map { abs($0 - start) }.max() ?? 0
+            least = 4
+        case .scale?:
+            guard let start = first.doubleValue else { return nil }
+            reach = keys.compactMap { $0.value.doubleValue }.map { abs($0 - start) }.max() ?? 0
+            least = 6
+        default:
+            return nil
+        }
+        guard reach > 0, reach < least else { return nil }
+        let said = reach < 1 ? String(format: "%.1f", reach) : String(Int(reach.rounded()))
+        return "\(name(of: step))'s \(property) changes by only \(said)"
+    }
+
     /// The box of a part on its drawing's grid, stroke included.
     static func box(of part: String, in art: SVGArtwork) -> CGRect? {
         let plain = AskMotion.plain(part)
@@ -740,6 +982,22 @@ public enum AskMotionCheck {
         }.map(name(of:))
         if !flat.isEmpty {
             said.append("\(flat.joined(separator: ", ")): its keys never change, so it does not move. Call set_keys again with replace true and all of its keys.")
+        }
+        let placed = placedWhereDrawn(steps)
+        if !placed.isEmpty {
+            said.append("\(placed.joined(separator: "; ")): position is how far it has moved from where it was drawn, so where it was drawn is x 0 y 0. Call set_keys again with replace true, each value less where it was drawn.")
+        }
+        let into = swingsInto(steps)
+        if !into.isEmpty {
+            said.append("\(into.joined(separator: "; ")): turned that way it falls into what stays still. Turn it the other way: set_keys again with replace true, every rotation value with the opposite sign.")
+        }
+        let quick = keyed.compactMap { tooQuick($0, among: keyed) }
+        if !quick.isEmpty {
+            said.append("\(quick.joined(separator: "; ")): too quick to see, it is there and then gone. Call set_keys again with replace true for it, that journey over 300 to 500 ms.")
+        }
+        let small = keyed.compactMap(tooSmall)
+        if !small.isEmpty {
+            said.append("\(small.joined(separator: "; ")): too small to see at icon size. A shake or a nudge is at least 1 on the grid or 6 degrees, a beat or a squash at least 10 percent. Call set_keys again with replace true for it.")
         }
         let held = keyed.filter(holdsBeforeTheEnd).map(name(of:))
         if !held.isEmpty {

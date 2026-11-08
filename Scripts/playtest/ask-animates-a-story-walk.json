@@ -1,0 +1,105 @@
+{
+  "out": "/tmp/photonz-playtest/ask-animates-a-story-walk",
+  "seed": "an-animated-icon-told-as-a-little-story-moves-th: the user's own sentence, a story of four beats, typed into the New window at Next defaults. Ask draws the trash can, its lid and the trash as their own parts and keys every beat: the lid opens, the trash is thrown in, bounces off the lid and the lid closes. Space plays it and Copy SVG puts a looping animated SVG on the clipboard",
+  "clock": 600,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "askFromNothing",
+      "from": "newWindow",
+      "text": "make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.",
+      "width": 1280,
+      "height": 900,
+      "card": "1-typed"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 State",
+      "reads": "standing"
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3,
+      "atMost": 30
+    },
+    {
+      "do": "describe",
+      "stage": "2-made",
+      "note": "the New window made an icon, not a refusal, and Ask drew and keyed the trash can"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-made"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Pause",
+      "present": true
+    },
+    {
+      "do": "expectPictureMoves"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-playing"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "writeSVG",
+      "name": "made",
+      "carries": "repeatCount=\"indefinite\""
+    },
+    {
+      "do": "agentTool",
+      "tool": "run_command",
+      "arguments": "{\"command\": \"copy_svg\"}"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "4-copied",
+      "textHas": "repeatCount=\"indefinite\""
+    }
+  ]
+}

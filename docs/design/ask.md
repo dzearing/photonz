@@ -1258,6 +1258,33 @@ judge the file as WebKit plays it, not the document. That is how a lid missing f
 every SVG was found: a box no taller than its own inside line had no line left to
 ride, and `boxRings` skipped it while the canvas drew it.
 
+### A story of several beats (2026-11-08)
+
+The user told a trash can's whole story ("the lid opens and some trash is thrown in,
+bouncing off the lid and causing it to close") and got a still can. Their app's own
+model log showed why: the still icon's questions were asked, never the motion
+design, because the words they typed held none of the exact words the motion check
+knew. So a moving icon is no longer chosen by spelling alone:
+
+* a slip of the keyboard in the long words for motion still asks for it
+  (`AskMotion.slipOfAnimate`: one letter out, in, changed or swapped);
+* an icon whose words name no motion asks the model one short question before it
+  is drawn still (`AskMotion.movesQuestion`). One action is a still (a balloon
+  popping, a bell ringing, a door opening: the icon shows that action); an ask for
+  motion, or two or more things that happen one after another, moves. Asked only
+  "does it move", the model turned five one-action stills into moving icons.
+
+A designed moving icon is sent back once, when it says it is finished, to go
+through its beats in the order the request tells them (`AskMotion.beatsReview`):
+key a beat nothing moves for, lengthen one too quick to see, and end with
+`Left out:` and any beat it could not show. Those land on the row as "Left out the
+bounce; it could not be planned." A moving icon that never got a key says it left
+out the motion, so it never lands as a still without saying so. The principles gain
+what a story needs, true of any subject: beats in order, each long enough to read,
+what a beat causes starting where the parts touch, nothing appearing out of
+nowhere, the whole object moving as one group, a shake big enough to see. The
+eval's `"story": true` cases are judged on every beat happening, in order.
+
 ## Try paths (walks)
 
 `ask-animates-an-icon-walk`: an animated SVG icon from one request at Next

@@ -1,0 +1,22 @@
+{
+  "request": "make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.",
+  "group": "animated",
+  "story": true,
+  "from": "an-animated-icon-told-as-a-little-story-moves-th: the user's own story (trash) and five more stories of several beats, 2026-11-08",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "trash",
+    "bin",
+    "garbage"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

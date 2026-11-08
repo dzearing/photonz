@@ -1,0 +1,22 @@
+{
+  "request": "make an animated envelope icon where a letter goes into the envelope, the flap closes and it flies off",
+  "group": "animated",
+  "story": true,
+  "from": "an-animated-icon-told-as-a-little-story-moves-th: the user's own story (trash) and five more stories of several beats, 2026-11-08",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "envelope",
+    "mail",
+    "letter"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

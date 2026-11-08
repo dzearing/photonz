@@ -1,0 +1,20 @@
+{
+  "request": "make an animated rocket icon where the rocket shakes, lifts off and leaves smoke behind",
+  "group": "animated",
+  "story": true,
+  "from": "an-animated-icon-told-as-a-little-story-moves-th: the user's own story (trash) and five more stories of several beats, 2026-11-08",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "rocket"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

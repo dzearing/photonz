@@ -515,6 +515,12 @@ public struct AskConversation: Sendable {
     private let drawsMotion: Bool
     /// How many times this plan's motion went back to the model.
     private var motionSendBacks = 0
+    /// The motion was designed in words first, so its beats are gone through
+    /// once before it lands (`AskMotion.beatsReview`).
+    private let motionDesigned: Bool
+    private var beatsReviewed = false
+    /// The beats the model said it left out (`AskMotion.leftOut(in:)`).
+    private var beatsLeftOut: [String] = []
     /// The document has a timeline, or does not say: the video tools are
     /// offered. A picture is not shown them (`AskTools.videoOnly`).
     private let video: Bool
@@ -542,7 +548,7 @@ public struct AskConversation: Sendable {
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
                 window: Int = AskConversation.contextWindow, web: AskWebPage? = nil,
                 lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil, iconBreak: AskIconBreak.Answer? = nil,
-                blankIcon: Bool = false) {
+                blankIcon: Bool = false, toldMotion: Bool = false) {
         self.request = request
         self.placeable = Self.placeable(in: library)
         self.web = web
@@ -553,8 +559,11 @@ public struct AskConversation: Sendable {
         let icon = Self.takesIconRoute(request, brushes: brushes, web: web != nil, holdsIcon: holdsIcon, blankIcon: blankIcon)
         self.icon = icon
         self.holdsIcon = holdsIcon
-        let drawsMotion = icon && AskMotion.drawsMotion(request, blankIcon: blankIcon)
+        // `toldMotion`: the model read the words as asking for motion
+        // (`AskMotion.movesQuestion`) where no word for it did.
+        let drawsMotion = icon && (toldMotion || AskMotion.drawsMotion(request, blankIcon: blankIcon))
         self.drawsMotion = drawsMotion
+        motionDesigned = drawsMotion && iconDesign != nil
         // A drawing with its hidden pieces all showing is no still to look at.
         landsAsDrawn = icon && (iconDesign != nil || iconBreak != nil || drawsMotion)
         breaksTheIcon = icon ? iconBreak?.kind : nil
@@ -562,7 +571,7 @@ public struct AskConversation: Sendable {
         self.brushes = brushes
         let parsed = try? AgentJSON.parse(Data(documentRead.utf8))
         video = parsed?["kind"]?.stringValue != "picture"
-        keysMotion = web == nil && (AskTools.asksForMotion(request) || parsed?["lap"] != nil)
+        keysMotion = web == nil && (drawsMotion || AskTools.asksForMotion(request) || parsed?["lap"] != nil)
         let size = parsed?["canvas"]
         canvasWidth = size?["width"]?.doubleValue ?? 0
         canvasHeight = size?["height"]?.doubleValue ?? 0
@@ -739,7 +748,7 @@ public struct AskConversation: Sendable {
         let things = lost.filter { thing in
             // Made after all, on a later try.
             !steps.dropFirst(thing.atStep).contains { $0.tool == thing.tool && (thing.named == nil || Self.named($0.arguments) == thing.named) }
-        }.map(\.words)
+        }.map(\.words) + beatsLeftOut + (drawsMotion && !steps.contains { $0.tool == "set_keys" } ? ["the motion"] : [])
         guard stoppedShort || !things.isEmpty else { return nil }
         return AskUnplanned(things: things, stoppedAfter: stoppedShort ? steps.last.map { AskLeftOutWords.thing($0, names: names) } ?? "the page" : nil)
     }
@@ -787,7 +796,12 @@ public struct AskConversation: Sendable {
         self.calls += calls.count
         refusedThisTurn = []
         guard !calls.isEmpty else {
-            let sentence = content.trimmingCharacters(in: .whitespacesAndNewlines)
+            var sentence = content.trimmingCharacters(in: .whitespacesAndNewlines)
+            if drawsMotion {
+                let told = AskMotion.leftOut(in: sentence)
+                beatsLeftOut = told.beats
+                sentence = told.rest
+            }
             // With a page, finishing (or refusing) lands the page as it is:
             // a model talked out of its job still leaves only the mocked page.
             if web != nil { return .planned(plan(summary: steps.isEmpty ? "" : sentence)) }
@@ -810,6 +824,12 @@ public struct AskConversation: Sendable {
                     messages.append(["role": "user", "content": .string(problems.joined(separator: " "))])
                     return .again(looks: [])
                 }
+            }
+            if motionDesigned, !beatsReviewed, steps.contains(where: { $0.tool == "set_keys" }) {
+                beatsReviewed = true
+                beatsLeftOut = []
+                messages.append(["role": "user", "content": .string(AskMotion.beatsReview)])
+                return .again(looks: [])
             }
             return .planned(plan(summary: sentence))
         }

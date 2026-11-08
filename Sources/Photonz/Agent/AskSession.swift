@@ -1037,13 +1037,21 @@ final class AskSession {
         let blankIcon = web == nil && editor.document.map { $0.isIconCanvas && $0.layers.count <= 1 } == true
         let route = AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil,
                                                    holdsIcon: AskIcon.holdsIcon(Self.text(of: read)), blankIcon: blankIcon)
-        if AskMotion.drawsMotion(words, blankIcon: blankIcon), route,
+        // An icon whose words name no motion may still tell one ("the lid
+        // opens, trash is thrown in and it closes"): the model says whether
+        // it moves before it is drawn still (`AskMotion.movesQuestion`).
+        var toldMotion = false
+        if !AskMotion.drawsMotion(words, blankIcon: blankIcon), route, !AskLocalModel.answersAreScripted {
+            let answer = try? await AskLocalModel.chat(AskMotion.movesBody(model: model, request: words))
+            toldMotion = (answer?["message"]?["content"]?.stringValue).map(AskMotion.moves(fromAnswer:)) ?? false
+            note("icon: moves: \(toldMotion ? "yes" : "no")")
+        }
+        if toldMotion || AskMotion.drawsMotion(words, blankIcon: blankIcon), route,
            !AskLocalModel.answersAreScripted {
             let answer = try? await AskLocalModel.chat(AskMotion.designBody(model: model, request: words))
             iconDesign = (answer?["message"]?["content"]?.stringValue).flatMap(AskMotion.design(fromAnswer:))
             note("icon: motion design: \(iconDesign ?? "none")")
-        } else if !AskMotion.drawsMotion(words, blankIcon: blankIcon), route,
-           !AskLocalModel.answersAreScripted {
+        } else if route, !AskLocalModel.answersAreScripted {
             let broken = try? await AskLocalModel.chat(AskIconBreak.questionBody(model: model, request: words))
             iconBreak = (broken?["message"]?["content"]?.stringValue).flatMap(AskIconBreak.answer(from:))
             note("icon: breaks: \(iconBreak.map { "\($0.kind.word): \($0.object)" } ?? "no")")
@@ -1062,7 +1070,7 @@ final class AskSession {
                                brushes: brushes,
                                memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1,
                                window: AskLocalModel.window, web: web?.page, lookedUp: lookedUp, iconDesign: iconDesign,
-                               iconBreak: iconBreak, blankIcon: blankIcon)
+                               iconBreak: iconBreak, blankIcon: blankIcon, toldMotion: toldMotion)
     }
 
     /// The longest side of the canvas picture the planning model is shown:
