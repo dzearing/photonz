@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-08T17:12:56.877Z",
+  "updated": "2026-11-08T20:30:18.498Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -33,6 +33,39 @@
     {
       "t": "2026-11-08T17:12:56.876Z",
       "note": "seq 5e-10 -> 10"
+    },
+    {
+      "t": "2026-11-08T17:14:41.365Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-08T17:26:42.857Z",
+      "note": "Reproduced (cause found from the model logs, not guessed): the user's attempt at 22:47 on 7 Nov in Photonz Dev (pid 88232) took the STILL icon route: their llama-server log shows the break question (167 prompt tokens, 1 token back = no), then the still icon design (849 + about 320), then a 14,149 token still plan (all tools), never the motion design (1747) or the 3-tool moving plan (about 5,000). Tokenised with the model's own tokenizer, the user's quoted sentence gives 163 and 845 tokens for the same two calls: their typed words were 4 tokens longer and did not hold one of the exact words the motion check needs (animated, animate, animation, looping, gif). With the quoted sentence itself, the route is right: the New window walk made a 512 icon and keyed it (lid opens and closes, trash fades in), today 09:18 run, and the user's own app at 09:10 today ran the 3-tool moving route too. So the still came from routing on exact keywords, not the plan running out of rounds (30) or context (16k of 64k), and not a refused key call (the motion check already sends back a plan with no keys, twice)."
+    },
+    {
+      "t": "2026-11-08T17:57:55.355Z",
+      "note": "Built (test first, AskMotionStoryTests): (1) a slip of the keyboard in the word for motion (anmiated, animted, animatd) still asks for motion, animal/anime/animator do not; (2) an icon request whose words name no motion asks the model one short question first (moves or still); measured on qwen3.8-27b: asking only whether it moves turned 5 one-action stills (balloon popping, door opening, bell ringing, bubble bursting, refresh) into moving icons, so the wording says one action is a still and only an ask for motion or two or more things one after another moves: 26 of 26 right (17 stills, 9 stories); (3) a designed moving icon is sent back once to go through its beats in order and finish with Left out: <beats> or nothing, which lands on the row as 'Left out the bounce; it could not be planned.', and a moving icon that never got keys says 'Left out the motion'; (4) motion rules for a story: beats in the order told, each long enough to read, what a beat causes starts where the parts touch, nothing appears out of nowhere, the whole object moves as one group, a shake is big enough to see, a hanging thing swings with rotation. Baseline of six new story cases (run 20261108-172723-ask): 63.1, 29.6, 60, 23.8, 39.3, 52.1; reads as asked 6, 3, 6, 3, 4, 5, none at 7."
+    },
+    {
+      "t": "2026-11-08T20:30:18.294Z",
+      "note": "owns these walks: ask-animates-a-story-walk, ask-animates-a-story-without-the-word-walk"
+    },
+    {
+      "t": "2026-11-08T20:30:18.362Z",
+      "note": "Shipped in b438830e8 (pushed): typo-tolerant motion words, the model's moves-or-still question (26 of 26), beats gone through once with Left out: on the row, and four send-backs true of any subject (journey too quick, motion too small, a turn that swings into what stays still, a position written as where a part sits). Scripts/test.sh exit 0 (one stopwatch test, the animated chart at 1080p, failed once while the user's model was loaded and passed alone and in the next full run). Walks at Next defaults: ask-animates-a-story-walk (the user's sentence; the first try on the new code failed expectPictureMoves because the trash was keyed at x 12 y 14, off the icon, which the new position check fixed) and ask-animates-a-story-without-the-word-walk (model said moves: 3 moving parts) both pass, play on Space, Copy SVG has repeatCount=indefinite. Single motions unhurt: bell 80.8, checkmark 91, heart 89.8; trash lid 27.7 then 74.8 with the swing check. Pictures looked at: the reel frames show the lid lift, the trash appear beside it, hit the lid end with a bounce mark, drop in, the lid shut, rest. Audit queue/audits/2026-11-08-animated-icon-told-as-a-story.json."
+    },
+    {
+      "t": "2026-11-08T20:30:18.430Z",
+      "note": "NOT DONE, the bar: six story cases, need 5 of 6 at reads-as-asked 7 or more; reached 0 of 6 (runs 20261108-172723 baseline 6,3,6,3,4,5; 20261108-191056 after rules and the first checks 6,3,3,3,3,4; the swing and position checks landed after, measured only on the trash cases). What is left is the model's own story design: things fade in where they land instead of travelling in (trash, checkbox), a rocket smoke dot and a leave too fast to see, the envelope's beats out of order. Next try: a look-and-revise pass (render frames of the planned motion, show them to the model, let it fix beats), a general technique. The eval also needs the person away (its walks take the front) and the user's own model let go (two 28 GB copies do not fit): today about an hour went to waiting. Left rough, no task earned: the moves question costs about a second on every still icon whose words do not say animated."
+    },
+    {
+      "t": "2026-11-08T20:30:18.497Z",
+      "note": "Routing fixed and shipped (b438830e8): a story always animates; story eval bar not met (0 of 6 at 7), left open for a look-and-revise pass"
     }
+  ],
+  "started": "2026-11-08T17:14:41.364Z",
+  "walks": [
+    "ask-animates-a-story-walk",
+    "ask-animates-a-story-without-the-word-walk"
   ]
 }

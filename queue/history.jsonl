@@ -16407,3 +16407,10 @@
 {"t":"2026-11-08T17:13:09.911Z","ev":"triage","summary":"merged 0, dropped 0, priority moves 0, epic fixes 2, reset 0, groomed 3 (findings folded into the flap, balloon and held-out tasks), spot-checked 2 new p1 bugs (both kept), renumbered 86"}
 {"t":"2026-11-08T17:13:39.580Z","ev":"task_note","id":"a-looping-turn-comes-home-and-spins-evenly-witho"}
 {"t":"2026-11-08T17:14:17.260Z","ev":"digest","file":"2026-11-08.md"}
+{"t":"2026-11-08T17:14:41.369Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-08T17:26:42.859Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-08T17:57:55.357Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-08T20:30:18.296Z","ev":"task_walks","id":"an-animated-icon-told-as-a-little-story-moves-th","walks":["ask-animates-a-story-walk","ask-animates-a-story-without-the-word-walk"]}
+{"t":"2026-11-08T20:30:18.364Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-08T20:30:18.432Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-08T20:30:18.499Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Routing fixed and shipped (b438830e8): a story always animates; story eval bar not met (0 of 6 at 7), left open for a look-and-revise pass"}
