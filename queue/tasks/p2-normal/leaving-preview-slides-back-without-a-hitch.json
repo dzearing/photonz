@@ -4,12 +4,12 @@
   "goal": "Coming out of Preview on a page of about thirty layers stalls the window for over a third of a second part way through the slide, because the panel is built again from nothing. Going in stalls for about a fifth of a second. It should feel as smooth as the rest of the app.",
   "epic": "ui-prototyping",
   "priority": "p2-normal",
-  "seq": 610,
+  "seq": 660,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T20:30:58.858Z",
-  "updated": "2026-11-07T15:49:09.987Z",
+  "updated": "2026-11-08T17:13:02.661Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-11-06 from Scripts/playtest/component-preview-walk.json log.json, the wait after each step: key escape 'mainBusy 959.8ms ... longest 378.9ms from 134ms in' (372.8ms in front), action togglePreview 'mainBusy 791.8ms ... longest 212.2ms from 136ms in' (205.1ms in front). Which work fills those passes is a theory, not measured: View mode keeps the editor built behind it (isEditorKeptBehindView, EditModeArrival) and Preview does not. Hover itself is fine, about 15 ms of main thread per change.",
@@ -25,6 +25,10 @@
     {
       "t": "2026-11-07T15:49:09.986Z",
       "note": "seq 4090 -> 610"
+    },
+    {
+      "t": "2026-11-08T17:13:02.660Z",
+      "note": "seq 610 -> 660"
     }
   ]
 }

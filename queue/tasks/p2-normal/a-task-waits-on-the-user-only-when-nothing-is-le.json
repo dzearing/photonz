@@ -4,12 +4,12 @@
   "goal": "The clipboard task sat blocked for a day, and the digest told the user only they could move it, when four of its suspects could be fixed from this Mac. The user asked how it was blocked on them. A task should wait on a person only when every suspect that can be tested or fixed without them has been, and the digest should say what was tried before it asks.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 590,
+  "seq": 640,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-11-05T14:49:57.107Z",
-  "updated": "2026-11-07T15:49:09.831Z",
+  "updated": "2026-11-08T17:13:02.526Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: a-screenshot-is-on-the-clipboard-every-time-on-a went blocked on 2026-11-03 waiting for a report from the other Mac, the 2026-11-04 digest called it one job only you can do, and on 2026-11-05 the user unblocked it and listed what could be fixed from here (walks off the real clipboard, several displays, shortcut failures said aloud, a failed copy noticed). The same digest noted the rule gap as first seen. A task that needs a report but no choice has no card, so nothing brings it back but a person. Files: queue/bin/runner-prompt.md and the digest prompt.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-07T15:49:09.830Z",
       "note": "seq 600 -> 590"
+    },
+    {
+      "t": "2026-11-08T17:13:02.525Z",
+      "note": "seq 590 -> 640"
     }
   ]
 }

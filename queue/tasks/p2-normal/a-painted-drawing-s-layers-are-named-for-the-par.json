@@ -4,12 +4,12 @@
   "goal": "When Ask paints a drawing it traces it into layers named after colours ('Orange', 'Dark brown 3'). A person opening Layers cannot tell the ear from the tail, and a follow-up request such as 'make the cat's tail longer' or 'make its ears pink' has nothing to aim at. Each sizeable layer should carry the name of the part it shows, worked out at request time by looking at the drawing, never from anything stored for a subject. Once a part can be found it should change whole: shrinking it takes all its pieces and leaves what was around it showing, and recolouring it takes every shade of it and nothing else.",
   "epic": "agent-ask",
   "priority": "p2-normal",
-  "seq": 90,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-22T16:26:13.331Z",
-  "updated": "2026-11-07T15:49:05.960Z",
+  "updated": "2026-11-08T17:12:59.051Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen twice in the last day, so it is no longer a nit: try-drawing-with-a-local-picture-model-then-turn left rough 'layer names are colour names not part names'; the scene audit (queue/audits/2026-10-22-a-scene-of-things-doing-something-together-is-dr.json, rough) says 'a painted drawing's layers are colour regions (\"Dark brown 3\"), not paws and keys', which is also why that task had to check its plan from the rendered picture instead of from which layers touch. The paint route: Scripts/picture-model/layers.py traces colours with vtracer; names are set where the trace lands (AskPictureModel / AgentDrawingWork). The look-and-revise check (AskDrawingCheck) already has a model that sees; it can name regions in the same pass. Product model: layers are everything, so a layer list of colour names breaks the promise that a drawing is editable.\n\nFolded in from making-a-part-of-a-traced-drawing-smaller-shrink: Reproduced: node Scripts/ask-eval/followup.mjs run --run after-5 --cases icon-sun-smaller (code bb3ea1fb). Model called change_part with part Sun and at, a point in the disc. Judge: \"The yellow sun disc did get smaller, but the space it left was filled with a thick green ring instead of the background, the rays stayed at their original size and position, and the top of the hill bulges upward\" (part 5 words 6 rest 4). Pictures: .ask-eval/followups/after-5/icon-sun-smaller/first.png and second.png. Layer tree of that icon: Green [path] covers 43,138 426x294 (under the sun), Yellow (disc) plus Yellow 2..13 and Pale yellow 1..6 (rays and highlights) as separate colour layers. splitPiece (Sources/PhotonzCore/AgentPartChange.swift) takes only the smallest ring at the point. Ideas: gather pieces of the same and near colours within a radius of the picked piece; or cut the hole out of the layer beneath. Found while running ask-changes-what-it-just-made-make-the-water-blu. Digest 2026-11-05 said a sun over a hill no longer goes through tracing since 3e03a854, so use a drawing that still does; the Statue of Liberty log line on that task is the live case.",
@@ -39,6 +39,10 @@
     {
       "t": "2026-11-07T15:49:05.959Z",
       "note": "seq 100 -> 90"
+    },
+    {
+      "t": "2026-11-08T17:12:59.050Z",
+      "note": "seq 90 -> 140"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Ask tears the outline of anything breaking at its upper right, which suits a balloon but makes a broken heart look bitten and a soap bubble look like a cracked egg. Each way of breaking should look like itself, and an object at its best without the tear should not be made worse by it.",
   "epic": "icon-vector",
   "priority": "p1-high",
-  "seq": 70,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T22:30:28.372Z",
-  "updated": "2026-11-08T06:10:18.665Z",
+  "updated": "2026-11-08T17:12:56.947Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-05. Scripts/ask-eval.sh run --engine ask --cases icon-broken-heart,icon-cracked-egg-filled,icon-soap-bubble-bursting. Tear on, run 20261105-204948-ask: heart 55.4 (asked 5, icon 4), egg 70.6 (6, 5), bubble 54.8 (6, 6, named 1 of 3 as a cracked egg). Tear off for one build, run 20261105-213322-ask: heart 30.5, egg 84.8, bubble 71.3. One reading each, and one version of the balloon has swung by 30. The bubble sheet shows the tool leaves an inner highlight poking into the tear: AskIconBreak.applied leaves parts lying in the torn stretch alone. Ideas: a crack through the object as a second tear shape, chosen by the model from a general list, and dropping parts that lie in the gap. No subject may be coded.",
@@ -110,6 +110,14 @@
     {
       "t": "2026-11-08T06:10:18.664Z",
       "note": "Balloon 66.6-69.3 to 72-85.6 (mean 81.2 over four readings), still under 85; heart, egg and bubble bars met and holding. Open for the balloon."
+    },
+    {
+      "t": "2026-11-08T17:12:49.733Z",
+      "note": "triage 2026-11-08: the balloon bar (85 over three readings) sits inside the judge's own spread: one identical picture read 72.0, 83.2, 84.0 and 85.6. Before a fourth pass on the balloon, judge it on the mean of at least five readings, or say the bar is met when the mean clears 80 and every look gives asked 7. Chasing one case past its noise is how a general fix turns into tuning for a balloon."
+    },
+    {
+      "t": "2026-11-08T17:12:56.946Z",
+      "note": "seq 70 -> 20"
     }
   ],
   "started": "2026-11-08T04:17:12.611Z",

@@ -4,12 +4,12 @@
   "goal": "Someone who asks for 'a gif of a bouncing ball' now gets a moving icon, but Export only offers an animated SVG or a still picture, so there is no way to save the .gif they asked for. Export on a picture that moves should offer GIF, playing the same loop the timeline plays.",
   "epic": "icon-svg",
   "priority": "p2-normal",
-  "seq": 49.375,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T01:56:23.505Z",
-  "updated": "2026-11-08T01:56:23.508Z",
+  "updated": "2026-11-08T17:12:58.625Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by asking-the-new-window-for-an-animated-icon-makes (2026-11-07): 'a gif' now routes to Ask's moving icon (AskMotion.gifWords). ExportDialog.swift ExportChoice is picture(ImageCodec.Format) or svg; the moving route is animatedSVG only. Recordings already write GIF (Recording.swift case gif, RecordingExport.swift), which may help render a timed picture's frames.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-11-08T01:56:23.507Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-08T17:12:58.624Z",
+      "note": "seq 49.375 -> 80"
     }
   ]
 }

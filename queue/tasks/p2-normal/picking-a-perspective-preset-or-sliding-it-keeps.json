@@ -2,14 +2,14 @@
   "id": "picking-a-perspective-preset-or-sliding-it-keeps",
   "title": "Picking a perspective preset or sliding it keeps the perspective popover open",
   "goal": "In 3D, the popover under the perspective pill (None, Subtle, Normal, Strong and a slider) disappears the moment the perspective changes, so a person who clicks Strong to try it has to click the pill again to try another value. It should stay open while you try values, the way the same controls in the tool bar Info popover already do, and close on Escape or a click elsewhere.",
-  "epic": "found-selection",
+  "epic": "image-editing",
   "priority": "p2-normal",
-  "seq": 580,
+  "seq": 630,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T21:33:45.710Z",
-  "updated": "2026-11-07T15:49:09.756Z",
+  "updated": "2026-11-08T17:13:02.458Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-01 on the probe at Next defaults (task a-walk-s-press-on-a-picture-tile-swatch-or-colou). perspective-pill-walk with press Strong in Perspective then expect field Perspective Value: expectCamera 90 passed, then: step 35 (expect): no field called \"Perspective Value\" is in the panel to read. Same with Subtle (20). Not a click artefact: with the popover open, an action undo (75 -> 45, no click at all) also closed it: step 34 (expect): no field called \"Perspective Value\". The tool bar Info popover stays open after its own Subtle press (Transform Perspective Value read 20 deg). Suspect: a perspective change redraws the selection grips and something on that path (CanvasSelectionGrips hideSelectionGrips / drawPerspectivePill with grips.perspective nil for a pass, or askPerspectivePopover) sets perspectivePopoverAnchor nil. Today the walk reopens it with a grip perspective step after Strong and has no Escape after the slider (the popover is already closed); fix those when this lands. Also seen at Strong (90 deg, tip 24 swing 36): the selection outline runs from the card corner to a handle far off the card at the lower left (queue/audits picture not saved; /tmp/photonz-playtest/perspective-pill-walk/5-strong-sc.png on the run), worth a look while here.",
@@ -51,6 +51,14 @@
     {
       "t": "2026-11-07T15:49:09.755Z",
       "note": "seq 590 -> 580"
+    },
+    {
+      "t": "2026-11-08T17:12:49.594Z",
+      "note": "triage 2026-11-08: epic moved from found-selection (staged later, which would mean dropping it) to image-editing (now). It is a fault you hit at Next defaults on a picture, so it stays."
+    },
+    {
+      "t": "2026-11-08T17:13:02.457Z",
+      "note": "seq 580 -> 630"
     }
   ],
   "walks": [

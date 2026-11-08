@@ -4,12 +4,12 @@
   "goal": "Making an icon swing takes a third key that nobody would guess, or it snaps back with a jump every lap, and a spin slows to a stop each lap until its curve is changed. Someone who sets a turn on a repeating picture should get a loop that runs smoothly.",
   "epic": "icon-animate",
   "priority": "p1-high",
-  "seq": 87.5,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T17:38:04.982Z",
-  "updated": "2026-11-07T17:38:54.597Z",
+  "updated": "2026-11-08T17:13:39.579Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-07: the walk cut off after the key at 1.5s (keys 0, 15 at 0.5s, -15 at 1.5s), written with writeSVG, gives keyTimes=\"0;0.25;0.75;1\" values=\"0 12 12;15.185 12 12;-15 12 12;-15 12 12\": it holds at -15 and restarts at 0, a 15 degree jump every lap. The full walk has to go to 0:02.00 and type 0. Spin: keys 0 and 360 write keySplines=\"0.4 0 0.2 1\" until Curve is set to Linear by hand (the frame walk does that step). Chose to leave the behaviour for this task to design, since it changes what a key means: pictures in queue/audits/2026-11-07-icon-workflow-keys-sc.png.",
@@ -17,7 +17,8 @@
     "Two turns set on a repeating picture play with no jump where the lap starts over, on the canvas and in the exported SVG",
     "A whole turn on a repeating picture goes round at a steady pace with no stop at the lap",
     "Whatever the app does for you is visible on the strip as keys or a curve you can change, and undoes in one step",
-    "A walk at Next defaults proves both with no typed end key"
+    "A walk at Next defaults proves both with no typed end key",
+    "A reel of a swing and a spin each playing three laps on the canvas, and the exported SVG playing in a browser, is in the audit; the frame either side of the lap reads the same angle within 1 degree"
   ],
   "log": [
     {
@@ -27,6 +28,18 @@
     {
       "t": "2026-11-07T17:38:54.596Z",
       "note": "also: a click at the end of the ruler lands on 0:01.99, not 0:02.00, so the last key reads a hundredth short of the lap (queue/audits/2026-11-07-icon-workflow-keys-sc.png)"
+    },
+    {
+      "t": "2026-11-08T17:12:49.868Z",
+      "note": "triage 2026-11-08 spot check: did not rerun the cut-off walk. Both icon workflow walks still carry the workarounds the notes describe (the-whole-icon-workflow-walk types the end key 0, the frame walk picks Linear with the note 'a spin slows to a stop every lap'), and SVGMotionExport still writes spline curves by default. Kept at p1: it is a behaviour the walks have to route around, with the written SVG output in the notes."
+    },
+    {
+      "t": "2026-11-08T17:12:57.150Z",
+      "note": "seq 87.5 -> 50"
+    },
+    {
+      "t": "2026-11-08T17:13:39.578Z",
+      "note": "triage 2026-11-08: added a reel and a measured lap seam (within 1 degree) to the checklist, since its value is how the motion looks"
     }
   ],
   "walks": [

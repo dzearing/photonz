@@ -1,0 +1,28 @@
+{
+  "feature": "Ask's moving icons: a flap folds, what flies off leaves whole, lines draw on",
+  "epic": "icon-animate",
+  "summary": "Ask an animated envelope and its flap now folds open over its top edge instead of spinning flat through the body; wifi waves draw on one after another and reset cleanly; a paper plane flies off whole and comes back in from the other side.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask on the built-in model.",
+  "switched": {},
+  "try": [
+    { "do": "Press Ask and type: make an animated icon of an envelope opening. Send.", "shot": "2026-11-08-animated-fold-envelope-frames.png", "shotNote": "Frames of the exported SVG as WebKit plays it (the eval's svg-frames), not a window capture. Reel: 2026-11-08-animated-fold-envelope-reel.gif" },
+    { "do": "Press Space to play it, and watch the flap fold up and back over its top edge." },
+    { "do": "Export it (File > Export…, SVG) and open the file in Safari: the flap folds there too." },
+    { "do": "Ask: make an animated icon of a wifi signal, its waves appearing one after another.", "shot": "2026-11-08-animated-fold-wifi-frames.png", "shotNote": "Exported SVG frames, not a window capture. Reel: 2026-11-08-animated-fold-wifi-reel.gif" },
+    { "do": "Ask: make an animated icon of a paper plane taking off.", "shot": "2026-11-08-animated-fold-plane-frames.png", "shotNote": "Exported SVG frames, not a window capture. Reel: 2026-11-08-animated-fold-plane-reel.gif" }
+  ],
+  "evaluate": [
+    "Does the envelope's flap read as folding open over its top edge, the way you would open one?",
+    "Do the wifi waves read as appearing one after another, and does the restart look deliberate?",
+    "Does the plane read as taking off, now that it leaves the frame whole and comes back in from the lower left?",
+    "Is the flatter fold in the exported file (no perspective) close enough to what the canvas shows?"
+  ],
+  "rough": [
+    "The paper plane still falls short: 6 of 10 on reading as a take-off against a bar of 7. The model leaves its speed lines floating after the plane has gone and draws the plane nearly edge to edge. Kept open on this task.",
+    "The envelope's letter shows as a heavy dark block while it rises through the open flap; the judge reads it as a smear (reads as asked 7, clean 4).",
+    "The wifi dot comes out a squashed oval and the outer wave nearly touches the sides (clean 6).",
+    "A fold in the exported SVG is the card seen straight on, squeezed toward its hinge; the canvas adds the camera's perspective. Chose the flat version because SVG has no 3D and an icon's fold reads the same.",
+    "These pictures are the exported file played in WebKit by the eval, not captures of the app window: the eval walks never photograph the window.",
+    "Held-out set: 56.9 over 53 cases with 8 new animated requests (animated 37.3). On the 45 earlier cases it reads about 60.4 against 66.4 last time; the fall is in drawing and video, which this change does not reach. Filed as an open question."
+  ]
+}

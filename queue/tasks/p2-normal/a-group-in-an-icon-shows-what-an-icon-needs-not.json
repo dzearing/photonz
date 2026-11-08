@@ -4,12 +4,12 @@
   "goal": "Picking a group in an icon fills the panel with page layout rows (Arrangement, Hug and Fixed, Padding, Scale) that mean nothing in a drawing, and they push the animation rows down. Someone drawing an icon should see only rows that change their icon.",
   "epic": "icon-grid",
   "priority": "p2-normal",
-  "seq": 45,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T17:38:05.109Z",
-  "updated": "2026-11-07T17:38:05.112Z",
+  "updated": "2026-11-08T17:12:58.420Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen three times now: audits of 2026-11-06 and 2026-11-07 (icon-place-tag-1-box-sc.png) and 9-grouped in the-whole-icon-workflow-walk. Picture: queue/audits/2026-11-07-icon-workflow-group-panel-sc.png. Not a bug, a panel that speaks about the wrong job; the panel rows are not covered by the-panel-shows-what-the-picked-thing-is-and-its, which moves one-shot buttons.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-11-07T17:38:05.111Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-08T17:12:58.419Z",
+      "note": "seq 45 -> 50"
     }
   ],
   "walks": [

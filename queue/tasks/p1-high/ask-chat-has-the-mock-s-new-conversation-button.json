@@ -4,12 +4,12 @@
   "goal": "Typing / in Ask lists the commands you can run, and today every row in an area shows that area's one icon, where the mock gives each command its own. Give each row its own icon so the list can be read at a glance.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 150,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T14:43:35.102Z",
-  "updated": "2026-11-07T15:49:04.477Z",
+  "updated": "2026-11-08T17:12:57.634Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left by typing-in-ask-lists-the-commands-you-can-run. Mock: askPalHTML in docs/design/mocks/shared/dist/photonz-ds.js. AskConversationLines and AskCommandsList.symbol in Sources/Photonz/Agent/AskViews.swift; AppCommandTable has no icon today. New Conversation has to decide what Ask forgets: its memory of what it made comes from the rows (AskSession.conversation).",
@@ -44,6 +44,10 @@
     {
       "t": "2026-11-07T15:49:04.476Z",
       "note": "seq 160 -> 150"
+    },
+    {
+      "t": "2026-11-08T17:12:57.633Z",
+      "note": "seq 150 -> 120"
     }
   ]
 }

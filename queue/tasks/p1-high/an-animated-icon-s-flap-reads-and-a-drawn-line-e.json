@@ -4,12 +4,12 @@
   "goal": "Ask's moving icons still fall short on a few kinds of motion: an envelope's flap crosses its body, a plane stops cut off at the top edge, and lines that draw themselves jump when the loop restarts. Make these read as well as the rest, and measure the work on requests nobody tuned for.",
   "epic": "icon-animate",
   "priority": "p1-high",
-  "seq": 80,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T18:22:08.469Z",
-  "updated": "2026-11-08T10:46:33.204Z",
+  "updated": "2026-11-08T17:12:57.015Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ask-animates-what-it-makes-an-animated-svg-icon, run 20261106-171511-ask: envelope 4, plane 6, wifi loops 3. AskMotionCheck leaves trimStart and trimEnd out of its loop check on purpose, since a checkmark set to end where it began never drew. Rules in AskMotion.principles must stay general: nothing per subject. Pictures: queue/audits/2026-11-06-ask-animates-after-envelope-opening.png and -after-wifi-signal.png.",
@@ -17,7 +17,8 @@
     "An animated envelope opening reads as asked at 7 or more in the eval, its flap turning on the top edge without crossing the body",
     "A paper plane taking off is never cut off while it is in the frame: it stays inside or leaves completely, reading 7 or more",
     "A motion that draws lines on loops at 7 or more: wifi no longer shrinks to a row of dots before the lap restarts",
-    "The held-out set gains animated requests written by someone who has not tuned the prompt, and its total is reported"
+    "The held-out set gains animated requests written by someone who has not tuned the prompt, and its total is reported",
+    "The envelope flap closes onto the V it starts from: no frame where it lands shallower and then jumps deeper (today 1.76 s shows a shallow V and 1.92 s the full one, queue/audits/2026-11-08-animated-fold-envelope-frames.png)"
   ],
   "log": [
     {
@@ -71,6 +72,14 @@
     {
       "t": "2026-11-08T10:46:33.203Z",
       "note": "Envelope (7) and wifi (8) read as asked and the held-out set gained 8 blind animated requests (total 56.9). The paper plane reads 6 against a bar of 7: open for the next pass."
+    },
+    {
+      "t": "2026-11-08T17:12:49.663Z",
+      "note": "triage 2026-11-08, read from the envelope contact sheet: the closing flap lands as a shallow V at 1.76 s and pops to the full V by 1.92 s, a visible jump at the end of each lap. Added to the checklist."
+    },
+    {
+      "t": "2026-11-08T17:12:57.014Z",
+      "note": "seq 80 -> 30"
     }
   ],
   "started": "2026-11-08T06:22:09.473Z"
