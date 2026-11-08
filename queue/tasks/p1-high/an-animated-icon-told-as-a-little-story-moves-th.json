@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-08T20:30:18.498Z",
+  "updated": "2026-11-08T22:45:50.316Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -61,9 +61,29 @@
     {
       "t": "2026-11-08T20:30:18.497Z",
       "note": "Routing fixed and shipped (b438830e8): a story always animates; story eval bar not met (0 of 6 at 7), left open for a look-and-revise pass"
+    },
+    {
+      "t": "2026-11-08T20:38:43.604Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-08T22:45:45.686Z",
+      "note": "Built and shipped e78463fd9: a look at the motion before it lands (AskMotionLook). Twelve frames of the lap on white go to the planning model with the request; it names the frames that show each beat or says not seen, and what looks wrong; anything but All good goes back once (drawing kept, keys replaced), then lands. Prototype first on a model copy I started (bounded, killed): shown last run's frames it named the judge's own faults in 20 to 30 s. Guard: only while the request is under 150 s, and one more rule send-back after it, not two. Tests AskMotionLookTests (8), Scripts/test.sh exit 0 on the second full run (the first had BusyVideoSizeTests fail once under load; it passed alone 8 of 8 and in the next full run)."
+    },
+    {
+      "t": "2026-11-08T22:45:45.762Z",
+      "note": "Measured. Six story cases, reads as asked: baseline 6,3,3,3,3,4 (run 20261108-191056, total 34.8); with the look 5,6,6,3,5,4 (20261108-210016, total 49.1); second wording (contact, direction, going behind, leaving the frame is fine) 5,6,4,5,4 and the heart out of its 300 s (20261108-213042, 40.8). Single motions with the look 69.9 vs 72.3 (20261108-220616 vs 193403): bell 61.5 vs 80.8 (judge: shears, no crown; the look moved only the sound waves), checkmark 88, heart 91.6, trash lid 38.6. Walks ask-animates-a-story-walk and ask-animates-a-story-without-the-word-walk pass at Next defaults, but their plans took 264 s and 267 s, so the guard skipped the look: the user's own sentence does not get it yet."
+    },
+    {
+      "t": "2026-11-08T22:45:45.838Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases at reads as asked 7 or more; reached 0 of 6 (best 6). Pictures looked at: run 210016 heart frames (two beats, crack, halves part; crack floats loose, long broken hold) and bell frames (rigid swing, cap left behind). What is left: (1) the story plan is slow, mostly rule send-backs and the beats review going round (the trash: 17 turns, 265 s), so the look rarely fits for the trash; making the plan quicker is the next lever; (2) the look is lenient on contact (it called the trash's bounce seen in run 1 though it never touched the lid); the second wording fixes that offline but costs time; (3) drawing craft the judge marks down (bell reads as a lampshade, heart crack floats). Left rough, no new task (all inside this one): the look nearly always sends back, so it costs a re-plan even on good motion."
+    },
+    {
+      "t": "2026-11-08T22:45:50.315Z",
+      "note": "Look before landing shipped (e78463fd9): story total 34.8 to 49.1, reads as asked best 6; bar (5 of 6 at 7) not met. Next lever: a quicker story plan so the look fits the user's trash sentence."
     }
   ],
-  "started": "2026-11-08T17:14:41.364Z",
+  "started": "2026-11-08T20:38:43.603Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
