@@ -21,15 +21,29 @@ public enum AskIconBreak {
 
     /// How much of the outline goes.
     static let tornShare: CGFloat = 0.3
-    /// How far the tear reaches into the object, as a share of its size,
-    /// and how far back the middle of it comes.
-    static let tearDepth: CGFloat = 0.2
-    static let tearReturn: CGFloat = 0.3
+    /// The corners the tear crosses its gap in: the first, the middle and the
+    /// last go in, the two between come back to the line across. Three, two
+    /// deep and one back, crossed in two long legs meeting near the middle,
+    /// and every judge read the bite as a Pac-Man, a pie chart or a clock
+    /// (`AskIconBreakRaggedTests`, 2026-11-08).
+    public static let toothCount = 5
+    /// How far a tooth reaches into the object, as a share of its size, and
+    /// how much of that the ones between keep.
+    static let tearDepth: CGFloat = 0.11
+    static let tearReturn: CGFloat = 0
+    /// How far, in units, a tooth between comes back from the two beside it.
+    /// A whole unit across a diagonal is two units of grid, so the tear's
+    /// teeth came out as long legs; seven tenths is one unit of grid there.
+    static let toothReturn: CGFloat = 0.7
     /// The marks, as shares of the object's size, and the angle between them.
     static let markGap: CGFloat = 0.155
     static let markLength: CGFloat = 0.16
     static let markWeight: CGFloat = 0.125
-    static let markSpread: CGFloat = 0.6
+    /// About 18 degrees: on whole units the three land one across and two
+    /// up, one and one, two across and one up. Spread wider they landed
+    /// straight up, at 45 degrees and straight across, and were read as a
+    /// clock's hours (2026-11-08).
+    static let markSpread: CGFloat = 0.45
     /// The heaviest a line may be, as a share of the object's size: past this
     /// the teeth of the tear close up at 16 px.
     static let lineShare: CGFloat = 0.146
@@ -47,8 +61,9 @@ public enum AskIconBreak {
     static let longestMark: CGFloat = 1.5
     /// How long a mark's whole run may be, in units: as long as a short dash
     /// at a line of 1.5. The marks that landed 2 to 3 long outweighed the
-    /// object they flew from (the eval, 2026-11-08).
-    static let markRuns: ClosedRange<CGFloat> = 1.4...2.05
+    /// object they flew from (the eval, 2026-11-08). Up to the root of 5, so
+    /// a mark can lean (one across, two up) instead of standing square.
+    static let markRuns: ClosedRange<CGFloat> = 1.4...2.25
     /// The heaviest a torn line lands, in units. Brought up to fill the live
     /// area a torn bubble's line landed at 2, and every judge called it heavy;
     /// the tears that read best landed at 1.5 (the eval, 2026-11-08).
@@ -70,8 +85,12 @@ public enum AskIconBreak {
     static let pieceLength: CGFloat = 2.2
     static let pieceRuns: ClosedRange<CGFloat> = 2...3.2
     /// What a tooth leg running straight up or across costs, in units of a
-    /// tooth's distance from where it belongs (`Placing.notched`).
-    static let squareLegCost: CGFloat = 1.5
+    /// tooth's distance from where it belongs (`Placing.notched`). Little:
+    /// across a diagonal, short teeth on whole units are a staircase, and
+    /// five of them were judged a popping balloon in 17 looks of 18, where a
+    /// three tooth bite kept off square legs was a Pac-Man in all nine
+    /// (2026-11-08). At 1.5 the teeth took long legs to keep off square ones.
+    static let squareLegCost: CGFloat = 0.3
     static let markLengthWeighs: CGFloat = 0.5
     /// The shortest run a tear leaves at either end of what it kept, in units.
     static let shortestRun: CGFloat = 1.5
@@ -644,13 +663,17 @@ public enum AskIconBreak {
         let first = placing.point(start), last = placing.point(stop)
         kept[0] = kept[0].starting(at: first)
         kept[kept.count - 1] = kept[kept.count - 1].ending(at: last)
-        let teeth = (1...3).map { step -> CGPoint in
-            let t = CGFloat(step) / 4
-            let across = CGPoint(x: last.x + (first.x - last.x) * t, y: last.y + (first.y - last.y) * t)
-            let inward = CGPoint(x: centre.x - across.x, y: centre.y - across.y)
-            let length = max(hypot(inward.x, inward.y), 1e-6)
-            let depth = size * tearDepth * (step == 2 ? tearReturn : 1)
-            return placing.point(CGPoint(x: across.x + inward.x / length * depth, y: across.y + inward.y / length * depth))
+        // In square to the line across the gap, toward the middle: pushed
+        // toward the middle itself, the teeth near the ends ran steeply in.
+        let gap = CGPoint(x: first.x - last.x, y: first.y - last.y)
+        let gapLength = max(hypot(gap.x, gap.y), 1e-6)
+        var inward = CGPoint(x: -gap.y / gapLength, y: gap.x / gapLength)
+        if (centre.x - last.x) * inward.x + (centre.y - last.y) * inward.y < 0 { inward = CGPoint(x: -inward.x, y: -inward.y) }
+        let teeth = (1...toothCount).map { step -> CGPoint in
+            let t = CGFloat(step) / CGFloat(toothCount + 1)
+            let across = CGPoint(x: last.x + gap.x * t, y: last.y + gap.y * t)
+            let depth = size * tearDepth * (step % 2 == 0 ? tearReturn : 1)
+            return placing.point(CGPoint(x: across.x + inward.x * depth, y: across.y + inward.y * depth))
         }
         var d = "M\(placing.text(first))"
         for run in kept where hypot(run.end.x - run.start.x, run.end.y - run.start.y) > 1e-6 {
@@ -861,12 +884,14 @@ public enum AskIconBreak {
             return flying
         }
 
-        /// `teeth` on whole units as they cross from `from` to `to`, with the
-        /// middle one still standing proud of the two beside it (rounded, it
-        /// can land level with them and the tear reads as one straight bite),
-        /// and as few legs as can be running straight up or straight across.
+        /// `teeth` on whole units as they cross from `from` to `to`: the
+        /// first, every other one and the last a unit or more in, each one
+        /// between standing a unit or more proud of the two beside it
+        /// (rounded, it can land level with them and the tear reads as one
+        /// straight bite), and as few legs as can be running straight up or
+        /// straight across.
         func notched(_ teeth: [CGPoint], from: CGPoint, to: CGPoint, centre: CGPoint) -> [CGPoint] {
-            guard whole, teeth.count == 3 else { return teeth }
+            guard whole, teeth.count % 2 == 1 else { return teeth }
             let across = CGPoint(x: to.x - from.x, y: to.y - from.y)
             let long = max(hypot(across.x, across.y), 1e-6)
             var inward = CGPoint(x: -across.y / long, y: across.x / long)
@@ -880,33 +905,53 @@ public enum AskIconBreak {
                     ? CGPoint(x: point.x + sign * (inward.x < 0 ? -1 : 1), y: point.y)
                     : CGPoint(x: point.x, y: point.y + sign * (inward.y < 0 ? -1 : 1))
             }
-            // Whole points near each tooth, kept off straight up and straight
-            // across legs: rounded on their own, the legs of a tear at an angle
-            // came out as a staircase of right angles, read as a step cut in it
-            // and as a stray stroke (the eval, 2026-11-08). A leg like that
-            // costs as much as a tooth a unit and a half from where it belongs.
+            // Whole points near each tooth, a leg straight up or straight
+            // across costing a little (`squareLegCost`).
             func near(_ point: CGPoint) -> [CGPoint] {
                 let middle = CGPoint(x: point.x.rounded(), y: point.y.rounded())
                 return (-1...1).flatMap { dx in (-1...1).map { dy in CGPoint(x: middle.x + CGFloat(dx), y: middle.y + CGFloat(dy)) } }
             }
             func square(_ a: CGPoint, _ b: CGPoint) -> CGFloat { a.x == b.x || a.y == b.y ? 1 : 0 }
-            var best: (teeth: [CGPoint], cost: CGFloat)?
-            for a in near(teeth[0]) where depth(a) >= 1 {
-                for c in near(teeth[2]) where depth(c) >= 1 {
-                    for b in near(teeth[1]) where depth(b) <= min(depth(a), depth(c)) - 1 {
-                        let off = a.distance(to: teeth[0]) + b.distance(to: teeth[1]) + c.distance(to: teeth[2])
-                        let squares = square(from, a) + square(a, b) + square(b, c) + square(c, to)
-                        let cost = off + squares * squareLegCost
-                        if cost < best?.cost ?? .infinity { best = ([a, b, c], cost) }
-                    }
-                }
+            func goesIn(_ index: Int) -> Bool { index % 2 == 0 }
+            func fits(_ a: CGPoint, _ index: Int, _ b: CGPoint) -> Bool {
+                // A tooth going in and the one after it, either way round.
+                goesIn(index) ? depth(b) <= depth(a) - toothReturn : depth(a) <= depth(b) - toothReturn
             }
-            if let best { return best.teeth }
+            // The cheapest way along, one tooth at a time: each tooth only
+            // answers to the ones beside it.
+            let choices = teeth.enumerated().map { index, tooth in
+                near(tooth).filter { !goesIn(index) || depth($0) >= 1 }
+            }
+            var best: [(cost: CGFloat, back: Int)] = choices[0].map { ($0.distance(to: teeth[0]) + square(from, $0) * squareLegCost, -1) }
+            var steps: [[(cost: CGFloat, back: Int)]] = [best]
+            for index in 1..<teeth.count {
+                best = choices[index].map { here in
+                    var pick = (cost: CGFloat.infinity, back: -1)
+                    for (way, there) in choices[index - 1].enumerated() where fits(there, index - 1, here) {
+                        let cost = steps[index - 1][way].cost + square(there, here) * squareLegCost
+                        if cost < pick.cost { pick = (cost, way) }
+                    }
+                    var own = here.distance(to: teeth[index])
+                    if index == teeth.count - 1 { own += square(here, to) * squareLegCost }
+                    return (pick.cost + own, pick.back)
+                }
+                steps.append(best)
+            }
+            if let end = best.indices.min(by: { best[$0].cost < best[$1].cost }), best[end].cost.isFinite {
+                var picked: [CGPoint] = [], at = end
+                for index in stride(from: teeth.count - 1, through: 0, by: -1) {
+                    picked.append(choices[index][at])
+                    at = steps[index][at].back
+                }
+                return picked.reversed()
+            }
             var out = teeth
-            for index in [0, 2] {
+            for index in teeth.indices where goesIn(index) {
                 while depth(out[index]) < 1 { out[index] = moved(out[index], inwards: true) }
             }
-            while depth(out[1]) > min(depth(out[0]), depth(out[2])) - 1 { out[1] = moved(out[1], inwards: false) }
+            for index in teeth.indices where !goesIn(index) {
+                while depth(out[index]) > min(depth(out[index - 1]), depth(out[index + 1])) - 1 { out[index] = moved(out[index], inwards: false) }
+            }
             return out
         }
 

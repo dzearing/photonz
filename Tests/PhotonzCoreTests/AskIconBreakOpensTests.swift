@@ -106,16 +106,6 @@ struct AskIconBreakOpensTests {
         #expect(marks.count == AskIconBreak.markCount, "\(name)")
     }
 
-    @Test("The legs of a tear's teeth do not run straight up or across", arguments: AskIconBreakUnitsTests.tearing)
-    func teethLegsSlant(_ drawing: (name: String, svg: String)) throws {
-        let frame = try AskIconBreakUnitsTests.landed(drawing.svg).frame
-        let body = try #require(frame.children.filter { $0.path?.isClosed == true }
-            .max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }?.path)
-        let points = body.anchors.suffix(4).map(\.point) + body.anchors.prefix(1).map(\.point)
-        let square = zip(points, points.dropFirst()).filter { abs($0.x - $1.x) < 1e-6 || abs($0.y - $1.y) < 1e-6 }
-        #expect(square.isEmpty, "\(drawing.name): \(points.map { "\($0.x / Self.unit),\($0.y / Self.unit)" })")
-    }
-
     @Test("Torn on the grid, a line lands at 1.5 at the heaviest")
     func notHeavy() throws {
         for drawing in AskIconBreakUnitsTests.drawings {

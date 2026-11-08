@@ -420,14 +420,18 @@ Either way:
   from a general list ("burst" or "cracked"), and what the object is, and draws
   it whole, the way it draws every icon well; a vector tool then breaks the
   outline it drew. A burst tears it: the biggest closed shape loses a stretch at
-  its upper right, three teeth cross the gap, three short marks fly out, and any
-  part lying in the torn stretch goes with it. A round line bursts open instead:
+  its upper right, five short teeth cross the gap going in and coming back in
+  turn (on whole units across a diagonal, a staircase), three short marks fan
+  out leaning from it, and any part lying in the torn stretch goes with it. Three
+  teeth crossed in two long legs to the middle and every judge read a Pac-Man,
+  a pie chart or a clock; marks landing straight up, at 45 degrees and straight
+  across read as a clock's hours (balloon 66 to 69 before, 72 to 86 after,
+  2026-11-08). A round line bursts open instead:
   a bite out of anything round reads as eaten (a torn bubble was named a
   cracked egg or a bitten cookie), so a circle loses a short stretch, its line
   is left open, and that stretch flies off in three pieces along the curve
   (bubble 78 against 71 drawn by the model alone, 2026-11-08). Torn on the grid
-  a line lands at 1.5 at the heaviest, the teeth keep off straight up and
-  straight across legs (rounded on their own they made a staircase), and the
+  a line lands at 1.5 at the heaviest, and the
   model is told to draw no drops or drips (a drip under a bubble made every
   judge call it a balloon). A crack runs through it the short way
   (down a wide thing, across a tall one) as a jagged line in a line drawing, or
@@ -437,7 +441,10 @@ Either way:
   eaten (56); cracked they scored 86 to 88 and 89 to 91 (2026-11-07). A ring
   in pieces was tried for a bursting bubble and read as a viewfinder, a sun or
   a light bulb, never better than the tear. On the 24 grid all of that is worked
-  out where it will land, on whole units (`docs/design/svg-export.md`). The tool reads only shapes and knows
+  out where it will land, on whole units (`docs/design/svg-export.md`), and the
+  landing stretches a curve's handles with its rounded ends, so a string whose
+  end moved half a unit keeps its bend instead of coming out straight
+  (`SVGArtwork.stretchHandles`, runs of two units or more). The tool reads only shapes and knows
   nothing of what they are. The model could not write that geometry itself: on
   "a balloon popping" it scored from 25 to 85 on the same words, and told to tear
   a clean balloon it lost the balloon. That route lands without being looked at

@@ -165,9 +165,11 @@ public struct SVGArtwork: Hashable, Sendable {
         let scale = min(from.width > 0 ? box.width / from.width : .infinity,
                         from.height > 0 ? box.height / from.height : .infinity)
         let offset = CGPoint(x: box.midX - from.width * scale / 2, y: box.midY - from.height * scale / 2)
+        func placed(_ p: CGPoint) -> CGPoint {
+            CGPoint(x: (p.x - from.minX) * scale + offset.x, y: (p.y - from.minY) * scale + offset.y)
+        }
         func map(_ p: CGPoint) -> CGPoint {
-            let placed = CGPoint(x: (p.x - from.minX) * scale + offset.x, y: (p.y - from.minY) * scale + offset.y)
-            return grid?.landing(placed) ?? placed
+            grid?.landing(placed(p)) ?? placed(p)
         }
         func mapHandle(_ h: CGPoint?) -> CGPoint? { h.map { CGPoint(x: $0.x * scale, y: $0.y * scale) } }
         func mapRect(_ r: CGRect) -> CGRect {
@@ -198,12 +200,16 @@ public struct SVGArtwork: Hashable, Sendable {
                     layer.content = .annotation(annotation)
                 }
             case .path(let outline):
-                let anchors = outline.rings.flatMap { $0 }.map { anchor in
-                    var moved = anchor
-                    moved.point = map(anchor.point)
-                    moved.handleIn = mapHandle(anchor.handleIn)
-                    moved.handleOut = mapHandle(anchor.handleOut)
-                    return moved
+                let anchors = outline.rings.flatMap { ring in
+                    var landed = ring.map { anchor in
+                        var moved = anchor
+                        moved.point = map(anchor.point)
+                        moved.handleIn = mapHandle(anchor.handleIn)
+                        moved.handleOut = mapHandle(anchor.handleOut)
+                        return moved
+                    }
+                    if let grid { Self.stretchHandles(&landed, drawn: ring.map { placed($0.point) }, unit: grid.unit, closed: outline.closed) }
+                    return landed
                 }
                 let ink = part.stroke ?? part.fill ?? AgentDrawing.defaultStrokeHex
                 let content = PathContent(anchors: anchors, isClosed: outline.closed,
@@ -218,6 +224,29 @@ public struct SVGArtwork: Hashable, Sendable {
             }
             if part.opacity < 1 { layer.style.opacity = max(0, part.opacity) }
             return layer
+        }
+    }
+
+    /// Each run's handles stretched as its ends were by landing on units, so
+    /// a curve keeps the shape it was drawn with. Pinned to their anchors
+    /// unstretched, a curve whose end rounded half a unit came out longer and
+    /// straighter than drawn (a balloon's string, the eval, 2026-11-08). A run
+    /// under two units one way keeps that way's handles as they were:
+    /// stretched, a short run's handles put a kink in a cloud's lobe.
+    static func stretchHandles(_ landed: inout [PathAnchor], drawn: [CGPoint], unit: CGFloat, closed: Bool) {
+        guard landed.count == drawn.count, landed.count >= 2 else { return }
+        func stretch(_ old: CGFloat, _ new: CGFloat) -> CGFloat {
+            guard abs(old) >= unit * 2 else { return 1 }
+            let by = new / old
+            return by >= 2.0 / 3 && by <= 1.5 ? by : 1
+        }
+        let runs = closed ? landed.count : landed.count - 1
+        for start in 0..<runs {
+            let end = (start + 1) % landed.count
+            let sx = stretch(drawn[end].x - drawn[start].x, landed[end].point.x - landed[start].point.x)
+            let sy = stretch(drawn[end].y - drawn[start].y, landed[end].point.y - landed[start].point.y)
+            landed[start].handleOut = landed[start].handleOut.map { CGPoint(x: $0.x * sx, y: $0.y * sy) }
+            landed[end].handleIn = landed[end].handleIn.map { CGPoint(x: $0.x * sx, y: $0.y * sy) }
         }
     }
 

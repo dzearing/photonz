@@ -1,0 +1,27 @@
+{
+  "feature": "A torn icon reads as burst, not bitten",
+  "epic": "icon-vector",
+  "summary": "Ask's balloon popping no longer looks like a Pac-Man: the tear crosses its gap in short steps and the marks fan out instead of sitting like clock hands. It scores 72 to 86 where it scored 66 to 69, still short of the 85 bar on every reading.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New picture from the Icon row, Ask open.",
+  "switched": {},
+  "try": [
+    { "do": "File, New, Image, Icon.", "shot": "2026-11-08-icon-tear-ragged-0-balloon-before.png" },
+    { "do": "Ask: make an icon of a balloon popping.", "shot": "2026-11-08-icon-tear-ragged-1-balloon.png" },
+    { "do": "Look at the tear and the three marks at 16 and 24 in Actual sizes.", "shot": "2026-11-08-icon-tear-ragged-4-window-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "New Icon picture again. Ask: an icon of a soap bubble bursting.", "shot": "2026-11-08-icon-tear-ragged-2-bubble.png" },
+    { "do": "New Icon picture again. Ask: a broken heart icon.", "shot": "2026-11-08-icon-tear-ragged-3-heart.png" },
+    { "do": "Open any line icon SVG with a curve as an Icon picture and compare it to the file.", "shot": "2026-11-08-icon-tear-ragged-5-landing-old-new.png" }
+  ],
+  "evaluate": [
+    "Does the balloon read as popping rather than bitten?",
+    "Do the three marks read as flying out of the tear rather than as tick marks?",
+    "At 16 px, is the stepped tear still a tear and not a smudge?",
+    "Does the bubble still open and the heart still crack the way they did?"
+  ],
+  "rough": [
+    "The balloon is still under its bar of 85: 84.0, 83.2, 85.6 and 72.0 on four readings of the same picture. The judges now say lopsided, sitting left of centre and a blob of a knot, not Pac-Man. Covered by this task, a-broken-icon-reads-as-what-breaks-it-a-crack-th, still open.",
+    "On whole units the tear is a staircase of right angles across a diagonal. It scored better than the slanted wedge it replaces; a person may still find it blocky up close.",
+    "The model draws the balloon's knot as a little V, which lands as a blob at a 1.5 line. Asking it to redraw it solid made a speck and a straight string (45.6), so that was dropped.",
+    "No mock covers what Ask draws; the pictures are the eval's own sheets and one walk capture."
+  ]
+}

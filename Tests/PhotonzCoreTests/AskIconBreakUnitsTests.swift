@@ -176,38 +176,12 @@ struct AskIconBreakUnitsTests {
         #expect(body.frame.height / Self.unit >= 14 - 1e-6, "\(body.frame.height / Self.unit)")
     }
 
-    @Test("The tear still goes in and comes back: rounding has not flattened it", arguments: tearing)
-    func theTeethSurvive(_ drawing: (name: String, svg: String)) throws {
-        let frame = try Self.landed(drawing.svg).frame
-        let body = try #require(frame.children.filter { $0.path?.isClosed == true }
-            .max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }?.path)
-        // The outline ends at the tear, crosses its three teeth and closes.
-        let points = body.anchors.suffix(4).map(\.point) + body.anchors.prefix(1).map(\.point)
-        #expect(points.count == 5)
-        let (from, to) = (points[0], points[4])
-        let across = CGPoint(x: to.x - from.x, y: to.y - from.y)
-        let length = hypot(across.x, across.y)
-        // How far in from the line across the tear, toward the middle of the
-        // outline: the middle tooth may stand out past that line.
-        let middle = CGPoint(x: body.flattened().map(\.x).reduce(0, +) / CGFloat(body.flattened().count),
-                             y: body.flattened().map(\.y).reduce(0, +) / CGFloat(body.flattened().count))
-        let inward: CGFloat = ((middle.x - from.x) * across.y - (middle.y - from.y) * across.x) < 0 ? -1 : 1
-        func depth(_ point: CGPoint) -> CGFloat {
-            inward * ((point.x - from.x) * across.y - (point.y - from.y) * across.x) / length / Self.unit
-        }
-        #expect(depth(points[1]) >= 1, "\(drawing.name)")
-        #expect(depth(points[3]) >= 1, "\(drawing.name)")
-        // A whole unit back: any less and it rounds to a staircase, which is a
-        // step and not a tear.
-        #expect(depth(points[2]) <= min(depth(points[1]), depth(points[3])) - 0.9, "\(drawing.name): \(points)")
-    }
-
     @Test("The tear has a real corner in it: it never goes flat", arguments: tearing)
     func aTearHasCorners(_ drawing: (name: String, svg: String)) throws {
         let frame = try Self.landed(drawing.svg).frame
         let body = try #require(frame.children.filter { $0.path?.isClosed == true }
             .max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }?.path)
-        let points = body.anchors.suffix(4).map(\.point) + body.anchors.prefix(1).map(\.point)
+        let points = body.anchors.suffix(AskIconBreak.toothCount + 1).map(\.point) + body.anchors.prefix(1).map(\.point)
         let runs = zip(points, points.dropFirst()).map { CGPoint(x: $1.x - $0.x, y: $1.y - $0.y) }
         // On a square grid a zigzag along a diagonal is right angles, so a
         // right angle counts.
@@ -234,7 +208,7 @@ struct AskIconBreakUnitsTests {
         let body = try #require(frame.children.filter { $0.path?.isClosed == true }
             .max { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }?.path)
         let points = body.anchors.map(\.point)
-        let keptEnd = points.count - 4
+        let keptEnd = points.count - AskIconBreak.toothCount - 1
         let first = hypot(points[1].x - points[0].x, points[1].y - points[0].y) / Self.unit
         let last = hypot(points[keptEnd].x - points[keptEnd - 1].x, points[keptEnd].y - points[keptEnd - 1].y) / Self.unit
         #expect(first >= AskIconBreak.shortestRun - 0.75, "\(drawing.name): \(first)")

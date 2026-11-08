@@ -22784,3 +22784,13 @@ units.
 - Found: the balloon fell from 84 to 89 on 2026-11-06 to 55 to 69 with the whole-units placement, on the same model drawing. Re-judged today the old picture scores 84, so judge noise is about 7 either way. Most readings now get a model balloon with a tiny open knot, read as a tulip or a plug.
 - Lab: the tear tool can be run on the model's own saved drawings (the eval's `ask-walk/log.json` trace carries every SVG it drew) and judged on a picture, about a minute a variant. Tried and dropped: a deeper bite (clock hands), a middle tooth kept inside the line (wedge), five marks (no better, bunched like fingers), slanted three marks (clumped).
 - Open: the balloon. Next: what the model draws whole, the knot above all; the tear is near the old look.
+
+## 2026-11-08 — A torn icon crosses its gap in short teeth
+
+- A burst tear now crosses its gap in five short teeth going in and coming back in turn, square to the line across (`AskIconBreak.toothCount`, `Placing.notched` searches whole points tooth by tooth). On whole units across a diagonal that is a staircase, and the judges took it: the old three-tooth bite was a Pac-Man, a pie chart or a clock in nine looks of nine.
+- The three marks fan out at 18 to 26 degrees apart and may run the root of 5 long, so on whole units they lean (one across, two up) instead of landing straight up, at 45 and straight across, which read as a clock's hours.
+- Landing on whole units now stretches a curve's handles with its rounded ends (`SVGArtwork.stretchHandles`, runs of two units or more one way, by at most half again). Pinned unstretched, the balloon's string came out straight; same picture judged 2 sevens in 9 against 5 to 6 in 9 with the bend kept. Checked against the 18 icons of the 2026-11-06 run: 7 ordinary icons land differently, none visibly (a first version kinked a cloud's lobe; the two unit floor fixed it).
+- Tried and dropped: sending a small bent line (the balloon's V knot) back to be drawn solid. The model closed the V into a speck and straightened the string; judged a bitten lollipop, 45.6.
+- Eval: balloon 84.0, 83.2, 85.6, 72.0 on one identical picture (was 66.6 to 69.3); bar of 85 still not met. Heart 86.5, egg 88.8, bubble 87.2 hold.
+- Lab: `/tmp/tearlab` has render, row and a 9-look judge (`tools/judge.mjs <label> <case> <svg> 9`); judge a picture LANDED through `iconFrame` + `SVGExport`, never the tool's raw output, or the lab reads 10 to 15 points high.
+- Next: the balloon's remaining misses say lopsided, sits left of centre (the tear takes the upper right) and a blob knot. Open: whether the visual mass, not the box, should be centred for a torn icon.
