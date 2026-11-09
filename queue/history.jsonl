@@ -16464,3 +16464,12 @@
 {"t":"2026-11-09T05:18:09.206Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
 {"t":"2026-11-09T05:18:09.281Z","ev":"task_walks","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","walks":[]}
 {"t":"2026-11-09T05:18:09.356Z","ev":"task_pending","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","from":"in_progress","note":"Plane (7.4, 7.9), wifi (8.1) and the flap landing are met; the envelope reads 5 against its bar of 7 since the motion look's re-plan, so it stays open. Shipped 35ad2621f; audit queue/audits/2026-11-09-animated-fold-lands-plane-leaves.json"}
+{"t":"2026-11-09T05:25:41.301Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
+{"t":"2026-11-09T05:25:41.342Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-09T05:27:46.553Z","ev":"slice_pass","walks":26,"passed":24,"failed":2,"seconds":419,"of":1136,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-09T05:27:46.746Z","ev":"task_started","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","title":"An animated icon's flap reads, and a drawn line ends its lap cleanly","priority":"p1-high"}
+{"t":"2026-11-09T08:08:47.814Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T08:08:47.888Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T08:22:20.149Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-09T08:22:47.709Z","ev":"task_walks","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","walks":[]}
+{"t":"2026-11-09T08:22:47.784Z","ev":"task_pending","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","from":"in_progress","note":"Plane (7.6, 7.9, loop fixed), wifi (8.1), the flap landing and the held-out set are met. The envelope went from reads-as-asked 5 to 6.0-6.8 (best 71.8) and stays open against its bar of 7: what is left is the model's tiny letter, which reads as a blob tangled with the flap. Shipped 5ced1498a; audit queue/audits/2026-11-09-envelope-from-behind.json"}

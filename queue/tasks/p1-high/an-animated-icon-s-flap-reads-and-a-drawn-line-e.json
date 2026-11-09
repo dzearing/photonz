@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-06T18:22:08.469Z",
-  "updated": "2026-11-09T05:18:09.355Z",
+  "updated": "2026-11-09T08:22:47.783Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ask-animates-what-it-makes-an-animated-svg-icon, run 20261106-171511-ask: envelope 4, plane 6, wifi loops 3. AskMotionCheck leaves trimStart and trimEnd out of its loop check on purpose, since a checkmark set to end where it began never drew. Rules in AskMotion.principles must stay general: nothing per subject. Pictures: queue/audits/2026-11-06-ask-animates-after-envelope-opening.png and -after-wifi-signal.png.",
@@ -112,8 +112,28 @@
     {
       "t": "2026-11-09T05:18:09.354Z",
       "note": "Plane (7.4, 7.9), wifi (8.1) and the flap landing are met; the envelope reads 5 against its bar of 7 since the motion look's re-plan, so it stays open. Shipped 35ad2621f; audit queue/audits/2026-11-09-animated-fold-lands-plane-leaves.json"
+    },
+    {
+      "t": "2026-11-09T05:27:46.741Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T08:08:47.812Z",
+      "note": "Reproduced envelope 5 (runs 035219/044140/045626): the model draws the empty body first and the letter over it, so it shows through; the flap's top sat 1 unit above the body's line (doubled bar, closed roof = 'house'); Ask's boxes landed with their line inside the edge (half a line small, unlike an opened SVG); flap opened 10->180 in 200 ms. Rescored the 2026-11-08 envelope that read 7 on today's 9-look judge: 77.2, reads 7, so the bar is reachable."
+    },
+    {
+      "t": "2026-11-09T08:08:47.886Z",
+      "note": "Shipped 5ced1498a: comes out from behind an outline drawn first (moved behind, outline white, in line), fold back face behind what comes out (swap at edge on), hingesShared, box/oval lines centred on landing, foldsOpen, folds 450-550 ms both ways, motion margin, jumpsUnseen (plane snapped level at lap end). Envelope: 56.1, 48.5, 56.2, 66, 69, 71.8, 71.3, 66.6, 57.4 (a run where the back face was mistimed, fixed), 62.7, 64.3; reads as asked 6.2-6.8. Plane 7.56, wifi 8.11 in run 20261109-073759-ask."
+    },
+    {
+      "t": "2026-11-09T08:22:47.707Z",
+      "note": "walks none -> none"
+    },
+    {
+      "t": "2026-11-09T08:22:47.782Z",
+      "note": "Plane (7.6, 7.9, loop fixed), wifi (8.1), the flap landing and the held-out set are met. The envelope went from reads-as-asked 5 to 6.0-6.8 (best 71.8) and stays open against its bar of 7: what is left is the model's tiny letter, which reads as a blob tangled with the flap. Shipped 5ced1498a; audit queue/audits/2026-11-09-envelope-from-behind.json"
     }
   ],
-  "started": "2026-11-09T03:41:53.079Z",
+  "started": "2026-11-09T05:27:46.740Z",
   "walks": []
 }
