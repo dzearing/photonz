@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-23T22:48:46.880Z",
-  "updated": "2026-11-08T17:12:57.220Z",
+  "updated": "2026-11-09T23:55:54.819Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-23 in queue/audits/2026-10-23-component-sheet-window-sc.png (Scripts/playtest.sh Scripts/playtest/ask-builds-base-components-walk.json --no-build, 1-sheet-sc.png): each copy's chip (CanvasNames.canvasNameChips, drawNameChip in CanvasComponents.swift) is a fixed screen size just above the copy, so at zoom 0.67 it covers about 30 document points, over the header row the table sets 16 points above its first row (AgentComponentSheet.swift, AgentNewComponent.headerGap). Chips of a lower row also sit in the 32 point gap and touch the row above. The earlier layout put state names UNDER looks for this reason. Headers are named <State> Header, row names <Row> Label.",
@@ -106,9 +106,28 @@
     {
       "t": "2026-11-08T17:12:57.219Z",
       "note": "seq 90 -> 60"
+    },
+    {
+      "t": "2026-11-09T23:20:47.788Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T23:55:28.505Z",
+      "note": "walks ask-builds-base-components-walk -> ask-builds-base-components-walk, component-sheet-chips-clear-walk"
+    },
+    {
+      "t": "2026-11-09T23:55:36.306Z",
+      "note": "Reproduced on current code with a fast walk (component-sheet-chips-clear-walk: add_component with labels, three kinds): chips covered Hover, Pressed, Disabled, On, Focused headers. Chose leaving a component chip off at rest when its plate would cover any of the picture's own text (CanvasNameLabels.covering), back on top while its drawing is pointed at or picked, over moving chips below copies or widening the sheet's header gap: moving lands in the next row's gap, and widening would change the exported picture (acceptance 3) and still fail at lower zoom since chips are a fixed screen size. The header already names the version; hovering spells it out. Added walk step expectNamesClearOfWords; both walks green (Ask walk 462s, 3 chips at rest clear of 71 word boxes). Export path untouched: only canvas chrome code changed. Left rough (log only): a picked copy's chip sits close above its top resize handle, pre-existing."
+    },
+    {
+      "t": "2026-11-09T23:55:54.817Z",
+      "note": "A component chip that would print over the picture's own words (a sheet's state headers) is left off at rest and comes back on top while its copy is pointed at or picked. CanvasNameLabels.covering in PhotonzCore (5 unit tests), wired in CanvasNames/CanvasComponents. New walk step expectNamesClearOfWords; ask-builds-base-components-walk (real Ask, 462s) and new component-sheet-chips-clear-walk both green at Next defaults with real window captures. Export untouched. Full Scripts/test.sh green. Audit queue/audits/2026-11-09-component-sheet-chips-clear.json. Commit 56121e73d."
     }
   ],
   "walks": [
-    "ask-builds-base-components-walk"
-  ]
+    "ask-builds-base-components-walk",
+    "component-sheet-chips-clear-walk"
+  ],
+  "started": "2026-11-09T23:20:47.787Z",
+  "completed": "2026-11-09T23:55:54.818Z"
 }
