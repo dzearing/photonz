@@ -80,6 +80,8 @@ struct AskMotionLookTests {
         #expect(asked.contains("Bounces: not seen"))
         #expect(asked.contains("replace true"))
         #expect(asked.contains("Left out:"))
+        // Where the keys put the parts goes with it, so a miss is plain in numbers.
+        #expect(asked.contains("Where your keys put each moving part"), "\(asked)")
         #expect(talk.steps.count == drawn, "the drawing and its keys stay, to be mended")
         _ = talk.take(AskMotionTests.reply("set_keys", try AskMotionTests.args(#"{"layer":"$1/whole","property":"position","replace":true,"keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":-3}},{"seconds":0.7,"value":{"x":0,"y":0}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)))
         // No second beats review: the look was the review.

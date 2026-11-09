@@ -740,7 +740,7 @@ public struct AskConversation: Sendable {
             let plan = webPlan(steps, page: web, summary: summary)
             return AskPlan(steps: plan.steps, summary: plan.summary, names: plan.names, unplanned: unplanned)
         }
-        return AskPlan(steps: drawsMotion ? AskMotion.fitted(AskMotion.hidden(steps)) : steps, summary: summary, names: names, unplanned: unplanned)
+        return AskPlan(steps: drawsMotion ? AskMotion.fitted(AskMotion.hidden(AskMotion.landingFolded(steps))) : steps, summary: summary, names: names, unplanned: unplanned)
     }
 
     /// What this plan could not make, so far.
@@ -828,7 +828,7 @@ public struct AskConversation: Sendable {
             if motionDesigned, !beatsReviewed, steps.contains(where: { $0.tool == "set_keys" }) {
                 beatsReviewed = true
                 beatsLeftOut = []
-                messages.append(["role": "user", "content": .string(AskMotion.beatsReview)])
+                messages.append(["role": "user", "content": .string(AskMotion.beatsReview(for: steps))])
                 return .again(looks: [])
             }
             return .planned(plan(summary: sentence))
@@ -1293,7 +1293,8 @@ public struct AskConversation: Sendable {
         motionSendBacks = AskMotionCheck.mostSendBacks - 1
         beatsReviewed = true
         beatsLeftOut = []
-        messages.append(["role": "user", "content": .string(AskMotionLook.sendBack(seen))])
+        let parts = AskMotion.whereParts(steps).map { "\n\n\($0)\n\(AskMotion.touchRule)" } ?? ""
+        messages.append(["role": "user", "content": .string(AskMotionLook.sendBack(seen) + parts)])
     }
 
     /// The drawing already planned that this one would land on top of: both

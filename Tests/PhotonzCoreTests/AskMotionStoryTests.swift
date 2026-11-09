@@ -196,3 +196,136 @@ struct AskMotionWhereTests {
         #expect(AskMotionCheck.problems([Self.drawing, moved]).isEmpty)
     }
 }
+
+/// Keys the model wrote again with replace true are the only keys that play:
+/// the ones they replaced are judged and made room for no more. On
+/// 2026-11-08 the trash of the user's story was sent back three times for
+/// keys it had already replaced, about 25 seconds of a plan the person
+/// waited through, and its drawing was shrunk for a journey that never played.
+@Suite("Keys written again replace the ones before")
+struct AskMotionKeysAgainTests {
+
+    static let drawing = AskMotionWhereTests.drawing
+
+    static func keys(_ json: String) throws -> AskStep {
+        AskStep(tool: "set_keys", arguments: try AskMotionTests.args(json))
+    }
+
+    @Test("A send-back mended with replace true is not sent back again")
+    func mendedIsMended() throws {
+        let absolute = try Self.keys(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":12,"y":14}},{"seconds":0.5,"value":{"x":18,"y":2}},{"seconds":1,"value":{"x":12,"y":14}}]}"#)
+        let mended = try Self.keys(#"{"layer":"$1/trash","property":"position","replace":true,"keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":6,"y":-12}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
+        #expect(!AskMotionCheck.problems([Self.drawing, absolute]).isEmpty)
+        #expect(AskMotionCheck.problems([Self.drawing, absolute, mended]).isEmpty)
+    }
+
+    @Test("Folded: a replace drops the keys before it for that value only, and keys without replace join them, a key at the same moment rewritten")
+    func folded() throws {
+        let first = try Self.keys(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
+        let fade = try Self.keys(#"{"layer":"$1/trash","property":"opacity","keys":[{"seconds":0,"value":100},{"seconds":1,"value":100}]}"#)
+        let added = try Self.keys(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0.5,"value":{"x":4,"y":-8}},{"seconds":1,"value":{"x":0,"y":1}}]}"#)
+        let folded = AskMotion.folded([Self.drawing, first, fade, added])
+        #expect(folded.count == 3)
+        #expect(folded[0] == Self.drawing)
+        #expect(folded.contains(fade))
+        let joined = try #require(folded.first { $0.arguments["property"]?.stringValue == "position" })
+        let times = joined.arguments["keys"]?.arrayValue?.compactMap { $0["seconds"]?.doubleValue }
+        #expect(times == [0, 0.5, 1])
+        #expect(joined.arguments["keys"]?.arrayValue?.last?["value"]?["y"]?.doubleValue == 1)
+
+        let swing = try Self.keys(#"{"layer":"$1/trash","property":"rotation","pivot":{"x":0.5,"y":0},"keys":[{"seconds":0,"value":0},{"seconds":1,"value":0}]}"#)
+        let again = try Self.keys(#"{"layer":"$1/trash","property":"rotation","replace":true,"keys":[{"seconds":0,"value":0},{"seconds":0.5,"value":20},{"seconds":1,"value":0}]}"#)
+        let swung = AskMotion.folded([Self.drawing, swing, again])
+        #expect(swung.count == 2)
+        #expect(swung[1].arguments["keys"]?.arrayValue?.count == 3)
+        // The hinge said once stays, written again or not.
+        #expect(swung[1].arguments["pivot"]?["x"]?.doubleValue == 0.5)
+    }
+
+    @Test("Room is made for the keys that play, not the ones replaced")
+    func roomForWhatPlays() throws {
+        let far = try Self.keys(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":12,"y":-14}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
+        let near = try Self.keys(#"{"layer":"$1/trash","property":"position","replace":true,"keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":2,"y":-3}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
+        let landed = AskMotion.fitted([Self.drawing, far, near])
+        #expect(landed.first?.arguments["svg"]?.stringValue?.contains(#"viewBox="0 0 24 24""#) == true)
+        #expect(landed.count == 2)
+    }
+
+    @Test("A plan with a second drawing after the replaced keys keeps every step, so step numbers still point where they did")
+    func numbersKept() throws {
+        let first = try Self.keys(#"{"layer":"$1/trash","property":"opacity","keys":[{"seconds":0,"value":100},{"seconds":1,"value":0}]}"#)
+        let again = try Self.keys(#"{"layer":"$1/trash","property":"opacity","replace":true,"keys":[{"seconds":0,"value":100},{"seconds":0.5,"value":0},{"seconds":1,"value":100}]}"#)
+        let landing = AskMotion.landingFolded([Self.drawing, first, Self.drawing, again])
+        #expect(landing.count == 4)
+        #expect(AskMotion.landingFolded([Self.drawing, first, again]).count == 2)
+    }
+}
+
+/// Where the keys put each moving part, at each key, and what it touches:
+/// shown to the model as it goes through its beats, so a bounce that never
+/// meets what it bounces off is plain in numbers. On 2026-11-08 the look said
+/// the trash never touched the lid and the model sent the same keys again.
+/// Boxes and keys only: nothing here knows what any part is.
+@Suite("Where the keys put the parts")
+struct AskMotionWhereTheyAreTests {
+
+    static let svg = ##"""
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><g id="trash"><circle id="ball" cx="12" cy="2" r="1"/></g><path id="can" d="M5 8 L6 20 L18 20 L19 8"/><g id="lid"><line id="top" x1="5" y1="6" x2="19" y2="6"/></g></svg>
+    """##
+    static let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(svg)])
+
+    static func keys(_ json: String) throws -> AskStep {
+        AskStep(tool: "set_keys", arguments: try AskMotionTests.args(json))
+    }
+
+    @Test("A part keyed onto another is said to touch it at that key, and away from it to touch nothing")
+    func touches() throws {
+        let drop = try Self.keys(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":2.5}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
+        let said = try #require(AskMotion.whereParts([Self.drawing, drop]))
+        #expect(said.contains("0 s: trash x 10 to 14, y 0 to 4, touching nothing"), "\(said)")
+        #expect(said.contains("0.5 s: trash x 10 to 14, y 2.5 to 6.5, touching lid"), "\(said)")
+    }
+
+    @Test("A turned part is placed where the turn takes it, and a part inside another says so")
+    func turnedAndInside() throws {
+        let lift = try Self.keys(#"{"layer":"$1/lid","property":"rotation","pivot":{"x":19,"y":6},"keys":[{"seconds":0,"value":0},{"seconds":0.5,"value":90},{"seconds":1,"value":0}]}"#)
+        let drop = try Self.keys(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":12}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
+        let said = try #require(AskMotion.whereParts([Self.drawing, lift, drop]))
+        // Turned a quarter clockwise about its right end, its left end stands up over the hinge.
+        #expect(said.contains("lid turned 90, x 18 to 20, y -9 to 7"), "\(said)")
+        #expect(said.contains("trash x 10 to 14, y 12 to 16, inside can"), "\(said)")
+    }
+
+    @Test("A part keyed out of sight is said to be hidden, and halfway between keys it is halfway")
+    func hiddenAndBetween() throws {
+        let fade = try Self.keys(#"{"layer":"$1/trash","property":"opacity","keys":[{"seconds":0,"value":0},{"seconds":0.4,"value":100},{"seconds":1,"value":0}]}"#)
+        let drop = try Self.keys(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.8,"value":{"x":8,"y":0}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
+        let said = try #require(AskMotion.whereParts([Self.drawing, fade, drop]))
+        #expect(said.contains("0 s: trash hidden"), "\(said)")
+        #expect(said.contains("0.4 s: trash x 14 to 18"), "\(said)")
+    }
+
+    @Test("Nothing keyed, nothing said")
+    func nothingKeyed() {
+        #expect(AskMotion.whereParts([Self.drawing]) == nil)
+    }
+
+    @Test("The beats are gone through with where the parts are")
+    func inTheReview() throws {
+        let drop = try Self.keys(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":2.5}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
+        let review = AskMotion.beatsReview(for: [Self.drawing, drop])
+        #expect(review.hasPrefix(AskMotion.beatsReviewAsk))
+        #expect(review.contains("touching lid"))
+        #expect(AskMotion.beatsReview(for: [Self.drawing]) == AskMotion.beatsReviewAsk)
+    }
+}
+
+@Suite("What goes in is drawn where it is first seen")
+struct AskMotionDrawnWhereSeenTests {
+    @Test("The rules and the design ask say what is put in starts outside it, and what comes out starts inside")
+    func rules() {
+        #expect(AskMotion.drawRules.contains("What comes out of another part starts hidden inside it"))
+        #expect(AskMotion.drawRules.contains("is drawn where it is first seen, away from that part and never inside it"))
+        #expect(AskMotion.designAsk.contains("what goes into something is first seen outside it"))
+    }
+}

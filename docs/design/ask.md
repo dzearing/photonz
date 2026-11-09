@@ -1308,6 +1308,31 @@ Measured on the six story cases: reads as asked went from 6, 3, 3, 3, 3, 4 to 5,
 calls leaving the frame "cut off" talks the plan out of flying off, and a look not
 asked about contact calls a bounce seen when the trash never touches the lid.
 
+### Keys that play, and where they put the parts (2026-11-08)
+
+Keys the model writes again with `replace` true are the only ones that play, so
+the rule checks and the room made for the motion read the plan folded
+(`AskMotion.folded`): a replace drops the keys before it for that value, keys
+without it join them. Before, the trash of the user's story was sent back three
+times for keys it had already replaced (about 25 s) and its drawing was shrunk for a
+journey that never played. The plan that lands is folded too
+(`AskMotion.landingFolded`), unless a step that makes something comes after a
+dropped one, which would move its `$N`.
+
+When the model goes through its beats, and when the look sends it back, it is
+shown where its keys put each moving part at each key, on its own grid, and what
+the part touches or is inside (`AskMotion.whereParts`: boxes turned, grown and moved
+straight between keys, a part in a keyed group carried with it), with one line
+asking that a hit or a bounce has the two parts touching at its key. And what is
+thrown, dropped or put into something is drawn where it is first seen, outside it
+(the draw rules and the design ask): the design had drawn the trash "at rest inside
+the bin", by the rule for what comes out of a part.
+
+Measured: plans quicker (median 190 s to 159 to 179 s), reads as asked 7, 6, 3, 4,
+5, 4 and 5, 6, 5, 4, 5, 4, within a run's noise of before. Tried and taken out: a
+send-back for a part that comes into view where it goes out of view (rose out of
+the can and sank back); the model repeated its words and planned worse.
+
 ## Try paths (walks)
 
 `ask-animates-an-icon-walk`: an animated SVG icon from one request at Next

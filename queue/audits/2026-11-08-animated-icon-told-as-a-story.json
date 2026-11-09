@@ -1,7 +1,7 @@
 {
   "feature": "An animated icon told as a little story",
   "epic": "icon-svg",
-  "summary": "Asking for an icon that tells a story of several beats now always makes a moving icon, even when your words never say animated or have a typo in it. Before it lands, Ask now looks at frames of its own motion and mends any beat it could not see, and its row says if it had to leave one out.",
+  "summary": "Asking for an icon that tells a story of several beats now always makes a moving icon, even when your words never say animated or have a typo in it. Before it lands, Ask looks at frames of its own motion and mends any beat it could not see, and its row says if it had to leave one out. Since the last pass it plans about 30 seconds quicker, no longer sends back keys it already fixed, and sees where each moving part sits at each beat.",
   "setup": "Photonz Dev, release Next, no flag changed from its default.",
   "switched": {},
   "try": [
@@ -11,8 +11,9 @@
       "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
     },
     {
-      "do": "Press Space and watch the lid open, the trash come in and hit the lid, drop in, and the lid shut.",
-      "shot": "2026-11-08-animated-story-frames.png"
+      "do": "Press Space and watch the lid open, the paper ball come in by the lid, and the lid shut; the timeline shows Ball, Impact and Lid keyed on their own.",
+      "shot": "2026-11-08-animated-story-playing-pass3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
     },
     {
       "do": "Ask for: make an animated heart icon where the heart beats twice and then breaks. Watch the line under the request say Checking the motion, then Fixing the motion.",
@@ -46,10 +47,12 @@
     "Does the heart's reel read as two beats and then a break, and is the extra 15 to 60 seconds of Checking the motion worth it?"
   ],
   "rough": [
-    "Not at the bar yet: of six story requests, none reads as asked at 7 or more. Looking at the motion before it lands lifted the six from 6, 3, 3, 3, 3, 4 to 5, 6, 6, 3, 5, 4 (total 34.8 to 49.1); a second wording read 5, 6, 4, 5, 4 with one case out of time. The task stays open for it (an-animated-icon-told-as-a-little-story-moves-th).",
-    "Your own trash sentence plans for about 265 seconds, past the 150 seconds the look waits for, so the look does not run on it yet; shorter plans get it.",
+    "Not at the bar yet: of six story requests, none reliably reads as asked at 7 or more. This pass: 7, 6, 3, 4, 5, 4 (total 49.8, the bell at 7, the first case to reach it) and, with every change in, 5, 6, 5, 4, 5, 4 (46.4); before it, 5, 6, 6, 3, 5, 4 (49.1). Those swings are within what one run differs from the next. The task stays open for it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "Your trash sentence now plans in about 150 to 185 seconds (265 before), so the look sometimes runs on it and sometimes does not. When it runs, the model mostly sends the same trash keys back unchanged.",
+    "In the walk with your sentence, the plan took 194 s, past the 150 s the look waits for, so the look did not run on it; mid-play the frame shows jagged stair-step marks beside the lid's hinge that I have not explained yet.",
     "In the heart, the crack floats loose between the halves instead of being their broken edges, and the broken heart holds for over a second before it snaps back whole.",
-    "The trash in the reel fades in beside the lid instead of flying in from outside, and passes in front of the can's rim as it drops in.",
+    "The trash is now drawn where it is first seen, outside the can, but its path still never meets the lid, so the bounce does not read; the model was shown where every part sits at each beat and did not move it.",
+    "The envelope's letter is drawn on top of the envelope instead of behind its front, and the flap flips up into a roof shape instead of folding shut.",
     "The new check that asks the model whether an icon moves costs about a second on every still icon whose words do not say animated.",
     "No mock covers how Ask plans motion; this is Ask's planning, not a surface."
   ]
