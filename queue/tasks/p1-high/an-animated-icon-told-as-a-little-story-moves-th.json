@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-09T11:19:00.901Z",
+  "updated": "2026-11-09T12:58:24.670Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -129,9 +129,29 @@
     {
       "t": "2026-11-09T11:19:00.900Z",
       "note": "Mend and contact shipped (a2012994a): story total 48.6 to 57.4; bar (5 of 6 at reads as asked 7) not met, best 0 to 2 of 6 per run"
+    },
+    {
+      "t": "2026-11-09T11:29:55.501Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T11:51:53.299Z",
+      "note": "Read run D's traces (the plan trace is in each case's ask-walk/log.json, ask.trace). Found the app undoing beats the model planned: (1) marksGo pressed the rocket's smoke (model: 0.55 to 1.5 s, growing 30 to 100) into 0.55 to 0.9 s, one frame; (2) the tick's opacity rose over the same 0.4 s as its trimEnd, read as a grey ghost; (3) the envelope faded out as it flew off on Ease in and faded in on its way back (comesBack made it fly in, unseen), read as one frame then a pop; (4) hidden() only put behind a part that comes OUT of an outline, not one that drops IN (the letter). Built test first (AskMotionStoryBeatsTests): growing marks keep their keys, edgeHides, drawnNotFaded, hidden goes-in case; prompt: left-behind marks grow as they fade, a counted beat happens exactly that many times, a bounce is a hop. Running six story cases (run E)."
+    },
+    {
+      "t": "2026-11-09T12:58:24.518Z",
+      "note": "Shipped ed452a4ef (pushed): growing marks keep their keys (marksGo), edgeHides, drawnNotFaded, hidden goes-in case; rules for left-behind marks, counted beats, a bounce as a hop. Scripts/test.sh exit 0 on the second full run (first: VideoCutExportTests reader gave up at load 20, passed alone 7 of 7). Walks at Next defaults pass: ask-animates-a-story-walk (268 s, Copy SVG repeatCount=indefinite) and ask-animates-a-story-without-the-word-walk (262 s). Pictures looked at: run F contact sheet (bell reads as a bell with two ring marks; tick draws in; heart beats then splits; rocket smoke now seen over several frames; envelope flap folds OPEN, the model drew it shut; trash ball never visibly goes in) and the walk's 3-playing-sc.png (lid lifted on its hinge, ball beside it, 1.3 s lap). Audit queue/audits/2026-11-09-animated-icon-story-beats-kept.json."
+    },
+    {
+      "t": "2026-11-09T12:58:24.593Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases at reads as asked 7. Run E 20261109-115146: total 44.2, asked bell 6.9, checkbox 6, heart out of 300 s, envelope 4, rocket 5.3, trash 3 (0 of 6). Run F 20261109-121555, same code: total 55.8, bell 6.9, checkbox 8.0, heart 5.1, envelope 3.0, rocket 6.3, trash 3.7 (1 of 6). Mean of E and F 50.0 vs 50.7 over B to D: overall within noise, bell up both runs (77 vs 45 to 60). Per-case spread across six runs is wide (envelope 26 to 63, rocket 49 to 82, heart 0 to 69), so one run cannot rank a change; two per change is the least. What is left is the model's design: the envelope flap drawn shut then folded open, the letter outside the envelope's group (the goes-in rule refuses to regroup), the trash faded out on its way to an open-line can (nothing can hide it), the heart's plan near the 300 s walk limit (out twice in six runs). Next levers: a send-back for a part faded out while it travels in the frame (say pass behind, or close the can's outline), and a fold whose first look is shut that the words say closes. Left rough, no task earned: the walk's trash plays a 1.3 s lap against the 2 to 4 s the rules ask."
+    },
+    {
+      "t": "2026-11-09T12:58:24.669Z",
+      "note": "Beats kept as planned (ed452a4ef): bell up to 77, checkbox reads as asked 8; story bar (5 of 6 at 7) not met, 1 of 6 at best"
     }
   ],
-  "started": "2026-11-09T08:23:44.881Z",
+  "started": "2026-11-09T11:29:55.500Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
