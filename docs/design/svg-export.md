@@ -340,6 +340,39 @@ to what you just made. The sheet asks the destination, moves the format to the
 one that survives, and lists what makes the trip and what does not — including
 the one line nothing carries: **a drawing in a page receives no clicks**.
 
+## When it plays, and whose colour it is
+
+Two more answers on the Export sheet for an SVG, remembered per document
+(`PhotonzDocument.svgPlayback`) so Copy SVG, Preview as Web Page and the
+agent's `export` all write the same file (`SVGPlayback.swift`). They are
+applied over the finished file, after `SVGExport.write`.
+
+- **Plays** (asked only when the file moves): *Always* loops, as before.
+  *On hover* gives the root `<svg>` an id and every animation
+  `begin="id.mouseenter" end="id.mouseleave" restart="whenNotActive"` with no
+  freeze, so it rests on its still pose, plays while pointed at and starts from
+  the top on the next visit. `mouseenter`, not `mouseover`, which bubbles from
+  every shape and restarts the motion at each edge. The id has no minus in it:
+  SMIL reads `a-b.mouseenter` as `a` minus an offset and never starts (found by
+  the browser check). *Once* is `repeatCount="1" fill="freeze"`.
+- **Colour**: *As drawn*, or *Follow the page*, which turns the main ink (the
+  fill or stroke named most often; on a tie the plainest, so the near black
+  beats the red badge) into `currentColor`, colour changes into it included.
+
+**Preview as Web Page** (File menu, the layer and canvas right-click menus,
+the Export sheet, and `preview_web_page` for agents) writes
+`SVGPreviewPage.html` to a temporary folder and opens it: the icon in a button
+whose hover is handed to the icon (`pointer-events: none` on the icon, the
+button dispatching `mouseenter`/`mouseleave`), at 16 to 96 px on light and
+dark, a copy going round, Copy SVG, Copy HTML and Refresh. Every copy's ids are
+made its own (`SVGPlayback.uniquingIDs`). The app rewrites the page as the
+drawing changes; Refresh shows it. Under a walk it never opens the browser.
+
+`Scripts/svg-preview-check.mjs` loads the pages
+`Scripts/playtest/svg-preview-web-page-walk.json` writes in WebKit and
+Chromium (Playwright's engines) and checks each answer: 30 checks, both
+engines, on 2026-11-09.
+
 ## The canvas it was drawn on
 
 A blank canvas is a REAL full-size bitmap of white (`SolidImage`), because a

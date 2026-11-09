@@ -21,8 +21,9 @@ public enum SVGExporter {
     public static func export(_ document: PhotonzDocument, store: ImageStore,
                               renderer: DocumentRenderer = DocumentRenderer(),
                               animation: SVGExport.Animation = .still,
-                              background: SVGExport.Background = .keep) -> SVGExport.Result {
-        SVGExport.write(document, animation: animation,
+                              background: SVGExport.Background = .keep,
+                              playback: SVGPlayback = .standard) -> SVGExport.Result {
+        var result = SVGExport.write(document, animation: animation,
                         picture: { layer, origin in
                             picture(of: layer, at: origin, in: document,
                                     store: store, renderer: renderer)
@@ -36,6 +37,10 @@ public enum SVGExporter {
                         typeSetter: typeSetter,
                         flatImages: FlatBitmap.colors(in: document, store: store),
                         background: background)
+        // When it plays and what colour it takes are about where the file is
+        // going, so they are said last, over the finished file.
+        result.text = playback.apply(to: result.text)
+        return result
     }
 
     /// How the labels the app draws for itself — an arrow's caption, a
@@ -89,10 +94,11 @@ public enum SVGExporter {
     public static func data(_ document: PhotonzDocument, store: ImageStore,
                             renderer: DocumentRenderer = DocumentRenderer(),
                             animation: SVGExport.Animation = .still,
-                            background: SVGExport.Background = .keep)
+                            background: SVGExport.Background = .keep,
+                            playback: SVGPlayback = .standard)
         -> (data: Data, fallbacks: [SVGExport.Fallback], unmoved: [SVGExport.Fallback])? {
         let result = export(document, store: store, renderer: renderer, animation: animation,
-                            background: background)
+                            background: background, playback: playback)
         guard let data = result.text.data(using: .utf8) else { return nil }
         return (data, result.fallbacks, result.unmoved)
     }

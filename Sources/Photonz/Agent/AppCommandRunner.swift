@@ -293,6 +293,7 @@ extension EditorState {
         case .importMedia:
             if let path = call.word("path") { Task { await importMedia([URL(fileURLWithPath: path)]) } }
             else { importMediaFromPanel() }
+        case .previewWebPage: previewWebPage(around: pickedLayerID)
         // Image
         case .resizeImage:
             if let width = call.amount("width"), let height = call.amount("height") {
@@ -576,6 +577,7 @@ extension EditorState {
         case .cut, .copy, .paste: return hasDocument
         case .copyMerged, .copyMergedWithBackground: return hasDocument
         case .copySVG: return canCopySVG(around: pickedLayerID)
+        case .previewWebPage: return canPreviewWebPage(around: pickedLayerID)
         case .copyVideo, .copyAsGIF: return canCopyVideo
         case .selectAll, .newLayer, .newCollageLayer: return hasDocument
         case .swapFillColors: return true

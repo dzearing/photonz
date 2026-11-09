@@ -1,0 +1,115 @@
+{
+  "out": "/tmp/photonz-playtest/svg-preview-web-page-walk",
+  "seed": "An animated icon tried the way it will be used (task try-an-animated-svg-in-a-real-web-page-preview-a). A shape is keyed to turn, then Preview as Web Page writes the page around it four ways: going round always, on hover with the page's colour, once, and as the drawing's own Export choice. The pages land beside this log for Scripts/svg-preview-check.mjs to try in WebKit and Chromium. The Export sheet is photographed with its new Plays and Colour rows. Next defaults, no flag.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 240,
+      "canvasHeight": 240,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_shape",
+      "arguments": "{\"shape\": \"ellipse\", \"frame\": {\"x\": 150, \"y\": 40, \"width\": 40, \"height\": 40}, \"fill\": \"#FF3B30\", \"name\": \"Badge\"}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_shape",
+      "arguments": "{\"shape\": \"rectangle\", \"frame\": {\"x\": 60, \"y\": 70, \"width\": 120, \"height\": 120}, \"fill\": \"#1D1D1F\", \"cornerRadius\": 24, \"name\": \"Body\"}"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "agentTool",
+      "tool": "set_keys",
+      "arguments": "{\"layer\": \"$picked\", \"property\": \"rotation\", \"keys\": [{\"seconds\": 0, \"value\": 0, \"curve\": \"Linear\"}, {\"seconds\": 1, \"value\": 90}]}"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-keyed-shape"
+    },
+    {
+      "do": "agentTool",
+      "tool": "preview_web_page",
+      "arguments": "{\"open\": false, \"plays\": \"always\", \"path\": \"/tmp/photonz-playtest/svg-preview-web-page-walk/always.html\"}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "preview_web_page",
+      "arguments": "{\"open\": false, \"plays\": \"on_hover\", \"colour\": \"follow_page\", \"path\": \"/tmp/photonz-playtest/svg-preview-web-page-walk/hover.html\"}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "preview_web_page",
+      "arguments": "{\"open\": false, \"plays\": \"once\", \"path\": \"/tmp/photonz-playtest/svg-preview-web-page-walk/once.html\"}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "preview_web_page",
+      "arguments": "{\"open\": false, \"path\": \"/tmp/photonz-playtest/svg-preview-web-page-walk/default.html\"}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "export",
+      "arguments": "{\"format\": \"svg\", \"path\": \"/tmp/photonz-playtest/svg-preview-web-page-walk/hover.svg\", \"plays\": \"on_hover\", \"colour\": \"follow_page\", \"background\": false}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "export",
+      "arguments": "{\"format\": \"svg\", \"path\": \"/tmp/photonz-playtest/svg-preview-web-page-walk/follow.svg\", \"plays\": \"always\", \"colour\": \"follow_page\", \"background\": false}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "run_command",
+      "arguments": "{\"command\": \"preview_web_page\"}"
+    },
+    {
+      "do": "describe",
+      "stage": "2-pages-written",
+      "note": "THE TEST: four pages and one file written beside this log, none opened, since a walk never puts a browser in front of the person. Scripts/svg-preview-check.mjs then loads each in WebKit and Chromium: on hover rests until the button is hovered and stops when it is left, once holds its last frame, follow the page draws in the page's colour on dark."
+    },
+    {
+      "do": "action",
+      "action": "exportDialogToWebPage"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-export-sheet",
+      "note": "The Export sheet bound for a web page: under Format, Plays (Always, On hover, Once) and Colour (As drawn, Follow the page), and Preview as Web Page beside Cancel."
+    },
+    {
+      "do": "snapshot",
+      "name": "3-export-sheet"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    }
+  ]
+}

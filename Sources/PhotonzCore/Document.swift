@@ -71,6 +71,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// How many units across an icon picture is when that is not the usual 24:
     /// an SVG opened from another grid (`SVGOpening`). Nil on everything else.
     public var iconPictureGrid: CGFloat?
+    /// When this drawing's exported SVG plays and whether it follows the
+    /// page's colour: what the Export sheet last chose for it, so Copy SVG,
+    /// Preview as Web Page and the next export say the same (`SVGPlayback`).
+    public var svgPlayback = SVGPlayback.standard
     /// How long this document runs for, in milliseconds, or nil for a document
     /// with no time in it: the far commoner case, and every document anybody
     /// has today (`DocumentTime.swift`).
@@ -148,6 +152,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         case gridOriginX, gridOriginY, motionCycleMS, keyLap, readWords, durationMS
         case tracks, trackGroups, media, markers, markInMS, markOutMS
         case captionLook, captionsListenedTo, componentOriginals, camera, madeAsIcon, iconPictureGrid
+        case svgPlayback
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -203,6 +208,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // for byte what it was.
         if madeAsIcon { try c.encode(madeAsIcon, forKey: .madeAsIcon) }
         try c.encodeIfPresent(iconPictureGrid, forKey: .iconPictureGrid)
+        // Only a choice somebody made is written, so every other file is
+        // byte for byte what it was.
+        if !svgPlayback.isStandard { try c.encode(svgPlayback, forKey: .svgPlayback) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -255,6 +263,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         camera = try c.decodeIfPresent(SceneCamera.self, forKey: .camera)
         madeAsIcon = try c.decodeIfPresent(Bool.self, forKey: .madeAsIcon) ?? false
         iconPictureGrid = try c.decodeIfPresent(CGFloat.self, forKey: .iconPictureGrid)
+        svgPlayback = try c.decodeIfPresent(SVGPlayback.self, forKey: .svgPlayback) ?? .standard
         // Captions saved as a plain group of cues open as one Captions layer.
         adoptingCaptionGroups()
         // A zoom written before zooms were aimed at what is seen opens showing

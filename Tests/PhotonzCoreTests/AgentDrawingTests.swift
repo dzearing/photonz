@@ -139,6 +139,36 @@ struct AgentDrawingTests {
         else { Issue.record("a PNG to a .svg was accepted"); return }
     }
 
+    @Test("An SVG export can say when it plays and whether it follows the page's colour")
+    func exportPlayback() throws {
+        let request = try Self.request("export", #"{"format": "svg", "path": "/tmp/icon.svg", "plays": "on_hover", "colour": "follow_page"}"#).get()
+        #expect(request == .export(document: nil, format: .svg, path: "/tmp/icon.svg", scale: 1, background: true,
+                                   playback: SVGPlayback(plays: .onHover, ink: .followsPage)))
+        let once = try Self.request("export", #"{"format": "svg", "path": "/tmp/icon.svg", "plays": "once"}"#).get()
+        #expect(once == .export(document: nil, format: .svg, path: "/tmp/icon.svg", scale: 1, background: true,
+                                playback: SVGPlayback(plays: .once)))
+        guard case .failure = try Self.request("export", #"{"format": "png", "path": "/tmp/icon.png", "plays": "once"}"#)
+        else { Issue.record("a PNG was told when to play"); return }
+        guard case .failure = try Self.request("export", #"{"format": "svg", "path": "/tmp/icon.svg", "plays": "sometimes"}"#)
+        else { Issue.record("an unknown way of playing was accepted"); return }
+    }
+
+    @Test("preview_web_page writes the page, opening it in the browser unless told not to")
+    func previewWebPageCall() throws {
+        #expect(try Self.request("preview_web_page", "{}").get()
+                == .previewWebPage(document: nil, layer: nil, playback: nil, open: true))
+        let told = try Self.request("preview_web_page", #"{"layer": "Bell", "plays": "once", "colour": "as_drawn", "open": false}"#).get()
+        #expect(told == .previewWebPage(document: nil, layer: "Bell",
+                                        playback: SVGPlayback(plays: .once, ink: .asDrawn), open: false))
+        let placed = try Self.request("preview_web_page", #"{"path": "/tmp/walk/hover.html", "open": false}"#).get()
+        #expect(placed == .previewWebPage(document: nil, layer: nil, playback: nil, open: false,
+                                          path: "/tmp/walk/hover.html"))
+        guard case .failure = try Self.request("preview_web_page", #"{"path": "/tmp/walk/hover.svg"}"#)
+        else { Issue.record("a page written to a .svg was accepted"); return }
+        guard case .failure = try Self.request("preview_web_page", #"{"path": "hover.html"}"#)
+        else { Issue.record("a relative path was accepted"); return }
+    }
+
     // MARK: The layers they become
 
     @Test("A rectangle becomes the shape tool's box, filled, in exactly the frame asked for")

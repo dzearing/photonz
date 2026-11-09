@@ -111,6 +111,9 @@ enum LayerCommandList {
         // a picture, which has no code to give.
         if editorState.canCopySVG(around: id) {
             rows.append(.command("Copy SVG") { editorState.copySVG(around: id) })
+            // The same code, tried in a page: a button that plays it on
+            // hover, real sizes, light and dark (`EditorState+WebPreview`).
+            rows.append(.command("Preview as Web Page") { editorState.previewWebPage(around: id) })
         }
         // Where Photoshop keeps them, under the names it uses for the same
         // pair, so the two moves that make one shape match another are one

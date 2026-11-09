@@ -119,6 +119,9 @@ struct ExportDialog: View {
     /// and shown on the sheet each time, so it can never be a setting somebody
     /// left on months ago.
     @State private var keepsBackground = false
+    /// When the file plays and whether it follows the page's colour, opened
+    /// on what this drawing last chose (`SVGPlayback`).
+    @State private var playback = SVGPlayback.standard
     /// The canvas or frame `keepsBackground` is an answer about.
     @State private var askedAboutBackdrop: UUID?
     /// What each lossy format is set to while the sheet is up, seeded from what
@@ -249,7 +252,7 @@ struct ExportDialog: View {
         }
         vectorWeighed = true
         let preflight = editorState.svgPreflight(frameID: frameID, animated: carriesTheMotion,
-                                                 background: background)
+                                                 background: background, playback: playback)
         byteCount = preflight?.bytes
         unmoved = preflight?.unmoved ?? []
     }
@@ -462,6 +465,7 @@ struct ExportDialog: View {
                 handoffNote
             }
             if choice.isVector {
+                playbackRows
                 vectorNote
             } else {
                 labelledRow("Scale") {
@@ -490,6 +494,14 @@ struct ExportDialog: View {
                 }
             }
             HStack {
+                // Tries the file in a page before it is saved: the button
+                // that plays it on hover, the sizes, light and dark.
+                if choice.isVector {
+                    Button("Preview as Web Page") {
+                        editorState.setSVGPlayback(playback)
+                        editorState.previewWebPage(around: frameID)
+                    }
+                }
                 Spacer()
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
@@ -510,8 +522,9 @@ struct ExportDialog: View {
                                                     frameID: frameID, background: background,
                                                     using: sizer)
                     case .svg:
+                        editorState.setSVGPlayback(playback)
                         editorState.exportSVG(frameID: frameID, animated: carriesTheMotion,
-                                              background: background)
+                                              background: background, playback: playback)
                     }
                 }
                 .keyboardShortcut(.defaultAction)
@@ -530,6 +543,7 @@ struct ExportDialog: View {
         // last time, so the common case is Return.
         .onAppear {
             frameID = editorState.selectedFrameID
+            playback = editorState.document?.svgPlayback ?? .standard
             choice = ExportChoice.remembered(offeringSVG: offersSVG, offeringWebP: offersWebP)
             destination = SVGHandoff.remembered
             #if PHOTONZ_PLAYTEST
@@ -567,6 +581,7 @@ struct ExportDialog: View {
             refreshSize()
         }
         .onChange(of: choice) { refreshSize() }
+        .onChange(of: playback) { refreshVectorSize() }
         .onChange(of: frameID) { refreshSize() }
         // A file with nothing behind it is a different file, so it is a
         // different number, whether it is shapes or pixels.
@@ -690,6 +705,22 @@ struct ExportDialog: View {
         }
         let names = unmoved.prefix(3).map(\.layerName).joined(separator: ", ")
         return "\(names) each have a change the file cannot carry."
+    }
+
+    /// When the file plays, asked only of a file that moves, and whether its
+    /// ink follows the page's colour, asked of every SVG: an icon drawn in
+    /// near black vanishes on a dark page unless it does.
+    @ViewBuilder private var playbackRows: some View {
+        if carriesTheMotion {
+            labelledRow("Plays") {
+                SegmentedControl("Plays", selection: $playback.plays,
+                                 options: SVGPlayback.Plays.allCases.map { .init($0, $0.title) })
+            }
+        }
+        labelledRow("Colour") {
+            SegmentedControl("Colour", selection: $playback.ink,
+                             options: SVGPlayback.Ink.allCases.map { .init($0, $0.title) })
+        }
     }
 
     /// What a vector file gets instead of a scale: what it is, and what could

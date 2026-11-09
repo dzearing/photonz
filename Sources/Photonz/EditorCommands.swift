@@ -690,6 +690,13 @@ struct EditorCommands: Commands {
         // writes, but a second export would have nowhere to go.
         .disabled((editor?.document == nil && !(offersRecordingExportSheet(video)))
                   || editor?.videoExport != nil)
+        // Beside Export, where Photoshop keeps Save for Web: the drawing as
+        // an icon on a page in the browser, to try it in a hover button and
+        // at real sizes (`EditorState+WebPreview`).
+        if Experiments.shared.svgExportEnabled {
+            Button("Preview as Web Page") { editor?.run(.previewWebPage) }
+                .disabled(!(editor?.canRun(.previewWebPage) ?? false))
+        }
         // Copy Merged took this key and moved next to Copy in Edit, where
         // the difference between the two copies is readable. Off, the
         // picture-of-everything copy stays here as Copy Image.

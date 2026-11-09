@@ -55,6 +55,11 @@ final class EditorState {
     /// SVG's menu rows ask on every redraw, and a blank canvas is only known
     /// to be blank by reading every pixel of it.
     @ObservationIgnored var flatPictureMemo: [UUID: (bitmap: ObjectIdentifier, color: RGBA?)] = [:]
+    /// The page Preview as Web Page last wrote for this window, rewritten as
+    /// the drawing changes so the browser's Refresh shows the icon as it is
+    /// now (`EditorState+WebPreview`).
+    @ObservationIgnored var webPreview: WebPreview?
+    @ObservationIgnored var webPreviewRewrite: Task<Void, Never>?
     /// True while a look section is building its body, so that every read of
     /// `document` in it watches `lookRowsRevision` rather than `history`
     /// (`readingForTheLookRows`).
@@ -4189,8 +4194,9 @@ final class EditorState {
     /// said which layers those are, so this does not stop to tell you again.
     /// `frameID` narrows it to one frame exactly as the picture formats do.
     func exportSVG(frameID: UUID? = nil, animated: Bool = false,
-                   background: SVGExport.Background = .keep) {
+                   background: SVGExport.Background = .keep, playback: SVGPlayback? = nil) {
         guard let document else { return }
+        let playback = playback ?? document.svgPlayback
         let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
         let target = frame.flatMap { document.frameDocument(id: $0) } ?? document
         // One lap of the loop, written into the file, where the file is going
@@ -4198,7 +4204,8 @@ final class EditorState {
         let animation: SVGExport.Animation = animated && target.hasMotion
             ? .moving(cycleMS: target.motionCycleLengthMS) : .still
         guard let written = SVGExporter.data(target, store: store, renderer: previewRenderer,
-                                             animation: animation, background: background)
+                                             animation: animation, background: background,
+                                             playback: playback)
         else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.svg]
@@ -4222,18 +4229,29 @@ final class EditorState {
     /// twelve megapixel document to put a number on a label is not a trade
     /// worth making while somebody is still choosing.
     func svgPreflight(frameID: UUID? = nil, animated: Bool = false,
-                      background: SVGExport.Background = .keep)
+                      background: SVGExport.Background = .keep, playback: SVGPlayback? = nil)
         -> (bytes: Int, unmoved: [SVGExport.Fallback])? {
         guard let document else { return nil }
+        let playback = playback ?? document.svgPlayback
         let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
         let target = frame.flatMap { document.frameDocument(id: $0) } ?? document
         guard SVGExporter.embeddedPictures(in: target, store: store).isEmpty else { return nil }
         let animation: SVGExport.Animation = animated && target.hasMotion
             ? .moving(cycleMS: target.motionCycleLengthMS) : .still
         guard let written = SVGExporter.data(target, store: store, renderer: previewRenderer,
-                                             animation: animation, background: background)
+                                             animation: animation, background: background,
+                                             playback: playback)
         else { return nil }
         return (written.data.count, written.unmoved)
+    }
+
+    /// Remembers when this drawing's SVG plays and whether it follows the
+    /// page's colour, so Copy SVG, Preview as Web Page and the next export
+    /// say what the Export sheet last said (`SVGPlayback`). Nothing is
+    /// recorded when nothing changed.
+    func setSVGPlayback(_ playback: SVGPlayback) {
+        guard let document, document.svgPlayback != playback else { return }
+        perform(announcing: false, openingTheTimeline: false) { $0.svgPlayback = playback }
     }
 
 
@@ -5532,6 +5550,8 @@ final class EditorState {
             iconPreviews = [:]
             return
         }
+        // A page open in the browser follows the drawing.
+        if webPreview != nil { rewriteWebPreviewSoon() }
         // A change of length moves no second on the timeline in one frame
         // (`TimelineZoomGlide`).
         noteTimelineLength()

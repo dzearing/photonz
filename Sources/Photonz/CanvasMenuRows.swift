@@ -51,6 +51,7 @@ extension EditorState {
         // The whole drawing's code, the way the layer menu copies a frame's.
         if canCopySVG(around: nil) {
             rows.append(.command("Copy SVG") { self.copySVG(around: nil) })
+            rows.append(.command("Preview as Web Page") { self.previewWebPage(around: nil) })
         }
         if clipboardHasALayer {
             rows.append(.command("Paste", .command("v")) { self.paste() })

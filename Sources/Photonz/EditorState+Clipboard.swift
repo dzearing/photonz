@@ -90,14 +90,16 @@ extension EditorState {
     /// `target` as the SVG the Export sheet writes for a web page, or nil
     /// where a copy of it carries no SVG: SVG export is off, or it holds a
     /// photograph, a screenshot or time (`CompositeCopy.carriesSVG`).
-    func clipboardSVG(of target: PhotonzDocument, background: SVGExport.Background) -> String? {
+    func clipboardSVG(of target: PhotonzDocument, background: SVGExport.Background,
+                      playback: SVGPlayback? = nil) -> String? {
         guard Experiments.shared.svgExportEnabled,
               CompositeCopy.carriesSVG(target, flatImages: flatColorsRemembered(in: target))
         else { return nil }
         let animation = CompositeCopy.svgAnimation(
             for: target, motionOn: Experiments.shared.animatedSVGExportEnabled)
         return SVGExporter.export(target, store: store, renderer: previewRenderer,
-                                  animation: animation, background: background).text
+                                  animation: animation, background: background,
+                                  playback: playback ?? document?.svgPlayback ?? .standard).text
     }
 
     /// `FlatBitmap.colors`, remembering each answer against the bitmap it was
@@ -188,7 +190,7 @@ extension EditorState {
 
     /// What a copy does with the canvas a drawing was made on, as Copy Merged
     /// does it (`copyCompositeToClipboard`).
-    private var copyBackground: SVGExport.Background {
+    var copyBackground: SVGExport.Background {
         Experiments.shared.copyLeavesTheCanvasOutEnabled ? .drop : .keep
     }
 

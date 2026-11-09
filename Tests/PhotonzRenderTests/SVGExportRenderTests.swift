@@ -990,4 +990,22 @@ struct AskIconExportTests {
         #expect(text.contains("<path"))
         #expect(text.contains("stroke-linecap=\"round\""))
     }
+
+    // MARK: - Where the file is going
+
+    /// When it plays and what colour it takes are said over the finished file,
+    /// so the same shapes come out with the main ink as the page's colour.
+    @Test func followThePageTurnsTheMainInkIntoThePagesColour() {
+        let document = PhotonzDocument(canvasSize: SVGExportRenderTests.canvas, layers: [
+            SVGExportRenderTests.pathLayer(fill: "#2E6BFF", stroke: "#101820", width: 6)
+        ])
+        let store = ImageStore()
+        let plain = SVGExporter.export(document, store: store).text
+        let following = SVGExporter.export(document, store: store,
+                                           playback: SVGPlayback(ink: .followsPage)).text
+        #expect(plain == SVGExporter.export(document, store: store, playback: .standard).text)
+        #expect(following != plain)
+        #expect(following.contains("currentColor"))
+        #expect(following == SVGPlayback(ink: .followsPage).apply(to: plain))
+    }
 }

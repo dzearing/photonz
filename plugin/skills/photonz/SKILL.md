@@ -47,7 +47,7 @@ checked.
 | Components | `add_component` (a new component with every state it has, in one call), `run_command make_component` (a group you built), `list_components`, `place_component` |
 | Video | `add_clip`, `cut`, `trim`, `move_clip`, `set_transition`, `add_title` / `list_titles`, `recommended_zooms` / `apply_zooms`, `set_playhead` |
 | Everything else | `list_commands` (every menu bar and right-click command, by name, with whether it can run now) and `run_command` |
-| Out | `export` (PNG, SVG, MP4), `undo`, `redo` |
+| Out | `export` (PNG, SVG, MP4), `preview_web_page`, `undo`, `redo` |
 
 `run_command` covers the menus: `group`, `ungroup`, `align`, `space_evenly`,
 `bring_to_front`, `combine_shapes`, `rename_layer`, `delete_layer`, `new_frame`,
@@ -228,7 +228,10 @@ gives it a lap, and the lap is what an animated SVG plays.
    A pause when it loops is `set_timing` with more `seconds` than the lap.
 7. `export` `format: svg` writes the motion: its answer gives `lapSeconds`, and
    `notMoving` names anything the file could not carry. `run_command copy_svg` copies
-   the same thing.
+   the same thing. `plays: on_hover` (or `once`) and `colour: follow_page` (the ink
+   takes the page's text colour, so it shows on dark) when the person says how it is used.
+8. `preview_web_page` opens it in the browser in a hover button, at 16 to 96 px on
+   light and dark, so you can say "here it is in a page" and give its `path`.
 
 ### Measurements on a screenshot
 

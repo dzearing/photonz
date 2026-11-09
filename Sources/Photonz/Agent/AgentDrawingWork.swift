@@ -50,10 +50,13 @@ enum AgentDrawingWork {
             return try listComponents(AgentDocuments.editor(id).get())
         case .placeComponent(let id, let component, let center, let words):
             return try placeComponent(AgentDocuments.editor(id).get(), component: component, at: center, words: words)
-        case .export(let id, let format, let path, let scale, let background):
+        case .export(let id, let format, let path, let scale, let background, let playback):
             guard format != .mp4 else { throw Failure("export: an MP4 is written from a video.") }
             return try await export(AgentDocuments.editor(id).get(), format: format, path: path,
-                                    scale: scale, background: background)
+                                    scale: scale, background: background, playback: playback)
+        case .previewWebPage(let id, let layer, let playback, let open, let path):
+            return try previewWebPage(AgentDocuments.editor(id).get(), layer: layer,
+                                      playback: playback, open: open, path: path)
         default:
             throw Failure("That is not a picture tool.")
         }
@@ -594,6 +597,49 @@ enum AgentDrawingWork {
 
     // MARK: Export
 
+    struct PreviewPage: Encodable {
+        let path: String
+        let plays: String
+        let colour: String
+    }
+
+    /// The drawing as an icon on a web page, as File > Preview as Web Page
+    /// writes it.
+    private static func previewWebPage(_ editor: EditorState, layer: String?,
+                                       playback: SVGPlayback?, open: Bool,
+                                       path: String?) throws -> Answer {
+        let document = try AgentWork.document(of: editor)
+        var layerID: UUID?
+        if let layer {
+            let id = UUID(uuidString: layer).flatMap { document.layer(id: $0)?.id }
+                ?? document.allLayers.first { $0.name == layer }?.id
+            guard let id else {
+                throw Failure("There is no layer \(layer) in this document. read_document lists them.")
+            }
+            layerID = id
+        }
+        guard editor.canPreviewWebPage(around: layerID) else {
+            throw Failure("There is no drawing to show: a page shows shapes, paths and text, not a photograph.")
+        }
+        let target = path.map { URL(fileURLWithPath: $0) }
+        if let target {
+            var isFolder: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: target.deletingLastPathComponent().path,
+                                                 isDirectory: &isFolder), isFolder.boolValue else {
+                throw Failure("There is no folder at \(target.deletingLastPathComponent().path) to write into.")
+            }
+        }
+        guard let url = editor.previewWebPage(around: layerID, playback: playback, opening: open,
+                                              to: target) else {
+            throw Failure("Photonz could not write the page.")
+        }
+        let chosen = playback ?? document.svgPlayback
+        return .json(PreviewPage(
+            path: url.path,
+            plays: AgentTools.playsWords.first { $0.value == chosen.plays }?.key ?? "always",
+            colour: AgentTools.colourWords.first { $0.value == chosen.ink }?.key ?? "as_drawn"))
+    }
+
     struct Exported: Encodable {
         let path: String
         let format: String
@@ -609,7 +655,8 @@ enum AgentDrawingWork {
     }
 
     private static func export(_ editor: EditorState, format: AgentExportFormat, path: String,
-                               scale: Double, background: Bool) async throws -> Answer {
+                               scale: Double, background: Bool,
+                               playback: SVGPlayback? = nil) async throws -> Answer {
         let document = try AgentWork.document(of: editor)
         let url = URL(fileURLWithPath: path)
         var isFolder: ObjCBool = false
@@ -635,7 +682,8 @@ enum AgentDrawingWork {
             // The motion goes out as Copy SVG sends it.
             let animation = CompositeCopy.svgAnimation(for: document, motionOn: Experiments.shared.animatedSVGExportEnabled)
             guard let written = SVGExporter.data(document, store: editor.store, renderer: DocumentRenderer(),
-                                                 animation: animation, background: backdrop) else {
+                                                 animation: animation, background: backdrop,
+                                                 playback: playback ?? document.svgPlayback) else {
                 throw Failure("Photonz could not write the picture as SVG.")
             }
             try written.data.write(to: url)

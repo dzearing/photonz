@@ -22,7 +22,7 @@ struct AgentToolsTests {
             "new_picture", "add_shape", "add_path", "add_drawing", "add_photo", "add_text", "set_layer", "find_elements",
             "add_measurement", "find_measurements", "mark_measurements", "find_misalignments", "mark_misalignments",
             "list_components", "place_component",
-            "export", "new_video", "add_clip", "cut", "trim", "move_clip", "set_transition", "add_title",
+            "export", "preview_web_page", "new_video", "add_clip", "cut", "trim", "move_clip", "set_transition", "add_title",
             "list_titles", "recommended_zooms", "apply_zooms", "set_playhead",
             "list_styles", "add_style", "apply_style", "set_layout",
             "add_component",

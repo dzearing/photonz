@@ -55,7 +55,13 @@ public enum AgentRequest: Hashable, Sendable {
     case markMisalignments(document: String?, region: CGRect?, findings: [String])
     case listComponents(document: String?)
     case placeComponent(document: String?, component: String, center: CGPoint, words: [String] = [])
-    case export(document: String?, format: AgentExportFormat, path: String, scale: Double, background: Bool)
+    /// `playback` nil: the drawing's own choice from the Export sheet.
+    case export(document: String?, format: AgentExportFormat, path: String, scale: Double, background: Bool,
+                playback: SVGPlayback? = nil)
+    /// The drawing around `layer` (a frame, or what it lives in; nil the
+    /// whole drawing) as an icon on a web page (`SVGPreviewPage`).
+    case previewWebPage(document: String?, layer: String?, playback: SVGPlayback?, open: Bool,
+                        path: String? = nil)
     // Slice 4: video (`AgentVideo.swift`).
     case newVideo(AgentNewVideo)
     case addClip(document: String?, clip: AgentClipSource, atMS: Int?, track: String?)
@@ -499,12 +505,62 @@ public enum AgentTools {
                 "path": ["type": "string", "description": "An absolute path to write, ending .png, .svg or .mp4."],
                 "scale": ["type": "number", "minimum": .number(0.1), "maximum": 8, "description": "PNG only: 2 doubles the pixels. 1 when left out."],
                 "background": ["type": "boolean", "description": "PNG and SVG: keep the canvas colour behind the drawing. True when left out; false leaves it see-through."],
+                "plays": playsProperty,
+                "colour": colourProperty,
                 "size": ["type": "string", "enum": .array(AgentVideoSize.allCases.map { .string($0.rawValue) }),
                          "description": "MP4 only: full keeps the video's own frame; 1080p, 720p and 480p shrink a bigger one. full when left out."],
                 "quality": ["type": "string", "enum": .array(VideoExportQuality.allCases.map { .string($0.rawValue) }),
                             "description": "MP4 only: high (smoothest, biggest), standard or small. high when left out."],
             ], required: ["format", "path"])),
+        AgentTool(
+            name: "preview_web_page",
+            description: "Write the drawing as an icon on a small web page and open it in the browser, as File > Preview as Web Page does: in a button that plays it on hover, at 16 to 96 px on light and dark, and looping. Answers the page's path.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "layer": ["type": "string", "description": "A layer id or name: the frame it is or lives in is shown. The whole drawing when left out."],
+                "plays": playsProperty,
+                "colour": colourProperty,
+                "open": ["type": "boolean", "description": "Open it in the browser. True when left out."],
+                "path": ["type": "string", "description": "An absolute path ending .html to write it to. A temporary folder when left out."],
+            ])),
     ]
+
+    /// When an SVG's motion plays (`SVGPlayback.Plays`).
+    private static let playsProperty: AgentJSON = [
+        "type": "string", "enum": .array(playsWords.keys.sorted().map { .string($0) }),
+        "description": "SVG only: always loops, on_hover plays while the pointer is on it, once plays one lap and holds. With colour left out too, the drawing's own Export choice.",
+    ]
+
+    /// Whether an SVG's main ink follows the page (`SVGPlayback.Ink`).
+    private static let colourProperty: AgentJSON = [
+        "type": "string", "enum": .array(colourWords.keys.sorted().map { .string($0) }),
+        "description": "SVG only: as_drawn, or follow_page to draw the main ink in the page's text colour so it shows on dark.",
+    ]
+
+    public static let playsWords: [String: SVGPlayback.Plays] = ["always": .always, "on_hover": .onHover, "once": .once]
+    public static let colourWords: [String: SVGPlayback.Ink] = ["as_drawn": .asDrawn, "follow_page": .followsPage]
+
+    /// The playback a call asks for, nil when it says nothing about it, or the
+    /// words it got wrong.
+    static func playback(_ args: [String: AgentJSON]) -> Result<SVGPlayback?, AgentToolError> {
+        let plays = args["plays"]?.stringValue
+        let colour = args["colour"]?.stringValue
+        guard plays != nil || colour != nil else { return .success(nil) }
+        var playback = SVGPlayback.standard
+        if let plays {
+            guard let chosen = playsWords[plays] else {
+                return .failure(AgentToolError("plays is always, on_hover or once."))
+            }
+            playback.plays = chosen
+        }
+        if let colour {
+            guard let chosen = colourWords[colour] else {
+                return .failure(AgentToolError("colour is as_drawn or follow_page."))
+            }
+            playback.ink = chosen
+        }
+        return .success(playback)
+    }
 
     public static func tool(named name: String) -> AgentTool? { all.first { $0.name == name } }
 
@@ -582,7 +638,7 @@ public enum AgentTools {
                 .map { .runCommand(document: document, call: $0) }
         case "new_picture", "add_shape", "add_path", "add_drawing", "add_photo", "add_text", "set_layer", "find_elements",
              "add_measurement", "find_measurements", "mark_measurements", "find_misalignments", "mark_misalignments",
-             "list_components", "place_component", "export":
+             "list_components", "place_component", "export", "preview_web_page":
             return drawingRequest(name, args, document: document)
         case _ where videoToolNames.contains(name):
             return videoRequest(name, args, document: document)
@@ -878,9 +934,26 @@ public enum AgentTools {
             if format == .mp4 { return videoExportRequest(args, document: document, path: path.expandingTildeInPath) }
             if args["size"] != nil || args["quality"] != nil { return fail("size and quality are for an MP4.") }
             if format == .svg, args["scale"] != nil { return fail("scale only applies to a PNG.") }
-            return .success(.export(document: document, format: format, path: path.expandingTildeInPath,
-                                    scale: args["scale"]?.doubleValue ?? 1,
-                                    background: args["background"]?.boolValue ?? true))
+            if format != .svg, args["plays"] != nil || args["colour"] != nil {
+                return fail("plays and colour are for an SVG.")
+            }
+            return playback(args).map { playback in
+                .export(document: document, format: format, path: path.expandingTildeInPath,
+                        scale: args["scale"]?.doubleValue ?? 1,
+                        background: args["background"]?.boolValue ?? true, playback: playback)
+            }
+        case "preview_web_page":
+            let path = args["path"]?.stringValue.map { ($0 as NSString).expandingTildeInPath }
+            if let path {
+                guard path.hasPrefix("/") else { return fail("path must be absolute.") }
+                guard (path as NSString).pathExtension.lowercased() == "html" else {
+                    return fail("a page's path ends .html.")
+                }
+            }
+            return playback(args).map { playback in
+                .previewWebPage(document: document, layer: args["layer"]?.stringValue,
+                                playback: playback, open: args["open"]?.boolValue ?? true, path: path)
+            }
         default:
             return .failure(AgentToolError("There is no tool called \(name).", isUnknownTool: true))
         }

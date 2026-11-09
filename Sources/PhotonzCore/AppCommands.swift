@@ -158,6 +158,7 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     // File
     case save = "save"
     case importMedia = "import_media"
+    case previewWebPage = "preview_web_page"
     // Image
     case resizeImage = "resize_image"
     case canvasSize = "canvas_size"
@@ -955,6 +956,8 @@ public enum AppCommandTable {
         make(.save, "Save", "File", .document, needs: "changes, and a file or History item to save them to"),
         make(.importMedia, "Import Media\u{2026}", "File", .document, needs: "a document with a Library",
              options: [.init("path", .text, "An absolute path to a recording, a sound or a picture.", required: true)]),
+        make(.previewWebPage, "Preview as Web Page", "File", .document,
+             needs: "a drawing: shapes, paths or text", picks: .layers),
         make(.resizeImage, "Resize Image\u{2026}", "Image", .document, needs: "a document",
              options: size("new")),
         make(.canvasSize, "Canvas Size\u{2026}", "Image", .document, needs: "a document",

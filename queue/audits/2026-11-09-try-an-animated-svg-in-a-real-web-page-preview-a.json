@@ -1,0 +1,36 @@
+{
+  "feature": "Try an animated SVG in a real web page",
+  "epic": "icon-export",
+  "task": "try-an-animated-svg-in-a-real-web-page-preview-a",
+  "summary": "Preview as Web Page opens your icon in the browser inside a button that plays on hover, at 16 to 96 px on light and dark. Export and Copy SVG can now play On hover or Once, and Follow the page draws the main ink in the page's text colour so it shows on dark.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any drawing with a key on it (Add Key on Rotation is enough).",
+  "switched": {},
+  "try": [
+    { "do": "Draw a shape, key its Rotation, then choose File > Preview as Web Page.", "shot": "2026-11-09-svg-web-preview-page.png", "shotNote": "Drawn by WebKit from the page the walk wrote, with the pointer on the light button, on On hover and Follow the page." },
+    { "do": "In the browser, point at the button's word: the icon plays; move off and it rests on its first frame." },
+    { "do": "Back in Photonz, press Shift Command E and pick SVG: set Plays to On hover and Colour to Follow the page.", "shot": "2026-11-09-svg-web-preview-export-sheet-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Preview as Web Page on the sheet: the page shows the new choice in its two chips at the top." },
+    { "do": "Nudge the shape in Photonz, then press Refresh on the page: it shows the change." },
+    { "do": "Press Copy HTML on the page and paste it into any HTML file: the button plays on hover there too." },
+    { "do": "Point at this icon: it was exported with Follow the page, so it shows on the dark tile too.", "shot": "2026-11-09-svg-web-preview-follow-the-page.svg" }
+  ],
+  "evaluate": [
+    "Is the page what you wanted for judging an animated icon: a hover button, real sizes, light and dark?",
+    "Should On hover loop while the pointer stays, or play once per hover?",
+    "Does Follow the page pick the right colour on your icons, the ink rather than the accent?",
+    "Is Preview as Web Page beside Cancel on the Export sheet a place you would look for it?"
+  ],
+  "rough": [
+    "No mock covers the Export sheet's Plays and Colour rows or the preview page; built from the task's own words.",
+    "On hover only reaches an SVG placed inline or in an object tag: a browser never sends hover to an SVG shown through an img tag, so a pasted img stays on its first frame. Copy HTML hands over inline code for that reason.",
+    "On hover drops a finite repeat's hold: a part set to play twice and stop snaps back to its first frame after its last lap while the pointer is still on it.",
+    "Follow the page picks the colour named most often (ties go to the plainest); an icon drawn mostly in its accent colour gives the accent to the page instead.",
+    "The preview button on the Export sheet uses the copy's background choice, not the sheet's Include the background box.",
+    "The page refreshes when you press Refresh; it does not reload by itself."
+  ],
+  "checks": [
+    "Scripts/playtest/svg-preview-web-page-walk.json: ok at Next defaults, no flag.",
+    "Scripts/svg-preview-check.mjs: 30 of 30 checks in WebKit and Chromium (on hover rests, plays when the button is hovered, stops on leave, restarts; once holds its last frame; follow the page takes the strip's colour, the accent stays red).",
+    "15 export and Copy SVG walks re-run green."
+  ]
+}
