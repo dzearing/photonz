@@ -1,0 +1,27 @@
+{
+  "feature": "Ask's moving icons: a letter comes out from behind its envelope, and a plane comes back level",
+  "epic": "icon-animate",
+  "summary": "When Ask animates something coming out of something, the part now starts hidden behind the front and rises in front of the opened flap, the flap folds over the body's own top line, and a plane that flies off comes back in already level instead of snapping at the end of the lap.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask on the built-in model.",
+  "switched": {},
+  "try": [
+    { "do": "Press Ask and type: make an animated icon of an envelope opening. Send.", "shot": "2026-11-09-envelope-from-behind-frames.png", "shotNote": "Frames of the exported SVG as WebKit plays it (the eval's frames), not a window capture. Reel: 2026-11-09-envelope-from-behind-reel.gif. Before this change: 2026-11-09-envelope-from-behind-before.png" },
+    { "do": "Press Space and look at the shut envelope: nothing of the letter shows through its front." },
+    { "do": "Watch the flap open: it folds up over the body's top line, with no doubled bar along the top." },
+    { "do": "Watch the letter rise: it passes in front of the opened flap, not behind its lines." },
+    { "do": "Ask: make an animated icon of a paper plane taking off. Play it.", "shot": "2026-11-09-plane-comes-back-level-frames.png", "shotNote": "Exported SVG frames, not a window capture. Reel: 2026-11-09-plane-comes-back-level-reel.gif" },
+    { "do": "Watch the end of the lap: the plane fades back in level and the loop starts again without a jump." }
+  ],
+  "evaluate": [
+    "Does the shut envelope read as a clean envelope, with nothing showing through it?",
+    "When the letter rises, does it read as a letter coming out, or as a small box tangled with the flap?",
+    "Do the flap's opening and closing read as folding, or still as a snap?",
+    "Does the paper plane's loop now restart without a visible jump?"
+  ],
+  "rough": [
+    "The envelope reads as asked 6.0 to 6.8 in ten runs since these changes (best 71.8), against its bar of 7. It read 5 before them. What is left is the model's letter: it draws it 8 by 4 units with 2-unit lines, so what clears the body is mostly outline, and judges call it a small box tangled with the flap. A rule asking for a bigger part was tried once and ignored by the model, so it was taken out. This task stays open for it.",
+    "The letter drops back into the envelope in the same moment the flap starts to close, so in some runs it seems to vanish rather than sink (judge, 3 looks of 9 in one run).",
+    "The paper plane's nose is cut by the top edge for a frame or two as it flies out (it is crossing the edge, which the motion check allows), and its dash trail floats apart from it.",
+    "These pictures are the exported file played in WebKit by the eval, not captures of the app window: the eval walks never photograph the window."
+  ]
+}
