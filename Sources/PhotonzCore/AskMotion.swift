@@ -513,7 +513,20 @@ public enum AskMotion {
     /// and what travels is seen the whole way (`holdsMove`, `travelsSeen`,
     /// `hitStarts`), while the keys still say what they touch.
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
-        jumpsUnseen(fitted(hidden(hingesShared(foldsOpen(foldsLand(touchesPlaced(hitStarts(travelsSeen(holdsMove(drawnNotFaded(landingFolded(steps))))))))))))
+        let timed = foldsOpen(foldsLand(touchesPlaced(hitStarts(travelsSeen(holdsMove(drawnNotFaded(landingFolded(steps))))))))
+        let made = fitted(comesClear(hidden(hingesShared(timed))))
+        // Hinges again for the room made, if any: lines and corner rounds
+        // keep their size on the final grid as the drawing shrinks.
+        let grow = viewBoxWidth(made).flatMap { after in viewBoxWidth(timed).map { after / $0 } } ?? 1
+        guard grow > 1.001 else { return jumpsUnseen(made) }
+        return jumpsUnseen(fitted(comesClear(hidden(hingesShared(timed, grow: grow)))))
+    }
+
+    /// The width of the drawing's viewBox, if it has one.
+    static func viewBoxWidth(_ steps: [AskStep]) -> CGFloat? {
+        guard let svg = steps.first(where: { $0.tool == "add_drawing" })?.arguments["svg"]?.stringValue,
+              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true) else { return nil }
+        return art.viewBox?.width
     }
 
     /// `fitted` before its marks go: the steps with the room made, and the
@@ -571,10 +584,15 @@ public enum AskMotion {
     /// one frame" on a sheet of frames 160 ms apart, nine looks of nine.
     static let foldLandingLeast = 0.45
     static let foldLanding = 0.55
-    /// Curves that arrive gently; any other is swapped for Ease in out on a
-    /// fold's way home.
-    static let landingCurves: Set<String> = ["ease out", "ease in out", "ease in out sine", "ease out quint",
-                                             "ease out expo", "smooth"]
+    /// The pace a fold of 90 degrees or more opens and lands on: even. Seen
+    /// straight on, as an icon is, a fold shows the cosine of its angle, so
+    /// an even turn already starts and lands softly and passes edge on
+    /// quickly. Ease in out on the angle bunched every visible change into
+    /// the middle of the turn: on a sheet of frames 133 ms apart the
+    /// envelope of 2026-11-09 went from wide open to gone to nearly shut,
+    /// "the flap vanishes, then pops back in closed instead of folding shut"
+    /// in nine looks of nine.
+    static let foldPace = EasingCurve.linear.title
 
     /// `steps` with every fold that comes home landing on its rest, seen. A
     /// flap shut in 200 ms on Ease in, then 8 degrees past flat, reached the
@@ -583,11 +601,17 @@ public enum AskMotion {
     /// tipped 8 degrees either way looks the same straight on (the eval,
     /// 2026-11-08). So on the way home from an opening of 90 degrees or more,
     /// keys within 20 degrees of rest before it get there go, the run comes
-    /// home on a curve that slows as it lands, and a landing under 450 ms
+    /// home at an even pace (`foldPace`), and a landing under 450 ms
     /// takes up to 550 ms from the stillness after it. Geometry and time
     /// only: nothing knows what folds.
     public static func foldsLand(_ steps: [AskStep]) -> [AskStep] {
         let folds: Set<String> = [MotionProperty.rotationX.rawValue, MotionProperty.rotationY.rawValue]
+        // A lap that loops comes back to its first key, the rest: a landing
+        // that is a fold's last key has the time to the lap's end after it
+        // (the envelope of 2026-11-09 shut in 300 ms as its last key, "snaps
+        // shut" in nine looks of nine).
+        let timing = steps.last { $0.tool == "set_timing" }
+        let lapEnd = timing?.arguments["loop"]?.boolValue == false ? nil : timing?.arguments["seconds"]?.doubleValue
         return steps.map { step in
             guard step.tool == "set_keys", folds.contains(step.arguments["property"]?.stringValue ?? ""),
                   var object = step.arguments.objectValue else { return step }
@@ -614,15 +638,21 @@ public enum AskMotion {
                     home = index + 1
                     changed = true
                 }
-                if let said = curve(index), !landingCurves.contains(said.lowercased()) {
-                    keys[index].json["curve"] = .string(EasingCurve.easeInOut.title)
+                if curve(index)?.caseInsensitiveCompare(foldPace) != .orderedSame {
+                    keys[index].json["curve"] = .string(foldPace)
                     changed = true
                 }
                 // Too quick to follow home: it takes its time from the
                 // stillness after it, if there is any.
                 let start = keys[index].seconds
-                guard keys[home].seconds - start < foldLandingLeast - 0.0005, home + 1 < keys.count,
-                      atRest(keys[home + 1].value) else { continue }
+                guard keys[home].seconds - start < foldLandingLeast - 0.0005 else { continue }
+                if home == keys.count - 1, let lapEnd, lapEnd > keys[home].seconds + 0.0005 {
+                    keys[home].seconds = Double(rounded(CGFloat(min(start + foldLanding, lapEnd))))
+                    keys[home].json["seconds"] = .number(keys[home].seconds)
+                    changed = true
+                    continue
+                }
+                guard home + 1 < keys.count, atRest(keys[home + 1].value) else { continue }
                 let landed = min(start + foldLanding, keys[home + 1].seconds)
                 if landed >= keys[home + 1].seconds - 0.0005 {
                     keys.remove(at: home)
@@ -650,7 +680,7 @@ public enum AskMotion {
     /// way out, keys within 20 degrees of rest after it leaves go (a card
     /// tipped that little looks flat straight on), an opening under 450 ms
     /// starts earlier, out of the stillness before it, to take up to 550 ms
-    /// (and, short of that, ends later, out of the stillness after), and its curve, if it arrives hard or jumps, becomes Ease in out. The
+    /// (and, short of that, ends later, out of the stillness after), and it turns at an even pace (`foldPace`). The
     /// mirror of `foldsLand`; geometry and time only.
     public static func foldsOpen(_ steps: [AskStep]) -> [AskStep] {
         let folds: Set<String> = [MotionProperty.rotationX.rawValue, MotionProperty.rotationY.rawValue]
@@ -698,9 +728,7 @@ public enum AskMotion {
                         keys[open].json["seconds"] = .number(keys[open].seconds)
                     }
                 }
-                if !landingCurves.contains((keys[start].json["curve"]?.stringValue ?? "").lowercased()) {
-                    keys[start].json["curve"] = .string(EasingCurve.easeInOut.title)
-                }
+                keys[start].json["curve"] = .string(foldPace)
                 changed = true
             }
             guard changed else { return step }
@@ -1144,7 +1172,13 @@ public enum AskMotion {
     /// house", in nine looks of nine. Only a straight-sided outline folding
     /// over one of its own edges, within a stroke of a closed outline's same
     /// edge; a hinge said on the grid moves with it. Geometry only.
-    public static func hingesShared(_ steps: [AskStep]) -> [AskStep] {
+    ///
+    /// `grow` is how much the drawing's frame will grow to make room: lines
+    /// and corner rounds keep their size on the final grid as everything
+    /// else shrinks, so a fold's ends are tucked for them that much larger
+    /// (on 2026-11-09 a frame grown 1.25 times left round ends tucked for
+    /// the drawn size poking out of the body's corners).
+    public static func hingesShared(_ steps: [AskStep], grow: CGFloat = 1) -> [AskStep] {
         guard let index = steps.firstIndex(where: { $0.tool == "add_drawing" }),
               var svg = steps[index].arguments["svg"]?.stringValue,
               case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true),
@@ -1172,11 +1206,12 @@ public enum AskMotion {
             let hinge = atLow ? low : high
             let (spanLow, spanHigh) = level ? (box.minX, box.maxX) : (box.minY, box.maxY)
             // The closed outline whose same edge is within a stroke of it.
-            let edges: [CGFloat] = art.parts.compactMap { other in
+            let edges: [(edge: CGFloat, round: Round?)] = art.parts.compactMap { other in
                 guard other != part, !(other.name.map { plain($0) == name } ?? false), other.strokeWidth > 0 else { return nil }
+                let corner: CGFloat
                 switch other.shape {
-                case .rect: break
-                case .path(let ring) where ring.closed: break
+                case .rect(_, let radius): corner = radius * grow
+                case .path(let ring) where ring.closed: corner = 0
                 default: return nil
                 }
                 let room = SVGArtwork.shapeBounds(other.shape)
@@ -1184,11 +1219,13 @@ public enum AskMotion {
                 let edge = level ? (atLow ? room.minY : room.maxY) : (atLow ? room.minX : room.maxX)
                 let (roomLow, roomHigh) = level ? (room.minX, room.maxX) : (room.minY, room.maxY)
                 guard abs(edge - hinge) <= slack, spanLow >= roomLow - slack, spanHigh <= roomHigh + slack else { return nil }
-                return edge
+                let half = other.strokeWidth * grow / 2
+                return (edge, corner > 0 ? Round(outer: room.insetBy(dx: -half, dy: -half), radius: corner + half) : nil)
             }
-            guard let edge = edges.min(by: { abs($0 - hinge) < abs($1 - hinge) }) else { continue }
-            let shift = edge - hinge
-            guard let made = hingeOpened(name, level: level, atLow: atLow, size: box.size, shift: shift, in: svg) else { continue }
+            guard let nearest = edges.min(by: { abs($0.edge - hinge) < abs($1.edge - hinge) }) else { continue }
+            let shift = nearest.edge - hinge
+            guard let made = hingeOpened(name, level: level, atLow: atLow, box: box, shift: shift, line: part.strokeWidth * grow,
+                                         round: nearest.round, in: svg) else { continue }
             svg = made
             changed = true
             if !fraction, shift != 0, var arguments = step.arguments.objectValue {
@@ -1207,7 +1244,91 @@ public enum AskMotion {
     /// big on the grid, opened along its edge on the hinge's side and moved
     /// `shift` across it. Nil unless its own `d` is plain absolute M and L and
     /// nothing above it scales it.
-    static func hingeOpened(_ name: String, level: Bool, atLow: Bool, size: CGSize, shift: CGFloat, in svg: String) -> String? {
+    /// The outer edge of a rounded outline's ink: its box grown by half its
+    /// line, and the round of its corners there.
+    struct Round: Equatable {
+        var outer: CGRect
+        var radius: CGFloat
+
+        func holds(_ point: CGPoint, slack: CGFloat = 0.02) -> Bool {
+            let inner = outer.insetBy(dx: radius, dy: radius)
+            let nearest = CGPoint(x: min(max(point.x, inner.minX), inner.maxX), y: min(max(point.y, inner.minY), inner.maxY))
+            return hypot(point.x - nearest.x, point.y - nearest.y) <= radius + slack
+        }
+    }
+
+    /// How far, at most, a fold's end slides in along its hinge to clear a
+    /// rounded corner, in the round's own radii: past that it is not the
+    /// corner's doing.
+    static let tuckMost: CGFloat = 1.5
+
+    /// `ring`, a fold opened along its hinge with its ends on that hinge, with
+    /// each end slid along the hinge toward the middle until its flat line
+    /// end sits inside a rounded outline's ink both as drawn and folded over
+    /// the hinge. The envelope of 2026-11-09 drew its flap's ends on the
+    /// body's rounded corners, and their square ends stuck out of the round
+    /// shut and open, "the flap's corners poke past the body" in seven looks
+    /// of nine. Geometry only: ends, a hinge line, a round.
+    ///
+    /// First choice is a round end: slid in until the whole round sits inside
+    /// the outline's round, a round end centred on the hinge lies within the
+    /// outline's own line shut and open alike and melts into it, where a
+    /// flat end meets that line at an angle and leaves a notch ("the flap's
+    /// ends are clipped off at sharp angles", 2026-11-09). Only when that
+    /// takes more than `tuckMost` does an end stay flat, slid as far as its
+    /// corners need. `round` in the answer says which.
+    static func tucked(_ ring: [CGPoint], offset: CGPoint, level: Bool, hinge: CGFloat, line: CGFloat,
+                       round: Round) -> (ring: [CGPoint], round: Bool) {
+        guard ring.count >= 3 else { return (ring, false) }
+        let middle = level ? round.outer.midX : round.outer.midY
+        let most = round.radius * tuckMost
+        let ends = [0, ring.count - 1]
+        // A round end: its whole disc inside the outline's round.
+        let roundSlides = ends.map { end -> CGFloat? in
+            let at = CGPoint(x: ring[end].x + offset.x, y: ring[end].y + offset.y)
+            let inward: CGFloat = ((level ? at.x : at.y) < middle) ? 1 : -1
+            // The disc is inside the round when its centre is inside the
+            // round drawn half a line in all round.
+            let inner = Round(outer: round.outer.insetBy(dx: line / 2, dy: line / 2), radius: max(round.radius - line / 2, 0))
+            return stride(from: CGFloat(0), through: most, by: 0.05).first { slide in
+                inner.holds(level ? CGPoint(x: at.x + inward * slide, y: at.y) : CGPoint(x: at.x, y: at.y + inward * slide))
+            }
+        }
+        if roundSlides.allSatisfy({ $0 != nil }) {
+            var out = ring
+            for (end, slide) in zip(ends, roundSlides) {
+                guard let slide, slide > 0 else { continue }
+                let inward: CGFloat = ((level ? ring[end].x + offset.x : ring[end].y + offset.y) < middle) ? 1 : -1
+                let amount = CGFloat(rounded(slide))
+                out[end] = level ? CGPoint(x: ring[end].x + inward * amount, y: ring[end].y) : CGPoint(x: ring[end].x, y: ring[end].y + inward * amount)
+            }
+            return (out, true)
+        }
+        var out = ring
+        for (end, next) in [(0, 1), (ring.count - 1, ring.count - 2)] {
+            let at = CGPoint(x: ring[end].x + offset.x, y: ring[end].y + offset.y)
+            let toward = CGPoint(x: ring[next].x + offset.x, y: ring[next].y + offset.y)
+            let inward: CGFloat = ((level ? at.x : at.y) < middle) ? 1 : -1
+            func clear(_ slide: CGFloat) -> Bool {
+                let moved = level ? CGPoint(x: at.x + inward * slide, y: at.y) : CGPoint(x: at.x, y: at.y + inward * slide)
+                let length = hypot(toward.x - moved.x, toward.y - moved.y)
+                guard length > 0.001 else { return false }
+                let across = CGPoint(x: -(toward.y - moved.y) / length * line / 2, y: (toward.x - moved.x) / length * line / 2)
+                let corners = [CGPoint(x: moved.x + across.x, y: moved.y + across.y), CGPoint(x: moved.x - across.x, y: moved.y - across.y)]
+                let folded = corners.map { level ? CGPoint(x: $0.x, y: 2 * hinge - $0.y) : CGPoint(x: 2 * hinge - $0.x, y: $0.y) }
+                return (corners + folded).allSatisfy { round.holds($0) }
+            }
+            guard !clear(0) else { continue }
+            guard let slide = stride(from: CGFloat(0.05), through: most, by: 0.05).first(where: clear) else { continue }
+            let amount = CGFloat(rounded(slide))
+            out[end] = level ? CGPoint(x: ring[end].x + inward * amount, y: ring[end].y) : CGPoint(x: ring[end].x, y: ring[end].y + inward * amount)
+        }
+        return (out, false)
+    }
+
+    static func hingeOpened(_ name: String, level: Bool, atLow: Bool, box: CGRect, shift: CGFloat, line: CGFloat,
+                            round: Round? = nil, in svg: String) -> String? {
+        let size = box.size
         guard let whole = elementRange(name, in: svg) else { return nil }
         let element = String(svg[whole])
         guard element.hasPrefix("<path"), let dRange = element.range(of: #"\sd="([^"]*)""#, options: .regularExpression) else { return nil }
@@ -1243,16 +1364,24 @@ public enum AskMotion {
         func on(_ point: CGPoint) -> Bool { abs((level ? point.y : point.x) - side) < 0.01 }
         let count = points.count
         guard let cut = (0..<count).first(where: { on(points[$0]) && on(points[($0 + 1) % count]) }) else { return nil }
-        let ring = (1...count).map { points[(cut + $0) % count] }
+        var ring = (1...count).map { points[(cut + $0) % count] }
+        var roundEnds = false
+        if let round {
+            // Where its points land in the drawing: its box, moved onto the edge.
+            let offset = CGPoint(x: box.minX - minX + (level ? 0 : shift), y: box.minY - minY + (level ? shift : 0))
+            let hinge = level ? side + offset.y : side + offset.x
+            (ring, roundEnds) = tucked(ring, offset: offset, level: level, hinge: hinge, line: line, round: round)
+        }
         func said(_ value: CGFloat) -> String {
             let number = rounded(value)
             return number == number.rounded() ? String(Int(number)) : String(number)
         }
         let opened = "M" + ring.map { "\(said($0.x)) \(said($0.y))" }.joined(separator: " L")
-        // Its ends now sit on the outline's corners, where a round or square
-        // end pokes half a line past them (the judge, 2026-11-09: "round end
-        // caps poke out at the corners").
-        var made = paint([("stroke-linecap", "butt")], onElement: element.replacingCharacters(in: dRange, with: " d=\"\(opened)\""))
+        // Its ends sit on the outline's line: round where they were tucked
+        // inside its round, flat otherwise, since on a corner a round end
+        // pokes half a line past it (the judge, 2026-11-09: "round end caps
+        // poke out at the corners").
+        var made = paint([("stroke-linecap", roundEnds ? "round" : "butt")], onElement: element.replacingCharacters(in: dRange, with: " d=\"\(opened)\""))
         if shift != 0 {
             let move = level ? "translate(0 \(said(shift)))" : "translate(\(said(shift)) 0)"
             if let transform = made.range(of: #"\stransform="([^"]*)""#, options: .regularExpression) {
@@ -1268,6 +1397,81 @@ public enum AskMotion {
     }
 
     // MARK: What comes out of something
+
+    /// How much of itself, at least, a part that comes out of an outline
+    /// shows at its farthest out.
+    static let clearShare: CGFloat = 0.7
+
+    /// `steps` with every part that starts inside a closed outline and comes
+    /// out of it brought, at its farthest out, far enough to show 70 percent
+    /// of its ink past the outline's, a unit inside the frame at most. The
+    /// envelope of 2026-11-09 raised its letter until 3.3 of its 7 units
+    /// showed, so the letter's lines met the body's in a black band: "a
+    /// stubby bar", "a solid black blob" in nine looks of nine. Every key
+    /// that holds that farthest place moves with it. Boxes and keys only:
+    /// nothing here knows what anything is.
+    public static func comesClear(_ steps: [AskStep]) -> [AskStep] {
+        guard let drawing = steps.first(where: { $0.tool == "add_drawing" }),
+              let svg = drawing.arguments["svg"]?.stringValue,
+              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true), let view = art.viewBox else { return steps }
+        let margin = view.width * restMargin
+        let frame = view.insetBy(dx: margin, dy: margin)
+        var out = steps
+        for (at, step) in steps.enumerated() where step.tool == "set_keys"
+            && step.arguments["property"]?.stringValue == MotionProperty.position.rawValue {
+            guard let name = (step.arguments["layer"]?.stringValue).flatMap(partReference).map({ plain($0.part) }),
+                  let box = AskMotionCheck.box(of: name, in: art), var object = step.arguments.objectValue,
+                  var keys = step.arguments["keys"]?.arrayValue else { continue }
+            let offsets = keys.map { key -> CGPoint? in
+                guard let x = key["value"]?["x"]?.doubleValue, let y = key["value"]?["y"]?.doubleValue else { return nil }
+                return CGPoint(x: x, y: y)
+            }
+            guard let first = offsets.first ?? nil, !offsets.contains(where: { $0 == nil }) else { continue }
+            let rest = box.offsetBy(dx: first.x, dy: first.y)
+            // The smallest closed outline, not its own, whose ink holds it at rest.
+            let rooms = art.parts.compactMap { part -> CGRect? in
+                guard !(part.name.map { plain($0) == name } ?? false), !part.groups.contains(where: { plain($0) == name }),
+                      part.strokeWidth > 0 else { return nil }
+                switch part.shape {
+                case .rect, .ellipse: break
+                case .path(let path) where path.closed: break
+                default: return nil
+                }
+                let ink = Self.box(of: part)
+                return ink.insetBy(dx: -AskMotionCheck.edgeSlack, dy: -AskMotionCheck.edgeSlack).contains(rest) ? ink : nil
+            }
+            guard let room = rooms.min(by: { $0.width * $0.height < $1.width * $1.height }) else { continue }
+            // Its farthest out: how far past each side of the room it shows.
+            var best: (index: Int, side: Int, shown: CGFloat)?
+            for (index, offset) in offsets.enumerated() {
+                guard let offset else { continue }
+                let placed = box.offsetBy(dx: offset.x, dy: offset.y)
+                let shown = [room.minY - placed.minY, placed.maxY - room.maxY, room.minX - placed.minX, placed.maxX - room.maxX]
+                for (side, past) in shown.enumerated() where past > 0 && past > (best?.shown ?? 0) {
+                    best = (index, side, past)
+                }
+            }
+            guard let best, let peak = offsets[best.index] else { continue }
+            let placed = box.offsetBy(dx: peak.x, dy: peak.y)
+            // Gone from the frame altogether, or already clear: as made.
+            guard placed.intersects(view) else { continue }
+            let extent = best.side < 2 ? placed.height : placed.width
+            let wanted = clearShare * extent - best.shown
+            guard wanted > 0.25 else { continue }
+            let ahead = [placed.minY - frame.minY, frame.maxY - placed.maxY, placed.minX - frame.minX, frame.maxX - placed.maxX][best.side]
+            let move = min(wanted, ahead)
+            guard move > 0.25 else { continue }
+            let delta: CGPoint = [CGPoint(x: 0, y: -move), CGPoint(x: 0, y: move), CGPoint(x: -move, y: 0), CGPoint(x: move, y: 0)][best.side]
+            for (index, offset) in offsets.enumerated() where offset == peak {
+                guard var json = keys[index].objectValue else { continue }
+                json["value"] = .object(["x": .number(rounded(peak.x + delta.x)), "y": .number(rounded(peak.y + delta.y))])
+                keys[index] = .object(json)
+            }
+            object["keys"] = .array(keys)
+            out[at] = AskStep(tool: step.tool, arguments: .object(object))
+        }
+        return out
+    }
 
     /// `steps` with what travels out from inside a closed outline hidden at
     /// rest behind that outline, the smallest that holds it, which is filled

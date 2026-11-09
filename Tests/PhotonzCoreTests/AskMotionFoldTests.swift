@@ -90,7 +90,7 @@ struct AskMotionFoldTests {
         let landed = Self.keys(try #require(AskMotion.foldsLand([made]).first))
         #expect(landed.map(\.seconds) == [0, 0.2, 0.3, 0.5, 1.6, 2.15, 2.4])
         #expect(landed.map(\.value) == [0, 0, 8, 180, 180, 0, 0])
-        #expect(landed[4].curve == "Ease in out")
+        #expect(landed[4].curve == "Linear")
         // The opening is not a landing and is left as made.
         #expect(landed[2].curve == "Ease out back")
     }
@@ -100,13 +100,32 @@ struct AskMotionFoldTests {
         let quick = try Self.foldKeys(#"[{"seconds":0,"value":0},{"curve":"Ease in out","seconds":0.4,"value":180},{"curve":"Linear","seconds":1,"value":180},{"seconds":1.15,"value":0},{"seconds":2,"value":0}]"#)
         let landed = Self.keys(try #require(AskMotion.foldsLand([quick]).first))
         #expect(landed.map(\.seconds) == [0, 0.4, 1, 1.55, 2])
-        #expect(landed[2].curve == "Ease in out")
+        #expect(landed[2].curve == "Linear")
         // With little stillness after it, it takes what there is and the key
         // that stood there goes, its value being the same rest.
         let tight = try Self.foldKeys(#"[{"seconds":0,"value":0},{"seconds":0.4,"value":-180},{"curve":"Ease in","seconds":1,"value":-180},{"seconds":1.15,"value":0},{"seconds":1.3,"value":0},{"curve":"Ease in","seconds":1.5,"value":90},{"seconds":2,"value":0}]"#, property: "rotationY")
         let held = Self.keys(try #require(AskMotion.foldsLand([tight]).first))
         #expect(held.map(\.seconds) == [0, 0.4, 1, 1.3, 1.5, 2])
         #expect(held.map(\.value) == [0, -180, -180, 0, 90, 0])
+    }
+
+    @Test("A fold whose landing is its last key takes its time from the rest of the lap, which loops back to rest")
+    func foldLandsIntoTheLapEnd() throws {
+        // The envelope of 2026-11-09 14:33: shut from 180 at 1.4 s to 0 at
+        // 1.7 s, its last key, in a 2 s lap. With no key after it there was
+        // no stillness to borrow, and nine looks of nine said "snaps shut
+        // between 1.47 and 1.60 s".
+        let made = try Self.foldKeys(#"[{"curve":"Ease in out","seconds":0,"value":0},{"curve":"Hold","seconds":0.5,"value":180},{"curve":"Ease in out","seconds":1.4,"value":180},{"seconds":1.7,"value":0}]"#)
+        let timing = AskStep(tool: "set_timing", arguments: ["seconds": 2, "loop": true])
+        let landed = Self.keys(try #require(AskMotion.foldsLand([timing, made]).last))
+        #expect(landed.map(\.seconds) == [0, 0.5, 1.4, 1.95])
+        #expect(landed.map(\.value) == [0, 180, 180, 0])
+        // A lap shorter than the landing wants: it takes what there is.
+        let short = AskStep(tool: "set_timing", arguments: ["seconds": .number(1.8), "loop": true])
+        #expect(Self.keys(try #require(AskMotion.foldsLand([short, made]).last)).map(\.seconds) == [0, 0.5, 1.4, 1.8])
+        // Played once, the lap's end is not a rest it comes back to.
+        let once = AskStep(tool: "set_timing", arguments: ["seconds": 2, "loop": false])
+        #expect(Self.keys(try #require(AskMotion.foldsLand([once, made]).last)).map(\.seconds) == [0, 0.5, 1.4, 1.7])
     }
 
     @Test("A fold that flips open too quickly to see takes its time from the stillness before it, and a nudge too small to see first goes")
@@ -119,18 +138,18 @@ struct AskMotionFoldTests {
         let opened = Self.keys(try #require(AskMotion.foldsOpen([made]).first))
         #expect(opened.map(\.seconds) == [0, 0.5, 1.6, 2, 2.4])
         #expect(opened.map(\.value) == [0, 180, 180, 0, 0])
-        #expect(opened[0].curve == "Ease in out")
+        #expect(opened[0].curve == "Linear")
         // With a little stillness before it, it starts that much earlier.
         let later = try Self.foldKeys(#"[{"curve":"Hold","seconds":0,"value":0},{"curve":"Ease in","seconds":0.4,"value":0},{"seconds":0.6,"value":180},{"seconds":2,"value":0}]"#)
         let sooner = Self.keys(try #require(AskMotion.foldsOpen([later]).first))
         #expect(sooner.map(\.seconds) == [0, 0.05, 0.6, 2])
-        #expect(sooner[1].curve == "Ease in out")
+        #expect(sooner[1].curve == "Linear")
         // With no stillness before it, it opens from the start of the lap.
         let early = try Self.foldKeys(#"[{"seconds":0,"value":0},{"curve":"Ease in","seconds":0.2,"value":180},{"seconds":1.6,"value":180},{"seconds":2,"value":0}]"#)
         // ...taking its time from the stillness after it.
         let first = Self.keys(try #require(AskMotion.foldsOpen([early]).first))
         #expect(first.map(\.seconds) == [0, 0.55, 1.6, 2])
-        #expect(first[0].curve == "Ease in out")
+        #expect(first[0].curve == "Linear")
         // Already slow enough, or never open past 90: left as made.
         let slow = try Self.foldKeys(#"[{"seconds":0,"value":0},{"curve":"Ease out back","seconds":0.1,"value":0},{"seconds":0.6,"value":180},{"seconds":2,"value":0}]"#)
         #expect(AskMotion.foldsOpen([slow]) == [slow])
@@ -142,8 +161,13 @@ struct AskMotionFoldTests {
 
     @Test("What already lands is left alone: a slow close, a flat turn, a fold that never comes home")
     func foldLandingLeftAlone() throws {
-        let slow = try Self.foldKeys(#"[{"seconds":0,"value":0},{"seconds":0.5,"value":180},{"curve":"Ease out","seconds":1.1,"value":180},{"seconds":1.6,"value":0},{"seconds":2,"value":0}]"#)
+        let slow = try Self.foldKeys(#"[{"seconds":0,"value":0},{"seconds":0.5,"value":180},{"curve":"Linear","seconds":1.1,"value":180},{"seconds":1.6,"value":0},{"seconds":2,"value":0}]"#)
         #expect(AskMotion.foldsLand([slow]) == [slow])
+        // Slow enough on another curve: only its pace changes, to even.
+        let eased = try Self.foldKeys(#"[{"seconds":0,"value":0},{"seconds":0.5,"value":180},{"curve":"Ease out","seconds":1.1,"value":180},{"seconds":1.6,"value":0},{"seconds":2,"value":0}]"#)
+        let paced = Self.keys(try #require(AskMotion.foldsLand([eased]).first))
+        #expect(paced.map(\.seconds) == [0, 0.5, 1.1, 1.6, 2])
+        #expect(paced[2].curve == "Linear")
         let swing = try Self.foldKeys(#"[{"seconds":0,"value":0},{"seconds":0.5,"value":120},{"curve":"Ease in","seconds":1,"value":120},{"seconds":1.1,"value":-8},{"seconds":1.3,"value":0},{"seconds":2,"value":0}]"#, property: "rotation")
         #expect(AskMotion.foldsLand([swing]) == [swing])
         let small = try Self.foldKeys(#"[{"seconds":0,"value":0},{"curve":"Ease in","seconds":0.5,"value":40},{"seconds":0.6,"value":0},{"seconds":2,"value":0}]"#)
@@ -157,7 +181,7 @@ struct AskMotionFoldTests {
         let made = try Self.foldKeys(#"[{"seconds":0,"value":0},{"curve":"Ease in out","seconds":0.4,"value":180},{"curve":"Ease in","seconds":1,"value":180},{"curve":"Ease out back","seconds":1.2,"value":-8},{"seconds":1.4,"value":0},{"seconds":2,"value":0}]"#)
         let landed = Self.keys(try #require(AskMotion.fitted([drawing, made]).last))
         #expect(!landed.contains { $0.value < 0 })
-        #expect(landed.first { $0.seconds == 1 }?.curve == "Ease in out")
+        #expect(landed.first { $0.seconds == 1 }?.curve == "Linear")
     }
 
     @Test("A side fold flips across, and a fold that moves keeps its hinge with it")
@@ -529,6 +553,78 @@ struct AskMotionFoldTests {
         // A fold about its middle has no hinge on an edge.
         let middle = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/flap","property":"rotationX","keys":[{"seconds":0,"value":0},{"seconds":1,"value":180}]}"#))
         #expect(AskMotion.hingesShared([drawing, middle]) == [drawing, middle])
+    }
+
+    @Test("A fold hinged on a rounded outline's edge tucks its ends inside the round, shut and open")
+    func foldEndsTuckInsideTheRound() throws {
+        // The envelope of 2026-11-09 14:33: the flap's ends sat on the body's
+        // corners, which are rounded, so its flat line ends stuck out of the
+        // round shut and open: "the open flap's corners poke past the body",
+        // seven looks of nine.
+        var lineEnd: PathLineEnd?
+        func flapEnds(_ body: String, grow: CGFloat = 1) throws -> [CGPoint] {
+            let svg = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2">"## + body + ##"<path id="flap" d="M4 7 L12 13 L20 7 Z"/></svg>"##
+            let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(svg)])
+            let fold = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/flap","property":"rotationX","pivot":{"x":0.5,"y":0},"keys":[{"seconds":0,"value":0},{"seconds":0.5,"value":180},{"seconds":2,"value":0}]}"#))
+            let made = AskMotion.hingesShared([drawing, fold], grow: grow)
+            let art = try SVGArtwork.parse(try #require(made.first?.arguments["svg"]?.stringValue), keepingGroups: true).get()
+            guard case .path(let open)? = art.parts.first(where: { AskMotion.plain($0.name ?? "") == "flap" })?.shape,
+                  let ring = open.rings.first, let first = ring.first, let last = ring.last else { Issue.record("no flap"); return [] }
+            lineEnd = art.parts.first(where: { AskMotion.plain($0.name ?? "") == "flap" })?.lineEnd
+            return [first.point, last.point]
+        }
+        let rounded = try flapEnds(##"<rect id="body" x="4" y="7" width="16" height="12" rx="2"/>"##)
+        #expect(rounded.count == 2)
+        for end in rounded {
+            #expect(end.y == 7)
+            // In from the corner by the round, where a round line end
+            // centred on the hinge sits wholly inside the outline's line,
+            // shut and open, so it melts into it rather than leaving a
+            // square notch ("the flap's ends are clipped off at sharp angles").
+            #expect(min(end.x - 4, 20 - end.x) >= 1.7)
+            #expect(min(end.x - 4, 20 - end.x) <= 3)
+        }
+        #expect(lineEnd == .round)
+        // In a frame that will grow by a quarter to make room, lines and
+        // rounds land a quarter larger against the drawing: further in.
+        let grown = try flapEnds(##"<rect id="body" x="4" y="7" width="16" height="12" rx="2"/>"##, grow: 1.25)
+        #expect(grown.count == 2 && grown[0].x - 4 > rounded[0].x - 4 + 0.3)
+        #expect(lineEnd == .round)
+        // A square-cornered outline holds the ends where they are, flat.
+        let square = try flapEnds(##"<rect id="body" x="4" y="7" width="16" height="12"/>"##)
+        #expect(Set(square.map(\.x)) == [4, 20])
+        #expect(lineEnd == .flat)
+    }
+
+    @Test("What comes out of an outline and goes back comes most of the way clear of it, inside the frame")
+    func comesClear() throws {
+        // The envelope of 2026-11-09 14:33: the letter rose until 3.3 of its
+        // 7 units of ink showed above the body's line, so its own lines met
+        // the body's in a black band, "a stubby bar", "a solid black blob",
+        // nine looks of nine.
+        let svg = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><path id="letter" d="M7 12 L17 12 L17 17 L7 17 Z" fill="#FFFFFF"/><rect id="body" x="4" y="7" width="16" height="12" rx="2" fill="#FFFFFF"/></svg>"##
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(svg)])
+        func rise(_ peak: Double) throws -> AskStep {
+            AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/letter","property":"position","keys":[{"curve":"Hold","seconds":0,"value":{"x":0,"y":0}},{"curve":"Ease in","seconds":0.5,"value":{"x":0,"y":0}},{"curve":"Ease out back","seconds":0.9,"value":{"x":0,"y":"# + String(peak) + #"}},{"curve":"Ease in","seconds":1.1,"value":{"x":0,"y":"# + String(peak) + #"}},{"seconds":1.4,"value":{"x":0,"y":0}},{"seconds":2,"value":{"x":0,"y":0}}]}"#))
+        }
+        let made = AskMotion.comesClear([drawing, try rise(-8.276)])
+        let ys = try #require(made.last?.arguments["keys"]?.arrayValue).compactMap { $0["value"]?["y"]?.doubleValue }
+        // 70 percent of its 7 units of ink above the body's outer edge at 6:
+        // its top at 1.1, so it moves up 9.9 from where it is drawn.
+        #expect(ys == [0, 0, -9.9, -9.9, 0, 0])
+        #expect(made.first == drawing)
+        // Already clear enough, or gone from the frame altogether: as made.
+        let clear = try rise(-10.5)
+        #expect(AskMotion.comesClear([drawing, clear]) == [drawing, clear])
+        let gone = try rise(-20)
+        #expect(AskMotion.comesClear([drawing, gone]) == [drawing, gone])
+        // Moving about inside the outline is not coming out of it.
+        let inside = try rise(-2)
+        #expect(AskMotion.comesClear([drawing, inside]) == [drawing, inside])
+        // The frame's edge holds it a unit in: in a short frame it rises as far as that.
+        let short = svg.replacingOccurrences(of: "viewBox=\"0 0 24 24\"", with: "viewBox=\"0 1 24 23\"")
+        let low = AskMotion.comesClear([AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(short)]), try rise(-8.276)])
+        #expect(try #require(low.last?.arguments["keys"]?.arrayValue).compactMap { $0["value"]?["y"]?.doubleValue }[2] == -9)
     }
 
     @Test("The rules teach a fold, a part that leaves and a line drawn on, in words true of anything")

@@ -1,0 +1,28 @@
+{
+  "feature": "Ask's moving envelope reads as an envelope opening",
+  "epic": "icon-animate",
+  "summary": "When Ask animates a flap that folds, the flap now folds shut in visible steps instead of snapping, its ends sit inside the body's rounded corners instead of poking past them, and what comes out (a letter) rises far enough to read as itself.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask on the built-in model.",
+  "switched": {},
+  "try": [
+    { "do": "Press Ask and type: make an animated icon of an envelope opening. Send.", "shot": "2026-11-09-envelope-reads-after.png", "shotNote": "Frames of the exported SVG as WebKit plays it (the eval's frames), not a window capture. Reel: 2026-11-09-envelope-reads-after.gif. The same request before this change: 2026-11-09-envelope-reads-before.png" },
+    { "do": "Press Space and look at the shut envelope's top corners: the flap's ends meet the body's line with no nub sticking out." },
+    { "do": "Watch the flap open, then the letter rise: the whole letter clears the body." },
+    { "do": "Watch the flap close: it goes low, then a shallow V, then the full V, instead of vanishing for a frame and popping shut." },
+    { "do": "Ask: make an animated icon of a trash can lid opening. Play it and watch the lid fold the same way." }
+  ],
+  "evaluate": [
+    "Does the flap's close now read as folding shut, or still as a snap?",
+    "Do the shut envelope's top corners look clean?",
+    "When the letter is up, does it read as a letter coming out, or does the flap's tip showing above it look wrong?",
+    "Does the trash lid still open and close the way you expect?"
+  ],
+  "rough": [
+    "Measured on the climb set (qwen3.8-27b, judged nine looks each): the envelope reads as asked 7.11, 7.0, 7.0 and 7.11 in four runs on the final code (scores 77.8, 76.6, 77.2, 78.4), and 6.44 in one run on an earlier step of it. That is up from 6.1 on the code this task started from (62.1).",
+    "The open flap's tip still shows above the risen letter, and small stubs of the flap's back legs show beside the letter. Judges call it 'the flap tip pokes through the letter'. Physically it is right, since the letter is in front of the open flap, but it reads as a layering slip.",
+    "Where the letter's top line passes the body's top line on its way in or out, the two lines merge into one thick band for a frame. Every part that passes an edge does this, and a sheet of frames sometimes catches it.",
+    "The story case (a letter goes into the envelope, the flap closes and it flies off) scored 36.9, up from 27.2 this morning, and still tells its beats in the wrong order (the flap opens when it should close). That is the story task's (an-animated-icon-told-as-a-little-story-moves-th), not this one.",
+    "No held-out run on the current judge rubric yet: Scripts/ask-eval.sh report says so, and a whole held-out run takes hours. The held-out set gained its 8 animated requests on 2026-11-08 (total 56.9 then).",
+    "These pictures are the exported file played in WebKit by the eval, not captures of the app window: the eval's walks never photograph the window."
+  ]
+}
