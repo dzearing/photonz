@@ -55,8 +55,10 @@ public enum AskMotionLook {
         in a frame; what goes in or into something passes behind its front and is hidden by it; what closes ends \
         closed and what opens ends open; what flies off or leaves goes out of the frame. Then one line for each \
         thing that looks wrong: a part that appears or vanishes in place instead of travelling, a part cut off by \
-        the edge while it stays (leaving the frame on purpose is fine), a change too small to notice, beats in \
-        the wrong order, a part left behind when the rest moves, a part drawn over what it should be behind. Be \
+        the edge while it stays, a change too small to notice, beats in \
+        the wrong order, a part left behind when the rest moves, a part drawn over what it should be behind. A \
+        part that flies out of the frame, is gone a moment and comes back in from another edge is travelling, \
+        not vanishing, and is cut by the edge only while it crosses it: that is fine. Be \
         strict: a beat counts only if a person watching would see it. If every beat is seen, in order, and \
         nothing looks wrong, end with: All good.
         """

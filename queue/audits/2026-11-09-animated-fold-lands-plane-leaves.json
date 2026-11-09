@@ -1,0 +1,26 @@
+{
+  "feature": "Ask's moving icons: a flap shuts onto its V, a plane leaves and comes back cleanly",
+  "epic": "icon-animate",
+  "summary": "An envelope's flap now slows as it shuts and settles onto its V instead of snapping, and a paper plane takes its speed lines with it, is away only a moment, and stays clear of the frame's edge at rest.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask on the built-in model.",
+  "switched": {},
+  "try": [
+    { "do": "Press Ask and type: make an animated icon of an envelope opening. Send.", "shot": "2026-11-09-animated-envelope-lands-frames.png", "shotNote": "Frames of the exported SVG as WebKit plays it (the eval's svg-frames), not a window capture. Reel: 2026-11-09-animated-envelope-lands-reel.gif" },
+    { "do": "Press Space and watch the flap shut: it should slow into the V, not snap.", "shot": "2026-11-09-animated-envelope-lands-closeup.png", "shotNote": "The close filmed every 0.04 s. Before: 2026-11-09-animated-envelope-before-closeup.png, where the flap hit the V at full speed." },
+    { "do": "Ask: make an animated icon of a paper plane taking off.", "shot": "2026-11-09-animated-plane-leaves-frames.png", "shotNote": "Exported SVG frames, not a window capture. Reel: 2026-11-09-animated-plane-leaves-reel.gif" },
+    { "do": "Play it and watch the speed lines as the plane leaves: they go before it is gone." },
+    { "do": "Export it (File > Export…, SVG) and open it in Safari: the same motion plays there." }
+  ],
+  "evaluate": [
+    "Does the envelope's flap read as settling shut, rather than slamming?",
+    "Does the paper plane read as taking off, with nothing left behind on an empty frame?",
+    "Is the plane away for about the right time before it comes back?",
+    "Is the envelope still worth asking for, given its letter now shows through the closed front (see rough)?"
+  ],
+  "rough": [
+    "The envelope reads as asked 5 now (three runs on 2026-11-09), against 7 on 2026-11-08. The model now draws the letter in front of the envelope's body, so it shows through when closed, and the open flap reads as a house. In all three runs this came after the check that looks at the motion before it lands (added since) sent the plan back, so the fold change is not the cause. The close itself is fixed. This task stays open for it.",
+    "The paper plane read as asked 7.4 and 7.9 in two of the three runs since these changes. The third read 4.3: the motion check called the plane's exit 'vanishing' and the model shrank its flight to a hop. The check is now told that flying out and coming back in from another edge is fine, and the 7.9 run came after that change.",
+    "The plane still exits fast at its end (the model's Ease in), and its trail dash stays dark while the plane fades as it leaves (judge: 'looks a bit like a stray piece').",
+    "These pictures are the exported file played in WebKit by the eval, not captures of the app window: the eval walks never photograph the window."
+  ]
+}

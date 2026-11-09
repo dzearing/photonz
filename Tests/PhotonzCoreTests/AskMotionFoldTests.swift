@@ -71,6 +71,64 @@ struct AskMotionFoldTests {
         #expect(MotionSVG.carried.contains(.rotationX) && MotionSVG.carried.contains(.rotationY))
     }
 
+    // MARK: A fold lands
+
+    static func foldKeys(_ json: String, property: String = "rotationX") throws -> AskStep {
+        AskStep(tool: "set_keys", arguments: try args(#"{"layer":"$1/flap","property":""# + property + #"","pivot":{"x":12,"y":6},"keys":"# + json + "}"))
+    }
+
+    static func keys(_ step: AskStep) -> [(seconds: Double, value: Double, curve: String?)] {
+        AskMotionCheck.timed(step).map { ($0.seconds, $0.value.doubleValue ?? .nan, $0.curve) }
+    }
+
+    @Test("A fold closing onto its rest lands on it: a bounce past rest, which a flat file cannot show, goes, and the close slows as it lands")
+    func foldLands() throws {
+        // The envelope Ask made on 2026-11-08: shut in 200 ms on Ease in, then
+        // 8 degrees past flat. The file showed it at full speed into the V,
+        // a shallow V one frame and the whole one the next.
+        let made = try Self.foldKeys(#"[{"curve":"Hold","seconds":0,"value":0},{"curve":"Ease in","seconds":0.2,"value":0},{"curve":"Ease out back","seconds":0.3,"value":8},{"curve":"Hold","seconds":0.5,"value":180},{"curve":"Ease in","seconds":1.6,"value":180},{"curve":"Ease out back","seconds":1.8,"value":-8},{"curve":"Hold","seconds":2,"value":0},{"seconds":2.4,"value":0}]"#)
+        let landed = Self.keys(try #require(AskMotion.foldsLand([made]).first))
+        #expect(landed.map(\.seconds) == [0, 0.2, 0.3, 0.5, 1.6, 2, 2.4])
+        #expect(landed.map(\.value) == [0, 0, 8, 180, 180, 0, 0])
+        #expect(landed[4].curve == "Ease in out")
+        // The opening is not a landing and is left as made.
+        #expect(landed[2].curve == "Ease out back")
+    }
+
+    @Test("A fold that shuts too quickly to see takes its time from the stillness after it")
+    func foldLandsSlowly() throws {
+        let quick = try Self.foldKeys(#"[{"seconds":0,"value":0},{"curve":"Ease in out","seconds":0.4,"value":180},{"curve":"Linear","seconds":1,"value":180},{"seconds":1.15,"value":0},{"seconds":2,"value":0}]"#)
+        let landed = Self.keys(try #require(AskMotion.foldsLand([quick]).first))
+        #expect(landed.map(\.seconds) == [0, 0.4, 1, 1.4, 2])
+        #expect(landed[2].curve == "Ease in out")
+        // With little stillness after it, it takes what there is and the key
+        // that stood there goes, its value being the same rest.
+        let tight = try Self.foldKeys(#"[{"seconds":0,"value":0},{"seconds":0.4,"value":-180},{"curve":"Ease in","seconds":1,"value":-180},{"seconds":1.15,"value":0},{"seconds":1.3,"value":0},{"curve":"Ease in","seconds":1.5,"value":90},{"seconds":2,"value":0}]"#, property: "rotationY")
+        let held = Self.keys(try #require(AskMotion.foldsLand([tight]).first))
+        #expect(held.map(\.seconds) == [0, 0.4, 1, 1.3, 1.5, 2])
+        #expect(held.map(\.value) == [0, -180, -180, 0, 90, 0])
+    }
+
+    @Test("What already lands is left alone: a slow close, a flat turn, a fold that never comes home")
+    func foldLandingLeftAlone() throws {
+        let slow = try Self.foldKeys(#"[{"seconds":0,"value":0},{"seconds":0.5,"value":180},{"curve":"Ease out","seconds":1.2,"value":180},{"seconds":1.6,"value":0},{"seconds":2,"value":0}]"#)
+        #expect(AskMotion.foldsLand([slow]) == [slow])
+        let swing = try Self.foldKeys(#"[{"seconds":0,"value":0},{"seconds":0.5,"value":120},{"curve":"Ease in","seconds":1,"value":120},{"seconds":1.1,"value":-8},{"seconds":1.3,"value":0},{"seconds":2,"value":0}]"#, property: "rotation")
+        #expect(AskMotion.foldsLand([swing]) == [swing])
+        let small = try Self.foldKeys(#"[{"seconds":0,"value":0},{"curve":"Ease in","seconds":0.5,"value":40},{"seconds":0.6,"value":0},{"seconds":2,"value":0}]"#)
+        #expect(AskMotion.foldsLand([small]) == [small])
+    }
+
+    @Test("Planning lands a fold: fitted carries it")
+    func fittedLandsFolds() throws {
+        let svg = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><path id="body" d="M5 7 L19 7 L19 17 L5 17 Z"/><path id="flap" d="M5 7 L12 13 L19 7"/></svg>"##
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(svg)])
+        let made = try Self.foldKeys(#"[{"seconds":0,"value":0},{"curve":"Ease in out","seconds":0.4,"value":180},{"curve":"Ease in","seconds":1,"value":180},{"curve":"Ease out back","seconds":1.2,"value":-8},{"seconds":1.4,"value":0},{"seconds":2,"value":0}]"#)
+        let landed = Self.keys(try #require(AskMotion.fitted([drawing, made]).last))
+        #expect(!landed.contains { $0.value < 0 })
+        #expect(landed.first { $0.seconds == 1 }?.curve == "Ease in out")
+    }
+
     @Test("A side fold flips across, and a fold that moves keeps its hinge with it")
     func sideFold() throws {
         var (document, id) = Self.box()
@@ -189,6 +247,83 @@ struct AskMotionFoldTests {
         let end = try Self.args(#"{"layer":"$1/wave","property":"trimEnd","keys":[{"seconds":0,"value":0},{"seconds":0.5,"value":100}]}"#)
         #expect(AskMotion.refusal(start, steps: [drawing])?.contains("trimEnd") == true)
         #expect(AskMotion.refusal(end, steps: [drawing]) == nil)
+    }
+
+    // MARK: Marks go with what leaves
+
+    static let flyer = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><g id="craft"><path d="M4 12 L18 6 L12 18 Z"/></g><g id="lines"><path d="M1 15 L4 15"/><path d="M2 18 L5 18"/></g><path id="ground" d="M2 21 L22 21"/></svg>"##
+
+    @Test("A mark that shows only while a part moves is gone by the time that part has left the frame, never left on its own")
+    func marksGoWithWhatLeaves() throws {
+        // The paper plane Ask made on 2026-11-08: its speed lines faded in as
+        // it set off and hung on for half a second after it had gone.
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(Self.flyer)])
+        let fly = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/craft","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.4,"value":{"x":0,"y":0}},{"curve":"Ease in","seconds":0.9,"value":{"x":24,"y":-20}},{"curve":"Hold","seconds":1.9,"value":{"x":24,"y":-20}},{"seconds":1.95,"value":{"x":-24,"y":20}},{"seconds":2.4,"value":{"x":0,"y":0}}]}"#))
+        let lines = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/lines","property":"opacity","keys":[{"seconds":0,"value":0},{"seconds":0.4,"value":0},{"seconds":0.6,"value":100},{"seconds":1.1,"value":100},{"seconds":1.3,"value":0},{"seconds":2.4,"value":0}]}"#))
+        let made = AskMotion.marksGo([drawing, fly, lines], view: CGRect(x: 0, y: 0, width: 24, height: 24))
+        let faded = AskMotionCheck.timed(try #require(made.last))
+        // Gone (back to 0) by the time two thirds of the part is out of the
+        // frame, straight between its keys about 0.64 s; seen as it sets off.
+        let gone = try #require(faded.first { $0.seconds > 0.45 && $0.value.doubleValue == 0 })
+        #expect(gone.seconds <= 0.66)
+        #expect(faded.contains { $0.seconds > 0.4 && $0.seconds < 0.6 && $0.value.doubleValue == 100 })
+        #expect(faded.first?.seconds == 0 && faded.last?.seconds == 2.4)
+        #expect(made.dropLast() == [drawing, fly])
+        // Marks that drift on their own, slower than the part, still go: the
+        // plane's lines drifted after it across an empty frame (2026-11-09).
+        let drift = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/lines","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.4,"value":{"x":0,"y":0}},{"seconds":0.9,"value":{"x":12,"y":-9}},{"seconds":2.4,"value":{"x":0,"y":0}}]}"#))
+        let drifted = AskMotion.marksGo([drawing, fly, drift, lines], view: CGRect(x: 0, y: 0, width: 24, height: 24))
+        let fades = AskMotionCheck.timed(try #require(drifted.last))
+        #expect(try #require(fades.first { $0.seconds > 0.45 && $0.value.doubleValue == 0 }).seconds <= 0.66)
+    }
+
+    @Test("What is there at rest, what never leaves, and what goes with the part are left alone")
+    func marksLeftAlone() throws {
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(Self.flyer)])
+        let fly = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/craft","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.9,"value":{"x":24,"y":-20}},{"seconds":2.4,"value":{"x":24,"y":-20}}]}"#))
+        // Seen at the top of the lap: it is part of the picture, not a mark.
+        let ground = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/ground","property":"opacity","keys":[{"seconds":0,"value":100},{"seconds":1.3,"value":0},{"seconds":2.4,"value":100}]}"#))
+        let view = CGRect(x: 0, y: 0, width: 24, height: 24)
+        #expect(AskMotion.marksGo([drawing, fly, ground], view: view) == [drawing, fly, ground])
+        // A part that only nudges never leaves, so nothing is due to go.
+        let nudge = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/craft","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.9,"value":{"x":2,"y":-2}},{"seconds":2.4,"value":{"x":0,"y":0}}]}"#))
+        let lines = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/lines","property":"opacity","keys":[{"seconds":0,"value":0},{"seconds":0.6,"value":100},{"seconds":1.3,"value":0},{"seconds":2.4,"value":0}]}"#))
+        #expect(AskMotion.marksGo([drawing, nudge, lines], view: view) == [drawing, nudge, lines])
+        // Marks that go out of the frame themselves are not left behind.
+        let linesFly = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/lines","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.8,"value":{"x":30,"y":-30}},{"seconds":2.4,"value":{"x":30,"y":-30}}]}"#))
+        #expect(AskMotion.marksGo([drawing, fly, lines, linesFly], view: view) == [drawing, fly, lines, linesFly])
+    }
+
+    @Test("A drawing that has wholly left comes back soon and rests at home, rather than leaving the frame empty")
+    func comesBackSoon() throws {
+        // The paper plane of 2026-11-09 after `leaving`: out by 0.9 s, waiting
+        // off the frame until 1.94 s, so a third of the lap was empty.
+        let alone = Self.flyer.replacingOccurrences(of: #"<path id="ground" d="M2 21 L22 21"/>"#, with: "")
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(alone)])
+        let fly = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/craft","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.2,"value":{"x":0,"y":0}},{"curve":"Ease in","seconds":0.35,"value":{"x":0,"y":0.9}},{"seconds":0.9,"value":{"x":22.4,"y":-16}},{"curve":"Hold","seconds":1.3,"value":{"x":24,"y":-20.3}},{"curve":"Hold","seconds":1.9,"value":{"x":24,"y":-20.3}},{"curve":"Ease out","seconds":1.94,"value":{"x":-24,"y":20.3}},{"seconds":2.4,"value":{"x":0,"y":0}}]}"#))
+        let lines = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/lines","property":"opacity","keys":[{"seconds":0,"value":0},{"seconds":0.4,"value":0},{"seconds":0.6,"value":100},{"seconds":0.8,"value":0},{"seconds":2.4,"value":0}]}"#))
+        let view = CGRect(x: 0, y: 0, width: 24, height: 24)
+        let back = AskMotionCheck.timed(try #require(AskMotion.comesBack([drawing, fly, lines], view: view)[1]))
+        #expect(back.map(\.seconds) == [0, 0.2, 0.35, 0.9, 1.05, 1.51, 2.4])
+        #expect(back[3].curve == "Hold")
+        #expect(back[4].value["x"]?.doubleValue == -24 && back[4].curve == "Ease out")
+        #expect(back[5].value["x"]?.doubleValue == 0 && back[6].value["x"]?.doubleValue == 0)
+        // With something left in the frame it is not empty: left alone.
+        let grounded = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(Self.flyer)])
+        #expect(AskMotion.comesBack([grounded, fly, lines], view: view) == [grounded, fly, lines])
+        // Gone only briefly: left alone.
+        let brief = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/craft","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"curve":"Hold","seconds":0.9,"value":{"x":24,"y":-20.3}},{"curve":"Ease out","seconds":1.1,"value":{"x":-24,"y":20.3}},{"seconds":1.6,"value":{"x":0,"y":0}},{"seconds":2.4,"value":{"x":0,"y":0}}]}"#))
+        #expect(AskMotion.comesBack([drawing, brief, lines], view: view) == [drawing, brief, lines])
+    }
+
+    @Test("Ink that reaches the frame's edge at rest gets the icon's one unit of margin; a drawing on the usual live area keeps its frame")
+    func inkOffTheEdge() throws {
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(Self.flyer)])
+        let lines = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/lines","property":"opacity","keys":[{"seconds":0,"value":0},{"seconds":0.6,"value":100},{"seconds":1.3,"value":0},{"seconds":2.4,"value":0}]}"#))
+        let svg = try #require(AskMotion.fitted([drawing, lines]).first?.arguments["svg"]?.stringValue)
+        #expect(svg.contains(#"viewBox="-1.000 -1.000 26.000 26.000""#))
+        let roomy = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(Self.flyer.replacingOccurrences(of: "M1 15", with: "M2 15"))])
+        #expect(AskMotion.fitted([roomy, lines]).first == roomy)
     }
 
     // MARK: Coming out of something

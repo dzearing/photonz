@@ -504,6 +504,14 @@ public enum AskMotion {
     /// The most a drawing's viewBox grows to make room. Further and the icon
     /// is too small to read, and whatever flies that far is meant to leave.
     public static let mostRoom: CGFloat = 1.4
+    /// The margin an icon keeps on its grid, a share of the side: one unit
+    /// of 24. A drawing whose ink at rest reaches nearer the edge than three
+    /// quarters of that is cut by its frame (a paper plane's speed lines lost
+    /// their ends to the left edge, the eval, 2026-11-08), so its frame grows
+    /// to give it that margin, by `mostRest` at most. One drawn on the usual
+    /// live area is left as it is.
+    static let restMargin: CGFloat = 1.0 / 24
+    static let mostRest: CGFloat = 1.2
 
     /// `steps` with the drawing's viewBox widened about its middle to hold
     /// everything its keys do, so nothing is cut off by the frame. A vector
@@ -512,33 +520,125 @@ public enum AskMotion {
     /// a flap's swing from 180 to 90 and a letter's rise from 3 to 1, a round of
     /// the plan each time (the eval, 2026-11-06).
     public static func fitted(_ planned: [AskStep]) -> [AskStep] {
-        let steps = swingsFitted(landingFolded(planned))
+        let (steps, view) = roomFitted(swingsFitted(foldsLand(landingFolded(planned))))
+        return view.map { marksGo(comesBack(steps, view: $0), view: $0) } ?? steps
+    }
+
+    /// `fitted` before its marks go: the steps with the room made, and the
+    /// frame they play in, if the drawing has one.
+    static func roomFitted(_ steps: [AskStep]) -> ([AskStep], CGRect?) {
         guard let index = steps.firstIndex(where: { $0.tool == "add_drawing" }),
               let svg = steps[index].arguments["svg"]?.stringValue,
               case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true), let view = art.viewBox,
-              var object = steps[index].arguments.objectValue else { return steps }
+              var object = steps[index].arguments.objectValue else { return (steps, nil) }
         let slack = AskMotionCheck.edgeSlack
+        // At rest it keeps clear of the edge, as an icon on its grid does.
+        let still = art.parts.map { SVGArtwork.shapeBounds($0.shape).insetBy(dx: -$0.strokeWidth / 2, dy: -$0.strokeWidth / 2) }
+            .reduce(CGRect.null) { $0.union($1) }
+        let farthest = still.isNull ? 0 : [view.midX - still.minX, still.maxX - view.midX,
+                                            view.midY - still.minY, still.maxY - view.midY].max() ?? 0
+        let clear = view.width / 2 - farthest >= restMargin * view.width * 0.75 ? view.width
+            : min(max(view.width, 2 * farthest + 2 * restMargin * view.width), view.width * mostRest)
         let reach = AskMotionCheck.reach(of: steps.filter { $0.tool == "set_keys" }, in: art)
-        guard !reach.isNull, !view.insetBy(dx: -slack, dy: -slack).contains(reach) else { return steps }
         func room(holding reach: CGRect) -> CGRect {
-            let needed = [view.midX - reach.minX, reach.maxX - view.midX, view.midY - reach.minY, reach.maxY - view.midY].max() ?? 0
-            let side = max(view.width, min((needed + 2 * slack) * 2, view.width * mostRoom))
+            let needed = reach.isNull ? 0 : [view.midX - reach.minX, reach.maxX - view.midX, view.midY - reach.minY, reach.maxY - view.midY].max() ?? 0
+            let side = max(clear, min((needed + 2 * slack) * 2, view.width * mostRoom))
             return CGRect(x: view.midX - side / 2, y: view.midY - side / 2, width: side, height: side)
         }
+        guard clear > view.width || (!reach.isNull && !view.insetBy(dx: -slack, dy: -slack).contains(reach)) else { return (steps, view) }
         var out = steps
         var box = room(holding: reach)
         if !box.insetBy(dx: -slack, dy: -slack).contains(reach) {
             // Something travels past all the room there is: it is meant to
             // leave, and leaves whole rather than stopping half over the edge.
-            (out, box) = leaving(steps, in: art, most: box, view: view)
+            (out, box) = leaving(steps, in: art, most: box,
+                                 view: CGRect(x: view.midX - clear / 2, y: view.midY - clear / 2, width: clear, height: clear))
         }
         if box.width > view.width {
             let said = [box.minX, box.minY, box.width, box.height].map { String(format: "%.3f", Double($0)) }.joined(separator: " ")
-            guard let found = svg.range(of: #"viewBox="[^"]*""#, options: .regularExpression) else { return out }
+            guard let found = svg.range(of: #"viewBox="[^"]*""#, options: .regularExpression) else { return (out, view) }
             object["svg"] = .string(svg.replacingCharacters(in: found, with: "viewBox=\"\(said)\""))
             out[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
+            return (out, box)
         }
-        return out
+        return (out, view)
+    }
+
+    /// A fold this far from its rest is a real opening, and its way home a
+    /// landing worth seeing.
+    static let foldOpen = 90.0
+    /// Within this of its rest a fold is all but flat on: seen straight on,
+    /// as an icon is, it is the card at 94 percent or more of itself.
+    static let foldNearRest = 20.0
+    /// The least a fold takes to land so the eye follows it home, and what it
+    /// is given when it can borrow the stillness after it.
+    static let foldLandingLeast = 0.3
+    static let foldLanding = 0.4
+    /// Curves that arrive gently; any other is swapped for Ease in out on a
+    /// fold's way home.
+    static let landingCurves: Set<String> = ["ease out", "ease in out", "ease in out sine", "ease out quint",
+                                             "ease out expo", "smooth"]
+
+    /// `steps` with every fold that comes home landing on its rest, seen. A
+    /// flap shut in 200 ms on Ease in, then 8 degrees past flat, reached the
+    /// file at full speed into its V: a shallow V one frame, the whole V the
+    /// next, and the bounce past flat cannot be seen at all, since a card
+    /// tipped 8 degrees either way looks the same straight on (the eval,
+    /// 2026-11-08). So on the way home from an opening of 90 degrees or more,
+    /// keys within 20 degrees of rest before it get there go, the run comes
+    /// home on a curve that slows as it lands, and a landing under 300 ms
+    /// takes up to 400 ms from the stillness after it. Geometry and time
+    /// only: nothing knows what folds.
+    public static func foldsLand(_ steps: [AskStep]) -> [AskStep] {
+        let folds: Set<String> = [MotionProperty.rotationX.rawValue, MotionProperty.rotationY.rawValue]
+        return steps.map { step in
+            guard step.tool == "set_keys", folds.contains(step.arguments["property"]?.stringValue ?? ""),
+                  var object = step.arguments.objectValue else { return step }
+            var keys = (step.arguments["keys"]?.arrayValue ?? []).compactMap { key -> (seconds: Double, value: Double, json: [String: AgentJSON])? in
+                guard let json = key.objectValue, let seconds = key["seconds"]?.doubleValue,
+                      let value = key["value"]?.doubleValue else { return nil }
+                return (seconds, value, json)
+            }.sorted { $0.seconds < $1.seconds }
+            guard keys.count == step.arguments["keys"]?.arrayValue?.count, let rest = keys.first?.value else { return step }
+            func atRest(_ value: Double) -> Bool { abs(value - rest) < 0.5 }
+            func curve(_ index: Int) -> String? { keys[index].json["curve"]?.stringValue }
+            var changed = false
+            var index = 0
+            while index < keys.count - 1 {
+                defer { index += 1 }
+                guard abs(keys[index].value - rest) >= foldOpen,
+                      curve(index)?.caseInsensitiveCompare(AgentKeyCurve.hold) != .orderedSame else { continue }
+                // Its way home: the keys all but flat before it gets there.
+                var home = index + 1
+                while home < keys.count, !atRest(keys[home].value), abs(keys[home].value - rest) <= foldNearRest { home += 1 }
+                guard home < keys.count, atRest(keys[home].value) else { continue }
+                if home > index + 1 {
+                    keys.removeSubrange((index + 1)..<home)
+                    home = index + 1
+                    changed = true
+                }
+                if let said = curve(index), !landingCurves.contains(said.lowercased()) {
+                    keys[index].json["curve"] = .string(EasingCurve.easeInOut.title)
+                    changed = true
+                }
+                // Too quick to follow home: it takes its time from the
+                // stillness after it, if there is any.
+                let start = keys[index].seconds
+                guard keys[home].seconds - start < foldLandingLeast - 0.0005, home + 1 < keys.count,
+                      atRest(keys[home + 1].value) else { continue }
+                let landed = min(start + foldLanding, keys[home + 1].seconds)
+                if landed >= keys[home + 1].seconds - 0.0005 {
+                    keys.remove(at: home)
+                } else {
+                    keys[home].seconds = Double(rounded(CGFloat(landed)))
+                    keys[home].json["seconds"] = .number(keys[home].seconds)
+                }
+                changed = true
+            }
+            guard changed else { return step }
+            object["keys"] = .array(keys.map { .object($0.json) })
+            return AskStep(tool: step.tool, arguments: .object(object))
+        }
     }
 
     /// `steps` with every swing that would reach past all the room there is
@@ -672,6 +772,181 @@ public enum AskMotion {
             out[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
         }
         return (out, room)
+    }
+
+    /// How finely a journey is followed to find when a part has gone.
+    static let leavingStep = 0.01
+    /// Less than this much of a part in the frame and it reads as gone.
+    static let goneShare: CGFloat = 1.0 / 3
+
+    /// How much of `box` lies inside `view`, 0 to 1.
+    static func share(of box: CGRect, in view: CGRect) -> CGFloat {
+        let inside = box.intersection(view)
+        guard !inside.isNull, box.width * box.height > 0 else { return 0 }
+        return inside.width * inside.height / (box.width * box.height)
+    }
+
+    /// `steps` with every mark that is seen only while something moves gone
+    /// by the time that thing has (all but) left the frame. A paper plane's speed lines
+    /// faded in as it set off and hung on alone for half a second after it
+    /// had gone (the eval, 2026-11-08), and told so in words, the model did
+    /// it again. A mark here is a part hidden at the top of the lap, shown by
+    /// its opacity alone, that does not travel itself; its showing is pressed
+    /// into the time before the traveller is wholly out of `view`. Boxes,
+    /// keys and time only: nothing knows what the marks are.
+    public static func marksGo(_ steps: [AskStep], view: CGRect) -> [AskStep] {
+        guard let index = steps.firstIndex(where: { $0.tool == "add_drawing" }),
+              let svg = steps[index].arguments["svg"]?.stringValue,
+              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true) else { return steps }
+        let keyed = steps.filter { $0.tool == "set_keys" }
+        func property(_ step: AskStep) -> String? { step.arguments["property"]?.stringValue }
+        func part(_ step: AskStep) -> String? { (step.arguments["layer"]?.stringValue).flatMap(partReference)?.part }
+        func held(_ name: String) -> Set<Int> {
+            let plain = plain(name)
+            return Set(art.parts.indices.filter { at in
+                art.parts[at].name.map { Self.plain($0) == plain } ?? false || art.parts[at].groups.contains { Self.plain($0) == plain }
+            })
+        }
+        let moving = keyed.filter { property($0) == MotionProperty.position.rawValue }
+        // Where a part is at a moment, by its own travel.
+        func offset(of name: String, at seconds: Double) -> CGVector {
+            guard let step = moving.first(where: { part($0).map(plain) == plain(name) }),
+                  let value = AskMotionCheck.value(of: step, at: seconds),
+                  let x = value["x"]?.doubleValue, let y = value["y"]?.doubleValue else { return .zero }
+            return CGVector(dx: x, dy: y)
+        }
+        // When each part that leaves is first all but out of the frame: the
+        // eye counts it gone with a third of it still in.
+        var gone: [(parts: Set<Int>, at: Double)] = []
+        for step in moving {
+            guard let name = part(step), let box = AskMotionCheck.box(of: name, in: art), box.width * box.height > 0,
+                  let end = AskMotionCheck.timed(step).last?.seconds, end > 0 else { continue }
+            var at = 0.0
+            while at <= end {
+                if let value = AskMotionCheck.value(of: step, at: at), let x = value["x"]?.doubleValue, let y = value["y"]?.doubleValue,
+                   AskMotion.share(of: box.offsetBy(dx: x, dy: y), in: view) < goneShare {
+                    gone.append((held(name), at))
+                    break
+                }
+                at += leavingStep
+            }
+        }
+        guard !gone.isEmpty else { return steps }
+        var out = steps
+        for (at, step) in steps.enumerated() where step.tool == "set_keys" && property(step) == MotionProperty.opacity.rawValue {
+            guard let name = part(step), var object = step.arguments.objectValue, let box = AskMotionCheck.box(of: name, in: art) else { continue }
+            let own = held(name)
+            var keys = AskMotionCheck.timed(step)
+            guard keys.count == step.arguments["keys"]?.arrayValue?.count,
+                  let first = keys.first, first.seconds <= 0, (first.value.doubleValue ?? 100) <= 5 else { continue }
+            func shown(_ key: (seconds: Double, value: AgentJSON, curve: String?)) -> Bool { (key.value.doubleValue ?? 100) > 5 }
+            var changed = false
+            for leaving in gone where leaving.parts.isDisjoint(with: own) {
+                // A mark that has gone out of the frame itself by then is not
+                // left behind.
+                let there = offset(of: name, at: leaving.at)
+                guard box.offsetBy(dx: there.dx, dy: there.dy).intersects(view) else { continue }
+                // The stretch it is seen in that runs past the moment the
+                // traveller has gone: from the last unseen key before it to
+                // the first unseen key after.
+                guard let after = keys.firstIndex(where: { $0.seconds > leaving.at && !shown($0) }),
+                      let before = keys.lastIndex(where: { $0.seconds <= leaving.at && !shown($0) }),
+                      before < after, keys[before + 1].seconds < leaving.at,
+                      keys[(before + 1)..<after].contains(where: shown) else { continue }
+                let from = keys[before].seconds
+                let share = (leaving.at - from) / (keys[after].seconds - from)
+                for key in (before + 1)...after {
+                    keys[key].seconds = Double(rounded(CGFloat(from + (keys[key].seconds - from) * share)))
+                }
+                changed = true
+            }
+            guard changed else { continue }
+            object["keys"] = .array(keys.map { key in
+                var json: [String: AgentJSON] = ["seconds": .number(key.seconds), "value": key.value]
+                if let curve = key.curve { json["curve"] = .string(curve) }
+                return .object(json)
+            })
+            out[at] = AskStep(tool: step.tool, arguments: .object(object))
+        }
+        return out
+    }
+
+    /// The longest the frame may stand empty while what left it is away.
+    static let longestGone = 0.5
+    /// How soon after its last key out of sight a drawing that left comes in.
+    static let returnsAfter = 0.15
+
+    /// `steps` with a drawing that has wholly left the frame brought back in
+    /// soon after, then resting at home until the lap ends, rather than
+    /// waiting out of sight. A paper plane flew off and the frame stood empty
+    /// for a third of the lap (the eval, 2026-11-09). Only when what leaves
+    /// is everything seen at the top of the lap, so the frame really is empty,
+    /// and only when its way back ends at home with nothing after but home.
+    /// Its way in keeps its length; the keys out of sight before it go, its
+    /// last key out holding till it jumps unseen. Boxes and time only.
+    public static func comesBack(_ steps: [AskStep], view: CGRect) -> [AskStep] {
+        guard let index = steps.firstIndex(where: { $0.tool == "add_drawing" }),
+              let svg = steps[index].arguments["svg"]?.stringValue,
+              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true) else { return steps }
+        func property(_ step: AskStep) -> String? { step.arguments["property"]?.stringValue }
+        func part(_ step: AskStep) -> String? { (step.arguments["layer"]?.stringValue).flatMap(partReference)?.part }
+        func held(_ name: String) -> Set<Int> {
+            let plain = plain(name)
+            return Set(art.parts.indices.filter { at in
+                art.parts[at].name.map { Self.plain($0) == plain } ?? false || art.parts[at].groups.contains { Self.plain($0) == plain }
+            })
+        }
+        // What is seen at the top of the lap.
+        var seen = Set(art.parts.indices)
+        for step in steps where step.tool == "set_keys" && property(step) == MotionProperty.opacity.rawValue {
+            guard let name = part(step), let first = AskMotionCheck.timed(step).first, first.seconds <= 0,
+                  (first.value.doubleValue ?? 100) <= 5 else { continue }
+            seen.subtract(held(name))
+        }
+        var out = steps
+        for (at, step) in steps.enumerated() where step.tool == "set_keys" && property(step) == MotionProperty.position.rawValue {
+            guard let name = part(step), seen.isSubset(of: held(name)), let box = AskMotionCheck.box(of: name, in: art),
+                  var object = step.arguments.objectValue else { continue }
+            let keys = AskMotionCheck.timed(step)
+            guard keys.count == step.arguments["keys"]?.arrayValue?.count, let home = keys.first?.value,
+                  let lapEnd = keys.last?.seconds else { continue }
+            func isOut(_ value: AgentJSON?) -> Bool {
+                guard let x = value?["x"]?.doubleValue, let y = value?["y"]?.doubleValue else { return false }
+                return !box.offsetBy(dx: x, dy: y).intersects(view)
+            }
+            // How long it is away: from the moment it is out to the moment
+            // it is back in sight.
+            var left: Double?
+            var away = 0.0
+            var moment = 0.0
+            while moment <= lapEnd {
+                let outNow = isOut(AskMotionCheck.value(of: step, at: moment))
+                if outNow, left == nil { left = moment }
+                if !outNow, let since = left { away = moment - since; break }
+                moment += leavingStep
+            }
+            guard away > longestGone,
+                  let first = keys.firstIndex(where: { isOut($0.value) }),
+                  let enters = keys.indices.last(where: { $0 > first && isOut(keys[$0].value) && $0 + 1 < keys.count && !isOut(keys[$0 + 1].value) }),
+                  let landed = keys.indices.first(where: { $0 > enters && keys[$0].value == home }),
+                  keys[landed...].allSatisfy({ $0.value == home }) else { continue }
+            let starts = keys[first].seconds + returnsAfter
+            let shift = keys[enters].seconds - starts
+            guard shift > 0.0005 else { continue }
+            var made = Array(keys[...first])
+            made[first].curve = AgentKeyCurve.hold
+            for key in keys[enters...landed] {
+                made.append((Double(rounded(CGFloat(key.seconds - shift))), key.value, key.curve))
+            }
+            if let last = made.last, last.seconds < lapEnd - 0.0005 { made.append((lapEnd, home, nil)) }
+            object["keys"] = .array(made.map { key in
+                var json: [String: AgentJSON] = ["seconds": .number(key.seconds), "value": key.value]
+                if let curve = key.curve { json["curve"] = .string(curve) }
+                return .object(json)
+            })
+            out[at] = AskStep(tool: step.tool, arguments: .object(object))
+        }
+        return out
     }
 
     /// A step's keys in the order they play.

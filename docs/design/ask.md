@@ -1229,6 +1229,26 @@ before it, and `AskMotion.hidden` fills the closed outline it travels out of whi
 so it starts hidden: told to fill it itself, the model filled the letter and the flap
 and left the envelope's body empty, so the letter showed through.
 
+A fold lands on its rest (`AskMotion.foldsLand`, 2026-11-09). An envelope's flap
+was shut in 200 ms on Ease in and then keyed 8 degrees past flat: it hit the V at
+full speed, so a frame caught it as a shallow V and the next as the whole one, and
+the bounce past flat cannot be seen at all, since a card tipped a little either way
+looks the same straight on. On the way home from an opening of 90 degrees or more,
+keys within 20 degrees of rest go, the run comes home on a curve that slows into
+it, and a landing under 300 ms takes up to 400 ms from the stillness after it.
+
+What leaves takes its marks with it and does not leave the frame empty. A mark
+hidden at the top of the lap and shown by its opacity is gone by the time the part
+beside it is two thirds out of the frame (`AskMotion.marksGo`): a paper plane's
+speed lines hung on alone after it had gone, and told in words the model did it
+again. A drawing that has wholly left, with nothing else seen at the top of the lap,
+comes back 150 ms after its last key out of sight and then rests at home
+(`AskMotion.comesBack`): the plane waited off the frame for a third of the lap.
+And ink that reaches within three quarters of a unit of the frame's edge at rest
+gets the icon's one unit of margin, the frame growing by at most a fifth; a drawing
+on the usual live area keeps its frame. All three are boxes, keys and time, true of
+anything that travels.
+
 Two things in how a tool call reaches the model decide all of this, and both were
 wrong at first. A call is held to its schema, and `modelSchema` keeps only an
 `anyOf`'s first choice, so a key's value could only be a number and its pivot only a
