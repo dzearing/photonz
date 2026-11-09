@@ -16586,3 +16586,12 @@
 {"t":"2026-11-09T20:59:59.467Z","ev":"task_walks","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","walks":[]}
 {"t":"2026-11-09T20:59:59.544Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-09T20:59:59.621Z","ev":"task_pending","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","from":"in_progress","note":"Encoder fallback fixed in the app (362de972e), size-check and flat-budget test bugs fixed; still open: the 30 s reader stall (2 of 9 runs beside a release build) and the chart frame budget under a compile, so 10 green runs in a row is not reached yet"}
+{"t":"2026-11-09T21:15:04.919Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-09T21:17:09.544Z","ev":"slice_pass","walks":28,"passed":27,"failed":1,"seconds":677,"of":1137,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-09T21:17:09.722Z","ev":"task_started","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","title":"The full test suite never fails on unchanged code when the Mac is busy","priority":"p1-high"}
+{"t":"2026-11-09T23:16:52.751Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-09T23:16:52.830Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-09T23:16:52.907Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-09T23:16:52.985Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-09T23:16:53.062Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-09T23:17:04.543Z","ev":"task_done","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","from":"in_progress","note":"Pushed adffb6e37 (with 362de972e before it). Exports: a picture pass whose read stalls on a lost hardware decode (caught answering after 59.7 s) goes again once on a fresh reader; the 30 s give-up clock no longer depends on the global pool (a full pool parked exports for good). Perf gates: a CPU ruler beside the GPU frame ruler, so the chart budget (reproduced failing with all cores busy) and the alignment re-measure scale with a busy CPU. Verified: ten full Scripts/test.sh runs in a row green, five beside a from-scratch release build; Aurora/Behind Glass agreed in 27 full runs in a row."}

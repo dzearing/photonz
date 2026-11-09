@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-02T22:47:36.700Z",
-  "updated": "2026-11-09T20:59:59.620Z",
+  "updated": "2026-11-09T23:17:04.542Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-02 in asking-for-a-sheet-of-components-gives-a-clean-t, tree with only Agent component planner changes:\n  $ Scripts/test.sh\n  ✘ Test dragTheWidth() recorded an issue at ShapeBorderRenderTests.swift:262:13: Expectation failed: (median → 52.961916) < (48 → 48.0)\n  ✘ Test dragTheWidth() failed after 181.377 seconds with 1 issue.\n  ✘ Test run with 1331 tests in 207 suites failed after 219.950 seconds with 1 issue.\nSame tree:\n  $ Scripts/test.sh --filter ShapeBorderRenderTests  ->  ✔ dragTheWidth() passed after 0.351 seconds; 8 tests passed\n  $ Scripts/test.sh  ->  all five groups passed (15,197 tests)\nThe check is `if MachineSpeed.isGating { #expect(median < 48) }` in the suite \"A Width drag on a drawn package stays inside a frame\" (Tests/PhotonzRenderTests/ShapeBorderRenderTests.swift:201), which runs in the rest group beside three other swift test processes, not with the stopwatch suites. CLAUDE.md: a speed budget goes in a ...PerfTests suite and is judged against a ruler taken beside it, never a flat millisecond count.\n\nFolded in 2026-11-03 from the-full-test-run-never-fails-on-a-video-check-t:\nSeen while measuring the-full-test-run-never-fails-on-a-speed-budget, 2026-10-30, in about 25 full Scripts/test.sh runs on this Mac (16 cores, go loop idle):\n- BusyVideoSizeTests.swift:251 (A long recording that is quiet and then busy is weighed from stretches of it): near(landed 2102302, weighed 1597442) failed, once.\n- BusyVideoSizeTests.swift:148 (Where the budget cannot hold, what the sheet weighs is what lands, speed 900): near(landed 1712276, weighed 1339509) failed, once.\n- VideoCutExportTests.swift:35 (Exporting a recording with the middle dropped writes only what is left): Caught error .readerGaveUp(\"no picture came out of the recording for 30 seconds\"), once.\nBoth BusyVideoSizeTests are in the .serialized run (Scripts/test.sh side run). Command: Scripts/test.sh with no arguments; output lines above are verbatim from those runs. Neither is a speed budget, so they were left out of the speed-budget task.",
@@ -130,8 +130,37 @@
     {
       "t": "2026-11-09T20:59:59.619Z",
       "note": "Encoder fallback fixed in the app (362de972e), size-check and flat-budget test bugs fixed; still open: the 30 s reader stall (2 of 9 runs beside a release build) and the chart frame budget under a compile, so 10 green runs in a row is not reached yet"
+    },
+    {
+      "t": "2026-11-09T21:17:09.716Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T23:16:52.749Z",
+      "note": "Chart budget reproduced 2026-11-09: 16 bounded perl spinners, AnimatedChartPerfTests read Donut 19.2 ms vs bound 18.5 (frame ruler 4.3 against 3.3, 1.3x) and failed 1 of 3. A from-scratch release or debug compile alone did not reproduce it (load 4 to 12). Fixed with a CPU yardstick (MachineSpeed .cpu, baseline 3.3 ms, busiestFactor): under the same load the CPU ruler read 6.6 to 7.0 and 5 of 5 passed; all 33 stopwatch tests in 16 suites passed under 16 spinners."
+    },
+    {
+      "t": "2026-11-09T23:16:52.828Z",
+      "note": "Reader stall: caught once with the diagnostic patch in an UNLOADED full run (run 5): the stalled read answered by itself after 59.7 s; the VTDecoderXPCService serving it was idle with its AVDFrameReceiver waiting on the hardware, and a media thread in the test process sat in RemoteVideoDecoder_DecodeFrameWithOptions (WaitOnConditionTimed). So: a hardware decode that never comes back until the system's own ~60 s timeout. Not reproducible on demand: 4 runs beside a release build, 5 loops of the video suites beside 4 GPU burners and up to 8 concurrent media test processes caught none. Chose to start the picture pass again once on a fresh reader (new decoder session) over raising the 30 s limit to 90 s, because a lost frame costs the person 30 s instead of the export, and a decoder stuck for good is still reported after the second go."
+    },
+    {
+      "t": "2026-11-09T23:16:52.905Z",
+      "note": "Also found and fixed: GuardedReads' 30 s give-up clock ran on DispatchQueue.global, so with 90 global threads blocked an export parked for good (probe: 40/56/62/66/72 blocked read in 0.1 s, 90 parked the whole run). The clock has its own queue; GuardedReadsTests 'A stuck read is still given up on when every ordinary background thread is taken' failed at 10.7 s before, passes in 0.2 s after."
+    },
+    {
+      "t": "2026-11-09T23:16:52.983Z",
+      "note": "left rough: OffThePool runs blocking decodes on the capped global pool too (not the cause here, the stalled process had about 50 threads; a person would only notice if dozens of decodes ran at once). PieceCopyWriterTests failed notCopyable in every process with 8 media test processes at once (artificial; never seen in a full run). Neither filed."
+    },
+    {
+      "t": "2026-11-09T23:16:53.060Z",
+      "note": "Verified on adffb6e37's tree: ten full Scripts/test.sh runs in a row exit 0 (A to D and J beside 'swift build -c release --scratch-path /tmp/photonz-load-build' from scratch, E to I unloaded, 248 to 270 s each). Aurora/Behind Glass frames agreed in all 15 full runs today plus the 12 before (27 in a row, check unchanged). No audit: nothing a person sees changed."
+    },
+    {
+      "t": "2026-11-09T23:17:04.540Z",
+      "note": "Pushed adffb6e37 (with 362de972e before it). Exports: a picture pass whose read stalls on a lost hardware decode (caught answering after 59.7 s) goes again once on a fresh reader; the 30 s give-up clock no longer depends on the global pool (a full pool parked exports for good). Perf gates: a CPU ruler beside the GPU frame ruler, so the chart budget (reproduced failing with all cores busy) and the alignment re-measure scale with a busy CPU. Verified: ten full Scripts/test.sh runs in a row green, five beside a from-scratch release build; Aurora/Behind Glass agreed in 27 full runs in a row."
     }
   ],
-  "started": "2026-11-09T19:24:15.425Z",
-  "walks": []
+  "started": "2026-11-09T21:17:09.715Z",
+  "walks": [],
+  "completed": "2026-11-09T23:17:04.541Z"
 }
