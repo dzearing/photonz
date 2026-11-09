@@ -1,0 +1,27 @@
+{
+  "feature": "A story icon keeps the beats the model planned",
+  "epic": "icon-svg",
+  "summary": "Four places where the app itself undid a planned beat are fixed: smoke left behind now stays on screen, a tick draws in rather than fading in, something that flies out of the frame is seen leaving and coming back, and what drops into a closed outline goes behind it. The bell now reads as a bell that rings twice; the bar of five stories at 7 is still not met (1 of 6 in the best run).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Press Command N, choose Icon, and in Ask type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.", "shot": "2026-11-09-story-beats-trash-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Ask for a bell: make an animated bell icon: the bell swings, rings twice and settles.", "shot": "2026-11-09-story-beats-sheet.png" },
+    { "do": "Ask for a rocket: make an animated rocket icon where the rocket shakes, lifts off and leaves smoke behind. Press Space and watch the smoke after it leaves." },
+    { "do": "Ask for a checkbox: make an animated checkbox icon where the box is ticked and the tick bounces." },
+    { "do": "Copy SVG and open it in a browser: it plays and loops." }
+  ],
+  "evaluate": [
+    "Does the rocket's smoke now stay long enough to read as left behind?",
+    "Does the tick read as drawn in, not faded in?",
+    "Does the bell's swing with two rings read as asked?",
+    "Does the trash read as thrown in and hitting the lid yet? (It still does not on these runs.)"
+  ],
+  "rough": [
+    "The bar is not met: reads as asked on run 20261109-121555 is bell 6.9, checkbox 8.0, heart 5.1, envelope 3.0, rocket 6.3, trash 3.7, one of six at 7 (bar: five of six); run 20261109-115146 had none, with the heart out of its 300 s. Tracked on this task, an-animated-icon-told-as-a-little-story-moves-th, which stays open.",
+    "The envelope varies with the model's drawing: twice this pass it drew the flap shut and folded it open, or kept the letter outside the envelope's group, so the rule that hides what drops in could not apply. Inside this task.",
+    "The trash still fades out as it moves toward the can instead of passing behind its front, and the can is drawn as an open line, so nothing can hide it. Inside this task.",
+    "The walk's trash plays a 1.3 s lap, shorter than the 2 to 4 s the rules ask for a story.",
+    "Walk pictures were taken with the probe behind another app, so blue controls read grey."
+  ]
+}

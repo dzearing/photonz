@@ -239,10 +239,14 @@ public enum AskMotion {
         - What leaves (flies off, is thrown, is sent) goes all the way out of the frame, never stopping half over \
         its edge, seen the whole way: Ease in, speeding up over 300 to 500 ms. Then it comes back in from the other \
         side, or fades in where it rests. Marks that show a part moving (lines behind it, a trail) go with it or \
-        are gone before it is, never left on their own.
+        are gone before it is, never left on their own; what it leaves behind where it was (smoke, dust) grows \
+        there, scale 30 to 100, as it fades over 400 to 800 ms.
         - A story of several beats plays them in the order told, one after another, each long enough to read: \
         200 ms at the least, a journey 300 to 600 ms. What a beat causes starts as that beat ends, at the key where \
-        the two parts touch: that position key says "touches" with the other part's id. The beats fill most of a 2 to 4 second lap with a short rest at its end, never a burst \
+        the two parts touch: that position key says "touches" with the other part's id. A beat the words count \
+        (twice, three times) happens exactly that many times, each seen apart. A bounce is a hop: the part goes up \
+        at least 2 on the grid and comes back down, squashing a little as it lands; a pulse in size alone reads \
+        as a beat, not a bounce. The beats fill most of a 2 to 4 second lap with a short rest at its end, never a burst \
         at the start and a long still wait.
         - Nothing appears out of nowhere. What is thrown, dropped or put in starts away from where it lands (in \
         view, or outside the frame) and travels the whole way there, x and y keyed together along an arc; what goes \
@@ -444,7 +448,7 @@ public enum AskMotion {
     /// the plan each time (the eval, 2026-11-06).
     public static func fitted(_ planned: [AskStep]) -> [AskStep] {
         let (steps, view) = roomFitted(swingsFitted(foldsOpen(foldsLand(landingFolded(planned)))))
-        return view.map { marksGo(comesBack(steps, view: $0), view: $0) } ?? steps
+        return view.map { marksGo(comesBack(edgeHides(steps, view: $0), view: $0), view: $0) } ?? steps
     }
 
     /// Below this opacity a part is out of sight.
@@ -506,7 +510,7 @@ public enum AskMotion {
     /// before a close was slowed, and the flap vanished while still open);
     /// then hinges shared, what comes out put behind, and room made.
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
-        jumpsUnseen(fitted(hidden(hingesShared(foldsOpen(foldsLand(touchesPlaced(landingFolded(steps))))))))
+        jumpsUnseen(fitted(hidden(hingesShared(foldsOpen(foldsLand(touchesPlaced(drawnNotFaded(landingFolded(steps)))))))))
     }
 
     /// `fitted` before its marks go: the steps with the room made, and the
@@ -853,8 +857,12 @@ public enum AskMotion {
     /// had gone (the eval, 2026-11-08), and told so in words, the model did
     /// it again. A mark here is a part hidden at the top of the lap, shown by
     /// its opacity alone, that does not travel itself; its showing is pressed
-    /// into the time before the traveller is wholly out of `view`. Boxes,
-    /// keys and time only: nothing knows what the marks are.
+    /// into the time before the traveller is wholly out of `view`. A mark
+    /// that grows on its own (its scale keyed through 10 or more) is left
+    /// behind on purpose and keeps its keys: the rocket's smoke of
+    /// 2026-11-09, planned from 0.55 to 1.5 s, was pressed into 0.55 to 0.9
+    /// and showed in one frame. Boxes, keys and time only: nothing knows
+    /// what the marks are.
     public static func marksGo(_ steps: [AskStep], view: CGRect) -> [AskStep] {
         guard let index = steps.firstIndex(where: { $0.tool == "add_drawing" }),
               let svg = steps[index].arguments["svg"]?.stringValue,
@@ -869,6 +877,11 @@ public enum AskMotion {
             })
         }
         let moving = keyed.filter { property($0) == MotionProperty.position.rawValue }
+        let grows = Set(keyed.filter { property($0) == MotionProperty.scale.rawValue }.compactMap { step -> String? in
+            let values = AskMotionCheck.timed(step).compactMap { $0.value.doubleValue }
+            guard let least = values.min(), let most = values.max(), most - least >= markGrowth else { return nil }
+            return part(step).map { plain($0) }
+        })
         // Where a part is at a moment, by its own travel.
         func offset(of name: String, at seconds: Double) -> CGVector {
             guard let step = moving.first(where: { part($0).map(plain) == plain(name) }),
@@ -895,7 +908,8 @@ public enum AskMotion {
         guard !gone.isEmpty else { return steps }
         var out = steps
         for (at, step) in steps.enumerated() where step.tool == "set_keys" && property(step) == MotionProperty.opacity.rawValue {
-            guard let name = part(step), var object = step.arguments.objectValue, let box = AskMotionCheck.box(of: name, in: art) else { continue }
+            guard let name = part(step), !grows.contains(plain(name)), var object = step.arguments.objectValue,
+                  let box = AskMotionCheck.box(of: name, in: art) else { continue }
             let own = held(name)
             var keys = AskMotionCheck.timed(step)
             guard keys.count == step.arguments["keys"]?.arrayValue?.count,
@@ -930,6 +944,106 @@ public enum AskMotion {
             out[at] = AskStep(tool: step.tool, arguments: .object(object))
         }
         return out
+    }
+
+    /// How much a mark's scale changes before it counts as growing on its
+    /// own, as smoke or dust does where it was left.
+    static let markGrowth = 10.0
+
+    /// At or over this opacity a part is all there (at or under `unseen` it
+    /// is not seen at all).
+    static let seenFull = 95.0
+
+    /// `steps` with the fade taken off a part that flies out of the frame,
+    /// when every stretch it is unseen holds a moment it is gone from
+    /// `view`: the frame's edge already hides it. The envelope of
+    /// 2026-11-09 faded out as it flew off on Ease in and faded in on its
+    /// way back, so the judge saw it gone in one frame and popping back in;
+    /// the rocket of the same day faded out as it lifted off and the look
+    /// saw no lift-off at all. Its keys stay where they are, every value
+    /// full. A part that rests part seen keeps its look. Boxes, keys and time
+    /// only.
+    public static func edgeHides(_ steps: [AskStep], view: CGRect) -> [AskStep] {
+        guard let index = steps.firstIndex(where: { $0.tool == "add_drawing" }),
+              let svg = steps[index].arguments["svg"]?.stringValue,
+              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true) else { return steps }
+        func property(_ step: AskStep) -> String? { step.arguments["property"]?.stringValue }
+        func part(_ step: AskStep) -> String? { (step.arguments["layer"]?.stringValue).flatMap(partReference).map { plain($0.part) } }
+        let moving = steps.filter { $0.tool == "set_keys" && property($0) == MotionProperty.position.rawValue }
+        var out = steps
+        for (at, step) in steps.enumerated() where step.tool == "set_keys" && property(step) == MotionProperty.opacity.rawValue {
+            guard let name = part(step), let travel = moving.last(where: { part($0) == name }),
+                  let box = AskMotionCheck.box(of: name, in: art), box.width * box.height > 0,
+                  var object = step.arguments.objectValue, let list = step.arguments["keys"]?.arrayValue else { continue }
+            let keys = AskMotionCheck.timed(step)
+            let values = keys.compactMap { $0.value.doubleValue }
+            guard values.count == keys.count, values.count == list.count, let end = keys.last?.seconds, let full = values.max(),
+                  full >= seenFull, values.allSatisfy({ $0 <= unseen || $0 >= seenFull }),
+                  values.contains(where: { $0 <= unseen }) else { continue }
+            func gone(_ seconds: Double) -> Bool {
+                guard let value = AskMotionCheck.value(of: travel, at: seconds),
+                      let x = value["x"]?.doubleValue, let y = value["y"]?.doubleValue else { return false }
+                return share(of: box.offsetBy(dx: x, dy: y), in: view) < goneShare
+            }
+            // Each stretch it is unseen, and whether it was gone in it.
+            var stretches: [Bool] = []
+            var inStretch = false
+            var moment = 0.0
+            while moment <= end + 0.0005 {
+                if (AskMotionCheck.value(of: step, at: moment)?.doubleValue ?? 100) <= unseen {
+                    if !inStretch { stretches.append(false); inStretch = true }
+                    if gone(moment) { stretches[stretches.count - 1] = true }
+                } else {
+                    inStretch = false
+                }
+                moment += leavingStep
+            }
+            guard !stretches.isEmpty, stretches.allSatisfy({ $0 }) else { continue }
+            object["keys"] = .array(list.map { key in
+                var json = key.objectValue ?? [:]
+                json["value"] = .number(full)
+                return .object(json)
+            })
+            out[at] = AskStep(tool: step.tool, arguments: .object(object))
+        }
+        return out
+    }
+
+    /// `steps` with a line that draws itself inked from the moment it starts
+    /// to draw, rather than faded in over the same beat: drawn and faded at
+    /// once, the tick of 2026-11-09 read as "a small grey ghost scaling in
+    /// instead of drawing in as a stroke", nine looks of nine. Only a rise in
+    /// opacity that starts while nothing of the line is drawn and ends once
+    /// it is is moved to the start of that rise; until then nothing shows
+    /// whatever its opacity. Keys and time only.
+    public static func drawnNotFaded(_ steps: [AskStep]) -> [AskStep] {
+        func property(_ step: AskStep) -> String? { step.arguments["property"]?.stringValue }
+        let trims = steps.filter { $0.tool == "set_keys" && property($0) == MotionProperty.trimEnd.rawValue }
+        guard !trims.isEmpty else { return steps }
+        return steps.map { step in
+            guard step.tool == "set_keys", property(step) == MotionProperty.opacity.rawValue,
+                  let trim = trims.last(where: { $0.arguments["layer"] == step.arguments["layer"] }),
+                  var object = step.arguments.objectValue, var list = step.arguments["keys"]?.arrayValue, list.count > 1 else { return step }
+            let order = list.indices.sorted { (list[$0]["seconds"]?.doubleValue ?? 0) < (list[$1]["seconds"]?.doubleValue ?? 0) }
+            func seconds(_ at: Int) -> Double { list[order[at]]["seconds"]?.doubleValue ?? 0 }
+            func value(_ at: Int) -> Double? { list[order[at]]["value"]?.doubleValue }
+            func drawn(_ moment: Double) -> Double { AskMotionCheck.value(of: trim, at: moment)?.doubleValue ?? 100 }
+            var changed = false
+            for at in 0..<(order.count - 1) {
+                guard let low = value(at), let high = value(at + 1), low <= unseen, high > unseen,
+                      list[order[at]]["curve"]?.stringValue?.caseInsensitiveCompare(AgentKeyCurve.hold) != .orderedSame else { continue }
+                let from = at > 0 ? seconds(at - 1) : seconds(at)
+                let undrawn = stride(from: from, through: seconds(at), by: leavingStep).allSatisfy { drawn($0) <= unseen }
+                    && drawn(seconds(at)) <= unseen
+                guard undrawn, drawn(seconds(at + 1)) > unseen, var key = list[order[at]].objectValue else { continue }
+                key["value"] = .number(high)
+                list[order[at]] = .object(key)
+                changed = true
+            }
+            guard changed else { return step }
+            object["keys"] = .array(list)
+            return AskStep(tool: step.tool, arguments: .object(object))
+        }
     }
 
     /// The longest the frame may stand empty while what left it is away.
@@ -1222,9 +1336,17 @@ public enum AskMotion {
             // Drawn before it: only what really comes out of the outline, and
             // one move a plan, since the parts' places are read from before it.
             guard !moved, let reach = AskMotionCheck.reach(of: keyed, in: art, only: name) else { continue }
+            // Where it is at each of its position keys: what drops in from
+            // outside the outline goes in just as what comes out of it does
+            // (the eval's letter of 2026-11-09, drawn above the envelope).
+            let placed = keyed.filter { layer($0) == name && $0.arguments["property"]?.stringValue == MotionProperty.position.rawValue }
+                .flatMap { AskMotionCheck.timed($0) }.compactMap { key -> CGRect? in
+                    guard let x = key.value["x"]?.doubleValue, let y = key.value["y"]?.doubleValue else { return nil }
+                    return box.offsetBy(dx: x, dy: y)
+                }
             let before = art.parts.indices.filter { at in
                 guard at < first, !holds(art.parts[at], name), let room = outline(art.parts[at]) else { return false }
-                return room.contains(box) && !room.contains(reach)
+                return (room.contains(box) || placed.contains { room.contains($0) }) && !room.contains(reach)
             }
             guard let smallest = before.min(by: { area(art.parts[$0]) < area(art.parts[$1]) }),
                   let cover = art.parts[smallest].name,
