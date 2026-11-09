@@ -520,8 +520,64 @@ public enum AskMotion {
     /// a flap's swing from 180 to 90 and a letter's rise from 3 to 1, a round of
     /// the plan each time (the eval, 2026-11-06).
     public static func fitted(_ planned: [AskStep]) -> [AskStep] {
-        let (steps, view) = roomFitted(swingsFitted(foldsLand(landingFolded(planned))))
+        let (steps, view) = roomFitted(swingsFitted(foldsOpen(foldsLand(landingFolded(planned)))))
         return view.map { marksGo(comesBack(steps, view: $0), view: $0) } ?? steps
+    }
+
+    /// Below this opacity a part is out of sight.
+    static let unseen = 5.0
+
+    /// `steps` with every jump (a Hold into a different value) that happens
+    /// while its part is seen moved to the last moment before it that the
+    /// part was out of sight. The plane of 2026-11-09 was gone at 1.1 s,
+    /// faded back in from 1.3 s still tipped -15 degrees and snapped level at
+    /// the lap's end, "visibly snaps when the loop restarts" in four looks of
+    /// four. Only a part with its own opacity keys, and only a jump it has an
+    /// unseen moment before; time and values only.
+    public static func jumpsUnseen(_ steps: [AskStep]) -> [AskStep] {
+        func layer(_ step: AskStep) -> String? { step.arguments["layer"]?.stringValue }
+        let fades = Dictionary(steps.filter { $0.tool == "set_keys" && $0.arguments["property"]?.stringValue == MotionProperty.opacity.rawValue }
+            .compactMap { step in layer(step).map { ($0, step) } }, uniquingKeysWith: { _, last in last })
+        return steps.map { step in
+            guard step.tool == "set_keys", let name = layer(step), let fade = fades[name],
+                  step.arguments["property"]?.stringValue != MotionProperty.opacity.rawValue,
+                  var object = step.arguments.objectValue else { return step }
+            func seen(_ at: Double) -> Bool { (AskMotionCheck.value(of: fade, at: at)?.doubleValue ?? 100) > unseen }
+            var keys = AskMotionCheck.timed(step)
+            guard keys.count == step.arguments["keys"]?.arrayValue?.count else { return step }
+            var changed = false
+            var index = 0
+            while index < keys.count - 1 {
+                defer { index += 1 }
+                let (from, to) = (keys[index], keys[index + 1])
+                guard from.curve?.caseInsensitiveCompare(AgentKeyCurve.hold) == .orderedSame, from.value != to.value,
+                      seen(to.seconds) else { continue }
+                // The last unseen moment between them, walking back from the jump.
+                var moment = to.seconds - leavingStep
+                while moment > from.seconds + 0.0005, seen(moment) { moment -= leavingStep }
+                guard moment > from.seconds + 0.0005 else { continue }
+                let at = Double(rounded(CGFloat(moment)))
+                keys.insert((at, to.value, AgentKeyCurve.hold), at: index + 1)
+                changed = true
+                index += 1
+            }
+            guard changed else { return step }
+            object["keys"] = .array(keys.map { key in
+                var json: [String: AgentJSON] = ["seconds": .number(key.seconds), "value": key.value]
+                if let curve = key.curve { json["curve"] = .string(curve) }
+                return .object(json)
+            })
+            return AskStep(tool: step.tool, arguments: .object(object))
+        }
+    }
+
+    /// A moving icon's plan as it lands: folds timed first, since a fold's
+    /// back face shows from the moment it turns edge on, read off its keys
+    /// as they will play (on 2026-11-09 the back face was timed off the keys
+    /// before a close was slowed, and the flap vanished while still open);
+    /// then hinges shared, what comes out put behind, and room made.
+    public static func planned(_ steps: [AskStep]) -> [AskStep] {
+        jumpsUnseen(fitted(hidden(hingesShared(foldsOpen(foldsLand(landingFolded(steps)))))))
     }
 
     /// `fitted` before its marks go: the steps with the room made, and the
@@ -532,14 +588,17 @@ public enum AskMotion {
               case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true), let view = art.viewBox,
               var object = steps[index].arguments.objectValue else { return (steps, nil) }
         let slack = AskMotionCheck.edgeSlack
-        // At rest it keeps clear of the edge, as an icon on its grid does.
-        let still = art.parts.map { SVGArtwork.shapeBounds($0.shape).insetBy(dx: -$0.strokeWidth / 2, dy: -$0.strokeWidth / 2) }
+        let reach = AskMotionCheck.reach(of: steps.filter { $0.tool == "set_keys" }, in: art)
+        // At rest it keeps clear of the edge, as an icon on its grid does,
+        // and so does what its keys do inside the frame (a flap folded open
+        // put its tip's line on the top edge, the eval, 2026-11-09).
+        var still = art.parts.map { SVGArtwork.shapeBounds($0.shape).insetBy(dx: -$0.strokeWidth / 2, dy: -$0.strokeWidth / 2) }
             .reduce(CGRect.null) { $0.union($1) }
+        if !reach.isNull, view.insetBy(dx: -slack, dy: -slack).contains(reach) { still = still.union(reach) }
         let farthest = still.isNull ? 0 : [view.midX - still.minX, still.maxX - view.midX,
                                             view.midY - still.minY, still.maxY - view.midY].max() ?? 0
         let clear = view.width / 2 - farthest >= restMargin * view.width * 0.75 ? view.width
             : min(max(view.width, 2 * farthest + 2 * restMargin * view.width), view.width * mostRest)
-        let reach = AskMotionCheck.reach(of: steps.filter { $0.tool == "set_keys" }, in: art)
         func room(holding reach: CGRect) -> CGRect {
             let needed = reach.isNull ? 0 : [view.midX - reach.minX, reach.maxX - view.midX, view.midY - reach.minY, reach.maxY - view.midY].max() ?? 0
             let side = max(clear, min((needed + 2 * slack) * 2, view.width * mostRoom))
@@ -571,9 +630,11 @@ public enum AskMotion {
     /// as an icon is, it is the card at 94 percent or more of itself.
     static let foldNearRest = 20.0
     /// The least a fold takes to land so the eye follows it home, and what it
-    /// is given when it can borrow the stillness after it.
-    static let foldLandingLeast = 0.3
-    static let foldLanding = 0.4
+    /// is given when it can borrow the stillness after it. 300 and 400 ms
+    /// until 2026-11-09, when a close of 400 ms still read as "snaps shut in
+    /// one frame" on a sheet of frames 160 ms apart, nine looks of nine.
+    static let foldLandingLeast = 0.45
+    static let foldLanding = 0.55
     /// Curves that arrive gently; any other is swapped for Ease in out on a
     /// fold's way home.
     static let landingCurves: Set<String> = ["ease out", "ease in out", "ease in out sine", "ease out quint",
@@ -586,8 +647,8 @@ public enum AskMotion {
     /// tipped 8 degrees either way looks the same straight on (the eval,
     /// 2026-11-08). So on the way home from an opening of 90 degrees or more,
     /// keys within 20 degrees of rest before it get there go, the run comes
-    /// home on a curve that slows as it lands, and a landing under 300 ms
-    /// takes up to 400 ms from the stillness after it. Geometry and time
+    /// home on a curve that slows as it lands, and a landing under 450 ms
+    /// takes up to 550 ms from the stillness after it. Geometry and time
     /// only: nothing knows what folds.
     public static func foldsLand(_ steps: [AskStep]) -> [AskStep] {
         let folds: Set<String> = [MotionProperty.rotationX.rawValue, MotionProperty.rotationY.rawValue]
@@ -632,6 +693,77 @@ public enum AskMotion {
                 } else {
                     keys[home].seconds = Double(rounded(CGFloat(landed)))
                     keys[home].json["seconds"] = .number(keys[home].seconds)
+                }
+                changed = true
+            }
+            guard changed else { return step }
+            object["keys"] = .array(keys.map { .object($0.json) })
+            return AskStep(tool: step.tool, arguments: .object(object))
+        }
+    }
+
+    /// The least a fold takes to open so the eye sees it turn, and what it is
+    /// given when it can borrow the stillness before it.
+    static let foldOpeningLeast = 0.45
+    static let foldOpening = 0.55
+
+    /// `steps` with every fold that opens 90 degrees or more from rest seen
+    /// doing it. The envelope of 2026-11-09 nudged its flap 10 degrees and
+    /// then opened it the rest of the way in 200 ms: frames 160 ms apart showed
+    /// it shut and then open, "snaps open" in nine looks of nine. So on the
+    /// way out, keys within 20 degrees of rest after it leaves go (a card
+    /// tipped that little looks flat straight on), an opening under 450 ms
+    /// starts earlier, out of the stillness before it, to take up to 550 ms
+    /// (and, short of that, ends later, out of the stillness after), and its curve, if it arrives hard or jumps, becomes Ease in out. The
+    /// mirror of `foldsLand`; geometry and time only.
+    public static func foldsOpen(_ steps: [AskStep]) -> [AskStep] {
+        let folds: Set<String> = [MotionProperty.rotationX.rawValue, MotionProperty.rotationY.rawValue]
+        return steps.map { step in
+            guard step.tool == "set_keys", folds.contains(step.arguments["property"]?.stringValue ?? ""),
+                  var object = step.arguments.objectValue else { return step }
+            var keys = (step.arguments["keys"]?.arrayValue ?? []).compactMap { key -> (seconds: Double, value: Double, json: [String: AgentJSON])? in
+                guard let json = key.objectValue, let seconds = key["seconds"]?.doubleValue,
+                      let value = key["value"]?.doubleValue else { return nil }
+                return (seconds, value, json)
+            }.sorted { $0.seconds < $1.seconds }
+            guard keys.count == step.arguments["keys"]?.arrayValue?.count, let rest = keys.first?.value else { return step }
+            func atRest(_ value: Double) -> Bool { abs(value - rest) < 0.5 }
+            var changed = false
+            var open = 1
+            while open < keys.count {
+                defer { open += 1 }
+                guard abs(keys[open].value - rest) >= foldOpen else { continue }
+                // Back to where it left rest, past any nudge too small to see.
+                var start = open - 1
+                while start > 0, !atRest(keys[start].value), abs(keys[start].value - rest) <= foldNearRest { start -= 1 }
+                guard atRest(keys[start].value), keys[open].seconds - keys[start].seconds < foldOpeningLeast - 0.0005 else { continue }
+                if open > start + 1 {
+                    keys.removeSubrange((start + 1)..<open)
+                    open = start + 1
+                }
+                let from = max(start > 0 && atRest(keys[start - 1].value) ? keys[start - 1].seconds : keys[start].seconds,
+                               keys[open].seconds - foldOpening)
+                if start > 0, atRest(keys[start - 1].value), from <= keys[start - 1].seconds + 0.0005 {
+                    keys.remove(at: start)
+                    start -= 1
+                    open -= 1
+                } else {
+                    keys[start].seconds = Double(rounded(CGFloat(from)))
+                    keys[start].json["seconds"] = .number(keys[start].seconds)
+                }
+                // Still too quick, it takes the rest from the stillness after it.
+                if keys[open].seconds - keys[start].seconds < foldOpeningLeast - 0.0005, open + 1 < keys.count,
+                   abs(keys[open + 1].value - keys[open].value) < 0.5 {
+                    let opened = min(keys[start].seconds + foldOpening, keys[open + 1].seconds)
+                    if opened >= keys[open + 1].seconds - 0.0005 {
+                        keys.remove(at: open)
+                    } else {
+                        keys[open].seconds = Double(rounded(CGFloat(opened)))
+                        keys[open].json["seconds"] = .number(keys[open].seconds)
+                    }
+                }
+                if !landingCurves.contains((keys[start].json["curve"]?.stringValue ?? "").lowercased()) {
+                    keys[start].json["curve"] = .string(EasingCurve.easeInOut.title)
                 }
                 changed = true
             }
@@ -956,45 +1088,383 @@ public enum AskMotion {
         }.map(\.element)
     }
 
+    // MARK: A fold shares its hinge
+
+    /// `steps` with a fold drawn a line off the edge it is hinged on moved
+    /// onto that edge, and its own stroke along the hinge left out, since the
+    /// outline already draws it. On 2026-11-09 the eval's envelope drew its
+    /// flap's top one unit above its body's, both stroked: shut it read as
+    /// "an odd thick top bar" and open as a closed triangle on a box, "a
+    /// house", in nine looks of nine. Only a straight-sided outline folding
+    /// over one of its own edges, within a stroke of a closed outline's same
+    /// edge; a hinge said on the grid moves with it. Geometry only.
+    public static func hingesShared(_ steps: [AskStep]) -> [AskStep] {
+        guard let index = steps.firstIndex(where: { $0.tool == "add_drawing" }),
+              var svg = steps[index].arguments["svg"]?.stringValue,
+              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true),
+              var object = steps[index].arguments.objectValue else { return steps }
+        var out = steps
+        var changed = false
+        for (at, step) in steps.enumerated() where step.tool == "set_keys" {
+            let property = step.arguments["property"]?.stringValue
+            guard property == MotionProperty.rotationX.rawValue || property == MotionProperty.rotationY.rawValue,
+                  let name = (step.arguments["layer"]?.stringValue).flatMap(partReference).map({ plain($0.part) }) else { continue }
+            let level = property == MotionProperty.rotationX.rawValue
+            let own = art.parts.filter { $0.name.map { plain($0) == name } ?? false || $0.groups.contains { plain($0) == name } }
+            guard own.count == 1, let part = own.first, plain(part.name ?? "") == name,
+                  case .path(let outline) = part.shape, outline.rings.count == 1,
+                  outline.rings[0].allSatisfy({ $0.handleIn == nil && $0.handleOut == nil }),
+                  let px = step.arguments["pivot"]?["x"]?.doubleValue, let py = step.arguments["pivot"]?["y"]?.doubleValue else { continue }
+            let box = SVGArtwork.shapeBounds(part.shape)
+            let fraction = isFraction(px, py)
+            let pivot = fraction ? CGPoint(x: box.minX + box.width * px, y: box.minY + box.height * py) : CGPoint(x: px, y: py)
+            // Which of its own edges it folds over, if any.
+            let along = level ? pivot.y : pivot.x
+            let (low, high) = level ? (box.minY, box.maxY) : (box.minX, box.maxX)
+            let atLow: Bool
+            if abs(along - low) <= 0.5 { atLow = true } else if abs(along - high) <= 0.5 { atLow = false } else { continue }
+            let hinge = atLow ? low : high
+            let (spanLow, spanHigh) = level ? (box.minX, box.maxX) : (box.minY, box.maxY)
+            // The closed outline whose same edge is within a stroke of it.
+            let edges: [CGFloat] = art.parts.compactMap { other in
+                guard other != part, !(other.name.map { plain($0) == name } ?? false), other.strokeWidth > 0 else { return nil }
+                switch other.shape {
+                case .rect: break
+                case .path(let ring) where ring.closed: break
+                default: return nil
+                }
+                let room = SVGArtwork.shapeBounds(other.shape)
+                let slack = max(part.strokeWidth, other.strokeWidth)
+                let edge = level ? (atLow ? room.minY : room.maxY) : (atLow ? room.minX : room.maxX)
+                let (roomLow, roomHigh) = level ? (room.minX, room.maxX) : (room.minY, room.maxY)
+                guard abs(edge - hinge) <= slack, spanLow >= roomLow - slack, spanHigh <= roomHigh + slack else { return nil }
+                return edge
+            }
+            guard let edge = edges.min(by: { abs($0 - hinge) < abs($1 - hinge) }) else { continue }
+            let shift = edge - hinge
+            guard let made = hingeOpened(name, level: level, atLow: atLow, size: box.size, shift: shift, in: svg) else { continue }
+            svg = made
+            changed = true
+            if !fraction, shift != 0, var arguments = step.arguments.objectValue {
+                arguments["pivot"] = .object(["x": .number(level ? px : rounded(CGFloat(px) + shift)),
+                                              "y": .number(level ? rounded(CGFloat(py) + shift) : py)])
+                out[at] = AskStep(tool: step.tool, arguments: .object(arguments))
+            }
+        }
+        guard changed else { return steps }
+        object["svg"] = .string(svg)
+        out[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
+        return out
+    }
+
+    /// `svg` with the path called `name`, a polygon of straight sides `size`
+    /// big on the grid, opened along its edge on the hinge's side and moved
+    /// `shift` across it. Nil unless its own `d` is plain absolute M and L and
+    /// nothing above it scales it.
+    static func hingeOpened(_ name: String, level: Bool, atLow: Bool, size: CGSize, shift: CGFloat, in svg: String) -> String? {
+        guard let whole = elementRange(name, in: svg) else { return nil }
+        let element = String(svg[whole])
+        guard element.hasPrefix("<path"), let dRange = element.range(of: #"\sd="([^"]*)""#, options: .regularExpression) else { return nil }
+        let d = String(element[dRange]).drop { $0 != "\"" }.dropFirst().dropLast()
+        var points: [CGPoint] = []
+        var numbers: [CGFloat] = []
+        var closed = false
+        var first = true
+        let tokens = d.matches(of: /[A-Za-z]|-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/).map { String($0.output) }
+        for token in tokens {
+            if let letter = token.first, letter.isLetter {
+                guard numbers.isEmpty, !closed else { return nil }
+                switch letter {
+                case "M": guard first else { return nil }
+                case "L": guard !first else { return nil }
+                case "Z", "z": closed = true
+                default: return nil
+                }
+                first = false
+                continue
+            }
+            guard let value = Double(token) else { return nil }
+            numbers.append(CGFloat(value))
+            if numbers.count == 2 { points.append(CGPoint(x: numbers[0], y: numbers[1])); numbers = [] }
+        }
+        guard numbers.isEmpty, points.count >= 3 else { return nil }
+        if let last = points.last, let start = points.first, hypot(last.x - start.x, last.y - start.y) < 0.001 { points.removeLast() }
+        guard points.count >= 3 else { return nil }
+        let xs = points.map(\.x), ys = points.map(\.y)
+        guard let minX = xs.min(), let maxX = xs.max(), let minY = ys.min(), let maxY = ys.max(),
+              abs((maxX - minX) - size.width) < 0.01, abs((maxY - minY) - size.height) < 0.01 else { return nil }
+        let side = level ? (atLow ? minY : maxY) : (atLow ? minX : maxX)
+        func on(_ point: CGPoint) -> Bool { abs((level ? point.y : point.x) - side) < 0.01 }
+        let count = points.count
+        guard let cut = (0..<count).first(where: { on(points[$0]) && on(points[($0 + 1) % count]) }) else { return nil }
+        let ring = (1...count).map { points[(cut + $0) % count] }
+        func said(_ value: CGFloat) -> String {
+            let number = rounded(value)
+            return number == number.rounded() ? String(Int(number)) : String(number)
+        }
+        let opened = "M" + ring.map { "\(said($0.x)) \(said($0.y))" }.joined(separator: " L")
+        // Its ends now sit on the outline's corners, where a round or square
+        // end pokes half a line past them (the judge, 2026-11-09: "round end
+        // caps poke out at the corners").
+        var made = paint([("stroke-linecap", "butt")], onElement: element.replacingCharacters(in: dRange, with: " d=\"\(opened)\""))
+        if shift != 0 {
+            let move = level ? "translate(0 \(said(shift)))" : "translate(\(said(shift)) 0)"
+            if let transform = made.range(of: #"\stransform="([^"]*)""#, options: .regularExpression) {
+                let existing = String(made[transform]).drop { $0 != "\"" }.dropFirst().dropLast()
+                made.replaceSubrange(transform, with: " transform=\"\(move) \(existing)\"")
+            } else if let space = made.firstIndex(of: " ") {
+                made.insert(contentsOf: " transform=\"\(move)\"", at: space)
+            }
+        }
+        var text = svg
+        text.replaceSubrange(whole, with: made)
+        return text
+    }
+
     // MARK: What comes out of something
 
-    /// `steps` with what travels out from inside a closed outline drawn
-    /// after it hidden at rest: that outline, the smallest that holds it, is
-    /// filled white, so the part is behind it until it comes out. Told to do
-    /// this itself, the model filled the part and the cover over it and left
-    /// the outline it sat in empty, so the part showed through (the eval,
-    /// 2026-11-08). Order and boxes only: a part drawn in front of the
-    /// outline, or one that never travels, was meant to be seen.
+    /// `steps` with what travels out from inside a closed outline hidden at
+    /// rest behind that outline, the smallest that holds it, which is filled
+    /// white, so the part is behind it until it comes out. Told to do this
+    /// itself, the model filled the part and the cover over it and left the
+    /// outline it sat in empty, so the part showed through (the eval,
+    /// 2026-11-08).
+    ///
+    /// An outline drawn BEFORE the part is the same picture told the other
+    /// way round: the part goes to just behind the outline, but only when it
+    /// really comes out of it (one that moves about inside was meant to be
+    /// seen), when nothing else drawn before the outline sits inside it (the
+    /// white would bury it) and when the move leaves it in the same groups.
+    /// Then a part of that outline that folds and is filled white stops
+    /// being filled: shut, the white outline behind it hides what is inside
+    /// anyway, and folded open it would cover what came out. Three envelopes
+    /// out of three did this on 2026-11-09: the outline first and empty, the
+    /// part over it showing through the closed front.
+    /// Order and boxes only: nothing here knows what anything is.
     public static func hidden(_ steps: [AskStep]) -> [AskStep] {
         guard let index = steps.firstIndex(where: { $0.tool == "add_drawing" }),
               var svg = steps[index].arguments["svg"]?.stringValue,
               case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true),
               var object = steps[index].arguments.objectValue else { return steps }
-        let travelling = Set(steps.filter { $0.tool == "set_keys" && $0.arguments["property"]?.stringValue == MotionProperty.position.rawValue }
-            .compactMap { ($0.arguments["layer"]?.stringValue).flatMap(partReference).map { plain($0.part) } })
+        func layer(_ step: AskStep) -> String? { (step.arguments["layer"]?.stringValue).flatMap(partReference).map { plain($0.part) } }
+        let keyed = steps.filter { $0.tool == "set_keys" }
+        let travelling = Set(keyed.filter { $0.arguments["property"]?.stringValue == MotionProperty.position.rawValue }.compactMap(layer))
+        let folding = Set(keyed.filter { [MotionProperty.rotationX.rawValue, MotionProperty.rotationY.rawValue]
+            .contains($0.arguments["property"]?.stringValue ?? "") }.compactMap(layer))
         func holds(_ part: SVGArtwork.Part, _ name: String) -> Bool {
             part.name.map { plain($0) == name } ?? false || part.groups.contains { plain($0) == name }
         }
-        var filled: Set<String> = []
-        for name in travelling {
-            let own = art.parts.indices.filter { holds(art.parts[$0], name) }
-            guard let last = own.last, let box = AskMotionCheck.box(of: name, in: art) else { continue }
-            let covers = art.parts.indices.filter { at in
-                let part = art.parts[at]
-                guard at > last, part.fill == nil, let cover = part.name, !holds(part, name) else { return false }
-                if case .path(let outline) = part.shape, !outline.closed { return false }
-                return SVGArtwork.shapeBounds(part.shape).insetBy(dx: -part.strokeWidth / 2, dy: -part.strokeWidth / 2)
-                    .insetBy(dx: -AskMotionCheck.edgeSlack, dy: -AskMotionCheck.edgeSlack).contains(box) && !cover.isEmpty
-            }
-            let smallest = covers.min { area(art.parts[$0]) < area(art.parts[$1]) }
-            if let smallest, let cover = art.parts[smallest].name { filled.insert(plain(cover)) }
+        func outline(_ part: SVGArtwork.Part) -> CGRect? {
+            guard part.fill == nil, !(part.name ?? "").isEmpty else { return nil }
+            if case .path(let path) = part.shape, !path.closed { return nil }
+            return SVGArtwork.shapeBounds(part.shape).insetBy(dx: -part.strokeWidth / 2, dy: -part.strokeWidth / 2)
+                .insetBy(dx: -AskMotionCheck.edgeSlack, dy: -AskMotionCheck.edgeSlack)
         }
-        guard !filled.isEmpty else { return steps }
+        var filled: Set<String> = []
+        var moved = false
+        var lined: [(part: String, stroke: String, width: CGFloat)] = []
+        var faced: [(part: String, room: CGRect)] = []
+        // Solid ink coming out of a drawing made of lines reads as a hole,
+        // not a thing (the judge, nine looks of nine on 2026-11-09: "a solid
+        // black block that clashes with the outline style"). It comes out in
+        // the outline's own line, white inside, when every other part is line.
+        func inLine(_ name: String, from cover: SVGArtwork.Part) {
+            guard let ink = cover.stroke, cover.strokeWidth > 0,
+                  art.parts.allSatisfy({ holds($0, name) || $0.fill == nil || isWhite($0.fill) }) else { return }
+            for part in art.parts where holds(part, name) {
+                guard let own = part.name, part.fill?.lowercased() == ink.lowercased(),
+                      part.stroke == nil || part.stroke?.lowercased() == ink.lowercased() else { continue }
+                lined.append((plain(own), ink, cover.strokeWidth))
+            }
+        }
+        for name in travelling.sorted() {
+            let own = art.parts.indices.filter { holds(art.parts[$0], name) }
+            guard let first = own.first, let last = own.last, let box = AskMotionCheck.box(of: name, in: art) else { continue }
+            let after = art.parts.indices.filter { at in
+                at > last && !holds(art.parts[at], name) && outline(art.parts[at]).map { $0.contains(box) } ?? false
+            }
+            if let smallest = after.min(by: { area(art.parts[$0]) < area(art.parts[$1]) }), let cover = art.parts[smallest].name,
+               let room = outline(art.parts[smallest]) {
+                filled.insert(plain(cover))
+                inLine(name, from: art.parts[smallest])
+                faced.append((name, room))
+                continue
+            }
+            // Drawn before it: only what really comes out of the outline, and
+            // one move a plan, since the parts' places are read from before it.
+            guard !moved, let reach = AskMotionCheck.reach(of: keyed, in: art, only: name) else { continue }
+            let before = art.parts.indices.filter { at in
+                guard at < first, !holds(art.parts[at], name), let room = outline(art.parts[at]) else { return false }
+                return room.contains(box) && !room.contains(reach)
+            }
+            guard let smallest = before.min(by: { area(art.parts[$0]) < area(art.parts[$1]) }),
+                  let cover = art.parts[smallest].name,
+                  let room = outline(art.parts[smallest]) else { continue }
+            let buried = art.parts.indices.contains { at in
+                at < smallest && !holds(art.parts[at], name) && room.intersects(Self.box(of: art.parts[at]))
+            }
+            guard !buried, let shifted = svgMoving(name, before: plain(cover), in: svg),
+                  case .success(let after) = SVGArtwork.parse(shifted, keepingGroups: true),
+                  after.parts.filter({ holds($0, name) }).map(\.groups) == own.map({ art.parts[$0].groups }) else { continue }
+            svg = shifted
+            moved = true
+            filled.insert(plain(cover))
+            inLine(name, from: art.parts[smallest])
+            // A white fold of the outline, shut inside it, would cover what came out once open.
+            for at in art.parts.indices where at > smallest {
+                let part = art.parts[at]
+                guard let fold = part.name, folding.contains(plain(fold)) || part.groups.contains(where: { folding.contains(plain($0)) }),
+                      isWhite(part.fill), room.contains(Self.box(of: part)) else { continue }
+                svg = fill("none", on: plain(fold), in: svg)
+            }
+            faced.append((name, room))
+        }
+        // A fold of the outline drawn over what comes out lies behind it once
+        // turned past edge on.
+        var added: [AskStep] = []
+        for (name, room) in faced {
+            for part in art.parts {
+                guard let fold = part.name.map(plain), folding.contains(fold), !holds(part, name),
+                      room.contains(Self.box(of: part)),
+                      let at = art.parts.firstIndex(of: part), let from = art.parts.firstIndex(where: { holds($0, name) }), at > from,
+                      let turn = keyed.last(where: { layer($0) == fold && [MotionProperty.rotationX.rawValue, MotionProperty.rotationY.rawValue]
+                          .contains($0.arguments["property"]?.stringValue ?? "") }),
+                      !keyed.contains(where: { layer($0) == fold && $0.arguments["property"]?.stringValue == MotionProperty.opacity.rawValue }),
+                      let reference = (turn.arguments["layer"]?.stringValue).flatMap(partReference),
+                      let faces = backFace(of: fold, behind: name, groups: part.groups, in: svg) else { continue }
+                let sides = sidesShown(turn)
+                guard sides.count > 1 else { continue }
+                svg = faces.svg
+                let back = "$\(reference.step)/\(faces.id)"
+                var turned = turn.arguments.objectValue ?? [:]
+                turned["layer"] = .string(back)
+                added.append(AskStep(tool: "set_keys", arguments: .object(turned)))
+                for (layerName, front) in [(turn.arguments["layer"]?.stringValue ?? "", true), (back, false)] {
+                    let keys: [AgentJSON] = sides.enumerated().map { index, side in
+                        var key: [String: AgentJSON] = ["seconds": .number(side.seconds), "value": .number(side.front == front ? 100 : 0)]
+                        if index < sides.count - 1 { key["curve"] = .string(AgentKeyCurve.hold) }
+                        return .object(key)
+                    }
+                    added.append(AskStep(tool: "set_keys", arguments: .object(["layer": .string(layerName),
+                                                                               "property": .string(MotionProperty.opacity.rawValue),
+                                                                               "keys": .array(keys)])))
+                }
+                moved = true
+            }
+        }
+        guard !filled.isEmpty || moved else { return steps }
         for cover in filled { svg = whiteFill(on: cover, in: svg) }
+        for line in lined {
+            svg = paint([("fill", "#FFFFFF"), ("stroke", line.stroke), ("stroke-width", "\(rounded(line.width))"),
+                         ("stroke-linejoin", "round")], on: line.part, in: svg)
+        }
         object["svg"] = .string(svg)
         var out = steps
         out[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
-        return out
+        return out + added
+    }
+
+    /// `svg` with a copy of the part called `fold`, its id ending "-back",
+    /// put just before the part called `name`, and that id; nil when either
+    /// is not there or the copy would land in other groups than `groups`.
+    static func backFace(of fold: String, behind name: String, groups: [String], in svg: String) -> (svg: String, id: String)? {
+        guard let range = elementRange(fold, in: svg) else { return nil }
+        let element = String(svg[range])
+        guard let idRange = element.range(of: #"\bid="([^"]*)""#, options: .regularExpression) else { return nil }
+        let id = String(element[idRange]).dropFirst(4).dropLast() + "-back"
+        guard !svg.contains("id=\"\(id)\""), let target = elementRange(name, in: svg) else { return nil }
+        var copy = element
+        copy.replaceSubrange(idRange, with: "id=\"\(id)\"")
+        var text = svg
+        text.insert(contentsOf: copy, at: target.lowerBound)
+        guard case .success(let art) = SVGArtwork.parse(text, keepingGroups: true),
+              art.parts.first(where: { $0.name.map(plain) == plain(String(id)) })?.groups == groups else { return nil }
+        return (text, String(id))
+    }
+
+    /// Which face of a fold shows, front or back, from its first key to its
+    /// last: where it starts, then each moment it turns edge on.
+    static func sidesShown(_ turn: AskStep) -> [(seconds: Double, front: Bool)] {
+        let keys = AskMotionCheck.timed(turn).compactMap { key in key.value.doubleValue.map { (key.seconds, $0, key.curve) } }
+        guard let first = keys.first, let last = keys.last else { return [] }
+        func front(_ degrees: Double) -> Bool { cos(degrees * .pi / 180) >= 0 }
+        var sides = [(seconds: rounded(CGFloat(first.0)), front: front(first.1))]
+        for (one, next) in zip(keys, keys.dropFirst()) {
+            let span = next.0 - one.0
+            guard span > 0 else { continue }
+            let hold = one.2?.caseInsensitiveCompare(AgentKeyCurve.hold) == .orderedSame
+            let curve = one.2.flatMap(AgentKeyCurve.curve(named:)) ?? .linear
+            func angle(_ share: Double) -> Double {
+                hold ? (share < 1 ? one.1 : next.1) : one.1 + (next.1 - one.1) * curve.value(at: share)
+            }
+            // Walk the run finely, then close in on each turn edge on.
+            let steps = 240
+            var low = 0.0
+            for step in 1...steps {
+                let high = Double(step) / Double(steps)
+                guard front(angle(high)) != front(angle(low)) else { low = high; continue }
+                var (a, b) = (low, high)
+                for _ in 0..<30 {
+                    let mid = (a + b) / 2
+                    if front(angle(mid)) == front(angle(a)) { a = mid } else { b = mid }
+                }
+                let at = rounded(CGFloat(one.0 + span * b))
+                if let previous = sides.last, at <= previous.seconds { sides[sides.count - 1].front = front(angle(high)) } else {
+                    sides.append((at, front(angle(high))))
+                }
+                low = high
+            }
+        }
+        if sides.count > 1, let end = sides.last, end.seconds < rounded(CGFloat(last.0)) {
+            sides.append((rounded(CGFloat(last.0)), end.front))
+        }
+        return sides
+    }
+
+    private static func box(of part: SVGArtwork.Part) -> CGRect {
+        SVGArtwork.shapeBounds(part.shape).insetBy(dx: -part.strokeWidth / 2, dy: -part.strokeWidth / 2)
+    }
+
+    private static func isWhite(_ fill: String?) -> Bool {
+        guard let fill = fill?.lowercased().trimmingCharacters(in: .whitespaces) else { return false }
+        return ["#fff", "#ffffff", "white", "rgb(255,255,255)", "rgb(255, 255, 255)"].contains(fill)
+    }
+
+    /// The whole element whose id reads as `name`, children and closing tag
+    /// included, in `svg`.
+    static func elementRange(_ name: String, in svg: String) -> Range<String.Index>? {
+        var from = svg.startIndex
+        while let tag = svg.range(of: #"<([A-Za-z]+)\b[^>]*>"#, options: .regularExpression, range: from..<svg.endIndex) {
+            let element = String(svg[tag])
+            from = tag.upperBound
+            guard let id = element.range(of: #"\bid="([^"]*)""#, options: .regularExpression),
+                  plain(String(element[id]).dropFirst(4).dropLast().description) == name else { continue }
+            if element.hasSuffix("/>") { return tag }
+            guard let kind = element.dropFirst().split(whereSeparator: { !$0.isLetter }).first.map(String.init) else { return nil }
+            // Walk to the matching close, counting the same kind opened inside.
+            var depth = 1
+            var at = tag.upperBound
+            while depth > 0, let next = svg.range(of: "</?\(kind)\\b[^>]*>", options: .regularExpression, range: at..<svg.endIndex) {
+                let found = svg[next]
+                if found.hasPrefix("</") { depth -= 1 } else if !found.hasSuffix("/>") { depth += 1 }
+                at = next.upperBound
+                if depth == 0 { return tag.lowerBound..<next.upperBound }
+            }
+            return nil
+        }
+        return nil
+    }
+
+    /// `svg` with the element called `name` taken out and put back just
+    /// before the element called `cover`, or nil when either is not there.
+    static func svgMoving(_ name: String, before cover: String, in svg: String) -> String? {
+        guard let part = elementRange(name, in: svg) else { return nil }
+        var text = svg
+        let element = String(text[part])
+        text.removeSubrange(part)
+        guard let target = elementRange(cover, in: text) else { return nil }
+        text.insert(contentsOf: element, at: target.lowerBound)
+        return text
     }
 
     private static func area(_ part: SVGArtwork.Part) -> CGFloat {
@@ -1003,7 +1473,28 @@ public enum AskMotion {
     }
 
     /// `svg` with the element whose id reads as `name` filled white.
-    static func whiteFill(on name: String, in svg: String) -> String {
+    static func whiteFill(on name: String, in svg: String) -> String { fill("#FFFFFF", on: name, in: svg) }
+
+    /// `svg` with the element whose id reads as `name` filled with `paint`.
+    static func fill(_ paint: String, on name: String, in svg: String) -> String {
+        Self.paint([("fill", paint)], on: name, in: svg)
+    }
+
+    /// One element's opening tag given `attributes`, each replacing any it had.
+    static func paint(_ attributes: [(String, String)], onElement element: String) -> String {
+        guard let end = element.range(of: ">") else { return element }
+        let tag = String(element[..<end.upperBound])
+        var made = tag
+        for (key, value) in attributes.reversed() {
+            made = made.replacingOccurrences(of: #"\s"# + key + #"="[^"]*""#, with: "", options: .regularExpression)
+            if let space = made.firstIndex(of: " ") { made.insert(contentsOf: " \(key)=\"\(value)\"", at: space) }
+        }
+        return made + element[end.upperBound...]
+    }
+
+    /// `svg` with the element whose id reads as `name` given `attributes`,
+    /// each replacing any it had. A group is never painted: its parts are.
+    static func paint(_ attributes: [(String, String)], on name: String, in svg: String) -> String {
         var text = svg
         var from = text.startIndex
         while let tag = text.range(of: #"<[A-Za-z]+\b[^>]*>"#, options: .regularExpression, range: from..<text.endIndex) {
@@ -1011,8 +1502,11 @@ public enum AskMotion {
             from = tag.upperBound
             guard let id = element.range(of: #"\bid="([^"]*)""#, options: .regularExpression),
                   plain(String(element[id]).dropFirst(4).dropLast().description) == name, !element.hasPrefix("<g") else { continue }
-            var made = element.replacingOccurrences(of: #"\sfill="[^"]*""#, with: "", options: .regularExpression)
-            if let space = made.firstIndex(of: " ") { made.insert(contentsOf: " fill=\"#FFFFFF\"", at: space) }
+            var made = element
+            for (key, value) in attributes.reversed() {
+                made = made.replacingOccurrences(of: #"\s"# + key + #"="[^"]*""#, with: "", options: .regularExpression)
+                if let space = made.firstIndex(of: " ") { made.insert(contentsOf: " \(key)=\"\(value)\"", at: space) }
+            }
             text.replaceSubrange(tag, with: made)
             return text
         }

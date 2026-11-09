@@ -199,6 +199,15 @@ public struct SVGArtwork: Hashable, Sendable {
                     annotation.fill = paint
                     layer.content = .annotation(annotation)
                 }
+                // An SVG's line rides the shape's edge, half each side. A box
+                // starts with its line inside, which on the file's numbers is
+                // half a line small all round: on 2026-11-09 an envelope's
+                // body line sat a unit under the flap drawn to meet it.
+                if part.stroke != nil, strokeWidth > 0, var annotation = layer.annotation {
+                    annotation.strokePosition = .center
+                    layer.content = .annotation(annotation)
+                    layer.style.borderPosition = .center
+                }
             case .path(let outline):
                 let anchors = outline.rings.flatMap { ring in
                     var landed = ring.map { anchor in

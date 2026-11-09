@@ -39,6 +39,20 @@ struct SVGArtworkTests {
         #expect(drawing.viewBox == CGRect(x: 0, y: 0, width: 100, height: 100))
     }
 
+    @Test("A box or oval Ask draws keeps its line on its edge, as the SVG drew it, the same as a file opened")
+    func drawnLinesRideTheEdge() throws {
+        // On 2026-11-09 the eval's envelope landed its body's line half a
+        // line inside the edge and a unit below the flap hinged on that edge,
+        // so the two read as one thick bar (task an-animated-icon-s-flap-reads-and-a-drawn-line-e).
+        let drawing = try Self.parse(##"<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><rect id="body" x="3" y="7" width="18" height="12"/><circle id="dot" cx="12" cy="12" r="3"/><rect id="solid" x="1" y="1" width="2" height="2" fill="#000" stroke="none"/></svg>"##)
+        let layers = drawing.layers(named: "Thing", fitting: CGRect(x: 0, y: 0, width: 24, height: 24),
+                                    within: CGRect(x: 0, y: 0, width: 24, height: 24))
+        #expect(layers.count == 3)
+        #expect(layers[0].outlinePosition == .center)
+        #expect(layers[1].outlinePosition == .center)
+        #expect(Self.near(layers[0].frame.minY, 7) && Self.near(layers[0].frame.height, 12))
+    }
+
     @Test("A path's straight runs, absolute and relative, land on the right points")
     func straightRuns() throws {
         let drawing = try Self.parse(#"<svg viewBox="0 0 50 50"><path d="M10 10 H30 v10 l-10 5 L10 20z"/></svg>"#)
