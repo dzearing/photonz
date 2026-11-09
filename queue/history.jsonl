@@ -16425,3 +16425,16 @@
 {"t":"2026-11-09T00:42:12.142Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T00:42:12.224Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T00:42:12.299Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Plans quicker and fold replaced keys (05a277aaa); story bar (5 of 6 at 7) still not met, best 7 once. Next lever: a fresh short call per value for the look's critique, or contact placed from boxes."}
+{"t":"2026-11-09T00:52:12.692Z","ev":"task_note","id":"a-copy-s-own-words-stay-centred-in-their-control"}
+{"t":"2026-11-09T00:52:12.733Z","ev":"task_note","id":"leaving-preview-slides-back-without-a-hitch"}
+{"t":"2026-11-09T00:52:12.771Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-09T00:54:17.334Z","ev":"slice_pass","walks":25,"passed":23,"failed":2,"seconds":569,"of":1136,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-09T00:54:17.515Z","ev":"task_started","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","title":"A broken icon reads as what breaks it: a crack through a heart, a split egg, a bubble in pieces","priority":"p1-high"}
+{"t":"2026-11-09T01:51:30.747Z","ev":"task_walks","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","walks":["a-torn-icon-writes-whole-units-walk"]}
+{"t":"2026-11-09T01:51:54.277Z","ev":"task_created","id":"find-out-why-the-eval-judge-scores-one-identical","priority":"p2-normal","title":"Find out why the eval judge scores one identical icon picture 85.6 and then 69.9 within an hour"}
+{"t":"2026-11-09T01:52:04.017Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-09T01:52:04.091Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-09T01:52:04.166Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-09T01:52:04.239Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-09T01:52:04.315Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-09T01:52:04.389Z","ev":"task_pending","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Wedge knot fixed (3a83d3993, 85.6 on it); balloon mean of five 76.0 against 85, held down by an untouched drawing the judge read 85.6 to 69.9. Open for the balloon."}
