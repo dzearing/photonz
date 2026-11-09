@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T17:38:04.857Z",
-  "updated": "2026-11-09T14:31:41.534Z",
+  "updated": "2026-11-09T18:26:06.249Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the-whole-icon-workflow-on-a-frame-walk. Reproduce: Scripts/playtest.sh Scripts/playtest/the-whole-icon-workflow-on-a-frame-walk.json --no-build, then open 13-playing-sc.png: the icon is drawn in 24 blocks across; 12-keys-set-sc.png, the same moment stopped, is sharp. Picture: queue/audits/2026-11-07-icon-workflow-playing-blocks-sc.png. Cause: EditorState.letGoOfCrispTileForPlay drops the sharp tile for play and refreshCrispTile only draws one after a settle, so frames are the 1x composite, magnified nearest past 2x (viewport.zoom >= 2). Fix wants a per-frame render at the view's scale for a small canvas area, inside the frame budget. Renderer change, so it needs a perf note.",
@@ -35,9 +35,31 @@
     {
       "t": "2026-11-09T14:31:41.533Z",
       "note": "seq 40 -> 30"
+    },
+    {
+      "t": "2026-11-09T17:49:17.678Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T18:25:55.051Z",
+      "note": "Reproduced first: the-whole-icon-workflow-on-a-frame-walk 13-playing-sc.png showed the icon as 24 grey blocks across while 12-keys-set was sharp. Cause as noted: play dropped the sharp tile and the 1x composite was magnified nearest. Fix: a latest-wins TileScheduler (PhotonzRender, tested first) draws a sharp tile of what you can see for every playing frame; on stop the last playing tile is held until the stopped one replaces it, drawn without the 90ms settle wait."
+    },
+    {
+      "t": "2026-11-09T18:25:55.128Z",
+      "note": "Chose a per-frame tile of the visible region over compositing the whole document at screen scale because the tile is bounded by the window (a 512 icon at 800% would be 8192 pixels across) and reuses the stopped picture's own drawing path. Perf note: 1.8ms (24 unit, 800%), 4.1ms (512 at fit), 3.1ms (whole window at 800% on a 1600x1100 canvas) per tile on a ten layer icon, PlayTilePerfTests; in the app 3.3ms and 5.5ms, about 28 sharp frames a second against the 30 the preview asks. The composite path itself is unchanged."
+    },
+    {
+      "t": "2026-11-09T18:25:55.203Z",
+      "note": "Checked the audit pictures: the sheet shows before as blocks and now playing matching stopped at both sizes. The dark band on the cloud's lower edge is the selection's dashed outline on the stroke's outer edge, present when stopped and before this change, so not filed. Both icon walks now film the window playing, expectSharp while playing and after stopping, and a stopped capture at a slant. 19 motion and keyed-picture walks green, full Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-09T18:26:06.247Z",
+      "note": "Each playing frame on a zoomed canvas now gets a sharp tile of the window (TileScheduler, latest wins; EditorState.drawPlayTile), held through stop until the stopped tile replaces it. Measured on captures: 800% playing 0.133-0.143 soft share vs 0.138 stopped (0.508 before); 512 Icon 0.049-0.063 vs 0.061 (0.097 before). ~28 sharp frames/s of the 30 asked; tile 1.8/4.1/3.1ms on a ten layer icon (PlayTilePerfTests). Both icon walks film it and expectSharp while playing; 19 motion walks and Scripts/test.sh green. Audit 2026-11-09-a-playing-icon-stays-sharp-on-a-zoomed-canvas.json with sheet, two GIF reels and a window film."
     }
   ],
   "walks": [
     "the-whole-icon-workflow-on-a-frame-walk"
-  ]
+  ],
+  "started": "2026-11-09T17:49:17.677Z",
+  "completed": "2026-11-09T18:26:06.248Z"
 }
