@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-09T12:58:24.670Z",
+  "updated": "2026-11-09T14:27:55.896Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -149,9 +149,29 @@
     {
       "t": "2026-11-09T12:58:24.669Z",
       "note": "Beats kept as planned (ed452a4ef): bell up to 77, checkbox reads as asked 8; story bar (5 of 6 at 7) not met, 1 of 6 at best"
+    },
+    {
+      "t": "2026-11-09T12:58:58.897Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T14:27:55.668Z",
+      "note": "Read run F's trash plan: the model writes each key's curve as how the part ARRIVES (Hold on the key it stays open until, Ease out back on the key it shuts at), the app reads it as the run LEAVING the key, so the lid stood open and snapped shut in one frame; 81 such keys across the eval's plans. Also the ball met the lid at 0.6 s while the lid stood still to 0.9 s, and in run G the model faded the ball out over its whole throw. Built test first (AskMotionHitsTests, 6 tests): holdsMove (a seen Hold that then jumps runs on the next key's curve; off-frame or faded jumps keep it), hitStarts (a part a key touches, still and keyed to move within 0.5 s, starts at the hit), travelsSeen (a part faded over a journey of 6+ stays seen and fades over 0.1 s where it arrives; puffs and growing marks keep their fade)."
+    },
+    {
+      "t": "2026-11-09T14:27:55.744Z",
+      "note": "Shipped 87bad39e3 (pushed). Scripts/test.sh exit 0. Walks at Next defaults pass: ask-animates-a-story-walk (Copy SVG repeatCount=indefinite x3) and ask-animates-a-story-without-the-word-walk. Run G 20261109-130950 (first two passes): total 44.3, asked bell 6.8, checkbox 6.9, heart out of 300 s, envelope 3.4, rocket 5.8, trash 3. Run H 20261109-134344 (all three): total 48.6, asked bell 6.8, checkbox 6.7, heart out of 300 s, envelope 5, rocket 5.7, trash 4: 0 of 6. The five cases besides the heart: H 291.7 vs F 283.4, G 265.5, E 264.9. Pictures looked at: run F bell and trash frames, run H trash frames (ball now seen until it is in the can, lid eases shut with a settle, the ball never touches the lid) and the walk's 3-playing-sc.png. Audit queue/audits/2026-11-09-animated-icon-story-hit.json."
+    },
+    {
+      "t": "2026-11-09T14:27:55.821Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases at reads as asked 7; reached 0 of 6 in G and H (best ever across nine runs: checkbox 8, rocket 7.1, bell 6.9). What is left: (1) the heart ran out of 300 s in E, G and H, making nothing, and a walk that runs out keeps only the first three trace lines, so where its time goes is unknown: the next runner should get the trace saved on a time out first; (2) touches places the ball against the lid's bounding box, not its line, so a bounce off a thin part is never seen: place against the part's drawn outline; (3) the envelope's flap drawn shut and folded open. Left rough, no task earned (all inside this one): the trash lap is still 1.3 s."
+    },
+    {
+      "t": "2026-11-09T14:27:55.895Z",
+      "note": "Seen holds ease, hits start what they hit, thrown parts seen the whole way (87bad39e3); story bar (5 of 6 at 7) not met, 0 of 6 in runs G and H"
     }
   ],
-  "started": "2026-11-09T11:29:55.500Z",
+  "started": "2026-11-09T12:58:58.896Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
