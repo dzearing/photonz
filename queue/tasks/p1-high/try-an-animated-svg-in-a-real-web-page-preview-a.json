@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 7e-10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-09T15:16:35.422Z",
-  "updated": "2026-11-09T15:16:35.546Z",
+  "updated": "2026-11-09T17:48:49.088Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-09 (intake): 'I would love a way to test the animated svg in html, for example in a button which on hover animates the icon. Would be nice to have a generate preview html function, especially so that in your ready to try you can demonstrate the animated svgs in an interactive way.' Done by the intake window the same day: the dashboard side (632d37368): queue/audits .svg served (dev-server audit-shot), a report's SVG shot drawn as a player: a button paused until hovered, sizes on light and dark, Pause, a warning when its colours are fixed. Found while testing it: the trash can SVG's ink is a fixed near-black, so it vanishes on dark. Export code: Sources/PhotonzCore/SVGExport.swift, SVGMotionExport.swift (repeatCount=indefinite today).",
@@ -30,6 +30,39 @@
     {
       "t": "2026-11-09T15:16:35.545Z",
       "note": "seq 45 -> 7e-10"
+    },
+    {
+      "t": "2026-11-09T16:35:36.431Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T17:48:10.163Z",
+      "note": "Adversarial review before building: a person testing an icon hovers the BUTTON, not the 20px glyph, so SMIL's own hover on the svg is not enough; the page hands the button's hover to the icon (pointer-events none on the icon, dispatched mouseenter/mouseleave). An img-tag SVG never gets hover in any browser, so Copy HTML gives inline code. mouseover bubbles and would restart at every shape edge, so mouseenter/mouseleave (checked in WebKit and Chromium first)."
+    },
+    {
+      "t": "2026-11-09T17:48:10.237Z",
+      "note": "Chose looping while hovered and resting on the first frame on leave over playing once per hover, because the task says 'plays while hovered (and again on each hover)'. Chose a segmented control for Plays (3) and Colour (2) over menus, matching Format and Scale on the same sheet. Chose remembering the choice as a document field set through History (one undo step, only when it changes) since all document edits go through History. Put Preview as Web Page beside Cancel on the Export sheet as well as the File menu (after Export) and the layer/canvas right-click menus (after Copy SVG)."
+    },
+    {
+      "t": "2026-11-09T17:48:10.312Z",
+      "note": "Browser check found two real bugs, both fixed with tests: an id with a minus (photonz-icon) never starts in either engine because SMIL reads a-b.mouseenter as an offset (ids are now letters/digits/underscores); and Follow the page picked the red badge over the near-black body on a 1-1 tie (ties now go to the plainest colour). Scripts/svg-preview-check.mjs: 30/30 in WebKit and Chromium."
+    },
+    {
+      "t": "2026-11-09T17:48:10.388Z",
+      "note": "left rough (no task, under the bar or by design): On hover drops a finite repeat's freeze; Follow the page counts names not area; the sheet's Preview button uses the copy background setting not the sheet checkbox; the page does not reload itself (Refresh button, as the acceptance allows). All in the audit's rough list."
+    },
+    {
+      "t": "2026-11-09T17:48:10.464Z",
+      "note": "owns these walks: svg-preview-web-page-walk"
+    },
+    {
+      "t": "2026-11-09T17:48:49.086Z",
+      "note": "Shipped in f6ed6ea15 (Next, no flag change): Export sheet Plays (Always/On hover/Once) and Colour (As drawn/Follow the page) remembered per document; File > Preview as Web Page plus layer and canvas right-click rows and a sheet button write an offline page (hover button, 16-96 px light and dark, looping copy, Copy SVG/HTML, Refresh) and open it, rewritten as the drawing changes; Copy SVG and agent export follow the choice; export gains plays/colour and new MCP tool preview_web_page. Verified: SVGPlaybackTests (17) + agent/render tests, full Scripts/test.sh green; svg-preview-web-page-walk ok at Next defaults; Scripts/svg-preview-check.mjs 30/30 in WebKit and Chromium (found and fixed two bugs: hyphenated SMIL event ids never start, ink tie picked the accent); 15 export/Copy SVG walks re-run green. runner-prompt.md and the photonz skill note the preview. Audit: queue/audits/2026-11-09-try-an-animated-svg-in-a-real-web-page-preview-a.json"
     }
-  ]
+  ],
+  "started": "2026-11-09T16:35:36.430Z",
+  "walks": [
+    "svg-preview-web-page-walk"
+  ],
+  "completed": "2026-11-09T17:48:49.087Z"
 }
