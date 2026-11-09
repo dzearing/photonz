@@ -16555,3 +16555,9 @@
 {"t":"2026-11-09T14:33:13.960Z","ev":"task_started","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","title":"An animated icon's flap reads, and a drawn line ends its lap cleanly","priority":"p1-high"}
 {"t":"2026-11-09T15:16:35.426Z","ev":"task_created","id":"try-an-animated-svg-in-a-real-web-page-preview-a","priority":"p1-high","title":"Try an animated SVG in a real web page: Preview as Web Page, playback on hover, and colours that follow the page"}
 {"t":"2026-11-09T15:16:35.547Z","ev":"task_resequenced","id":"try-an-animated-svg-in-a-real-web-page-preview-a","from":45,"to":7e-10}
+{"t":"2026-11-09T16:23:41.822Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-09T16:24:42.336Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T16:24:42.419Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T16:24:42.493Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T16:24:42.568Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T16:24:42.654Z","ev":"task_done","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","from":"in_progress","note":"Envelope reads as asked 7.0-7.1 in four runs (was 6.1): folds shut in steps at an even pace and into the lap's end, fold ends tucked round inside the body's corners for the frame's growth, what comes out comes 70% clear. Plane 7.0, wifi 7.9, trash lid 87.4. d441abba2, Scripts/test.sh green, audit queue/audits/2026-11-09-envelope-reads-as-asked.json"}

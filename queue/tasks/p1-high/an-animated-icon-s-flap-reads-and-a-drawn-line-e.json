@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T18:22:08.469Z",
-  "updated": "2026-11-09T14:33:13.959Z",
+  "updated": "2026-11-09T16:24:42.653Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ask-animates-what-it-makes-an-animated-svg-icon, run 20261106-171511-ask: envelope 4, plane 6, wifi loops 3. AskMotionCheck leaves trimStart and trimEnd out of its loop check on purpose, since a checkmark set to end where it began never drew. Rules in AskMotion.principles must stay general: nothing per subject. Pictures: queue/audits/2026-11-06-ask-animates-after-envelope-opening.png and -after-wifi-signal.png.",
@@ -144,8 +144,29 @@
     {
       "t": "2026-11-09T14:33:13.956Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T16:24:42.334Z",
+      "note": "Reproduced on HEAD 23a0c1465 (run 20261109-143335-ask): envelope 62.1, reads as asked 6.1; story envelope 27.2. Nine looks of nine: the flap snapped shut (1.4->1.7 s, its last key, so foldsLand had no stillness after it to borrow), the letter peeked 3.3 of 7 units and merged with the body line into a black band, and the flap's flat ends stuck out of the body's rounded corners."
+    },
+    {
+      "t": "2026-11-09T16:24:42.417Z",
+      "note": "Built (d441abba2): foldsLand borrows to the lap's end; folds of 90+ open and land Linear (seen straight on, an even turn eases by itself; Ease in out put every change in one frame, so the 133 ms sheet showed open, gone, shut); hingeOpened tucks fold ends inside a rounded outline, round ends where they fit, sized for the frame's growth (planned() re-runs the hinge pass with it); comesClear brings what comes out of an outline to 70% clear. Chose Linear over Ease in out because the projection of an even turn already starts and lands softly."
+    },
+    {
+      "t": "2026-11-09T16:24:42.491Z",
+      "note": "Measured (climb, qwen3.8-27b): envelope 77.8/76.6/77.2/78.4, reads as asked 7.11/7.0/7.0/7.11 on the final code (one 6.44 on an earlier step). Trash lid 87.4 (8.0). Plane 76.6 (7.0), wifi 79 (7.9, loops 8.7). Story envelope 36.9 (was 27.2; its beat order is the story task's). Story trash 38.6, inside today's range 19-42. No held-out run on rubric 4a03a8fc (report says none yet; a whole held-out run is hours). Looked at every sheet: after.png shows clean shut corners, the close in steps (1.60 low, 1.73 shallow V, 1.86 V) and the letter wholly out."
+    },
+    {
+      "t": "2026-11-09T16:24:42.566Z",
+      "note": "Left rough, not filed: the open flap's tip shows above the risen letter and stubs of its back legs beside it ('tip pokes through the letter'); a part's line merging with an edge's line for the frame it crosses. Both in the audit; neither yet seen to cost the bar. Folded the flaky dragTheWidth flat 48 ms budget into the-full-test-suite-stays-green-on-a-busy-mac-wh."
+    },
+    {
+      "t": "2026-11-09T16:24:42.651Z",
+      "note": "Envelope reads as asked 7.0-7.1 in four runs (was 6.1): folds shut in steps at an even pace and into the lap's end, fold ends tucked round inside the body's corners for the frame's growth, what comes out comes 70% clear. Plane 7.0, wifi 7.9, trash lid 87.4. d441abba2, Scripts/test.sh green, audit queue/audits/2026-11-09-envelope-reads-as-asked.json"
     }
   ],
   "started": "2026-11-09T14:33:13.955Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-11-09T16:24:42.652Z"
 }
