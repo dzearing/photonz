@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-05T22:30:28.372Z",
-  "updated": "2026-11-09T01:53:30.717Z",
+  "updated": "2026-11-09T02:04:12.487Z",
   "deps": [
     "find-out-why-the-eval-judge-scores-one-identical"
   ],
@@ -164,6 +164,10 @@
     {
       "t": "2026-11-09T01:53:30.716Z",
       "note": "Waiting on find-out-why-the-eval-judge-scores-one-identical (now a dep, p1 seq 15): the balloon bar of 85 is inside the judge's swing on one identical picture. Heart, egg, bubble bars met."
+    },
+    {
+      "t": "2026-11-09T02:04:12.486Z",
+      "note": "From find-out-why-the-eval-judge-scores-one-identical: the 85.6 the balloon bar was set against was the high side of a coin flip (median of three on didWhatWasAsked, which the judge reads at about 6.3 for this balloon). On the new judging (mean of nine looks, rubric 4a03a8fc) the same untouched balloon, md5 c98a0849, reads 74.8 steadily (six readings 73.9 to 75.6). 85 is not a bar it ever truly met; restate the balloon item on rubric 4a03a8fc (e.g. the torn balloon reads at least as well as its untouched 74.8) before chasing it."
     }
   ],
   "started": "2026-11-09T01:52:39.817Z",

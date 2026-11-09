@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 15,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-09T01:51:54.273Z",
-  "updated": "2026-11-09T01:53:27.338Z",
+  "updated": "2026-11-09T02:13:02.393Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-09: icon.png md5 c98a0849043a02e0ade5edfb618dc242 (icon-balloon-popping, the round balloon) in runs 20261109-005655-ask 85.6, 20261109-010121-ask 84.0, 20261109-013349-ask 71.3, 20261109-013612-ask 72.0, 20261109-013813-ask 71.3, and the next run 69.9. Command: Scripts/ask-eval.sh run --engine ask --cases icon-balloon-popping. Asked/icon lines went from 7/6 to 6/5-6. In a lab judge (9 looks, /tmp/tearlab2/j.sh) the same picture read 85.6 in 6 of 7 reps at about 01:10. The scores drift downward over the hour rather than scatter, which may point at something time-dependent.",
@@ -33,7 +33,33 @@
     {
       "t": "2026-11-09T01:53:27.337Z",
       "note": "Raised to p1, seq 15: it is now a prerequisite of a-broken-icon-reads-as-what-breaks-it-a-crack-th (a user task), whose last bar (balloon at 85) sits inside this judge's swing. Note from reading judge.mjs: each line is the median of only 3 looks on a 0-10 integer scale, so the drift of 85.6 -> 69.9 is about 11 line-steps, too large for rounding alone; worth checking whether every line drops together (a shift in the judge) or one or two lines flip (sampling)."
+    },
+    {
+      "t": "2026-11-09T01:53:48.936Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T02:04:12.182Z",
+      "note": "Cause, measured: not time, not the judge drifting, not the sheet. Pulled every look from the six runs: didWhatWasAsked was 7 in 6 of 18 looks, 6 in the rest; the first two runs drew 7 as their median of three, the last four drew 6, and asked under 7 scales the whole score by 6/7 (85.6 -> ~72). Re-judged the eval's own sheet (md5 672cc52a) side by side with the lab's re-render at 17:55: eval sheet 14/48 looks at 7, lab sheet 30/48, same minute; across the evening eval sheet 20/66, lab 77/120. The lab copy differs in ~200 edge pixels of 686,000 (diff.swift), so lab readings do not stand in for the eval's sheet. claude CLI unchanged since Nov 5 (2.1.319)."
+    },
+    {
+      "t": "2026-11-09T02:04:12.260Z",
+      "note": "Simulated from 90 real looks (/tmp/judgedrift/eval-looks.jsonl, sim.mjs): chance six readings land within 5 of their mean: median of 3 11%, median of 9 26%, median of 15 42% (a median must still be 6 or 7), mean of 3 28%, mean of 6 72%, mean of 9 90%, mean of 12 97%, trimmed mean of 9 71%. Chose mean of 9 looks over mean of 12 because 9 clears the bar nine times in ten for a picture right on the edge, and costs a third fewer judge calls; nine run at once, ~10 s a case."
+    },
+    {
+      "t": "2026-11-09T02:04:12.336Z",
+      "note": "Shipped: judge.mjs lines are the mean of looks (linesFrom, tested in judge.test.mjs), JUDGE_LOOKS = 9 for judge and blind naming, used by run, rescore and calibrate; JUDGING folded into RUBRIC_ID (f5ae1562 -> 4a03a8fc) so no median run is ever the bar; runs record looks. Six readings of the same balloon on the new judging, 17:59-18:03 PST: 75.6, 73.9, 75.6, 73.9 (a full run, 20261109-020056-ask), 75.6, 73.9: mean 74.8, max 0.85 off. README section 'How steady a reading is' writes it down."
+    },
+    {
+      "t": "2026-11-09T02:04:12.411Z",
+      "note": "left rough: followup.mjs and paint-judge.mjs still take the median of three looks for their own pass bars; not changed here because they are separate evals with their own bars and nothing has shown them swinging. Fold here if they do."
+    },
+    {
+      "t": "2026-11-09T02:13:02.391Z",
+      "note": "Cause: sampling, not time. The balloon's didWhatWasAsked sits between 6 and 7 (7 in ~1/3 of looks); the median of 3 looks snapped it to 6 or 7 and asked<7 scales the whole score by 6/7, a 14-point cliff. A lab re-render (200 edge pixels different) read 7 twice as often, so lab readings do not stand in. Fix (b564b9f01): judge lines are the mean of 9 looks (JUDGE_LOOKS, also naming/rescore/calibrate), method folded into RUBRIC_ID (now 4a03a8fc), runs record looks; judge.test.mjs covers it. Verified: six readings of the same balloon read 73.9-75.6 (mean 74.8, max 0.85 off), one a full eval run. Written up in Scripts/ask-eval/README.md 'How steady a reading is'. Scripts/test.sh green."
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-11-09T01:53:48.935Z",
+  "completed": "2026-11-09T02:13:02.392Z"
 }
