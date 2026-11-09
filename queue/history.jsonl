@@ -16456,3 +16456,11 @@
 {"t":"2026-11-09T03:41:18.167Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T03:41:18.242Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T03:41:24.434Z","ev":"task_done","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Every bar met on the steady judge (mean of nine looks), three readings each, tear on vs break step off: heart 86.5/86.5/87.3 with asked 7.9-8.3 and icon 7.0-7.3 (off 42-43); egg 88.8 x3 (off 80-84); bubble 82.7-86.2 (off 11-16, a refresh arrow); balloon 80.4-85.6 (off 11-49). Balloon item restated from 85, a median-judge number, to the egg/bubble bar. No app code changed this run (59a72e2f3, queue and docs); audit queue/audits/2026-11-09-icon-break-kinds-steady.json; walk a-torn-icon-writes-whole-units-walk ok."}
+{"t":"2026-11-09T03:41:53.085Z","ev":"task_started","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","title":"An animated icon's flap reads, and a drawn line ends its lap cleanly","priority":"p1-high"}
+{"t":"2026-11-09T04:41:50.531Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T04:41:50.609Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T04:41:50.695Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T05:18:09.131Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T05:18:09.206Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
+{"t":"2026-11-09T05:18:09.281Z","ev":"task_walks","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","walks":[]}
+{"t":"2026-11-09T05:18:09.356Z","ev":"task_pending","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","from":"in_progress","note":"Plane (7.4, 7.9), wifi (8.1) and the flap landing are met; the envelope reads 5 against its bar of 7 since the motion look's re-plan, so it stays open. Shipped 35ad2621f; audit queue/audits/2026-11-09-animated-fold-lands-plane-leaves.json"}

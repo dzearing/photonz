@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-06T18:22:08.469Z",
-  "updated": "2026-11-08T17:12:57.015Z",
+  "updated": "2026-11-09T05:18:09.355Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ask-animates-what-it-makes-an-animated-svg-icon, run 20261106-171511-ask: envelope 4, plane 6, wifi loops 3. AskMotionCheck leaves trimStart and trimEnd out of its loop check on purpose, since a checkmark set to end where it began never drew. Rules in AskMotion.principles must stay general: nothing per subject. Pictures: queue/audits/2026-11-06-ask-animates-after-envelope-opening.png and -after-wifi-signal.png.",
@@ -80,7 +80,40 @@
     {
       "t": "2026-11-08T17:12:57.014Z",
       "note": "seq 80 -> 30"
+    },
+    {
+      "t": "2026-11-09T03:41:53.080Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T04:41:50.529Z",
+      "note": "Envelope 'shallow V then jump' reproduced at 0.04 s steps in WebKit (svg-frames --frames 61 on run 20261108-072622-ask): not a landing at a shallow V but the close caught mid-fold. The model shut the flap 180 deg in 200 ms on Ease in, so it hits the V at full speed, and its 8 deg bounce past flat cannot show in a flat file (cos is even). The exporter's sampled values match the motion at every moment (checked)."
+    },
+    {
+      "t": "2026-11-09T04:41:50.607Z",
+      "note": "Built AskMotion.foldsLand (planning, any fold): on a fold's way home from 90+ deg, keys within 20 deg of rest go, a curve that does not slow into rest becomes Ease in out, and a landing under 300 ms borrows up to 400 ms from the stillness after it. Rules: a fold shuts over 300-500 ms on Ease in out and never goes past 0. Eval 20261109-035219-ask: the file now closes 1.6 -> 1.95 s slowing into the V; that run's envelope read 5 for its drawing (letter sank, open flap read as a house), not the close."
+    },
+    {
+      "t": "2026-11-09T04:41:50.693Z",
+      "note": "Plane: built AskMotion.marksGo (a part hidden at the top of the lap and shown by opacity is gone by the time a part beside it is two thirds out of the frame), comesBack (a drawing that wholly left and is away over 0.5 s comes back 0.15 s after its last key out of sight, keeps its way in, rests at home), and a rest margin (ink reaching within 3/4 unit of the frame edge gets the 1-unit icon margin, frame grows at most 1.2x; a drawing on the usual live area is untouched). Eval 20261109-042932-ask: plane 80.8, reads as asked 7.44 (was 6)."
+    },
+    {
+      "t": "2026-11-09T05:18:09.129Z",
+      "note": "Shipped 35ad2621f (pushed): foldsLand, marksGo, comesBack, rest margin, and the motion look told that flying out and back in is fine. Scripts/test.sh green (exit 0). Eval (climb, qwen3.8-27b): plane 80.8 (reads 7.4), 43.7 (4.3: the look called the exit 'vanishing' and the model shrank it to a hop, which is why the look was changed), 82 (7.9) -> plane item met. Wifi 80.2 (reads 8.1) -> still met. Envelope close filmed every 0.04 s: 1.80 shallow, 1.84, 1.88, 1.92, full by 1.96, slowing into the V -> flap item met (queue/audits/2026-11-09-animated-envelope-lands-closeup.png)."
+    },
+    {
+      "t": "2026-11-09T05:18:09.204Z",
+      "note": "NOT DONE: the envelope reads as asked 5 in three runs today (49.1, 46.6, 48.7) against its bar of 7, which it met on 2026-11-08. In every run the motion look (added since, e78463fd9) sent the plan back over the letter, and the re-planned drawing puts the letter in front of the body, so it shows through when closed and the open flap reads as a house. Not the fold change: the close is clean in all three. Next try: the plan's re-draw after a look keeps what comes out of a part behind it (AskMotion.hidden only fills an outline drawn AFTER the part; here the part is drawn after the outline), or the look is told the letter starting inside is fine. Left rough: plane trail dash stays dark while the plane fades as it leaves."
+    },
+    {
+      "t": "2026-11-09T05:18:09.279Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-09T05:18:09.354Z",
+      "note": "Plane (7.4, 7.9), wifi (8.1) and the flap landing are met; the envelope reads 5 against its bar of 7 since the motion look's re-plan, so it stays open. Shipped 35ad2621f; audit queue/audits/2026-11-09-animated-fold-lands-plane-leaves.json"
     }
   ],
-  "started": "2026-11-08T06:22:09.473Z"
+  "started": "2026-11-09T03:41:53.079Z",
+  "walks": []
 }
