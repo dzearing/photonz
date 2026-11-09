@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-09T00:42:12.298Z",
+  "updated": "2026-11-09T11:19:00.901Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -101,9 +101,37 @@
     {
       "t": "2026-11-09T00:42:12.297Z",
       "note": "Plans quicker and fold replaced keys (05a277aaa); story bar (5 of 6 at 7) still not met, best 7 once. Next lever: a fresh short call per value for the look's critique, or contact placed from boxes."
+    },
+    {
+      "t": "2026-11-09T08:23:44.882Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T08:51:34.569Z",
+      "note": "Baseline on the steady judge (nine looks, rubric 4a03a8fc), run 20261109-082429 at bebc5c0e4: total 48.6, reads as asked bell 5.6, checkbox 7.2, heart 3.9, envelope 3.2, rocket 4.9, trash 4.3: 1 of 6 at 7. Plans 122 to 197 s; the look fired for 4 (trash, rocket, checkbox; bell said All good while the judge saw rubber). Trash trace: after the look, the mend in the long talk re-sent its keys with one key added (1.5 s) and the ball still never met the lid."
+    },
+    {
+      "t": "2026-11-09T09:30:23.986Z",
+      "note": "Run B 20261109-085127 (fresh mend + touches, look up to 200 s): total 50.1; reads as asked bell 4.4, checkbox 7.2, heart out of 300 s (plan 197 s, look, then a 2,900 token mend and more rounds), envelope 6, rocket 7.1, trash 3: 2 of 6 at 7. Trash trace showed two real defects: (1) jumpsUnseen put a Hold key at 0.59 s beside the throw's key at 0.6 s, the app refused the whole position step ('two keys at 0.59 s are one key') and the trash never moved; (2) the model wrote touches: $1/lid and the planning argument check refused it. Both fixed test first; the mend is now bounded (no round after 250 s, lands the looked-at motion instead) and the look starts by 175 s."
+    },
+    {
+      "t": "2026-11-09T10:09:57.776Z",
+      "note": "Run C 20261109-093019 (mend bounded at 250 s, look by 175 s): total 46.5, reads as asked 4.8, 6, 2.7, 6.3, 5.6, 2; 0 of 6. The bound cut off the rocket's and heart's mends (landed un-mended); the trash lost its design: replayed the design call on a bounded model copy, the model wrote a whole design and then went on to 'Now I'll draw it' and an svg, and any answer holding <svg was dropped whole. Fixed test first (keep the words before the drawing). In B the mend helped whenever it finished (envelope 28 to 58, rocket 49 to 82, checkbox 77 to 85), so mend rounds now start by 260 s and a round still going at 285 s is cancelled and the looked-at motion lands."
+    },
+    {
+      "t": "2026-11-09T11:19:00.737Z",
+      "note": "Shipped a2012994a (pushed): fresh short mend after the look (look by 175 s, mend rounds by 260 s, cut at 285 s landing the looked-at motion), touches placed where parts meet, jumpsUnseen no longer puts a key beside another (the trash's whole position step was refused), a design kept when the model goes on to draw. Scripts/test.sh exit 0. Walks at Next defaults pass: ask-animates-a-story-walk (268 s on a loaded Mac, Copy SVG repeatCount=indefinite x4) and ask-animates-a-story-without-the-word-walk (passed at 300 s on the second try; the first ran out while Spotlight indexing held a core and the load was 13; the model runs at 14 to 18 tok/s in walks against 31 in the eval, which holds the front). Pictures looked at: run D contact sheet (heart beats twice then splits; rocket shakes, leaves, returns; trash lid opens and shuts but the ball never visibly meets it; bell reads as a lampshade; letter drawn over the envelope) and the walk's 3-playing-sc.png. Audit queue/audits/2026-11-09-animated-icon-story-mend.json."
+    },
+    {
+      "t": "2026-11-09T11:19:00.813Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases at reads as asked 7. Run D 20261109-100952: total 57.4 (baseline 48.6), asked bell 5, checkbox 5.2, heart 6.6, envelope 6, rocket 6, trash 4.1: 0 of 6 (run B had checkbox 7.2 and rocket 7.1). Next levers: the look is lenient (the bell 'all good' three runs running while the judge sees a lampshade with its handle left behind), so a stricter look or a look on single frames of each beat; the trash's model wrote touches on the lid key but the ball still read as dropping beside it, so check the placed contact in the frames. Left rough, no task earned: a story with a look and mend takes about four minutes."
+    },
+    {
+      "t": "2026-11-09T11:19:00.900Z",
+      "note": "Mend and contact shipped (a2012994a): story total 48.6 to 57.4; bar (5 of 6 at reads as asked 7) not met, best 0 to 2 of 6 per run"
     }
   ],
-  "started": "2026-11-08T22:46:23.324Z",
+  "started": "2026-11-09T08:23:44.881Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
