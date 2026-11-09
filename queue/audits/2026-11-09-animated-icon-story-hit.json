@@ -1,0 +1,25 @@
+{
+  "feature": "An animated icon told as a little story: the lid shuts when it is hit",
+  "epic": "icon-svg",
+  "summary": "A part that stays put and then moves now eases there instead of snapping, a part that gets hit starts moving the moment it is hit, and something thrown stays visible all the way until it lands. In your trash sentence, the ball now drops into the can and the lid shuts with a little settle. It still never visibly bounces off the lid.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-09-story-hit-trash-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return." },
+    { "do": "Wait for Ask to finish (about four minutes), then press Space to play." },
+    { "do": "Watch the lid close: it should ease shut and settle, not jump shut in one frame.", "shot": "2026-11-09-story-hit-trash-frames.png" },
+    { "do": "Watch the ball: it should stay visible until it is inside the can, not fade out in mid-air." },
+    { "do": "Compare the six story icons on the contact sheet.", "shot": "2026-11-09-story-hit-sheet.png" }
+  ],
+  "evaluate": [
+    "Does the lid shutting read as caused by the ball, even though the ball never touches it?",
+    "Does the ball read as thrown in now that it stays visible until it is in the can?",
+    "Is a four minute wait for a story icon something you would put up with?"
+  ],
+  "rough": [
+    "The bounce off the lid still is not seen: the ball passes beside the open lid and drops in. The model places the ball against the lid's bounding box, not the lid's line.",
+    "The heart story ran past the five minute limit in three of the last four runs and made nothing; the walk keeps only the start of its trace, so where the time went is not known yet.",
+    "The bar for this task (five of six story icons read as asked at 7 or more) is still not met: run H reached 0 of 6 (bell 6.8, checkbox 6.7, envelope 5, rocket 5.7, trash 4, heart out of time)."
+  ]
+}

@@ -508,9 +508,12 @@ public enum AskMotion {
     /// back face shows from the moment it turns edge on, read off its keys
     /// as they will play (on 2026-11-09 the back face was timed off the keys
     /// before a close was slowed, and the flap vanished while still open);
-    /// then hinges shared, what comes out put behind, and room made.
+    /// then hinges shared, what comes out put behind, and room made. Before
+    /// any of it, a seen hold moves and a hit starts what it hits
+    /// and what travels is seen the whole way (`holdsMove`, `travelsSeen`,
+    /// `hitStarts`), while the keys still say what they touch.
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
-        jumpsUnseen(fitted(hidden(hingesShared(foldsOpen(foldsLand(touchesPlaced(drawnNotFaded(landingFolded(steps)))))))))
+        jumpsUnseen(fitted(hidden(hingesShared(foldsOpen(foldsLand(touchesPlaced(hitStarts(travelsSeen(holdsMove(drawnNotFaded(landingFolded(steps))))))))))))
     }
 
     /// `fitted` before its marks go: the steps with the room made, and the

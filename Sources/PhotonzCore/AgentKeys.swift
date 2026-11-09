@@ -132,6 +132,8 @@ public struct AgentTimingSet: Encodable, Hashable, Sendable {
 /// read can be handed straight back.
 public enum AgentKeyCurve {
     static let hold = "Hold"
+    /// What a new key runs on when it names no curve.
+    static let easeInOut = "Ease in out"
 
     public static func word(_ curve: EasingCurve) -> String {
         curve == .steps(1) ? hold : curve.title
