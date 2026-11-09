@@ -519,6 +519,8 @@ public struct AskConversation: Sendable {
     /// once before it lands (`AskMotion.beatsReview`).
     private let motionDesigned: Bool
     private var beatsReviewed = false
+    /// The motion's design in words, said again when a look mends it.
+    private let motionDesign: String?
     /// The beats the model said it left out (`AskMotion.leftOut(in:)`).
     private var beatsLeftOut: [String] = []
     /// The document has a timeline, or does not say: the video tools are
@@ -564,6 +566,7 @@ public struct AskConversation: Sendable {
         let drawsMotion = icon && (toldMotion || AskMotion.drawsMotion(request, blankIcon: blankIcon))
         self.drawsMotion = drawsMotion
         motionDesigned = drawsMotion && iconDesign != nil
+        motionDesign = drawsMotion ? iconDesign : nil
         // A drawing with its hidden pieces all showing is no still to look at.
         landsAsDrawn = icon && (iconDesign != nil || iconBreak != nil || drawsMotion)
         breaksTheIcon = icon ? iconBreak?.kind : nil
@@ -704,11 +707,7 @@ public struct AskConversation: Sendable {
     /// things (`AskLookup`).
     var offeredTools: [AgentJSON] {
         guard web == nil else { return AskTools.webModelTools }
-        if drawsMotion {
-            return AskMotion.tools.compactMap { name in
-                (AskTools.pictureKeyModelTools + AskTools.modelTools).first { $0["function"]?["name"]?.stringValue == name }
-            }
-        }
+        if drawsMotion { return AskMotion.modelTools }
         let all = AskTools.modelTools(painting: painting, video: video) + (holdsIcon ? AskTools.iconModelTools : [])
             + (keysMotion ? (video ? AskTools.keyModelTools : AskTools.pictureKeyModelTools) : [])
         guard lookedUp != nil else { return all }
@@ -979,7 +978,9 @@ public struct AskConversation: Sendable {
                     continue
                 }
                 // Checked as it would run, with $N standing in for ids not made yet.
-                switch AgentTools.request(tool: name, arguments: name == "add_component" ? step.arguments : arguments) {
+                // A key's touches is the planner's, placed before it lands (`AskMotion.touchesPlaced`).
+                switch AgentTools.request(tool: name, arguments: name == "add_component" ? step.arguments
+                                          : drawsMotion ? AskMotion.withoutTouches(arguments) : arguments) {
                 case .success(.addComponent(_, let component)) where drawnBefore(component) != nil:
                     let (earlier, kind) = drawnBefore(component) ?? (0, "")
                     let made = steps.compactMap { $0.tool == "add_component" ? $0.arguments["name"]?.stringValue : nil }
@@ -1293,8 +1294,11 @@ public struct AskConversation: Sendable {
         motionSendBacks = AskMotionCheck.mostSendBacks - 1
         beatsReviewed = true
         beatsLeftOut = []
-        let parts = AskMotion.whereParts(steps).map { "\n\n\($0)\n\(AskMotion.touchRule)" } ?? ""
-        messages.append(["role": "user", "content": .string(AskMotionLook.sendBack(seen) + parts)])
+        // A fresh talk: the rules, then one message with all there is now
+        // (`AskMotionLook.mending`), never the plan's own turns to repeat.
+        let mend: AgentJSON = ["role": "user", "content": .string(AskMotionLook.mending(request: request, design: motionDesign,
+                                                                                        steps: steps, seen: seen))]
+        messages = Array(messages.prefix(1)) + [mend]
     }
 
     /// The drawing already planned that this one would land on top of: both

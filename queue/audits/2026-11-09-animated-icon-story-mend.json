@@ -1,0 +1,27 @@
+{
+  "feature": "An animated icon told as a story is looked at and mended before it lands",
+  "epic": "icon-svg",
+  "summary": "A moving icon's frames are now looked at for most stories (the look waited for plans under 150 s and skipped four of six), and what the look saw is mended in a short fresh talk. A beat where one part hits another is placed so the two really meet. Story total 48.6 to 57.4 on the steady judge; the bar of five stories at 7 is not met yet.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Press Command N, choose Icon, and in Ask type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.", "shot": "2026-11-09-story-trash-made-sc.png" },
+    { "do": "Wait for it to finish (about four minutes on this Mac), then press Space to play it.", "shot": "2026-11-09-story-trash-playing-sc.png" },
+    { "do": "Ask the same for a heart: make an animated heart icon where the heart beats twice and then breaks." },
+    { "do": "Ask for a rocket: make an animated rocket icon where the rocket shakes, lifts off and leaves smoke behind." },
+    { "do": "Copy SVG and open it in a browser: it plays and loops." }
+  ],
+  "evaluate": [
+    "Does the trash read as thrown in and hitting the lid, or does it still just drop beside it?",
+    "Is about four minutes for a story icon a wait you would sit through for a better result?",
+    "Do the heart's two beats and its split read in order?",
+    "Does the rocket's lift-off read, and does the smoke look like smoke?"
+  ],
+  "rough": [
+    "The bar is not met: reads as asked on run 20261109-100952 is bell 5, checkbox 5.2, heart 6.6, envelope 6, rocket 6, trash 4.1, none of six at 7 (bar: five of six). Tracked on this task, an-animated-icon-told-as-a-little-story-moves-th, which stays open.",
+    "The look still calls the bell all good while the judge sees a lampshade with a handle left behind; a lenient look sends nothing back. Inside this task.",
+    "A story with a look and mend now takes about four minutes (the trash 262 s in the eval); a mend that would run past 285 s is cut and the motion lands as it was looked at.",
+    "The trash's contact: the model now names what a key touches and it is placed, but in run 100952 the ball still read as dropping beside the lid. Inside this task.",
+    "Walk pictures were taken with the probe behind another app, so blue controls read grey."
+  ]
+}

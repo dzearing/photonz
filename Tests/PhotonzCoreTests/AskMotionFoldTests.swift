@@ -366,6 +366,16 @@ struct AskMotionFoldTests {
         // A jump made while unseen already: left as made.
         let early = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/craft","property":"rotation","keys":[{"seconds":0,"value":0},{"curve":"Hold","seconds":0.7,"value":-15},{"curve":"Hold","seconds":1.2,"value":0},{"seconds":2.4,"value":0}]}"#))
         #expect(AskMotion.jumpsUnseen([early, fade]) == [early, fade])
+        // Unseen right up to the jump's own key (the trash of 2026-11-09,
+        // hidden on a Hold until it is thrown at 0.6 s): a key at 0.59 s
+        // would be one key with it on the timeline, and the app refused the
+        // whole step, so the trash never moved. No key goes in within a
+        // key's width of another.
+        let thrown = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"curve":"Hold","seconds":0.5,"value":{"x":0,"y":0}},{"curve":"Ease in","seconds":0.6,"value":{"x":1,"y":-1}},{"seconds":1.5,"value":{"x":-5,"y":8}},{"curve":"Hold","seconds":2.6,"value":{"x":-5,"y":8}}]}"#))
+        let hidden = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/trash","property":"opacity","keys":[{"seconds":0,"value":0},{"curve":"Hold","seconds":0.5,"value":0},{"curve":"Ease in","seconds":0.6,"value":100},{"curve":"Hold","seconds":1.5,"value":100},{"curve":"Ease in","seconds":1.65,"value":0},{"curve":"Hold","seconds":2.6,"value":0}]}"#))
+        let kept = AskMotion.jumpsUnseen([thrown, hidden])
+        let times = (kept[0].arguments["keys"]?.arrayValue ?? []).compactMap { $0["seconds"]?.doubleValue }.sorted()
+        #expect(zip(times, times.dropFirst()).allSatisfy { ($1 - $0) * 1000 > Double(PropertyKeys.nearMS) }, "\(times)")
     }
 
     @Test("Ink that reaches the frame's edge at rest gets the icon's one unit of margin; a drawing on the usual live area keeps its frame")

@@ -30,8 +30,27 @@ public enum AskMotionLook {
     /// The latest a look may start, in seconds since the request was sent.
     /// The look and its re-plan take 40 to 90 seconds, and a plan that is
     /// already slow would carry the request past five minutes: on 2026-11-08
-    /// a heart's story did, and landed nothing at all.
-    public static let latestStart: TimeInterval = 150
+    /// a heart's story did, and landed nothing at all. 150 until 2026-11-09,
+    /// when stories planned in 160 to 190 seconds and most were never looked
+    /// at; the mend is a short fresh talk since (`mending`), and 200 carried a
+    /// heart past five minutes, so 175, with the mend itself bounded.
+    public static let latestStart: TimeInterval = 175
+
+    /// The latest a round of the mend may start, in seconds since the request
+    /// was sent; past it, the motion lands as it was looked at. A heart's
+    /// story planned for 197 s on 2026-11-09, was looked at, and its mend
+    /// (a 2,900 token read and 1,300 tokens written, then more rounds) carried
+    /// it past five minutes with nothing landed.
+    public static let latestMendRound: TimeInterval = 260
+
+    /// When a round of the mend still going is cut off, in seconds since the
+    /// request was sent, and the motion lands as it was looked at: a mend's
+    /// first round wrote for a minute (the rocket, 2026-11-09), and no round
+    /// may carry a request past five minutes.
+    public static let mendCut: TimeInterval = 285
+
+    /// Why a mend stopped, in the trace.
+    public static let outOfTime = "the mend ran out of time"
 
     /// Whether a moving icon that landed `seconds` after it was asked is
     /// looked at, having been looked at `looked` times already.
@@ -100,6 +119,34 @@ public enum AskMotionLook {
             $0.trimmingCharacters(in: .whitespaces).trimmingCharacters(in: .punctuationCharacters).lowercased() != "all good"
         }.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
         return kept.count > mostCritique ? String(kept.prefix(mostCritique)) : kept
+    }
+
+    /// The one message a mend starts from (`AskConversation.reviseMotion`):
+    /// the request, its design, the drawing, the keys as they play now and
+    /// what the look saw, with nothing of the plan's own turns before it.
+    ///
+    /// Why: told what the look saw at the end of the whole plan's talk (its
+    /// calls, the rule send-backs, the beats review), Qwen3.8 27B sent the
+    /// same keys again, twice for the trash on 2026-11-08, and that re-plan
+    /// was so long the look was skipped for most stories (plans of 160 to 190
+    /// seconds against a start no later than 150). Shown the keys as numbers
+    /// to change, it has nothing of its own to repeat.
+    static func mending(request: String, design: String?, steps: [AskStep], seen: String) -> String {
+        let playing = AskMotion.folded(steps)
+        var lines = ["The request: \(request)"]
+        if let design { lines += ["", "The design:", design] }
+        for (at, step) in steps.enumerated() where step.tool == "add_drawing" {
+            lines += ["", "The drawing, layer $\(at + 1): name its parts as $\(at + 1)/their-id.",
+                      step.arguments["svg"]?.stringValue ?? ""]
+        }
+        let timing = playing.filter { $0.tool == "set_timing" }
+        let keys = playing.filter { $0.tool == "set_keys" }
+        if !timing.isEmpty || !keys.isEmpty {
+            lines += ["", "The motion as it plays now:"]
+            lines += (timing + keys).map { "\($0.tool) \($0.arguments.encodedString())" }
+        }
+        let parts = AskMotion.whereParts(steps).map { "\n\n\($0)\n\(AskMotion.touchRule)" } ?? ""
+        return lines.joined(separator: "\n") + "\n\n" + sendBack(seen) + parts
     }
 
     /// Said to the plan with what the look saw.

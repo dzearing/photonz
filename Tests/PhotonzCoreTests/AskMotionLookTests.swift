@@ -93,6 +93,37 @@ struct AskMotionLookTests {
         #expect(plan.unplanned == nil)
     }
 
+    @Test("The mend after a look is a fresh short talk: the rules, then the request, the drawing, the keys as they play and what was seen")
+    func freshMend() throws {
+        var talk = try Self.planned()
+        // Two keys for the same value, the second replacing the first: only
+        // the one that plays is shown to be mended.
+        talk.reviseMotion(seen: "warm up")
+        _ = talk.take(AskMotionTests.reply("set_keys", try AskMotionTests.args(#"{"layer":"$1/whole","property":"scale","replace":true,"keys":[{"seconds":0,"value":100},{"seconds":0.4,"value":140},{"seconds":1,"value":100}]}"#)))
+        let system = talk.messages.first
+        talk.reviseMotion(seen: "Opens: 0.2 s\nBounces: not seen")
+        // No earlier turn to anchor on: the model's own calls, the rule
+        // send-backs and the beats review are gone.
+        #expect(talk.messages.count == 2, "\(talk.messages.count) messages")
+        #expect(talk.messages.first == system)
+        let asked = talk.messages.last?["content"]?.stringValue ?? ""
+        #expect(talk.messages.last?["role"]?.stringValue == "user")
+        #expect(asked.contains(Self.request))
+        #expect(asked.contains("1) the thing 2) parts 3) beats"), "the design goes with it")
+        #expect(asked.contains(#"id="whole""#), "the drawing goes with it, its part ids readable")
+        #expect(asked.contains("140"), "the keys that play")
+        #expect(!asked.contains("125"), "not the keys a replace took away: \(asked)")
+        #expect(asked.contains("Bounces: not seen"))
+        #expect(asked.contains("Where your keys put each moving part"))
+        #expect(asked.contains("Left out:"))
+        // The steps stay, so `$1` is still the drawing and the new keys replace.
+        _ = talk.take(AskMotionTests.reply("set_keys", try AskMotionTests.args(#"{"layer":"$1/whole","property":"position","replace":true,"keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":-3}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)))
+        guard case .planned(let plan) = talk.take(AskMotionTests.said("Done.\nLeft out: nothing")) else {
+            Issue.record("the mended plan lands"); return
+        }
+        #expect(plan.steps.first?.tool == "add_drawing")
+    }
+
     @Test("A mended plan that still leaves a beat out says so on the row")
     func stillLeftOut() throws {
         var talk = try Self.planned()

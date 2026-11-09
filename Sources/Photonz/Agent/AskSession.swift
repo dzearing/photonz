@@ -531,17 +531,27 @@ final class AskSession {
         var retrying: AskStage?
         // How many times a moving icon's frames were looked at (`AskMotionLook`).
         var motionLooks = 0
+        // The moving icon as it was looked at, while its mend runs: what
+        // lands if the mend fails or runs out of time (`AskMotionLook.latestMendRound`).
+        var lookedAt: AskPlan?
         while true {
-            let outcome = await Self.plan(&talk, model: model, in: editor, note: note, say: say, first: retrying)
+            let outcome = await Self.plan(&talk, model: model, in: editor, note: note, say: say, first: retrying,
+                                          stopBy: lookedAt.map { _ in started.addingTimeInterval(AskMotionLook.latestMendRound) },
+                                          cutAt: lookedAt.map { _ in started.addingTimeInterval(AskMotionLook.mendCut) })
             guard !Task.isCancelled else { return }
             lastPlanSeconds = Date().timeIntervalSince(started)
             var plan: AskPlan
             switch outcome {
             case .success(let planned): plan = planned
             case .failure(let trouble):
-                phase = .stopped(trouble.sentence)
-                return
+                guard let held = lookedAt else {
+                    phase = .stopped(trouble.sentence)
+                    return
+                }
+                note("motion mend: \(trouble.sentence); landing the motion as it was looked at")
+                plan = held
             }
+            lookedAt = nil
             if let carrying = carried.flatMap({ AskDrawingCheck.carryingPlans($0, into: plan) }) {
                 plan = carrying
             } else if !AskIcon.isIn(plan) {
@@ -583,6 +593,7 @@ final class AskSession {
                 }
                 if let seen {
                     canvas.undo()
+                    lookedAt = plan
                     talk.reviseMotion(seen: seen)
                     retrying = .fixingMotion
                     enter(.fixingMotion)
@@ -1144,9 +1155,12 @@ final class AskSession {
     /// more than thinking (a try again and why).
     private static func plan(_ talk: inout AskConversation, model: String, in editor: EditorState,
                              note: (String) -> Void, say: @escaping @MainActor (AskStage) -> Void,
-                             first: AskStage? = nil) async -> Result<AskPlan, AskLocalModel.Trouble> {
+                             first: AskStage? = nil, stopBy: Date? = nil,
+                             cutAt: Date? = nil) async -> Result<AskPlan, AskLocalModel.Trouble> {
         guard let document = editor.agentID else { return .failure(.said(AskCopy.noDocumentSentence)) }
         while talk.rounds < AskConversation.mostRounds {
+            // No round starts past `stopBy`: a round can take a minute.
+            if let stopBy, Date() >= stopBy { return .failure(.said(AskMotionLook.outOfTime)) }
             let reply: AgentJSON
             // Every request fits the window before it goes (`AskConversation.fittedMessages`):
             // one that still cannot is said plainly here, never sent for the server to refuse.
@@ -1177,7 +1191,21 @@ final class AskSession {
             defer { watch?.cancel() }
             do {
                 note("asking the model (about \(expected) tokens of \(talk.window))")
-                reply = try await AskLocalModel.chat(talk.chatBody(model: model))
+                let body = talk.chatBody(model: model)
+                if let cutAt {
+                    // A round still going at `cutAt` is cut off: its request
+                    // is cancelled, which a stop of the whole request does too.
+                    let asking = Task { try await AskLocalModel.chat(body) }
+                    let cut = Task {
+                        try? await Task.sleep(for: .seconds(max(0, cutAt.timeIntervalSinceNow)))
+                        if !Task.isCancelled { asking.cancel() }
+                    }
+                    defer { cut.cancel() }
+                    reply = try await withTaskCancellationHandler { try await asking.value } onCancel: { asking.cancel() }
+                    if asking.isCancelled { return .failure(.said(AskMotionLook.outOfTime)) }
+                } else {
+                    reply = try await AskLocalModel.chat(body)
+                }
                 watch?.cancel()
                 // Long enough to hold a whole component call, so a look the
                 // planner let through can be rebuilt from the trace (a blue

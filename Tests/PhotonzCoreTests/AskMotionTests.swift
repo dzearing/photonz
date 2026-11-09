@@ -414,6 +414,11 @@ struct AskMotionTests {
         #expect(!asked.contains("coordinates"))
         #expect(AskMotion.design(fromAnswer: "Parts and beats.") == "Parts and beats.")
         #expect(AskMotion.design(fromAnswer: "<svg></svg>") == nil)
+        // The user's trash of 2026-11-09: a whole design, then the model went
+        // on to draw it, and the drawing cost it the design.
+        let wentOn = "**Design**\n\n1) The lid swings open.\n3) Beats: 0-200 rest.\n\nNow I'll draw it.\n\n<tool_call>\n<function=add_drawing>\n<parameter=svg>\n<svg viewBox=\"0 0 24 24\">"
+        #expect(AskMotion.design(fromAnswer: wentOn) == "**Design**\n\n1) The lid swings open.\n3) Beats: 0-200 rest.\n\nNow I'll draw it.")
+        #expect(AskMotion.design(fromAnswer: "Parts.\n```svg\n<svg></svg>\n```") == "Parts.")
         let talk = AskConversation(request: "make an animated icon of a thing", documentRead: #"{"kind":"picture","canvas":{"width":512,"height":512}}"#, iconDesign: "A plan.")
         #expect(talk.messages.last?["content"]?.stringValue == AskMotion.drawTheDesign)
     }

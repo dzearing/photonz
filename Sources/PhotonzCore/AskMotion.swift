@@ -104,8 +104,9 @@ public enum AskMotion {
     /// Said under where the parts are.
     static let touchRule = """
         A beat where one part hits, bounces off, knocks, pushes or lands on another needs the two touching at \
-        that beat's key, and what goes into something ends inside it: where this says touching nothing, move the \
-        keys until it says touching that part.
+        that beat's key: give that position key "touches" with the other part's id and it is placed against it. \
+        What goes into something ends inside it: where this says touching nothing, move the keys until it says \
+        touching that part.
         """
 
     /// The beats review for `steps`: the ask, and where the keys put each
@@ -204,8 +205,15 @@ public enum AskMotion {
     /// The design in `answer`, or nil when it holds none, which only costs
     /// the motion its head start.
     public static func design(fromAnswer answer: String) -> String? {
-        let words = AskConversation.withoutThinking(answer).trimmingCharacters(in: .whitespacesAndNewlines)
-        return words.isEmpty || words.contains("<svg") ? nil : words
+        var words = AskConversation.withoutThinking(answer)
+        // A model that goes on to draw keeps the design it wrote before the
+        // drawing: the user's trash of 2026-11-09 lost a whole design that way
+        // and was planned with none.
+        if let drawing = ["<tool_call", "```", "<svg"].compactMap({ words.range(of: $0)?.lowerBound }).min() {
+            words = String(words[..<drawing])
+        }
+        words = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        return words.isEmpty ? nil : words
     }
 
     /// How a thing moves well, true of anything.
@@ -234,7 +242,7 @@ public enum AskMotion {
         are gone before it is, never left on their own.
         - A story of several beats plays them in the order told, one after another, each long enough to read: \
         200 ms at the least, a journey 300 to 600 ms. What a beat causes starts as that beat ends, at the key where \
-        the two parts touch. The beats fill most of a 2 to 4 second lap with a short rest at its end, never a burst \
+        the two parts touch: that position key says "touches" with the other part's id. The beats fill most of a 2 to 4 second lap with a short rest at its end, never a burst \
         at the start and a long still wait.
         - Nothing appears out of nowhere. What is thrown, dropped or put in starts away from where it lands (in \
         view, or outside the frame) and travels the whole way there, x and y keyed together along an arc; what goes \
@@ -338,89 +346,13 @@ public enum AskMotion {
     /// the trash never touched the lid it should bounce off, and the model
     /// sent the same keys again: in numbers the miss is plain.
     public static func whereParts(_ planned: [AskStep]) -> String? {
-        let steps = folded(planned)
-        guard let svg = steps.first(where: { $0.tool == "add_drawing" })?.arguments["svg"]?.stringValue,
-              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true) else { return nil }
-        let keyed = steps.filter { $0.tool == "set_keys" }
-        var movers: [String] = []
-        for step in keyed {
-            guard let part = (step.arguments["layer"]?.stringValue).flatMap(partReference)?.part,
-                  AskMotionCheck.box(of: part, in: art) != nil, !movers.contains(where: { plain($0) == plain(part) }) else { continue }
-            movers.append(part)
-        }
-        guard !movers.isEmpty else { return nil }
-        func holds(_ part: SVGArtwork.Part, _ name: String) -> Bool {
-            part.name.map { plain($0) == plain(name) } ?? false || part.groups.contains { plain($0) == plain(name) }
-        }
-        // The keyed groups a mover sits inside, innermost first.
-        func carriers(of name: String) -> [String] {
-            guard let first = art.parts.first(where: { holds($0, name) }) else { return [] }
-            let outer = first.groups.firstIndex { plain($0) == plain(name) }.map { Array(first.groups[..<$0]) } ?? first.groups
-            return outer.reversed().compactMap { group in movers.first { plain($0) == plain(group) } }
-        }
-        // What stays still, each as its outermost named thing.
-        var still: [(name: String, box: CGRect)] = []
-        for part in art.parts where !movers.contains(where: { holds(part, $0) }) {
-            guard let unit = part.groups.first ?? part.name else { continue }
-            let own = SVGArtwork.shapeBounds(part.shape).insetBy(dx: -part.strokeWidth / 2, dy: -part.strokeWidth / 2)
-            if let at = still.firstIndex(where: { plain($0.name) == plain(unit) }) {
-                still[at].box = still[at].box.union(own)
-            } else {
-                still.append((unit, own))
-            }
-        }
+        // Keys that say what they touch are shown where they will land.
+        guard let lap = Lap(touchesPlaced(planned)), !lap.movers.isEmpty else { return nil }
+        let keyed = lap.keyed, movers = lap.movers
         let near = Double(PropertyKeys.nearMS) / 1000
         var moments: [Double] = []
         for seconds in keyed.flatMap({ AskMotionCheck.timed($0).map(\.seconds) }).sorted() where !moments.contains(where: { abs($0 - seconds) <= near }) {
             moments.append(seconds)
-        }
-        // A value at `seconds`: straight between keys, standing on a Hold.
-        func value(_ name: String, _ property: MotionProperty, at seconds: Double) -> AgentJSON? {
-            guard let step = keyed.last(where: { one in
-                (one.arguments["layer"]?.stringValue).flatMap(partReference).map { plain($0.part) == plain(name) } ?? false
-                    && one.arguments["property"]?.stringValue == property.rawValue
-            }) else { return nil }
-            return AskMotionCheck.value(of: step, at: seconds)
-        }
-        func turn(of name: String) -> (degrees: Double, pivot: CGPoint?)? {
-            guard let step = keyed.last(where: { one in
-                (one.arguments["layer"]?.stringValue).flatMap(partReference).map { plain($0.part) == plain(name) } ?? false
-                    && one.arguments["property"]?.stringValue == MotionProperty.rotation.rawValue
-            }), let own = AskMotionCheck.box(of: name, in: art) else { return nil }
-            guard let x = step.arguments["pivot"]?["x"]?.doubleValue, let y = step.arguments["pivot"]?["y"]?.doubleValue else {
-                return (0, CGPoint(x: own.midX, y: own.midY))
-            }
-            return (0, isFraction(x, y) ? CGPoint(x: own.minX + own.width * x, y: own.minY + own.height * y) : CGPoint(x: x, y: y))
-        }
-        // `points` as `name`'s own keys move them at `seconds`.
-        func moved(_ points: [CGPoint], by name: String, at seconds: Double) -> [CGPoint] {
-            guard let own = AskMotionCheck.box(of: name, in: art) else { return points }
-            let middle = CGPoint(x: own.midX, y: own.midY)
-            let grow = (value(name, .scale, at: seconds)?.doubleValue ?? 100) / 100
-            let degrees = value(name, .rotation, at: seconds)?.doubleValue ?? 0
-            let pivot = turn(of: name)?.pivot ?? middle
-            let shift = value(name, .position, at: seconds)
-            let (dx, dy) = (shift?["x"]?.doubleValue ?? 0, shift?["y"]?.doubleValue ?? 0)
-            let angle = degrees * .pi / 180
-            return points.map { point in
-                let grown = CGPoint(x: middle.x + (point.x - middle.x) * grow, y: middle.y + (point.y - middle.y) * grow)
-                let (x, y) = (grown.x - pivot.x, grown.y - pivot.y)
-                return CGPoint(x: pivot.x + x * cos(angle) - y * sin(angle) + dx, y: pivot.y + x * sin(angle) + y * cos(angle) + dy)
-            }
-        }
-        func corners(_ box: CGRect) -> [CGPoint] {
-            [CGPoint(x: box.minX, y: box.minY), CGPoint(x: box.maxX, y: box.minY),
-             CGPoint(x: box.maxX, y: box.maxY), CGPoint(x: box.minX, y: box.maxY)]
-        }
-        func placed(_ name: String, at seconds: Double) -> (quad: [CGPoint], seen: Bool)? {
-            guard let own = AskMotionCheck.box(of: name, in: art) else { return nil }
-            var quad = moved(corners(own), by: name, at: seconds)
-            var seen = (value(name, .opacity, at: seconds)?.doubleValue ?? 100) >= 10
-            for carrier in carriers(of: name) {
-                quad = moved(quad, by: carrier, at: seconds)
-                seen = seen && (value(carrier, .opacity, at: seconds)?.doubleValue ?? 100) >= 10
-            }
-            return (quad, seen)
         }
         func said(_ value: CGFloat) -> String {
             let tenth = (value * 10).rounded() / 10
@@ -435,26 +367,17 @@ public enum AskMotion {
         for seconds in moments.prefix(mostMoments) {
             var said_: [String] = []
             for name in movers {
-                guard let (quad, seen) = placed(name, at: seconds) else { continue }
+                guard let (quad, seen) = lap.placed(name, at: seconds) else { continue }
                 let label = name.lowercased()
                 guard seen else { said_.append("\(label) hidden"); continue }
                 let xs = quad.map(\.x), ys = quad.map(\.y)
                 var words = label
-                let degrees = value(name, .rotation, at: seconds)?.doubleValue ?? 0
+                let degrees = lap.value(name, .rotation, at: seconds)?.doubleValue ?? 0
                 if abs(degrees) >= 1 { words += " turned \(said(CGFloat(degrees))),"}
-                let grow = value(name, .scale, at: seconds)?.doubleValue ?? 100
+                let grow = lap.value(name, .scale, at: seconds)?.doubleValue ?? 100
                 if abs(grow - 100) >= 1 { words += " at \(said(CGFloat(grow))) percent," }
                 words += " x \(said(xs.min() ?? 0)) to \(said(xs.max() ?? 0)), y \(said(ys.min() ?? 0)) to \(said(ys.max() ?? 0))"
-                // What it touches: what stays, and what moves and is seen then,
-                // never what carries it or what it carries.
-                let family = Set(carriers(of: name).map(plain) + [plain(name)])
-                    .union(movers.filter { carriers(of: $0).contains { plain($0) == plain(name) } }.map(plain))
-                var others: [(name: String, quad: [CGPoint])] = still
-                    .filter { unit in !family.contains(plain(unit.name)) && !art.parts.contains { holds($0, name) && $0.groups.contains { plain($0) == plain(unit.name) } } }
-                    .map { ($0.name, corners($0.box)) }
-                for other in movers where !family.contains(plain(other)) {
-                    if let there = placed(other, at: seconds), there.seen { others.append((other, there.quad)) }
-                }
+                let others = lap.others(of: name, at: seconds)
                 if let around = others.first(where: { other in quad.allSatisfy { Self.inside($0, other.quad) } }) {
                     words += ", inside \(around.name.lowercased())"
                 } else {
@@ -557,6 +480,12 @@ public enum AskMotion {
                 while moment > from.seconds + 0.0005, seen(moment) { moment -= leavingStep }
                 guard moment > from.seconds + 0.0005 else { continue }
                 let at = Double(rounded(CGFloat(moment)))
+                // Unseen until a key's width before the jump: it comes into
+                // sight already there, and a key that close would be one key
+                // with it, which the app refuses with the whole step (the
+                // trash of 2026-11-09 never moved).
+                let width = Double(PropertyKeys.nearMS) / 1000
+                guard to.seconds - at > width, at - from.seconds > width else { continue }
                 keys.insert((at, to.value, AgentKeyCurve.hold), at: index + 1)
                 changed = true
                 index += 1
@@ -577,7 +506,7 @@ public enum AskMotion {
     /// before a close was slowed, and the flap vanished while still open);
     /// then hinges shared, what comes out put behind, and room made.
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
-        jumpsUnseen(fitted(hidden(hingesShared(foldsOpen(foldsLand(landingFolded(steps)))))))
+        jumpsUnseen(fitted(hidden(hingesShared(foldsOpen(foldsLand(touchesPlaced(landingFolded(steps))))))))
     }
 
     /// `fitted` before its marks go: the steps with the room made, and the
@@ -2006,7 +1935,7 @@ public enum AskMotionCheck {
 
     /// What is wrong with `steps` as a moving icon, in words for the model.
     public static func problems(_ planned: [AskStep]) -> [String] {
-        let steps = AskMotion.folded(planned)
+        let steps = AskMotion.folded(AskMotion.touchesPlaced(planned))
         let keyed = steps.filter { $0.tool == "set_keys" }
         guard !keyed.isEmpty else {
             return ["Nothing moves yet. Call set_keys for each value of each part that moves, then finish."]
