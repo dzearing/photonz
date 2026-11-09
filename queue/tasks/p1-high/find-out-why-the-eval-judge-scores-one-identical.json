@@ -3,13 +3,13 @@
   "title": "Find out why the eval judge scores one identical icon picture 85.6 and then 69.9 within an hour",
   "goal": "The eval that keeps or throws away changes to Ask gave the exact same balloon picture scores from 85.6 down to 69.9 in about fifty minutes, so a single reading cannot tell a better icon from a worse one. Find out where the swing comes from and make a reading steady enough to decide on.",
   "epic": "icon-vector",
-  "priority": "p2-normal",
-  "seq": 85,
+  "priority": "p1-high",
+  "seq": 15,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-09T01:51:54.273Z",
-  "updated": "2026-11-09T01:51:54.276Z",
+  "updated": "2026-11-09T01:53:27.338Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-09: icon.png md5 c98a0849043a02e0ade5edfb618dc242 (icon-balloon-popping, the round balloon) in runs 20261109-005655-ask 85.6, 20261109-010121-ask 84.0, 20261109-013349-ask 71.3, 20261109-013612-ask 72.0, 20261109-013813-ask 71.3, and the next run 69.9. Command: Scripts/ask-eval.sh run --engine ask --cases icon-balloon-popping. Asked/icon lines went from 7/6 to 6/5-6. In a lab judge (9 looks, /tmp/tearlab2/j.sh) the same picture read 85.6 in 6 of 7 reps at about 01:10. The scores drift downward over the hour rather than scatter, which may point at something time-dependent.",
@@ -21,6 +21,18 @@
     {
       "t": "2026-11-09T01:51:54.275Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-09T01:53:27.187Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-11-09T01:53:27.262Z",
+      "note": "seq 85 -> 15"
+    },
+    {
+      "t": "2026-11-09T01:53:27.337Z",
+      "note": "Raised to p1, seq 15: it is now a prerequisite of a-broken-icon-reads-as-what-breaks-it-a-crack-th (a user task), whose last bar (balloon at 85) sits inside this judge's swing. Note from reading judge.mjs: each line is the median of only 3 looks on a 0-10 integer scale, so the drift of 85.6 -> 69.9 is about 11 line-steps, too large for rounding alone; worth checking whether every line drops together (a shift in the judge) or one or two lines flip (sampling)."
     }
   ],
   "walks": []

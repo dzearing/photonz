@@ -16438,3 +16438,9 @@
 {"t":"2026-11-09T01:52:04.239Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T01:52:04.315Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T01:52:04.389Z","ev":"task_pending","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Wedge knot fixed (3a83d3993, 85.6 on it); balloon mean of five 76.0 against 85, held down by an untouched drawing the judge read 85.6 to 69.9. Open for the balloon."}
+{"t":"2026-11-09T01:52:39.823Z","ev":"task_started","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","title":"A broken icon reads as what breaks it: a crack through a heart, a split egg, a bubble in pieces","priority":"p1-high"}
+{"t":"2026-11-09T01:53:27.189Z","ev":"task_reprioritized","id":"find-out-why-the-eval-judge-scores-one-identical","from":"p2-normal","to":"p1-high"}
+{"t":"2026-11-09T01:53:27.264Z","ev":"task_resequenced","id":"find-out-why-the-eval-judge-scores-one-identical","from":85,"to":15}
+{"t":"2026-11-09T01:53:27.339Z","ev":"task_note","id":"find-out-why-the-eval-judge-scores-one-identical"}
+{"t":"2026-11-09T01:53:27.416Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
+{"t":"2026-11-09T01:53:30.718Z","ev":"task_pending","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Waiting on find-out-why-the-eval-judge-scores-one-identical (now a dep, p1 seq 15): the balloon bar of 85 is inside the judge's swing on one identical picture. Heart, egg, bubble bars met."}
