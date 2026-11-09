@@ -4,12 +4,12 @@
   "goal": "In a component sheet the Photonz skill built, the picture Photonz rendered shows faint grey boxes beside the Off and On column headers, about where the longer words Off Disabled and On Disabled would have sat in an earlier layout of the table. No layer is there. All three judges of the eval named them as ghost marks. Find out whether removed or moved words leave something behind in a rendered picture, and fix it if they do.",
   "epic": "agent-skills",
   "priority": "p2-normal",
-  "seq": 210,
+  "seq": 200,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-03T01:28:27.560Z",
-  "updated": "2026-11-08T17:12:59.530Z",
+  "updated": "2026-11-09T14:31:41.784Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in .ask-eval/runs/20261103-003200-skill/component-table/result.png (the render_picture the eval takes). Counted stray non-white pixels in each header row outside every top-level layer frame (inset 3), threshold min channel < 255, using a small CoreGraphics scan (/tmp/inkprobe/ghost.swift, not kept):\n  skill 003200: row 780 (Toggle) 1269, row 1460 (Checkbox) 385, row 1596 (Radio) 225, every other row 59 to 84 (antialias halo)\n  ask 002713: every row 25 to 40\n  skill 20261024-121624: 8 in all\nread.json lists only the Off/On headers and the full-canvas locked Background image in that area, so the marks are not layers. Contrast-stretched crop: rectangles of about #F2F2F2 right after Off (x 250 to 300 and 330 to 355) and after On (490 to 520), the word Disabled positions of Off Disabled and On Disabled headers in columns 0 and 1. The sheet lays out again on every labelled add_component, deleting and re-adding its headers (AgentComponentSheet.swift), and since 3c95a980 Toggle, Checkbox and Radio each get their own header row, so their headers move more between layouts. Not reproduced outside that one run: suspect a render cache of deleted text layers, or the Background image extended at canvas growth (EditorState+Crop.swift setCanvasSize).",
@@ -42,6 +42,10 @@
     {
       "t": "2026-11-08T17:12:59.529Z",
       "note": "seq 160 -> 210"
+    },
+    {
+      "t": "2026-11-09T14:31:41.783Z",
+      "note": "seq 210 -> 200"
     }
   ]
 }

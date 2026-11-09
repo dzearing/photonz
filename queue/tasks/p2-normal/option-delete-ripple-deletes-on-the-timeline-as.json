@@ -4,12 +4,12 @@
   "goal": "Premiere on the Mac ripple deletes with Option Delete, so an editor presses it on every unwanted stretch. On a video here it falls through to Fill with Foreground, which does nothing to a clip, so the press is silently lost. Let Option Delete ripple delete while the timeline has the keyboard and a clip or a marked stretch is picked, and keep it as Fill everywhere else. And a cut with nothing removed joins back into one piece when it is picked and Delete is pressed, the quickest way a Premiere editor knows; today that only works from its right-click.",
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
-  "seq": 420,
+  "seq": 410,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T22:07:24.772Z",
-  "updated": "2026-11-08T17:13:00.994Z",
+  "updated": "2026-11-09T14:31:43.399Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-07 by the manager pass, probe from HEAD 8cfad4ee, /tmp/mgr-walks/option-delete.json: openSampleTalk, I at a quarter, O at the middle, Option Delete -> 'option+delete is Edit > Fill with Foreground ... nothing else took the press' (the timeline does not take it). Running the row's action directly on a picked Sample Talk piece (fillWithForeground) changed nothing on screen and left the clip in 2 pieces, so for a person the press is a no-op either way.\nWhy it is this way: the-menu-bar-reads-like-a-professional-mac-edito moved Ripple Delete off Option Delete to Shift Delete because the one-key-each check found it on two printed rows (EditorCommands.swift ~720-731, comment 'one key on two rows lies on one of them'). TimelineKeys.swift ~211-212 maps only Delete and Shift Delete. Fill.filled has no clip check (Fill.swift ~22-25), FillColors.swift ~23 enables it for any picked layer.\nShape: decide in TimelineKeys (PhotonzCore, TDD) that Option Delete is ripple delete when the timeline has the keyboard AND (a ruler or track range is held, or the picked layers are all clips with picture or sound); otherwise fall through. Stale comments promising Option Delete: EditorState+RulerRange.swift ~15, EditorState+TrackRange.swift ~16.\nBlocked on a card because it gives a Photoshop key a second meaning (the user's Photoshop-parity rule).\n\nFolded in from delete-on-a-picked-through-edit-joins-it-as-in-p: From the rough list of queue/audits/2026-10-17-a-cut-with-nothing-removed-can-be-joined-back-in.json: 'Delete on a picked through edit does not join it, as it does in Premiere; the task asked not to change Delete without a card, so it is left as it was.' No card was ever opened, so the gap would sit unseen. Premiere: select a through edit (the dashed edit line) and press Delete to join it. Reuse the Join Through Edit action from task a-cut-with-nothing-removed-can-be-joined-back-in; do not write a second join. Filed by the digest of 2026-10-17.",
@@ -149,6 +149,10 @@
     {
       "t": "2026-11-08T17:13:00.993Z",
       "note": "seq 370 -> 420"
+    },
+    {
+      "t": "2026-11-09T14:31:43.398Z",
+      "note": "seq 420 -> 410"
     }
   ]
 }

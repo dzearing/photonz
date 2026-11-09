@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-09T14:27:55.896Z",
+  "updated": "2026-11-09T14:31:36.276Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -19,6 +19,7 @@
     "Fix: a request for an animated icon NEVER ends as a still. If the full story cannot be planned, Ask animates as many beats as it can, in order, and its row says which it left out ('Animated the lid opening and closing; left out the bounce'). New eval cases with multi-beat stories (at least 6: this one, 'a letter goes into an envelope, the flap closes and it flies off', 'a bell swings, rings twice and settles', 'a heart beats twice then breaks', 'a rocket shakes, lifts off and leaves smoke', 'a checkbox is ticked and the tick bounces'), each judged on 'every beat asked for happens, in order' from contact sheets; at least 5 of 6 at 7 or more.",
     "The objects a story needs are drawn as their own named layers so they can move (the trash, the lid on its hinge, the can), and the beats are keyed in time order with motion principles (anticipation, overshoot, settle), from the model's own planning, no coded animations per subject.",
     "Walk with the user's exact sentence: the picture plays every beat, Copy SVG gives an animated SVG that loops.",
+    "A reel (GIF or MP4) of the user's exact trash sentence playing two laps at Next defaults, plus its contact sheet, named in the audit so the user can watch it without running Ask (four minutes a try)",
     "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
   ],
   "log": [
@@ -169,6 +170,10 @@
     {
       "t": "2026-11-09T14:27:55.895Z",
       "note": "Seen holds ease, hits start what they hit, thrown parts seen the whole way (87bad39e3); story bar (5 of 6 at 7) not met, 0 of 6 in runs G and H"
+    },
+    {
+      "t": "2026-11-09T14:31:36.275Z",
+      "note": "triage 2026-11-09: six passes in 21 hours, story totals 44 to 57 with per-case spread wider than the gap to the bar (envelope 26 to 63, rocket 49 to 82), and the user's own trash sentence is the weakest case (3 to 4.1). Steer for the next pass: (1) the heart running out of 300 s and making nothing is a real defect, fix it first (save the trace on a time out); (2) then the user's own sentence: the bounce off the lid is the beat they named and it is never seen (contact against the lid's drawn line, not its box); (3) judge every change on two runs on the steady judge, never one. Added a reel of the user's sentence to the checklist: the audits so far carry sheets and stills, no reel."
     }
   ],
   "started": "2026-11-09T12:58:58.896Z",
