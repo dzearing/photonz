@@ -1,0 +1,33 @@
+{
+  "feature": "A looping turn comes home and spins evenly",
+  "epic": "icon-animate",
+  "task": "a-looping-turn-comes-home-and-spins-evenly-witho",
+  "summary": "A turn keyed on a repeating icon now loops smoothly with nothing extra typed: a swing gets a key at the lap end holding where it started, and a 0 to 360 spin goes round at one pace. Both show on the strip as keys and curves you can change, and both come home in the exported SVG.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. File > New > Image, Icon. Walks: the-whole-icon-workflow-walk (the swing) and the-whole-icon-workflow-on-a-frame-walk (the spin).",
+  "switched": {},
+  "try": [
+    { "do": "Draw a shape, pick it, and press K (Add Key) with the playhead at 0:00." },
+    { "do": "Click the ruler at 0.5 s and turn the shape about 15 degrees with its turn handle." },
+    { "do": "Click the ruler at 1.5 s and type -15 in Rotation. Look at the Rotation row: a fourth key sits on the repeats mark.", "shot": "2026-11-09-looping-turn-swing-strip-sc.png" },
+    { "do": "Press Play and watch three laps: it swings through upright without a jump or a pause.", "shot": "2026-11-09-looping-turn-swing-canvas-sheet.png" },
+    { "do": "On a new icon, choose Animate a Property > Rotation at 0:00, click the end of the ruler, type 360. The panel's Curve reads Linear.", "shot": "2026-11-09-looping-turn-spin-strip-sc.png" },
+    { "do": "Press Play: it goes round at one steady pace with no slow down at the lap.", "shot": "2026-11-09-looping-turn-spin-canvas-sheet.png" },
+    { "do": "Hover the exported swing to play it.", "shot": "2026-11-09-looping-turn-swing.svg" },
+    { "do": "Hover the exported spin to play it.", "shot": "2026-11-09-looping-turn-spin.svg" }
+  ],
+  "evaluate": [
+    "Does the swing carry through upright each lap rather than pausing or kicking there?",
+    "When you see the key on the repeats mark, is it clear it is what brings the swing home?",
+    "When you drag the repeats mark longer or shorter, should the key standing on it move with the mark, as it does now?",
+    "Is Linear right for a full spin, with no ease at all?"
+  ],
+  "rough": [
+    "Reels, three laps each: 2026-11-09-looping-turn-swing-canvas.mp4 and 2026-11-09-looping-turn-spin-canvas.mp4 (the canvas, filmed at half a point to the pixel), 2026-11-09-looping-turn-swing-svg-in-browsers.mp4 and 2026-11-09-looping-turn-spin-svg-in-browsers.mp4 (the exported file in WebKit, left, and Chromium, right).",
+    "The measured bar: the drawn angle a millisecond either side of the lap is 0.03 degrees apart on the swing and 0.18 on the spin in the walks (expectLapSeam), and 0.06 and 0.36 in both browsers over three laps (2026-11-09-looping-turn-browser-seams.txt). The old swing file reads 15 degrees apart on the same check.",
+    "The swing's first and last keys read Bezier in their ease menu: a straight run through upright with eased turns at 15 and -15 needs handles, and there is no plainer name for that yet.",
+    "Only turns come home by themselves. A move or a fade keyed on a looping icon still snaps back at the lap, because that can be on purpose (a blink); chose that over every property, logged on the task.",
+    "Delete the key on the repeats mark and the next angle you set puts it back. Typing a different angle on it keeps yours.",
+    "The pace at the seam is matched once, when the swing first passes through upright. Changing the -15 key a lot afterwards can leave a small change of speed there.",
+    "No mock covers what happens at the seam: picture-keys.html draws the keys and the repeats mark, and the new key sits on that mark."
+  ]
+}

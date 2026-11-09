@@ -214,7 +214,9 @@ extension EditorState {
     /// every other number in the app.
     func setMotionCycleMS(_ ms: Int) {
         guard document?.motionCycleMS != max(1, ms) else { return }
-        perform { $0.motionCycleMS = max(1, ms) }
+        // A key standing on a keyed picture's lap end rides the change
+        // (`setKeyLapLength`); anywhere else this is just the length.
+        perform { $0.setKeyLapLength(ms) }
         motionChanged()
     }
 

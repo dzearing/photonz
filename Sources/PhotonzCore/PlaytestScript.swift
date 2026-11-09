@@ -3319,6 +3319,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// moving numbers say nothing about whether the picture moved, and on
     /// 2026-11-06 a keyed picture played frozen under a green walk.
     case expectPictureMoves(seconds: Double)
+    /// Fails unless every keyed turn on a repeating picture draws the same
+    /// angle, within `within` degrees, a millisecond either side of where the
+    /// lap starts over, and keeps moving through that seam where it passes
+    /// through it. `steady` also fails a turn whose pace across the lap
+    /// varies by more than a tenth: a spin (`LapSeamReading`).
+    case expectLapSeam(within: Double, steady: Bool)
     case writeSVG(name: String, background: SVGExport.Background, frame: String? = nil,
                   lacks: String? = nil, carries: String? = nil)
     /// Write the document out as a picture to `<out>/<name>.<ext>`, at the
@@ -4787,7 +4793,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "agentTool", "expectPictureMoves", "expectPreview", "appKey", "holdAppKey", "appearance", "askFromNothing", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
+        "action", "agentTool", "expectPictureMoves", "expectLapSeam", "expectPreview", "appKey", "holdAppKey", "appearance", "askFromNothing", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
@@ -4867,6 +4873,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .render: "render"
         case .agentTool: "agentTool"
         case .expectPictureMoves: "expectPictureMoves"
+        case .expectLapSeam: "expectLapSeam"
         case .writeSVG: "writeSVG"
         case .writePicture: "writePicture"
         case .exportQuality: "exportQuality"
@@ -5577,6 +5584,9 @@ public enum PlaytestStep: Sendable, Equatable {
                            scale: CGFloat(try f.optionalNumber("scale") ?? 1))
         case "expectPictureMoves":
             self = .expectPictureMoves(seconds: try f.optionalNumber("seconds") ?? 0.25)
+        case "expectLapSeam":
+            self = .expectLapSeam(within: try f.optionalNumber("within") ?? 1,
+                                  steady: try f.optionalFlag("steady") ?? false)
         case "agentTool":
             self = .agentTool(tool: try f.string("tool"), arguments: try f.optionalString("arguments") ?? "{}")
         case "writeSVG":
@@ -6685,8 +6695,10 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("key", "a slide is set off by exactly one of \"key\" or \"press\"")
             }
             let seconds = try f.optionalNumber("seconds") ?? PlaytestSlideFilm.defaultSeconds
-            guard seconds >= 0.1, seconds <= 3 else {
-                throw f.invalid("seconds", "a slide is filmed for 0.1 to 3 seconds, not \(seconds)")
+            // Seven: three laps of a two second loop and a little over, which
+            // is what a reel of a loop coming home needs.
+            guard seconds >= 0.1, seconds <= 7 else {
+                throw f.invalid("seconds", "a slide is filmed for 0.1 to 7 seconds, not \(seconds)")
             }
             let ceiling = try f.optionalNumber("longestStillUnderMS")
             if let ceiling, ceiling <= 0 {

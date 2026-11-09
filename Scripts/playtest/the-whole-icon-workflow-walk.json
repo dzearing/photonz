@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/the-whole-icon-workflow-walk",
-  "seed": "The whole icon workflow from the focus, end to end, at Next defaults with nothing switched on: File, New, Image, Icon, keylines and snapping already on, a cloud of three circles and a Pen box joined from right-click, a 1.75 round outline, a Pen arrow brought into line with it, checked at real sizes, grouped, swung by Add Key, a turn on the canvas and two typed moments, forever, and written as an animated SVG. Points are off the unit on purpose: every one lands on a whole unit. Tools are picked by their keys, panel controls by real clicks.",
+  "seed": "The whole icon workflow from the focus, end to end, at Next defaults with nothing switched on: File, New, Image, Icon, keylines and snapping already on, a cloud of three circles and a Pen box joined from right-click, a 1.75 round outline, a Pen arrow brought into line with it, checked at real sizes, grouped, swung by Add Key, a turn on the canvas and two moments and nothing typed at the lap end, forever, and written as an animated SVG. Points are off the unit on purpose: every one lands on a whole unit. Tools are picked by their keys, panel controls by real clicks.",
   "setup": {
     "forget": [
       "all"
@@ -635,40 +635,18 @@
       "name": "11-swung-the-other-way"
     },
     {
-      "do": "clickRuler",
-      "seconds": 2
-    },
-    {
-      "do": "wait",
-      "seconds": 0.6
-    },
-    {
       "do": "describe",
-      "stage": "12-at-the-lap-end",
-      "note": "CLUMSY: the last key has to be told to go home, or the swing snaps back when the lap starts over."
+      "stage": "12-comes-home",
+      "note": "NO END KEY TYPED: the swing has a key at the lap end holding where it started, put there by the app, so it comes home rather than jumping when the lap starts over."
     },
     {
-      "do": "focus",
-      "field": "Rotation Value"
+      "do": "expectRowKeys",
+      "row": "Rotation",
+      "remember": "swing"
     },
     {
-      "do": "key",
-      "key": "a",
-      "modifiers": [
-        "command"
-      ]
-    },
-    {
-      "do": "type",
-      "text": "0"
-    },
-    {
-      "do": "key",
-      "key": "return"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.8
+      "do": "expectLapSeam",
+      "within": 1
     },
     {
       "do": "snapshot",
@@ -678,7 +656,7 @@
       "do": "filmWindow",
       "name": "13-playing-film",
       "press": "Real Size Preview",
-      "seconds": 2
+      "seconds": 6
     },
     {
       "do": "expectSharp",
@@ -764,7 +742,7 @@
     {
       "do": "menus",
       "stage": "14-file",
-      "choose": "File > Export\u2026"
+      "choose": "File > Export…"
     },
     {
       "do": "wait",
@@ -787,6 +765,10 @@
       "name": "cloud-download",
       "carries": "repeatCount=\"indefinite\"",
       "lacks": "<image"
+    },
+    {
+      "do": "expectSVG",
+      "contains": "keyTimes=\"0;0.25;0.75;1\""
     }
   ]
 }

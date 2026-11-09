@@ -2857,6 +2857,27 @@ private final class Run {
             guard difference > 0 else {
                 throw Failure(description: "the canvas's picture stood still for \(seconds)s")
             }
+        case .expectLapSeam(let within, let steady):
+            let editor = try requireEditor()
+            guard let document = editor.document else { throw Failure(description: "expectLapSeam: no document") }
+            let readings = document.lapSeamReadings()
+            guard !readings.isEmpty else {
+                throw Failure(description: "expectLapSeam: nothing turns on a picture whose lap repeats")
+            }
+            for reading in readings {
+                let said = "\(reading.layerName): \(String(format: "%.2f", reading.jump))° apart across the seam, "
+                    + "\(String(format: "%.1f", reading.arriving))° into it and "
+                    + "\(String(format: "%.1f", reading.leaving))° out of it per tenth of the lap"
+                    + (steady ? ", pace varies by \(String(format: "%.0f", reading.paceSpread * 100))%" : "")
+                print("    " + said)
+                note(number, step.name, said, state: describe())
+                guard reading.jump <= within else {
+                    throw Failure(description: said + ": it jumps where the lap starts over")
+                }
+                if steady, reading.paceSpread > 0.1 {
+                    throw Failure(description: said + ": it does not go round at a steady pace")
+                }
+            }
         case .agentTool(let tool, let arguments):
             let editor = try requireEditor()
             let filled = arguments.replacingOccurrences(of: "$picked", with: editor.selectedLayerID?.uuidString ?? "")

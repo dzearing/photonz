@@ -1,0 +1,16 @@
+  ok   WebKit   2026-11-09-looping-turn-swing.svg lap 1: -0.03° then 0.03°, 0.06° apart
+  ok   WebKit   2026-11-09-looping-turn-swing.svg lap 2: -0.03° then 0.03°, 0.06° apart
+  ok   WebKit   2026-11-09-looping-turn-swing.svg lap 3: -0.03° then 0.03°, 0.06° apart
+       WebKit   2026-11-09-looping-turn-swing.svg at a quarter lap: 15.2°
+  ok   WebKit   2026-11-09-looping-turn-spin.svg lap 1: 359.82° then 0.18°, 0.36° apart
+  ok   WebKit   2026-11-09-looping-turn-spin.svg lap 2: 359.82° then 0.18°, 0.36° apart
+  ok   WebKit   2026-11-09-looping-turn-spin.svg lap 3: 359.82° then 0.18°, 0.36° apart
+       WebKit   2026-11-09-looping-turn-spin.svg at a quarter lap: 90.0°
+  ok   Chromium 2026-11-09-looping-turn-swing.svg lap 1: -0.03° then 0.03°, 0.06° apart
+  ok   Chromium 2026-11-09-looping-turn-swing.svg lap 2: -0.03° then 0.03°, 0.06° apart
+  ok   Chromium 2026-11-09-looping-turn-swing.svg lap 3: -0.03° then 0.03°, 0.06° apart
+       Chromium 2026-11-09-looping-turn-swing.svg at a quarter lap: 15.2°
+  ok   Chromium 2026-11-09-looping-turn-spin.svg lap 1: 359.82° then 0.18°, 0.36° apart
+  ok   Chromium 2026-11-09-looping-turn-spin.svg lap 2: 359.82° then 0.18°, 0.36° apart
+  ok   Chromium 2026-11-09-looping-turn-spin.svg lap 3: 359.82° then 0.18°, 0.36° apart
+       Chromium 2026-11-09-looping-turn-spin.svg at a quarter lap: 90.0°

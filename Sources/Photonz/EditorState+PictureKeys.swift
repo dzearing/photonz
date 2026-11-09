@@ -127,10 +127,11 @@ extension EditorState {
         keyLapDrag = KeyLapDrag(heldRulerMS: length, lengthMS: length)
     }
 
-    /// ...moved. It stops at the last key, so no key is left past the end.
+    /// ...moved. It stops at the last key, so no key is left past the end;
+    /// a key standing on the end rides it instead.
     func dragKeyLap(toMS ms: Int) {
         guard let document, var drag = keyLapDrag else { return }
-        drag.lengthMS = max(document.shortestKeyLapMS, ms)
+        drag.lengthMS = max(document.shortestDraggedKeyLapMS, ms)
         keyLapDrag = drag
     }
 

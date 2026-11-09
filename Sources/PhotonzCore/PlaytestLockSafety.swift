@@ -329,6 +329,8 @@ public enum PlaytestLockSafety {
         "agentTool",
         // Reads the canvas's own layers inside the app, as `snapshot` does.
         "expectPictureMoves",
+        // Reads the document's own keys inside the app; nothing on screen.
+        "expectLapSeam",
         // Sets what the walk's own drags hand the canvas; nothing on screen.
         "pen",
         // A video export asks the editor to write a file and then opens the

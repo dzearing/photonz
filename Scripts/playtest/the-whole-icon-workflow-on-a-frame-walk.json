@@ -696,20 +696,13 @@
     },
     {
       "do": "describe",
-      "stage": "10-eases",
-      "note": "CLUMSY: a new stretch eases in and out, so a spin slows to a stop every lap until Curve is set to Linear."
+      "stage": "10-even",
+      "note": "NO CURVE PICKED: 360 typed at the end of the ruler lands on the lap end, and the spin's two keys read Linear by themselves, so it goes round at one pace with no stop at the lap."
     },
     {
-      "do": "panelMenu",
-      "menu": "Curve",
-      "choose": "Linear",
-      "at": [
-        "centre"
-      ]
-    },
-    {
-      "do": "wait",
-      "seconds": 0.8
+      "do": "expectLapSeam",
+      "within": 1,
+      "steady": true
     },
     {
       "do": "clickRuler",
@@ -731,7 +724,7 @@
       "do": "filmWindow",
       "name": "13-playing-film",
       "press": "Real Size Preview",
-      "seconds": 2
+      "seconds": 6
     },
     {
       "do": "expectSharp",
@@ -821,7 +814,7 @@
     {
       "do": "menus",
       "stage": "14-file",
-      "choose": "File > Export\u2026"
+      "choose": "File > Export…"
     },
     {
       "do": "wait",
@@ -845,6 +838,10 @@
       "carries": "repeatCount=\"indefinite\"",
       "lacks": "<image",
       "frame": "Frame"
+    },
+    {
+      "do": "expectSVG",
+      "contains": "calcMode=\"linear\""
     }
   ]
 }

@@ -515,9 +515,14 @@ extension PhotonzDocument {
                                        _ property: KeyedProperty,
                                        atDocumentTimeMS ms: Int, ease: KeyEase? = nil) -> Bool {
         guard let layer = layer(id: layerID), layer.keyableProperties.contains(property) else { return false }
-        let clock = keyClock(of: layer, property, atDocumentTimeMS: ms)
+        var clock = keyClock(of: layer, property, atDocumentTimeMS: ms)
         switch property {
         case let .motion(motion, effect):
+            // On a repeating picture a key within a frame of the lap end lands
+            // on it, and a turn looks after its seam (`LoopingTurn.swift`).
+            clock = keyLanding(clock, on: layer)
+            let before = layer.keyedMotion(motion, effect: effect)
+            defer { if motion == .rotation { closeTurnLap(layerID: layerID, effect: effect, before: before) } }
             if let keyed = layer.keyedMotion(motion, effect: effect) {
                 let next = keyed.settingKey(atMS: clock, value: value, ease: ease)
                 updateLayer(id: layerID) { edited in

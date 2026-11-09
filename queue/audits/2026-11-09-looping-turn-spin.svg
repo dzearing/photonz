@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <clipPath id="clip-1">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <g>
+    <g clip-path="url(#clip-1)">
+      <g transform="rotate(0 12 12)">
+        <animateTransform attributeName="transform" type="rotate" dur="2000ms" repeatCount="indefinite" calcMode="linear" keyTimes="0;1" values="0 12 12;360 12 12"/>
+        <g transform="translate(3 6)">
+          <path d="M0 9 C0 7.343 1.343 6 3 6 L3.1 6 C3.034 5.677 3 5.342 3 5 C3 2.239 5.239 0 8 0 C10.471 0 12.524 1.793 12.923 4.151 C13.264 4.051 13.626 4 14 4 C16.209 4 18 5.791 18 8 C18 10.209 16.209 12 14 12 L3 12 C1.343 12 0 10.657 0 9 Z" fill="none" stroke="#1C1C1E" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+          <path transform="translate(9 3)" d="M0 0 L0 6" fill="none" stroke="#1C1C1E" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+          <path transform="translate(6 6)" d="M0 0 L3 3 L6 0" fill="none" stroke="#1C1C1E" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
