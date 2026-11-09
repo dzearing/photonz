@@ -5,14 +5,58 @@
   "setup": "Photonz Next, no switch changed from its default. Walks: ask-animates-from-the-new-window-walk (the user's own words), front-door-walk (the Icon row), ask-with-nothing-open-walk (a video still refused).",
   "switched": {},
   "try": [
-    { "do": "File > New, type 'make an animated trash can icon where it opens, some trash is thrown in' and click Create.", "shot": "2026-11-07-new-window-animated-1-typed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Wait for Ask: a 512 by 512 picture opens in Icon with the trash can, its lid and the trash keyed on the timeline.", "shot": "2026-11-07-new-window-animated-2-trash-made-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Press Space: the lid swings open, the trash drops in, and it loops.", "shot": "2026-11-07-new-window-animated-3-trash-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Edit > Copy SVG and paste it into a browser: it plays and loops (2026-11-07-new-window-animated-trash.svg is the walk's file)." },
-    { "do": "Try 'an animated loading spinner' in a new New window: a spinner arc that turns and loops.", "shot": "2026-11-07-new-window-animated-4-spinner-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Try 'make an animated svg of a heart beating' and 'a gif of a bouncing ball'.", "shot": "2026-11-07-new-window-animated-6-ball-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Type 'a video of waves on a beach' and click Create: it still says Ask can't make videos yet." },
-    { "do": "Click the Icon row under Size and New Image: a 512 by 512 picture opens in Icon.", "shot": "2026-11-07-new-window-animated-7-icon-row-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+    {
+      "do": "File > New, type 'make an animated trash can icon where it opens, some trash is thrown in' and click Create.",
+      "shot": "2026-11-07-new-window-animated-1-typed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Wait for Ask: a 512 by 512 picture opens in Icon with the trash can, its lid and the trash keyed on the timeline.",
+      "shot": "2026-11-07-new-window-animated-2-trash-made-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Space: the lid swings open, the trash drops in, and it loops.",
+      "shot": "2026-11-07-new-window-animated-3-trash-playing-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Edit > Copy SVG and paste it into a browser: it plays and loops (2026-11-07-new-window-animated-trash.svg is the walk's file)."
+    },
+    {
+      "do": "Try 'an animated loading spinner' in a new New window: a spinner arc that turns and loops.",
+      "shot": "2026-11-07-new-window-animated-4-spinner-playing-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Try 'make an animated svg of a heart beating' and 'a gif of a bouncing ball'.",
+      "shot": "2026-11-07-new-window-animated-6-ball-playing-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type 'a video of waves on a beach' and click Create: it still says Ask can't make videos yet."
+    },
+    {
+      "do": "Click the Icon row under Size and New Image: a 512 by 512 picture opens in Icon.",
+      "shot": "2026-11-07-new-window-animated-7-icon-row-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "The trash can icon as exported: point at the button to play it, and see it at 16, 24, 48 and 96 on light and dark.",
+      "shot": "2026-11-07-new-window-animated-trash.svg"
+    },
+    {
+      "do": "The loading spinner as exported.",
+      "shot": "2026-11-07-new-window-animated-spinner.svg"
+    },
+    {
+      "do": "The beating heart as exported.",
+      "shot": "2026-11-07-new-window-animated-heart.svg"
+    },
+    {
+      "do": "The bouncing ball as exported (it came out as a ring: the model's drawing).",
+      "shot": "2026-11-07-new-window-animated-ball.svg"
+    }
   ],
   "evaluate": [
     "Is an icon-sized square the picture you expected for 'a gif of a bouncing ball', or did you want something bigger?",

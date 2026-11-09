@@ -362,6 +362,19 @@
     background:rgba(0,0,0,.55);border-radius:6px;padding:6px 8px;pointer-events:none}
   .db-lb .db-lbx{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:15px;border:0;background:rgba(0,0,0,.55);
     color:#fff;font-size:16px;line-height:30px;cursor:pointer}
+  /* An animated SVG in a report plays where it would be used: a button that
+     moves on hover, and the icon at real sizes on light and dark. */
+  #dashboard .db-svgplay{display:flex;flex-wrap:wrap;gap:var(--gap);align-items:center;margin-top:6px;padding:10px;border:1px solid var(--line-soft);border-radius:var(--r3);background:var(--panel-2);max-width:620px}
+  #dashboard .db-svgplay .db-svgbtn{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 10px;border-radius:8px;border:1px solid var(--line);background:#fff;color:#1d1d1f;font:600 13px -apple-system,system-ui,sans-serif;cursor:pointer}
+  #dashboard .db-svgplay .db-svgbtn:hover{background:#f2f2f5}
+  #dashboard .db-svgplay .db-svgbtn svg{width:20px;height:20px;display:block}
+  #dashboard .db-svgplay .db-svgsizes{display:flex;gap:6px;align-items:flex-end}
+  #dashboard .db-svgplay .db-svgcell{display:grid;place-items:center;border-radius:6px;padding:6px}
+  #dashboard .db-svgplay .db-svgcell.light{background:#fff;color:#1d1d1f}
+  #dashboard .db-svgplay .db-svgcell.dark{background:#1c1c1e;color:#f5f5f7}
+  #dashboard .db-svgplay .db-svgcell svg{display:block}
+  #dashboard .db-svgplay .db-svglab{font-size:10px;color:var(--faint);text-align:center;margin-top:2px}
+  #dashboard .db-svgplay .db-svgnote{flex-basis:100%;font-size:10.5px;color:var(--faint)}
   #dashboard .db-ashotnote{max-width:460px;margin-top:4px;font-size:10.5px;line-height:1.5;color:var(--faint)}
   #dashboard .db-acomposer{grid-column:1/-1;margin-top:var(--s2);display:flex;flex-direction:column;gap:var(--s2)}
   #dashboard .db-acta{display:flex;gap:var(--s2);justify-content:flex-end}
@@ -1733,6 +1746,57 @@
   function auditBodyId(name) { return 'db-ab-' + name.replace(/[^a-z0-9]+/gi, '-'); }
 
   // one commentable line: the content, plus a quiet control that opens a composer
+  // A report's picture. An SVG is put where it would be used instead of shown
+  // as a still: a button whose icon plays while the pointer is on it, and the
+  // icon at 16, 24, 48 and 96 on light and dark, playing (the user, 2026-11-09:
+  // "a way to test the animated svg in html, for example in a button which on
+  // hover animates the icon"). Filled in after the report is drawn
+  // (hydrateSvgPlay), because the SVG has to be inline to be paused and played.
+  function auditMedia(shot) {
+    if (/\.svg$/i.test(shot)) return '<div class="db-svgplay" data-svg="' + esc(shot) + '"><span class="db-svgnote">Loading ' + esc(shot) + '…</span></div>';
+    return '<img src="/api/audit-shot/' + encodeURIComponent(shot) + '" alt="" loading="lazy">';
+  }
+  function hydrateSvgPlay(root) {
+    if (!root) return;
+    Array.prototype.forEach.call(root.querySelectorAll('.db-svgplay[data-svg]:not([data-ready])'), function (box) {
+      box.setAttribute('data-ready', '1');
+      var name = box.getAttribute('data-svg');
+      fetch('/api/audit-shot/' + encodeURIComponent(name), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); }).then(function (text) {
+        var moving = /<animate|<set\b/.test(text);
+        var cell = function (px, tone) {
+          return '<div><div class="db-svgcell ' + tone + '" style="width:' + (px + 12) + 'px;height:' + (px + 12) + 'px"><span style="width:' + px + 'px;height:' + px + 'px;display:block">' + text + '</span></div><div class="db-svglab">' + px + '</div></div>';
+        };
+        var h = '<button type="button" class="db-svgbtn" title="Point at it">' + text + '<span>' + (moving ? 'Hover me' : 'Button') + '</span></button>';
+        h += '<div class="db-svgsizes">' + [16, 24, 48, 96].map(function (px) { return cell(px, 'light'); }).join('') + '</div>';
+        h += '<div class="db-svgsizes">' + [16, 24, 48, 96].map(function (px) { return cell(px, 'dark'); }).join('') + '</div>';
+        if (moving) h += '<button type="button" class="btn sm secondary" data-svgtoggle>Pause sizes</button>';
+        // An icon for a web page follows the page's colour through currentColor.
+        // One with its colours fixed in it vanishes on dark: say so rather than
+        // let an empty dark row read as the player failing.
+        if (!/currentColor/i.test(text)) h += '<span class="db-svgnote" style="color:var(--warn)">Its colours are fixed in the SVG, so on dark it can disappear. Exported with currentColor it would follow the page.</span>';
+        h += '<span class="db-svgnote">' + esc(name) + (moving ? ' · the button plays while the pointer is on it; the sizes loop' : ' · still') + '</span>';
+        box.innerHTML = h;
+        Array.prototype.forEach.call(box.querySelectorAll('svg'), function (svg) {
+          svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
+          if (!svg.getAttribute('viewBox') && svg.getAttribute('width')) svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        });
+        var btn = box.querySelector('.db-svgbtn svg');
+        if (btn && moving && btn.pauseAnimations) {
+          btn.pauseAnimations(); btn.setCurrentTime(0);
+          var b = box.querySelector('.db-svgbtn');
+          b.addEventListener('mouseenter', function () { btn.setCurrentTime(0); btn.unpauseAnimations(); });
+          b.addEventListener('mouseleave', function () { btn.pauseAnimations(); btn.setCurrentTime(0); });
+        }
+        var tog = box.querySelector('[data-svgtoggle]');
+        if (tog) tog.addEventListener('click', function () {
+          var paused = tog.textContent.indexOf('Play') === 0;
+          Array.prototype.forEach.call(box.querySelectorAll('.db-svgsizes svg'), function (svg) { if (svg.pauseAnimations) { if (paused) svg.unpauseAnimations(); else svg.pauseAnimations(); } });
+          tog.textContent = paused ? 'Pause sizes' : 'Play sizes';
+        });
+      }).catch(function () { box.innerHTML = '<span class="db-svgnote">Could not load ' + esc(name) + '</span>'; });
+    });
+  }
+
   function auditLine(cls, anchor, quote, inner) {
     var open = commentOn === anchor;
     var key = auditSel + '|' + anchor;
@@ -1774,7 +1838,7 @@
       h += '<div class="db-asec"><div class="mlabel"><i class="ic ic-play"></i>Try it · ' + a.try.length + ' steps</div>';
       a.try.forEach(function (st, i) {
         var inner = '<div class="db-arow"><span class="db-anum">' + (i + 1) + '</span><span class="db-ado">' + esc(st.do || '') + '</span></div>';
-        if (st.shot) inner += '<img src="/api/audit-shot/' + encodeURIComponent(st.shot) + '" alt="" loading="lazy">';
+        if (st.shot) inner += auditMedia(st.shot);
         // A caption for the picture itself. It exists for the one thing a
         // reader cannot see in the picture: a capture taken while the Mac was
         // locked is the real window, with colours that can read dimmed and no
@@ -1944,6 +2008,7 @@
     var el = auditSel && document.getElementById(auditBodyId(auditSel));
     if (!el) { render(); return; }
     el.innerHTML = auditDetail(auditSel);
+    hydrateSvgPlay(el);
   }
   function loadAudit(name) {
     fetch('/api/audit/' + encodeURIComponent(name)).then(function (r) { return r.json(); }).then(function (d) {
@@ -2060,6 +2125,10 @@
   }
 
   // ---- actions ----
+  // A report can be drawn from several places (the list, an opened card, a
+  // refresh), so any SVG player that appears anywhere is filled in once.
+  new MutationObserver(function () { hydrateSvgPlay(document.getElementById('dashboard')); })
+    .observe(document.getElementById('dashboard'), { childList: true, subtree: true });
   document.getElementById('dashboard').addEventListener('click', function (e) {
     var b = e.target.closest('[data-act], [data-dbtab], [data-tsort], [data-tfilter]');
     if (!b) return;

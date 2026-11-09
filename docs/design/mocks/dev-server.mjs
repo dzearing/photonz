@@ -120,10 +120,10 @@ async function handleApi(req, res, url) {
     // screenshots live beside their audit
     if (req.method === 'GET' && url.startsWith('/api/audit-shot/')) {
       const name = decodeURIComponent(url.slice('/api/audit-shot/'.length));
-      if (!/^[a-z0-9._-]+\.(png|jpg|jpeg)$/i.test(name)) return send(400, { error: 'bad name' });
+      if (!/^[a-z0-9._-]+\.(png|jpg|jpeg|svg)$/i.test(name)) return send(400, { error: 'bad name' });
       try {
         const buf = await readFile(join(ROOT, '..', '..', '..', 'queue', 'audits', name));
-        res.writeHead(200, { 'content-type': name.endsWith('.png') ? 'image/png' : 'image/jpeg', 'cache-control': 'no-store' });
+        res.writeHead(200, { 'content-type': name.endsWith('.png') ? 'image/png' : name.endsWith('.svg') ? 'image/svg+xml' : 'image/jpeg', 'cache-control': 'no-store' });
         return res.end(buf);
       } catch { return send(404, { error: 'no shot' }); }
     }
