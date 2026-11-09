@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-02T22:47:36.700Z",
-  "updated": "2026-11-09T16:23:41.821Z",
+  "updated": "2026-11-09T20:59:59.620Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-02 in asking-for-a-sheet-of-components-gives-a-clean-t, tree with only Agent component planner changes:\n  $ Scripts/test.sh\n  ✘ Test dragTheWidth() recorded an issue at ShapeBorderRenderTests.swift:262:13: Expectation failed: (median → 52.961916) < (48 → 48.0)\n  ✘ Test dragTheWidth() failed after 181.377 seconds with 1 issue.\n  ✘ Test run with 1331 tests in 207 suites failed after 219.950 seconds with 1 issue.\nSame tree:\n  $ Scripts/test.sh --filter ShapeBorderRenderTests  ->  ✔ dragTheWidth() passed after 0.351 seconds; 8 tests passed\n  $ Scripts/test.sh  ->  all five groups passed (15,197 tests)\nThe check is `if MachineSpeed.isGating { #expect(median < 48) }` in the suite \"A Width drag on a drawn package stays inside a frame\" (Tests/PhotonzRenderTests/ShapeBorderRenderTests.swift:201), which runs in the rest group beside three other swift test processes, not with the stopwatch suites. CLAUDE.md: a speed budget goes in a ...PerfTests suite and is judged against a ruler taken beside it, never a flat millisecond count.\n\nFolded in 2026-11-03 from the-full-test-run-never-fails-on-a-video-check-t:\nSeen while measuring the-full-test-run-never-fails-on-a-speed-budget, 2026-10-30, in about 25 full Scripts/test.sh runs on this Mac (16 cores, go loop idle):\n- BusyVideoSizeTests.swift:251 (A long recording that is quiet and then busy is weighed from stretches of it): near(landed 2102302, weighed 1597442) failed, once.\n- BusyVideoSizeTests.swift:148 (Where the budget cannot hold, what the sheet weighs is what lands, speed 900): near(landed 1712276, weighed 1339509) failed, once.\n- VideoCutExportTests.swift:35 (Exporting a recording with the middle dropped writes only what is left): Caught error .readerGaveUp(\"no picture came out of the recording for 30 seconds\"), once.\nBoth BusyVideoSizeTests are in the .serialized run (Scripts/test.sh side run). Command: Scripts/test.sh with no arguments; output lines above are verbatim from those runs. Neither is a speed budget, so they were left out of the speed-budget task.",
@@ -19,7 +19,8 @@
     "The busy-video size estimate and the cut export that waits 30 s for its recording are each reproduced or explained: what about a busy Mac makes the weighed size miss, and what holds the reader",
     "The Aurora and Behind Glass check (TitleBackgroundsRenderTests: playback, scrubbing and export draw the same frames) passes 20 full Scripts/test.sh runs in a row, or its difference is shown to be GPU rounding with numbers and bounded to 1 level per pixel",
     "A real defect in the app found on the way (an estimate that is wrong under load, a reader that stalls) is fixed, not loosened in the test",
-    "None of these checks fails in ten full Scripts/test.sh runs in a row on this Mac"
+    "None of these checks fails in ten full Scripts/test.sh runs in a row on this Mac",
+    "The animated chart frame budget (AnimatedChartPerfTests, 'Every chart at 1080p draws inside a frame while it builds') passes with a release build running beside the stopwatch run: its 1080p frame ruler is GPU work and does not slow when a compile takes the CPU"
   ],
   "log": [
     {
@@ -109,6 +110,28 @@
     {
       "t": "2026-11-09T16:23:41.820Z",
       "note": "also seen 2026-11-09 16:25 UTC: Scripts/test.sh failed once on unchanged rendering code with 'A Width drag on a drawn package stays inside a frame' dragTheWidth median 52.8 ms against its flat 48 ms (ShapeBorderRenderTests.swift:262), while four ask-eval runs had just finished; the suite alone passed in 0.36 s and the next full run was green. It is a flat millisecond budget in a suite that runs beside the rest, not in a ...PerfTests suite against a ruler."
+    },
+    {
+      "t": "2026-11-09T19:24:15.426Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T20:09:16.442Z",
+      "note": "2026-11-09 findings: (1) The hardware H.264 encoder takes 32 sessions across the whole Mac (VTCompressionSession probe: 32 hardware, the rest software with no error; one process holding 24 left another 8). A writer past that silently gets the software encoder, which ignores the budget: a 2 s Small document landed 1,887,382 bytes vs 234,015 (new HardwareEncoderTests reproduces it). That is the busy-size failure. Fixed in the app: writers ask for the hardware encoder and wait up to 30 s for a session (HardwareEncoder.swift), then fall back. (2) Test bug: VideoExportBudgetTests.bytes(of:) read url.resourceValues, which caches the size on the URL, so BusyVideoSizeTests' lightest-of-three re-read the first write's size every go (three goes read 2,439,432 while the files were 2,439,432 / 2,684,923 / 1,955,784). (3) Test bug: BusyVideoSizeTests and VideoExportBudgetTests run at once in the serialized process and both wrote busy-3s.mp4, busy-4s.mp4, busy-sound-4s.mp4, tone-4s.m4a in one shared folder. (4) dragTheWidth, the Aurora/Glass page budget and the live-backdrop budget moved into ...PerfTests suites judged by MachineSpeed.checkFrames against the 1080p frame ruler. Ruled out for the 30 s reader stall: encoder cap (export with 32 sessions held took 0.2 s), dispatch pool starvation (70 blocked global threads: 0.17 s; the 30 s timer itself runs on that pool and did fire in the real failures)."
+    },
+    {
+      "t": "2026-11-09T20:59:59.465Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-09T20:59:59.542Z",
+      "note": "Landed 362de972e: (1) app fix, writers wait up to 30 s for a hardware H.264 session (HardwareEncoder.swift, HardwareEncoderTests reproduces the 8x heavy file and passes); (2) BusyVideoSizeTests size read fixed (URL resourceValues cache) and the shared busy-*s.mp4 names made unique; (3) dragTheWidth, Aurora/Behind Glass page and live backdrop budgets now in one serialized FrameBudgetPerfTests suite judged by MachineSpeed.checkFrames; (4) the playback/scrub/export frame check now prints how many bytes differ and by how many levels. Checklist: item 1 done; item 3 half done (busy size reproduced and fixed, reader stall reproduced but not explained); item 5 done (encoder fallback). Full Scripts/test.sh runs on 2026-11-09 with these fixes and a from-scratch release build (swift build -c release --scratch-path /tmp/photonz-load-build) beside each: A ok, B ok, C reader stall, D ok, E ok, F ok, G ok, H reader stall + chart budget, I chart budget; plus J (no load) ok and two clean runs before the fixes. So 4 in a row (D to G) once, not reliably 3; 10 in a row not reached. Aurora/Glass frames agreed in all 12 runs (bar is 20). LEFT: (a) the 30 s reader stall, 2 of 9 loaded runs (VideoAssetCommitTests aCommitReportsHowFarThroughTheEncodeItIs in C, VideoCutExportTests 'frame reader tells a cut recording' in H). A stack sample of C (taken with queue/diagnostics/guarded-reads-stall-sample.patch) showed copyNextSampleBuffer in FigSemaphoreWaitRelative with every in-process media thread idle, 26 threads, and an AVAssetExportSession (remaker/videomentor/formatwriter) in the same process also idle, so it waits on something out of process. Ruled out with probes: the encoder cap (export with 32 sessions held: 0.2 s), 120 live decoding readers (0.18 s), 70 blocked GCD threads (0.17 s). Next step: apply the patch, which now also samples VTDecoderXPCService/VTEncoderXPCService and records whether the abandoned read ever answers, and run full test.sh beside a release build until it catches one. (b) chart budget, new checklist item: Line Chart read 15.4 and 15.7 ms against 14.2 with a 16 thread compile beside the stopwatch run while the frame ruler read 2.9 to 3.0 against its own 3.3; it reads 10.1 to 10.7 beside any test suite alone. Gotcha for whoever loads the Mac this way: pkill on 'scratch-path' leaves the swift-frontend children running; kill on the folder path."
+    },
+    {
+      "t": "2026-11-09T20:59:59.619Z",
+      "note": "Encoder fallback fixed in the app (362de972e), size-check and flat-budget test bugs fixed; still open: the 30 s reader stall (2 of 9 runs beside a release build) and the chart frame budget under a compile, so 10 green runs in a row is not reached yet"
     }
-  ]
+  ],
+  "started": "2026-11-09T19:24:15.425Z",
+  "walks": []
 }
