@@ -1,5 +1,6 @@
 import CoreGraphics
 import CoreImage
+import CoreText
 import Foundation
 @testable import PhotonzRender
 import Testing
@@ -132,6 +133,22 @@ enum MachineSpeed {
         return .overBudget
     }
 
+    /// How many times its own number the busiest ruler read: the factor a
+    /// bound is scaled by when a subject is read beside more than one ruler.
+    ///
+    /// A ruler shaped like one part of the subject only sees that part being
+    /// taken away. A chart frame is a GPU render AND the CPU work of laying out
+    /// its shapes and counting numbers: with every core busy (2026-11-09) it
+    /// read 19.2ms against 9.5 alone while the GPU frame ruler beside it read
+    /// 1.3 times its own number, and the bound scaled by that ruler alone
+    /// failed on unchanged code. Whichever part the machine took the most from
+    /// is the one that can slow the subject that far. A ruler with no reading
+    /// is left out; with none at all the answer is infinity.
+    static func busiestFactor(_ rulers: [(ms: Double, baselineMS: Double)]) -> Double {
+        let read = rulers.filter { $0.ms.isFinite && $0.baselineMS > 0 }.map { $0.ms / $0.baselineMS }
+        return read.max() ?? .infinity
+    }
+
     /// Whether a budget failing should fail the build.
     /// Set `PHOTONZ_PERF_GATE=report` to collect the numbers without gating:
     /// the release workflow does exactly that, so publishing a build can never
@@ -158,6 +175,12 @@ enum MachineSpeed {
         /// ground and rendered into a bitmap the way the canvas renders a
         /// frame. Tracks the cost of drawing one frame of a playing edit.
         case frame = "1080p frame"
+        /// Text laid out and shapes filled into a bitmap on one thread, no GPU
+        /// at all. Tracks how much of a core a subject gets, the half of a
+        /// frame the GPU rulers cannot see. Taken beside the frame ruler for a
+        /// subject that does real CPU work per frame (`measureInterleaved`'s
+        /// `alsoCPU`).
+        case cpu = "CPU drawing"
 
         /// What this workload measured on the calibration machine, below.
         var baselineMS: Double {
@@ -165,6 +188,7 @@ enum MachineSpeed {
             case .filterGraph: return 8.0
             case .pixelPush: return 146.0
             case .frame: return 3.3
+            case .cpu: return 3.3
             }
         }
     }
@@ -186,12 +210,14 @@ enum MachineSpeed {
         case .filterGraph: return filterGraphFactor
         case .pixelPush: return pixelPushFactor
         case .frame: return frameFactor
+        case .cpu: return cpuFactor
         }
     }
 
     private static let filterGraphFactor: Double = measure(.filterGraph)
     private static let pixelPushFactor: Double = measure(.pixelPush)
     private static let frameFactor: Double = measure(.frame)
+    private static let cpuFactor: Double = measure(.cpu)
 
     /// One round of the yardstick's fixed workload, for a caller that wants to
     /// take it back to back with its own subject rather than at process start.
@@ -200,6 +226,7 @@ enum MachineSpeed {
         case .filterGraph: return filterGraphRound()
         case .pixelPush: return pixelPushRound()
         case .frame: return frameRound()
+        case .cpu: return cpuRound()
         }
     }
 
@@ -209,6 +236,7 @@ enum MachineSpeed {
         case .filterGraph: measured = medianMS(rounds: 7, work: filterGraphRound())
         case .pixelPush: measured = medianMS(rounds: 5, work: pixelPushRound())
         case .frame: measured = medianMS(rounds: 15, work: frameRound())
+        case .cpu: measured = medianMS(rounds: 15, work: cpuRound())
         }
         let factor = measured / yardstick.baselineMS
         print(String(format: "[perf] machine yardstick %@ — %.1fms here against %.1fms on the "
@@ -307,6 +335,71 @@ enum MachineSpeed {
             let out = probeContext.createCGImage(stacked.cropped(to: big), from: big)
             _ = out?.dataProvider?.data
         }
+    }
+
+    /// One thread's worth of CPU drawing, shaped like the CPU half of a chart
+    /// frame: a dozen labels laid out fresh (the numbers change every call, as
+    /// a counting chart's do), a long line stroked and filled under, and a
+    /// ring of wedges, into a 960x540 bitmap, three times. No Core Image and no GPU, so a
+    /// busy GPU leaves it alone and a busy CPU slows it the way it slows the
+    /// layout and text of a frame.
+    private static func cpuRound() -> () -> Void {
+        let width = 960, height = 540
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: width * 4, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return {} }
+        let font = CTFontCreateWithName("Helvetica" as CFString, 22, nil)
+        let points = (0..<400).map { i in
+            CGPoint(x: Double(i) * 2.4, y: 270 + 180 * sin(Double(i) / 23) * cos(Double(i) / 71))
+        }
+        var call = 0
+        // Three passes a round: one pass is about a millisecond, mostly
+        // per-call overhead, and a ruler that short tracks nothing.
+        return { for _ in 0..<3 {
+            call += 1
+            context.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1))
+            context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+            let line = CGMutablePath()
+            line.addLines(between: points)
+            let area = line.mutableCopy() ?? CGMutablePath()
+            area.addLine(to: CGPoint(x: points.last?.x ?? 0, y: 0))
+            area.addLine(to: .zero)
+            area.closeSubpath()
+            context.setFillColor(CGColor(srgbRed: 0.3, green: 0.5, blue: 0.9, alpha: 0.3))
+            context.addPath(area)
+            context.fillPath()
+            context.setStrokeColor(CGColor(srgbRed: 0.1, green: 0.3, blue: 0.8, alpha: 1))
+            context.setLineWidth(4)
+            context.setLineJoin(.round)
+            context.addPath(line)
+            context.strokePath()
+            for wedge in 0..<24 {
+                let start = Double(wedge) / 24 * 2 * .pi
+                let ring = CGMutablePath()
+                ring.addArc(center: CGPoint(x: 780, y: 380), radius: 140, startAngle: start,
+                            endAngle: start + 2 * .pi / 24 * 0.9, clockwise: false)
+                ring.addArc(center: CGPoint(x: 780, y: 380), radius: 80,
+                            startAngle: start + 2 * .pi / 24 * 0.9, endAngle: start, clockwise: true)
+                ring.closeSubpath()
+                context.setFillColor(CGColor(srgbRed: Double(wedge) / 24, green: 0.6, blue: 0.4, alpha: 1))
+                context.addPath(ring)
+                context.fillPath()
+            }
+            context.setFillColor(CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 1))
+            for row in 0..<12 {
+                let words = String(format: "Quarter %d  %.2f%%  $%d", row + 1,
+                                   Double((call * 37 + row * 101) % 10_000) / 100, call * 1_013 + row * 7)
+                let text = NSAttributedString(string: words,
+                                              attributes: [NSAttributedString.Key(kCTFontAttributeName as String): font,
+                                                           NSAttributedString.Key(kCTForegroundColorFromContextAttributeName as String): true])
+                let laid = CTLineCreateWithAttributedString(text)
+                context.textPosition = CGPoint(x: 20, y: 20 + row * 42)
+                CTLineDraw(laid, context)
+            }
+            _ = context.makeImage()
+        } }
     }
 
     private static let frameGround = CIImage(cgImage: texture(width: 1920, height: 1080))
@@ -425,29 +518,49 @@ enum MachineSpeed {
         let yardstickMS: Double
         let yardstick: Yardstick
         let rounds: Int
+        /// The CPU ruler's median in the same rounds, when it was taken.
+        var cpuMS: Double? = nil
+
+        /// How much slower than their own numbers the rulers taken with the
+        /// subject read: the busier of the two when the CPU ruler was taken.
+        var factor: Double {
+            var rulers = [(ms: yardstickMS, baselineMS: yardstick.baselineMS)]
+            if let cpuMS { rulers.append((ms: cpuMS, baselineMS: Yardstick.cpu.baselineMS)) }
+            return MachineSpeed.busiestFactor(rulers)
+        }
     }
 
     /// The measuring half of `checkInterleaved`, for a gate that reads several
     /// subjects and judges the dearest (`AnimatedChartRenderTests`).
+    ///
+    /// `alsoCPU` takes the CPU ruler in every round as well, for a subject
+    /// that does real work on the CPU: `judgeScaled` then scales by whichever
+    /// ruler read the busier machine (`busiestFactor`).
     static func measureInterleaved(yardstick: Yardstick = .filterGraph, rounds: Int = 15,
+                                   alsoCPU: Bool = false,
                                    subject: () -> Void) -> Interleaved {
         let reference = round(for: yardstick)
+        let cpu = alsoCPU ? cpuRound() : nil
         // Warm both, so neither pays for a pipeline the other gets for free.
         reference()
+        cpu?()
         subject()
 
         var subjectMS: [Double] = []
         var referenceMS: [Double] = []
+        var cpuMS: [Double] = []
         let clock = ContinuousClock()
         for _ in 0..<rounds {
             referenceMS.append(ms(clock.measure { reference() }))
+            if let cpu { cpuMS.append(ms(clock.measure { cpu() })) }
             subjectMS.append(ms(clock.measure { subject() }))
         }
         return Interleaved(normalizedMS: normalizedMS(subject: subjectMS, reference: referenceMS,
                                                       referenceBaselineMS: yardstick.baselineMS),
                            rawMS: median(of: subjectMS) ?? .infinity,
                            yardstickMS: median(of: referenceMS) ?? .infinity,
-                           yardstick: yardstick, rounds: rounds)
+                           yardstick: yardstick, rounds: rounds,
+                           cpuMS: alsoCPU ? (median(of: cpuMS) ?? .infinity) : nil)
     }
 
     /// The judging half for a subject whose ratio to the yardstick is noisier
@@ -464,18 +577,23 @@ enum MachineSpeed {
     static func judgeScaled(_ label: String, _ reading: Interleaved, baselineMS: Double,
                             tolerance: Double, slackMS: Double = 0,
                             sourceLocation location: SourceLocation) {
-        let factor = reading.yardstickMS / reading.yardstick.baselineMS
+        let factor = reading.factor
         let bound = budget(baselineMS: baselineMS, factor: factor, tolerance: tolerance, slackMS: slackMS)
+        let cpuNote = reading.cpuMS.map {
+            String(format: ", and the CPU ruler %.1fms against its own %.1fms", $0, Yardstick.cpu.baselineMS)
+        } ?? ""
         let message = String(format: "%@ — %.1fms here against a budget of %.1fms (baseline %.1fms x %.1f "
                              + "tolerance + %.0fms, x %.2f for a %@ yardstick reading %.1fms against "
-                             + "its own %.1fms in the same %d rounds)",
+                             + "its own %.1fms%@ in the same %d rounds)",
                              label, reading.rawMS, bound, baselineMS, tolerance, slackMS, max(1, factor),
                              reading.yardstick.rawValue, reading.yardstickMS,
-                             reading.yardstick.baselineMS, reading.rounds)
+                             reading.yardstick.baselineMS, cpuNote, reading.rounds)
         print("[perf] budget: \(message)")
         guard isGating else { return }
-        switch self.reading(normalizedMS: reading.rawMS, boundMS: bound, yardstickMS: reading.yardstickMS,
-                            yardstickBaselineMS: reading.yardstick.baselineMS) {
+        // The busiest ruler, as a reading of a ruler with a baseline of 1, so
+        // the same untrusted line holds for either.
+        switch self.reading(normalizedMS: reading.rawMS, boundMS: bound, yardstickMS: factor,
+                            yardstickBaselineMS: 1) {
         case .withinBudget:
             return
         case .overBudget:
@@ -557,9 +675,9 @@ enum MachineSpeed {
     }
 
     /// The measuring half of `checkFrames`.
-    static func measureFrames(frames: Int, draw: (Int) -> Void) -> Interleaved {
+    static func measureFrames(frames: Int, alsoCPU: Bool = false, draw: (Int) -> Void) -> Interleaved {
         var next = 0
-        return measureInterleaved(yardstick: .frame, rounds: frames) {
+        return measureInterleaved(yardstick: .frame, rounds: frames, alsoCPU: alsoCPU) {
             draw(next)
             next += 1
         }

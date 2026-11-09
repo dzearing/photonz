@@ -278,3 +278,21 @@ landing 1.91 times against 1.6; the undo and the export sizer fail on the
 work they skip. Ten full runs in a row then had no speed-budget failure, the
 tightest reading at three quarters of its bound. Calibration machine numbers
 are in each test's comment.
+
+## 2026-11-09: a CPU ruler beside the frame ruler
+
+The dearest animated chart read 19.2ms against its 9.5 alone with every core
+busy (sixteen bounded spinners), while the 1080p frame ruler taken in the same
+rounds read only 1.3 times its own 3.3ms: a chart frame is CPU work (layout,
+counting numbers) as well as a GPU render, and the GPU ruler cannot see the CPU
+being taken. Its bound, scaled by that ruler alone, failed on unchanged code (1
+of 3 such runs). `MachineSpeed` now has a `.cpu` yardstick (text laid out and
+shapes filled into a 960x540 bitmap on one thread, three passes, no Core
+Image), taken in the same rounds when a gate asks for it (`alsoCPU`), and
+`judgeScaled` scales by whichever ruler read the busier machine
+(`busiestFactor`). Calibration machine, 2026-11-09: the CPU ruler reads 3.2 to
+3.3ms quiet beside the chart, so its baseline is 3.3ms. With sixteen spinners
+it read 6.6 to 7.0 (2.0 to 2.1x), the chart 18.6 to 23.1, and five of five runs
+passed. The chart and the alignment guide re-measure (pure CPU work, which was
+judged against the GPU ruler) take it; every stopwatch suite passed with all
+cores busy.

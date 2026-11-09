@@ -31,6 +31,14 @@ struct GuardedReads: Sendable {
         let seconds: TimeInterval
     }
 
+    /// What strikes when a read runs past its limit: a queue of its own, never
+    /// the ordinary background queues. A process runs only so many threads
+    /// off those at once, and with them all taken by work that waits (90 on
+    /// 2026-11-09) a read stops AND a clock waiting for one of the same
+    /// threads never strikes, so the caller sat for good instead of hearing
+    /// the read had stalled. A queue of its own gets a thread regardless.
+    private static let clock = DispatchQueue(label: "photonz.guarded-reads.clock", qos: .userInitiated)
+
     /// How long one read may take before it is called stuck.
     let limit: TimeInterval
     private let queue: DispatchQueue
@@ -50,8 +58,7 @@ struct GuardedReads: Sendable {
             try await withCheckedThrowingContinuation { (waiting: CheckedContinuation<T, Error>) in
                 answer.wait(with: waiting)
                 let giveUp = DispatchWorkItem { answer.give(.failure(Stalled(seconds: limit))) }
-                DispatchQueue.global(qos: .userInitiated)
-                    .asyncAfter(deadline: .now() + limit, execute: giveUp)
+                GuardedReads.clock.asyncAfter(deadline: .now() + limit, execute: giveUp)
                 queue.async {
                     let result = work()
                     giveUp.cancel()

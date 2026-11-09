@@ -22856,3 +22856,11 @@ units.
 - Two real bugs found in traces: `jumpsUnseen` inserted a key 10 ms before the throw's key and the app refused the whole step (the trash never moved); a design followed by the model drawing it was thrown away whole (the trash had no design). Both fixed test first.
 - Measured, six story cases, rubric 4a03a8fc: baseline 082429 48.6 (asked 5.6, 7.2, 3.9, 3.2, 4.9, 4.3); B 085127 50.1 (2 of 6 at 7, heart out of time); C 093019 46.5; D 100952 57.4 (asked 5, 5.2, 6.6, 6, 6, 4.1). Bar of 5 of 6 at 7 NOT met; the task stays open.
 - Next levers: the look is lenient (calls the bell all good); walks run the model at half the eval's speed (not in front), so a story takes 250 to 270 s in a walk.
+
+## 2026-11-09 (evening): the full test suite stays green on a busy Mac (the-full-test-suite-stays-green-on-a-busy-mac-wh)
+
+- The chart frame budget failed with every core busy because its ruler is GPU work: chart 19.2 ms, frame ruler only 1.3x. `MachineSpeed` gained a `.cpu` yardstick taken in the same rounds (`alsoCPU`), and `judgeScaled` scales by the busier ruler (`busiestFactor`, unit tested). The chart and the alignment guide re-measure use it. Five of five chart runs and every stopwatch suite passed under sixteen bounded spinners. Calibration in `docs/progress/perf.md`.
+- The 30 s reader stall was caught once (diagnostic patch, unloaded full run): the read answered on its own after 59.7 s while the decoder service serving it sat idle, its hardware frame receiver waiting. It is a lost hardware decode the system times out of. Export now starts its picture pass again once on a fresh reader (`VideoExporter.retryingAStalledRead`, unit tested; the bar never runs backwards).
+- `GuardedReads`' give-up clock ran on the global pool, so with that pool full (90 blocked threads) a stalled read never gave up at all; it has its own queue now (test fills the pool and checks it strikes).
+- Ten full `Scripts/test.sh` runs in a row green after the changes (A to J, five beside a from-scratch release build).
+- Open: `OffThePool` also runs blocking decodes on the capped global pool (not the cause here: the stalled process had about 50 threads); `PieceCopyWriterTests` fails with eight media test processes at once (artificial load, never seen in a real run).

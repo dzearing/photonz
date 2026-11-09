@@ -147,7 +147,7 @@ struct AnimatedChartPerfTests {
             // Warmed up the way playback is: the moving background's kernels
             // compile on a fresh context's first frames.
             for ms in stride(from: 200, to: 600, by: 50) { _ = renderer.renderInteractive(doc.drawn(atTimeMS: ms), store: store) }
-            let reading = MachineSpeed.measureFrames(frames: 20) { frame in
+            let reading = MachineSpeed.measureFrames(frames: 20, alsoCPU: true) { frame in
                 _ = renderer.renderInteractive(doc.drawn(atTimeMS: 616 + frame * 50), store: store)
             }
             if reading.rawMS > (dearest?.reading.rawMS ?? -1) { dearest = (kind, reading) }

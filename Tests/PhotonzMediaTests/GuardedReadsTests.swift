@@ -57,6 +57,35 @@ struct GuardedReadsTests {
         #expect(waited >= 0.3, "gave up before the limit, after \(waited)s")
     }
 
+    @Test("A stuck read is still given up on when every ordinary background thread is taken")
+    func givesUpOnAFullPool() async throws {
+        // A process may run only so many threads off the ordinary background
+        // queues at once. Filled with work that waits (90 of them on
+        // 2026-11-09), an export's read stopped AND the clock meant to give up
+        // on it never struck, because the clock waited for one of those same
+        // threads: the run sat for good instead of failing in 30 seconds. The
+        // clock has a queue of its own, so it strikes on a full pool.
+        let reads = GuardedReads(label: "test.full-pool", limit: 0.2)
+        let release = DispatchSemaphore(value: 0)
+        let taken = 128
+        for _ in 0..<taken {
+            DispatchQueue.global(qos: .userInitiated).async { release.wait() }
+        }
+        // Whatever happens, the pool is handed back: from a queue of its own,
+        // which a full pool cannot hold up, so this test cannot park the run.
+        let handBack = DispatchWorkItem { for _ in 0..<taken { release.signal() } }
+        DispatchQueue(label: "test.full-pool.hand-back").asyncAfter(deadline: .now() + 10, execute: handBack)
+        let stuck = DispatchSemaphore(value: 0)
+        defer { stuck.signal() }
+        let started = Date()
+        await #expect(throws: GuardedReads.Stalled(seconds: 0.2)) {
+            try await reads.run { stuck.wait(); return 1 }
+        }
+        let waited = Date().timeIntervalSince(started)
+        if !handBack.isCancelled { handBack.cancel(); for _ in 0..<taken { release.signal() } }
+        #expect(waited < 9, "the clock only struck once the pool was handed back, after \(waited)s")
+    }
+
     @Test("A slow read inside the limit is still waited for")
     func slowButInTime() async throws {
         let reads = GuardedReads(label: "test.slow", limit: 2)

@@ -5,12 +5,14 @@
 # a ps of the VT encoder/decoder XPC services with a 1 s sample of each, and, if the
 # abandoned read ever answers, answered-<pid>-<time>.txt saying after how long.
 # Revert before committing: git checkout Sources/PhotonzMedia/GuardedReads.swift
+# 2026-11-09: caught once in an unloaded full run: the read answered after 59.7 s, the
+# decoder service serving it idle with its hardware frame receiver waiting (see the task log).
 
 diff --git a/Sources/PhotonzMedia/GuardedReads.swift b/Sources/PhotonzMedia/GuardedReads.swift
-index ca66dd9a5..5fb0e2c45 100644
+index 716cecb..0fe8826 100644
 --- a/Sources/PhotonzMedia/GuardedReads.swift
 +++ b/Sources/PhotonzMedia/GuardedReads.swift
-@@ -49,11 +49,28 @@ struct GuardedReads: Sendable {
+@@ -57,10 +57,27 @@ struct GuardedReads: Sendable {
          return try await withTaskCancellationHandler {
              try await withCheckedThrowingContinuation { (waiting: CheckedContinuation<T, Error>) in
                  answer.wait(with: waiting)
@@ -28,8 +30,7 @@ index ca66dd9a5..5fb0e2c45 100644
 +                    }
 +                    answer.give(.failure(Stalled(seconds: limit)))
 +                }
-                 DispatchQueue.global(qos: .userInitiated)
-                     .asyncAfter(deadline: .now() + limit, execute: giveUp)
+                 GuardedReads.clock.asyncAfter(deadline: .now() + limit, execute: giveUp)
                  queue.async {
                      let result = work()
 +                    if giveUp.isCancelled == false, limit >= 10, Date().timeIntervalSince(asked) > limit,

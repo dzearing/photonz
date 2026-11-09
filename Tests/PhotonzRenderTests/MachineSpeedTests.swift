@@ -186,6 +186,28 @@ struct MachineSpeedTests {
                                      yardstickMS: 80, yardstickBaselineMS: 8) == .overBudget)
     }
 
+    @Test func aBoundIsScaledByWhicheverRulerTheMachineSlowedMore() {
+        // A chart frame is CPU work as well as GPU work. With every core busy
+        // it read 19.2ms against its 9.5 alone while the GPU frame ruler beside
+        // it read only 1.3 times its own number (2026-11-09), so a bound
+        // scaled by that ruler alone failed on unchanged code. The CPU ruler
+        // taken in the same rounds read the slowdown the chart felt.
+        #expect(MachineSpeed.busiestFactor([(ms: 4.3, baselineMS: 3.3), (ms: 6.0, baselineMS: 3.0)]) == 2)
+        #expect(MachineSpeed.busiestFactor([(ms: 6.6, baselineMS: 3.3), (ms: 3.0, baselineMS: 3.0)]) == 2,
+                "a busy GPU still loosens it on its own")
+        #expect(MachineSpeed.busiestFactor([(ms: 2.0, baselineMS: 3.3), (ms: 2.0, baselineMS: 3.0)]) < 1,
+                "quiet rulers report a fast machine, which the budget then clamps to 1")
+    }
+
+    @Test func aRulerThatMeasuredNothingCannotLoosenOrExcuseABound() {
+        // A ruler with no reading says nothing about the machine: it neither
+        // loosens the bound nor hides the ruler that did read.
+        #expect(MachineSpeed.busiestFactor([(ms: 4.3, baselineMS: 3.3), (ms: .infinity, baselineMS: 3.0)])
+                == 4.3 / 3.3)
+        #expect(MachineSpeed.busiestFactor([(ms: .infinity, baselineMS: 3.3)]) == .infinity,
+                "with no ruler at all, nothing is known, which the reading calls untrusted only when over")
+    }
+
     @Test func theMedianOfTheRoundsIsWhatCounts() {
         #expect(MachineSpeed.median(of: [3, 1, 2]) == 2)
         #expect(MachineSpeed.median(of: [4, 1, 3, 2]) == 3)   // upper of the two middles

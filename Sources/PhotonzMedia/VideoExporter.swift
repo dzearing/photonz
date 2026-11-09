@@ -2,6 +2,7 @@ import AVFoundation
 import CoreGraphics
 import ImageIO
 import PhotonzCore
+import Synchronization
 import UniformTypeIdentifiers
 
 /// Reads frames out of a recorded MP4 to produce: a poster thumbnail for the
@@ -477,10 +478,20 @@ public enum VideoExporter {
         // The pictures are nearly all of the work, so they are nearly all of
         // the bar. What is left covers the sound and the join.
         let pictureShare = hasAudio ? 0.9 : 1.0
-        let silent = scratch.appendingPathComponent("picture.mp4")
-        try await writePictures(composition: composition, videoComposition: videoComposition,
-                                plan: plan, holdsToBudget: holdsToBudget, to: silent) { done in
-            onProgress?(done * pictureShare)
+        // A pass started again writes a file of its own: the stalled one's
+        // writer is let go only once its read answers (`GuardedReads`).
+        var silent = scratch.appendingPathComponent("picture.mp4")
+        let pictureProgress: (@Sendable (Double) -> Void)?
+        if let onProgress {
+            pictureProgress = { done in onProgress(done * pictureShare) }
+        } else {
+            pictureProgress = nil
+        }
+        try await retryingAStalledRead(onProgress: pictureProgress) { progress in
+            silent = scratch.appendingPathComponent("picture-\(UUID().uuidString).mp4")
+            try await writePictures(composition: composition, videoComposition: videoComposition,
+                                    plan: plan, holdsToBudget: holdsToBudget, to: silent,
+                                    onProgress: progress)
         }
         try Task.checkCancellation()
         guard hasAudio else {
@@ -607,6 +618,52 @@ public enum VideoExporter {
         else { throw ExportError.exportFailed }
         try? FileManager.default.removeItem(at: destination)
         try await session.export(to: destination, as: .m4a)
+    }
+
+    /// `pass`, started again once from the beginning if its read stalls
+    /// (`ExportError.readerGaveUp`), and reported as stalled only if the
+    /// second go stalls too. Any other failure is reported at once.
+    ///
+    /// A full test run on 2026-11-09 caught an export's read stalled past its
+    /// limit and answering on its own at 59.7 seconds: the decoder service
+    /// serving it sat idle, its hardware frame receiver waiting for a frame
+    /// that never came back, until the system's own timeout let it go. A
+    /// fresh reader asks for a fresh decoder session, so going again costs the
+    /// person the wait and the pass, where giving up cost them the export.
+    ///
+    /// The bar never runs backwards: the second go reports nothing until it
+    /// passes where the first one stopped.
+    static func retryingAStalledRead(onProgress: (@Sendable (Double) -> Void)?,
+                                     _ pass: (_ progress: (@Sendable (Double) -> Void)?) async throws -> Void)
+        async throws {
+        let furthest = FurthestProgress()
+        var forward: (@Sendable (Double) -> Void)?
+        if let onProgress {
+            forward = { done in
+                if furthest.moves(to: done) { onProgress(done) }
+            }
+        }
+        do {
+            try await pass(forward)
+        } catch ExportError.readerGaveUp {
+            try Task.checkCancellation()
+            try await pass(forward)
+        }
+    }
+
+    /// The furthest a bar has been, so a pass started again never moves it back.
+    private final class FurthestProgress: Sendable {
+        private let furthest = Mutex<Double>(-1)
+
+        /// Whether `done` is past anything reported so far, and if so it is now
+        /// the furthest.
+        func moves(to done: Double) -> Bool {
+            furthest.withLock { furthest in
+                guard done > furthest else { return false }
+                furthest = done
+                return true
+            }
+        }
     }
 
     /// The picture and the sound in one file, neither of them re-encoded.

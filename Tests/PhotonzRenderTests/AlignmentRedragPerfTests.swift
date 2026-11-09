@@ -73,7 +73,7 @@ struct AlignmentRedragPerfTests {
             let took = clock.measure { moved.keepAlignmentGuidesMeasured(since: document, picture: picture) }
             moveMS.append(Double(took.components.attoseconds) / 1e15 + Double(took.components.seconds) * 1000)
         }
-        let reading = MachineSpeed.measureInterleaved(yardstick: .frame, rounds: 60, subject: move)
+        let reading = MachineSpeed.measureInterleaved(yardstick: .frame, rounds: 60, alsoCPU: true, subject: move)
         let sorted = moveMS.sorted()
         let p95 = sorted[min(sorted.count - 1, Int(Double(sorted.count) * 0.95))]
         let worst = sorted.last ?? .infinity
@@ -82,11 +82,13 @@ struct AlignmentRedragPerfTests {
         print(String(format: "[perf] alignment guide re-measure per move on 12 MP, debug build: median "
                      + "%.2fms, p95 %.2fms, worst %.2fms over %d moves",
                      reading.rawMS, p95, worst, sorted.count))
-        // Judged at the 95th percentile, scaled by the frame ruler read in the
-        // same rounds, so a busy machine is not read as a slow scan.
+        // Judged at the 95th percentile, scaled by the busier of the frame and
+        // CPU rulers read in the same rounds (the scan is CPU work), so a busy
+        // machine is not read as a slow scan.
         let atP95 = MachineSpeed.Interleaved(normalizedMS: reading.normalizedMS * p95 / max(reading.rawMS, 0.001),
                                              rawMS: p95, yardstickMS: reading.yardstickMS,
-                                             yardstick: reading.yardstick, rounds: reading.rounds)
+                                             yardstick: reading.yardstick, rounds: reading.rounds,
+                                             cpuMS: reading.cpuMS)
         MachineSpeed.judgeScaled("a guide re-measured per move on a 12 megapixel screenshot (p95)", atP95,
                                  baselineMS: 40, tolerance: 1.5,
                                  sourceLocation: SourceLocation(fileID: #fileID, filePath: #filePath,
