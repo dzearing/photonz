@@ -675,20 +675,87 @@
       "name": "12-keys-set"
     },
     {
-      "do": "press",
-      "control": "Real Size Preview"
+      "do": "filmWindow",
+      "name": "13-playing-film",
+      "press": "Real Size Preview",
+      "seconds": 2
     },
     {
-      "do": "wait",
-      "seconds": 1.2
+      "do": "expectSharp",
+      "within": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "13-playing",
+      "note": "PLAYING ZOOMED IN: the icon turns drawn sharp, a tile per frame, not the picture blown up. playTiles counts them, playTileMS is what one costs."
     },
     {
       "do": "snapshot",
       "name": "13-playing"
     },
     {
+      "do": "wait",
+      "seconds": 0.12
+    },
+    {
+      "do": "snapshot",
+      "name": "13-playing-1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.12
+    },
+    {
+      "do": "snapshot",
+      "name": "13-playing-2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.12
+    },
+    {
+      "do": "snapshot",
+      "name": "13-playing-3"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.12
+    },
+    {
+      "do": "snapshot",
+      "name": "13-playing-4"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.12
+    },
+    {
+      "do": "snapshot",
+      "name": "13-playing-5"
+    },
+    {
       "do": "press",
       "control": "Real Size Preview"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectSharp",
+      "within": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "13-stopped-at-a-slant"
     },
     {
       "do": "wait",

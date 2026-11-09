@@ -249,6 +249,24 @@ final class EditorState {
     /// 2026-10-25).
     @ObservationIgnored var crispTileForLandingStroke = false
     @ObservationIgnored private var crispTileKeptUntilReplaced = false
+    /// A picture playing zoomed in is drawn sharp frame by frame: each frame's
+    /// visible patch is asked of this, which draws one at a time and skips to
+    /// the newest (`TileScheduler`). Without it every playing frame was the
+    /// composite blown up, an icon at 800% playing as 24 grey blocks across.
+    @ObservationIgnored private var playTileScheduler: TileScheduler?
+    /// Which run of play tiles a delivered one belongs to. Moved on whenever
+    /// the camera moves or the picture stops, so a tile drawn for the old
+    /// framing or the last playing frame never lands after it.
+    @ObservationIgnored private var playTileRun = 0
+    @ObservationIgnored private var playTileViewport: Viewport?
+    /// The tile on screen is a playing frame's: when play stops it stays up
+    /// until the stopped picture's own tile replaces it, drawn straight away,
+    /// so stopping never drops to the blocks for a tenth of a second.
+    @ObservationIgnored private var playTileShowing = false
+    /// Play tiles that reached the canvas, and what the last ones cost to
+    /// draw, for a walk to read the rate a playing picture is kept sharp at.
+    @ObservationIgnored private(set) var playTileCount = 0
+    @ObservationIgnored private(set) var recentPlayTileMS: [Double] = []
     var isImporterPresented = false
     var isResizeDialogPresented = false
     var isCanvasSizeDialogPresented = false
@@ -5786,7 +5804,74 @@ final class EditorState {
     private func letGoOfCrispTileForPlay() {
         crispTileTask?.cancel()
         crispTileTask = nil
+        stopPlayTiles()
         if crispTile != nil { crispTileOutOfDate = true }
+    }
+
+    /// Asks for a sharp tile of a playing frame, `display` as the canvas draws
+    /// it. Laid over the composite when it lands, replacing the last frame's,
+    /// so the canvas is as sharp playing as stopped. A 24 unit icon at 800% is
+    /// 384 pixels square and costs about a millisecond; the whole of a window
+    /// at 800% over a big canvas is a few (`PlayTilePerfTests`). A frame whose
+    /// tile is still drawing is skipped rather than queued, so a slow one
+    /// lowers how often the tile changes, never how often the composite does.
+    private func drawPlayTile(_ display: PhotonzDocument) {
+        crispTileTask?.cancel()
+        crispTileTask = nil
+        guard Experiments.shared.crispZoomEnabled, dragPreview == nil, !windowClosed,
+              let viewport else {
+            letGoOfCrispTileForPlay()
+            return
+        }
+        let scale = viewport.zoom * (hostWindow?.backingScaleFactor ?? 2)
+        guard scale > 1.01, let region = visibleDocumentRect(viewport) else {
+            letGoOfCrispTileForPlay()
+            return
+        }
+        if playTileViewport != viewport {
+            playTileRun += 1
+            playTileViewport = viewport
+        }
+        let run = playTileRun
+        let tiles: TileScheduler
+        if let existing = playTileScheduler {
+            tiles = existing
+        } else {
+            tiles = TileScheduler(store: store, renderer: tileRenderer) { [weak self] delivery in
+                await MainActor.run { self?.showPlayTile(delivery) }
+            }
+            playTileScheduler = tiles
+        }
+        // Past 2x the canvas shows pixels squarely, as `refreshCrispTile` does.
+        let nearest = viewport.zoom >= 2
+        let colors = canvasColorSpace
+        Task {
+            await tiles.submit(display, region: region, scale: scale, magnifyNearest: nearest,
+                               colorSpace: colors, stamp: run)
+        }
+    }
+
+    private func showPlayTile(_ delivery: TileScheduler.Delivery) {
+        guard !windowClosed, isMotionPlaying, dragPreview == nil,
+              delivery.stamp == playTileRun, let tile = delivery.tile,
+              let viewport = playTileViewport, self.viewport == viewport else { return }
+        crispTileOutOfDate = false
+        crispTileKeptUntilReplaced = false
+        playTileShowing = true
+        crispTile = tile
+        crispTileViewport = viewport
+        playTileCount += 1
+        recentPlayTileMS.append(delivery.drawMS)
+        if recentPlayTileMS.count > 400 { recentPlayTileMS.removeFirst(100) }
+    }
+
+    /// No playing frame's tile lands from here on.
+    private func stopPlayTiles() {
+        playTileRun += 1
+        playTileViewport = nil
+        if let tiles = playTileScheduler {
+            Task { await tiles.dropPending() }
+        }
     }
 
     private func refreshCrispTile(showing preview: PhotonzDocument? = nil,
@@ -5794,8 +5879,12 @@ final class EditorState {
                                   withTheNextFrame: Bool = false) {
         crispTileTask?.cancel()
         crispTileTask = nil
-        let landing = crispTileForLandingStroke
+        // A playing frame's tile is held like a landing stroke's: up until the
+        // stopped picture's replaces it, and that one drawn straight away.
+        let landing = crispTileForLandingStroke || (playTileShowing && crispTile != nil)
         crispTileForLandingStroke = false
+        playTileShowing = false
+        stopPlayTiles()
         crispTileKeptUntilReplaced = false
         // Anything on screen was drawn for a different moment than this one.
         if withTheNextFrame, crispTile != nil {
@@ -5898,15 +5987,15 @@ final class EditorState {
                 contentScale = scale
             }
         }
-        // Not while the motion preview is running. A sharp copy of a moving
-        // picture is stale before it lands, and asking for one thirty times a
-        // second would clear the tile thirty times a second, which every view
-        // reading it is told about whether or not the value changed.
+        // Not the settling kind while the motion preview is running: that one
+        // waits for the picture to stop changing, and a playing one never does.
+        // While it plays, each frame gets a sharp tile of its own instead
+        // (`drawPlayTile`), drawn one at a time and newest first.
         defer {
             if !isMotionPlaying {
                 refreshCrispTile(showing: submitted, displayed: displayed, withTheNextFrame: true)
-            } else if isKeyedPicture {
-                letGoOfCrispTileForPlay()
+            } else {
+                drawPlayTile(displayed)
             }
         }
         if scheduler == nil {

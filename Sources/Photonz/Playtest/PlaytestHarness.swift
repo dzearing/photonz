@@ -21140,6 +21140,12 @@ private final class Run {
             // put on screen per second, which is the only honest answer to "is
             // this live?".
             "canvasFrames": editor.canvasFrameCount,
+            // Sharp tiles of a playing picture that reached the canvas, and
+            // the typical cost of the last ones in ms: how a zoomed-in picture
+            // is kept sharp while it plays (`EditorState.drawPlayTile`).
+            "playTiles": editor.playTileCount,
+            "playTileMS": Self.round1(CGFloat(editor.recentPlayTileMS.sorted()
+                .dropFirst(editor.recentPlayTileMS.count / 2).first ?? 0)),
             // Whether Undo and Redo have anything to do, which is what the
             // Edit menu dims itself on and what a shortcut walk checks.
             "canUndo": editor.canUndo,

@@ -1,0 +1,28 @@
+{
+  "feature": "A playing icon stays sharp on a zoomed canvas",
+  "epic": "icon-animate",
+  "summary": "Pressing play on an icon zoomed in now shows it as sharp as when it is stopped. At 800% it used to play as 24 grey blocks across, and a 512 Icon picture went soft.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walks: the-whole-icon-workflow-on-a-frame-walk (24 unit frame at 800%) and the-whole-icon-workflow-walk (512 Icon picture at its fit zoom).",
+  "switched": {},
+  "try": [
+    { "do": "Make a new picture, add a 24 unit icon frame from New Frame, and pinch in to 800%.", "shot": "2026-11-09-playing-icon-800-stopped-sc.png" },
+    { "do": "Draw a shape on the frame, group it, press K and key its Rotation to 360 at 2s." },
+    { "do": "Press Real Size Preview to play, and watch the edges while it turns.", "shot": "2026-11-09-playing-icon-800-playing-sc.png" },
+    { "do": "Press it again to stop, and click the ruler at 0.3s to see the same kind of slant stopped.", "shot": "2026-11-09-playing-icon-800-stopped-slant-sc.png" },
+    { "do": "Make a 512 Icon picture from New Image, key a turn the same way and play it at its fit zoom.", "shot": "2026-11-09-playing-icon-512-playing-sc.png" },
+    { "do": "Compare before, now and stopped side by side on the sheet.", "shot": "2026-11-09-playing-icon-sharp-sheet.png" },
+    { "do": "Watch the reels: the 800% frames playing (2026-11-09-playing-icon-sharp-800.gif), the 512 icon playing (2026-11-09-playing-icon-sharp-512.gif), and the whole window filmed at its real pace (2026-11-09-playing-icon-window-film.mp4).", "shot": "2026-11-09-playing-icon-sharp-800.gif" }
+  ],
+  "evaluate": [
+    "While it plays at 800%, do the strokes look as crisp as when you stop?",
+    "Does stopping happen without a flash of blurry pixels before it settles?",
+    "Does the turn still look smooth at 30 frames a second, with nothing stuttering?",
+    "On a 512 Icon picture at its normal zoom, is playing as sharp as stopped?"
+  ],
+  "rough": [
+    "Measured on the window captures, as the share of the icon's ink that is an in-between grey: 24 unit frame at 800% reads 0.133 to 0.143 over six playing captures against 0.138 stopped at a slant, where playing read 0.508 before. The 512 Icon reads 0.049 to 0.063 playing against 0.061 stopped, where playing read 0.097 before.",
+    "Frame rate: the preview asks for 30 frames a second and the sharp copy kept up, about 65 sharp frames in the 2.3 seconds filmed in both walks. One costs 3.3ms at 800% and 5.5ms for the 512 icon in the app; on a ten layer icon the test reads 1.8ms at 800%, 4.1ms for a 512 icon at fit and 3.1ms for a whole window at 800% over a big canvas, all far inside the 33ms a frame has.",
+    "The selection box and its handles are drawn from the newest frame and the sharp copy can trail them by one frame while it turns. Same as the stretched picture did before; not visible at normal speed in the film.",
+    "The full-size reels are six captures about 0.15s apart, so they step; the window film is the real pace but a quarter size, so it shows smoothness rather than sharpness. No mock covers this: it is how the canvas draws, not a new surface."
+  ]
+}
