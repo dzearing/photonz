@@ -1,0 +1,25 @@
+{
+  "feature": "A broken icon reads as what breaks it, measured on the steady judge",
+  "epic": "icon-vector",
+  "summary": "Ask's breaking icons (a popping balloon, a broken heart, a cracked egg, a bursting bubble) were measured three times each with the tear and three times with the break step switched off. With the tear every one reads as what was asked; without it the bubble becomes a refresh arrow and the heart falls apart.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Make a new Icon picture (File > New, Icon).", "shot": "2026-11-09-icon-break-window-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Ask, type: a broken heart icon, and send it. Look for a jagged crack through the heart.", "shot": "2026-11-09-icon-break-tear-on.png" },
+    { "do": "Make another Icon picture and ask for: a cracked egg icon, filled. Look for a jagged gap splitting the egg." },
+    { "do": "Make another and ask for: an icon of a soap bubble bursting. Look for an open ring with pieces flying off." },
+    { "do": "Make another and ask for: make an icon of a balloon popping. Look for a ragged tear at the upper right with marks flying out." },
+    { "do": "Compare with what Ask drew for the same four with the break step off.", "shot": "2026-11-09-icon-break-step-off.png" }
+  ],
+  "evaluate": [
+    "Does each of the four read at a glance as the thing breaking the way you asked?",
+    "Does the bursting bubble read as a bubble and not a cracked egg or a bitten cookie?",
+    "Is the round balloon with no knot (one of its two drawings) still clearly a balloon to you?"
+  ],
+  "rough": [
+    "The balloon's bar was restated: the old 85 came from the old median judge, which read one identical picture anywhere from 69.9 to 85.6. On the steady judge the bar is now 'at least as well with the tear as without', the same bar as the egg and the bubble.",
+    "The balloon still comes out as one of two model drawings: a round one whose knot lands as a speck or nothing (80.4) and one with a rounded tie (84.8, 85.6). The tear is not what holds the round one back.",
+    "Without the break step the egg is drawn as a hatching egg with its top lifted (79.8 to 83.6), which is a fair reading of 'cracked'; the tear's split egg reads better (88.8 every time) but the gap is the smallest of the four."
+  ]
+}

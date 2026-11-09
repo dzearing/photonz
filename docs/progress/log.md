@@ -22834,3 +22834,11 @@ units.
 - Five readings after: 85.6, 71.3, 72.0, 71.3, 69.9 (mean 76.0); the last four are the round balloon, which this change never touches. Bar of 85 NOT met.
 - Found: the judge drifts on an identical picture. The round balloon's PNG (same bytes) read 85.6, 84.0, 71.3, 72.0, 71.3 and 69.9 between 00:56 and 01:46. Any one-case bar near 85 sits inside that.
 - Lab: `/tmp/tearlab2` (lab.sh <variant> lands with `iconFrame` + `SVGExporter` through a temporary test; j.sh <variant> <reps> judges 9 looks per rep).
+
+## 2026-11-09 — Broken icons measured on the steady judge (a-broken-icon-reads-as-what-breaks-it-a-crack-th)
+
+- No app code changed. The balloon's bar of 85 was set on the old median judge; restated as "at least as well with the tear as without", the bar the egg and bubble already had.
+- "Without the tear" = Ask with the break step off entirely (temporary build, `iconBreak = nil` in AskSession, reverted), so the model draws the broken thing by itself. A first try that only skipped `AskIconBreak.applied` is the wrong baseline: the model is told to draw the object whole, so it scored 18 to 22.
+- Three readings each, rubric 4a03a8fc. Tear on (021403, 022206, 023030): balloon 84.8, 80.4, 85.6; heart 86.5, 86.5, 87.3 (asked 7.9 to 8.3, icon 7.0 to 7.3); egg 88.8 x3; bubble 82.7, 86.2, 83.7. Break step off (024846, 030827, 031850): balloon 47.3, 10.7, 48.7; heart 43.4, 41.8, 41.8; egg 83.6, 82.7, 79.8 (a hatching egg); bubble 15.9, 11.3, 11.3 (named a refresh arrow). Every bar met.
+- The lab runs are in the eval history tagged "lab: break step OFF (temporary uncommitted build)"; they are not a state of the app.
+- Next: the round balloon drawing's knot still lands as a speck (80.4 against 85 for the tied one); left in the task log, not filed.
