@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-08T22:45:50.316Z",
+  "updated": "2026-11-09T00:42:12.298Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -81,9 +81,29 @@
     {
       "t": "2026-11-08T22:45:50.315Z",
       "note": "Look before landing shipped (e78463fd9): story total 34.8 to 49.1, reads as asked best 6; bar (5 of 6 at 7) not met. Next lever: a quicker story plan so the look fits the user's trash sentence."
+    },
+    {
+      "t": "2026-11-08T22:46:23.325Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T00:31:41.737Z",
+      "note": "Built (test first): keys written again with replace true now replace the ones before for the rule checks and the room made for the motion (AskMotion.folded/landingFolded, AskMotionKeysAgainTests); before, the trash was sent back three times for keys it had already replaced (about 25 s) and its drawing shrunk for a journey that never played. The beats review and the look's send-back now carry where each moving part sits at each key and what it touches (AskMotion.whereParts, AskMotionWhereTheyAreTests). Draw rules and design ask: what is thrown, dropped or put in is drawn where it is first seen, outside (the design had the trash 'at rest inside the bin'). Tried and removed: a send-back for a part that comes into view where it goes out of view; the model echoed its words and the trash fell to 3."
+    },
+    {
+      "t": "2026-11-09T00:42:12.140Z",
+      "note": "Shipped 05a277aaa (pushed). Scripts/test.sh exit 0. Walks at Next defaults pass: ask-animates-a-story-walk (the user's sentence, plan 194 s, look skipped as over 150 s, Copy SVG repeatCount=indefinite x4) and ask-animates-a-story-without-the-word-walk (moves: yes, 245 s). Six story cases: run 20261108-225859 total 49.8 (reads as asked 7,6,3,4,5,4) and 20261108-235558 total 46.4 (5,6,5,4,5,4), against 49.1 (5,6,6,3,5,4); plan median 190 s to 159 and 179 s. Picture looked at: 3-playing-sc.png from the walk: lid lifted on its hinge, ball by the lid, Ball/Impact/Lid keyed separately; jagged stair-step marks beside the hinge mid-play, not yet explained (in the audit's rough)."
+    },
+    {
+      "t": "2026-11-09T00:42:12.222Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases at reads as asked 7; reached 0 of 6 reliably (best 7, the bell, once). What is left: the 27B model does not act on contact numbers or on the look's critique; it re-sends identical keys at temperature 0 (the trash twice after the look, refused as a repeat). Next levers to try: send the look's critique for ONE value to a fresh short call that writes only that value's keys (no long history to anchor on), or let the model name which part a beat touches and place the contact key in code from the boxes (a tool, true of any subject). The envelope's letter is drawn over the envelope's front and its flap flips up; left in the audit's rough, inside this task."
+    },
+    {
+      "t": "2026-11-09T00:42:12.297Z",
+      "note": "Plans quicker and fold replaced keys (05a277aaa); story bar (5 of 6 at 7) still not met, best 7 once. Next lever: a fresh short call per value for the look's critique, or contact placed from boxes."
     }
   ],
-  "started": "2026-11-08T20:38:43.603Z",
+  "started": "2026-11-08T22:46:23.324Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
