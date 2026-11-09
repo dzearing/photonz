@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T22:30:28.372Z",
-  "updated": "2026-11-09T03:41:18.241Z",
+  "updated": "2026-11-09T03:41:24.433Z",
   "deps": [
     "find-out-why-the-eval-judge-scores-one-identical"
   ],
@@ -184,10 +184,15 @@
     {
       "t": "2026-11-09T03:41:18.240Z",
       "note": "left rough: the round balloon drawing's knot lands as a speck or nothing (80.4 vs 84.8/85.6 for the tied drawing); not filed because every bar holds and the tear is not the cause."
+    },
+    {
+      "t": "2026-11-09T03:41:24.431Z",
+      "note": "Every bar met on the steady judge (mean of nine looks), three readings each, tear on vs break step off: heart 86.5/86.5/87.3 with asked 7.9-8.3 and icon 7.0-7.3 (off 42-43); egg 88.8 x3 (off 80-84); bubble 82.7-86.2 (off 11-16, a refresh arrow); balloon 80.4-85.6 (off 11-49). Balloon item restated from 85, a median-judge number, to the egg/bubble bar. No app code changed this run (59a72e2f3, queue and docs); audit queue/audits/2026-11-09-icon-break-kinds-steady.json; walk a-torn-icon-writes-whole-units-walk ok."
     }
   ],
   "started": "2026-11-09T02:13:24.283Z",
   "walks": [
     "a-torn-icon-writes-whole-units-walk"
-  ]
+  ],
+  "completed": "2026-11-09T03:41:24.432Z"
 }
