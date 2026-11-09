@@ -99,14 +99,15 @@ it up.
   The rule score is the mean of the rules that apply.
 * **The judge** (0 to 10): `rubric.md`, five lines (clean, typography, aligned,
   designed, did what was asked), each 1 to 10, typography left out for a
-  wordless drawing. Three looks at once, each line's median, then their mean.
+  wordless drawing. Nine looks at once (`JUDGE_LOOKS`), each line the mean of
+  them, then the mean of the lines. Until 2026-11-09 it was three looks and each
+  line's median; see "How steady a reading is" below for why that changed.
   The judge is `claude-opus-5-5` in a fresh `claude -p` session that can only
   read the picture: it never sees the request's transcript, the read document or
-  who made it. Repeat judging of the same picture moved by 0.2 at most
-  (2026-10-20).
-* **Named blind** (drawings only, 0 to 10): `naming.md`, three looks with no hint
+  who made it.
+* **Named blind** (drawings only, 0 to 10): `naming.md`, nine looks with no hint
   of the request; each look that names it as one of the case's `names` is a
-  third. A drawing whose own words spell its name gets no credit for naming
+  ninth. A drawing whose own words spell its name gets no credit for naming
   (the user's dog had "Dog" written over it).
 
 A drawing's score is 3 x rules + 4 x judge + 3 x named; anything else is
@@ -116,12 +117,60 @@ score is scaled by didWhatWasAsked / 7** (`scoring.mjs`): the stock cat drawn
 for "a cat curled up sleeping" is clean, aligned and named "cat" blind, and
 without this scored about 85 while doing nothing the request asked. Nothing
 made scores 0. The run's total is the mean of
-its cases. One blind look is ten points on a drawing case, so read a change of
-two or three points on the total as noise.
+its cases. One case read twice can still differ by two or three points (below),
+so read a change that size on one case as noise.
 
-The rubric, the naming prompt and the judge model together have an id
-(`rubric` in the history). Runs are only compared with runs of the same engine
-on the same id; change the rubric and the old runs stop being the bar.
+The rubric, the naming prompt, the judge model and the way looks are combined
+(`JUDGING`) together have an id (`rubric` in the history). Runs are only
+compared with runs of the same engine on the same id; change the rubric and the
+old runs stop being the bar. Each run also records its `looks`: a run made with
+`--judge-runs 3` to save time is on the same id but reads far less steadily.
+
+### How steady a reading is
+
+On 2026-11-09 the same balloon icon, the very same file, read 85.6, 84.0, 71.3,
+72.0, 71.3 and 69.9 in six runs inside an hour, under the old judging (three
+looks, each line's median). It looked like a drift downward through the hour.
+It was not the time of day, the sheet or the judge changing. It was sampling,
+made fourteen times bigger by two things in how the score was put together:
+
+* **The picture sits between two whole numbers.** The judge gave its
+  didWhatWasAsked 7 in about a third of its looks and 6 in the rest (20 of 66
+  looks at 7 that evening, the same third at 16:56, at 17:35 and at 17:55). The
+  median of three looks is then 6 three times in four and 7 one time in four,
+  never anything in between.
+* **didWhatWasAsked under 7 scales the whole score** (by 6/7 when it is 6). So
+  one line moving one step took the case from 85.6 to about 72, a cliff of
+  fourteen points, where every other line moving one step moves it by under
+  one.
+
+The first two runs simply drew 7 and the next four drew 6. Taking more looks
+does not cure a median: simulated from 90 real looks at the balloon, six
+readings landed within 5 points of their own mean only 11% of the time with the
+median of three, 26% with the median of nine and 42% with the median of
+fifteen, because a median still has to come out 6 or 7. A mean does not:
+the mean of three gets 28%, of six 72%, of nine 90%, of twelve 97%. So the
+judge takes nine looks and each line is their mean, and a picture read at 6.3
+reads 6.3, scaled by 6.3/7, every time. Six readings of the balloon under the
+new judging (17:59 to 18:03, one of them a whole `run` of the case end to end)
+read 75.6, 73.9, 75.6, 73.9, 75.6 and 73.9: a mean of 74.8, none more than
+0.9 from it. The nine looks run at once, so a case takes about ten seconds
+more of judging, not a minute.
+
+Two more things the evening showed:
+
+* **A picture drawn again by another renderer is not the same picture to the
+  judge.** A lab copy of the balloon, drawn from its SVG by a separate tool,
+  differs from the eval's own sheet in about 200 edge pixels of 686,000. The
+  judge gave the lab copy 7 in two looks of three (77 of 120) and the eval's
+  copy 7 in one of three, judged side by side at the same minute. A picture
+  that sits on a line's edge tips on detail that small. So a reading taken in a
+  lab is a guide, and the number that decides is a reading of the eval's own
+  sheet.
+* **The best past run is a lucky one.** `compare` sets a run against the best
+  before it, and under medians the best was the reading that drew the high
+  side of a coin flip (the 85.6 above). That is one more reason the change of
+  judging is a new rubric id: no old median reading is the bar for a mean.
 
 ## Video cases
 

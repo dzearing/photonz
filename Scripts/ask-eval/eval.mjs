@@ -3,7 +3,7 @@
 // (Scripts/ask-eval/README.md). Run it through Scripts/ask-eval.sh.
 //
 //   run --engine ask|skill --tag "<what changed>" [--set climb|held-out] [--cases a,b]
-//       [--resume <run>] [--minutes N] [--no-build] [--judge-runs 3] [--on <switch>,<switch>]
+//       [--resume <run>] [--minutes N] [--no-build] [--judge-runs 9] [--on <switch>,<switch>]
 //       [--models <id>,<id>]              the probe has only these built-in models, and no picture model
 //       [--mac 16]                        Ask plans as a Mac of this size would: its window and what it holds
 //   compare [<run>] [--with <run>|best]     a run against the best so far, case by case
@@ -20,7 +20,7 @@ import os from "node:os";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { score as ruleScore } from "./rules.mjs";
-import { judgePicture, nameBlind, JUDGE_MODEL, RUBRIC_ID, run } from "./judge.mjs";
+import { judgePicture, nameBlind, JUDGE_MODEL, JUDGE_LOOKS, RUBRIC_ID, run } from "./judge.mjs";
 import { repo, runAsk, runSkill, quitProbe, SKILL_MODEL } from "./engines.mjs";
 import { combine } from "./scoring.mjs";
 import { tally, describe } from "./lookups.mjs";
@@ -153,7 +153,7 @@ function historyLine(meta) {
     run: meta.id, engine: meta.engine, set: meta.set ?? "climb", tag: meta.tag, commit: meta.commit, started: meta.started, finished: new Date().toISOString(),
     ...(Object.keys(meta.switched ?? {}).length ? { switched: meta.switched } : {}),
     ...(meta.models?.length ? { models: meta.models } : {}), ...(meta.mac ? { mac: meta.mac } : {}),
-    wallSeconds: meta.wallSeconds, rubric: RUBRIC_ID, judgeModel: JUDGE_MODEL, engineModel: meta.engineModel,
+    wallSeconds: meta.wallSeconds, rubric: RUBRIC_ID, looks: meta.looks ?? null, judgeModel: JUDGE_MODEL, engineModel: meta.engineModel,
     total: meta.total, groups: meta.groups, lookups: meta.lookups, model: meta.model, caseCount: Object.keys(meta.cases).length,
     lines: meta.lines ?? judgeLines(meta.cases), time: timeByGroup(meta.cases),
   };
@@ -180,7 +180,7 @@ async function commandRun() {
   if (sealed && wanted) throw new Error("the held-out set runs whole: it is read in total, never case by case");
   const cases = wanted ? all.filter((c) => wanted.includes(c.id)) : all;
   if (wanted && cases.length !== wanted.length) throw new Error(`no such case: ${wanted.filter((w) => !all.some((c) => c.id === w)).join(", ")}`);
-  const judgeRuns = Number(option("judge-runs", 3));
+  const judgeRuns = Number(option("judge-runs", JUDGE_LOOKS));
   const minutes = Number(option("minutes", 0));
   const startedAt = Date.now();
 
@@ -193,7 +193,7 @@ async function commandRun() {
   } else {
     const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*/, "").replace("T", "-");
     meta = { id: `${stamp}-${engine}${sealed ? "-held-out" : ""}`, engine, set, tag: option("tag") ?? "untagged", commit: commit(), started: new Date().toISOString(),
-             caseIDs: cases.map((c) => c.id), engineModel: engine === "skill" ? SKILL_MODEL : null, cases: {},
+             caseIDs: cases.map((c) => c.id), engineModel: engine === "skill" ? SKILL_MODEL : null, cases: {}, looks: judgeRuns,
              // Switches the run turns on that are off at Next defaults (--on a,b): a try measured
              // before it is anybody's default. Recorded so the run never reads as the default app.
              switched: Object.fromEntries((option("on") ?? "").split(",").filter(Boolean).map((name) => [name, true])),
@@ -343,8 +343,8 @@ async function calibrate() {
     const picture = path.join(here, "calibration", item.picture);
     const testCase = cases[item.case];
     const [judge, named] = await Promise.all([
-      judgePicture({ picture, request: testCase.request, context: testCase.context, runs: 3, crafted: !!testCase.crafted }),
-      testCase.group === "drawing" ? nameBlind({ picture, names: testCase.names, runs: 3 }) : null,
+      judgePicture({ picture, request: testCase.request, context: testCase.context, crafted: !!testCase.crafted }),
+      testCase.group === "drawing" ? nameBlind({ picture, names: testCase.names }) : null,
     ]);
     // The best the case could score: every rule met.
     const atBest = combine(testCase, { score: 10 }, judge, named);
@@ -373,7 +373,7 @@ async function rescore(id) {
     if (r.unrun || (only && !only.includes(caseID))) continue;
     const dir = path.join(runDir, caseID);
     const read = JSON.parse(readFileSync(path.join(dir, "read.json"), "utf8"));
-    const scored = await scoreCase(cases[caseID], dir, { read, picture: path.join(dir, "result.png") }, 3);
+    const scored = await scoreCase(cases[caseID], dir, { read, picture: path.join(dir, "result.png") }, JUDGE_LOOKS);
     Object.assign(r, { score: scored.score, rules: scored.rules, judge: scored.judge, named: scored.named });
     writeFileSync(path.join(dir, "score.json"), JSON.stringify(r, null, 2));
     if (!sealed) console.log(`${caseID.padEnd(24)} ${r.score}`);

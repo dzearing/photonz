@@ -1,6 +1,7 @@
 // The judge: a strong model that can see, and did not make the picture, scores
 // it against the fixed rubric (rubric.md) and names a drawing blind
-// (naming.md). The same model and prompt every run, three runs, the median.
+// (naming.md). The same model and prompt every run, JUDGE_LOOKS looks, each
+// line the mean of them.
 // Dev tooling only: nothing here ships in the app.
 import { spawn } from "node:child_process";
 import { copyFileSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -32,8 +33,20 @@ export const ICON = readFileSync(path.join(here, "rubric-icon.md"), "utf8").trim
 /// An animated icon is judged on frames of its SVG as a browser plays it. It has
 /// its own rubric, left out of RUBRIC_ID so older runs still compare.
 export const ANIMATED_RUBRIC = readFileSync(path.join(here, "rubric-animated.md"), "utf8");
+/// How many looks the judge takes at a picture, and the blind namer at a
+/// drawing. Nine, since 2026-11-09: a picture the judge reads between two whole
+/// numbers on a line (the balloon read 7 on didWhatWasAsked in about a third of
+/// its looks, 6 in the rest) needs that many for six readings to land within 5
+/// points of each other nine times in ten (README, "How steady a reading is").
+export const JUDGE_LOOKS = 9;
+/// How the looks become a line: their mean. Until 2026-11-09 it was the median
+/// of three, which snaps a line the judge reads at 6.3 to 6 or to 7, and a 6
+/// against a 7 on didWhatWasAsked scales the whole score by 6/7: the same
+/// picture read 85.6 and 69.9 within the hour. It is part of RUBRIC_ID, so no
+/// run of medians is ever the bar for a run of means.
+export const JUDGING = "mean of looks";
 /// Which rubric scored a run: a run scored by another rubric is not compared.
-export const RUBRIC_ID = createHash("sha256").update(RUBRIC + NAMING + CRAFTED + VIDEO_RUBRIC + JUDGE_MODEL).digest("hex").slice(0, 8);
+export const RUBRIC_ID = createHash("sha256").update(RUBRIC + NAMING + CRAFTED + VIDEO_RUBRIC + JUDGE_MODEL + JUDGING).digest("hex").slice(0, 8);
 export const LINES = ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted", "photographic", "readsAsIcon", "loops"];
 
 /// The rubric for one case: with the crafted line for an illustration, and
@@ -106,23 +119,16 @@ async function ask(picture, prompt) {
   }
 }
 
-const median = (values) => {
-  const sorted = values.filter((v) => typeof v === "number").sort((a, b) => a - b);
-  if (!sorted.length) return null;
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+/// A line's reading: the mean of the looks that gave it, to two places.
+const mean = (values) => {
+  const given = values.filter((v) => typeof v === "number" && Number.isFinite(v));
+  if (!given.length) return null;
+  return Math.round(given.reduce((s, v) => s + v, 0) / given.length * 100) / 100;
 };
 
-/// The rubric, `runs` times at once: each line's median, and their mean.
-/// A story's request tells several beats; it is judged on each of them happening, in order.
-export const storyLine = "The request tells a little story of several beats. didWhatWasAsked is whether every beat it asks for happens, in the order told, and reads as that beat: a beat missing, out of order or too small to read is 5 or lower.";
-
-export async function judgePicture({ picture, request, context, runs = 3, crafted = false, video = false, photo = false, icon = false, animated = false, story = false }) {
-  const said = [context ? `It was made on ${context}: judge what the request did to it, not the picture underneath.` : "", story ? storyLine : ""].filter(Boolean).join("\n");
-  const prompt = rubricFor({ crafted, video, photo, icon, animated }).replaceAll("{{request}}", request)
-    .replaceAll("{{context}}", said);
-  const answers = (await Promise.all(Array.from({ length: runs }, () => ask(picture, prompt)))).filter(Boolean);
-  if (!answers.length) return { score: null, lines: {}, why: "the judge gave no answer", answers };
+/// The lines a case is judged on, each the mean of its looks. A line every
+/// look left null (typography on a wordless drawing) is null, so it is out.
+export function linesFrom(answers, { crafted = false, video = false, photo = false, icon = false, animated = false } = {}) {
   const lines = {};
   for (const line of LINES) {
     if (line === "crafted" && !crafted) continue;
@@ -133,9 +139,22 @@ export async function judgePicture({ picture, request, context, runs = 3, crafte
     // A picture is never judged on flow, nor a video on alignment.
     if (!animated && (line === "flow") !== video && (line === "flow" || line === "aligned")) continue;
     const values = answers.map((a) => a[line]);
-    // A line every answer left null (typography on a wordless drawing) is out.
-    lines[line] = values.every((v) => v === null || v === undefined) ? null : median(values.map((v) => (v === null ? undefined : Number(v))));
+    lines[line] = values.every((v) => v === null || v === undefined) ? null : mean(values.map((v) => (v === null ? undefined : Number(v))));
   }
+  return lines;
+}
+
+/// The rubric, `runs` times at once: each line's mean, and their mean.
+/// A story's request tells several beats; it is judged on each of them happening, in order.
+export const storyLine = "The request tells a little story of several beats. didWhatWasAsked is whether every beat it asks for happens, in the order told, and reads as that beat: a beat missing, out of order or too small to read is 5 or lower.";
+
+export async function judgePicture({ picture, request, context, runs = JUDGE_LOOKS, crafted = false, video = false, photo = false, icon = false, animated = false, story = false }) {
+  const said = [context ? `It was made on ${context}: judge what the request did to it, not the picture underneath.` : "", story ? storyLine : ""].filter(Boolean).join("\n");
+  const prompt = rubricFor({ crafted, video, photo, icon, animated }).replaceAll("{{request}}", request)
+    .replaceAll("{{context}}", said);
+  const answers = (await Promise.all(Array.from({ length: runs }, () => ask(picture, prompt)))).filter(Boolean);
+  if (!answers.length) return { score: null, lines: {}, why: "the judge gave no answer", answers };
+  const lines = linesFrom(answers, { crafted, video, photo, icon, animated });
   const counted = Object.values(lines).filter((v) => v !== null);
   const score = Math.round(counted.reduce((s, v) => s + v, 0) / counted.length * 10) / 10;
   // Every look is kept, so how much the judge wavers on a picture can be read.
@@ -144,7 +163,7 @@ export async function judgePicture({ picture, request, context, runs = 3, crafte
 }
 
 /// The drawing named with no hint, `runs` times: how many named it right.
-export async function nameBlind({ picture, names, runs = 3 }) {
+export async function nameBlind({ picture, names, runs = JUDGE_LOOKS }) {
   const answers = await Promise.all(Array.from({ length: runs }, () => ask(picture, NAMING)));
   const said = answers.map((a) => String(a?.name ?? "").trim());
   const right = said.filter((s) => names.some((n) => new RegExp(`\\b${n}(s|es)?\\b`, "i").test(s)));
