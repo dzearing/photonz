@@ -383,6 +383,7 @@ public enum AskIconBreak {
             guard max(own.width, own.height) < small, let name = part.name, let found = Self.tag(named: name, in: out) else { continue }
             out.replaceSubrange(found.range, with: found.asSolid(ink: ink))
         }
+        if line { out = rounded(drawn, other: body, in: out, from: svg, weight: weight, said: said, placing: placing) }
         guard let close = out.range(of: "</svg>", options: .backwards) else { return nil }
         out.insert(contentsOf: marks.joined(), at: close.lowerBound)
         return placing.wrapping(out)
@@ -692,6 +693,36 @@ public enum AskIconBreak {
         // What the tear took: the stretch that went and the teeth across it.
         let bite = gone.flatMap { run in (0...16).map { run.point(at: CGFloat($0) / 16) } } + notched.reversed()
         return (d + " Z", curve + across, bite)
+    }
+
+    /// `svg` with every solid part but `body` that has straight sides and no
+    /// line of its own given the round edge of the drawing's lines, when they
+    /// are round-joined: pulled in by half a line, so it covers about what it
+    /// covered, with the line round it in its own colour. A part narrower
+    /// than a line comes to a line through its middle, a round-ended dash.
+    /// Left sharp, a balloon's knot landed one unit tall with two corners
+    /// poking out under the round ends of every line around it, and was read
+    /// as stray spikes (`AskIconBreakSolidCornersTests`, 2026-11-09).
+    private static func rounded(_ drawn: [SVGArtwork.Part], other body: SVGArtwork.Part, in out: String, from svg: String,
+                                weight: CGFloat, said: String, placing: Placing) -> String {
+        guard svg.range(of: #"stroke-linejoin\s*=\s*"round""#, options: .regularExpression) != nil else { return out }
+        var out = out
+        for part in drawn where part != body && part.stroke == nil && isClosed(part.shape) {
+            guard let fill = part.fill, let name = part.name, let partRuns = runs(of: part.shape),
+                  !partRuns.isEmpty, partRuns.allSatisfy(\.isStraight),
+                  let found = tag(named: name, in: out) else { continue }
+            let corners = partRuns.map { placing.placed($0.start) }
+            let box = corners.reduce(CGRect.null) { $0.union(CGRect(origin: $1, size: .zero)) }
+            let half = weight / 2
+            let inner = box.insetBy(dx: min(half, box.width / 2), dy: min(half, box.height / 2))
+            func pulled(_ point: CGPoint) -> CGPoint {
+                CGPoint(x: box.width > 0 ? inner.minX + (point.x - box.minX) / box.width * inner.width : inner.midX,
+                        y: box.height > 0 ? inner.minY + (point.y - box.minY) / box.height * inner.height : inner.midY)
+            }
+            let d = "M" + corners.map { placing.text(placing.point(pulled($0))) }.joined(separator: " L") + " Z"
+            out.replaceSubrange(found.range, with: found.asRounded(d, ink: fill, weight: said))
+        }
+        return out
     }
 
     /// `svg` without every part but `body` whose middle lies in `area`.
@@ -1004,6 +1035,14 @@ public enum AskIconBreak {
         func asSolid(ink: String) -> String {
             let plain = attributes.replacingOccurrences(of: #"\s(fill|stroke)\s*=\s*"[^"]*""#, with: "", options: .regularExpression)
             return #"<\#(name)\#(plain) fill="\#(ink)" stroke="none"/>"#
+        }
+
+        /// The shape as the path `d`, solid in `ink` with a round-joined line
+        /// of `weight` round it in the same colour.
+        func asRounded(_ d: String, ink: String, weight: String) -> String {
+            let plain = kept.replacingOccurrences(of: #"\s(fill|stroke|stroke-width|stroke-linejoin)\s*=\s*"[^"]*""#, with: "",
+                                                  options: .regularExpression)
+            return #"<path\#(plain) d="\#(d)" fill="\#(ink)" stroke="\#(ink)" stroke-width="\#(weight)" stroke-linejoin="round"/>"#
         }
     }
 

@@ -1,0 +1,25 @@
+{
+  "feature": "A broken icon's solid parts have its lines' round corners",
+  "epic": "icon-vector",
+  "summary": "When Ask tears a line icon, any solid part with straight sides (a balloon's knot) gets the same round edge as the lines around it, so it no longer pokes out as spikes.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Make a new Icon picture (File > New, Icon).", "shot": "2026-11-09-icon-solid-corners-window.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Ask and type: make an icon of a balloon popping. Send it." },
+    { "do": "Look at the knot under the balloon: a rounded tie, no corners poking out.", "shot": "2026-11-09-icon-solid-corners-balloon.png" },
+    { "do": "Compare the same model drawing before and after: the spiky wedge against the rounded tie.", "shot": "2026-11-09-icon-solid-corners-after.png" },
+    { "do": "Check the Actual sizes panel at 16 and 24: the knot stays one clean shape." }
+  ],
+  "evaluate": [
+    "Does the knot read as a knot, or as a blob?",
+    "Does the rounded knot sit with the rest of the drawing as one family of round-ended lines?",
+    "Is the torn balloon still clearly popping at 16 px?"
+  ],
+  "rough": [
+    "The balloon bar (85 over three readings) is still not met. Mean of five eval readings is 76.0 (85.6, 71.3, 72.0, 71.3, 69.9); four of the five drew the round balloon this change never touches.",
+    "The judge is not steady: the identical round-balloon picture (same PNG bytes) read 85.6, 84.0, 71.3, 72.0, 71.3 and 69.9 within about 50 minutes.",
+    "The round balloon's knot is an open V drawn 2 units wide that lands as a speck, and judges say it has no knot. Filling it in changes nothing at that size. Making it bigger would mean the tool guessing which small parts matter, so it is left.",
+    "Before picture for comparison: 2026-11-09-icon-solid-corners-before.png (same model drawing, before this change)."
+  ]
+}

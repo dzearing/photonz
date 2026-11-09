@@ -274,10 +274,19 @@ struct AskIconBreakUnitsTests {
             SVGArtwork.shapeBounds(try #require(art.parts.first { $0.name == name }).shape)
         }
         let scale = try box(after, "String").height / box(before, "String").height
-        #expect(abs(try box(after, "Knot").width / box(before, "Knot").width - scale) < 1e-3)
-        let gapBefore = try box(before, "String").minY - box(before, "Knot").minY
-        let gapAfter = try box(after, "String").minY - box(after, "Knot").minY
-        #expect(abs(gapAfter - gapBefore * scale) < 1e-3)
+        let gapBefore = try box(before, "String").minY - box(before, "Knot").midY
+        let gapAfter = try box(after, "String").minY - box(after, "Knot").midY
+        #expect(abs(gapAfter - gapBefore * scale) <= 0.5 + 1e-3)
+        // The knot is solid with sharp corners: it takes the line's round edge
+        // (`AskIconBreakSolidCornersTests`), so its own box is pulled in by
+        // half a line and lands on whole units: its middle moves with the
+        // rest to within half a unit, and with its line it is about as wide
+        // as it was.
+        let knot = try #require(after.parts.first { $0.name == "Knot" })
+        let middleBefore = try box(before, "Knot").midX - box(before, "String").minX
+        let middleAfter = try box(after, "Knot").midX - box(after, "String").minX
+        #expect(abs(middleAfter - middleBefore * scale) <= 0.5 + 1e-3)
+        #expect(abs(try box(after, "Knot").width + knot.strokeWidth - box(before, "Knot").width * scale) <= 1 + 1e-3)
     }
 
     @Test("Asked for twice, it tears the same way")
