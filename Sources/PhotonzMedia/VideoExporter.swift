@@ -518,19 +518,30 @@ public enum VideoExporter {
         guard reader.canAdd(videoOut) else { throw ExportError.exportFailed }
         reader.add(videoOut)
 
-        let writer = try AVAssetWriter(outputURL: destination, fileType: .mp4)
-        let input = AVAssetWriterInput(mediaType: .video, outputSettings: movieSettings(plan, holdsToBudget: holdsToBudget))
-        input.expectsMediaDataInRealTime = false
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
-            assetWriterInput: input,
-            sourcePixelBufferAttributes: [
-                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-                kCVPixelBufferWidthKey as String: Int(plan.size.width.rounded()),
-                kCVPixelBufferHeightKey as String: Int(plan.size.height.rounded()),
-            ])
-        guard writer.canAdd(input) else { throw ExportError.exportFailed }
-        writer.add(input)
-        guard writer.startWriting(), reader.startReading() else {
+        // On the hardware encoder, waiting for it when the Mac's sessions are
+        // all taken: the software one does not keep to the budget
+        // (`HardwareEncoder`).
+        let (writer, (input, adaptor)) = try await HardwareEncoder.start(
+            at: destination, wouldNotStart: { _ in ExportError.exportFailed }
+        ) { hardware in
+            let writer = try AVAssetWriter(outputURL: destination, fileType: .mp4)
+            var settings = movieSettings(plan, holdsToBudget: holdsToBudget)
+            if hardware { settings[AVVideoEncoderSpecificationKey] = HardwareEncoder.required }
+            let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+            input.expectsMediaDataInRealTime = false
+            let adaptor = AVAssetWriterInputPixelBufferAdaptor(
+                assetWriterInput: input,
+                sourcePixelBufferAttributes: [
+                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                    kCVPixelBufferWidthKey as String: Int(plan.size.width.rounded()),
+                    kCVPixelBufferHeightKey as String: Int(plan.size.height.rounded()),
+                ])
+            guard writer.canAdd(input) else { throw ExportError.exportFailed }
+            writer.add(input)
+            return (writer, (input, adaptor))
+        }
+        guard reader.startReading() else {
+            writer.cancelWriting()
             throw ExportError.exportFailed
         }
         writer.startSession(atSourceTime: .zero)

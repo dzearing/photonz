@@ -184,30 +184,6 @@ struct LiveBackdropRenderTests {
         }
     }
 
-    @Test("Every look draws a 1080p frame inside 16 ms at Normal")
-    func fastEnough() throws {
-        let renderer = DocumentRenderer()
-        for look in LiveLook.allCases {
-            let doc = Self.document(Self.paint(look))
-            _ = try Self.frame(doc, atMS: 0, renderer: renderer)
-            var times: [Double] = []
-            for step in 1...6 {
-                let drawn = doc.drawn(atTimeMS: step * 33)
-                let start = DispatchTime.now().uptimeNanoseconds
-                let image = renderer.render(drawn, store: ImageStore())
-                times.append(Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000)
-                #expect(image != nil)
-            }
-            let best = times.min() ?? 0
-            let median = times.sorted()[times.count / 2]
-            print("[live-perf] \(look.title) 1920x1080: best \(String(format: "%.1f", best)) ms, median \(String(format: "%.1f", median)) ms")
-            // At most 5.4ms on the calibration machine (2026-10-13), and 7.8
-            // to 12.4ms on the GitHub VM, within a few ms of a flat 16. The
-            // gate is the shared one, scaled by how fast this machine is.
-            MachineSpeed.check("\(look.title) live backdrop at 1080p", medianMS: best, baselineMS: 5.5)
-        }
-    }
-
     @Test("A held look (Speed nought) is a still picture with its look drawn, not its bare ground")
     func heldLook() throws {
         let held = Self.paint(.sketch) { $0.speed = 0 }

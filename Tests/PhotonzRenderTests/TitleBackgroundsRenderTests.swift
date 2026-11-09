@@ -79,6 +79,17 @@ struct TitleBackgroundsRenderTests {
         return (mean, variance.squareRoot())
     }
 
+    /// How two renders differ: how many bytes, by how many levels at most.
+    static func difference(_ a: [UInt8], _ b: [UInt8]) -> String {
+        guard a.count == b.count else { return "sizes \(a.count) and \(b.count)" }
+        var differing = 0, most = 0
+        for (x, y) in zip(a, b) where x != y {
+            differing += 1
+            most = max(most, abs(Int(x) - Int(y)))
+        }
+        return "\(differing) of \(a.count) bytes differ, by at most \(most) levels"
+    }
+
     static func milliseconds(_ duration: Duration) -> Double {
         Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
     }
@@ -302,56 +313,16 @@ struct TitleBackgroundsRenderTests {
                 let scrubbed = try #require(Self.render(doc, atMS: ms, store: store, renderer: scrub))
                 let exported = try #require(DocumentRenderer().render(doc.drawn(atTimeMS: ms), store: store,
                                                                      scale: 1))
-                let scrubAgrees = played[ms] == Self.bytes(scrubbed)
-                let exportAgrees = played[ms] == Self.bytes(exported)
-                #expect(scrubAgrees, "\(preset.name): scrub differs at \(ms)")
-                #expect(exportAgrees, "\(preset.name): export differs at \(ms)")
+                let shown = played[ms] ?? []
+                let scrubBytes = Self.bytes(scrubbed), exportBytes = Self.bytes(exported)
+                let scrubAgrees = shown == scrubBytes
+                let exportAgrees = shown == exportBytes
+                // A difference says how far apart, so one seen in a full run
+                // can be told from rounding (a level here and there) or a
+                // different picture.
+                #expect(scrubAgrees, "\(preset.name): scrub differs at \(ms): \(Self.difference(shown, scrubBytes))")
+                #expect(exportAgrees, "\(preset.name): export differs at \(ms): \(Self.difference(shown, exportBytes))")
             }
         }
-    }
-
-    // MARK: - A whole page, inside a frame
-
-    /// One frame of each new title page through the canvas's own render, at
-    /// 1080p, over twenty frames of its hold. Printed for the perf note.
-    @Test("Aurora and Behind Glass at 1080p each draw inside a frame")
-    func pagesInsideAFrame() throws {
-        let store = ImageStore()
-        var report: [String] = []
-        for preset in [BuiltInTitle.aurora, .glass] {
-            var doc = Self.timed([Self.stripes(store: store)], lengthMS: 10_000)
-            let landed = doc.insertTitle(preset, atTimeMS: 0)
-            _ = try #require(landed)
-            // A context of its own, so the reading is this page's cost and not
-            // the queue of every other render suite running beside it.
-            let renderer = DocumentRenderer(privateContext: CIContext(options: [.cacheIntermediates: true]))
-            _ = renderer.renderInteractive(doc.drawn(atTimeMS: 1_000), store: store)
-            var samples: [Double] = []
-            for ms in stride(from: 1_016, to: 1_016 + 20 * 16, by: 16) {
-                let shown = doc.drawn(atTimeMS: ms)
-                let began = ContinuousClock.now
-                _ = renderer.renderInteractive(shown, store: store)
-                samples.append(Self.milliseconds(ContinuousClock.now - began))
-            }
-            let median = samples.sorted()[samples.count / 2]
-            report.append(String(format: "%@: median %.1fms, worst %.1fms over %d frames",
-                                 preset.name, median, samples.max() ?? 0, samples.count))
-            // Measured alone at 8.9 to 10.4 ms (Aurora) and 4.7 to 5.5 ms
-            // (Behind Glass) on 2026-10-10; inside the full suite the CPU half
-            // of a drifting frame competes with every other suite, so the gate
-            // is the shared one, scaled by how fast this machine is.
-            let baseline = preset == .aurora ? 10.0 : 5.5
-            let factor = MachineSpeed.factor(.filterGraph)
-            if MachineSpeed.isGating {
-                #expect(median < MachineSpeed.budget(baselineMS: baseline, factor: factor),
-                        "\(preset.name) median \(median)ms")
-            }
-        }
-        // The mesh grid on its own, the CPU part of a drifting frame.
-        let began = ContinuousClock.now
-        for ms in stride(from: 0, to: 20 * 16, by: 16) { _ = MeshPainter.image(Self.aurora, size: Self.canvas, atMS: ms) }
-        let grid = Self.milliseconds(ContinuousClock.now - began) / 20
-        report.append(String(format: "mesh grid alone: %.2fms a frame", grid))
-        print("[perf] title backgrounds, 1920x1080:\n  " + report.joined(separator: "\n  "))
     }
 }

@@ -1,0 +1,42 @@
+# Opt-in stall diagnostic for GuardedReads (the 30 s readerGaveUp in a full run).
+# Apply: git apply queue/diagnostics/guarded-reads-stall-sample.patch
+# Run:   mkdir -p /tmp/photonz-stalls && PHOTONZ_STALL_SAMPLE_DIR=/tmp/photonz-stalls Scripts/test.sh
+# A stall of a guarded read (limit >= 10 s) writes: a 2 s sample of the test process,
+# a ps of the VT encoder/decoder XPC services with a 1 s sample of each, and, if the
+# abandoned read ever answers, answered-<pid>-<time>.txt saying after how long.
+# Revert before committing: git checkout Sources/PhotonzMedia/GuardedReads.swift
+
+diff --git a/Sources/PhotonzMedia/GuardedReads.swift b/Sources/PhotonzMedia/GuardedReads.swift
+index ca66dd9a5..5fb0e2c45 100644
+--- a/Sources/PhotonzMedia/GuardedReads.swift
++++ b/Sources/PhotonzMedia/GuardedReads.swift
+@@ -49,11 +49,28 @@ struct GuardedReads: Sendable {
+         return try await withTaskCancellationHandler {
+             try await withCheckedThrowingContinuation { (waiting: CheckedContinuation<T, Error>) in
+                 answer.wait(with: waiting)
+-                let giveUp = DispatchWorkItem { answer.give(.failure(Stalled(seconds: limit))) }
++                let asked = Date()
++                let giveUp = DispatchWorkItem {
++                    if limit >= 10, let dir = ProcessInfo.processInfo.environment["PHOTONZ_STALL_SAMPLE_DIR"] {
++                        let pid = ProcessInfo.processInfo.processIdentifier
++                        let stamp = Int(Date().timeIntervalSince1970)
++                        let script = "ps -axo pid,ppid,stat,pcpu,etime,comm | grep -E 'XPCService|mediaserverd|VTDecoder|VTEncoder' | grep -v grep > \(dir)/stall-\(pid)-\(stamp)-ps.txt; for p in $(pgrep -f 'VTDecoderXPCService|VTEncoderXPCService'); do sample $p 1 -file \(dir)/stall-\(pid)-\(stamp)-svc-$p.txt >/dev/null 2>&1; done; sample \(pid) 2 -file \(dir)/stall-\(pid)-\(stamp).txt >/dev/null 2>&1"
++                        let task = Process()
++                        task.executableURL = URL(fileURLWithPath: "/bin/zsh")
++                        task.arguments = ["-c", script]
++                        try? task.run(); task.waitUntilExit()
++                    }
++                    answer.give(.failure(Stalled(seconds: limit)))
++                }
+                 DispatchQueue.global(qos: .userInitiated)
+                     .asyncAfter(deadline: .now() + limit, execute: giveUp)
+                 queue.async {
+                     let result = work()
++                    if giveUp.isCancelled == false, limit >= 10, Date().timeIntervalSince(asked) > limit,
++                       let dir = ProcessInfo.processInfo.environment["PHOTONZ_STALL_SAMPLE_DIR"] {
++                        let line = "pid \(ProcessInfo.processInfo.processIdentifier): the read stalled past \(limit)s answered after \(Date().timeIntervalSince(asked))s\n"
++                        try? line.write(toFile: "\(dir)/answered-\(ProcessInfo.processInfo.processIdentifier)-\(Int(Date().timeIntervalSince1970)).txt", atomically: true, encoding: .utf8)
++                    }
+                     giveUp.cancel()
+                     answer.give(.success(result))
+                 }

@@ -222,25 +222,30 @@ public enum DocumentMovieWriter {
     private static func writeSilentMovie(plan: VideoFramePlan, to destination: URL,
                                          frames: FrameSource, holdsToBudget: Bool,
                                          onProgress: (@Sendable (Double) -> Void)?) async throws {
-        let writer = try AVAssetWriter(outputURL: destination, fileType: .mp4)
-        let input = AVAssetWriterInput(mediaType: .video,
-                                       outputSettings: videoSettings(
-                                           plan: plan, holdsToBudget: holdsToBudget))
-        input.expectsMediaDataInRealTime = false
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
-            assetWriterInput: input,
-            sourcePixelBufferAttributes: [
-                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-                kCVPixelBufferWidthKey as String: Int(plan.size.width),
-                kCVPixelBufferHeightKey as String: Int(plan.size.height),
-            ])
-        guard writer.canAdd(input) else {
-            throw WriteError.writerFailed("the file will not take a picture track")
-        }
-        writer.add(input)
-        guard writer.startWriting() else {
-            throw WriteError.writerFailed(
-                writer.error.map(String.init(describing:)) ?? "it would not start")
+        // On the hardware encoder, waiting for it when the Mac's sessions are
+        // all taken: the software one does not keep to the budget
+        // (`HardwareEncoder`).
+        let (writer, (input, adaptor)) = try await HardwareEncoder.start(
+            at: destination,
+            wouldNotStart: { WriteError.writerFailed($0.map(String.init(describing:)) ?? "it would not start") }
+        ) { hardware in
+            let writer = try AVAssetWriter(outputURL: destination, fileType: .mp4)
+            var settings = videoSettings(plan: plan, holdsToBudget: holdsToBudget)
+            if hardware { settings[AVVideoEncoderSpecificationKey] = HardwareEncoder.required }
+            let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+            input.expectsMediaDataInRealTime = false
+            let adaptor = AVAssetWriterInputPixelBufferAdaptor(
+                assetWriterInput: input,
+                sourcePixelBufferAttributes: [
+                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                    kCVPixelBufferWidthKey as String: Int(plan.size.width),
+                    kCVPixelBufferHeightKey as String: Int(plan.size.height),
+                ])
+            guard writer.canAdd(input) else {
+                throw WriteError.writerFailed("the file will not take a picture track")
+            }
+            writer.add(input)
+            return (writer, (input, adaptor))
         }
         writer.startSession(atSourceTime: .zero)
         do {

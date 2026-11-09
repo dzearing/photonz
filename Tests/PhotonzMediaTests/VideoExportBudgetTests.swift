@@ -23,7 +23,10 @@ struct VideoExportBudgetTests {
     static func busySource(seconds: Int, size: CGSize) async throws -> URL {
         let plan = DocumentVideoExport.plan(durationMS: seconds * 1000, canvasSize: size,
                                             format: .mp4, quality: .high)
-        let url = folder.appendingPathComponent("busy-\(seconds)s.mp4")
+        // A name of its own each time: this suite and `BusyVideoSizeTests`
+        // share the folder and run at the same time, and with one name each
+        // wrote the recording over while the other was reading it.
+        let url = folder.appendingPathComponent("busy-\(seconds)s-\(UUID().uuidString).mp4")
         let width = Int(plan.size.width), height = Int(plan.size.height)
         let frames: DocumentMovieWriter.FrameSource = { ms in
             guard let context = CGContext(data: nil, width: width, height: height,
@@ -116,9 +119,9 @@ struct VideoExportBudgetTests {
     /// the two out of step with each other is how an export stops dead.
     static func busySourceWithSound(seconds: Int, size: CGSize) async throws -> URL {
         let silent = try await busySource(seconds: seconds, size: size)
-        let tone = folder.appendingPathComponent("tone-\(seconds)s.m4a")
+        let tone = folder.appendingPathComponent("tone-\(seconds)s-\(UUID().uuidString).m4a")
         try TestTone.writeFlat(to: tone, seconds: Double(seconds))
-        let url = folder.appendingPathComponent("busy-sound-\(seconds)s.mp4")
+        let url = folder.appendingPathComponent("busy-sound-\(seconds)s-\(UUID().uuidString).mp4")
         try? FileManager.default.removeItem(at: url)
         let composition = AVMutableComposition()
         let picture = AVURLAsset(url: silent)
@@ -140,8 +143,15 @@ struct VideoExportBudgetTests {
         return url
     }
 
+    /// What is on the disk now. Never `url.resourceValues`: a URL keeps the
+    /// size it read first, so the same URL asked again after the file was
+    /// written over says the old size. That is how "the lightest of three"
+    /// in `BusyVideoSizeTests` kept reporting its first, heavy write
+    /// (2026-11-09: three goes read 2,439,432 bytes while the files on the
+    /// disk were 2,439,432, 2,684,923 and 1,955,784).
     static func bytes(of url: URL) -> Int {
-        (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        ((try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? NSNumber)?
+            .intValue ?? 0
     }
 
     static func wholeOf(_ url: URL, seconds: Double) -> VideoCutList {

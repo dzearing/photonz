@@ -39,8 +39,15 @@ struct AnimatedExportWeighTests {
 
     static let folder = TestTone.scratch()
 
+    /// What is on the disk now. Never `url.resourceValues`: a URL keeps the
+    /// size it read first, so the same URL asked again after the file was
+    /// written over says the old size. That is how "the lightest of three"
+    /// in `BusyVideoSizeTests` kept reporting its first, heavy write
+    /// (2026-11-09: three goes read 2,439,432 bytes while the files on the
+    /// disk were 2,439,432, 2,684,923 and 1,955,784).
     static func bytes(of url: URL) -> Int {
-        (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        ((try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? NSNumber)?
+            .intValue ?? 0
     }
 
     /// A screen-like recording: fine still detail like a window full of words,

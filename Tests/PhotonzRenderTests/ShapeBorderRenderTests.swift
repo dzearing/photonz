@@ -255,11 +255,10 @@ struct ShapeBorderDragCostTests {
         let boxMedian = boxTimings.sorted()[boxTimings.count / 2]
         print("Width drag on the package at 2x, 1440x1024: shape ring median \(String(format: "%.1f", median)) ms, worst \(String(format: "%.1f", timings.max() ?? 0)) ms; box ring median \(String(format: "%.1f", boxMedian)) ms")
         #expect(renderer.followedOutlinesMerged == 1)
-        // A stopwatch reading: collected without gating where
-        // PHOTONZ_PERF_GATE says report (61.9 ms on GitHub's three core VM, two
-        // tests at a time, on unchanged code, 2026-10-26).
-        if MachineSpeed.isGating {
-            #expect(median < 48)
-        }
+        // Only printed here. The budget is `FrameBudgetPerfTests`, which
+        // runs with nothing beside it and is read against a ruler: as a flat
+        // 48 ms here, in the run beside three other test processes, it read
+        // 50 to 82 ms on unchanged code while costing 5 ms alone (2026-11-02
+        // to 11-09).
     }
 }
