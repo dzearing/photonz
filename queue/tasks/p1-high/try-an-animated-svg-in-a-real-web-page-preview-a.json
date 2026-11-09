@@ -1,0 +1,35 @@
+{
+  "id": "try-an-animated-svg-in-a-real-web-page-preview-a",
+  "title": "Try an animated SVG in a real web page: Preview as Web Page, playback on hover, and colours that follow the page",
+  "goal": "A person making an animated icon wants to see it the way it will be used: in a button that animates while the pointer is on it, at real sizes, on light and dark. Add a Preview as Web Page command that writes a small HTML page around the icon and opens it in the default browser, give the SVG export a choice of when it plays, and let an exported icon follow the page's colour.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 7e-10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-09T15:16:35.422Z",
+  "updated": "2026-11-09T15:16:35.546Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-09 (intake): 'I would love a way to test the animated svg in html, for example in a button which on hover animates the icon. Would be nice to have a generate preview html function, especially so that in your ready to try you can demonstrate the animated svgs in an interactive way.' Done by the intake window the same day: the dashboard side (632d37368): queue/audits .svg served (dev-server audit-shot), a report's SVG shot drawn as a player: a button paused until hovered, sizes on light and dark, Pause, a warning when its colours are fixed. Found while testing it: the trash can SVG's ink is a fixed near-black, so it vanishes on dark. Export code: Sources/PhotonzCore/SVGExport.swift, SVGMotionExport.swift (repeatCount=indefinite today).",
+  "acceptance": [
+    "File > Preview as Web Page (and on a picked icon's right-click menu) writes an HTML page to a temporary folder and opens it in the default browser: the icon inside a button that plays while hovered (and again on each hover), a row at 16, 24, 32, 48 and 96 px on light and on dark, a looping copy, and a Copy SVG / Copy HTML button. The page is plain HTML with the SVG inline, no network, works offline; it refreshes from the app when the icon changes (a Refresh button is enough).",
+    "Export and Copy SVG gain 'Plays': Always (loops, today), On hover (starts when the pointer enters the SVG, begin='mouseover' with restart, holds the first frame otherwise), Once (plays once and holds the last frame). The choice is remembered per document, shows in the Export sheet, and the preview page shows the chosen one.",
+    "Export and Copy SVG gain 'Colour': as drawn (today), or Follow the page (the icon's main ink becomes currentColor, so it takes the text colour of wherever it is placed and shows on dark). The dashboard's Ready to try already warns when an SVG's colours are fixed and it vanishes on dark (632d37368); with Follow the page it shows on both.",
+    "Each choice is checked in Safari and Chrome (WebKit and Chromium via the walk harness or Playwright): On hover starts only when hovered, Once holds its last frame, Follow the page takes the page's colour.",
+    "Agents get the same through export and a preview_web_page tool (MCP), so Ask can say 'here it is in a page'.",
+    "Audits for animated icons attach the exported .svg as a try step's shot: Ready to try now plays an SVG shot in a hover button and at sizes on light and dark (dashboard 632d37368). Note this in runner-prompt.md where audits are described, so every animated icon report can be tried there.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-09T15:16:35.424Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-09T15:16:35.545Z",
+      "note": "seq 45 -> 7e-10"
+    }
+  ]
+}

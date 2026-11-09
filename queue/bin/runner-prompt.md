@@ -136,7 +136,7 @@ The machine you run on is the user's. Anything you start, you finish.
   shape (a title's single Fade row, a shadow's Kind as a dropdown twice, a lifted
   clip called Sample Talk copy). Each one turned rotating checks red and cost a
   separate task to fix walks that were wrong, not the app.
-  The whole set is about 1010 walks and about 290 minutes, which is 29 times the 600s ceiling
+  The whole set is about 1100 walks and about 340 minutes, which is 34 times the 600s ceiling
   on your background work, so starting it inside a task ends with you
   terminated and your task handed back unfinished. That is not hypothetical:
   eight of the twenty recorded runner failures are exactly this, including
@@ -406,6 +406,8 @@ the answer in this run rather than blocking at all.
 Write the findings into the task log. A mock assumption the app cannot deliver becomes a filed prerequisite task (p1, sequenced ahead of this one), not a cut. If you believe the mock itself is wrong, open a decision card and build the mock until it is answered.
 
 **UI text is a label, not an explanation.** A panel row is a short label and a value or control. No sentence in the panel explains the model ("A freeze is not a new kind of object..."); explanations belong in docs, the tutorial, or nowhere. At most one short hint line per section, only when a person would otherwise be stuck. Choose the control the mock uses: a list of more than three exclusive options is a dropdown, not a radio column. This rule trims text the app adds; a line the user's mock prints is part of the floor and is never dropped quietly. When a mock line is longer than the user's budgets (40 characters in the panel, 30 in the chrome), the budget wins: the line moves, in the mock's words, behind the question mark beside its section's header (in the chrome, into the tip of the control it is about), the mock page is left as drawn, and the audit's `rough` names every line moved or left out (on 2026-09-23 the transition picker dropped the mock's closing line about overlap and said nothing; that was a quiet departure, not a trim). UX-PATTERNS §4 "When the mock prints a sentence longer than the budget" is the rule.
+
+**An animated icon's report lets the user try it.** When a task makes or changes an SVG (still or animated), save the exported `.svg` under `queue/audits/` and attach it as a try step's `shot`. Ready to try draws an SVG shot as a player: a button that plays it while the pointer is on it, and the icon at 16, 24, 48 and 96 on light and dark (the user, 2026-11-09). A PNG of an animated icon cannot show its motion; the SVG can.
 
 **Chrome says labels and values, never sentences.** Outside the panel (timeline and its bar, transport, tool bar, canvas overlays, HUDs, popovers, toasts, empty states, status pills) a string is a label or a value of 30 characters at most: no sentence about state, no debug reading (`@`, raw ms, ids, bracketed explanations), no "no X" placeholder. When there is nothing to show, show nothing; an empty state is empty or one short label; a control that only acts on a selection is absent without one. Mock text that reads like a debug value is not copied: raise it as a decision card. The user turned down the mock's own "Playhead no animated property @ 0.00s" pill on 2026-09-25 as "completely unprofessional ux". `ChromeCopyBudgetTests` fails the build on a new offender; UX-PATTERNS §4 "What the chrome may say" is the rule.
 
