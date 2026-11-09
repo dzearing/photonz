@@ -220,6 +220,11 @@ public enum PlaytestLockSafety {
         // expectInk it renders the document and reads pixels, no window and no
         // name. If a locked sweep refuses it, take it out.
         "expectChipContrast",
+        // Added 2026-11-09 by reading, NOT yet watched under a lock: it asks
+        // the canvas where it drew its chips and where the picture's text is,
+        // no name and no picture of the window. If a locked sweep refuses it,
+        // take it out.
+        "expectNamesClearOfWords",
         // Added 2026-09-26 by reading, NOT yet watched under a lock: it asks a
         // clip's timeline bar what it last drew, which the bar tells the
         // harness itself, never a name. The second-clip guide walk reads it,

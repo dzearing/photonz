@@ -1,0 +1,44 @@
+{
+  "feature": "Component sheet headers stay readable",
+  "epic": "agent-skills",
+  "summary": "When Ask lays components out as a table, the header naming each state now reads in full on the canvas. A copy's violet name chip that would have printed over those words stays off until you point at or pick that copy.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: ask-builds-base-components-walk (the real Ask request) and component-sheet-chips-clear-walk (the same kind of sheet built in five seconds).",
+  "switched": {},
+  "try": [
+    {
+      "do": "On a blank picture, press Ask and type: create a table of apple like quality base components that show different states and text.",
+      "shot": "2026-11-09-sheet-chips-clear-ask-sheet-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click bare canvas so nothing is picked, and read the headers across the top of each row.",
+      "shot": "2026-11-09-sheet-chips-clear-rest-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Rest the pointer on the Hover button.",
+      "shot": "2026-11-09-sheet-chips-clear-pointed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click it, then move the pointer away.",
+      "shot": "2026-11-09-sheet-chips-clear-picked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Compare with the sheet from 2026-10-24, where Hover, Pressed and Disabled were half covered.",
+      "shot": "2026-10-24-component-sheet-window-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Do the headers and the drawings read as a clean table at the zoom it opens at?",
+    "With no chips at rest, can you still tell which drawings are linked copies of a component?",
+    "When you point at a copy, is it fine that its chip sits over the header until you move away?"
+  ],
+  "rough": [
+    "At rest a copy under a header shows no mark at all, so nothing on the canvas says it is a linked copy until you point at it. The Layers list still marks each one with a violet diamond and its version.",
+    "The rule is general: any component chip that would print over any words in the picture is left off at rest, not only on Ask's sheets. A screen's own name chip is unchanged.",
+    "A picked copy's chip still sits close above its top resize handle, as it did before this change.",
+    "No mock covers the chips over a component sheet."
+  ]
+}

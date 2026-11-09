@@ -1,0 +1,116 @@
+{
+  "out": "/tmp/photonz-playtest/component-sheet-chips-clear-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "seed": "A sheet of components the way Ask lays one out (add_component with labels), at Next defaults and the zoom a new picture opens at. The violet chip over each copy must not cover the header word naming its state; pointing at a copy still says which version it is.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_component",
+      "arguments": "{\"name\": \"Button\", \"x\": 80, \"y\": 100, \"labels\": true, \"firstLook\": \"Default\", \"parts\": [{\"name\": \"Box\", \"shape\": \"rectangle\", \"x\": 0, \"y\": 0, \"width\": 120, \"height\": 36, \"cornerRadius\": 8, \"fill\": \"#0A84FF\"}, {\"name\": \"Label\", \"shape\": \"text\", \"text\": \"Button\", \"x\": 0, \"y\": 9, \"width\": 120, \"height\": 18, \"fontSize\": 13, \"color\": \"#FFFFFF\"}], \"looks\": [{\"name\": \"Hover\", \"changes\": [{\"part\": \"Box\", \"fill\": \"#3B9DFF\"}]}, {\"name\": \"Pressed\", \"changes\": [{\"part\": \"Box\", \"fill\": \"#0060C8\"}]}, {\"name\": \"Disabled\", \"changes\": [{\"part\": \"Box\", \"fill\": \"#C7C7CC\"}]}]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_component",
+      "arguments": "{\"name\": \"Toggle\", \"x\": 80, \"y\": 200, \"labels\": true, \"firstLook\": \"Off\", \"parts\": [{\"name\": \"Track\", \"shape\": \"rectangle\", \"x\": 0, \"y\": 0, \"width\": 52, \"height\": 30, \"cornerRadius\": 15, \"fill\": \"#E9E9EA\"}, {\"name\": \"Knob\", \"shape\": \"rectangle\", \"x\": 2, \"y\": 2, \"width\": 26, \"height\": 26, \"cornerRadius\": 13, \"fill\": \"#FFFFFF\"}], \"looks\": [{\"name\": \"On\", \"changes\": [{\"part\": \"Track\", \"fill\": \"#34C759\"}, {\"part\": \"Knob\", \"x\": 24}]}]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_component",
+      "arguments": "{\"name\": \"Text Field\", \"x\": 80, \"y\": 300, \"labels\": true, \"firstLook\": \"Default\", \"parts\": [{\"name\": \"Box\", \"shape\": \"rectangle\", \"x\": 0, \"y\": 0, \"width\": 220, \"height\": 34, \"cornerRadius\": 6, \"fill\": \"#FFFFFF\", \"stroke\": \"#C7C7CC\", \"strokeWidth\": 2}, {\"name\": \"Words\", \"shape\": \"text\", \"text\": \"Enter text\", \"x\": 10, \"y\": 8, \"width\": 200, \"height\": 18, \"fontSize\": 13, \"color\": \"#8E8E93\"}], \"looks\": [{\"name\": \"Focused\", \"changes\": [{\"part\": \"Box\", \"stroke\": \"#0A84FF\"}]}, {\"name\": \"Disabled\", \"changes\": [{\"part\": \"Box\", \"fill\": \"#F2F2F7\"}]}]}"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        720,
+        900
+      ],
+      "space": "document",
+      "comment": "bare canvas, so nothing is picked and every name is at rest"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-sheet",
+      "note": "the sheet at rest: a row per kind, each state named once in a header above its column, and no chip printed over a header"
+    },
+    {
+      "do": "expectNamesClearOfWords"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-sheet"
+    },
+    {
+      "do": "move",
+      "at": [
+        634,
+        158
+      ],
+      "space": "document",
+      "comment": "rest the pointer on the Hover copy of the button"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-pointed",
+      "note": "pointing at a copy brings its chip back, saying which component and version it is, on top of the header"
+    },
+    {
+      "do": "expectNamesClearOfWords"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-pointed"
+    },
+    {
+      "do": "click",
+      "at": [
+        634,
+        158
+      ],
+      "space": "document",
+      "comment": "pick it, then move the pointer off: a picked copy keeps saying what it is"
+    },
+    {
+      "do": "move",
+      "at": [
+        720,
+        900
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "3-picked"
+    }
+  ]
+}

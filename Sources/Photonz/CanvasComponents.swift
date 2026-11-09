@@ -72,8 +72,14 @@ extension CanvasNSView {
         // it is the only one that can land on a neighbour, and it has to be the
         // one on top when it does.
         let chips = canvasNameChips().filter { $0.kind != .screen }
-        for chip in chips where !chip.spelledOut { drawNameChip(chip, into: componentChromeLayer) }
-        for chip in chips where chip.spelledOut { drawNameChip(chip, into: componentChromeLayer) }
+        // A name raised over the picture's own words is drawn last for the
+        // same reason.
+        for chip in chips where !(chip.spelledOut || chip.raised) {
+            drawNameChip(chip, into: componentChromeLayer)
+        }
+        for chip in chips where chip.spelledOut || chip.raised {
+            drawNameChip(chip, into: componentChromeLayer)
+        }
         drawVariantGridEdges(into: componentChromeLayer)
     }
 

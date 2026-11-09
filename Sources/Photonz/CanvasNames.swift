@@ -50,6 +50,10 @@ extension CanvasNSView {
         /// the two differ, so a screen and a plain component never change a
         /// pixel when you point at them.
         let spelledOut: Bool
+        /// Whether this name is only showing because somebody is looking at
+        /// its drawing: at rest it would print over the picture's own words,
+        /// so it is left off then and drawn on top of them now.
+        var raised = false
 
         /// The one word printed above the drawing, nil for a copy of the first
         /// version nobody is looking at, which wears its mark and nothing else.
@@ -150,16 +154,37 @@ extension CanvasNSView {
                     ? Self.componentGlyphSize : Self.componentMarkInset,
                    kind: .copyMark)
         }
+        // A component drawing's name never prints over words the picture
+        // already says: on a sheet of components that is the header naming the
+        // very state the chip would say. Such a name is left off until you
+        // point at or pick its drawing, and then it comes back where it always
+        // sat, on top (`CanvasNameLabels.covering`). A screen's name is the
+        // handle for the whole screen, so it keeps its place.
+        let words = componentsEnabled ? canvasWordBoxes() : []
+        let offWords = CanvasNameLabels.covering(
+            chips.filter { $0.kind != .screen }.map(\.label), words: words)
+        let showing = chips.filter { !offWords.contains($0.layer.id) }
+        let looked = chips.filter {
+            offWords.contains($0.layer.id) && isNameSpelledOut($0.layer.id)
+        }
         // Where the names sit is worked out from what they say AT REST, so the
         // one you are looking at growing its word never shuffles the rest of
         // the row out from under your pointer. It draws over its neighbours on
         // its own plate instead.
-        let stacked = CanvasNameLabels.stacked(chips.map(\.label))
-        return zip(chips, stacked).map { chip, placed in
+        let stacked = CanvasNameLabels.stacked(showing.map(\.label))
+        // A name that climbed out of a neighbour's way onto a word is left off
+        // the same way.
+        let climbedOnWords = CanvasNameLabels.covering(
+            zip(showing, stacked).filter { $0.0.kind != .screen }.map(\.1), words: words)
+        let placedChips = zip(showing, stacked).filter {
+            !climbedOnWords.contains($0.1.id) || isNameSpelledOut($0.1.id)
+        } + looked.map { ($0, $0.label) }
+        return placedChips.map { chip, placed in
+            let raised = offWords.contains(chip.layer.id) || climbedOnWords.contains(chip.layer.id)
             guard chip.liveCaption != chip.caption, isNameSpelledOut(chip.layer.id) else {
                 return CanvasNameChip(layer: chip.layer, label: placed, kind: chip.kind,
                                       caption: chip.caption, liveCaption: chip.liveCaption,
-                                      spelledOut: false)
+                                      spelledOut: false, raised: raised)
             }
             // The letters start after the mark with a little air, even on a
             // copy whose bare diamond needed none, and the whole name prints
@@ -172,8 +197,27 @@ extension CanvasNSView {
                                         fitsWholeText: true)
             return CanvasNameChip(layer: chip.layer, label: label, kind: chip.kind,
                                   caption: chip.caption, liveCaption: chip.liveCaption,
-                                  spelledOut: true)
+                                  spelledOut: true, raised: raised)
         }
+    }
+
+    /// The boxes of the words the picture itself prints, in view points: every
+    /// visible text layer, wherever it sits in the tree. What a component
+    /// drawing's name keeps clear of.
+    func canvasWordBoxes() -> [CGRect] {
+        guard let viewport, let document else { return [] }
+        var boxes: [CGRect] = []
+        func walk(_ list: [Layer]) {
+            for layer in list where layer.isVisible {
+                if layer.isText, let bounds = liveCanvasBounds(of: layer.id),
+                   bounds.width > 0, bounds.height > 0 {
+                    boxes.append(viewRect(forDocRect: turned(bounds, of: layer), in: viewport))
+                }
+                walk(layer.children)
+            }
+        }
+        walk(document.layers)
+        return boxes
     }
 
     /// Every name a click can land on, paired with the layer it belongs to. A

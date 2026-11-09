@@ -3955,6 +3955,9 @@ private final class Run {
         case .expectChipContrast(let min):
             note(number, step.name, try checkChipContrast(min: min), state: describe())
 
+        case .expectNamesClearOfWords:
+            note(number, step.name, try checkNamesClearOfWords(), state: describe())
+
         case .expectWaveform(let clip, let within, let cleanedAt, let rawAt):
             note(number, step.name, try await checkWaveform(clip: clip, within: within,
                                                             cleanedAt: cleanedAt, rawAt: rawAt),
@@ -10523,6 +10526,25 @@ private final class Run {
     /// behind them, read off the document as it renders at 1x
     /// (`expectChipContrast`, `ChipContrastReader`). The export path, which
     /// the canvas matches pixel for pixel (`ChipStyleRenderingTests`).
+    /// `expectNamesClearOfWords`: no chip the canvas drew over a component
+    /// drawing sits on the picture's own words, unless it is up because
+    /// somebody is pointing at or has picked that drawing.
+    private func checkNamesClearOfWords() throws -> String {
+        let canvas = try requireCanvas()
+        let words = canvas.canvasWordBoxes()
+        let chips = canvas.canvasNameChips().filter { $0.kind != .screen }
+        let resting = chips.filter { !$0.raised && !$0.spelledOut }
+        let covering = CanvasNameLabels.covering(resting.map(\.label), words: words)
+        let left = chips.filter { $0.raised }.count
+        guard covering.isEmpty else {
+            let names = resting.filter { covering.contains($0.layer.id) }.map(\.layer.name)
+            throw Failure(description: "\(covering.count) name(s) print over the picture's words: "
+                          + names.joined(separator: ", "))
+        }
+        return "\(resting.count) name(s) at rest clear of \(words.count) word box(es)"
+            + (left > 0 ? ", \(left) up only because it is looked at" : "")
+    }
+
     private func checkChipContrast(min: Double) throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document,

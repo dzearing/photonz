@@ -352,6 +352,37 @@ public enum CanvasNameLabels {
         return result
     }
 
+    // MARK: A name over words the picture already says
+
+    /// How far a word may reach into a plate before it counts as covered: a
+    /// header line whose box ends a hair inside the plate's padding is not
+    /// under the letters, and leaving a name off for it would be a loss for
+    /// nothing.
+    public static let wordGrace: CGFloat = 1
+
+    /// The names that would print over words in the picture, which the canvas
+    /// leaves off until somebody points at or picks the drawing they belong to.
+    ///
+    /// A name is chrome and the words are the person's picture, so the words
+    /// win. On a sheet of components each state is named by a header straight
+    /// above its column, and the copy's chip under it said the same word on top
+    /// of it: both read half covered, at every zoom, because the chip is a fixed
+    /// size on screen while the gap under the header is a fixed size in the
+    /// picture. Leaving the chip off loses nothing there, since the header says
+    /// it, and anywhere else pointing at the drawing still spells it out.
+    ///
+    /// `words` are the boxes of the picture's own text, in view points like the
+    /// names.
+    public static func covering(_ labels: [CanvasNameLabel], words: [CGRect]) -> Set<UUID> {
+        guard !words.isEmpty else { return [] }
+        var covered: Set<UUID> = []
+        for label in labels {
+            let plate = plateBox(for: label).insetBy(dx: wordGrace, dy: wordGrace)
+            if words.contains(where: { $0.intersects(plate) }) { covered.insert(label.id) }
+        }
+        return covered
+    }
+
     /// The layer whose name is under `point`, or nil for anywhere else.
     ///
     /// `labels` comes in drawing order, back to front, so where two names

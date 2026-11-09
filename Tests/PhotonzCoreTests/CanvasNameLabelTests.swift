@@ -600,3 +600,62 @@ struct CanvasNamePlateTests {
         #expect(plate.width == 10 + CanvasNameLabels.platePadding * 2)
     }
 }
+
+/// A name over a drawing is chrome, and chrome never prints over words the
+/// picture already says: on a sheet of components each state is named by a
+/// header straight above its column, and the chip of the copy under it landed
+/// on that header (`Hover` and `Pressed` half covered, 2026-10-23).
+@Suite("Canvas names over words")
+struct CanvasNamesOverWordsTests {
+
+    /// A copy 120 by 36 in view points, and the strip its name hangs in.
+    private let copy = CGRect(x: 300, y: 300, width: 120, height: 36)
+
+    private func label(_ frame: CGRect, text: CGFloat = 40) -> CanvasNameLabel {
+        CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: text, leadingInset: 14)
+    }
+
+    @Test("A name that would print over a header word is left off")
+    func headerWordTakesTheSpot() {
+        // The sheet sets its header 16 document points above the row, about
+        // 11 view points at the zoom a new picture opens at: the 14 point
+        // strip the name hangs in lands on it.
+        let name = label(copy)
+        let header = CGRect(x: 300, y: 278, width: 46, height: 12)
+        #expect(CanvasNameLabels.covering([name], words: [header]) == [name.id])
+    }
+
+    @Test("A bare mark over a short header word is left off too")
+    func bareMarkOverAWord() {
+        let bare = CanvasNameLabel(id: UUID(), frameRect: copy, textWidth: 0, leadingInset: 10)
+        let header = CGRect(x: 302, y: 280, width: 20, height: 12)
+        #expect(CanvasNameLabels.covering([bare], words: [header]) == [bare.id])
+    }
+
+    @Test("Words with clear air above the name, or off to its side, leave it where it is")
+    func clearWordsKeepTheName() {
+        let name = label(copy)
+        let plate = CanvasNameLabels.plateBox(for: name)
+        let above = CGRect(x: 300, y: plate.minY - 14, width: 46, height: 12)
+        let beside = CGRect(x: plate.maxX + 2, y: plate.minY, width: 60, height: 12)
+        let inside = CGRect(x: 310, y: 309, width: 100, height: 18)
+        #expect(CanvasNameLabels.covering([name], words: [above, beside, inside]).isEmpty)
+    }
+
+    @Test("A word only grazing the plate's edge does not count as covered")
+    func grazingIsNotCovering() {
+        let name = label(copy)
+        let plate = CanvasNameLabels.plateBox(for: name)
+        let grazing = CGRect(x: 300, y: plate.minY - 12 + 0.5, width: 46, height: 12)
+        #expect(CanvasNameLabels.covering([name], words: [grazing]).isEmpty)
+    }
+
+    @Test("Only the names over words are left off, the rest of the row keeps theirs")
+    func onlyTheCoveringOnes() {
+        let left = label(copy)
+        let right = label(copy.offsetBy(dx: 400, dy: 0))
+        let header = CGRect(x: 700, y: 280, width: 46, height: 12)
+        #expect(CanvasNameLabels.covering([left, right], words: [header]) == [right.id])
+        #expect(CanvasNameLabels.covering([left, right], words: []).isEmpty)
+    }
+}
