@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T17:38:04.982Z",
-  "updated": "2026-11-09T14:31:41.611Z",
+  "updated": "2026-11-09T19:18:43.945Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-07: the walk cut off after the key at 1.5s (keys 0, 15 at 0.5s, -15 at 1.5s), written with writeSVG, gives keyTimes=\"0;0.25;0.75;1\" values=\"0 12 12;15.185 12 12;-15 12 12;-15 12 12\": it holds at -15 and restarts at 0, a 15 degree jump every lap. The full walk has to go to 0:02.00 and type 0. Spin: keys 0 and 360 write keySplines=\"0.4 0 0.2 1\" until Curve is set to Linear by hand (the frame walk does that step). Chose to leave the behaviour for this task to design, since it changes what a key means: pictures in queue/audits/2026-11-07-icon-workflow-keys-sc.png.",
@@ -44,10 +44,40 @@
     {
       "t": "2026-11-09T14:31:41.610Z",
       "note": "seq 50 -> 40"
+    },
+    {
+      "t": "2026-11-09T18:26:54.135Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-09T18:31:26.736Z",
+      "note": "Review before building: a person keys 0, 15 at 0.5s, -15 at 1.5s and expects a swing; nothing tells them the lap end needs a fourth key, and the playhead cannot even reach 0:02.00 (the ruler stops at the lap minus 1 ms, so a click at the end lands on 0:01.99). A Photoshop/AE user would expect keys they set to loop smoothly. Plan: on a repeating keyed picture, a turn that moves gets a real key at the lap end holding its first angle (shown on the strip, changeable, same undo step); a key set within 20 ms of the lap end lands on it; a key on the lap end travels with the repeats mark; where the turn passes through the seam (a spin, or a swing crossing its start) the two seam keys nobody eased get a straight tangent at the seam (Linear on a two key spin, Bezier handles on a longer one) so it neither stops nor kicks at the lap. Chose turns only over every property because a fade or move that snaps back each lap can be on purpose (a blink), while a turn that jumps never is."
+    },
+    {
+      "t": "2026-11-09T19:18:17.544Z",
+      "note": "Chose a real key at the lap end (shown on the strip, changeable, same undo step) over an unseen wrap from the last key to the first, because the checklist asks that whatever the app does is visible and changeable. Chose turns only over every property: a fade or move that snaps back each lap can be a blink on purpose, a turn that jumps never is. Chose matched Bezier handles on the two seam keys over plain Linear on a swing: Linear leaving an eased key still kicks (5x the pace on one side), matched handles carry one pace through upright. A two key spin gets plain Linear on both keys."
+    },
+    {
+      "t": "2026-11-09T19:18:17.620Z",
+      "note": "Built: LoopingTurn.swift (home key, lap end landing within 20 ms, seam handles, keys on the lap end ride the repeats mark via setKeyLapLength, shortestDraggedKeyLapMS), hooked in setKeyedValue; 23 unit tests (LoopingTurnTests, LapSeamReadingTests). Walk step expectLapSeam; filmWindow ceiling 3 -> 7 s for three laps. Both icon workflow walks lost their workaround (typed 0 at the lap end; Curve > Linear) and pass at Next defaults: swing seam 0.03 deg, spin 0.18 deg with 0% pace spread; files: keyTimes 0;0.25;0.75;1 ending at 0, and calcMode linear 0 -> 360. Scripts/svg-lap-seam-check.mjs plays the files in WebKit and Chromium: 0.06 and 0.36 deg over three laps, old swing file fails at 15 deg. Full Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-09T19:18:17.695Z",
+      "note": "Pictures looked at: both strip crops (swing has a 4th key on the repeats mark, seam keys wear the Bezier mark; spin's two keys plain, Curve reads Linear), both canvas contact sheets (swing alternates +/-15 with no stuck frame; spin steps ~90 deg per half second: 96, 174, 264, 356, ...), a film frame mid swing, and a frame of the browser reel (icon drawn in both engines). None shows the old jump or stop."
+    },
+    {
+      "t": "2026-11-09T19:18:17.771Z",
+      "note": "left rough (no task: nobody is stopped by it, and the audit asks the user): deleting the home key and setting another angle puts it back; the seam pace is matched once, so a big later change to the -15 key can leave a small speed change at upright; seam keys read 'Bezier' rather than a friendlier word; moves and fades still snap back on a loop by choice. The 0:01.99 ruler note from 2026-11-07 is answered here: a key set there lands on 0:02.00."
+    },
+    {
+      "t": "2026-11-09T19:18:43.943Z",
+      "note": "A turn keyed on a repeating icon now comes home with a key at the lap end (on the strip, changeable, one undo step), a key set at the end of the ruler lands on the lap end, a key there rides the repeats mark, and a turn passing through the seam keeps one pace (Linear on a two key spin, matched Bezier handles on a swing). Commit 9cd3c912a. Verified: 23 new unit tests and full Scripts/test.sh green; both icon workflow walks pass at Next defaults with their workarounds removed, expectLapSeam reads 0.03 deg (swing) and 0.18 deg with 0% pace spread (spin); Scripts/svg-lap-seam-check.mjs reads 0.06 / 0.36 deg over three laps in WebKit and Chromium. Reels and sheets in queue/audits/2026-11-09-looping-turn-*, audit 2026-11-09-a-looping-turn-comes-home-and-spins-evenly-witho.json."
     }
   ],
   "walks": [
     "the-whole-icon-workflow-walk",
     "the-whole-icon-workflow-on-a-frame-walk"
-  ]
+  ],
+  "started": "2026-11-09T18:26:54.134Z",
+  "completed": "2026-11-09T19:18:43.944Z"
 }
