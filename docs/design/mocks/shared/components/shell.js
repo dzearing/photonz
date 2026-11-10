@@ -133,7 +133,6 @@
       ' aria-label="Ask the agent" aria-hidden="true"><div class="chat">' +
       '<div class="chat-h"><i class="ic ic-sparkle sm"></i> Agent<span class="tspacer"></span>' +
       '<span class="val">on-device</span>' +
-      '<button class="btn ghost icon sm" title="New conversation"><i class="ic ic-plus"></i></button>' +
       '<button class="btn ghost icon sm" data-ask-close title="Close (Esc)"><i class="ic ic-x"></i></button>' +
       '</div>' +
       '<div class="chat-b"><div class="msg u">make the headline bigger and add our card glow</div>' +

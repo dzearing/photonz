@@ -453,7 +453,7 @@ struct AskCommandsList: View {
         let picked = canRun && index == listing.highlight
         return Button { ask.runCommand(entry, in: editorState) } label: {
             HStack(spacing: 10) {
-                Image(systemName: Self.symbol(entry.area))
+                Image(systemName: entry.symbol)
                     .font(.system(size: 12))
                     .frame(width: 16)
                 // The menu's words win the row: in the panel's narrow column
@@ -481,17 +481,5 @@ struct AskCommandsList: View {
         .playtestHover { over in if over, canRun { ask.pickCommand(at: index) } }
         .help(canRun ? entry.menu : AskCopy.commandNeeds(entry))
         .playtestControl("Ask Command \(entry.title)", detail: canRun ? entry.apiName : "can't run now")
-    }
-
-    /// The mock gives each row an icon; the table knows a command's area.
-    private static func symbol(_ area: AppCommand.Area) -> String {
-        switch area {
-        case .timeline: "film"
-        case .layers: "square.3.layers.3d"
-        case .edit: "pencil"
-        case .measure: "ruler"
-        case .view: "eye"
-        case .document: "doc"
-        }
     }
 }

@@ -1,0 +1,40 @@
+{
+  "feature": "Each row of the / command list wears its own icon",
+  "epic": "agent-ask",
+  "summary": "Typing / in Ask lists commands, and every row now shows an icon for that command (scissors for Split, a diamond for Key at Playhead, the edge for each Align row) instead of one icon per area.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/ask-slash-lists-commands-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a picture, draw a rectangle and leave it picked.",
+      "shot": "2026-11-10-ask-slash-icons-mock.png",
+      "shotNote": "The mock (agent-generate-wt.html, the / list): one icon per row."
+    },
+    {
+      "do": "Press Command-K and type /.",
+      "shot": "2026-11-10-ask-slash-icons-1-all-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type al after the slash and look at the Align rows.",
+      "shot": "2026-11-10-ask-slash-icons-2-align-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type /track in a video and scan the track rows (Add Video Track, Mute Track, Lock Track)."
+    },
+    {
+      "do": "Press the down arrow a few times and Return to run a row."
+    }
+  ],
+  "evaluate": [
+    "Can you tell what a row does from its icon before reading its words?",
+    "Do any two neighbouring rows look so alike that the icons stop helping?",
+    "Does any icon say the wrong thing about its command?",
+    "The icons are the Mac's own symbols, like every other icon in the app, not the mock's drawn glyphs: is that right for this list?"
+  ],
+  "rough": [
+    "Rows that are one choice of a command (Speed 50%, a transition kind) wear their command's icon; only Align and Space Evenly rows show their own choice.",
+    "The shared mock's Ask dialog still drew a New conversation button the user took out on 2026-11-04; it is removed from the shared mock component (your call on 2026-11-04, one-agent-pane-on-the-right-a-plain-history-of-r)."
+  ]
+}
