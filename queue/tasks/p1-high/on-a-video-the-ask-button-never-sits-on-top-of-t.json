@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:18:48.491Z",
-  "updated": "2026-11-08T17:12:57.292Z",
+  "updated": "2026-11-10T00:51:31.521Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the manager 2026-10-20 08:16: Scripts/playtest-all.sh --no-build ask-adds-a-title-page passed, and its pictures /tmp/photonz-playtest/ask-adds-a-title-page-walk/1-plan-sc.png and 2-ran-sc.png show the overlap (crops saved under queue/manager/shots/). The Ask button came with 8238a30a: Sources/Photonz/TitlebarPanelToggle.swift:147-156 widens the right slot by AskTitlebarButton.width when offersAsk; AskTitlebarButton in Sources/Photonz/Agent/AskViews.swift:11. On a video the panel runs to the window top (the View and Edit switch already floated over it before Ask); on a picture Layers starts below the title bar. Placement contract: the title bar row (docs/design/mocks/shared/UX-PATTERNS.md, line 24 and section 1 line 322) owns Ask, the mode and the panel toggle; the panel starts under it. Check whether the video panel's top inset counts the wider right slot.",
@@ -125,6 +125,41 @@
     {
       "t": "2026-11-08T17:12:57.291Z",
       "note": "seq 100 -> 70"
+    },
+    {
+      "t": "2026-11-09T23:56:23.385Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T00:50:34.649Z",
+      "note": "owns these walks: panel-stays-under-the-title-bar-walk, picture-panel-stays-under-the-title-bar-walk, ask-adds-a-title-page-walk"
+    },
+    {
+      "t": "2026-11-10T00:51:31.208Z",
+      "note": "Reproduced 2026-11-09 on today's build with a walk at Next defaults: at rest the video panel already started under the title bar (the at-rest overlap from 2026-10-20 was gone), but scrolled, rows slid straight under Ask and View/Edit (Captions header read through Ask; edit point Out/In fields under Ask/View). A picture's Layers header did the same when the list scrolled 40pt. Shots: queue/audits/2026-11-09-panel-under-titlebar-*-before.png"
+    },
+    {
+      "t": "2026-11-10T00:51:31.284Z",
+      "note": "Cause: a SwiftUI ScrollView adjacent to the title bar safe area draws its content on into it. Fix: PanelTopEdge (InspectorSections.swift) on both panel scrollers (InspectorPanel.swift dock + lists pane): a mask = the scroller's own frame, fading its top 14pt (DockMetrics.bodyEdgeFade) only while scrolled. Chose clip+fade over a hard cut because it reads like content passing under a Mac toolbar and reuses the panel's one fade idiom; chose to fix pictures too because it is one panel and they had the same fault."
+    },
+    {
+      "t": "2026-11-10T00:51:31.358Z",
+      "note": "Proof: new walk step expectTitleBarClear (PhotonzCore parse, unit tested; harness cuts each panel-column control to its scrollers and to PanelTopEdgeProbe's recorded top edge, measures against title bar control boxes). With the fix disabled it FAILS naming Out/In under Ask/View; with it, passes. panel-stays-under-the-title-bar-walk (video: cut picked, Search transitions pressed by real click, typed dip, Push gone/Dip to white present, scrolled 40 and 200), picture-panel-stays-under-the-title-bar-walk, ask-adds-a-title-page-walk (ran with the local model, check added after 1-ran) all green, no flags. Picture at rest compared before/after pixel for pixel: zero difference. Scripts/test.sh exit 0. Pictures looked at: video before/after, search, ask-ran, picture before/after/rest; all show nothing under Ask."
+    },
+    {
+      "t": "2026-11-10T00:51:31.434Z",
+      "note": "left rough: the edit point's Out/In fields shorten the clip name (Tutori...mple) in the half-width field; seen in passing, not this task's, unverified whether it is meant to; no task filed."
+    },
+    {
+      "t": "2026-11-10T00:51:31.519Z",
+      "note": "Panel rows now stop at the title bar's lower edge and fade there instead of sliding under Ask, View/Edit and the panel toggle, on videos and pictures (PanelTopEdge on both panel scrollers). Proved by new step expectTitleBarClear in panel-stays-under-the-title-bar-walk, picture-panel-stays-under-the-title-bar-walk and ask-adds-a-title-page-walk, all at Next defaults; fails with the fix removed. Picture at rest pixel-identical. Audit queue/audits/2026-11-09-panel-stays-under-the-title-bar.json. Commit 7bc8dd3d6, tests green."
     }
-  ]
+  ],
+  "started": "2026-11-09T23:56:23.384Z",
+  "walks": [
+    "panel-stays-under-the-title-bar-walk",
+    "picture-panel-stays-under-the-title-bar-walk",
+    "ask-adds-a-title-page-walk"
+  ],
+  "completed": "2026-11-10T00:51:31.520Z"
 }
