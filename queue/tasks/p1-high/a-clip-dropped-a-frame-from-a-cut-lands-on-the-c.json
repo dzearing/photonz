@@ -1,7 +1,7 @@
 {
   "id": "a-clip-dropped-a-frame-from-a-cut-lands-on-the-c",
   "title": "A clip dropped a frame from a cut lands on the cut",
-  "goal": "Nine video walks fail the same way in both of the last two full walk runs: a clip dropped onto the timeline a frame short of a cut (5.96 s next to a cut at 6 s) now lands where it was dropped instead of on the cut, so it overlaps the clip before it, and every later trim, roll and transition is a frame off. Find out whether dropping stopped snapping to the cut or the walks' drop step changed, and make a drop beside a cut land on it, the way Premiere does with snapping on.",
+  "goal": "Nine video walks fail the same way in both of the last two full walk runs: a clip dropped onto the timeline a frame short of a cut (5.96 s next to a cut at 6 s) now lands where it was dropped instead of on the cut, so it overlaps the clip before it, and every later trim, roll and transition is a frame off. Find out whether dropping stopped snapping to the cut or the walks' drop step changed, and make a drop beside a cut land on it, the way Premiere does with snapping on. Done on 2026-11-10 for the drop itself (8 of the 9 walks pass); what is left is that pressing Escape while dragging the end of a transition on the timeline no longer puts it back, which the ninth walk catches.",
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 60,
@@ -9,15 +9,16 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-03T15:25:54.878Z",
-  "updated": "2026-11-10T13:21:02.113Z",
+  "updated": "2026-11-10T19:09:29.888Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Carved out of walks-that-fail-in-the-full-sweep-26 by the 2026-11-03 digest: one cause behind nine of its 50, the same lesson as the walk press fault on 2026-11-01. Evidence, run 2026-11-03 at head 26d9c8c4:\n  $ Scripts/playtest-all.sh --no-build a-cut-opens-into-its-two-clips-walk\n  a-cut-opens-into-its-two-clips-walk 13s FAILED step 30 (expectClip): no clip called \"b-roll\" is on V1, starting at 6.0s, ending at 13.0s; the timeline: b-roll on V1 5.96s to 12.92s; Tutorial Sample on V1 0.00s to 5.96s\nThe walk cuts at 6 s (W), drops scratch/b-roll.mp4 with dropOnTimeline seconds 5.96 (step 16), expects b-roll 6 to 14 (step 18, passes, likely within tolerance), then Q at 7 s; the result shows the drop overlapped the first clip by 0.04 s. copy-and-paste-a-range-walk and transition-edge-follows-the-pointer-walk drop at 6.95 and read 13.95 and 'Length 4.9s'; the transition walks read 'Spare after 1.1s' for 1.0s. Failing in the 2026-11-01 and 2026-11-03 full runs. Possibly related: the-frame-shown-at-a-whole-second-is-the-one-tha (a 33 ms frame grid).",
+  "notes": "STATE 2026-11-10 (runner): drop snapping fixed in 9cb260dbd; 8 of 9 walks pass three runs running. Remaining: Escape mid band drag, see the last log entry for the trace (the drag's NSEvent local monitor never sees the keyDown until the button is up). Start there.\n\nCarved out of walks-that-fail-in-the-full-sweep-26 by the 2026-11-03 digest: one cause behind nine of its 50, the same lesson as the walk press fault on 2026-11-01. Evidence, run 2026-11-03 at head 26d9c8c4:\n  $ Scripts/playtest-all.sh --no-build a-cut-opens-into-its-two-clips-walk\n  a-cut-opens-into-its-two-clips-walk 13s FAILED step 30 (expectClip): no clip called \"b-roll\" is on V1, starting at 6.0s, ending at 13.0s; the timeline: b-roll on V1 5.96s to 12.92s; Tutorial Sample on V1 0.00s to 5.96s\nThe walk cuts at 6 s (W), drops scratch/b-roll.mp4 with dropOnTimeline seconds 5.96 (step 16), expects b-roll 6 to 14 (step 18, passes, likely within tolerance), then Q at 7 s; the result shows the drop overlapped the first clip by 0.04 s. copy-and-paste-a-range-walk and transition-edge-follows-the-pointer-walk drop at 6.95 and read 13.95 and 'Length 4.9s'; the transition walks read 'Spare after 1.1s' for 1.0s. Failing in the 2026-11-01 and 2026-11-03 full runs. Possibly related: the-frame-shown-at-a-whole-second-is-the-one-tha (a 33 ms frame grid).",
   "acceptance": [
     "Reproduce first: Scripts/playtest-all.sh --no-build a-cut-opens-into-its-two-clips-walk fails at step 30 with b-roll on V1 5.96s to 12.92s and Tutorial Sample 0.00s to 5.96s (seen 2026-11-03); say whether the drop at step 16 snapped before and what changed",
     "At Next defaults with snapping on, a clip dropped within a few frames of a cut lands exactly on it and the clip before it keeps its full length; with snapping off it lands where it was dropped",
     "If the app is right and the walks are wrong, the walks drop on the cut itself and the task log says why",
-    "All nine walks pass twice in a row on their own: a-cut-opens-into-its-two-clips-walk, expand-the-cut-from-its-menus-walk, roll-the-cut-between-two-clips-walk, roll-the-cut-between-two-clips-from-the-menu-bar-walk, copy-and-paste-a-range-walk, transition-edge-follows-the-pointer-walk, transition-picker-at-a-cut-walk, transition-placement-and-hold-walk, a-click-on-the-cut-opens-its-tiles-walk"
+    "All nine walks pass twice in a row on their own: a-cut-opens-into-its-two-clips-walk, expand-the-cut-from-its-menus-walk, roll-the-cut-between-two-clips-walk, roll-the-cut-between-two-clips-from-the-menu-bar-walk, copy-and-paste-a-range-walk, transition-edge-follows-the-pointer-walk, transition-picker-at-a-cut-walk, transition-placement-and-hold-walk, a-click-on-the-cut-opens-its-tiles-walk",
+    "Escape pressed half way through dragging the end of a transition's band puts the band back and the rest of the drag does nothing: transition-edge-follows-the-pointer-walk passes step 34 (Length 4.9s after the called-off drag), with the Escape reaching the app the way a keyboard's key does mid-drag"
   ],
   "log": [
     {
@@ -59,6 +60,34 @@
     {
       "t": "2026-11-10T13:21:02.112Z",
       "note": "seq 140 -> 60"
+    },
+    {
+      "t": "2026-11-10T17:52:39.166Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T19:09:13.623Z",
+      "note": "Reproduced at 6a507056a: Scripts/playtest-all.sh a-cut-opens-into-its-two-clips-walk -> FAILED step 30, b-roll on V1 5.96s to 12.92s, Tutorial Sample 0.00s to 5.96s, exactly as filed. The drop (step 16) was an Overwrite at 5.96: it did not snap. Traced the landing: span=6000ms over lane=1556pt, so the 8 point reach was 31 ms against a 40 ms gap; edges [0, 6000], snapping on. What changed: 087b8cb7f (2026-10-29) made a video's length follow its last clip, so after W the ruler shows 6 s instead of 8+ s and 8 points shrank under a frame. The walks were right; the app stopped snapping at this zoom."
+    },
+    {
+      "t": "2026-11-10T19:09:13.697Z",
+      "note": "Fixed in 9cb260dbd: ClipLanding.dropReachMS (PhotonzCore, tested) = max(8 pt, min(2 frames = 68 ms, 24 pt)); both timeline drop paths use it (files: EditorState+TimelineDrop timelineDropReachMS; titles/components: EditorState+TitlePresets). Snapping off still passes reach 0. Chose a two-frame floor capped at 24 pt over just raising the points because a frame or two short of a cut is never meant, while far zoomed in a person can still sit a clip a frame from a cut on purpose. Scripts/test.sh green (exit 0)."
+    },
+    {
+      "t": "2026-11-10T19:09:13.773Z",
+      "note": "Three walks had other, older faults behind the drop. transition-placement-and-hold and transition-edge-follows-the-pointer still expected the pre-2026-10-29 spare stop (29543b5cc made transitions hold edge frames): updated to Across it = '0.2s + 0.0s of spare, 0.2s held' and Length 4.9s. a-click-on-the-cut-opens-its-tiles: a click on the cut opens a popover, which the Mac closes at once in a background app; with front:true it passes, so setup now holds the front (a person's click brings the app forward)."
+    },
+    {
+      "t": "2026-11-10T19:09:13.857Z",
+      "note": "Walks after the fix, three runs (two before cleanup, one on the clean commit): 8 of 9 pass every time. LEFT: transition-edge-follows-the-pointer-walk fails at step 34: Escape pressed half way through a band end drag (dragGrip cancel) does not call it off; length reads 3.6s, not 4.9s. Traced with temporary logging: the drag's Escape watch (NSEvent local monitor, EditorState+ClipTransitions watchForClipTransitionEscape) sees the leftMouseUp but NEVER the keyDown, whether posted by dragGrip's own key event or by postEscapeThroughTheApp (down+up). So the key waits in the queue until the button is up, by which time the drag has committed. The walk passed on 2026-09-29 with the same key event; likely macOS 27 SwiftUI drag tracking. Every other Escape-cancel walk hands the key to the view directly or cancels through the editor, so none tests a real mid-drag key. Not confirmed with a real keyboard (no Accessibility grant to drive one). Next runner: find how a key reaches the app during a SwiftUI DragGesture on macOS 27 (e.g. watch at NSApp.sendEvent or the window), then make this walk pass twice."
+    },
+    {
+      "t": "2026-11-10T19:09:13.936Z",
+      "note": "walks a-cut-opens-into-its-two-clips-walk, expand-the-cut-from-its-menus-walk, roll-the-cut-between-two-clips-walk, roll-the-cut-between-two-clips-from-the-menu-bar-walk, copy-and-paste-a-range-walk, transition-edge-follows-the-pointer-walk, transition-picker-at-a-cut-walk, transition-placement-and-hold-walk, a-click-on-the-cut-opens-its-tiles-walk -> a-cut-opens-into-its-two-clips-walk, expand-the-cut-from-its-menus-walk, roll-the-cut-between-two-clips-walk, roll-the-cut-between-two-clips-from-the-menu-bar-walk, copy-and-paste-a-range-walk, transition-edge-follows-the-pointer-walk, transition-picker-at-a-cut-walk, transition-placement-and-hold-walk, a-click-on-the-cut-opens-its-tiles-walk"
+    },
+    {
+      "t": "2026-11-10T19:09:29.887Z",
+      "note": "Drop snapping fixed (9cb260dbd): a clip dropped one or two frames short of a cut lands on it. 8 of the 9 walks pass three runs in a row. Still open: transition-edge-follows-the-pointer-walk step 34, where Escape during a transition band drag does not call it off because the key never reaches the drag's watcher until the mouse button is up. Trace and next step are in the log."
     }
   ],
   "walks": [
@@ -71,5 +100,6 @@
     "transition-picker-at-a-cut-walk",
     "transition-placement-and-hold-walk",
     "a-click-on-the-cut-opens-its-tiles-walk"
-  ]
+  ],
+  "started": "2026-11-10T17:52:39.165Z"
 }
