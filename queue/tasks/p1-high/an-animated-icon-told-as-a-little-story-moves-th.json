@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-09T14:31:36.276Z",
+  "updated": "2026-11-10T13:16:00.673Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -174,9 +174,41 @@
     {
       "t": "2026-11-09T14:31:36.275Z",
       "note": "triage 2026-11-09: six passes in 21 hours, story totals 44 to 57 with per-case spread wider than the gap to the bar (envelope 26 to 63, rocket 49 to 82), and the user's own trash sentence is the weakest case (3 to 4.1). Steer for the next pass: (1) the heart running out of 300 s and making nothing is a real defect, fix it first (save the trace on a time out); (2) then the user's own sentence: the bounce off the lid is the beat they named and it is never seen (contact against the lid's drawn line, not its box); (3) judge every change on two runs on the steady judge, never one. Added a reel of the user's sentence to the checklist: the audits so far carry sheets and stills, no reel."
+    },
+    {
+      "t": "2026-11-10T10:41:14.286Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T12:14:55.153Z",
+      "note": "Trace on time out: a walk's waitFor that runs out now logs the app's state, Ask's whole plan trace included (PlaytestHarness waitFor). Heart rerun alone (20261110-104251): finished in 278 s, 54.4; its time is four long model turns (design 34 s, drawing 42 s, keys 43 s, mend turns 38 to 39 s), no stall. Judge: seam from the first frame, halves hinge open joined at the tip."
+    },
+    {
+      "t": "2026-11-10T12:14:55.229Z",
+      "note": "The user's trash, read from its plans: (1) run H and 20261110-105702: the model marked the ball's key 'touches lid', then the mend wrote the keys again without the word (once at the same moment, once moved from 0.6 to 0.7 s), so the hit was never placed and nothing started the lid. (2) Replayed through the landing, contact was read off boxes: the ball's box (padded by a stroke it does not draw) met the tilted lid's box at 0.8 s while the ink was 2 units apart. (3) With the hit placed, hitStarts started the lid on the hit and it swept down through the ball as it dropped. (4) swingsFitted narrowed the lid's swing (-55 to -40.7) AFTER the hit was placed, so the ball stood in the lid's path."
+    },
+    {
+      "t": "2026-11-10T12:14:55.304Z",
+      "note": "Built test first (AskMotionTouchesKeptTests 7, AskMotionHitsTests updated, AskMotionFoldTests 1): touchesKept (a key written again at the same moment, or the one key arriving at the same place, keeps its touches); contact read off ink (Lap.ink: convex hulls of each drawn part, stroke included, carried by every keyed group); placement aims for real contact; hitStarts starts what is hit as soon after the hit as it can without passing through the hitter (50 ms steps, never later than planned); swingsFitted runs before hits are placed; set_keys whose values never change is refused unless replace (the checkbox keyed rotation/rotationX/rotationY/strokeWidth at 100 all lap and folded its tick flat, run 20261110-112435); a part that passes through a MOVING part it was said to touch is sent back with when (min 60 ms; the trash through the half-open lid 0.82 to 1.04 s, the judge's own 0.8 to 1.0 s); rule: what breaks in two shows no line where it will part and the halves move apart."
+    },
+    {
+      "t": "2026-11-10T12:14:55.381Z",
+      "note": "Measured. Run 1 20261110-112435 (all but the last two): total 52: bell 66.7 (asked 6.3 judge), checkbox 31 (3.5), heart 60.1 (5.7), envelope 27.6 (3.2), rocket 71.8 (6.1), trash 55 (6.1, its best: earlier 40 today and 3 to 4.1 asked across nine runs). Run 2 20261110-115321 ran run 1's binary (my edit landed mid-build, the bell got no app): checkbox 31.3, heart 59.6, envelope 37.5, rocket 71, trash 46.3. Run 3 on the final code going."
+    },
+    {
+      "t": "2026-11-10T13:16:00.518Z",
+      "note": "Shipped 282341071 (pushed). Scripts/test.sh exit 0. Walks at Next defaults pass: ask-animates-a-story-walk (the user's sentence, plan 179 s, plays, Copy SVG repeatCount=indefinite x3) and ask-animates-a-story-without-the-word-walk (189 s). Final code, two runs: 20261110-121442 total 59.6, asked bell 6.6, checkbox 7.3, heart 6.0, envelope 3.0, rocket 6.4, trash 4.8; 20261110-124341 total 53.7, asked 6.0, 7.0, 3.9, 4.1, 6.3, 4.4. Reel of the user's sentence, two laps: queue/audits/2026-11-10-story-trash-two-laps.gif with its frames; audit queue/audits/2026-11-10-animated-icon-story-contact.json. Pictures looked at: all 32 reel frames (lid opens, trash fades in beside it, meets it ~0.8 s, overlaps it ~0.9 to 1.06 s, sinks in, lid shuts with a settle; both laps alike, clean seam), run 1 and run 3 contact sheets, the walk's 3-playing-sc.png."
+    },
+    {
+      "t": "2026-11-10T13:16:00.596Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases at reads as asked 7; reached 1 of 6 in both final runs (checkbox). What is left, from the traces: (1) the trash: the pass-through send-back fires (0.82 to 1.04 s, the judge's own times) but the 27B model answers it by moving x one unit; next lever is for the landing to route the after-touch path itself (back the way it came, or delay the drop until the lid is clear), a tool true of any subject; the trash also fades in beside the lid instead of being thrown from outside. (2) The heart swings 32 to 64 between runs: halves splay from a shared tip, once a teardrop with a line. (3) The envelope 25 to 37: letter drawn over the flap, flap opens. Left rough, no new task (all inside this one): the lid's opening sweeps through the resting trash at the start in some drawings (the pass-through check only looks after a touch)."
+    },
+    {
+      "t": "2026-11-10T13:16:00.672Z",
+      "note": "Hit kept, contact read off the ink, lid starts clear of the trash, still keys refused (282341071): story totals 59.6 and 53.7, checkbox fixed; bar (5 of 6 at reads as asked 7) not met, 1 of 6. Next: route the path after a touch in the landing."
     }
   ],
-  "started": "2026-11-09T12:58:58.896Z",
+  "started": "2026-11-10T10:41:14.285Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"

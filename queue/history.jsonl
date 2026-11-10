@@ -16624,3 +16624,13 @@
 {"t":"2026-11-10T08:31:55.076Z","ev":"task_note","id":"ask-s-first-answer-after-its-model-loads-comes-i"}
 {"t":"2026-11-10T10:29:57.017Z","ev":"task_note","id":"ask-s-first-answer-after-its-model-loads-comes-i"}
 {"t":"2026-11-10T10:30:13.562Z","ev":"task_done","id":"ask-s-first-answer-after-its-model-loads-comes-i","from":"in_progress","note":"Ask's built-in server now saves its read of the tools and rules every request starts with (13.5k tokens) and restores it in about 1 s on each first turn (AskStandingRead in PhotonzCore, keyed by model, its files, server build, window and exact tokens, with tests; AskModelServer.standingRead; commit 4c6f8a072). settings-measurements from a cold probe 16.4 s (17.4 s in the full run) against 83 to 101 s. On the baseline's own 40 climb cases median 56.9 s against 142.0, total 73.7 against 75.1; held-out total 54.9 against 56, median 115.4 s against 146.5. Scripts/test.sh green. Audit queue/audits/2026-11-10-ask-s-first-answer-after-its-model-loads-comes-i.json."}
+{"t":"2026-11-10T10:39:08.010Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-10T10:41:14.108Z","ev":"slice_pass","walks":28,"passed":25,"failed":3,"seconds":506,"of":1140,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-10T10:41:14.291Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-10T12:14:55.155Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-10T12:14:55.231Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-10T12:14:55.306Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-10T12:14:55.383Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-10T13:16:00.520Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-10T13:16:00.598Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-10T13:16:00.674Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Hit kept, contact read off the ink, lid starts clear of the trash, still keys refused (282341071): story totals 59.6 and 53.7, checkbox fixed; bar (5 of 6 at reads as asked 7) not met, 1 of 6. Next: route the path after a touch in the landing."}
