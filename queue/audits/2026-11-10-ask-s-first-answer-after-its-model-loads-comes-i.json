@@ -1,0 +1,29 @@
+{
+  "feature": "Ask answers in seconds the first time after its model loads",
+  "epic": "agent-drivable",
+  "summary": "Ask used to spend a minute or more re-reading the same tools and rules on the first request after its model loaded. It now reads them once, keeps what it read on disk, and picks it up again in under a second, so measuring a screenshot from a cold start takes about 16 s instead of 83 to 101 s.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default, Ask on the built-in Qwen3.8 27B.",
+  "switched": {},
+  "try": [
+    { "do": "Quit Photonz Dev and open it again, so Ask's model is not loaded." },
+    { "do": "Open a settings screenshot and press Ask in the right panel." },
+    { "do": "Type: annotate the ux with measurements around the major ui elements, then press Return." },
+    { "do": "Watch the panel: the very first time it still reads for about a minute, which is when it saves what it read." },
+    { "do": "Quit and open Photonz Dev again, then ask the same thing on another screenshot." },
+    { "do": "Count the seconds until the measurements land: about 16 s, most of it the model loading." }
+  ],
+  "evaluate": [
+    "From a fresh launch, does Ask's first answer now come about as fast as a later one?",
+    "Is about a minute on the very first request after installing or updating Photonz acceptable, given every later cold start is quick?",
+    "Is 1.4 GB in the Mac's Caches folder per kind of request (pictures, video, painting; at most three kept) a fair price for the speed?"
+  ],
+  "rough": [
+    "Before and after, settings-measurements from a cold probe: 83 s on 2026-10-24 (20261024-131153-ask), 101 s on 2026-11-10 before the change (20261110-014205-ask), 94.8 s on the run that reads and saves (20261110-062949-ask), 16.4 s on the next (20261110-064155-ask) and 17.4 s inside the full comparison run.",
+    "The same 40 climb cases as the 2026-10-24 baseline: median 56.9 s a request against 142.0 s, total 73.7 against 75.1 (20261110-065514-ask). The baseline's 41st case, the three-clip video one, did not run: its recording never opened, which the-ask-scoring-run-refuses-to-score-when-the-mo already covers.",
+    "Held-out set, whole, all 53 cases: total 54.9 against 56 on the run just before the change (20261110-083155-ask-held-out against 20261110-021212-ask-held-out); median 115.4 s a request against 146.5, redline 18 s against 100, video 24 s against 113, the whole run 116 minutes against 176. Drawing cases that stopped after three rejected drawings went from 3 to 6, and one of three layout cases still runs out of time; neither is in the part this change touches (the planning model's first read), but it is worth watching on the next run.",
+    "The first request after installing Photonz, after a Photonz update that changes the model server, or after Ask's rules change still reads the whole start once (75 s on Qwen3.8 27B) before saving it.",
+    "Each saved read is about 1.4 GB (0.4 GB plus 72 KB a token). They live in ~/Library/Caches/Photonz/AskReads, the newest three are kept, and deleting a model in Settings deletes its reads.",
+    "Only the first turn of a request is helped. Follow-up turns were already quick (5 s and 2 s on this case); a follow-up that adds a big picture still reads that picture.",
+    "No mock covers this: nothing on screen changed. No real screenshots are needed for a speed change; the numbers are from the eval's own traces, which now say 'restored the standing read (13488 tokens) in 0.9 s' and how many new tokens each turn read."
+  ]
+}

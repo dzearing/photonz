@@ -808,6 +808,37 @@ dialog, at Ask), `ask-offers-the-new-default-model-walk`,
 another Mac size with `"askMac": 8`, and a download in a walk with its own
 models folder clones the Mac's copy, so it is done in a second.
 
+### The first read is saved (2026-11-10)
+
+Every request starts with the same tools and rules (13,488 tokens on Qwen3.8
+27B for a picture; 15,016 for a video) and only then the document and the
+person's words. Qwen3.8 27B reads under 200 tokens a second, so a cold first
+turn spent 75 s or more on words it had read the time before. The built-in
+server now saves that read to a file and restores it in about a second
+(`AskStandingRead` in PhotonzCore, `AskModelServer.standingRead`):
+
+- On a request's first turn, `AskConversation.standingBody` (the tools and the
+  rules up to `The document now (read_document):`) and the real request are both
+  run through the server's own `/apply-template` and `/tokenize`; the tokens they
+  share from the start are the standing part.
+- Its file is named by the model id and a hash of every file the server loaded
+  (with sizes), the server's build (`/props` build_info), the window and the
+  exact tokens, so no other model, server or prompt ever reads it.
+- When the file is there, `/slots/0?action=restore`; otherwise `/completion`
+  with those tokens and nothing to write, then `/slots/0?action=save`. The
+  request then reads only what follows.
+- The save is of the standing part ALONE: qwen35 keeps a running state that
+  cannot be wound back, so a file of a longer request is no use to a request
+  that differs after the rules.
+- Files live in `~/Library/Caches/Photonz/AskReads` (about 0.4 GB plus 72 KB a
+  token, 1.4 GB here), newest three kept, deleted with their model.
+- The trace says `restored the standing read (N tokens) in 0.9 s` and, every
+  turn, how many new tokens the model read.
+
+Measured: settings-measurements from a cold probe 101 s before, 16.4 s after;
+the baseline's 40 climb cases median 142.0 s to 56.9 s, total 75.1 to 73.7;
+held-out median 146.5 s to 115.4 s, total 56 to 54.9.
+
 ### Walks share one model (2026-10-30)
 
 Every walk starts a new probe, and every probe used to load the whole model
