@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <clipPath id="clip-1">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <g>
+    <g clip-path="url(#clip-1)">
+      <g transform="translate(8 10)">
+        <path d="M0 0 L1 8 L7 8 L8 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(2 1)" d="M0 0 L1 6" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(5 1)" d="M1 0 L0 6" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g transform="rotate(0 7.249 8.832)">
+        <animateTransform attributeName="transform" type="rotate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.133;0.333;0.6;0.7;0.8;0.9;1" values="0 7.249 8.832;0 7.249 8.832;-40 7.249 8.832;-40 7.249 8.832;-25 7.249 8.832;-25 7.249 8.832;0 7.249 8.832;0 7.249 8.832"/>
+        <g transform="translate(7 7)">
+          <path transform="translate(0 2)" d="M0 0 L10 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path transform="translate(4 0)" d="M0 0 L2 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g>
+        <animate attributeName="opacity" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.333;0.8;0.9;1" values="1;1;1;0;1"/>
+        <g>
+          <animateTransform attributeName="transform" type="translate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.333;0.6;0.7;0.8;0.9;1" values="0 0;0 0;-5.753 1.182;-5.183 4.7;-5.543 3.959;-5.543 3.959;0 0"/>
+          <path transform="translate(17 5)" d="M1 0 L2 1 L1 2 L0 1 L1 0 Z" fill="#1D1D1F"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,27 @@
+{
+  "feature": "An animated icon told as a little story: what hits something comes away from it",
+  "epic": "icon-svg",
+  "summary": "After the trash touches the lid it now moves away from it, mirrored off the face it struck, and never back through it. Two keys in a row touching the lid are kept on the lid, not buried in it. Trash that appears just as it is thrown now flies in from beyond the frame's edge.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-10-story-trash-bounce-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return." },
+    { "do": "Wait for Ask to finish (about three and a half minutes), then press Space to play." },
+    { "do": "Watch the reel of the same sentence playing two laps.", "shot": "2026-11-10-story-trash-bounce-two-laps.gif" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-10-story-trash-bounce.svg" },
+    { "do": "Look at the boxed frames: the trash meets the lid, then steps down off it.", "shot": "2026-11-10-story-trash-bounce-marked.png" }
+  ],
+  "evaluate": [
+    "Does the trash stepping down off the lid at about 0.9 s read as a bounce to you, or is it still too small?",
+    "In this run the trash sits beside the can from the start of the lap. Would you rather it always flew in from outside the frame?",
+    "Now that nothing passes through the lid, is the remaining problem the size of the bounce, or the drawing itself (a black square on an outline can)?",
+    "Is it worth more passes on story icons, or is this good enough for now?"
+  ],
+  "rough": [
+    "The bounce is real but small: about an eighth of the icon, and the lid closing right after makes it read as one movement.",
+    "Flying in from outside only happens when the agent plans the trash hidden until it is thrown. In the walk's run it drew the trash in view from the start, so it sits beside the can at rest.",
+    "When the agent plans its own hop after the hit (run 20261110-144951), the trash steps down off the lid and then rises back under it, a zigzag.",
+    "The bar for this task (five of six story icons read as asked at 7 or more) is not met: one of six in each of three runs (the checkbox). Totals 58.9, 55.4, 57.3 against 59.6 and 53.7 on the code before; your trash sentence scored 49.5, 47.2 and 40.7, within the spread it had before."
+  ]
+}

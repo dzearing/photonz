@@ -450,7 +450,7 @@ public enum AskMotion {
     /// the plan each time (the eval, 2026-11-06).
     public static func fitted(_ planned: [AskStep]) -> [AskStep] {
         let (steps, view) = roomFitted(swingsFitted(foldsOpen(foldsLand(landingFolded(planned)))))
-        return view.map { marksGo(comesBack(edgeHides(steps, view: $0), view: $0), view: $0) } ?? steps
+        return view.map { marksGo(comesBack(edgeHides(thrownIn(steps, view: $0), view: $0), view: $0), view: $0) } ?? steps
     }
 
     /// Below this opacity a part is out of sight.

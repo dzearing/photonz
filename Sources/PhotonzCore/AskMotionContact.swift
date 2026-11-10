@@ -277,12 +277,14 @@ extension AskMotion {
         }
         // A key written again at a moment one said it touches says it too.
         var out = touchesKept(steps)
+        var bounces: [(step: Int, seconds: Double, off: String)] = []
         for at in out.indices where out[at].tool == "set_keys" {
             guard var object = out[at].arguments.objectValue, let keys = object["keys"]?.arrayValue,
                   keys.contains(where: { $0["touches"] != nil }) else { continue }
             let part = (object["layer"]?.stringValue).flatMap(partReference)?.part
             let isPosition = object["property"]?.stringValue == MotionProperty.position.rawValue
             var written: [AgentJSON] = []
+            var moved: [(seconds: Double, was: AgentJSON, now: AgentJSON)] = []
             for key in keys {
                 guard var one = key.objectValue else { written.append(key); continue }
                 // Named as a layer is ("$1/lid") or as a part ("lid").
@@ -291,15 +293,136 @@ extension AskMotion {
                 if isPosition, let part, let other, let seconds = one["seconds"]?.doubleValue,
                    let x = one["value"]?["x"]?.doubleValue, let y = one["value"]?["y"]?.doubleValue,
                    let lap = Lap(out), plain(other) != plain(part),
-                   let shift = meeting(part, other, at: seconds, in: lap) {
-                    one["value"] = ["x": .number(Double(rounded(CGFloat(x) + shift.dx))), "y": .number(Double(rounded(CGFloat(y) + shift.dy)))]
+                   let shift = meeting(part, other, at: seconds, in: lap) ?? pushedOut(part, other, at: seconds, in: lap) {
+                    let now: AgentJSON = ["x": .number(Double(rounded(CGFloat(x) + shift.dx))), "y": .number(Double(rounded(CGFloat(y) + shift.dy)))]
+                    if let was = one["value"] { moved.append((seconds, was, now)) }
+                    one["value"] = now
+                }
+                if isPosition, let part, let other, plain(other) != plain(part), let seconds = one["seconds"]?.doubleValue {
+                    bounces.append((at, seconds, other))
                 }
                 written.append(.object(one))
+            }
+            // What stays where it hit stays with it: the keys straight after
+            // a hit at the same place go where the hit went.
+            let order = written.indices.sorted { (written[$0]["seconds"]?.doubleValue ?? 0) < (written[$1]["seconds"]?.doubleValue ?? 0) }
+            for move in moved {
+                guard let from = order.firstIndex(where: { abs((written[$0]["seconds"]?.doubleValue ?? -1) - move.seconds) <= 0.0005 }) else { continue }
+                for slot in order[(from + 1)...] {
+                    guard written[slot]["value"] == move.was, keys[slot]["touches"] == nil, var one = written[slot].objectValue else { break }
+                    one["value"] = move.now
+                    written[slot] = .object(one)
+                }
             }
             object["keys"] = .array(written)
             out[at] = AskStep(tool: out[at].tool, arguments: .object(object))
         }
+        // Every hit placed first: what comes away is read against where the
+        // others really are.
+        // A run of keys touching the same part is one contact (it slides or
+        // rests along it): it comes away after the last of them, and only then.
+        for bounce in bounces where !bounces.contains(where: { later in
+            later.step == bounce.step && plain(later.off) == plain(bounce.off) && later.seconds > bounce.seconds + 0.0005
+                && AskMotionCheck.timed(out[bounce.step]).first(where: { $0.seconds > bounce.seconds + 0.0005 }).map { abs($0.seconds - later.seconds) <= 0.0005 } == true
+        }) {
+            out = bouncedAway(out, at: bounce.step, hit: bounce.seconds, off: bounce.off)
+        }
         return out
+    }
+
+    // MARK: What bounces comes away
+
+    /// The least a part goes coming away from what it hit, as a share of the
+    /// drawing's width: less is not seen as a bounce at icon size.
+    static let leastBounce: CGFloat = 0.125
+    /// The gap, as a share of the drawing's width, a part that bounced has
+    /// opened from what it hit by its next key. Touching ink, black on
+    /// black, reads as one shape: on 2026-11-10 the trash came off the lid a
+    /// little while the lid dipped after it, and nine looks of nine saw it
+    /// stuck to the lid, never bouncing.
+    static let bounceGap: CGFloat = 0.06
+
+    /// `steps`, with the hit at `seconds` already placed, and the key after
+    /// it moved when the part, from the hit on to the key after that, passes
+    /// through the moving part it hit, or ends it still touching it
+    /// (`bounceGap`): sent the way a ball comes off a wall,
+    /// its way in mirrored about the face it struck, at least `leastBounce`
+    /// of the drawing, and further, or nearer straight off that face, until
+    /// nothing passes through. On 2026-11-10 the user's trash met the open
+    /// lid from below and then moved back up into it as the lid dipped, so
+    /// "bounces off the lid" read as sinking through it in every run; sent
+    /// back with when, the model moved the key by one unit and no more.
+    /// A part hit that stays still is left alone (going in behind its front
+    /// is meant), and so is a part that comes away already, or stays where it
+    /// hit, or a hit no try keeps clear of. Keys and time only, any subject.
+    static func bouncedAway(_ steps: [AskStep], at index: Int, hit seconds: Double, off other: String) -> [AskStep] {
+        guard steps.indices.contains(index), let part = (steps[index].arguments["layer"]?.stringValue).flatMap(partReference)?.part,
+              let lap = Lap(steps), lap.isMover(other) || !lap.carriers(of: other).isEmpty else { return steps }
+        func point(_ value: AgentJSON?) -> CGPoint? {
+            guard let x = value?["x"]?.doubleValue, let y = value?["y"]?.doubleValue else { return nil }
+            return CGPoint(x: x, y: y)
+        }
+        let keys = AskMotionCheck.timed(steps[index])
+        guard let k = keys.firstIndex(where: { abs($0.seconds - seconds) <= 0.0005 }), k + 1 < keys.count,
+              let hitAt = point(keys[k].value), let nextAt = point(keys[k + 1].value), nextAt != hitAt else { return steps }
+        let until = k + 2 < keys.count ? keys[k + 2].seconds : keys[k + 1].seconds
+        func through(_ trial: [AskStep]) -> Bool {
+            guard let lap = Lap(trial) else { return false }
+            func seen(_ name: String, _ moment: Double) -> Bool {
+                guard lap.isMover(name) || !lap.carriers(of: name).isEmpty else { return true }
+                return lap.placed(name, at: moment)?.seen ?? true
+            }
+            var moment = seconds + 0.02
+            while moment <= until + 0.0005 {
+                if seen(part, moment), seen(other, moment),
+                   inkMeets(lap.ink(part, at: moment), lap.ink(other, at: moment), within: -passesThrough) { return true }
+                moment += 0.02
+            }
+            return false
+        }
+        // Seen apart from what it hit by the key after: a gap at icon size.
+        func apart(_ trial: [AskStep]) -> Bool {
+            guard let lap = Lap(trial) else { return true }
+            let at = keys[k + 1].seconds
+            return !inkMeets(lap.ink(part, at: at), lap.ink(other, at: at), within: bounceGap * (lap.art.viewBox?.width ?? 24))
+        }
+        guard through(steps) || !apart(steps) else { return steps }
+        // The way in: from just before the hit, or from the key before.
+        var before = point(AskMotionCheck.value(of: steps[index], at: seconds - 0.05)) ?? hitAt
+        if before == hitAt, k > 0, let earlier = point(keys[k - 1].value) { before = earlier }
+        let way = CGVector(dx: hitAt.x - before.x, dy: hitAt.y - before.y)
+        // The face struck: from the nearest ink of what was hit to the middle of the part.
+        let mine = lap.ink(part, at: seconds).flatMap { $0 }, theirs = lap.ink(other, at: seconds)
+        guard !mine.isEmpty, !theirs.isEmpty else { return steps }
+        let middle = CGPoint(x: mine.map(\.x).reduce(0, +) / CGFloat(mine.count), y: mine.map(\.y).reduce(0, +) / CGFloat(mine.count))
+        guard let struck = theirs.map({ nearest(to: middle, on: $0) })
+                .min(by: { hypot($0.x - middle.x, $0.y - middle.y) < hypot($1.x - middle.x, $1.y - middle.y) }) else { return steps }
+        func unit(_ v: CGVector) -> CGVector? {
+            let length = hypot(v.dx, v.dy)
+            return length > 1e-6 ? CGVector(dx: v.dx / length, dy: v.dy / length) : nil
+        }
+        guard let face = unit(CGVector(dx: middle.x - struck.x, dy: middle.y - struck.y)) ?? unit(CGVector(dx: -way.dx, dy: -way.dy)) else { return steps }
+        let dot = way.dx * face.dx + way.dy * face.dy
+        let mirrored = dot < 0 ? unit(CGVector(dx: way.dx - 2 * dot * face.dx, dy: way.dy - 2 * dot * face.dy)) ?? face : face
+        let width = lap.art.viewBox?.width ?? 24
+        let least = max(hypot(nextAt.x - hitAt.x, nextAt.y - hitAt.y), leastBounce * width)
+        let ways = [mirrored, unit(CGVector(dx: mirrored.dx + face.dx, dy: mirrored.dy + face.dy)) ?? face, face]
+        guard var object = steps[index].arguments.objectValue, let list = object["keys"]?.arrayValue,
+              let slot = list.firstIndex(where: { abs(($0["seconds"]?.doubleValue ?? -1) - keys[k + 1].seconds) <= 0.0005 }),
+              var key = list[slot].objectValue else { return steps }
+        for share: CGFloat in [1, 1.5, 2, 2.5, 3] {
+            for direction in ways {
+                key["value"] = ["x": .number(Double(rounded(hitAt.x + direction.dx * least * share))),
+                                "y": .number(Double(rounded(hitAt.y + direction.dy * least * share)))]
+                var changed = list
+                changed[slot] = .object(key)
+                object["keys"] = .array(changed)
+                var trial = steps
+                trial[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
+                if !through(trial), apart(trial) { return trial }
+            }
+        }
+        return steps
     }
 
     /// How far `part` moves at `seconds` to just meet `other`, or nil when
@@ -325,6 +448,42 @@ extension AskMotion {
             if inkMeets(shifted(mid), theirs, within: 0) { high = mid } else { low = mid }
         }
         return CGVector(dx: way.dx * high, dy: way.dy * high)
+    }
+
+    /// How far `part` moves at `seconds` to come out of a MOVING `other` it
+    /// is buried in until the two just meet, the shortest way out across one
+    /// of `other`'s faces; nil when it is not in deeper than a touch, when
+    /// `other` stays still (going in behind its front is meant), or when no
+    /// way out is found. On 2026-11-10 the model keyed the trash at 0.95 s
+    /// as touching the lid, two units inside it, and the trash was drawn
+    /// through the lid from 0.84 to 1.06 s: placing only ever pulled a part
+    /// towards what it touches.
+    static func pushedOut(_ part: String, _ other: String, at seconds: Double, in lap: Lap) -> CGVector? {
+        guard lap.isMover(other) || !lap.carriers(of: other).isEmpty else { return nil }
+        let mine = lap.ink(part, at: seconds), theirs = lap.ink(other, at: seconds)
+        guard !mine.isEmpty, !theirs.isEmpty, inkMeets(mine, theirs, within: -passesThrough) else { return nil }
+        func deep(_ way: CGVector, _ share: CGFloat) -> Bool {
+            inkMeets(mine.map { hull in hull.map { CGPoint(x: $0.x + way.dx * share, y: $0.y + way.dy * share) } }, theirs, within: -0.05)
+        }
+        let reach = (lap.art.viewBox?.width ?? 24) / 2
+        var best: CGVector?
+        for hull in theirs {
+            for (a, b) in zip(hull, hull.dropFirst() + hull.prefix(1)) {
+                let length = hypot(b.x - a.x, b.y - a.y)
+                guard length > 1e-6 else { continue }
+                for sign: CGFloat in [1, -1] {
+                    let way = CGVector(dx: sign * (b.y - a.y) / length, dy: sign * -(b.x - a.x) / length)
+                    guard !deep(way, reach) else { continue }
+                    var low: CGFloat = 0, high = reach
+                    for _ in 0..<24 {
+                        let mid = (low + high) / 2
+                        if deep(way, mid) { low = mid } else { high = mid }
+                    }
+                    if best.map({ hypot($0.dx, $0.dy) > high }) ?? true { best = CGVector(dx: way.dx * high, dy: way.dy * high) }
+                }
+            }
+        }
+        return best
     }
 
     /// Whether any piece of ink of one meets any of the other's.
