@@ -5,16 +5,19 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T14:43:35.102Z",
-  "updated": "2026-11-10T13:21:01.958Z",
+  "updated": "2026-11-10T17:26:27.048Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Left by typing-in-ask-lists-the-commands-you-can-run. Mock: askPalHTML in docs/design/mocks/shared/dist/photonz-ds.js. AskConversationLines and AskCommandsList.symbol in Sources/Photonz/Agent/AskViews.swift; AppCommandTable has no icon today. New Conversation has to decide what Ask forgets: its memory of what it made comes from the rows (AskSession.conversation).",
+  "notes": "Left by typing-in-ask-lists-the-commands-you-can-run. Mock: askPalHTML in docs/design/mocks/shared/dist/photonz-ds.js. AskConversationLines and AskCommandsList.symbol in Sources/Photonz/Agent/AskViews.swift; AppCommandTable has no icon today. New Conversation has to decide what Ask forgets: its memory of what it made comes from the rows (AskSession.conversation). DONE 2026-11-10: AppCommandID.symbol (exhaustive switch) + AskCommandEntry.symbol (choice overrides for align/spaceEvenly) in Sources/PhotonzCore/AppCommandSymbols.swift; AskViews uses entry.symbol. Tests: AppCommandSymbolTests (core), AppCommandSymbolsDrawTests (render, NSImage(systemSymbolName:)). Mock: removed New conversation button from shared/components/shell.js (dist rebuilt, untracked).",
   "acceptance": [
-    "Each row of the / list shows an icon for that command, as agent-generate-wt.html does, not one shared by its whole area"
+    "Each row of the / list shows an icon for that command, as agent-generate-wt.html does, not one shared by its whole area",
+    "No two commands share an icon unless they share their words, checked by a test",
+    "Every icon names a symbol the Mac can draw, checked by a test on CI's macOS",
+    "The shared mock's Ask dialog no longer draws the New conversation button the user removed on 2026-11-04"
   ],
   "log": [
     {
@@ -52,6 +55,32 @@
     {
       "t": "2026-11-10T13:21:01.957Z",
       "note": "seq 120 -> 40"
+    },
+    {
+      "t": "2026-11-10T16:53:41.759Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T17:25:24.079Z",
+      "note": "owns these walks: ask-slash-lists-commands-walk, ask-lists-commands-in-the-panel-walk"
+    },
+    {
+      "t": "2026-11-10T17:40:00.000Z",
+      "note": "Adversarial: a person scanning / wants to spot the row by shape; one icon per area (40 timeline rows, one film strip) made the icons noise. Mock rows each have their own glyph. Risk: ~250 commands, some icons inevitably abstract; kept each distinct and checked them all draw. Fade rows never appear in / (two required values), so no per-choice icon for them. Chose Mac system symbols over porting the mock's glyph set because every other icon in the app is one. Chose per-choice icons for Align and Space Evenly only, since only there do the choices differ in shape."
+    },
+    {
+      "t": "2026-11-10T17:26:07.044Z",
+      "note": "left rough: the / list draws Mac system symbols, not the mock's ic-* glyphs (the app draws every chrome icon that way); asked in the audit's evaluate list rather than filed, since it is app-wide and not a defect of this list."
+    },
+    {
+      "t": "2026-11-10T17:26:27.046Z",
+      "note": "Every / row in Ask now wears its own icon (AppCommandID.symbol, an exhaustive switch over all commands; Align and Space Evenly rows show their own edge/axis). Tests: AppCommandSymbolTests (no shared icons unless same words; no area wears one icon), AppCommandSymbolsDrawTests (every name draws on this macOS). Full Scripts/test.sh green (exit 0); ask-slash-lists-commands-walk (new Align step) and ask-lists-commands-in-the-panel-walk ok at Next defaults with real captures. Shared mock's New conversation button removed. Commit 8a376544a."
     }
-  ]
+  ],
+  "started": "2026-11-10T16:53:41.758Z",
+  "walks": [
+    "ask-slash-lists-commands-walk",
+    "ask-lists-commands-in-the-panel-walk"
+  ],
+  "completed": "2026-11-10T17:26:27.047Z"
 }
