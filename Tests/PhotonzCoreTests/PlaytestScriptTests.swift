@@ -3969,6 +3969,30 @@ struct PlaytestScriptTests {
         #expect(two == 2)
     }
 
+    @Test("An expectTitleBarClear step claims the panel draws nothing under the title bar's buttons, to a point by default")
+    func expectTitleBarClearReadsItsGap() throws {
+        let plain = try decode("""
+        { "steps": [ { "do": "expectTitleBarClear" } ] }
+        """)
+        guard case .expectTitleBarClear(let gap) = plain.steps[0] else {
+            Issue.record("expectTitleBarClear"); return
+        }
+        #expect(gap == 1)
+        #expect(plain.steps[0].name == "expectTitleBarClear")
+        let roomy = try decode("""
+        { "steps": [ { "do": "expectTitleBarClear", "gap": 4 } ] }
+        """)
+        guard case .expectTitleBarClear(let four) = roomy.steps[0] else {
+            Issue.record("expectTitleBarClear"); return
+        }
+        #expect(four == 4)
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectTitleBarClear", "gap": -1 } ] }
+            """)
+        }
+    }
+
     @Test("An expectSections step can name the lists in the pane under the pick")
     func expectSectionsClaimsTheListsPane() throws {
         let script = try decode("""

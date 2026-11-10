@@ -91,6 +91,9 @@
       "name": "1-ran"
     },
     {
+      "do": "expectTitleBarClear"
+    },
+    {
       "do": "action",
       "action": "undo"
     },

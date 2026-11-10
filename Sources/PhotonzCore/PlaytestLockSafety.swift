@@ -179,6 +179,11 @@ public enum PlaytestLockSafety {
         // register of controls holds, the same register a press reads, and
         // asks accessibility for nothing.
         "expectApart",
+        // Added 2026-11-09 by reading: it measures the same register of
+        // controls `expectApart` does, title bar and panel, and the panel's
+        // own record of where its top edge is, and asks accessibility for
+        // nothing.
+        "expectTitleBarClear",
         // Added 2026-10-01 by reading: `expectTracks` asks the document for
         // its tracks top down, and `dragTrack` drives the timeline's own drag
         // session the way `dragRow` drives the layers list's, by the track's

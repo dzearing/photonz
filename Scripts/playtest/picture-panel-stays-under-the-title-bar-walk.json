@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/picture-panel-stays-under-the-title-bar-walk",
+  "seed": "A picture's panel beside the title bar's Ask and panel toggle, at Next defaults, no flag set. At rest Layers starts under the title bar exactly as before; scrolled, its header and rows stop at the title bar's lower edge and fade there rather than reading through Ask (before 2026-11-09 the Layers header slid straight under it). Measured with expectTitleBarClear at rest and scrolled.",
+  "clock": 120,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 560 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [88, 330], "to": [400, 410], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-rest", "note": "a box drawn and picked: Layers at the top of the panel, under the title bar as it always was" },
+    { "do": "expectTitleBarClear" },
+    { "do": "snapshot", "name": "1-rest" },
+    { "do": "scrollPanel", "by": -40, "row": "Layers section" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-scrolled", "note": "Layers scrolled up: its header stops at the title bar's lower edge, never under Ask" },
+    { "do": "expectTitleBarClear" },
+    { "do": "snapshot", "name": "2-scrolled" }
+  ]
+}

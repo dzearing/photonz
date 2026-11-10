@@ -495,6 +495,11 @@ struct InspectorPanel: View {
                     // drops that to ~20ms. Collapse (chevron) and drag-reorder keep
                     // their own explicit `withAnimation`, so they still animate.
                 }
+                // On a video, and on a picture with Layers in the dock, this
+                // scroller is the panel's top, beside Ask and View | Edit in
+                // the title bar: rows scrolled up stop under the title bar
+                // and fade there, never draw under the buttons (`PanelTopEdge`).
+                .panelTopEdge()
                 .coordinateSpace(.named(inspectorDockSpace))
                 // A list a section opens over itself (Animate a property),
                 // drawn over the scroller so the scroller never cuts it off.
@@ -843,6 +848,9 @@ struct InspectorPanel: View {
                 }
                 .padding(.vertical, DockMetrics.listTopPadding)
             }
+            // The panel's top, under the title bar: rows scrolled up stop
+            // there rather than running on under Ask (`PanelTopEdge`).
+            .panelTopEdge()
             .coordinateSpace(.named(inspectorDockSpace))
             .panelPopoverHost()
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {

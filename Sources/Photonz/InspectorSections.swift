@@ -544,7 +544,54 @@ private struct ScrollEdgeFade: ViewModifier {
     }
 }
 
+/// The panel's own top edge, under the title bar: a scroller there stops at
+/// its frame, and fades its top while anything is scrolled up past it.
+///
+/// The title bar's right end holds Ask, View | Edit and the panel toggle, and
+/// the panel runs up beside them. A SwiftUI scroller draws its content on into
+/// the safe area above it, so a panel scrolled even a little slid its rows
+/// straight under those buttons with nothing between them: a section header
+/// read through Ask, a field you could see and not click (reported on a video
+/// 2026-10-20, and true of a picture's Layers pane too). The mask is what stops
+/// it: it is the scroller's own frame, which starts under the title bar, and
+/// it is the same fade `ScrollEdgeFade` uses for "there is more this way", so
+/// the panel says it one way at every edge it cuts.
+private struct PanelTopEdge: ViewModifier {
+    /// Whether anything is scrolled up past the top. Nothing is on the first
+    /// frame, so the edge starts sharp, as a panel at rest should look.
+    @State private var scrolled = false
+
+    private var fade: some View {
+        VStack(spacing: 0) {
+            LinearGradient(colors: [.black.opacity(0), .black],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: scrolled ? DockMetrics.bodyEdgeFade : 0)
+            Rectangle()
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.contentOffset.y + geometry.contentInsets.top > 1
+            } action: { _, now in
+                scrolled = now
+            }
+            .mask { fade }
+            .animation(.easeOut(duration: 0.12), value: scrolled)
+            // Where the edge is, for `expectTitleBarClear`. Nothing in the
+            // shipping app.
+            .panelTopEdgeProbe()
+    }
+}
+
 extension View {
+    /// Stops this panel scroller at its own top, under the title bar, and
+    /// fades that edge while it is scrolled. See `PanelTopEdge`.
+    func panelTopEdge() -> some View {
+        modifier(PanelTopEdge())
+    }
+
     /// Fades this scroller's top or bottom edge whenever it is showing less
     /// than it holds. See `ScrollEdgeFade`.
     ///

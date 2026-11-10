@@ -4098,6 +4098,11 @@ private final class Run {
                  try await patiently { try self.checkApart(controls, gap: CGFloat(gap), whole: whole) },
                  state: describe())
 
+        case .expectTitleBarClear(let gap):
+            note(number, step.name,
+                 try await patiently { try self.checkTitleBarClear(gap: CGFloat(gap)) },
+                 state: describe())
+
         case .expectOneUnit:
             note(number, step.name, try checkOneUnit(), state: describe())
 
@@ -14000,6 +14005,73 @@ private final class Run {
         }
         let words = whole.isEmpty ? "" : "; " + whole.map { "\"\($0)\" is whole" }.joined(separator: ", ")
         return "every pair at least \(n(gap))pt apart: " + line + words
+    }
+
+    /// `expectTitleBarClear`: every control in the window's content, cut to
+    /// what its scrollers and the panel's top edge (`PanelTopEdgeProbe`) let
+    /// it show, kept `gap` points clear of every control in the title bar.
+    private func checkTitleBarClear(gap: CGFloat) throws -> String {
+        let window = try requireWindow()
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content to measure")
+        }
+        func live(_ view: PanelTargetView) -> Bool { view.window != nil && !view.isHiddenOrHasHiddenAncestor }
+        func n(_ value: CGFloat) -> String { String(format: "%.1f", value) }
+        // Top left origin, as a person reads the window: y down from its top.
+        let height = content.bounds.height
+        func fromTop(_ box: CGRect) -> CGRect {
+            CGRect(x: box.minX, y: height - box.maxY, width: box.width, height: box.height)
+        }
+        func say(_ box: CGRect) -> String {
+            "x \(n(box.minX))–\(n(box.maxX)), y \(n(box.minY))–\(n(box.maxY))"
+        }
+        let bar = Self.findAllInTitlebar(PanelTargetView.self, of: window)
+            .filter { live($0) && $0.kind == .control && $0.alphaValue > 0.01 }
+            .map { (name: $0.name, box: fromTop($0.convert($0.bounds, to: nil))) }
+            .filter { $0.box.width > 0.5 && $0.box.height > 0.5 }
+        guard !bar.isEmpty else {
+            throw Failure(description: "no controls in the title bar to keep the panel clear of")
+        }
+        // SwiftUI's global space is the content view's, top left origin.
+        let edges = Array(PanelTopEdgeProbe.shared.frames.values)
+        // The panel's column, side to side: the claim is about the panel's
+        // controls, and the window's own title line spans the whole strip.
+        let column = PanelEdgeProbe.shared.panel
+        guard column.width > 1 else {
+            throw Failure(description: "the panel is not open, so there is no panel to keep clear of the title bar")
+        }
+        func inPanel(_ box: CGRect) -> Bool {
+            box.minX >= column.minX - 1 && box.maxX <= column.maxX + 1
+        }
+        var offenders: [String] = []
+        var measured = 0
+        for target in Self.findAll(PanelTargetView.self, in: content) where live(target) {
+            let box = fromTop(target.convert(target.bounds, to: nil))
+            guard inPanel(box) else { continue }
+            var shown = box.intersection(fromTop(target.convert(target.visibleRect, to: nil)))
+            // The topmost panel edge over it cuts off everything above it:
+            // nothing in the panel's column draws above its first scroller.
+            if let edge = edges.filter({ $0.minX < shown.maxX && $0.maxX > shown.minX })
+                .min(by: { $0.minY < $1.minY }), shown.minY < edge.minY {
+                let cut = edge.minY - shown.minY
+                shown = cut >= shown.height ? .null
+                    : CGRect(x: shown.minX, y: edge.minY, width: shown.width, height: shown.height - cut)
+            }
+            guard !shown.isNull, shown.width > 0.5, shown.height > 0.5 else { continue }
+            measured += 1
+            for item in bar where item.box.insetBy(dx: -gap, dy: -gap).intersects(shown) {
+                offenders.append("\"\(target.name)\" (\(say(shown))) meets \"\(item.name)\" (\(say(item.box)))")
+            }
+        }
+        let barLine = bar.map { "\($0.name) \(say($0.box))" }.joined(separator: "; ")
+        let edgeLine = edges.isEmpty ? "no panel top edge recorded"
+            : "panel top at y " + edges.map { n($0.minY) }.sorted().joined(separator: ", ")
+        guard offenders.isEmpty else {
+            throw Failure(description: "\(offenders.count) panel control(s) drawn under the title bar's controls: "
+                + offenders.prefix(8).joined(separator: "; ") + ". Title bar: \(barLine); \(edgeLine)")
+        }
+        return "\(measured) panel controls drawn, none within \(n(gap))pt of the title bar's \(bar.count): "
+            + barLine + "; " + edgeLine
     }
 
     /// The other way round from `checkInView`: the thing is in the panel and

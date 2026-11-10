@@ -1,0 +1,26 @@
+{
+  "feature": "The panel stays under the title bar's Ask, View and Edit",
+  "epic": "agent-ask",
+  "summary": "Scroll the right hand panel on a video or a picture and its rows now stop at the title bar's lower edge and fade out there, instead of sliding under Ask, View and Edit where you could read them through the buttons and could not click them. At rest nothing moved: a picture's window is pixel for pixel what it was.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: panel-stays-under-the-title-bar-walk (video), picture-panel-stays-under-the-title-bar-walk, ask-adds-a-title-page-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and switch to Edit with the panel open.", "shot": "2026-11-09-panel-under-titlebar-video-before.png", "shotNote": "Before, today's build: scrolled, the Captions header reads through Ask." },
+    { "do": "Scroll the panel up a little with the trackpad, and watch the top row as it reaches the title bar.", "shot": "2026-11-09-panel-under-titlebar-video-after-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Split the clip (B), click the cut, then click the Transitions search field and type dip.", "shot": "2026-11-09-panel-under-titlebar-search-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Ask (Command K) and ask it to add a title page; when its change lands the panel scrolls to show it.", "shot": "2026-11-09-panel-under-titlebar-ask-ran-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open a picture, draw a box, and scroll the Layers list up a little.", "shot": "2026-11-09-panel-under-titlebar-picture-after-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Scroll it back to the top and compare with how a picture's panel always looked.", "shot": "2026-11-09-panel-under-titlebar-picture-rest-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does the top row fading out at the title bar's edge read like content passing under a Mac toolbar, or would you rather it stopped with a hard edge?",
+    "Is the fade deep enough to notice (14 points, the same as the panel's other scroll fades), or too subtle against the dark panel?",
+    "With the panel at rest, does anything about the title bar or the panel's first section look different from before to you?"
+  ],
+  "rough": [
+    "A picture had the same fault, only less often: its Layers header slid under Ask when the list scrolled (picture-before shot). It gets the same edge, since it is one panel; at rest a picture is unchanged (the whole window compared pixel for pixel, zero difference).",
+    "No mock draws the panel scrolled; at rest it matches the placement table, the panel starting under the title bar row (UX-PATTERNS, Title bar row).",
+    "The original reproduction (Ask over the Transitions search field at rest) no longer happened on today's build: the panel already started under the title bar at rest, and the fault left was scrolling. The search field takes a real click in panel-stays-under-the-title-bar-walk.",
+    "All pictures were taken with the window behind another app, so the selected Edit segment and blue buttons show their background look."
+  ]
+}

@@ -4534,6 +4534,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// all. The user, 2026-10-18, a recording with every section folded: 310
     /// points of empty panel above the Library that nothing could remove.
     case expectPaneGap(atMost: Double)
+    /// CLAIMS that the right hand panel draws nothing under the title bar's
+    /// own controls (Ask, Preview, View | Edit, the panel toggle): every
+    /// control in the window's content, cut to what its scrollers and the
+    /// panel's top edge let it show, stays at least `gap` points (default 1)
+    /// clear of every one of their boxes. Fails naming each control that
+    /// meets one, with both boxes. On a video the panel runs up beside those
+    /// buttons, and before 2026-11-09 a scrolled panel slid its rows straight
+    /// under them: a header read through Ask, a field nobody could click.
+    case expectTitleBarClear(gap: Double)
     /// The named thing in the right hand panel must be ALL on screen: inside
     /// the window, and inside whatever is scrolling it.
     ///
@@ -4802,7 +4811,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectNamesClearOfWords", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectPlaceTag", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectOpenRefused", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectNamesClearOfWords", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectPlaceTag", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectOpenRefused", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectTitleBarClear", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4974,6 +4983,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectSectionFits: "expectSectionFits"
         case .expectSections: "expectSections"
         case .expectPaneGap: "expectPaneGap"
+        case .expectTitleBarClear: "expectTitleBarClear"
         case .expectInView: "expectInView"
         case .expectApart: "expectApart"
         case .expectOneUnit: "expectOneUnit"
@@ -6751,6 +6761,10 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectSections(leading: leading, layers: layers, absent: absent, lists: lists)
         case "expectPaneGap":
             self = .expectPaneGap(atMost: try f.optionalNumber("atMost") ?? 0.5)
+        case "expectTitleBarClear":
+            let gap = try f.optionalNumber("gap") ?? 1
+            guard gap >= 0 else { throw f.invalid("gap", "is the least distance clear, not \(gap)") }
+            self = .expectTitleBarClear(gap: gap)
         case "expectInView":
             let whole = try f.optionalFlag("whole") ?? false
             let out = try f.optionalFlag("out") ?? false
