@@ -133,7 +133,7 @@
       "seconds": 1.0,
       "release": false,
       "hold": "5-tile-over-the-empty-track",
-      "says": "Overwrite \u00b7 New Audio \u00b7 0:01"
+      "says": "Overwrite \u00b7 Audio \u00b7 0:01"
     },
     {
       "do": "dropOnTimeline",
@@ -155,7 +155,7 @@
     {
       "do": "describe",
       "stage": "6-first-clip-from-the-shelf",
-      "note": "THE THIRD TEST: the music tile dragged onto the recording one second in landed on a new Audio track under the recording's own sound, the mock's step 3"
+      "note": "THE THIRD TEST: the music tile dragged onto the recording one second in landed on the Audio track under the recording, the mock's step 3 (a new video starts with an empty Audio track since its sound became the bottom half of the clip)"
     },
     {
       "do": "snapshot",
@@ -164,7 +164,7 @@
     {
       "do": "labelsWhole",
       "stage": "6-first-clip-from-the-shelf",
-      "note": "THE THIRD TEST: the music tile dragged onto the recording one second in landed on a new Audio track under the recording's own sound, the mock's step 3"
+      "note": "THE THIRD TEST: the music tile dragged onto the recording one second in landed on the Audio track under the recording, the mock's step 3 (a new video starts with an empty Audio track since its sound became the bottom half of the clip)"
     },
     {
       "do": "panelMenu",

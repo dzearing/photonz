@@ -5,7 +5,8 @@
     "forget": [
       "text",
       "shapes",
-      "tools"
+      "tools",
+      "panel"
     ]
   },
   "steps": [
@@ -40,6 +41,8 @@
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.8 },
 
+    { "do": "press", "control": "Advanced", "in": "Advanced" },
+    { "do": "wait", "seconds": 0.5 },
     { "do": "panel", "stage": "arrow-picked" },
     { "do": "describe", "stage": "2-ending-row", "note": "the five endings: resting on each one must name that ending" },
 

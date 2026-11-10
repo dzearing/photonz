@@ -26,7 +26,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "panelMenu", "menu": "Border", "choose": "Outside" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Slider", "in": "Width", "across": 0.25 },
+    { "do": "press", "control": "Slider", "in": "Border, Width", "across": 0.25 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "1-triangle-outside", "note": "THE TEST: the border hugs the triangle. It used to be a rectangle round the shape's bounding box, painting the two top corners the triangle comes nowhere near." },
     { "do": "panel", "stage": "1-triangle-outside" },
@@ -54,7 +54,7 @@
     { "do": "expectPath", "anchors": 3, "closed": false },
     { "do": "describe", "stage": "3-line-arrives-bordered", "note": "a new shape is drawn in the last look, so the line arrives wearing the triangle's border already; adding a second would make two rows" },
 
-    { "do": "press", "control": "Slider", "in": "Width", "across": 0.25 },
+    { "do": "press", "control": "Slider", "in": "Border, Width", "across": 0.25 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "control": "Position", "in": "Border", "present": false },
     { "do": "expect", "control": "Slider", "in": "Offset", "present": false },

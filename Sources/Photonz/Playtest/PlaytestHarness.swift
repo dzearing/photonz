@@ -6686,7 +6686,10 @@ private final class Run {
                 func joinRow(_ id: UUID) -> MenuRow? {
                     editor.captionCueMenuRows(layerID: id).first { $0.title == "Join with Next Line" }
                 }
-                guard let lastRow = joinRow(last.id), !lastRow.isEnabled else {
+                // A timeline row that cannot act is left out rather than
+                // greyed (f26565da, `TimelineMenuTable`), so the last line's
+                // menu passes with the row absent or dimmed, never live.
+                if let lastRow = joinRow(last.id), lastRow.isEnabled {
                     throw Failure(description: "the last line's menu offers Join with Next Line as if it could act")
                 }
                 guard let row = joinRow(cues[0].id), row.isEnabled else {

@@ -106,6 +106,15 @@
       "seconds": 0.8
     },
     {
+      "do": "press",
+      "control": "Advanced",
+      "in": "Advanced"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
       "do": "describe",
       "stage": "2-label",
       "note": "a captioned arrow: Width and Label size are the two rows that used to disagree, one under the other"

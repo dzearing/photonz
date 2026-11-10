@@ -288,6 +288,10 @@ struct LayersListView: View {
     @State private var scroll = LayerListScroll()
     /// What the list is told to scroll to, when a pick asks it to follow.
     @State private var scrollPosition = ScrollPosition()
+    /// Bumped when the list loses rows under a scrolled offset, which gives
+    /// the scroll view and its lazy stack a fresh start (see the `onChange`
+    /// on the row count).
+    @State private var scrollEpoch = 0
     /// The reveal the list is still settling into, held only for the beat after
     /// a pick while the dock finishes sharing out its height. Nil the rest of
     /// the time, so a grab bar dragged ten seconds later never drags an old
@@ -423,6 +427,7 @@ struct LayersListView: View {
             ScrollView(.vertical) {
                 rows(displays, viewport: viewport)
             }
+            .id(scrollEpoch)
             .frame(height: viewport)
             .scrollBounceBehavior(.basedOnSize)
             .scrollPosition($scrollPosition)
@@ -579,6 +584,26 @@ struct LayersListView: View {
             scroll.offset = 0
             firstVisibleRow = 0
             scrollPosition.scrollTo(y: 0)
+        }
+        // A list that loses rows while scrolled down (an undo of Separate
+        // into Layers, a delete) has to come back inside its content. Left
+        // alone, the scroll view clamps its offset but the lazy stack keeps
+        // the rows it built for the old one, and the pane drew no rows at all
+        // over a one-layer document (separate-shadow-walk, 2026-11-10); a
+        // scrollTo alone did not bring them back, so the scroll view starts
+        // over. Only on the shrink that strands the offset, so a delete in a
+        // long list keeps its place.
+        .onChange(of: editorState.layerRows.count) { old, new in
+            guard new < old, scroll.offset > 0 else { return }
+            let content = LayerListMetrics.naturalHeight(rowCount: new, rowHeight: rowHeight,
+                                                         canvasRowHeight: canvasRowHeight)
+            let furthest = max(0, content - scroll.viewport)
+            guard scroll.offset > furthest else { return }
+            scroll.offset = furthest
+            firstVisibleRow = LayerListMetrics.firstVisibleRow(scrollOffset: furthest,
+                                                              rowHeight: rowHeight)
+            scrollPosition = ScrollPosition(y: furthest)
+            scrollEpoch += 1
         }
         .onChange(of: editorState.layerAwaitingRename) { _, id in
             guard let id, editorState.panelRows.contains(where: { $0.id == id }),

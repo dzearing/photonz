@@ -25,6 +25,8 @@
     { "do": "describe", "stage": "2-committed", "note": "Command Return landed the two line caption; it should read exactly as it did while being typed" },
     { "do": "snapshot", "name": "2-committed" },
 
+    { "do": "press", "control": "Advanced", "in": "Advanced" },
+    { "do": "wait", "seconds": 0.5 },
     { "do": "focus", "field": "Add a caption" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "snapshot", "name": "2b-inspector-caption", "note": "the panel's Caption field shows both lines" },

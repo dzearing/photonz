@@ -4,7 +4,8 @@
     "forget": [
       "shapes",
       "frames",
-      "tools"
+      "tools",
+      "panel"
     ]
   },
   "steps": [
@@ -132,6 +133,15 @@
       "do": "describe",
       "stage": "3-arrow",
       "note": "an arrow on the same frame: every tool that draws a line of its own takes the frame's weight, not just the Pen. A box and an oval have no line to take it: since 2026-09-14 they arrive as their fill and nothing else, and the border you put on one is an effect you add."
+    },
+    {
+      "do": "press",
+      "control": "Advanced",
+      "in": "Advanced"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
     },
     {
       "do": "expect",

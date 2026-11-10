@@ -232,7 +232,16 @@
   {
    "do": "describe",
    "stage": "5-pill-painted",
-   "note": "the pill's fill is CHOSEN now: carrying a colour onto Label Fill repaints the bubble and leaves the arrow alone."
+   "note": "the pill's fill is CHOSEN now: carrying the line's colour onto Chip Fill repaints the bubble and leaves the arrow alone. A new chip is a solid pill in the arrow's own colour, so the walk picks the Hairline plate chip first, or there would be nothing to carry."
+  },
+  {
+   "do": "press",
+   "control": "Chip style Hairline plate",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
   },
   {
    "do": "dragColor",

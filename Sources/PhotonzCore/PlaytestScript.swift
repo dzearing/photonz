@@ -1598,8 +1598,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case captionsNoteLines
     /// Join the first caption line with the second from the line's own right
     /// click menu on the Captions track, and fail unless one line now reads as
-    /// the two did and every other line is as noted. Fails too unless the last
-    /// line's Join with Next Line is dimmed.
+    /// the two did and every other line is as noted. Fails too if the last
+    /// line's menu offers a live Join with Next Line (left out is right).
     case captionsJoinFirstLineWithNext
     /// Fail unless every caption line reads as noted: what an undo puts back.
     case captionsExpectLinesAsNoted

@@ -13,6 +13,8 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "paintSelectionColor" },
     { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Advanced", "in": "Advanced" },
+    { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "saveColorStyle" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "type", "text": "Accent" },

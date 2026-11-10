@@ -66,9 +66,8 @@
       "stage": "1-measured"
     },
     {
-      "do": "scrollPanel",
-      "row": "Size",
-      "by": -600
+      "do": "reveal",
+      "control": "Size"
     },
     {
       "do": "wait",
@@ -88,9 +87,8 @@
       "note": "the measurement is shown, so Visible wears a checkmark; the menu is the short one measurements get, not the layer one"
     },
     {
-      "do": "scrollPanel",
-      "row": "Size",
-      "by": -600
+      "do": "reveal",
+      "control": "Size"
     },
     {
       "do": "wait",
@@ -106,9 +104,8 @@
       "seconds": 0.6
     },
     {
-      "do": "scrollPanel",
-      "row": "Size",
-      "by": -600
+      "do": "reveal",
+      "control": "Size"
     },
     {
       "do": "wait",
