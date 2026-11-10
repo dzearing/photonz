@@ -14,9 +14,8 @@ import Testing
 ///   switch below, so a new row does not build until it is placed;
 /// * the layer's right-click rows (`LayerCommandMenu.swift`), by title.
 ///
-/// Every other right-click row in the app is a menu bar row under the same or
-/// other words (`EveryCommandIsInTheMenuBarTests`), so it is named here through
-/// that row.
+/// Every right-click menu in the app, and every control in the panel, is
+/// counted menu by menu and section by section in `AgentReachTests`.
 ///
 /// A row with no name is either LEFT OUT on purpose, with the reason, or NOT
 /// YET named. The not-yet list may only shrink: its size is pinned, so adding a

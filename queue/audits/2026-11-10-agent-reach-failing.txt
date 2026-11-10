@@ -1,0 +1,8 @@
+A probe 'Duck' switch added to the Track section with no line in panelTable (reverted after the run):
+
+✘ Test "Every panel control is reached by an agent tool or command, or says why not" failed after 2.027 seconds with 1 issue.
+✘ Test "Every panel control is reached by an agent tool or command, or says why not" recorded an issue at AgentReachTests.swift:773:29: Issue recorded
+✘ Test "The count the audit reports" failed after 4.748 seconds with 1 issue.
+✘ Test "The count the audit reports" recorded an issue at AgentReachTests.swift:948:9: Expectation failed: (panelTotal.missing == 0 → false) && (menuTotal.missing == 0 → <not evaluated>)
+✘ Test run with 8 tests in 1 suite failed after 4.749 seconds with 2 issues.
+↳ TrackInspector.swift:64 "Duck" has no way in for an agent. Add it to panelTable with the agent tool and field that set it, the command that does it, or why not.

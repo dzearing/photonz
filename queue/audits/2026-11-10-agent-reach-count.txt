@@ -1,0 +1,135 @@
+Panel controls 440: named 160, left out 67, not yet 213, missing 0
+  in sections a picture shows too 339: named 134, left out 60, not yet 145, missing 0
+  in sections only a video shows 101: named 26, left out 7, not yet 68, missing 0
+  AddKeyControl.swift 3: named 3, left out 0, not yet 0, missing 0
+  AnnotationInspector.swift 9: named 4, left out 1, not yet 4, missing 0
+  ArrangeInspector.swift 2: named 2, left out 0, not yet 0, missing 0
+  ArrangementInspector.swift 12: named 10, left out 1, not yet 1, missing 0
+  ArrowStyleTiles.swift 1: named 1, left out 0, not yet 0, missing 0
+  BlendModeInspector.swift 2: named 0, left out 0, not yet 2, missing 0
+  BrushChooser.swift 3: named 3, left out 0, not yet 0, missing 0
+  BrushSettingControls.swift 2: named 2, left out 0, not yet 0, missing 0
+  CalloutInspector.swift 4: named 0, left out 1, not yet 3, missing 0
+  CanvasGridSettingsView.swift 5: named 0, left out 5, not yet 0, missing 0
+  CanvasInspector.swift 7: named 2, left out 1, not yet 4, missing 0
+  CaptionStyleInspector.swift 13: named 0, left out 0, not yet 13, missing 0
+  CaptionsInspector.swift 16: named 6, left out 0, not yet 10, missing 0
+  ChartInspector.swift 10: named 0, left out 0, not yet 10, missing 0
+  ChipStyleTiles.swift 5: named 5, left out 0, not yet 0, missing 0
+  ClickEffectRows.swift 4: named 0, left out 0, not yet 4, missing 0
+  ColorGradeEffectRows.swift 1: named 0, left out 0, not yet 1, missing 0
+  ColorStylePanel.swift 16: named 8, left out 2, not yet 6, missing 0
+  ComponentPanel.swift 44: named 14, left out 3, not yet 27, missing 0
+  CompositingInspector.swift 6: named 0, left out 0, not yet 6, missing 0
+  EffectStylePanel.swift 13: named 2, left out 3, not yet 8, missing 0
+  EffectsListInspector.swift 11: named 4, left out 0, not yet 7, missing 0
+  EffectsListRow.swift 5: named 1, left out 1, not yet 3, missing 0
+  FrameColumnsInspector.swift 2: named 1, left out 0, not yet 1, missing 0
+  FrameInspector.swift 3: named 2, left out 0, not yet 1, missing 0
+  GeometryInspector.swift 3: named 1, left out 2, not yet 0, missing 0
+  InspectorControls.swift 1: named 0, left out 1, not yet 0, missing 0
+  InspectorPanel.swift 1: named 0, left out 1, not yet 0, missing 0
+  LayerEffectsInspector.swift 9: named 7, left out 0, not yet 2, missing 0
+  LayersListView.swift 4: named 2, left out 2, not yet 0, missing 0
+  LayersPanelHeaderControls.swift 3: named 2, left out 1, not yet 0, missing 0
+  LensInspector.swift 2: named 0, left out 1, not yet 1, missing 0
+  LibraryCatalogTiles.swift 2: named 1, left out 0, not yet 1, missing 0
+  LibraryColorDrop.swift 2: named 2, left out 0, not yet 0, missing 0
+  LibraryPanel.swift 10: named 5, left out 5, not yet 0, missing 0
+  LibraryTitleTile.swift 1: named 1, left out 0, not yet 0, missing 0
+  MeasureInspector.swift 8: named 2, left out 1, not yet 5, missing 0
+  MeasurePartSettings.swift 4: named 0, left out 0, not yet 4, missing 0
+  MeasurementsListView.swift 7: named 6, left out 1, not yet 0, missing 0
+  MotionListInspector.swift 31: named 16, left out 6, not yet 9, missing 0
+  PanelSectionsFooter.swift 3: named 0, left out 3, not yet 0, missing 0
+  PartsInspector.swift 2: named 2, left out 0, not yet 0, missing 0
+  PlacementInspector.swift 15: named 6, left out 1, not yet 8, missing 0
+  PropertyKeysInspector.swift 13: named 8, left out 5, not yet 0, missing 0
+  SavedStrokePanel.swift 12: named 0, left out 3, not yet 9, missing 0
+  ShapePartSettings.swift 5: named 1, left out 1, not yet 3, missing 0
+  SoundEffectsInspector.swift 7: named 0, left out 0, not yet 7, missing 0
+  SoundInspector.swift 10: named 5, left out 0, not yet 5, missing 0
+  Space3DInspector.swift 7: named 3, left out 0, not yet 4, missing 0
+  SpeedInspector.swift 6: named 3, left out 1, not yet 2, missing 0
+  TextInspector.swift 7: named 1, left out 0, not yet 6, missing 0
+  TextOnPathInspector.swift 2: named 1, left out 0, not yet 1, missing 0
+  TextRevealInspector.swift 6: named 0, left out 0, not yet 6, missing 0
+  TextStylePanel.swift 11: named 5, left out 3, not yet 3, missing 0
+  TitleBackgroundPicker.swift 1: named 0, left out 0, not yet 1, missing 0
+  TitleRestyleInspector.swift 17: named 1, left out 2, not yet 14, missing 0
+  ToolInspectors.swift 5: named 0, left out 5, not yet 0, missing 0
+  TrackInspector.swift 4: named 4, left out 0, not yet 0, missing 0
+  TransitionInspector.swift 10: named 3, left out 1, not yet 6, missing 0
+  TransitionsGroup.swift 3: named 0, left out 3, not yet 0, missing 0
+  ZoomInspector.swift 7: named 2, left out 0, not yet 5, missing 0
+Right-click rows, 69 menus, 351: named 311, left out 27, not yet 13, missing 0
+  A 3D value row 5: named 5, left out 0, not yet 0, missing 0
+  A Library background or transition tile 3: named 2, left out 0, not yet 1, missing 0
+  A Library clip tile 1: named 1, left out 0, not yet 0, missing 0
+  A Library title tile 2: named 1, left out 0, not yet 1, missing 0
+  A Settings ▸ Agents row 1: named 0, left out 1, not yet 0, missing 0
+  A Transitions panel tile 2: named 2, left out 0, not yet 0, missing 0
+  A camera key on the timeline 4: named 2, left out 1, not yet 1, missing 0
+  A caption on the captions track 4: named 4, left out 0, not yet 0, missing 0
+  A caption word 7: named 7, left out 0, not yet 0, missing 0
+  A click on a recording's click lane 2: named 2, left out 0, not yet 0, missing 0
+  A clip on the timeline 24: named 20, left out 4, not yet 0, missing 0
+  A clip on the timeline (its rows by name) 61: named 58, left out 3, not yet 0, missing 0
+  A clip ▸ Add Captions 2: named 2, left out 0, not yet 0, missing 0
+  A clip ▸ Add Zoom 2: named 2, left out 0, not yet 0, missing 0
+  A clip ▸ Freeze Frame 2: named 2, left out 0, not yet 0, missing 0
+  A clip ▸ Punch In 5: named 5, left out 0, not yet 0, missing 0
+  A clip ▸ Sound ▸ Normalize 6: named 6, left out 0, not yet 0, missing 0
+  A clip ▸ Transition 1: named 1, left out 0, not yet 0, missing 0
+  A colour grade row 2: named 2, left out 0, not yet 0, missing 0
+  A component tile, and a property chip 3: named 2, left out 0, not yet 1, missing 0
+  A cut between two clips 3: named 3, left out 0, not yet 0, missing 0
+  A cut ▸ Transition… 1: named 1, left out 0, not yet 0, missing 0
+  A key 4: named 4, left out 0, not yet 0, missing 0
+  A key lane 3: named 3, left out 0, not yet 0, missing 0
+  A key lane ▸ Paste Keys 1: named 1, left out 0, not yet 0, missing 0
+  A key lane ▸ Show Graph 1: named 0, left out 1, not yet 0, missing 0
+  A key on a clip 4: named 4, left out 0, not yet 0, missing 0
+  A layer, in the layers list and on the canvas 45: named 43, left out 2, not yet 0, missing 0
+  A measurement's label chip 6: named 0, left out 0, not yet 6, missing 0
+  A motion path on the canvas 3: named 3, left out 0, not yet 0, missing 0
+  A motion row 1: named 1, left out 0, not yet 0, missing 0
+  A picked range 4: named 4, left out 0, not yet 0, missing 0
+  A picture's fade 3: named 3, left out 0, not yet 0, missing 0
+  A picture's key strip 1: named 1, left out 0, not yet 0, missing 0
+  A placed picture ▸ Fade 2: named 2, left out 0, not yet 0, missing 0
+  A point on a volume line 1: named 1, left out 0, not yet 0, missing 0
+  A range on a track 4: named 4, left out 0, not yet 0, missing 0
+  A range on the timeline ruler 10: named 9, left out 1, not yet 0, missing 0
+  A range ▸ Paste 1: named 1, left out 0, not yet 0, missing 0
+  A row of Properties 3: named 3, left out 0, not yet 0, missing 0
+  A row of the measurements list 4: named 4, left out 0, not yet 0, missing 0
+  A saved caption style 1: named 0, left out 0, not yet 1, missing 0
+  A speed stop 3: named 3, left out 0, not yet 0, missing 0
+  A stretch of a volume line 2: named 2, left out 0, not yet 0, missing 0
+  A stretch on a key graph 2: named 2, left out 0, not yet 0, missing 0
+  A stretch on a key graph ▸ its curve 3: named 0, left out 3, not yet 0, missing 0
+  A thing on the timeline ▸ More 1: named 0, left out 1, not yet 0, missing 0
+  A title ▸ Animate In and Animate Out 3: named 3, left out 0, not yet 0, missing 0
+  A title ▸ Save as Preset 2: named 2, left out 0, not yet 0, missing 0
+  A track header 22: named 19, left out 3, not yet 0, missing 0
+  A transition on a cut 6: named 6, left out 0, not yet 0, missing 0
+  A transition picker tile 2: named 2, left out 0, not yet 0, missing 0
+  A transition ▸ Copy and Paste 2: named 2, left out 0, not yet 0, missing 0
+  A zoom on the Zoom lane 4: named 4, left out 0, not yet 0, missing 0
+  An Ask history card 2: named 0, left out 2, not yet 0, missing 0
+  An arrow 1: named 1, left out 0, not yet 0, missing 0
+  An arrow ▸ Arrow Style 3: named 3, left out 0, not yet 0, missing 0
+  An arrow ▸ its label's chip 6: named 4, left out 0, not yet 2, missing 0
+  Animate ▸ a value 2: named 2, left out 0, not yet 0, missing 0
+  Ask's waiting row 1: named 0, left out 1, not yet 0, missing 0
+  Empty space on the timeline 6: named 4, left out 2, not yet 0, missing 0
+  Insert Title 1: named 1, left out 0, not yet 0, missing 0
+  Insert Title ▸ a preset 1: named 0, left out 1, not yet 0, missing 0
+  The canvas selection's mode chip 1: named 1, left out 0, not yet 0, missing 0
+  The canvas, on an empty spot 7: named 7, left out 0, not yet 0, missing 0
+  The captions track 8: named 8, left out 0, not yet 0, missing 0
+  The timeline ruler 12: named 12, left out 0, not yet 0, missing 0
+  The timeline's background 2: named 2, left out 0, not yet 0, missing 0
+  The timeline's camera lane 1: named 0, left out 1, not yet 0, missing 0
+

@@ -227,9 +227,8 @@ menu rows are not folded: they behave exactly as before.
 action does not go through `run(.name)` unless it is in `leftOut` (on purpose,
 with the reason) or `notYet` (a list whose size is pinned, so it only shrinks).
 The timeline right-click rows are placed by an exhaustive switch over
-`TimelineMenuRow`; the layer right-click rows by title. Every other right-click
-row is a menu bar row under the same or other words
-(`EveryCommandIsInTheMenuBarTests`), so it is covered through that row. On
+`TimelineMenuRow`; the layer right-click rows by title. Every right-click menu
+is now also counted directly, menu by menu, by `AgentReachTests` (below). On
 2026-10-19: 283 menu bar rows, 149 named, 56 left out, 77 not yet; 37 of 65
 timeline right-click rows run a named command.
 
@@ -270,6 +269,55 @@ rules that got the last 77 rows there:
 each command an agent can run is one undo step: it runs it, checks the document
 changed, undoes once and checks the document reads exactly as before (43 of 43
 on 2026-10-19). It never touches the clipboard, which is the person's.
+
+**The panel and every right-click menu (`the-agent-coverage-check-counts-panel-controls-a`).**
+`AgentReachTests` counts the two surfaces the menu bar test does not, read out
+of the source by `AgentReachSource` (a reader rather than a registry in Core,
+so a control is counted the day it is drawn):
+
+* *The panel*: every control each section draws, in the files the panel copy
+  budget reads plus the ones a section borrows from (effect rows, colour grade,
+  chip and arrow tiles, the add-key control). SwiftUI controls and the app's own
+  row controls (`LayerStyleSlider`, `VideoKit.DropdownRow`, `CurveRow` and the
+  rest) count once per use; a control inside a labelled row is known by the
+  row's words, so a slider and the box beside it are one setting. Ask's own
+  section is not read: an agent is already the one asking.
+* *Right-click menus*: every `MenuRow` list (`.command`, `.toggle`,
+  `.submenu`), every row written into a `.contextMenu`, and the track header's
+  menu, each listed under the menu it is in (`menus` names all 69), plus the
+  timeline clip's rows by `TimelineMenuRow`.
+
+Each control or row is reached by an agent tool and the field that sets it
+(`set_layer.opacity`, checked against the tool's schema) or by a command
+(`normalize_loudness`, checked against the table); a row or control worded as a
+command's own title needs no line. Otherwise it is LEFT OUT with its reason, or
+NOT YET reached with what is missing. Both not-yet lists are pinned, so they
+only shrink, and a new control or menu with no line fails the build with its
+file and line. The test prints the count per section file and per menu.
+
+On 2026-11-10:
+
+| Surface | All | Reached | Left out | Not yet |
+| --- | --- | --- | --- | --- |
+| Panel controls | 440 | 160 | 67 | 213 |
+| in sections a picture shows too | 339 | 134 | 60 | 145 |
+| in sections only a video shows | 101 | 26 | 7 | 68 |
+| Right-click rows (69 menus) | 351 | 311 | 27 | 13 |
+| of which the timeline clip's rows | 61 | 58 | 3 | 0 |
+
+The menus are nearly all reachable, because every right-click row is a command.
+The panel is where an agent is short: it can make most things but not change
+them afterwards. The biggest not-yet groups, panel and menus together: a
+component and its placed copies (variant, words, colours, room, properties;
+27), saved styles and saved lines themselves (save, rename, recolour, remove,
+unlink; 27), caption looks and caption styles (24), how a measurement looks
+(15), titles once made (15), an added effect's settings other than a drop
+shadow's, their order and their switch (13), a sound's volume, gain, fade
+curve, EQ and compressor (12), a text layer's font, weight, tracking, leading,
+alignment and reveal once made (12), charts once made (10), a motion row's
+start, length and curve (9), and how pieces follow a resized box (8). The
+follow-up that takes them on is
+`an-agent-can-change-what-it-made-fonts-captions`.
 
 ### Slice 3 (`an-agent-can-draw-a-picture-with-shapes-paths-te`): pictures
 

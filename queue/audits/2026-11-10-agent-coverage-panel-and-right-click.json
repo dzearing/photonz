@@ -1,0 +1,26 @@
+{
+  "feature": "The agent coverage check counts the panel and every right-click menu",
+  "epic": "agent-api",
+  "summary": "A check now lists every control in the panel (440) and every row of every right-click menu (351 rows in 69 menus) and says how an agent reaches each one, or why it does not. Of the panel's controls an agent reaches 160, 67 are left out on purpose with a reason, and 213 are not reached yet; of the right-click rows it reaches 311, 27 are left out and 13 are not yet.",
+  "setup": "No change to the app, so nothing to switch on. Run Scripts/test.sh --filter AgentReachTests from the repo; the count test prints the table below.",
+  "switched": {},
+  "try": [
+    { "do": "Read the counts: queue/audits/2026-11-10-agent-reach-count.txt has one line per panel file and per right-click menu: named, left out, not yet, missing." },
+    { "do": "Open Tests/PhotonzCoreTests/AgentReachTests.swift and read panelTable: one line per control, e.g. 'SoundInspector.swift › Volume | notYet: a sound's volume, gain and fade curve'." },
+    { "do": "Read the failing output in queue/audits/2026-11-10-agent-reach-failing.txt: a new 'Duck' switch on the Track section with no line fails the build with its file and line." },
+    { "do": "Read the coverage table in docs/design/agent-mcp.md, under 'The panel and every right-click menu'." }
+  ],
+  "evaluate": [
+    "Are the left-out reasons ones you agree with (tool settings for the next drag, the Library shelf, the grid, panel layout, Ask's own rows)?",
+    "Is 'a person can do it in the panel but an agent cannot change it afterwards' the right gap to close next, starting with fonts, captions, titles, effects and sound?",
+    "Is the picture against video split useful, or would you rather see it by section?"
+  ],
+  "rough": [
+    "No screenshot: this changes no window, only a test and a doc, so there is nothing on screen to photograph.",
+    "Counts on 2026-11-10. Panel: 440 controls, 160 reached, 67 left out, 213 not yet. Sections a picture shows too: 339, 134, 60, 145. Sections only a video shows: 101, 26, 7, 68. Right-click: 69 menus, 351 rows, 311 reached, 27 left out, 13 not yet; the timeline clip's 61 named rows are 58 reached and 3 left out, none unnamed.",
+    "The not-yet controls are filed as one task, an-agent-can-change-what-it-made-fonts-captions, rather than forty: almost all of them are one gap (an agent can make a thing but not change its settings afterwards).",
+    "A control is known by the words beside it. Where those are only known at run time, its line in the table uses the source expression (e.g. 'body: Slider(value: Binding(...))'), which is accurate but not pretty.",
+    "A few controls that share words in one file (two 'Shape' rows in the callout file, one for the tool and one for the picked callout) count once.",
+    "No control was a one-line mapping away from being reached: each not-yet one needs a new field on a tool or a new tool, so none was fixed in this task."
+  ]
+}

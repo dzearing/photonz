@@ -22864,3 +22864,10 @@ units.
 - `GuardedReads`' give-up clock ran on the global pool, so with that pool full (90 blocked threads) a stalled read never gave up at all; it has its own queue now (test fills the pool and checks it strikes).
 - Ten full `Scripts/test.sh` runs in a row green after the changes (A to J, five beside a from-scratch release build).
 - Open: `OffThePool` also runs blocking decodes on the capped global pool (not the cause here: the stalled process had about 50 threads); `PieceCopyWriterTests` fails with eight media test processes at once (artificial load, never seen in a real run).
+
+## 2026-11-10 — The agent coverage check counts the panel and every right-click menu (the-agent-coverage-check-counts-panel-controls-a)
+
+- New `Tests/PhotonzCoreTests/AgentReachTests.swift` + `AgentReachSource.swift` (a source reader, chosen over a registry in Core so a control counts the day it is drawn). Panel: 440 controls, 160 reached by a tool field or command, 67 left out with a reason, 213 not yet (pinned). Right-click: 69 menus named one by one, 351 rows, 311 reached, 27 left out, 13 not yet (pinned). Picture vs video split and the per-file, per-menu table print from the count test.
+- Tool fields are checked against each tool's schema and commands against `AppCommandID`, so a stale mapping fails too. A probe "Duck" switch on the Track section failed the build with its file and line (output in `queue/audits/2026-11-10-agent-reach-failing.txt`).
+- Gaps filed as one task, `an-agent-can-change-what-it-made-fonts-captions` (p2): an agent can make most things but not change their settings afterwards. Counts in `docs/design/agent-mcp.md`.
+- Next: lower `panelNotYetPin` / `rowNotYetPin` as tool fields land.
