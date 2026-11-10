@@ -1,0 +1,25 @@
+{
+  "feature": "Ask's redlines on screens unlike the settings pane",
+  "epic": "agent-ask",
+  "summary": "Ask now measures a glowing gradient button, a dark inspector panel and one named card instead of measuring the wrong thing or nothing. Asked how big a button is and how far it sits under a paragraph, it lays exactly those two.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot of a web page with one big call-to-action button (Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png works).", "shot": "2026-11-09-ask-redline-button.png", "shotNote": "Drawn by the eval's own render of the document, not a window capture." },
+    { "do": "Press Ask and type: how big is the download button, and how far is it from the paragraph above it?" },
+    { "do": "Open a screenshot of a dark inspector panel and ask: spec the spacing in this panel.", "shot": "2026-11-09-ask-redline-dark-panel.png", "shotNote": "Drawn by the eval's own render of the document, not a window capture." },
+    { "do": "Open a screenshot with a card in it and ask: measure the padding inside the meeting card.", "shot": "2026-11-09-ask-redline-card.png", "shotNote": "Drawn by the eval's own render of the document, not a window capture." },
+    { "do": "Command Z once and check every mark goes in one step." }
+  ],
+  "evaluate": [
+    "On the button, are the size and the space above it the two numbers you would have written by hand?",
+    "On the dark panel, do the row height and the space above the dropdown read as the spacing that matters?",
+    "On the card, does Ask measure the card's own padding, or still something nearby?"
+  ],
+  "rough": [
+    "No mock covers Ask's redline output; it is judged against the eval's rubric.",
+    "Readouts still say px on a 2x picture and can land far from their lines on a dense panel (a-redline-of-a-2x-screenshot-reads-in-points-wit).",
+    "A small line of words inside a button's glow is not seen, so a readout can sit on it (the version line under the download button).",
+    "On the named card the model still lays some calipers of its own in odd places; the card case scores 27.9 against 77 for the button."
+  ]
+}
