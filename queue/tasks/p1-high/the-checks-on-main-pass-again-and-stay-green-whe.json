@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "loop",
   "created": "2026-11-10T13:20:34.781Z",
-  "updated": "2026-11-10T13:21:01.803Z",
+  "updated": "2026-11-10T16:24:07.010Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the 2026-11-10 digest. Command: gh run list --branch main --limit 200 --json conclusion -q '[.[].conclusion] | group_by(.) | map({(.[0]):length}) | add' -> {cancelled:107, failure:87, success:5}; last success 2026-11-03T06:41Z. Every failure checked (runs 42771670171, 42799717445): Test slices 1 to 3 success, Build app bundle (arm64) fails at step \"The sweep's size is the size it really is\": \"queue/bin/sweep.sh:5 it says about 1010 walks and about 290 minutes; the set is 1140 walks and a full sweep is about 395 minutes. Fix all of them with: queue/bin/sweep-size.mjs --write\". The working tree's uncommitted copy says 1100 and 340, already stale again. Three digests in a row (11-07 to 11-09) noted those uncommitted edits and left them, because the digest only touches queue/. The digest prompt's own 'floor is twenty four hours' line is stale too (queue/bin/digest-prompt or wherever go-loop.sh keeps it).",
@@ -28,6 +28,45 @@
     {
       "t": "2026-11-10T13:21:01.802Z",
       "note": "seq 3980 -> 20"
+    },
+    {
+      "t": "2026-11-10T15:39:06.708Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T15:56:48.394Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-10T16:07:26.371Z",
+      "note": "Reproduced: queue/loop.log lines 71080 and 122221 'error: pathspec CLAUDE.md...' after the loop's --write. go-loop.sh is zsh, `git commit -- $files` did not word-split, so the rewrite was never committed; and keep_sweep_size_true checked the working tree (in band) not HEAD (out of band), so it never tried again. The quote rewrite had failed to commit since 2026-11-06."
+    },
+    {
+      "t": "2026-11-10T16:07:26.439Z",
+      "note": "Second hidden failure: sweep-size-drill's 'cap is half again over a good sweep' was red too (1.25), unseen because the step failed earlier. The 26s/walk stop sat under the 2026-11-08 sweep's 26.9s/walk, so the next full sweep would have been cut short. Budget now 1.6 x the 10-sweep median, 26 to 40s (34s today, 646 min stop)."
+    },
+    {
+      "t": "2026-11-10T16:07:26.506Z",
+      "note": "Chose margin AND sync over either alone: the loop resyncs what is COMMITTED at half the CI band (sweep-size.mjs --sync, commit by argv), so a runner's push has the other half (57 walks at 1140). Drill 'the margin' proves one walk, and twenty, added at the worst point the loop allows stays green. Took Scripts/ files off the quote list because a resync touching Scripts/ counts as landed code and would start a walk check."
+    },
+    {
+      "t": "2026-11-10T16:07:26.574Z",
+      "note": "Chose to move the 72h floor into sweep-schedule.mjs DEFAULTS rather than only fixing CLAUDE.md, because the dashboard and 'sweep.sh schedule' read the default and still said once a day. Three drills written against a one-day floor now pin floorHours:24 explicitly."
+    },
+    {
+      "t": "2026-11-10T16:07:26.646Z",
+      "note": "Verified: all sweep/ci drills green locally, failure-drill.sh scenario 1 green (loop runs in sandbox), Scripts/test.sh exit 0, dashboard strip seen live (queue/audits/2026-11-10-red-main-dashboard.png). Pushed ab3391e15; CI run 42849722450: size step and new drill green."
+    },
+    {
+      "t": "2026-11-10T16:07:26.716Z",
+      "note": "left rough: ci-main is read only before each task, so during a long task or with the loop stopped the dashboard shows the reading from when it was last read (the strip says how long ago). Not filed: visible on the page itself."
+    },
+    {
+      "t": "2026-11-10T16:24:07.008Z",
+      "note": "CI on main is green again: run 42849722450 (commit ab3391e15) ended in success, the first since 2026-11-03. Cause: the loop's quote resync committed with an unsplit zsh $files and always failed, and its check read the tree, not HEAD. Now sweep-size.mjs --sync reads HEAD, resyncs at half the CI band and commits by argv; a drill proves one walk (and twenty) at the worst allowed point stays green. The stranded quote edits are committed with today's numbers (1140 walks, 395 min). The sweep's stop follows the measured walk (it was under the 11-08 sweep's pace). ci-main.mjs names the failing job and step in the loop banner and log, on the dashboard and atop every runner prompt (drill in CI). CLAUDE.md and the schedule default now say three days. Verified: drills, failure-drill scenario 1, Scripts/test.sh exit 0, dashboard seen live."
     }
-  ]
+  ],
+  "started": "2026-11-10T15:39:06.707Z",
+  "walks": [],
+  "completed": "2026-11-10T16:24:07.009Z"
 }
