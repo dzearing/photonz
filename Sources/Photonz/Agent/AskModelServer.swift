@@ -93,6 +93,11 @@ final class AskModelServer {
     /// server first if it is the one running.
     func delete(_ choice: AskBuiltInModels.Choice) {
         if running == choice.id { stop() }
+        // Its saved reads are no use without it (`AskStandingRead`).
+        for name in (try? FileManager.default.contentsOfDirectory(atPath: Self.readsFolder.path)) ?? []
+        where AskStandingRead.belongs(name, to: choice.id) {
+            try? FileManager.default.removeItem(at: Self.readsFolder.appending(path: name))
+        }
         for file in choice.files {
             try? FileManager.default.removeItem(at: Self.folder.appending(path: file.name))
         }
@@ -112,7 +117,12 @@ final class AskModelServer {
     /// One turn of the chat, on `choice`, started first when it is not
     /// running. The body is Ollama's shape (`AskConversation.chatBody`) and so
     /// is the answer.
-    func chat(_ body: AgentJSON, on choice: AskBuiltInModels.Choice) async throws -> AgentJSON {
+    /// `standing` is the first request's start that is the same every time
+    /// (`AskConversation.standingBody`), given on a request's first turn
+    /// only: it is restored from its saved read, or read and saved, before
+    /// the request goes (`AskStandingRead`). `said` hears a line for the trace.
+    func chat(_ body: AgentJSON, on choice: AskBuiltInModels.Choice, standing: AgentJSON? = nil,
+              said: ((String) -> Void)? = nil) async throws -> AgentJSON {
         busy += 1
         defer {
             busy -= 1
@@ -120,6 +130,7 @@ final class AskModelServer {
             if shared { AskWalkServerProcess.touch() }
         }
         let port = try await ready(choice)
+        if let standing, let line = await standingRead(standing, before: body, on: choice, port: port) { said?(line) }
         guard let url = AskBuiltInServerPlan.chatURL(port: port) else { throw Failure.wouldNotStart }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -144,7 +155,121 @@ final class AskModelServer {
             stop()
             throw Failure.wouldNotStart
         }
-        return AskServerChat.reply(fromServer: try AgentJSON.parse(data))
+        let reply = try AgentJSON.parse(data)
+        if let timings = reply["timings"], let read = timings["prompt_n"]?.doubleValue {
+            said?("the model read \(Int(read)) new tokens (\(Int(timings["cache_n"]?.doubleValue ?? 0)) it had already)")
+        }
+        return AskServerChat.reply(fromServer: reply)
+    }
+
+    /// Where the server saves what it has read (`AskStandingRead`): one
+    /// folder for every build of Photonz on the Mac, like the models, in
+    /// Caches since any of it can be read again.
+    static var readsFolder: URL {
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory()).appending(path: "Library/Caches")
+        return caches.appending(path: "Photonz/AskReads")
+    }
+
+    /// The server's own build, by port, for the saved reads' names.
+    @ObservationIgnored private var builds: [Int: String] = [:]
+
+    /// Puts the standing part of `body` in the server's memory: restored from
+    /// its saved read when there is one, otherwise read now and saved for
+    /// next time. The request then reads only what follows it. Nil when there
+    /// was nothing to do; otherwise one line for the trace. Anything that
+    /// fails leaves the request to read it all, as before.
+    private func standingRead(_ standing: AgentJSON, before body: AgentJSON, on choice: AskBuiltInModels.Choice,
+                              port: Int) async -> String? {
+        guard let base = AskBuiltInServerPlan.base(port: port) else { return nil }
+        let started = Date()
+        func seconds() -> String { String(format: "%.1f", Date().timeIntervalSince(started)) }
+        // The picture comes after the rules, so it is left out of the count.
+        var words = body
+        if case .object(var object) = body, let messages = object["messages"]?.arrayValue {
+            object["messages"] = .array(messages.map { message in
+                guard case .object(var fields) = message else { return message }
+                fields["images"] = nil
+                return .object(fields)
+            })
+            words = .object(object)
+        }
+        guard let request = await tokens(of: words, base), let start = await tokens(of: standing, base) else {
+            return "standing read: the server could not count it"
+        }
+        let shared = AskStandingRead.shared(request, start)
+        guard AskStandingRead.worthSaving(shared) else { return nil }
+        guard let build = await build(base, port: port) else { return "standing read: the server did not say its build" }
+        let draft = choice.draft.flatMap { Self.isWhole($0) ? $0 : nil }
+        let files = ([choice.model] + (choice.eyes.map { [$0] } ?? []) + (draft.map { [$0] } ?? [])).map { "\($0.name) \($0.bytes)" }
+        let name = AskStandingRead.fileName(.init(model: choice.id, files: files, server: build, window: Self.window), tokens: shared)
+        let file = Self.readsFolder.appending(path: name)
+        if FileManager.default.fileExists(atPath: file.path) {
+            let restored = await post(base.appending(path: "slots/0").appending(queryItems: [.init(name: "action", value: "restore")]),
+                                      ["filename": .string(name)])
+            if restored?["n_restored"]?.doubleValue.map({ Int($0) }) == shared.count {
+                try? FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: file.path)
+                return "restored the standing read (\(shared.count) tokens) in \(seconds()) s"
+            }
+            // Unreadable to this server: read it again below, and save it over.
+            try? FileManager.default.removeItem(at: file)
+        }
+        guard Task.isCancelled == false,
+              await post(base.appending(path: "completion"),
+                         ["prompt": .array(shared.map { .number(Double($0)) }), "n_predict": 0, "cache_prompt": true],
+                         seconds: AskLocalModel.chatSeconds) != nil else {
+            return "standing read: the server would not read it"
+        }
+        let read = seconds()
+        try? FileManager.default.createDirectory(at: Self.readsFolder, withIntermediateDirectories: true)
+        let saved = await post(base.appending(path: "slots/0").appending(queryItems: [.init(name: "action", value: "save")]),
+                               ["filename": .string(name)], seconds: 60)
+        Self.keepRecentReads()
+        return saved?["n_saved"] == nil
+            ? "read the standing part (\(shared.count) tokens) in \(read) s; the server would not save it"
+            : "read the standing part (\(shared.count) tokens) in \(read) s and saved it"
+    }
+
+    /// The tokens the server makes of `body` (Ollama's shape), as its chat
+    /// would: through its chat template, then its tokenizer.
+    private func tokens(of body: AgentJSON, _ base: URL) async -> [Int]? {
+        guard let prompt = await post(base.appending(path: "apply-template"), AskServerChat.body(fromOllama: body))?["prompt"]?.stringValue,
+              let answer = await post(base.appending(path: "tokenize"),
+                                      ["content": .string(prompt), "add_special": true, "parse_special": true]) else { return nil }
+        return AskStandingRead.tokens(fromTokenize: answer)
+    }
+
+    private func build(_ base: URL, port: Int) async -> String? {
+        if let known = builds[port] { return known }
+        var request = URLRequest(url: base.appending(path: "props"))
+        request.timeoutInterval = 5
+        guard let (data, _) = try? await URLSession.shared.data(for: request),
+              let props = try? AgentJSON.parse(data), let build = props["build_info"]?.stringValue, !build.isEmpty else { return nil }
+        builds[port] = build
+        return build
+    }
+
+    /// One POST to the server, its answer, or nil when it failed. Stop
+    /// cancels it.
+    private func post(_ url: URL, _ json: AgentJSON, seconds: TimeInterval = 30) async -> AgentJSON? {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = AskTools.wireEncoded(json)
+        request.timeoutInterval = seconds
+        guard let data = try? await AskLocalModel.send(request), let answer = try? AgentJSON.parse(data),
+              answer["error"] == nil else { return nil }
+        return answer
+    }
+
+    /// Takes all but the most recently used saved reads off the Mac.
+    private static func keepRecentReads() {
+        let files = FileManager.default
+        guard let names = try? files.contentsOfDirectory(atPath: readsFolder.path) else { return }
+        let reads = names.filter { $0.hasSuffix(".\(AskStandingRead.fileExtension)") }.map { name in
+            (name: name, used: ((try? files.attributesOfItem(atPath: readsFolder.appending(path: name).path))?[.modificationDate] as? Date) ?? .distantPast)
+        }
+        for name in AskStandingRead.toRemove(reads) { try? files.removeItem(at: readsFolder.appending(path: name)) }
     }
 
     /// How far the server has got with the request it is answering, from
@@ -191,6 +316,7 @@ final class AskModelServer {
     private func start(_ choice: AskBuiltInModels.Choice) async throws -> Int {
         stop()
         guard let helper = Self.helper else { throw Failure.notShipped }
+        try? FileManager.default.createDirectory(at: Self.readsFolder, withIntermediateDirectories: true)
         loading = true
         defer { loading = false }
         let draftOnDisk = choice.draft.map(Self.isWhole) ?? false
@@ -205,13 +331,14 @@ final class AskModelServer {
         case .start:
             let port = AskBuiltInServerPlan.pickPort()
             try AskWalkServerProcess.start(helper, arguments: AskBuiltInServerPlan.arguments(
-                for: choice, in: Self.folder, port: port, draftOnDisk: draftOnDisk, window: window),
+                for: choice, in: Self.folder, port: port, draftOnDisk: draftOnDisk, window: window, reads: Self.readsFolder),
                 record: .init(model: choice.id, port: port, folder: Self.folder.path, draft: draftOnDisk, window: window))
             return try await share(choice, port: port)
         }
         let port = AskBuiltInServerPlan.pickPort()
         try server.launch(helper, arguments: AskBuiltInServerPlan.arguments(for: choice, in: Self.folder, port: port,
-                                                                            draftOnDisk: draftOnDisk, window: window),
+                                                                            draftOnDisk: draftOnDisk, window: window,
+                                                                            reads: Self.readsFolder),
                           environment: nil, pidFolder: Self.folder, note: "starts \(choice.id) on port \(port)")
         self.port = port
         running = choice.id

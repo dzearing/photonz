@@ -270,8 +270,11 @@ public enum AskBuiltInServerPlan {
 
     /// The server's command line. The draft goes in when its file is on the
     /// Mac (`draftOnDisk`), so a model downloaded without it still runs.
+    /// `reads` is where it saves what it has read and reads it back from
+    /// (`AskStandingRead`).
     public static func arguments(for choice: AskBuiltInModels.Choice, in folder: URL, port: Int,
-                                 draftOnDisk: Bool = false, window: Int = AskConversation.contextWindow) -> [String] {
+                                 draftOnDisk: Bool = false, window: Int = AskConversation.contextWindow,
+                                 reads: URL? = nil) -> [String] {
         var args = ["--model", folder.appending(path: choice.model.name).path]
         if let eyes = choice.eyes { args += ["--mmproj", folder.appending(path: eyes.name).path] }
         if draftOnDisk, let draft = choice.draft {
@@ -284,6 +287,7 @@ public enum AskBuiltInServerPlan {
             // one request at a time (Ask runs one at a time), no web page.
             "--n-gpu-layers", "999", "--jinja", "--parallel", "1", "--no-webui",
         ]
+        if let reads { args += ["--slot-save-path", reads.path] }
         return args
     }
 }

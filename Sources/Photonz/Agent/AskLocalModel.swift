@@ -171,7 +171,11 @@ enum AskLocalModel {
 
     /// One turn of the chat. A big model's first answer can take a while to
     /// load, so the wait is long; Stop cancels it.
-    static func chat(_ body: AgentJSON) async throws -> AgentJSON {
+    /// `standing`, on a request's first turn only, is the part of it that is
+    /// the same every time, which the built-in server restores from a saved
+    /// read rather than reading again (`AskStandingRead`); `said` hears what
+    /// it did, for the trace.
+    static func chat(_ body: AgentJSON, standing: AgentJSON? = nil, said: ((String) -> Void)? = nil) async throws -> AgentJSON {
         #if PHOTONZ_PLAYTEST
         if let reply = walkReplies.first {
             if walkReplies.count > 1 { walkReplies.removeFirst() }
@@ -183,7 +187,7 @@ enum AskLocalModel {
                   AskModelServer.isDownloaded(choice) else { throw Trouble.noModel }
             let json: AgentJSON
             do {
-                json = try await AskModelServer.shared.chat(body, on: choice)
+                json = try await AskModelServer.shared.chat(body, on: choice, standing: standing, said: said)
             } catch AskModelServer.Failure.tooSlow {
                 throw Trouble.tooSlow
             } catch is AskModelServer.Failure {

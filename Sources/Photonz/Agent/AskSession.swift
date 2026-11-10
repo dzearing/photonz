@@ -1192,10 +1192,20 @@ final class AskSession {
             do {
                 note("asking the model (about \(expected) tokens of \(talk.window))")
                 let body = talk.chatBody(model: model)
+                // A request's first turn starts from the saved read of what
+                // every request starts with (`AskStandingRead`).
+                let standing = talk.rounds == 0 ? talk.standingBody(model: model) : nil
+                let heardFromServer = AskServerLines()
+                let said: (String) -> Void = { heardFromServer.lines.append($0) }
+                func noteServer() {
+                    heardFromServer.lines.forEach(note)
+                    heardFromServer.lines.removeAll()
+                }
+                defer { noteServer() }
                 if let cutAt {
                     // A round still going at `cutAt` is cut off: its request
                     // is cancelled, which a stop of the whole request does too.
-                    let asking = Task { try await AskLocalModel.chat(body) }
+                    let asking = Task { try await AskLocalModel.chat(body, standing: standing, said: said) }
                     let cut = Task {
                         try? await Task.sleep(for: .seconds(max(0, cutAt.timeIntervalSinceNow)))
                         if !Task.isCancelled { asking.cancel() }
@@ -1204,9 +1214,10 @@ final class AskSession {
                     reply = try await withTaskCancellationHandler { try await asking.value } onCancel: { asking.cancel() }
                     if asking.isCancelled { return .failure(.said(AskMotionLook.outOfTime)) }
                 } else {
-                    reply = try await AskLocalModel.chat(body)
+                    reply = try await AskLocalModel.chat(body, standing: standing, said: said)
                 }
                 watch?.cancel()
+                noteServer()
                 // Long enough to hold a whole component call, so a look the
                 // planner let through can be rebuilt from the trace (a blue
                 // Off toggle could not be, cut at 300, 2026-10-24), nor a
@@ -1479,4 +1490,11 @@ enum AskHandoff {
     static func hold(_ words: String, for window: UUID) { held[window] = words }
 
     static func take(_ window: UUID) -> String? { held.removeValue(forKey: window) }
+}
+
+/// What the model's server said it did on one turn (`AskStandingRead`), kept
+/// for the trace until the turn ends.
+@MainActor
+final class AskServerLines {
+    var lines: [String] = []
 }

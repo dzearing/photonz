@@ -284,6 +284,16 @@ struct AskBuiltInModelTests {
         #expect(args.contains("--no-webui"))
     }
 
+    @Test("The server saves its standing read in the folder it is given, and saves nothing without one")
+    func serverSavesReads() throws {
+        let choice = try #require(AskBuiltInModels.ranked.first)
+        let folder = URL(fileURLWithPath: "/tmp/models")
+        let reads = URL(fileURLWithPath: "/tmp/reads")
+        let with = AskBuiltInServerPlan.arguments(for: choice, in: folder, port: 18_200, reads: reads)
+        #expect(with.firstIndex(of: "--slot-save-path").map { with[$0 + 1] } == reads.path)
+        #expect(!AskBuiltInServerPlan.arguments(for: choice, in: folder, port: 18_200).contains("--slot-save-path"))
+    }
+
     @Test("The draft writes ahead for the model when its file is on the Mac, and is left out when it is not")
     func serverDraft() throws {
         let choice = try #require(AskBuiltInModels.ranked.first)

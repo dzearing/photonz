@@ -422,6 +422,9 @@ public struct AskConversation: Sendable {
     }
 
     public private(set) var messages: [AgentJSON]
+    /// The rules before the document: with the tools, the part of the first
+    /// request that is the same every time (`AskStandingRead`).
+    private let standing: String?
     public private(set) var steps: [AskStep] = []
     /// One line Ask says beside what it made: that it made a different kind
     /// of picture from the one asked for, and why.
@@ -585,6 +588,7 @@ public struct AskConversation: Sendable {
         var instructions = web.map { Self.webInstructions(documentRead: described, page: $0) }
             ?? Self.instructions(documentRead: described, paints: paints && !icon, painting: painting, video: video,
                                  icon: icon, iconLook: AskIcon.documentLook(documentRead), drawsMotion: drawsMotion)
+        standing = instructions.range(of: Self.documentMarker, options: .backwards).map { String(instructions[..<$0.upperBound]) }
         if web == nil, AskDocumentDigest.saysInShort(described) { instructions += "\n\(Self.inShortRules)" }
         if holdsIcon, !icon { instructions += "\n\(AskIcon.tweakRules)" }
         if keysMotion, !drawsMotion, !video {
@@ -673,7 +677,24 @@ public struct AskConversation: Sendable {
 
     /// The body of one `POST /api/chat`, fitted to the window.
     public func chatBody(model: String) -> AgentJSON {
-        ["model": .string(model), "messages": .array(fittedMessages()), "tools": .array(offeredTools),
+        body(model: model, messages: fittedMessages())
+    }
+
+    /// The first request's start, which is the same for every request with
+    /// these tools: the tools and the rules up to the document, with a
+    /// stand-in for the person's words (a chat needs some). The server reads
+    /// it once and saves what it read (`AskStandingRead`). Nil when the rules
+    /// have no document line to cut at.
+    public func standingBody(model: String) -> AgentJSON? {
+        standing.map { body(model: model, messages: [["role": "system", "content": .string($0)], ["role": "user", "content": "."]]) }
+    }
+
+    /// Where the document starts in the rules: everything before it is the
+    /// same from one request to the next.
+    public static let documentMarker = "The document now (read_document):\n"
+
+    private func body(model: String, messages: [AgentJSON]) -> AgentJSON {
+        ["model": .string(model), "messages": .array(messages), "tools": .array(offeredTools),
          "stream": false, "think": false, "keep_alive": "30m",
          "options": ["num_ctx": .number(Double(window)), "temperature": 0]]
     }
