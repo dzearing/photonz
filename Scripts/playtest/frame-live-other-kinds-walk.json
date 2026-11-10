@@ -442,12 +442,12 @@
     {
       "do": "expect",
       "field": "W",
-      "reads": "550"
+      "reads": "614"
     },
     {
       "do": "describe",
       "stage": "1-group",
-      "note": "a plain group scales its pieces, exactly as it did before"
+      "note": "a plain group scales its pieces, exactly as it did before. A corner keeps the group's proportions, so the 430 by 210 group pulled 90 down follows the taller pull: 300 high, 614 wide"
     },
     {
       "do": "selectRow",

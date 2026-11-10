@@ -72,10 +72,10 @@
       ]
     },
     {
-      "comment": "The headline's part row and its Opacity and Position lanes are open, inside the timeline: the picture reads what it read with nothing picked.",
+      "comment": "The headline's part row and its Opacity and Position lanes are open, inside the timeline: the picture reads what it read with nothing picked. 71 since a clip's sound became the bottom half of the clip and the lanes grew (it was 74); what matters is that it is the same 71 before the pick and at every step after.",
       "do": "waitFor",
       "condition": "displayZoom",
-      "value": 74,
+      "value": 71,
       "timeout": 1
     },
     {
@@ -104,7 +104,7 @@
     {
       "do": "waitFor",
       "condition": "displayZoom",
-      "value": 74,
+      "value": 71,
       "timeout": 1
     },
     {
@@ -131,7 +131,7 @@
     {
       "do": "waitFor",
       "condition": "displayZoom",
-      "value": 74,
+      "value": 71,
       "timeout": 1
     },
     {
@@ -156,7 +156,7 @@
     {
       "do": "waitFor",
       "condition": "displayZoom",
-      "value": 74,
+      "value": 71,
       "timeout": 1
     },
     {
@@ -177,7 +177,7 @@
     {
       "do": "waitFor",
       "condition": "displayZoom",
-      "value": 74,
+      "value": 71,
       "timeout": 1
     },
     {

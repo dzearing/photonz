@@ -107,10 +107,19 @@ enum PlaytestPanelDrag {
     /// The pasteboard a provider would put on the drag, built by asking it for
     /// every type it offers. This is the payload the pointer carries, read out
     /// of the very closure the view's own `onDrag` uses.
-    static func pasteboard(from provider: NSItemProvider, named name: String) async throws -> NSPasteboard {
+    ///
+    /// `asTheFinder` carries a file off the disk the way the Finder does, as a
+    /// link to it plus its data, never as a promise: only a drag the app makes
+    /// itself out of SwiftUI (a History tile) promises its file. Carried as a
+    /// promise, a picture let go on the right hand panel reached a provider
+    /// with no link, and the panel took the drop and added nothing
+    /// (panel-takes-picture-walk, drop-hands-you-the-pointer-walk, from
+    /// 2026-10-28 to 2026-11-10).
+    static func pasteboard(from provider: NSItemProvider, named name: String,
+                           asTheFinder: Bool = false) async throws -> NSPasteboard {
         let board = NSPasteboard(name: NSPasteboard.Name("photonz.playtest.\(name)"))
         board.clearContents()
-        if let promised = await promisedFile(provider) {
+        if !asTheFinder, let promised = await promisedFile(provider) {
             board.writeObjects([promised])
             return board
         }

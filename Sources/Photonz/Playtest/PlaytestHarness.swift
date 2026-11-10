@@ -1993,7 +1993,7 @@ private final class Run {
             guard let provider = NSItemProvider(contentsOf: url) else {
                 throw Failure(description: "\(url.lastPathComponent) cannot be carried on a drag")
             }
-            let board = try await PlaytestPanelDrag.pasteboard(from: provider, named: "file")
+            let board = try await PlaytestPanelDrag.pasteboard(from: provider, named: "file", asTheFinder: true)
             let viewPoint = try self.viewPoint(at)
             let info = PlaytestDraggingInfo(pasteboard: board,
                                             location: canvas.convert(viewPoint, to: nil),
@@ -2186,7 +2186,7 @@ private final class Run {
             guard let provider = NSItemProvider(contentsOf: url) else {
                 throw Failure(description: "\(url.lastPathComponent) cannot be carried on a drag")
             }
-            let board = try await PlaytestPanelDrag.pasteboard(from: provider, named: "file")
+            let board = try await PlaytestPanelDrag.pasteboard(from: provider, named: "file", asTheFinder: true)
             let windowPoint = try self.windowPoint(at)
             let info = PlaytestDraggingInfo(pasteboard: board,
                                             location: windowPoint,
@@ -14085,6 +14085,18 @@ private final class Run {
     /// The other way round from `checkInView`: the thing is in the panel and
     /// none of it is where a person can see it.
     private func checkOutOfView(_ name: String) throws -> String {
+        // A layer row the lazy list has scrolled past and let go of has no
+        // view to measure, and it is out of sight all the same: the list's own
+        // geometry says where it is (find-what-stayed-a-picture-walk,
+        // 2026-11-10; the list used to keep every row it had built).
+        let probe = LayersListProbe.shared
+        if probe.rowNames.contains(name), (try? inViewMatch(name)) == nil {
+            guard !probe.isInView(name) else {
+                throw Failure(description: "\"\(name)\" is a layer row the list says is on screen, "
+                    + "and this step says it should be scrolled out of sight")
+            }
+            return "\"\(name)\" is a layer row scrolled out of sight (\(probe.measurements))"
+        }
         let match = try inViewMatch(name)
         guard let content = match.window?.contentView else {
             return "\"\(name)\" is in the panel and not in a window, so none of it is on screen"
