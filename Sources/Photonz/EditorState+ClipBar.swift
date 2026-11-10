@@ -372,6 +372,7 @@ extension EditorState {
     /// (`RippleEdgeDrag.swift`). Ignored for a grab that cannot ripple.
     func beginClipBarDrag(layerID: UUID, grab: ClipBarGrab, copying: Bool = false,
                           ripple: Bool = false) {
+        guard clipBarDragCalledOff == nil else { return }
         endTrimBeforeCutting()
         guard let document, let layer = document.layer(id: layerID),
               let time = layer.time, let pieces = layer.clipPieces,
@@ -842,19 +843,37 @@ extension EditorState {
     /// Escape, for as long as there is a bar in hand. A key WATCH rather than a
     /// binding, for the reason the timing strip's one is: SwiftUI hands a
     /// gesture no key events at all, so a bar taken hold of could otherwise
-    /// only be let go of by finishing the drag and undoing it.
+    /// only be let go of by finishing the drag and undoing it. It watches
+    /// through `HeldDragKeys`, because from macOS 27 AppKit drops a key
+    /// pressed during a SwiftUI drag before any event monitor sees it.
     private func watchForClipBarEscape() {
         guard clipBarEscapeWatch == nil else { return }
-        clipBarEscapeWatch = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard event.keyCode == 53, let self, clipBarDrag != nil else { return event }
+        clipBarEscapeWatch = HeldDragKeys.watch { [weak self] event in
+            guard event.keyCode == 53, let self, clipBarDrag != nil else { return false }
             cancelClipBarDrag()
-            return nil
+            holdClipBarOffUntilRelease()
+            return true
+        }
+    }
+
+    /// The gesture Escape called off is still under the hand and goes on
+    /// asking to take hold; it gets nothing until the button comes up. The
+    /// button coming up is not a key, so an event monitor sees it.
+    private func holdClipBarOffUntilRelease() {
+        guard clipBarDragCalledOff == nil else { return }
+        clipBarDragCalledOff = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { [weak self] event in
+            MainActor.assumeIsolated {
+                guard let self, let watch = self.clipBarDragCalledOff else { return }
+                NSEvent.removeMonitor(watch)
+                self.clipBarDragCalledOff = nil
+            }
+            return event
         }
     }
 
     private func stopWatchingForClipBarEscape() {
         guard let watch = clipBarEscapeWatch else { return }
-        NSEvent.removeMonitor(watch)
+        HeldDragKeys.stop(watch)
         clipBarEscapeWatch = nil
     }
 

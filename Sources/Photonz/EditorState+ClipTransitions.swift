@@ -602,29 +602,40 @@ extension EditorState {
                                               fine: motionStripRuler.readsHundredths)
     }
 
+    /// Escape is watched through `HeldDragKeys`, because AppKit drops every
+    /// key press while a SwiftUI drag holds the pointer, before any event
+    /// monitor can see it (macOS 27). The button coming up is not dropped, so
+    /// an event monitor still watches for that.
     private func watchForClipTransitionEscape() {
         guard clipTransitionEscapeWatch == nil else { return }
-        clipTransitionEscapeWatch = NSEvent.addLocalMonitorForEvents(
-            matching: [.keyDown, .leftMouseUp]) { [weak self] event in
-            guard let self else { return event }
-            if event.type == .leftMouseUp {
-                // The gesture's own end commits; this only lets go of a drag
-                // Escape called off, whose gesture may never say it ended.
-                if clipTransitionDragCalledOff {
-                    clipTransitionDragCalledOff = false
-                    stopWatchingForClipTransitionEscape()
-                }
-                return event
-            }
-            guard event.keyCode == 53, clipTransitionDrag != nil else { return event }
+        let keys = HeldDragKeys.watch { [weak self] event in
+            guard let self, event.keyCode == 53, clipTransitionDrag != nil else { return false }
             cancelClipTransitionDrag()
-            return nil
+            return true
         }
+        let release = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { [weak self] event in
+            // The gesture's own end commits; this only lets go of a drag
+            // Escape called off, whose gesture may never say it ended.
+            MainActor.assumeIsolated {
+                guard let self, self.clipTransitionDragCalledOff else { return }
+                self.clipTransitionDragCalledOff = false
+                self.stopWatchingForClipTransitionEscape()
+            }
+            return event
+        }
+        clipTransitionEscapeWatch = ClipTransitionEscapeWatch(keys: keys, release: release)
     }
 
     private func stopWatchingForClipTransitionEscape() {
         guard let watch = clipTransitionEscapeWatch else { return }
-        NSEvent.removeMonitor(watch)
+        HeldDragKeys.stop(watch.keys)
+        if let release = watch.release { NSEvent.removeMonitor(release) }
         clipTransitionEscapeWatch = nil
     }
+}
+
+/// What listens while a band's end is in hand: Escape, and the button coming up.
+struct ClipTransitionEscapeWatch {
+    let keys: HeldDragKeys.Watch
+    let release: Any?
 }

@@ -272,23 +272,25 @@ extension EditorState {
     /// carried section has one: the strip never holds the keyboard during a
     /// drag — whatever had it before still does — and SwiftUI hands a gesture
     /// no key events at all, so a bar taken hold of could only be let go of by
-    /// finishing the drag and undoing it.
+    /// finishing the drag and undoing it. It watches through `HeldDragKeys`,
+    /// because from macOS 27 AppKit drops a key pressed during a SwiftUI drag
+    /// before any event monitor sees it.
     private func watchForMotionTimingEscape() {
         guard motionTimingEscapeWatch == nil else { return }
-        motionTimingEscapeWatch = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        motionTimingEscapeWatch = HeldDragKeys.watch { [weak self] event in
             guard event.keyCode == 53, let self,
-                  motionTimingDrag != nil || motionStopDrag != nil else { return event }
+                  motionTimingDrag != nil || motionStopDrag != nil else { return false }
             cancelMotionTimingDrag()
             cancelMotionStopDrag()
-            // Swallowed: the press called this drag off and must not go on to
+            // Taken: the press called this drag off and must not go on to
             // clear the selection behind it.
-            return nil
+            return true
         }
     }
 
     private func stopWatchingForMotionTimingEscape() {
         guard let watch = motionTimingEscapeWatch else { return }
-        NSEvent.removeMonitor(watch)
+        HeldDragKeys.stop(watch)
         motionTimingEscapeWatch = nil
     }
 

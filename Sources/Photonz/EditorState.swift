@@ -2309,7 +2309,11 @@ final class EditorState {
     /// clip to carry them by (`EditorState+TrackRange`).
     var boxExtrasDrag: BoxExtrasDrag?
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
-    @ObservationIgnored var clipBarEscapeWatch: Any?
+    @ObservationIgnored var clipBarEscapeWatch: HeldDragKeys.Watch?
+    /// Escape called a bar's drag off and the button is still down: the rest
+    /// of that gesture does nothing, rather than taking hold again. The watch
+    /// on the button coming up is what clears it.
+    @ObservationIgnored var clipBarDragCalledOff: Any?
     /// The ⌥ watch armed while the pointer rests on a clip's bar, so the copy
     /// badge comes and goes with the key (`EditorState+ClipBar`).
     @ObservationIgnored var clipBarCopyCursorWatch: Any?
@@ -2322,12 +2326,12 @@ final class EditorState {
     @ObservationIgnored var clipBarGripHovered: Set<String> = []
     var clipBarCommandHeld = false
     /// ...and the one armed while a transition's band is.
-    @ObservationIgnored var clipTransitionEscapeWatch: Any?
+    @ObservationIgnored var clipTransitionEscapeWatch: ClipTransitionEscapeWatch?
     /// The Escape watch armed for exactly as long as a bar is in hand
     /// (`EditorState+MotionStrip`). Held here because the strip is rebuilt on
     /// every move of the drag and a watch owned by a view that comes and goes
     /// would be armed twice and disarmed never.
-    @ObservationIgnored var motionTimingEscapeWatch: Any?
+    @ObservationIgnored var motionTimingEscapeWatch: HeldDragKeys.Watch?
     /// Bumped whenever the LENS TOOL's own memory changes, so the capsule over
     /// the tool bar and the panel's tool section redraw. The memory itself
     /// lives in UserDefaults, which nothing observes.

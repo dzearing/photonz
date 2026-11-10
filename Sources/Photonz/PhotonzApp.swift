@@ -11,6 +11,9 @@ struct PhotonzApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
+        // Before the first key press: Escape has to reach a drag in hand,
+        // which on macOS 27 AppKit would otherwise drop (`HeldDragKeys`).
+        HeldDragKeys.install()
         #if DEBUG
         // `swift build && .build/debug/Photonz --legibility-sheet`: draws every
         // shared control, measures its words and exits (`LegibilitySheet`).

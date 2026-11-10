@@ -1,0 +1,24 @@
+{
+  "feature": "Escape calls off a drag on the timeline",
+  "epic": "video-cutting",
+  "summary": "Pressing Escape while you drag the end of a transition or the end of a clip on the timeline puts it back and the rest of the drag does nothing. On macOS 27 the Mac had been throwing that key away for as long as the button was down.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: transition-edge-follows-the-pointer-walk, command-drag-ripple-trims-an-edge-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a video, press W at 6s to cut it, and drop a second clip right after the cut.", "shot": "2026-11-10-escape-mid-drag-2-clip-end.png", "shotNote": "Picture of the window behind another app: blue buttons and picked controls show their background look." },
+    { "do": "Click the cut and press Command T to put a cross dissolve on it." },
+    { "do": "Drag the right end of the dissolve band out, and let go so it reads about 4.9s.", "shot": "2026-11-10-escape-mid-drag-1-band-held.png" },
+    { "do": "Drag the same end left and, with the button still down, press Escape." },
+    { "do": "Keep moving the pointer, then let go. The band should still read 4.9s." },
+    { "do": "Drag the first clip's end left and press Escape half way. Its end should go back to 6s." }
+  ],
+  "evaluate": [
+    "Does the band or the clip end snap back the moment you press Escape, rather than when you let go?",
+    "After Escape, does moving the pointer before letting go leave everything alone?",
+    "Does the next drag after a called-off one take hold normally?"
+  ],
+  "rough": [
+    "Proved with key presses the walk puts into the app's event queue, not with a real keyboard: the runner cannot drive a keyboard. The fix catches the press where the Mac takes it off the queue, which is the same place a real key passes through, as traced in AppKit's own code.",
+    "Covered: transition band ends, clip ends and bodies, and the timing strip's bars. The layer and track row drags and the panel's number scrubbers were not changed; their Escape walks pass."
+  ]
+}
