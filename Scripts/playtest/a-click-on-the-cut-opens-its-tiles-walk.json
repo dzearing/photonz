@@ -1,7 +1,8 @@
 {
   "out": "/tmp/photonz-playtest/a-click-on-the-cut-opens-its-tiles-walk",
-  "seed": "At Next defaults, no flag set: two different recordings meet on V1 at 0:07, the first one picked, so its end grip sits over the cut. The pointer rests on the cut and it lights; one real click there, by pointer, picks the cut and opens the tiles At this cut, naming both clips. A click is the proof a person can do it: a press by name would only prove the cut exists.",
+  "seed": "At Next defaults, no flag set: two different recordings meet on V1 at 0:07, the first one picked, so its end grip sits over the cut. The pointer rests on the cut and it lights; one real click there, by pointer, picks the cut and opens the tiles At this cut, naming both clips. A click is the proof a person can do it: a press by name would only prove the cut exists. The walk holds the front because a person's click brings the app forward, and the tiles are a popover, which the Mac closes at once in an app that is behind.",
   "setup": {
+    "front": true,
     "timelineOpen": true,
     "forget": [
       "all"

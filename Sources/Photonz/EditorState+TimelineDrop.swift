@@ -56,10 +56,13 @@ struct TimelineFileInAir {
 // function either way; this is the part that knows about pointers and files.
 extension EditorState {
 
-    /// The width of the band either side of an edge a clip in the air is
-    /// pulled onto, in points on the lane, which is what makes it the same
-    /// reach at every zoom.
-    static let timelineDropSnapPoints: CGFloat = 8
+    /// How far, in milliseconds at today's zoom, a clip let go on the lanes
+    /// reaches for an edge: eight points, but never less than two frames, so
+    /// a drop a frame short of a cut lands on it (`ClipLanding.dropReachMS`).
+    var timelineDropReachMS: Int {
+        guard timelineLaneWidth > 0 else { return 0 }
+        return ClipLanding.dropReachMS(msPerPoint: motionStripRuler.msSpanning(fraction: 1) / Double(timelineLaneWidth))
+    }
 
     /// A file has arrived over the timeline. Its length is read off it now, so
     /// the ghost can be drawn the length it will be.
@@ -143,8 +146,7 @@ extension EditorState {
         let x = point.x - TimelineDock.lanesLeading
         let fraction = min(max(0, x / timelineLaneWidth), 1)
         let raw = Int(ruler.ms(atFraction: Double(fraction)).rounded())
-        let reach = Int(ruler.msSpanning(fraction: Double(Self.timelineDropSnapPoints / timelineLaneWidth))
-            .rounded())
+        let reach = timelineDropReachMS
         let start = ClipLanding.snapped(startMS: raw, lengthMS: length,
                                         to: document.timelineEdgesMS + [documentTimeMS],
                                         withinMS: isTimelineSnapping ? max(0, reach) : 0)

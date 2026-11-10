@@ -324,6 +324,33 @@ struct ClipLandingTests {
         #expect(ClipLanding.snapped(startMS: -40, lengthMS: 4000, to: edges, withinMS: 200) == 0)
     }
 
+    @Test("A drop a frame or two short of a cut reaches it at any zoom a person cuts at")
+    func dropReachCoversTwoFrames() {
+        // Six seconds across a 1556 point lane, the walk's window after W cut
+        // the recording to six seconds: eight points is only 31 ms, short of
+        // a drop 40 ms before the cut. Two frames is the floor.
+        let wide = 6000.0 / 1556
+        #expect(ClipLanding.dropReachMS(msPerPoint: wide) == ClipLanding.dropReachFloorMS)
+        let shortByOneFrame = 5960
+        #expect(ClipLanding.snapped(startMS: shortByOneFrame, lengthMS: 8000, to: [0, 6000],
+                                    withinMS: ClipLanding.dropReachMS(msPerPoint: wide)) == 6000)
+        // ...and fifty ms short of a cut at seven seconds, a frame and a half.
+        let seven = 7000.0 / 1556
+        #expect(ClipLanding.snapped(startMS: 6950, lengthMS: 8000, to: [0, 7000],
+                                    withinMS: ClipLanding.dropReachMS(msPerPoint: seven)) == 7000)
+    }
+
+    @Test("Zoomed out, the drop reach is eight points; zoomed far in, never more than twenty four")
+    func dropReachIsPointsAtTheExtremes() {
+        // A minute across 800 points: eight points is 600 ms, well past two frames.
+        #expect(ClipLanding.dropReachMS(msPerPoint: 60_000.0 / 800) == 600)
+        // Half a second across 1600 points: two frames would be 218 points,
+        // so the reach stops at 24 points and a drop can still sit a frame
+        // from a cut on purpose.
+        #expect(ClipLanding.dropReachMS(msPerPoint: 500.0 / 1600) == 8)
+        #expect(ClipLanding.dropReachMS(msPerPoint: 0) == 0)
+    }
+
     @Test("The edges a clip snaps to are where the clips on the timeline start and end")
     func edgesOfTheTimeline() {
         let (doc, _, _, _) = Self.edit()

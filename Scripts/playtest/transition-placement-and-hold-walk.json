@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/transition-placement-and-hold-walk",
-  "seed": "A transition that needs an overlap can sit before the cut, across it or after it, and a dip can hold on black. At a cut where only one side has spare, a cross dissolve goes after the cut. A hold inserts real time and undo takes it out. At Next defaults, no flag set.",
+  "seed": "A transition that needs an overlap can sit before the cut, across it or after it, and a dip can hold on black. At a cut where only one side has spare, a cross dissolve goes after the cut, and moved across it the side with no spare holds its edge frame. A hold inserts real time and undo takes it out. At Next defaults, no flag set.",
   "setup": {
     "front": true,
     "forget": [
@@ -131,8 +131,27 @@
       "seconds": 0.6
     },
     {
-      "do": "expectNotice",
-      "says": "Not moved"
+      "do": "expect",
+      "field": "The overlap sits",
+      "reads": "Across it"
+    },
+    {
+      "do": "expect",
+      "field": "Paid with",
+      "reads": "0.2s + 0.0s of spare, 0.2s held"
+    },
+    {
+      "do": "describe",
+      "stage": "2b-across-holds-a-frame",
+      "note": "Across it at a cut with spare on one side only: since 2026-10-29 it is not refused. The recording runs on into its spare, and b-roll, with nothing before its in point, holds its first frame for its half, the way Premiere repeats frames"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
     },
     {
       "do": "expect",

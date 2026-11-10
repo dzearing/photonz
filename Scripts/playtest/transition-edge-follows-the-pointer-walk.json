@@ -35,12 +35,12 @@
 
     { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": 220, "steps": 30, "within": 2, "hold": "4-at-the-stop" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expect", "menu": "Length", "reads": "2.0s" },
-    { "do": "describe", "stage": "4-stop", "note": "THE THIRD TEST: pulled far past what the cut can pay for. The end followed the pointer until the spare ran out at two seconds, then stopped with the pointer moving on, and the bubble turned amber and said max. Letting go landed exactly the length it showed, with no jump" },
+    { "do": "expect", "menu": "Length", "reads": "4.9s" },
+    { "do": "describe", "stage": "4-stop", "note": "THE THIRD TEST: pulled far past what the spare can pay for. Since 2026-10-29 a transition no longer stops where the spare runs out: the end kept following the pointer the whole way, and what the footage cannot pay for is held edge frames, which Paid with names. Letting go landed exactly the length the bubble showed, with no jump" },
 
     { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": -80, "steps": 20, "cancel": true },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expect", "menu": "Length", "reads": "2.0s" },
+    { "do": "expect", "menu": "Length", "reads": "4.9s" },
     { "do": "describe", "stage": "5-escape", "note": "THE FOURTH TEST: Escape half way through a drag put the band back as it was, and the rest of the gesture did nothing" },
 
     { "do": "action", "action": "undo" },

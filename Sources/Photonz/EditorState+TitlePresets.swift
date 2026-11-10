@@ -308,8 +308,7 @@ extension EditorState {
         let ruler = motionStripRuler
         let fraction = min(max(0, (point.x - TimelineDock.lanesLeading) / timelineLaneWidth), 1)
         let raw = Int(ruler.ms(atFraction: Double(fraction)).rounded())
-        let reach = Int(ruler.msSpanning(fraction: Double(Self.timelineDropSnapPoints / timelineLaneWidth))
-            .rounded())
+        let reach = timelineDropReachMS
         return ClipLanding.snapped(startMS: raw, lengthMS: lengthMS,
                                    to: document.timelineEdgesMS + [documentTimeMS],
                                    withinMS: isTimelineSnapping ? max(0, reach) : 0)

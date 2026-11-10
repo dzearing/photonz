@@ -69,6 +69,29 @@ public struct ClipLanding: Hashable, Sendable {
     /// it to start on that edge: one frame at thirty a second.
     public static let playheadReachMS = 34
 
+    /// How far a clip let go on the timeline reaches for an edge, in points
+    /// on the lane, which is the same reach at every zoom...
+    public static let dropReachPoints: Double = 8
+    /// ...but never less than two frames at thirty a second: a clip let go a
+    /// frame or two short of a cut is never meant to leave a sliver of the
+    /// clip before it showing, or a one frame flash of black. Before
+    /// 2026-10-29 a cut recording kept its old length on the ruler, so eight
+    /// points always covered that; once the ruler follows the last clip, a
+    /// wide window can make eight points 31 ms.
+    public static let dropReachFloorMS = 2 * playheadReachMS
+    /// ...and never more than this many points, so far zoomed in a clip can
+    /// still be put a frame from a cut on purpose.
+    public static let dropReachMostPoints: Double = 24
+
+    /// The reach, in milliseconds, of a clip let go on a lane where one point
+    /// is `msPerPoint` long.
+    public static func dropReachMS(msPerPoint: Double) -> Int {
+        guard msPerPoint > 0, msPerPoint.isFinite else { return 0 }
+        let points = dropReachPoints * msPerPoint
+        let most = dropReachMostPoints * msPerPoint
+        return Int(max(points, min(Double(dropReachFloorMS), most)).rounded())
+    }
+
     /// A start pulled onto the nearest edge within reach: where a clip, or
     /// the playhead, already is, so b-roll let go near the end of the
     /// recording butts onto it rather than leaving a sliver of black. The
