@@ -5,11 +5,11 @@
   "epic": "agent-mcp",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:08:36.161Z",
-  "updated": "2026-11-10T13:21:02.036Z",
+  "updated": "2026-11-10T17:48:59.888Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the 2026-11-04 digest pass, Dev up, probe not running, installed 0.23.0:\n  (printf '%s\\n%s\\n' \"$INIT\" \"$CALL\"; sleep 28) | GO_LOOP_PID=1 /Applications/Photonz.app/Contents/Helpers/photonz-mcp\n  where INIT is an MCP initialize request and CALL is tools/call list_documents. Output:\n  photonz-mcp: launched Photonz (open -g -a /Applications/Photonz.app)\n  photonz-mcp: Photonz is not listening for agents...\n  ps then listed /Applications/Photonz.app/Contents/MacOS/Photonz, parent pid 1, started that second. Handshake and tools/list alone opened nothing.\nCause, read from code: launch() in Sources/PhotonzMCP/main.swift tries the helper's own bundle first (launchPath) whatever the choice says, so a loop session whose choice is probe opens the bundle the helper lives in, then waits for a probe socket that never comes. The server is installed in ~/.claude.json from /Applications, so every loop session uses that helper.\nSeen twice in a day: the clipboard runner at 21:55:09 on 2026-11-03 (pid 75545, logged on a-screenshot-is-on-the-clipboard-every-time-on-a) and this digest session at 07:58:24 on 2026-11-04 (pid 44993, parent 1, same second as the session; quit by hand). v0.23.0 predates c999166a, so it cannot step aside: CaptureShortcutOwner keeps the shortcuts with such a build and Dev stands down while it runs.",
@@ -60,6 +60,45 @@
     {
       "t": "2026-11-10T13:21:02.035Z",
       "note": "seq 130 -> 50"
+    },
+    {
+      "t": "2026-11-10T17:26:52.732Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T17:48:43.109Z",
+      "note": "Reproduced with the shipping 0.23.0 helper copied into a stand-in bundle (/tmp/pz-mcp-repro/Stand In.app, an app that only writes a line and exits), so no real Photonz was opened; the real installed app was already running (pid 38272), which would have hidden a launch. (INIT; CALL list_documents) | GO_LOOP_PID=1 <stand-in>/Contents/Helpers/photonz-mcp printed: launched Photonz (open -g -a /tmp/pz-mcp-repro/Stand In.app), then Photonz is not listening; the stand-in logged its launch. Cause as the notes said: launch() put the bridge's own bundle first whatever the choice was."
+    },
+    {
+      "t": "2026-11-10T17:48:43.174Z",
+      "note": "The no-tool-call launch at session start, found: Claude Code 2.1.321 opens every MCP session with a server/discover request (id server-discover-probe-1, protocol 2026-07-28) BEFORE initialize. The bridge answered only ping/initialize/tools/list itself, so server/discover started the app the second the session opened, probe.json or not. Seen with a real claude -p session through a tee wrapper: methods server/discover, initialize, notifications/initialized, tools/list, and the stand-in launched. This hits a person's own sessions too (they open the installed app the same way), which is likely why the installed copy kept reappearing on 2026-11-04 to 11-06. Missing probe.json (simulated with PHOTONZ_APP naming an app with no handshake): initialize alone launched the bridge's own bundle too."
+    },
+    {
+      "t": "2026-11-10T17:48:43.238Z",
+      "note": "Fixed in PhotonzAgentLink (AgentChannelAddress.launchAttempts, AgentChannelAddress.whileClosed) and Sources/PhotonzMCP/main.swift: the bridge opens only the app it was asked for (PHOTONZ_APP_PATH, then its own bundle only when that is the app asked for, then the asked-for bundle id), and while the app is closed anything but ping/initialize/tools/list/tools/call is answered -32601 'Photonz does not answer X.' as the app answers it, starting nothing. Tests first: AgentBridgeLaunchTests (6) in Tests/PhotonzCoreTests/AgentSetupTests.swift. Chose opening the probe (open -g -b com.dzearing.photonz.probe) for a loop session over refusing to open anything, because the agent drills and the ask eval rely on the bridge starting the probe and that was always the documented behaviour; the defect was only ever the wrong app."
+    },
+    {
+      "t": "2026-11-10T17:48:43.302Z",
+      "note": "Verified with the fixed helper in the stand-in bundle: loop session + tool call -> launched Photonz (open -g -b com.dzearing.photonz.probe), answered list_documents, stand-in NOT opened; loop session + no handshake -> plain not listening, nothing opened; person's session (env -u GO_LOOP_PID) -> still opens its own bundle (open -g -a .../Stand In.app) as before; server/discover -> -32601, nothing opened; real claude -p session with GO_LOOP_PID and the probe down -> nothing opened, 53 tools listed. Scripts/test.sh green (exit 0) on the second full run; the first missed one stopwatch budget by 0.7ms in IconPreviewRenderTests, filed as the-moving-icon-preview-speed-check-passes-on-a."
+    },
+    {
+      "t": "2026-11-10T17:48:43.366Z",
+      "note": "Capture shortcuts after an older copy quits: yes, Dev takes them back on its own, without a relaunch, by mechanism. CaptureCenter observes NSWorkspace didTerminateApplicationNotification for any com.dzearing.photonz* app and re-runs CaptureShortcutClaim.isOurs(), which re-reads runningApplications; a check script (/tmp/pz-scripts/terminate-check.swift) showed the quitting app is already gone from that list when the notification arrives, so the stubborn copy no longer counts and Dev registers. Not watched with the real 0.23.0 quitting: the installed copy now up (pid 38272, since 2026-11-06 18:00:22, same second as a bridge, the shape of this fault) may be the user's, so it was left running; Dev does not log a reclaim and its stand-down NSLog is not kept by the system log."
+    },
+    {
+      "t": "2026-11-10T17:48:43.434Z",
+      "note": "Reaches loop sessions only with the next release: every session runs the bridge from /Applications/Photonz.app (~/.claude.json), still 0.23.0, which has neither this fix nor the shortcut step-aside (c999166a). Until a release after 0.23.0 is installed, a session can still open the installed app. Not cut from a runner (the release skill is the user's). Left alone: an orphaned xctest from 2026-11-09 (pid 28380, 0% CPU) is not mine."
+    },
+    {
+      "t": "2026-11-10T17:48:51.600Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-10T17:48:59.886Z",
+      "note": "Shipped in 133d08055: the agent bridge (Sources/PhotonzMCP, PhotonzAgentLink AgentChannelAddress.launchAttempts/whileClosed) opens only the app it was asked for, so a loop session opens the probe and never /Applications/Photonz.app, and it answers Claude Code's opening server/discover itself (-32601) instead of starting an app, which was the no-tool-call launch at session start. Reproduced first with the shipping 0.23.0 helper in a stand-in bundle; verified after with the fixed helper and a real claude -p session; a person's own session still opens its own app. Dev retakes the capture shortcuts on its own when an older copy quits (didTerminate re-check, verified by mechanism). 6 new tests, Scripts/test.sh green. Reaches loop sessions once a release after 0.23.0 is installed in /Applications."
     }
-  ]
+  ],
+  "started": "2026-11-10T17:26:52.731Z",
+  "walks": [],
+  "completed": "2026-11-10T17:48:59.887Z"
 }

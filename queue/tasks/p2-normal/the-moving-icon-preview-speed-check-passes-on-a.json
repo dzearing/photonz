@@ -1,0 +1,26 @@
+{
+  "id": "the-moving-icon-preview-speed-check-passes-on-a",
+  "title": "The moving icon preview speed check passes on a busy run as well as alone",
+  "goal": "One speed check on the looping icon previews fails the whole test run when the rest of the suite is busy, though the work is well inside its budget when timed alone. A failed run stops a runner committing finished work, so the check should be timed where the suite keeps its other speed checks, away from the load.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 4080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-10T17:44:55.683Z",
+  "updated": "2026-11-10T17:44:55.686Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-11-10 by the runner on an-unmanned-session-never-opens-the-installed-ph. Full Scripts/test.sh, exit 1:\n  [perf] budget: moving icon previews, whole strip of 5 — 21.2ms on the calibration machine clock against a budget of 20.5ms (baseline 5.0ms x 2.5 tolerance + 8ms). Read 24.2ms here beside a filter graph yardstick reading 9.1ms against its own 8.0ms\n  ✘ Test \"A whole strip of moving previews fits inside one frame of the loop\" at IconPreviewRenderTests.swift:372\nThen Scripts/test.sh --filter IconPreviewRenderTests alone: 10.5ms against 20.5ms, passed. The suite \"Previewing a moving icon, frame after frame\" is not a ...PerfTests suite, so MachineSpeed.checkInterleaved is read while the other three test processes compete (CLAUDE.md: a new speed budget goes in a PerfTests suite). An orphaned xctest from 2026-11-09 (pid 28380, 0% CPU, PhotonzMediaTests SpeechTranscriptionTests) was also still up.",
+  "acceptance": [
+    "The check \"A whole strip of moving previews fits inside one frame of the loop\" runs in a suite whose name ends in PerfTests, so Scripts/test.sh times it on its own after the rest",
+    "Scripts/test.sh passes three runs in a row with the check in it"
+  ],
+  "log": [
+    {
+      "t": "2026-11-10T17:44:55.685Z",
+      "note": "created (manual)"
+    }
+  ]
+}
