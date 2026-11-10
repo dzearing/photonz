@@ -6,7 +6,9 @@ import PhotonzAgentLink
 // and talks to it over stdin and stdout; it finds the Photonz that is running
 // (launching it in the background if none is), and copies each line to the
 // app's socket and each answer back. The app does all the speaking: this knows
-// nothing about tools.
+// nothing about tools. While the app is closed, only a tool call starts it
+// (`AgentChannelAddress.whileClosed`), and only the app asked for is started
+// (`AgentChannelAddress.launchAttempts`).
 //
 //   PHOTONZ_APP       release, dev, probe or a bundle id. Unset: the first one
 //                     running of Dev, release, Probe; with none running, the
@@ -14,6 +16,9 @@ import PhotonzAgentLink
 //                     loop runner (GO_LOOP_PID): the probe, always.
 //   PHOTONZ_APP_PATH  the app bundle to launch when none is running, when
 //                     LaunchServices cannot find it by bundle id.
+//
+// A go loop session never opens the app this bridge ships inside unless that
+// app is the probe: it opens the probe, or says it is not listening.
 //
 // Shipped inside an app (Contents/Helpers/photonz-mcp, what Settings > Agents
 // installs), with neither set it reaches and launches that app alone.
@@ -32,10 +37,9 @@ final class Bridge: @unchecked Sendable {
     /// installs that copy): the one it reaches and launches unless told otherwise.
     private static let ownBundle = AgentChannelAddress.bundle(
         containingHelper: Bundle.main.executableURL?.resolvingSymlinksInPath().path ?? CommandLine.arguments[0])
-    private let launchPath = ProcessInfo.processInfo.environment["PHOTONZ_APP_PATH"] ?? Bridge.ownBundle
+    private static let ownBundleID = ownBundle.flatMap { Bundle(path: $0)?.bundleIdentifier }
     private let choice = AgentChannelAddress.choice(
-        environment: ProcessInfo.processInfo.environment,
-        ownBundleID: Bridge.ownBundle.flatMap { Bundle(path: $0)?.bundleIdentifier })
+        environment: ProcessInfo.processInfo.environment, ownBundleID: Bridge.ownBundleID)
 
     static let launchPatience: TimeInterval = 25
 
@@ -78,12 +82,9 @@ final class Bridge: @unchecked Sendable {
     }
 
     private func launch() -> Bool {
-        var attempts: [[String]] = []
-        if let launchPath, !launchPath.isEmpty { attempts.append(["-g", "-a", launchPath]) }
-        // Unset, the shipping app is the one to start; else whatever was asked for.
-        let order = (choice ?? "").isEmpty
-            ? [AgentChannelAddress.releaseBundleID, AgentChannelAddress.devBundleID] : candidates
-        attempts += order.map { ["-g", "-b", $0] }
+        let attempts = AgentChannelAddress.launchAttempts(
+            choice: choice, appPath: ProcessInfo.processInfo.environment["PHOTONZ_APP_PATH"],
+            ownBundle: Bridge.ownBundle, ownBundleID: Bridge.ownBundleID)
         for arguments in attempts {
             let open = Process()
             open.executableURL = URL(fileURLWithPath: "/usr/bin/open")
@@ -138,10 +139,10 @@ final class Bridge: @unchecked Sendable {
         FileHandle.standardOutput.write(Data((line + "\n").utf8))
     }
 
-    private func answerWithError(_ idKey: String, _ message: String) {
+    private func answerWithError(_ idKey: String, _ message: String, code: Int = -32000) {
         let text = (try? JSONSerialization.data(withJSONObject: message, options: [.fragmentsAllowed]))
             .map { String(decoding: $0, as: UTF8.self) } ?? "\"error\""
-        writeOut(#"{"jsonrpc":"2.0","id":\#(idKey),"error":{"code":-32000,"message":\#(text)}}"#)
+        writeOut(#"{"jsonrpc":"2.0","id":\#(idKey),"error":{"code":\#(code),"message":\#(text)}}"#)
     }
 
     /// The handshake the app left beside its socket, for the first app asked
@@ -197,9 +198,18 @@ final class Bridge: @unchecked Sendable {
         lock.unlock()
         if !connected, let method {
             guard let id else { return } // a notification for an app that is not there
-            if let reply = answeredHere(method, id: id, params: message?["params"] as? [String: Any]) {
-                writeOut(reply)
+            switch AgentChannelAddress.whileClosed(method: method, handshakeSaved: savedHandshake() != nil) {
+            case .answerFromHandshake, .answerHere:
+                if let reply = answeredHere(method, id: id, params: message?["params"] as? [String: Any]) {
+                    writeOut(reply)
+                    return
+                }
+            case .notUnderstood:
+                // As the app answers it, so the client falls back the same way.
+                answerWithError(id, "Photonz does not answer \(method).", code: -32601)
                 return
+            case .startTheApp:
+                break
             }
         }
         lock.lock()

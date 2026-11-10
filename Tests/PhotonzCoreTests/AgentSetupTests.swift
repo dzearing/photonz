@@ -293,3 +293,73 @@ struct AgentBundledBridgeTests {
         #expect(AgentChannelAddress.choice(environment: [:], ownBundleID: nil) == nil)
     }
 }
+
+/// What the bridge may open, and when. On 2026-11-03 and 2026-11-04 a go loop
+/// session whose bridge was installed from /Applications opened the installed
+/// Photonz beside the Dev app the person was using: the bridge tried the
+/// bundle it sits in before the app it had been told to reach (the probe), and
+/// Claude Code's opening `server/discover` question, which only the app could
+/// answer, started an app before any tool was called.
+@Suite("Agent channel: the bridge opens only the app it was asked for")
+struct AgentBridgeLaunchTests {
+
+    static let installed = "/Applications/Photonz.app"
+    static let release = AgentChannelAddress.releaseBundleID
+
+    @Test("A go loop session with the installed bridge opens the probe, never the installed app")
+    func loopSessionOpensTheProbe() {
+        let choice = AgentChannelAddress.choice(environment: ["GO_LOOP_PID": "1"], ownBundleID: Self.release)
+        let attempts = AgentChannelAddress.launchAttempts(
+            choice: choice, appPath: nil, ownBundle: Self.installed, ownBundleID: Self.release)
+        #expect(attempts == [["-g", "-b", AgentChannelAddress.probeBundleID]])
+        #expect(!attempts.joined().contains(Self.installed))
+        #expect(!attempts.joined().contains(Self.release))
+    }
+
+    @Test("A person's own session still opens the app the bridge was installed with")
+    func ownSessionOpensItsOwnApp() {
+        let choice = AgentChannelAddress.choice(environment: [:], ownBundleID: Self.release)
+        let attempts = AgentChannelAddress.launchAttempts(
+            choice: choice, appPath: nil, ownBundle: Self.installed, ownBundleID: Self.release)
+        #expect(attempts.first == ["-g", "-a", Self.installed])
+        #expect(attempts.dropFirst().allSatisfy { $0 == ["-g", "-b", Self.release] })
+    }
+
+    @Test("A bridge inside the probe, or one told where the app is, opens that")
+    func toldWhereItIs() {
+        let probe = "/Users/me/photonz/dist/Photonz Probe.app"
+        let fromProbe = AgentChannelAddress.launchAttempts(
+            choice: "probe", appPath: nil, ownBundle: probe, ownBundleID: AgentChannelAddress.probeBundleID)
+        #expect(fromProbe.first == ["-g", "-a", probe])
+        let told = AgentChannelAddress.launchAttempts(choice: "probe", appPath: probe, ownBundle: nil, ownBundleID: nil)
+        #expect(told == [["-g", "-a", probe], ["-g", "-b", AgentChannelAddress.probeBundleID]])
+    }
+
+    @Test("Naming another app keeps the installed bridge's own bundle out of it")
+    func namedAppOnly() {
+        let attempts = AgentChannelAddress.launchAttempts(
+            choice: "dev", appPath: nil, ownBundle: Self.installed, ownBundleID: Self.release)
+        #expect(attempts == [["-g", "-b", AgentChannelAddress.devBundleID]])
+    }
+
+    @Test("The repo's bridge with nothing named starts the shipping app, else Dev, as before")
+    func unnamedRepoBridge() {
+        let attempts = AgentChannelAddress.launchAttempts(choice: nil, appPath: nil, ownBundle: nil, ownBundleID: nil)
+        #expect(attempts == [["-g", "-b", Self.release], ["-g", "-b", AgentChannelAddress.devBundleID]])
+    }
+
+    @Test("While the app is closed only a tool call, or a handshake with nothing saved, starts it")
+    func whatStartsTheApp() {
+        #expect(AgentChannelAddress.whileClosed(method: "tools/call", handshakeSaved: true) == .startTheApp)
+        #expect(AgentChannelAddress.whileClosed(method: "initialize", handshakeSaved: true) == .answerFromHandshake)
+        #expect(AgentChannelAddress.whileClosed(method: "tools/list", handshakeSaved: true) == .answerFromHandshake)
+        #expect(AgentChannelAddress.whileClosed(method: "initialize", handshakeSaved: false) == .startTheApp)
+        #expect(AgentChannelAddress.whileClosed(method: "tools/list", handshakeSaved: false) == .startTheApp)
+        #expect(AgentChannelAddress.whileClosed(method: "ping", handshakeSaved: false) == .answerHere)
+        // Claude Code asks this first, before initialize, and falls back when
+        // it is not understood. The app does not understand it either.
+        #expect(AgentChannelAddress.whileClosed(method: "server/discover", handshakeSaved: true) == .notUnderstood)
+        #expect(AgentChannelAddress.whileClosed(method: "server/discover", handshakeSaved: false) == .notUnderstood)
+        #expect(AgentChannelAddress.whileClosed(method: "resources/list", handshakeSaved: true) == .notUnderstood)
+    }
+}

@@ -113,13 +113,26 @@ the probe (`AgentChannelAddress.choice`). The server a person installs for
 themselves is in every runner's session too, and an unmanned runner must never
 drive the Dev app a person is working in.
 
+**It only ever opens the app it was asked for** (`AgentChannelAddress.launchAttempts`):
+`PHOTONZ_APP_PATH` if given, then the bundle the bridge ships inside only when
+that bundle IS the app asked for, then the app asked for by bundle id. Until
+2026-11-10 the bridge's own bundle came first whatever was asked for, so a
+loop runner, whose server is installed from /Applications, opened the installed
+Photonz beside the person's Dev app and then waited for a probe that never came.
+That stray copy, being older than the capture shortcut rule, then held the
+capture shortcuts ahead of Dev until somebody quit it.
+
 **Opening a session does not start the app.** Claude Code starts every MCP
 server when a session opens and asks it for its tool list. The app leaves its
 handshake and tool list beside its socket (`<name>.json`,
 `AgentMCP.handshake`), and while the app is closed the bridge answers those
 two from it, so Photonz starts only when a tool is called. (The very first
 session on a machine, before the app has ever run with the channel, starts it
-to learn them.) Launching uses `open -g`, so the app starts in the background rather
+to learn them.) Anything else asked while the app is closed is answered "not
+understood" (-32601), as the app itself answers it, and starts nothing
+(`AgentChannelAddress.whileClosed`): Claude Code opens a session with
+`server/discover` before `initialize`, and starting the app to hear it say no
+opened Photonz the second a session began. Launching uses `open -g`, so the app starts in the background rather
 than taking your keyboard; opening a document from the agent then brings its
 window forward the way opening one from Finder does, because you asked to watch.
 
