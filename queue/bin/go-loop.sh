@@ -322,23 +322,23 @@ refresh_dev_app() { # $1 = git rev before the task ran
 # twenty a day, so a number typed in by hand is wrong within days: between
 # 2026-09-13 and 2026-10-13 that step failed CI on most pushes to main, and
 # because it runs first, the tests behind it never ran at all. So the loop
-# brings the quotes back into line after every task, before it pushes.
-# A quoting file the person has uncommitted edits in is left alone: committing
-# it would commit their half-done work along with the number.
+# brings the quotes back into line after every task, before it pushes, and at
+# HALF the CI band, so a runner's push has the other half to itself.
+#
+# All of it, the git commit included, is done in node (sweep-size.mjs --sync).
+# Until 2026-11-10 this function did `git commit -- $files` itself, and zsh
+# does not word-split an unquoted $files: git got ONE pathspec eleven lines long
+# and refused it, the rewrite stayed in the tree, and the check (which read the
+# tree, not HEAD) passed from then on while main failed CI for a week.
 keep_sweep_size_true() {
   (( SANDBOX == 0 )) || return 0
-  node queue/bin/sweep-size.mjs --check > /dev/null 2>&1 && return 0
-  local files
-  files=$(node -e "import('./queue/bin/sweep-size.mjs').then(m => console.log(m.QUOTERS.join('\n')))") || return 0
-  # shellcheck disable=SC2086
-  if ! git diff --quiet HEAD -- $files 2>/dev/null; then
-    echo "[go-loop] $(date +%T) the sweep's size is quoted wrongly, but a quoting file has uncommitted edits; left for whoever is editing it" | tee -a "$LOG"
-    return 0
-  fi
-  node queue/bin/sweep-size.mjs --write >> "$LOG" 2>&1 || return 0
-  # shellcheck disable=SC2086
-  git commit -q -m "The sweep's size is quoted as it really is: $(node queue/bin/sweep-size.mjs --phrase)" -- $files >> "$LOG" 2>&1 \
-    && echo "[go-loop] $(date +%T) brought the sweep's size back into line" | tee -a "$LOG"
+  local out
+  out=$(node queue/bin/sweep-size.mjs --sync 2>&1)
+  case "$out" in
+    *"within half the CI band"*) return 0 ;;
+  esac
+  echo "[go-loop] $(date +%T) $out" | tee -a "$LOG"
+  return 0
 }
 
 # Kill anything a runner left spinning on the user's machine. A runner testing
@@ -493,7 +493,7 @@ say_about_the_hold() {
 }
 
 # The walk checks, run BETWEEN tasks. A runner cannot run the whole set: it is
-# about 1010 walks and about 290 minutes (queue/bin/sweep-size.mjs counts it, so
+# about 1140 walks and about 395 minutes (queue/bin/sweep-size.mjs counts it, so
 # this comment cannot go stale on its own) and a runner's background work is
 # terminated at 600s, which
 # is how eight of the twenty recorded runner failures happened (2026-09-07
@@ -797,11 +797,27 @@ while :; do
   TASK_ID=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).id)" "$TASK_FILE")
   TASK_TITLE=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).title)" "$TASK_FILE")
   echo "[go-loop] $(date +%T) running task $TASK_ID" | tee -a "$LOG"
-  banner "**Go loop** working: $TASK_TITLE ($TASK_ID)"
+  # Whether main's checks pass, read before every task (queue/bin/ci-main.mjs).
+  # From 2026-11-03 to 11-10 every push to main failed CI and nothing the loop
+  # showed or a runner read said so. While it is red the banner and the log say
+  # where, and the runner reads it at the top of its prompt before it starts.
+  CI_BRIEF=""; CI_LINE=""
+  if (( SANDBOX == 0 )); then
+    CI_BRIEF=$(node queue/bin/ci-main.mjs brief 2>/dev/null) || CI_BRIEF=""
+    [[ -n "$CI_BRIEF" ]] && CI_LINE=$(node queue/bin/ci-main.mjs line 2>/dev/null)
+  fi
+  if [[ -n "$CI_LINE" ]]; then
+    echo "[go-loop] $(date +%T) $CI_LINE" | tee -a "$LOG"
+    banner "**Go loop** working: $TASK_TITLE ($TASK_ID) · **$CI_LINE**"
+  else
+    banner "**Go loop** working: $TASK_TITLE ($TASK_ID)"
+  fi
   state busy
 
   SESSION=$(uuidgen | tr 'A-Z' 'a-z')
-  run_runner "$(cat queue/bin/runner-prompt.md; echo; cat queue/bin/follow-up-bar.md)
+  run_runner "${CI_BRIEF:+$CI_BRIEF
+
+}$(cat queue/bin/runner-prompt.md; echo; cat queue/bin/follow-up-bar.md)
 
 TASK FILE: $TASK_FILE" "$SESSION"
   EXIT=$?

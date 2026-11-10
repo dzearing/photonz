@@ -1,7 +1,7 @@
 # queue/sweep
 
 The full walk sweep runs every scripted walk in `Scripts/playtest`:
-about 1010 walks and about 290 minutes,
+about 1140 walks and about 395 minutes,
 counted by `queue/bin/sweep-size.mjs` rather than written down here. This folder
 is where the go loop hands that run back and forth with the task runners.
 
@@ -19,15 +19,15 @@ had asked.
 Now `queue/bin/sweep-schedule.mjs` decides, and it is the one copy of these
 rules:
 
-* the **full set** runs at most once every twenty four hours, and only when code
+* the **full set** runs at most once every three days (72 hours, since 2026-11-05), and only when code
   has landed since the last one. Requests pile up and the next run serves them all;
 * **landed code is the ask: neither check waits for a request.** Code is
   anything under `Sources`, `Scripts`, `Resources`, `Vendor` or the package
   files; a commit of only the queue's own files, docs or unit tests starts nothing;
 * in between, after any task that lands code, a **rotating check** of about ten
   minutes: every walk whose script changed since the last check, then the next
-  chunk of the set, carrying on from `rotation.json`. Over a day the rotation
-  covers the whole set anyway, in pieces;
+  chunk of the set, carrying on from `rotation.json`, at most one every four
+  hours. The rotation works through the whole set in pieces between full runs;
 * a rotating check is **not a sweep**. It never clears a request, never closes
   the standing walk task, and says so in its own output. A walk it finds broken
   is written onto the standing walk task the same day;
@@ -183,7 +183,7 @@ standing task is closed by the merged record.
 ## Why a runner never runs the sweep itself
 
 A task runner's background work is terminated at 600s. The sweep is
-29 times the 600s ceiling, so a runner that starts one is killed waiting
+40 times the 600s ceiling, so a runner that starts one is killed waiting
 for it and its task is handed back unfinished. Eight of the twenty recorded runner failures are this,
 including 2026-09-07 16:22 ("The full walk sweep is still running (it re-runs
 all 253 walks)") and 2026-09-08 00:03 ("Background tasks still running after

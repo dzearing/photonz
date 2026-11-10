@@ -27,7 +27,10 @@ import { fileURLToPath } from 'node:url';
 import { parseSweepLog, sweepSentences } from './sweep-parse.mjs';
 import { recordSweep } from './sweep-record.mjs';
 import { machineBlock, previousFailures } from './sweep-notes.mjs';
-import { decide } from './sweep-schedule.mjs';
+import { decide as decideAt } from './sweep-schedule.mjs';
+// Written against a one-day floor (the rule being drilled, not today's floor,
+// which is 72 hours since 2026-11-05: sweep-schedule-drill.mjs checks that).
+const decide = (o) => decideAt({ floorHours: 24, ...o });
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 let failures = 0;

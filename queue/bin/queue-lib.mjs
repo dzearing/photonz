@@ -10,6 +10,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readCatalog, flagDefaults, forcedOn } from './flag-defaults.mjs';
 import { DEFAULTS as SWEEP_DEFAULTS } from './sweep-schedule.mjs';
+import { readCiMain, ciLine, failingWhere } from './ci-main.mjs';
 import { mockDifferences, auditNamesIn } from './mock-differences.mjs';
 
 // The queue lives at <repo>/queue. PHOTONZ_QUEUE_DIR points every writer at a
@@ -1585,7 +1586,7 @@ export function loopScript(status = readStatus(), alive = loopAlive(status)) {
 
 // ---- the full walk sweep ----------------------------------------------------
 // A runner cannot run the whole walk set: it is
-// about 1010 walks and about 290 minutes, and a runner's background work is cut
+// about 1140 walks and about 395 minutes, and a runner's background work is cut
 // off at 600s. So it asks with queue/bin/sweep.sh request and the loop runs one
 // between tasks. Requests that nothing ever serves used to be invisible: seven
 // of them sat unserved for three days because the loop had no code to run
@@ -1909,6 +1910,14 @@ const dur = (iso, at = Date.now()) => {
 };
 const ago = (iso, at = Date.now()) => ((at - Date.parse(iso || 0)) / 1000 < 90 && iso ? 'just now' : `${dur(iso, at)} ago`);
 
+// The CI reading with its words attached, so the page shows the sentence the
+// loop log and the runner read rather than composing its own.
+export function ciMainState() {
+  const s = readCiMain();
+  if (!s) return null;
+  return { ...s, line: ciLine(s), where: failingWhere(s) };
+}
+
 // ---- objectives -------------------------------------------------------------
 // The ordered epic tree that steers triage. Order IS priority; nesting is
 // sub-epics. The dashboard's Objectives tab edits this wholesale.
@@ -2214,6 +2223,10 @@ export function aggregateState({ tasks: includeTasks = true } = {}) {
     // which is the normal case; see devAppState for why it is only ever a
     // report and never a fix.
     devApp: devAppState(),
+    // Whether the last finished CI run on main passed, as the loop last read
+    // it before a task (queue/bin/ci-main.mjs). Red for a week in November
+    // 2026 with nothing on this page saying so.
+    ci: ciMainState(),
     // list rows only, see taskRow: the poll used to carry every task's whole
     // log and was three megabytes fifteen times a minute
     ...(includeTasks ? { tasks } : {}),

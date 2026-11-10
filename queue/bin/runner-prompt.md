@@ -136,7 +136,7 @@ The machine you run on is the user's. Anything you start, you finish.
   shape (a title's single Fade row, a shadow's Kind as a dropdown twice, a lifted
   clip called Sample Talk copy). Each one turned rotating checks red and cost a
   separate task to fix walks that were wrong, not the app.
-  The whole set is about 1100 walks and about 340 minutes, which is 34 times the 600s ceiling
+  The whole set is about 1140 walks and about 395 minutes, which is 40 times the 600s ceiling
   on your background work, so starting it inside a task ends with you
   terminated and your task handed back unfinished. That is not hypothetical:
   eight of the twenty recorded runner failures are exactly this, including
@@ -154,7 +154,7 @@ The machine you run on is the user's. Anything you start, you finish.
   queue/bin/sweep.sh status        # what the last sweep found
   ```
   It returns instantly, and **asking is not starting**: the full set runs at
-  most once every twenty four hours, and between those the loop runs a rotating
+  most once every three days, and between those the loop runs a rotating
   check of about ten minutes (every walk whose script changed, then the next
   chunk of the set) so a regression is still caught the day it lands. Your
   request waits for the next full run and is served by it along with everybody

@@ -15,7 +15,9 @@ import { tmpdir } from 'node:os';
 import {
   walkCount, perWalkSeconds, sweepSize, capSecondsFor, awakeSecondsFor,
   sizePhrase, multPhrase, multValue, checkQuotes, writeQuotes, QUOTERS, BUDGET_SECONDS_PER_WALK,
+  budgetSecondsFor, BUDGET_CEILING_SECONDS, RESYNC, TOLERANCE, syncQuotes, fromCommit,
 } from './sweep-size.mjs';
+import { execFileSync } from 'node:child_process';
 
 let bad = 0;
 const check = (what, ok, detail) => {
@@ -106,7 +108,25 @@ check('it grows with the set, so 800 walks does not close it again',
 check('a small checkout still gets two hours rather than two minutes',
   capSecondsFor(5) === 120 * 60, capSecondsFor(5));
 check('the hold on the screen outlasts the cap, not just a good sweep',
-  awakeSecondsFor(size.walks) > size.capSeconds, { awake: awakeSecondsFor(size.walks), cap: size.capSeconds });
+  awakeSecondsFor(size.walks, size.perWalkSeconds) > size.capSeconds, { awake: awakeSecondsFor(size.walks, size.perWalkSeconds), cap: size.capSeconds });
+
+// The budget follows the walks it is a net for, inside a floor and a ceiling,
+// so it never again has to be raised by hand (2026-11-10: 26s against walks of
+// 23 to 27s, and a full sweep due to be cut off).
+check('a walk of 12s gets the floor', budgetSecondsFor(12) === BUDGET_SECONDS_PER_WALK, budgetSecondsFor(12));
+check('a walk of 20.8s gets 1.6 times it', budgetSecondsFor(20.8) === 34, budgetSecondsFor(20.8));
+check('a walk of 60s still gets only the ceiling, so a wedge is caught early',
+  budgetSecondsFor(60) === BUDGET_CEILING_SECONDS, budgetSecondsFor(60));
+// The case that was red: ten sweeps at 20 to 27s a walk.
+repo = fakeRepo(1140, [13.3, 14.9, 15.6, 17.5, 18.6, 23, 23.5, 23, 25, 26.9].map((p) => honest(p)));
+{
+  const z = sweepSize(repo);
+  check('with the November 2026 sweeps the stop is half again over a good sweep',
+    z.capSeconds / (z.walks * z.perWalkSeconds) >= 1.5, +(z.capSeconds / (z.walks * z.perWalkSeconds)).toFixed(2));
+  check('...and above the slowest of them, which the old 26s was not',
+    z.capSeconds > 1140 * 26.9, { cap: z.capSeconds, slowest: Math.round(1140 * 26.9) });
+}
+rmSync(repo, { recursive: true, force: true });
 
 // ---- 4. the check goes red when a document drifts ---------------------------
 console.log('checking what the documents say');
@@ -174,6 +194,86 @@ try {
 }
 check('nothing was left changed behind the drill',
   QUOTERS.every((f, i) => readFileSync(f, 'utf8') === before[i]));
+
+// ---- 6. the loop's sync, against what is COMMITTED ---------------------------
+// A scratch git repo holding every quoting file, so the loop's step is drilled
+// end to end: read HEAD, rewrite, commit by argv.
+const git = (root, ...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+function gitRepo(n, phrase) {
+  const files = Object.fromEntries(QUOTERS.map((f) => [f, `# ${f}\nThe set is ${phrase}, which is twenty times the 600s ceiling.\nOther words.\n`]));
+  const root = fakeRepo(n, Array.from({ length: 10 }, () => honest(12)), files);
+  git(root, 'init', '-q');
+  git(root, 'config', 'user.email', 'drill@example.invalid');
+  git(root, 'config', 'user.name', 'drill');
+  git(root, 'add', '-A');
+  git(root, 'commit', '-q', '-m', 'start');
+  return root;
+}
+const commits = (root) => Number(git(root, 'rev-list', '--count', 'HEAD').trim());
+const addWalks = (root, k) => { const at = walkCount(root); for (let i = 0; i < k; i++) writeFileSync(join(root, 'Scripts', 'playtest', `new${at + i}-walk.json`), '{}'); };
+
+console.log('the loop keeps what is committed true');
+// The bug of 2026-11-06 to 11-10: a rewrite sat in the tree uncommitted, the
+// tree read in band, HEAD did not, and CI was red for a week.
+repo = gitRepo(1000, 'about 700 walks and about 100 minutes');
+{
+  const truth = sizePhrase(sweepSize(repo));
+  writeFileSync(join(repo, 'CLAUDE.md'), readFileSync(join(repo, 'CLAUDE.md'), 'utf8').replace(/about \d+ walks and about \d+ minutes/, truth));
+  check('a stranded rewrite reads fine in the tree', !checkQuotes(repo).problems.some((p) => p.file === 'CLAUDE.md'));
+  check('...and wrong in HEAD, which is what CI reads',
+    checkQuotes(repo, { read: fromCommit(repo) }).problems.some((p) => p.file === 'CLAUDE.md'));
+  const r = syncQuotes(repo);
+  check('the sync commits it, the stranded file included', r.committed && r.changed.includes('CLAUDE.md'), r);
+  check('it commits every quoting file in one go', r.changed.length === QUOTERS.length, r.changed);
+  check('HEAD is now in band', checkQuotes(repo, { read: fromCommit(repo) }).problems.length === 0,
+    checkQuotes(repo, { read: fromCommit(repo) }).problems);
+  check('the tree is clean behind it', git(repo, 'status', '--porcelain').trim() === '', git(repo, 'status', '--porcelain'));
+  const n = commits(repo);
+  check('a second sync, with nothing drifted, commits nothing', syncQuotes(repo).due === false && commits(repo) === n);
+}
+rmSync(repo, { recursive: true, force: true });
+
+console.log("a person's edits in a quoting file are theirs");
+repo = gitRepo(1000, 'about 700 walks and about 100 minutes');
+{
+  writeFileSync(join(repo, 'queue/README.md'), readFileSync(join(repo, 'queue/README.md'), 'utf8') + 'A paragraph somebody is still writing.\n');
+  const r = syncQuotes(repo);
+  check('the file with somebody\'s edits is held', r.held.includes('queue/README.md'), r);
+  check('...and left out of the commit', r.committed && !r.changed.includes('queue/README.md'), r.changed);
+  check('...with their paragraph still there, uncommitted',
+    /still writing/.test(readFileSync(join(repo, 'queue/README.md'), 'utf8')) && /queue\/README.md/.test(git(repo, 'status', '--porcelain')));
+}
+rmSync(repo, { recursive: true, force: true });
+
+// ---- 7. the margin: one more walk never turns CI red -------------------------
+// The loop syncs at HALF the CI band after every task, before it pushes. So
+// the worst a runner's push can start from is a quote just inside the resync
+// band, and it has the other half of the band to itself. Find that worst
+// starting point and add walks to it.
+console.log('the margin');
+check('the loop resyncs at half the band CI fails at',
+  RESYNC.walksPercent * 2 === TOLERANCE.walksPercent && RESYNC.minutesPercent * 2 === TOLERANCE.minutesPercent);
+repo = gitRepo(1140, 'about 1140 walks and about 230 minutes');
+{
+  syncQuotes(repo);
+  // Walk the set up one walk at a time until the loop would resync, then
+  // stop one short: that is the most drift a runner can ever start from.
+  let grown = 0;
+  while (syncQuotes(repo, { commit: false }).due === false && grown < 500) {
+    addWalks(repo, 1); grown++;
+  }
+  git(repo, 'checkout', '-q', '--', '.');
+  rmSync(join(repo, 'Scripts', 'playtest', `new${walkCount(repo) - 1}-walk.json`));
+  check('the loop lets the set grow by dozens of walks before it resyncs', grown > 20, grown);
+  check('at the last count it lets pass, CI is green', checkQuotes(repo, { read: fromCommit(repo) }).problems.length === 0);
+  addWalks(repo, 1);
+  check('ONE walk added there does not turn CI red', checkQuotes(repo, { read: fromCommit(repo) }).problems.length === 0,
+    checkQuotes(repo, { read: fromCommit(repo) }).problems);
+  addWalks(repo, 20);
+  check('nor does a runner adding twenty in one task', checkQuotes(repo, { read: fromCommit(repo) }).problems.length === 0,
+    checkQuotes(repo, { read: fromCommit(repo) }).problems);
+}
+rmSync(repo, { recursive: true, force: true });
 
 console.log(bad ? `\n${bad} FAILED` : '\nall good');
 process.exit(bad ? 1 : 0);

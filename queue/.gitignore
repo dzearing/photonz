@@ -21,3 +21,7 @@ sweep/.slice-walks.txt
 sweep/.awake.pid
 sweep/.resume-walks.txt
 sweep/.resume-claim.json
+# What the last finished CI run on main said (queue/bin/ci-main.mjs). One
+# machine's reading of GitHub, refreshed between tasks, not queue state.
+ci-main.json
+ci-main.json.tmp

@@ -35,7 +35,7 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 | App + DMG | `Scripts/build-app.sh --dmg` |
 | Run the app | `open "dist/Photonz Dev.app"` |
 | Run the app *as an agent* | `Scripts/probe-app.sh [file]` → builds and launches `dist/Photonz Probe.app` (`….photonz.probe`). Unmanned runners use this, never the dev app — see below |
-| Full walk sweep | Not yours to run: it is about 1010 walks and about 290 minutes, 29 times the 600s ceiling on an agent's background work. `queue/bin/sweep.sh request "<why>"` puts it on the pile; the loop runs the full set at most once a day, and a rotating check after each task that lands code, asked for or not (`queue/bin/sweep.sh schedule`). `Scripts/playtest-all.sh --no-build <name-fragment>` runs just the walks you touched, in seconds |
+| Full walk sweep | Not yours to run: it is about 1140 walks and about 395 minutes, 40 times the 600s ceiling on an agent's background work. `queue/bin/sweep.sh request "<why>"` puts it on the pile; the loop runs the full set at most once every three days, and a rotating check (at most every four hours) after a task that lands code, asked for or not (`queue/bin/sweep.sh schedule`). `Scripts/playtest-all.sh --no-build <name-fragment>` runs just the walks you touched, in seconds |
 | Where the loop's day went | `queue/bin/loop-day.mjs` (add `--hours 48`): the share of wall clock spent building, sweeping and idle |
 | Scripted playtest | `Scripts/playtest.sh <walk.json>` → drives the probe editor from a JSON script (keys, clicks, drags), writes offscreen renders + `log.json`. Probe-only, compiled out of release. See `docs/design/playtest-harness.md`; example: `Scripts/playtest/redline-walk.json` |
 | Regenerate icon | `swift Scripts/make-icon.swift` (only when intentionally changing it) |
@@ -50,15 +50,18 @@ minute day, 58 per cent of its wall clock against 41 per cent building
 
 The schedule now:
 
-* **The full set runs at most once every twenty four hours**, so once a day, and
-  only when code has landed since the last one. Requests pile up in between and
+* **The full set runs at most once every seventy two hours**, so every three
+  days, and only when code has landed since the last one (once a day until
+  2026-11-05, when the user cut it: about five tasks were done a day and a
+  whole set had grown to five or six hours). Requests pile up in between and
   the next run serves them all.
-* **In between, after any task that lands code, a rotating check**: about ten
+* **In between, after a task that lands code, a rotating check**, at most one
+  every four hours: about ten
   minutes of walks, made of the end-to-end walks every check runs
   (`an-editing-session-walk`: a whole video edit at Next defaults, failing on
   any blank frame while it plays), every walk whose script changed since the
-  last check, and the next chunk of the set, carrying on where it stopped. Over
-  a day the rotation covers the whole set anyway, in ten minute pieces.
+  last check, and the next chunk of the set, carrying on where it stopped, so
+  the rotation works through the whole set in ten minute pieces between runs.
 * **A rotating check is not a sweep.** It never closes the standing walk task,
   and thirty walks passing is never the state of seven hundred. A walk it finds
   broken lands on a task the same day: onto the open task that owns it (it said
@@ -74,7 +77,7 @@ The schedule now:
   runs has changed since, runs only the walks it never answered plus the ones it
   saw fail, as soon as the Mac is free again, and the two are written down as
   one run of the set that can close the standing walk task. When code has landed
-  since, it says so and the whole set runs again when the day is up
+  since, it says so and the whole set runs again when the floor is up
   (`queue/bin/sweep-resume.mjs`, drilled by `queue/bin/sweep-resume-drill.mjs`).
 * **A change every walk touches can jump the floor**:
   `queue/bin/sweep.sh request --now "<why the whole set, right now>"`.
@@ -119,7 +122,7 @@ still wait for them to step away (`queue/bin/person-at-mac.sh`, HIDIdleTime):
 * **`Scripts/probe-app.sh` with no walk**: nothing tells the app a walk is
   driving it, so opening a file brings it to the front like any app;
 * **the whole set**: fifteen minutes of absence, and it puts itself down when
-  they come back, its request going back on the pile. It runs at most once a day.
+  they come back, its request going back on the pile. It runs at most once every three days.
 
 `PHOTONZ_IGNORE_PERSON=1` is for a person running a walk by hand while they
 watch. Anything new that puts up a window or panel during a walk is run through

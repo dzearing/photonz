@@ -9,11 +9,17 @@
 // a runner had asked, and a runner asks after every task.
 //
 //   node queue/bin/sweep-schedule-drill.mjs
-import { decide, pickSlice, DEFAULTS, decideFromDisk, codeLandedBetween, WALK_PATHS, sliceWalkSeconds, sliceWalkSecondsFromDisk } from './sweep-schedule.mjs';
+import { decide as decideAt, pickSlice, DEFAULTS, decideFromDisk as decideFromDiskAt, codeLandedBetween, WALK_PATHS, sliceWalkSeconds, sliceWalkSecondsFromDisk } from './sweep-schedule.mjs';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
+
+// The scenarios below are written in hours against a ONE-DAY floor (26 hours is
+// "over the floor", 2 is "inside it"), which is the rule they drill, not the
+// floor the loop uses today (72 since 2026-11-05; checked under "defaults").
+const decide = (o) => decideAt({ floorHours: 24, ...o });
+const decideFromDisk = (o) => decideFromDiskAt({ floorHours: 24, ...o });
 
 let failures = 0;
 const check = (label, ok, got) => {
@@ -276,7 +282,7 @@ try {
 }
 
 console.log('defaults');
-check('the floor is a day (2026-09-26: walks took the user\'s Mac away)', DEFAULTS.floorHours === 24, DEFAULTS.floorHours);
+check('the floor is three days (2026-11-05: the user, about five tasks done a day and a whole set at five to six hours)', DEFAULTS.floorHours === 72, DEFAULTS.floorHours);
 check('a rotating check is budgeted at ten minutes', DEFAULTS.sliceMinutes === 10, DEFAULTS.sliceMinutes);
 
 console.log(failures ? `\n${failures} check(s) failed` : '\nall checks passed');

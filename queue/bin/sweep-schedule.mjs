@@ -12,7 +12,7 @@
 // THE SCHEDULE. Written here once, and every place that tells a human about it
 // reads it from queue/bin/sweep.sh schedule rather than typing it out again.
 //
-//   The full set runs at most once every FLOOR HOURS (24), so once a day, and
+//   The full set runs at most once every FLOOR HOURS (72), so every three days, and
 //   only when code has landed since the last one. Requests pile up in between
 //   and are all served by the next run.
 //
@@ -41,9 +41,14 @@
 //
 // Drill: queue/bin/sweep-schedule-drill.mjs
 export const DEFAULTS = {
-  // Hours between whole-set runs. 24, once a day (was twelve until 2026-09-26, when walks made the user's Mac unusable): a full sweep is 113
-  // minutes at 544 walks, which is 16 per cent of a day at this floor.
-  floorHours: 24,
+  // Hours between whole-set runs. 72, every three days, since 2026-11-05 (the
+  // user: 96 tasks waiting and about five done a day; a whole set had reached
+  // five to six hours, 22 per cent of the loop's week at a daily floor). It
+  // was 24 from 2026-09-26 (walks made the user's Mac unusable) and twelve
+  // before that. Until 2026-11-10 only the loop's environment said 72
+  // (go-loop.sh PHOTONZ_SWEEP_FLOOR_HOURS), so the dashboard and
+  // `sweep.sh schedule` went on saying once a day.
+  floorHours: 72,
   // Hours between two rotating checks. Until 2026-11-05 a check ran after EVERY
   // task that landed code, and a "ten minute" check was taking about thirty
   // (14 walks in 30 minutes that evening), so the user kept finding the loop
@@ -484,7 +489,7 @@ if (isMain) {
   const pace = sliceWalkSecondsFromDisk();
   console.log(`The walk sweep's schedule
 
-  The full set runs at most once every ${f} hours, so once a day, and only when
+  The full set runs at most once every ${f} hours, so ${f % 24 === 0 ? (f === 24 ? 'once a day' : `every ${['', '', 'two', 'three', 'four', 'five', 'six', 'seven'][f / 24] || f / 24} days`) : `${f} hours apart`}, and only when
   code has landed since the last one. Asking for a sweep does not start one: the
   requests pile up and the next run serves them all.
 

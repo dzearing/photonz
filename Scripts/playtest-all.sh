@@ -20,8 +20,8 @@
 # crashes as seven slow walks (2026-09-17 night).
 # Never touches "dist/Photonz Dev.app".
 #
-# The whole set is now about 1010 walks and about 290 minutes (counted by
-# queue/bin/sweep-size.mjs, never typed in), and it is GATED behind
+# The whole set is hundreds of walks and several hours (queue/bin/sweep-size.mjs
+# counts it; the refusal below asks it live), and it is GATED behind
 # PHOTONZ_SWEEP=1. That is not a build flag, it is a guard rail: a task runner
 # has its background work killed at 600s, and eight of the twenty recorded
 # runner failures are a runner that started this script and was terminated
@@ -62,15 +62,17 @@ if [[ -n "$ONLY_FILE" ]]; then
   ONLY_NAMES=$'\n'"$(cat "$ONLY_FILE")"$'\n'
 fi
 
-# The whole set is
-# about 1010 walks and about 290 minutes, which is 29 times the 600s ceiling
-# on a task runner's background work, so running it from inside a task ends with
+# The whole set is many times the 600s ceiling on a task runner's background
+# work (the refusal prints the size as queue/bin/sweep-size.mjs counts it today;
+# no number is typed in this file, so it cannot drift and turn CI red, which a
+# quoted one did from 2026-11-03 to 11-10), so running it from inside a task ends with
 # the runner terminated and its task handed back unfinished. Point whoever did
 # that at the way that survives instead of letting them start the run.
 if (( ${#PATTERNS[@]} == 0 )) && [[ -z "$ONLY_FILE" && "${PHOTONZ_SWEEP:-0}" != 1 ]]; then
+  SIZE=$(node queue/bin/sweep-size.mjs --phrase 2>/dev/null || echo "hundreds of walks and several hours")
+  echo "!! Refusing to run the whole walk set here: it is" >&2
+  echo "!! $SIZE, and a task runner's background work" >&2
   cat >&2 <<'EOM'
-!! Refusing to run the whole walk set here: it is
-!! about 1010 walks and about 290 minutes, and a task runner's background work
 !! is terminated at 600s, so this run would be killed
 !! and the task that started it would be handed back unfinished.
 !!

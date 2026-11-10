@@ -163,6 +163,13 @@ jobs:
           node queue/bin/sweep-size.mjs --check
           node queue/bin/sweep-size-drill.mjs
 
+      # Main failed CI on every push from 2026-11-03 to 11-10 and nothing the
+      # loop showed or a runner read said so. This holds the reading of the
+      # last finished run, and the words the dashboard, the loop and every
+      # runner get from it, honest (fixtures only; it never calls GitHub).
+      - name: A red main is said out loud
+        run: node queue/bin/ci-main-drill.mjs
+
       # The sweep is the only thing that says whether what the loop just built
       # broke the app, and on 2026-09-18 a killed loop threw away 126 walk
       # answers AND the request that asked for them, so nothing checked the app

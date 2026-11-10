@@ -2,7 +2,7 @@
 # The full walk sweep, owned by the go loop instead of by a task runner.
 #
 # Scripts/playtest-all.sh runs every scripted walk in Scripts/playtest:
-# about 1010 walks and about 290 minutes. That size is COUNTED, not remembered:
+# about 1140 walks and about 395 minutes. That size is COUNTED, not remembered:
 # queue/bin/sweep-size.mjs reads the walk count off disk and the seconds a walk
 # costs out of the recorded sweeps in queue/history.jsonl, and CI fails if this
 # comment drifts away from it. It used to be typed in, and by 2026-09-19 eleven
@@ -41,7 +41,7 @@
 # ASKING IS NOT STARTING. Until 2026-09-21 a request started a sweep, and since
 # a runner asks after every task the whole set ran after every task: thirteen
 # whole-set runs in twenty four hours, 58 per cent of the loop's wall clock
-# (queue/bin/loop-day.mjs --hours 24). Now the full set runs at most once a day
+# (queue/bin/loop-day.mjs --hours 24). Now the full set runs at most once every three days
 # and requests pile up for it, while a ROTATING CHECK of about ten minutes runs
 # after each task that lands code: every walk whose script changed, then the
 # next chunk of the set, carrying on where it stopped. Landed code is the ask;
@@ -86,7 +86,7 @@ case "${1:-}" in
 # them all, and each one's reason is carried into the result.
 request)
   shift
-  # --now jumps the once a day floor. It is for a change every walk touches
+  # --now jumps the three day floor. It is for a change every walk touches
   # (the renderer, the shell, the walk harness itself), and it costs the loop
   # two hours, so it is a thing you say on purpose rather than the default.
   URGENT=0
@@ -100,8 +100,8 @@ request)
     doc.requests.push({ t: new Date().toISOString(), by, why, ...(urgent === "1" ? { now: true } : {}) });
     fs.writeFileSync(file, JSON.stringify(doc, null, 2) + "\n");
     console.log(`==> Sweep requested (${doc.requests.length} pending). Nothing else for you to do.`);
-    if (urgent === "1") console.log("    You asked for it STRAIGHT AWAY, so it jumps the once a day floor and runs after this task.");
-    else console.log("    The full set runs at most once a day once code has landed, asked for or not; a rotating check of about ten minutes runs after each task that lands code. See: queue/bin/sweep.sh schedule");
+    if (urgent === "1") console.log("    You asked for it STRAIGHT AWAY, so it jumps the three day floor and runs after this task.");
+    else console.log("    The full set runs at most once every three days once code has landed, asked for or not; a rotating check of about ten minutes runs after a task that lands code, at most every four hours. See: queue/bin/sweep.sh schedule");
     console.log("    Read the result later with: queue/bin/sweep.sh status");
   ' "$REQ" "$why" "$(node -e '
       // Name the asker automatically: the runner knows its task, but nothing
@@ -598,7 +598,8 @@ run)
   # hold the loop for a day and more. The cap is what stops that, and it has to
   # sit well above a good sweep and well below a wedged one.
   #
-  # The budget is 24 seconds a walk (BUDGET_SECONDS_PER_WALK in sweep-size.mjs),
+  # The budget was 24 seconds a walk; since 2026-11-10 it is 1.6 times the
+  # measured walk, 26 to 40s (budgetSecondsFor in sweep-size.mjs). Historic:
   # floored at two hours. With 2026-10-02's 710 walks:
   #
   #   a good full sweep   710 x 14.6s = 173 minutes   (measured, see --json)

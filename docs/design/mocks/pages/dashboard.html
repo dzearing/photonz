@@ -1025,6 +1025,30 @@
       : 'Nothing is holding it, so the refresh should already have closed this.') + '">' + esc(t) + '</span>';
   }
 
+  // Whether the checks on main pass, as the loop read them before its last
+  // task (queue/bin/ci-main.mjs). From 2026-11-03 to 11-10 every push failed
+  // CI and nothing on this page said so; a real failure would have hidden the
+  // same way. Says nothing while main is green.
+  function ciBeatLine() {
+    var C = S.ci;
+    if (!C || !C.red) return '';
+    return '<br><span class="db-old" title="' + esc(C.line || '') + '">main\u2019s checks failing</span>';
+  }
+
+  function ciStrip() {
+    var C = S.ci;
+    if (!C || !C.red || !C.run) return '';
+    var h = '<div class="db-herr"><i class="ic ic-warning"></i><div>';
+    h += '<b>The checks on main are failing</b>';
+    h += '<p>The last finished run failed in ' + esc(C.where || 'an unnamed step') + '. ';
+    if (C.redSince) h += 'Main has been red for ' + (C.redSinceIsFloor ? 'at least ' : '') + esc(span(C.redSince)) + ', ' + C.redRuns + ' failed run' + (C.redRuns === 1 ? '' : 's') + '. ';
+    h += 'Every runner is told before it starts. ';
+    h += '<a href="' + esc(C.run.url) + '" target="_blank" rel="noopener">See the run</a>';
+    h += ' \u00b7 read ' + esc(span(C.checkedAt)) + ' ago' + (C.error ? ', the last try to read it again failed' : '') + '.</p>';
+    h += '</div></div>';
+    return h;
+  }
+
   // The full version, in the same strip the stale-script and locked-screen
   // warnings use. It never offers a button: releasing the lock is a person's
   // call, because the lock is the only thing that stops the loop quitting the
@@ -1091,7 +1115,7 @@
     else h += '<b>' + (st.cls === 'run' ? 'Between tasks' : 'Nothing running') + '</b><span>' + esc(st.note) + '</span>';
     h += '</div>';
     h += '<div class="db-beat">heartbeat ' + rel(L.updatedAt) + '<br>' + S.counts.byStatus.pending + ' pending · ' + S.counts.byStatus.blocked + ' blocked';
-    h += '<br>' + sweepLine() + leftoversLine() + devAppLine() + '</div>';
+    h += '<br>' + sweepLine() + leftoversLine() + devAppLine() + ciBeatLine() + '</div>';
     h += '</div>';
     // When the person was last told about the stall, and whether that was on
     // coming back to the Mac (advancePresence in queue-lib.mjs) or at its start.
@@ -1132,6 +1156,7 @@
       h += '</div></div>';
     }
     h += scriptStrip(L);
+    h += ciStrip();
     h += devAppStrip();
     h += blindStrip();
     h += '</div>';

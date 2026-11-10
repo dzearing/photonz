@@ -25,7 +25,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { remainderOf, resumable, mergeRuns } from './sweep-resume.mjs';
-import { decide, walkNames } from './sweep-schedule.mjs';
+import { decide as decideAt, walkNames } from './sweep-schedule.mjs';
+// Written against a one-day floor (the rule being drilled, not today's floor,
+// which is 72 hours since 2026-11-05: sweep-schedule-drill.mjs checks that).
+const decide = (o) => decideAt({ floorHours: 24, ...o });
 import { sweepSentences } from './sweep-parse.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
