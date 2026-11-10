@@ -1,0 +1,33 @@
+{
+  "id": "the-checks-on-main-pass-again-and-stay-green-whe",
+  "title": "The checks on main pass again, and stay green when walks are added",
+  "goal": "Every push to main has failed its automatic checks since 3 November, though every test passes: one check compares the walk count written in the docs with the real count, and each new walk breaks it. Nobody noticed for a week, so a real failure would hide the same way. Make the checks pass, keep them passing as walks are added, and make a red main visible to whoever watches the loop.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "loop",
+  "created": "2026-11-10T13:20:34.781Z",
+  "updated": "2026-11-10T13:21:01.803Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by the 2026-11-10 digest. Command: gh run list --branch main --limit 200 --json conclusion -q '[.[].conclusion] | group_by(.) | map({(.[0]):length}) | add' -> {cancelled:107, failure:87, success:5}; last success 2026-11-03T06:41Z. Every failure checked (runs 42771670171, 42799717445): Test slices 1 to 3 success, Build app bundle (arm64) fails at step \"The sweep's size is the size it really is\": \"queue/bin/sweep.sh:5 it says about 1010 walks and about 290 minutes; the set is 1140 walks and a full sweep is about 395 minutes. Fix all of them with: queue/bin/sweep-size.mjs --write\". The working tree's uncommitted copy says 1100 and 340, already stale again. Three digests in a row (11-07 to 11-09) noted those uncommitted edits and left them, because the digest only touches queue/. The digest prompt's own 'floor is twenty four hours' line is stale too (queue/bin/digest-prompt or wherever go-loop.sh keeps it).",
+  "acceptance": [
+    "queue/bin/sweep-size.mjs --check passes on a clean checkout of main, and the CI run for that push ends in success (gh run list --branch main --limit 1)",
+    "Adding one new walk file does not by itself turn CI red: either the count quotes allow a stated margin, or the step that lands a walk brings the quotes back into line in the same commit; a drill or unit test proves which",
+    "The uncommitted walk-count edits in the working tree (CLAUDE.md, Scripts/playtest-all.sh, docs/design/playtest-harness.md, docs/design/tutorials.md, Scripts/playtest/studies/README.md, queue/README.md, queue/bin/go-loop.sh, queue-lib.mjs, sweep.sh, queue/sweep/README.md, sitting since 2026-11-06) are either committed with today's numbers or thrown away, not left in the tree",
+    "When the last finished CI run on main failed, the dashboard and the loop's status line say so, naming the failing step, and the next runner is told before it starts",
+    "CLAUDE.md's two statements that the whole walk set runs at most once a day are corrected to the three-day floor set on 2026-11-05 (commit 7eac39576, PHOTONZ_SWEEP_FLOOR_HOURS=72)"
+  ],
+  "log": [
+    {
+      "t": "2026-11-10T13:20:34.783Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-10T13:21:01.802Z",
+      "note": "seq 3980 -> 20"
+    }
+  ]
+}

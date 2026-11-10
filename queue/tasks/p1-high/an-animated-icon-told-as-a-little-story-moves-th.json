@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-10T13:16:00.673Z",
+  "updated": "2026-11-10T13:20:43.339Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -206,6 +206,10 @@
     {
       "t": "2026-11-10T13:16:00.672Z",
       "note": "Hit kept, contact read off the ink, lid starts clear of the trash, still keys refused (282341071): story totals 59.6 and 53.7, checkbox fixed; bar (5 of 6 at reads as asked 7) not met, 1 of 6. Next: route the path after a touch in the landing."
+    },
+    {
+      "t": "2026-11-10T13:20:43.338Z",
+      "note": "Digest 2026-11-10, read as a user from 2026-11-10-story-trash-two-laps-frames.png: lid opens 0.29 to 0.48 s and that part reads well. The trash appears out of nothing at 0.58 s, already beside the lid, then from 0.87 to 1.06 s it is drawn on top of the lid's line and sinks through it, fading to grey as it enters the can. Nothing deflects, so 'thrown in' and 'bounces off the lid' are both still unseen. The lid closing at 1.35 s does follow the touch now, which is today's real gain. Eight passes over 2.5 days have moved this bar 2, 0, 0, 1, 1 of 6. Steer for the next pass: judge first on the user's own sentence (5.8 today) and the reel, since that is what they asked for; the other five cases are the guard against tuning for a trash can, not the goal. If one more pass ends without a visible bounce in the reel, write up what a person sees and let the user call it from the audit rather than starting a ninth pass."
     }
   ],
   "started": "2026-11-10T10:41:14.285Z",

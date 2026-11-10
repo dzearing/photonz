@@ -4,12 +4,12 @@
   "goal": "When an unmanned loop session uses a Photonz tool and its test copy is not running, the installed Photonz opens by itself on the person's Mac, the tool call fails anyway, and the app stays open after the session ends. That installed copy then holds the capture shortcuts ahead of the one the person is using. A session should reach the test copy or say it cannot, and open nothing else.",
   "epic": "agent-mcp",
   "priority": "p1-high",
-  "seq": 130,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:08:36.161Z",
-  "updated": "2026-11-08T17:12:57.702Z",
+  "updated": "2026-11-10T13:21:02.036Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the 2026-11-04 digest pass, Dev up, probe not running, installed 0.23.0:\n  (printf '%s\\n%s\\n' \"$INIT\" \"$CALL\"; sleep 28) | GO_LOOP_PID=1 /Applications/Photonz.app/Contents/Helpers/photonz-mcp\n  where INIT is an MCP initialize request and CALL is tools/call list_documents. Output:\n  photonz-mcp: launched Photonz (open -g -a /Applications/Photonz.app)\n  photonz-mcp: Photonz is not listening for agents...\n  ps then listed /Applications/Photonz.app/Contents/MacOS/Photonz, parent pid 1, started that second. Handshake and tools/list alone opened nothing.\nCause, read from code: launch() in Sources/PhotonzMCP/main.swift tries the helper's own bundle first (launchPath) whatever the choice says, so a loop session whose choice is probe opens the bundle the helper lives in, then waits for a probe socket that never comes. The server is installed in ~/.claude.json from /Applications, so every loop session uses that helper.\nSeen twice in a day: the clipboard runner at 21:55:09 on 2026-11-03 (pid 75545, logged on a-screenshot-is-on-the-clipboard-every-time-on-a) and this digest session at 07:58:24 on 2026-11-04 (pid 44993, parent 1, same second as the session; quit by hand). v0.23.0 predates c999166a, so it cannot step aside: CaptureShortcutOwner keeps the shortcuts with such a build and Dev stands down while it runs.",
@@ -56,6 +56,10 @@
     {
       "t": "2026-11-08T17:12:57.701Z",
       "note": "seq 160 -> 130"
+    },
+    {
+      "t": "2026-11-10T13:21:02.035Z",
+      "note": "seq 130 -> 50"
     }
   ]
 }

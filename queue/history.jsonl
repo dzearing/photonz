@@ -16634,3 +16634,22 @@
 {"t":"2026-11-10T13:16:00.520Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-10T13:16:00.598Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-10T13:16:00.674Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Hit kept, contact read off the ink, lid starts clear of the trash, still keys refused (282341071): story totals 59.6 and 53.7, checkbox fixed; bar (5 of 6 at reads as asked 7) not met, 1 of 6. Next: route the path after a touch in the landing."}
+{"t":"2026-11-10T13:20:34.785Z","ev":"task_created","id":"the-checks-on-main-pass-again-and-stay-green-whe","priority":"p1-high","title":"The checks on main pass again, and stay green when walks are added"}
+{"t":"2026-11-10T13:20:43.340Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-10T13:20:43.415Z","ev":"task_note","id":"text-keeps-every-word-at-every-zoom"}
+{"t":"2026-11-10T13:21:01.804Z","ev":"task_resequenced","id":"the-checks-on-main-pass-again-and-stay-green-whe","from":3980,"to":20}
+{"t":"2026-11-10T13:21:01.882Z","ev":"task_resequenced","id":"text-keeps-every-word-at-every-zoom","from":110,"to":30}
+{"t":"2026-11-10T13:21:01.959Z","ev":"task_resequenced","id":"ask-chat-has-the-mock-s-new-conversation-button","from":120,"to":40}
+{"t":"2026-11-10T13:21:02.037Z","ev":"task_resequenced","id":"an-unmanned-session-never-opens-the-installed-ph","from":130,"to":50}
+{"t":"2026-11-10T13:21:02.114Z","ev":"task_resequenced","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","from":140,"to":60}
+{"t":"2026-11-10T13:21:02.192Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-26","from":150,"to":70}
+{"t":"2026-11-10T13:21:02.269Z","ev":"task_resequenced","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":160,"to":80}
+{"t":"2026-11-10T13:21:02.346Z","ev":"task_resequenced","id":"the-keynote-clean-title-page-draws-its-starfield","from":170,"to":90}
+{"t":"2026-11-10T13:21:02.425Z","ev":"task_resequenced","id":"on-a-video-captions-and-transitions-sit-where-th","from":180,"to":100}
+{"t":"2026-11-10T13:21:02.504Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":190,"to":110}
+{"t":"2026-11-10T13:21:02.582Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":200,"to":120}
+{"t":"2026-11-10T13:21:02.670Z","ev":"task_resequenced","id":"the-brush-sits-right-after-crop-on-a-picture-s-t","from":210,"to":130}
+{"t":"2026-11-10T13:21:02.747Z","ev":"task_resequenced","id":"a-picked-arrow-s-appearance-starts-with-its-arro","from":220,"to":140}
+{"t":"2026-11-10T13:21:02.824Z","ev":"task_resequenced","id":"an-agent-can-change-what-it-made-fonts-captions","from":4080,"to":680}
+{"t":"2026-11-10T13:21:08.814Z","ev":"triage","summary":"merged 0, dropped 0, priority moves 0, filed 1 (CI on main red since 11-03, reproduced, p1 seq 20), reset 0, leftovers 0, groomed 1 (user-eye read and steer on the story icon task), renumbered 14, no new loop p1 bugs to spot-check"}
+{"t":"2026-11-10T13:21:59.172Z","ev":"digest","file":"2026-11-10.md"}
