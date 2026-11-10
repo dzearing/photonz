@@ -56,7 +56,9 @@ extension TextRasterizer {
         let width = Int((size.width * scale).rounded())
         let height = Int((size.height * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
-        let box = CGRect(x: 0, y: 0, width: CGFloat(width) / scale, height: CGFloat(height) / scale)
+        // The same box the still picture lays out in, so pieces break where
+        // its lines do at every scale.
+        let box = layoutBox(size, pixelHeight: height, scale: scale)
         let path = CGPath(rect: laidOutBox(text, in: box), transform: nil)
         let base = path.boundingBox.origin
         func frame(_ attributed: NSAttributedString) -> CTFrame {

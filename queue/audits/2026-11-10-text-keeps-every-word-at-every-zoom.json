@@ -1,0 +1,22 @@
+{
+  "feature": "Text keeps every word at every zoom",
+  "epic": "agent-ask",
+  "summary": "A line of text that fits its box now reads to its last word at every zoom. At some zooms it used to wrap and lose its last word (the pricing subtitle ended at \"cancel\" at 64% on a 2x screen).",
+  "setup": "Photonz Dev, release Next (the fix is in the shared renderer, so Current has it too), no flag changed from its default. Walk: Scripts/playtest/text-keeps-every-word-at-every-zoom-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "File > New > Image, then Ask: add the line \"Simple plans that scale with you. No hidden fees, cancel anytime.\" at 18 pt, centred.", "shot": "2026-11-10-text-every-zoom-100-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command 0 for 100%, then Command minus twice to reach 64%.", "shot": "2026-11-10-text-every-zoom-64-after-crop.png" },
+    { "do": "Compare with the same walk on the old renderer: the line stopped at \"cancel\".", "shot": "2026-11-10-text-every-zoom-64-before-crop.png" },
+    { "do": "Zoom through every step from 25% to 400% and read the line at each." }
+  ],
+  "evaluate": [
+    "Does the line read to \"anytime.\" at every zoom you try?",
+    "At 100%, does text you already had sit exactly where it did before?",
+    "Does wrapped text in a fixed width box break at the same words at every zoom?"
+  ],
+  "rough": [
+    "Text in a box measured in whole points draws identically at 100% (108 renders compared byte for byte). A box with a fractional size, such as one left by a drag, now sits in its true box: up to half a pixel sideways, and one pixel lower when aligned to the middle or bottom. Before the fix it sat in a slightly different place at each zoom.",
+    "The task names 67%. Zoom Out steps go 100, 80, 64, so the walk proves it at 64% (1.28 pixels a point, which rounds down like 67% did). The unit test also covers the exact scales from the report (0.6715 and 1.343) and 30 more that round down."
+  ]
+}

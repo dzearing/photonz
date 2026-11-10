@@ -1,0 +1,61 @@
+{
+  "out": "/tmp/photonz-playtest/text-keeps-every-word-at-every-zoom-walk",
+  "seed": "text-keeps-every-word-at-every-zoom, at Next defaults with the model's reply written into the walk: the pricing subtitle, 18 pt and centred in the box it was measured for, reads to its last word ('anytime.') at 100%, 80% and 64%. On a 2x screen 64% bakes the words at 1.28 pixels a point, a scale whose pixel width rounds down, which is where the line used to wrap and lose its last word.",
+  "clock": 120,
+  "setup": {
+    "forget": ["all"],
+    "askReplies": [
+      {
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "add_text",
+                "arguments": {
+                  "text": "Simple plans that scale with you. No hidden fees, cancel anytime.",
+                  "x": 200,
+                  "y": 300,
+                  "fontSize": 18,
+                  "alignment": "center",
+                  "color": "#1D1D1F",
+                  "shadow": false
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "message": { "role": "assistant", "content": "A subtitle.", "tool_calls": [] }
+      }
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 960, "canvasHeight": 640, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "add the pricing subtitle" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askSettled", "timeout": 90 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectLayers", "atLeast": 2 },
+    { "do": "action", "action": "zoomActualSize" },
+    { "do": "waitFor", "condition": "displayZoom", "value": 100, "timeout": 5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-at-100", "note": "the subtitle on one line, ending in anytime." },
+    { "do": "snapshot", "name": "1-at-100" },
+    { "do": "action", "action": "zoomOut" },
+    { "do": "waitFor", "condition": "displayZoom", "value": 80, "timeout": 5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "2-at-80" },
+    { "do": "action", "action": "zoomOut" },
+    { "do": "waitFor", "condition": "displayZoom", "value": 64, "timeout": 5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-at-64", "note": "still one line ending in anytime., where it used to end at cancel" },
+    { "do": "snapshot", "name": "3-at-64" }
+  ]
+}

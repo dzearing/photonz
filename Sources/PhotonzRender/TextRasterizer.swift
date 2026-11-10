@@ -45,6 +45,21 @@ public enum TextRasterizer {
                   scale: scale)
     }
 
+    /// The box the words are laid out in, in the points of a picture
+    /// `pixelHeight` pixels tall drawn at `scale`: exactly `size`, the box the
+    /// words were measured for, with its top on the picture's top.
+    ///
+    /// The picture's pixels are `size` times `scale` rounded, so they cover a
+    /// few hundredths of a point more or less than `size`. Laying the words
+    /// out in the pixels instead narrowed the box at every scale that rounds
+    /// down, and a line that just fits wrapped there, its last word falling
+    /// below the box: a subtitle measured on one line lost "anytime." at 67%
+    /// on a 2x screen. The top stays pinned so 100% draws as it always did.
+    static func layoutBox(_ size: CGSize, pixelHeight: Int, scale: CGFloat) -> CGRect {
+        CGRect(x: 0, y: CGFloat(pixelHeight) / scale - size.height,
+               width: size.width, height: size.height)
+    }
+
     /// One outline round the letters: how thick, and what colour.
     public struct TextOutline: Hashable, Sendable {
         public var width: CGFloat
@@ -88,8 +103,7 @@ public enum TextRasterizer {
         // into however many pixels `scale` asked for.
         context.scaleBy(x: scale, y: scale)
 
-        let box = CGRect(x: 0, y: 0,
-                         width: CGFloat(width) / scale, height: CGFloat(height) / scale)
+        let box = layoutBox(size, pixelHeight: height, scale: scale)
         let path = CGPath(rect: laidOutBox(text, in: box), transform: nil)
         func draw(_ attributed: NSAttributedString) {
             let framesetter = CTFramesetterCreateWithAttributedString(attributed)
