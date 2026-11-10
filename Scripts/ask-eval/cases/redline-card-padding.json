@@ -1,0 +1,8 @@
+{
+  "request": "measure the padding inside the meeting card and the gap between its title and the time under it",
+  "group": "redline",
+  "from": "A runner, 2026-11-09: a measuring request that names particular dimensions (ask-s-redlines-do-at-least-as-well-on-unseen-req)",
+  "start": { "open": "Tests/PhotonzRenderTests/Fixtures/people-panel-2x.png" },
+  "context": "a screenshot of a people list and a meeting card",
+  "expect": { "minMeasurements": 2, "maxMeasurements": 8 }
+}

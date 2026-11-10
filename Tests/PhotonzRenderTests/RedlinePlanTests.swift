@@ -226,4 +226,84 @@ struct RedlinePlanTests {
             }
         }
     }
+
+    // MARK: Screens unlike the settings pane
+
+    /// A dark inspector panel cropped from a window: the window's one pixel
+    /// edge runs its whole height and a divider its whole width, so the two
+    /// are one piece of ink that spans the picture. Until 2026-11-09 every
+    /// word on the panel was joined to that piece as one "line", so the
+    /// panel read as a single mark and its redline measured almost nothing.
+    @Test("A window edge joined to a full width divider reads as dividers, and the words beside them still read as words")
+    func frameLinesStayDividers() throws {
+        let luma = try Self.picture("effects-panel-2x")
+        let nodes = LayoutRead.read(luma, pixelScale: 2)
+        let area = CGFloat(luma.width * luma.height)
+        let huge = nodes.filter { $0.kind != .box && $0.rect.width * $0.rect.height > area / 4 }
+        #expect(huge.isEmpty, "\(huge.map(\.rect))")
+        // Corner Radius, Effects, Border 1, Style, Color, Position, Width, Offset, Border 2 and the readouts.
+        #expect(nodes.filter { $0.kind == .text }.count >= 9, "\(nodes.filter { $0.kind == .text }.map(\.rect))")
+        #expect(nodes.contains { $0.kind == .rule && $0.rect.width >= CGFloat(luma.width) * 0.9 })
+        let marks = RedlinePlan.marks(in: nodes, canvas: CGRect(x: 0, y: 0, width: luma.width, height: luma.height), pixelScale: 2)
+        #expect(marks.filter { $0.role != .size }.count >= 2, "\(marks.map(\.what))")
+    }
+
+    /// A call to action on a dark web page: a pill filled with a gradient,
+    /// glowing on the page. It is a button, not a photo, so it gets a size.
+    @Test("A button filled with a gradient is read as a button and measured, not as a photo")
+    func gradientButtonIsAControl() throws {
+        let luma = try Self.picture("download-pill-2x")
+        let nodes = LayoutRead.read(luma, pixelScale: 2)
+        let marks = RedlinePlan.marks(in: nodes, canvas: CGRect(x: 0, y: 0, width: luma.width, height: luma.height), pixelScale: 2)
+        // The pill is about 548 by 125 pixels at (492, 270); its glow is not part of it.
+        let size = try #require(marks.first { $0.role == .size && ($0.box?.width ?? 0) > 400 }, "\(marks.map(\.what))")
+        let box = try #require(size.box)
+        #expect(abs(box.minX - 492) <= 8 && abs(box.maxX - 1040) <= 8, "\(box)")
+        #expect(abs(box.minY - 270) <= 8 && abs(box.maxY - 395) <= 8, "\(box)")
+        // And how far it sits under the paragraph above it: 186 to 270 pixels.
+        let above = try #require(marks.first { $0.role == .gap && $0.axis == .vertical }, "\(marks.map(\.what))")
+        #expect(abs(above.start.y - 186) <= 4 && abs(above.end.y - 270) <= 4, "\(above.start) \(above.end)")
+    }
+
+    /// The same panel's redline: the colour well and the dropdown are what a
+    /// developer builds, not the disclosure chevrons; the rows of labels give
+    /// the row height; and two things across the panel from each other are
+    /// not neighbours with a gap between them.
+    @Test("A panel of labelled rows gets its controls sized, its row height, and no gap across the whole panel")
+    func panelOfRows() throws {
+        let luma = try Self.picture("effects-panel-2x")
+        let nodes = LayoutRead.read(luma, pixelScale: 2)
+        let marks = RedlinePlan.marks(in: nodes, canvas: CGRect(x: 0, y: 0, width: luma.width, height: luma.height), pixelScale: 2)
+        let sizes = marks.filter { $0.role == .size }
+        // Nothing under 10 points across is sized: a chevron is not a control.
+        for s in sizes { #expect(max(s.box?.width ?? 0, s.box?.height ?? 0) >= 20, "\(s.what) \(s.reading(pixelScale: 2))") }
+        // The colour well (221, 301) and the dropdown (221, 351) both get sizes.
+        #expect(sizes.contains { $0.box?.minY == 301 }, "\(sizes.map { $0.box ?? .zero })")
+        #expect(sizes.contains { $0.box?.minY == 351 }, "\(sizes.map { $0.box ?? .zero })")
+        #expect(marks.contains { $0.role == .rhythm }, "\(marks.map(\.what))")
+        for m in marks where m.role == .gap { #expect(m.value(pixelScale: 2) <= 64, "\(m.what) \(m.reading(pixelScale: 2))") }
+    }
+
+    /// "Measure the padding inside the meeting card": a model passes the
+    /// card's own box as the region. Read as a crop, the card's edge was the
+    /// crop's edge and there was no padding to find; read as a focus on the
+    /// whole picture, the card is a card.
+    @Test("A region round one card measures that card: its padding and the gaps between what is stacked in it")
+    func focusOnOneCard() throws {
+        let luma = try Self.picture("people-panel-2x")
+        let nodes = LayoutRead.read(luma, pixelScale: 2)
+        let card = CGRect(x: 562, y: 26, width: 331, height: 355)   // as a model gave it, a little inside the border
+        let marks = RedlinePlan.marks(in: nodes, canvas: CGRect(x: 0, y: 0, width: luma.width, height: luma.height),
+                                      pixelScale: 2, focus: card)
+        let grown = card.insetBy(dx: -48, dy: -48)
+        for m in marks {
+            let r = m.box ?? CGRect(x: min(m.start.x, m.end.x), y: min(m.start.y, m.end.y),
+                                    width: abs(m.end.x - m.start.x), height: abs(m.end.y - m.start.y))
+            #expect(grown.contains(r), "\(m.what) \(r) is outside the card")
+        }
+        #expect(marks.contains { $0.role == .padding && $0.start.x == 560 }, "\(marks.map(\.what))")
+        // The title (ends at 267) over the time (starts at 285).
+        #expect(marks.contains { $0.axis == .vertical && abs($0.start.y - 267) <= 2 && abs($0.end.y - 285) <= 2 },
+                "\(marks.map { "\($0.what) \($0.start) \($0.end)" })")
+    }
 }

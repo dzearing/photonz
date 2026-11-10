@@ -1,0 +1,8 @@
+{
+  "request": "spec the spacing in this panel",
+  "group": "redline",
+  "from": "A runner, 2026-11-09: a measuring request on a dark app window (ask-s-redlines-do-at-least-as-well-on-unseen-req)",
+  "start": { "open": "Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png" },
+  "context": "a screenshot of a dark inspector panel",
+  "expect": { "minMeasurements": 3, "maxMeasurements": 16 }
+}

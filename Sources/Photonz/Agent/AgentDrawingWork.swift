@@ -387,9 +387,12 @@ enum AgentDrawingWork {
         let scale = document.pixelScale
         let luma = read.luma
         return await Task.detached(priority: .userInitiated) {
-            let nodes = LayoutRead.read(luma, pixelScale: scale, region: region)
-            let canvas = region ?? CGRect(x: 0, y: 0, width: luma.width, height: luma.height)
-            return (RedlinePlan.marks(in: nodes, canvas: canvas, pixelScale: scale),
+            // The picture is read whole and the region is where to look:
+            // cropped to a card, the card's own edge is the crop's and it
+            // has no padding to measure.
+            let nodes = LayoutRead.read(luma, pixelScale: scale)
+            let canvas = CGRect(x: 0, y: 0, width: luma.width, height: luma.height)
+            return (RedlinePlan.marks(in: nodes, canvas: canvas, pixelScale: scale, focus: region),
                     RedlinePlan.obstacles(in: nodes, canvas: canvas, pixelScale: scale),
                     RedlinePlan.edges(in: nodes, canvas: canvas, pixelScale: scale))
         }.value

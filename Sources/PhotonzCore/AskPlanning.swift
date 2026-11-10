@@ -1580,8 +1580,9 @@ public struct AskConversation: Sendable {
         elements", "spec this"), call find_measurements, then mark_measurements once with the ids \
         that answer the request: all of them for a general request, only those whose what or role \
         matches when the person names particular things (just the buttons, only the spacing). Never \
-        place those yourself. When it lists nothing, or nothing that matches what was named, call \
-        find_elements and add_measurement for what was asked.
+        place those yourself. When they name one part (a card, one button), pass its box as \
+        region. What it does not list is add_measurement with boxes from find_measurements or \
+        find_elements.
         - To check a screenshot for what is inconsistent (misalignments, uneven spacing or gaps, padding \
         or borders that differ, "check the spacing", "what is inconsistent here"), call find_misalignments, \
         then mark_misalignments once with the ids of every finding worth showing. Never measure them \

@@ -221,16 +221,22 @@ public enum LayoutRead {
 
         // MARK: Reading a region
 
-        func scan(_ box: IntBox, allowed: [Bool], background: UInt32, parent: Int?, depth: Int,
-                  into nodes: inout [LayoutNode]) {
+        func scan(_ box: IntBox, allowed: [Bool], background: UInt32, rowBackgrounds: [UInt32]? = nil,
+                  parent: Int?, depth: Int, into nodes: inout [LayoutNode]) {
             var ink = [Bool](repeating: false, count: box.w * box.h)
             for y in 0..<box.h {
                 let row = (box.y + y) * width + box.x
+                let paper = rowBackgrounds?[y] ?? background
                 for x in 0..<box.w where allowed[y * box.w + x] {
-                    ink[y * box.w + x] = Self.distance(colour(row + x), background) > LayoutRead.inkThreshold
+                    ink[y * box.w + x] = Self.distance(colour(row + x), paper) > LayoutRead.inkThreshold
                 }
             }
-            let (labels, pieces) = self.pieces(in: box, ink: ink)
+            var (labels, pieces) = self.pieces(in: box, ink: ink)
+            // A window's edge and a divider that meets it are one piece of
+            // ink as long as the picture; read as one thing, it swallows
+            // every word near it. Its straight runs are dividers.
+            let frames = frameRules(in: box, ink: &ink, labels: labels, pieces: pieces)
+            if !frames.isEmpty { (labels, pieces) = self.pieces(in: box, ink: ink) }
             var loose: [Int] = []
             var boxes: [(Int, Shape)] = []
             for (id, piece) in pieces.enumerated() where piece.count >= 2 {
@@ -267,6 +273,10 @@ public enum LayoutRead {
                 nodes.append(LayoutNode(rect: CGRect(x: box.x + p.minX, y: box.y + p.minY, width: p.w, height: p.h),
                                         kind: .rule, parent: parent))
             }
+            for r in frames {
+                nodes.append(LayoutNode(rect: CGRect(x: box.x + r.minX, y: box.y + r.minY, width: r.w, height: r.h),
+                                        kind: .rule, parent: parent))
+            }
             for line in icons(lines(marks, pieces: pieces), pieces: pieces) {
                 var r = Piece()
                 for id in line { let p = pieces[id]; r.add(p.minX, p.minY); r.add(p.maxX, p.maxY) }
@@ -284,15 +294,84 @@ public enum LayoutRead {
                 nodes.append(node)
             }
             for (id, shape) in boxes {
-                let p = pieces[id]
+                var p = pieces[id]
+                var shape = shape
+                // A button filled with a gradient, glowing on its page: no
+                // one fill, so it read as a photo, glow and all.
+                if shape.isPicture, let lit = gradientCore(of: p, id: Int32(id), in: box, labels: labels, background: background) {
+                    p = lit.piece
+                    shape = lit.shape
+                }
                 let rect = CGRect(x: box.x + p.minX, y: box.y + p.minY, width: p.w, height: p.h)
                 let index = nodes.count
                 nodes.append(LayoutNode(rect: rect, kind: shape.isPicture ? .picture : .box, parent: parent,
                                         border: shape.border.map { CGFloat($0) }, fill: shape.fill))
                 guard !shape.isPicture else { continue }
                 let inner = IntBox(x: box.x + p.minX, y: box.y + p.minY, w: p.w, h: p.h)
-                scan(inner, allowed: shape.inside, background: shape.fill, parent: index, depth: depth + 1, into: &nodes)
+                scan(inner, allowed: shape.inside, background: shape.fill, rowBackgrounds: shape.rowFills,
+                     parent: index, depth: depth + 1, into: &nodes)
             }
+        }
+
+        // MARK: Frames
+
+        /// The straight runs of every piece that is a frame of lines rather
+        /// than a thing: far bigger than a control, nearly all empty, and
+        /// not a ring round flat space (a card's border is read as a box).
+        /// Each run of thin rows or columns that crosses most of the piece
+        /// is cleared from `ink` and handed back as a divider, so what was
+        /// joined to it reads on its own.
+        func frameRules(in box: IntBox, ink: inout [Bool], labels: [Int32], pieces: [Piece]) -> [Piece] {
+            let big = Int(40 * scale)
+            let thin = Int((2.5 * scale).rounded())
+            var found: [Piece] = []
+            for (id, p) in pieces.enumerated() where p.w >= big && p.h >= big && p.count * 8 < p.w * p.h {
+                // A ring round flat space is a bordered card, read as a box.
+                if shape(of: p, id: Int32(id), in: box, labels: labels) != nil { continue }
+                var rows = [Int](repeating: 0, count: p.h)
+                var cols = [Int](repeating: 0, count: p.w)
+                for y in p.minY...p.maxY {
+                    for x in p.minX...p.maxX where labels[y * box.w + x] == Int32(id) {
+                        rows[y - p.minY] += 1
+                        cols[x - p.minX] += 1
+                    }
+                }
+                func runs(_ counts: [Int], across length: Int) -> [ClosedRange<Int>] {
+                    var out: [ClosedRange<Int>] = []
+                    var start: Int?
+                    for i in 0...counts.count {
+                        let long = i < counts.count && counts[i] * 10 >= length * 8
+                        if long { start = start ?? i } else if let s = start {
+                            if i - s <= thin { out.append(s...(i - 1)) }
+                            start = nil
+                        }
+                    }
+                    return out
+                }
+                let across = runs(rows, across: p.w), down = runs(cols, across: p.h)
+                guard !across.isEmpty || !down.isEmpty else { continue }
+                for run in across {
+                    var r = Piece()
+                    for y in run {
+                        for x in p.minX...p.maxX where labels[(p.minY + y) * box.w + x] == Int32(id) {
+                            ink[(p.minY + y) * box.w + x] = false
+                            r.add(x, p.minY + y)
+                        }
+                    }
+                    found.append(r)
+                }
+                for run in down {
+                    var r = Piece()
+                    for x in run {
+                        for y in p.minY...p.maxY where labels[y * box.w + p.minX + x] == Int32(id) {
+                            ink[y * box.w + p.minX + x] = false
+                            r.add(p.minX + x, y)
+                        }
+                    }
+                    found.append(r)
+                }
+            }
+            return found.filter { $0.count > 0 }
         }
 
         // MARK: Boxes
@@ -303,6 +382,78 @@ public enum LayoutRead {
             var border: [Int]
             /// Inside the shape and clear of its border, piece-local.
             var inside: [Bool]
+            /// A gradient's fill, row by row, piece-local; nil for a flat fill.
+            var rowFills: [UInt32]? = nil
+        }
+
+        /// A shape with a gradient fill inside a soft glow or shadow: the
+        /// part of `p` sharply different from `background` (a glow fades
+        /// into the page a step at a time, a button's edge does not), when it
+        /// is a solid shape whose every row is nearly one colour. Nil for a
+        /// photo, whose rows are not.
+        func gradientCore(of p: Piece, id: Int32, in box: IntBox, labels: [Int32], background: UInt32)
+            -> (piece: Piece, shape: Shape)? {
+            let strong = 40
+            let w = p.w, h = p.h
+            var core = [Bool](repeating: false, count: w * h)
+            for y in 0..<h {
+                for x in 0..<w where labels[(p.minY + y) * box.w + p.minX + x] == id {
+                    core[y * w + x] = Self.distance(colour((box.y + p.minY + y) * width + box.x + p.minX + x), background) > strong
+                }
+            }
+            let local = IntBox(x: 0, y: 0, w: w, h: h)
+            let (coreLabels, corePieces) = pieces(in: local, ink: core)
+            guard let (bigId, big) = corePieces.enumerated().max(by: { $0.element.count < $1.element.count }),
+                  big.w >= Int(10 * scale), big.h >= Int(10 * scale),
+                  big.count * 10 >= big.w * big.h * 7 else { return nil }
+            // Every row of it nearly one colour, give or take its words.
+            var rowFills = [UInt32](repeating: 0, count: big.h)
+            var flat = 0, total = 0
+            for y in 0..<big.h {
+                var counts: [UInt32: Int] = [:]
+                var row: [UInt32] = []
+                for x in 0..<big.w where coreLabels[(big.minY + y) * w + big.minX + x] == Int32(bigId) {
+                    let c = colour((box.y + p.minY + big.minY + y) * width + box.x + p.minX + big.minX + x)
+                    counts[c, default: 0] += 1
+                    row.append(c)
+                }
+                guard let mode = counts.max(by: { ($0.value, $0.key) < ($1.value, $1.key) })?.key else { continue }
+                rowFills[y] = mode
+                total += row.count
+                flat += row.filter { Self.distance($0, mode) <= LayoutRead.inkThreshold }.count
+            }
+            guard total > 0, flat * 10 >= total * 7 else { return nil }
+            // The shape's inside: on each row between its first and last
+            // pixel, so its words (lighter or darker than the fill) are in
+            // it, and two points clear of its outline every way, so a
+            // highlight along a rounded edge is not.
+            let clear = max(1, Int((2 * scale).rounded()))
+            var spans = [(Int, Int)?](repeating: nil, count: big.h)
+            for y in 0..<big.h {
+                var first = -1, last = -1
+                for x in 0..<big.w where coreLabels[(big.minY + y) * w + big.minX + x] == Int32(bigId) {
+                    if first < 0 { first = x }
+                    last = x
+                }
+                if first >= 0 { spans[y] = (first + clear, last - clear) }
+            }
+            var inside = [Bool](repeating: false, count: big.w * big.h)
+            for y in clear..<max(clear, big.h - clear) {
+                var lo = Int.min, hi = Int.max
+                for dy in -clear...clear {
+                    guard let span = spans[y + dy] else { lo = Int.max; break }
+                    lo = max(lo, span.0)
+                    hi = min(hi, span.1)
+                }
+                guard lo <= hi else { continue }
+                for x in lo...hi { inside[y * big.w + x] = true }
+            }
+            var piece = Piece()
+            piece.add(p.minX + big.minX, p.minY + big.minY)
+            piece.add(p.minX + big.maxX, p.minY + big.maxY)
+            piece.count = big.count
+            let middle = rowFills[big.h / 2]
+            return (piece, Shape(fill: middle, isPicture: false, border: [0, 0, 0, 0], inside: inside, rowFills: rowFills))
         }
 
         /// A box when the piece is a filled shape or a ring round flat space;
@@ -404,6 +555,11 @@ public enum LayoutRead {
             let left = run({ ($0 % 100_000, $0 / 100_000) }, along: h, depth: min(reach, w / 2))
             let bottom = run({ ($0 / 100_000, h - 1 - $0 % 100_000) }, along: w, depth: min(reach, h / 2))
             let right = run({ (w - 1 - $0 % 100_000, $0 / 100_000) }, along: h, depth: min(reach, w / 2))
+            // A "border" as deep as the look reaches, on two sides or more,
+            // is no border: it is a photo with a patch of one colour in it.
+            if [top, left, bottom, right].filter({ $0 >= reach }).count >= 2 {
+                return Shape(fill: fill, isPicture: true, border: [0, 0, 0, 0], inside: [])
+            }
             // What is inside, kept clear of the border and the shape's own
             // antialiased rim, so neither reads as a child.
             let clear = max(max(top, bottom), max(left, right)) + 1

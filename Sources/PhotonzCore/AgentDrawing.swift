@@ -589,7 +589,21 @@ public enum AgentMeasurePlan {
             return GapMeasurement(axis: .vertical, start: CGPoint(x: x, y: top.maxY),
                                   end: CGPoint(x: x, y: bottom.minY))
         }
-        return nil
+        // One inside the other: the padding, on the side where they come
+        // nearest (the top or the left when two are even).
+        let (outer, inner) = a.contains(b) ? (a, b) : (b, a)
+        guard outer.contains(inner), outer != inner else { return nil }
+        let sides: [(CGFloat, GapMeasurement)] = [
+            (inner.minY - outer.minY, GapMeasurement(axis: .vertical, start: CGPoint(x: inner.midX.rounded(), y: outer.minY),
+                                                     end: CGPoint(x: inner.midX.rounded(), y: inner.minY))),
+            (inner.minX - outer.minX, GapMeasurement(axis: .horizontal, start: CGPoint(x: outer.minX, y: inner.midY.rounded()),
+                                                     end: CGPoint(x: inner.minX, y: inner.midY.rounded()))),
+            (outer.maxY - inner.maxY, GapMeasurement(axis: .vertical, start: CGPoint(x: inner.midX.rounded(), y: inner.maxY),
+                                                     end: CGPoint(x: inner.midX.rounded(), y: outer.maxY))),
+            (outer.maxX - inner.maxX, GapMeasurement(axis: .horizontal, start: CGPoint(x: inner.maxX, y: inner.midY.rounded()),
+                                                     end: CGPoint(x: outer.maxX, y: inner.midY.rounded()))),
+        ]
+        return sides.filter { $0.0 > 0 }.min { $0.0 < $1.0 }?.1
     }
 
     /// How far a measured side may sit from an edge in the picture and still

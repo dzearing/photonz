@@ -1,0 +1,8 @@
+{
+  "request": "how big is the download button, and how far is it from the paragraph above it?",
+  "group": "redline",
+  "from": "A runner, 2026-11-09: a question about one control's size and one gap, on a dark web page (ask-s-redlines-do-at-least-as-well-on-unseen-req)",
+  "start": { "open": "Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png" },
+  "context": "a screenshot of a web page with a download button",
+  "expect": { "minMeasurements": 2, "maxMeasurements": 6 }
+}

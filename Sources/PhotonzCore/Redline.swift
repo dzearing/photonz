@@ -81,13 +81,20 @@ public enum RedlinePlan {
     public static let mostMarks = 10
 
     public static func marks(luma: LumaField, pixelScale: CGFloat, region: CGRect? = nil) -> [RedlineMark] {
-        let nodes = LayoutRead.read(luma, pixelScale: pixelScale, region: region)
-        let canvas = region ?? CGRect(x: 0, y: 0, width: luma.width, height: luma.height)
-        return marks(in: nodes, canvas: canvas, pixelScale: pixelScale)
+        let nodes = LayoutRead.read(luma, pixelScale: pixelScale)
+        let canvas = CGRect(x: 0, y: 0, width: luma.width, height: luma.height)
+        return marks(in: nodes, canvas: canvas, pixelScale: pixelScale, focus: region)
     }
 
-    public static func marks(in nodes: [LayoutNode], canvas: CGRect, pixelScale: CGFloat) -> [RedlineMark] {
-        Scan(nodes: nodes, canvas: canvas, scale: max(pixelScale, 1)).run()
+    /// `focus` is the part of the picture a person named (one card, the
+    /// sidebar): the picture is still read whole, so the card is a card, and
+    /// only the marks in and round that part are kept, that part's own
+    /// padding and stacking first.
+    public static func marks(in nodes: [LayoutNode], canvas: CGRect, pixelScale: CGFloat,
+                             focus: CGRect? = nil) -> [RedlineMark] {
+        var scan = Scan(nodes: nodes, canvas: canvas, scale: max(pixelScale, 1))
+        scan.focus = focus
+        return scan.run()
     }
 
     /// What a readout must never sit on and a leader never cross: every line
@@ -160,6 +167,7 @@ public enum RedlinePlan {
         let canvas: CGRect
         let scale: CGFloat
         let children: [Int?: [Int]]
+        var focus: CGRect?
 
         init(nodes: [LayoutNode], canvas: CGRect, scale: CGFloat) {
             self.nodes = nodes
@@ -220,7 +228,9 @@ public enum RedlinePlan {
         /// A mark small enough to be an icon and big enough to measure.
         func isIcon(_ r: CGRect) -> Bool {
             let lo = pt(min(r.width, r.height)), hi = pt(max(r.width, r.height))
-            return lo >= 4 && hi <= 64 && hi / max(lo, 0.1) <= 2
+            // Under 10 points across is a chevron or a caret beside words,
+            // not something a developer is handed a size for.
+            return lo >= 4 && hi >= 10 && hi <= 64 && hi / max(lo, 0.1) <= 2
         }
 
         /// What a control's shape says it is.
@@ -316,7 +326,11 @@ public enum RedlinePlan {
             }.sorted(by: readingOrder)
             let obstacles = RedlinePlan.obstacles(in: nodes, canvas: canvas, pixelScale: scale)
             var sizes: [RedlineMark] = []
-            let kinds = kinds(controls)
+            // Controls before icons: the button is what gets built, the
+            // glyph beside a row is detail.
+            let found = kinds(controls)
+            func rank(_ k: Kind) -> Int { nodes[k.members[0]].kind == .mark ? 2 : k.name == "Icon" ? 1 : 0 }
+            let kinds = (0...2).flatMap { r in found.filter { rank($0) == r } }
             var representatives: [Int] = []
             for kind in kinds.prefix(mostSizes) {
                 let pick = representative(of: kind.members, obstacles: obstacles)
@@ -325,8 +339,13 @@ public enum RedlinePlan {
             }
 
             var spacing: [RedlineMark] = []
-            let containers = nodes.indices.filter(isContainer).sorted(by: readingOrder)
+            var containers = nodes.indices.filter(isContainer).sorted(by: readingOrder)
             let minimum = 2 * scale
+            // The card a person named comes first: its padding is the one measured.
+            let focused = focus.flatMap { f in
+                containers.max { overlap($0, f) < overlap($1, f) }.flatMap { overlap($0, f) >= 0.5 ? $0 : nil }
+            }
+            if let focused { containers = [focused] + containers.filter { $0 != focused } }
 
             // No margin from the picture's edge: a screenshot's edge is where
             // somebody cropped it, not a measurement of the design.
@@ -365,6 +384,33 @@ public enum RedlinePlan {
                 }
             }
 
+            // In the card a person named: its top padding when it is not
+            // the same as its left, and how far apart what is stacked in it
+            // sits (a photo over its title, a title over its date).
+            if let card = focused {
+                let r = nodes[card].rect
+                let inside = kids(card).filter { nodes[$0].kind != .rule }
+                if let first = inside.min(by: { nodes[$0].rect.minY < nodes[$1].rect.minY }),
+                   let left = inside.map({ nodes[$0].rect.minX - r.minX }).min() {
+                    let f = nodes[first].rect
+                    let top = f.minY - r.minY
+                    if top >= minimum, abs(top - left) > 2 * scale {
+                        let x = f.midX.rounded()
+                        spacing.append(RedlineMark(role: .padding, what: "Top padding", start: CGPoint(x: x, y: r.minY),
+                                                   end: CGPoint(x: x, y: f.minY), axis: .vertical))
+                    }
+                }
+                let stack = inside.sorted { nodes[$0].rect.minY < nodes[$1].rect.minY }
+                for (a, b) in zip(stack, stack.dropFirst()).prefix(3) {
+                    let ra = nodes[a].rect, rb = nodes[b].rect
+                    let shared = min(ra.maxX, rb.maxX) - max(ra.minX, rb.minX)
+                    guard rb.minY - ra.maxY >= minimum, shared > 0 else { continue }
+                    let x = (max(ra.minX, rb.minX) + shared / 2).rounded()
+                    spacing.append(RedlineMark(role: .gap, what: "Gap", start: CGPoint(x: x, y: ra.maxY),
+                                               end: CGPoint(x: x, y: rb.minY), axis: .vertical))
+                }
+            }
+
             // The row height: divider to divider in the first card that has
             // two; failing that, one repeated control to the next below it.
             if let rhythm = rowHeight(containers, controls: controls, obstacles: obstacles) {
@@ -385,13 +431,37 @@ public enum RedlinePlan {
                 }
             }
 
+            // With no cards stacked: how far a control on the page sits
+            // under what is above it (a button under its paragraph).
+            if !spacing.contains(where: { $0.role == .sectionGap }),
+               let (above, control) = representatives.lazy.compactMap({ c -> (Int, Int)? in
+                   let rc = nodes[c].rect
+                   guard nodes[c].kind == .box, nodes[c].parent == nil else { return nil }
+                   let over = nodes.indices.filter { o in
+                       let ro = nodes[o].rect
+                       return o != c && nodes[o].kind != .rule && ro.maxY <= rc.minY - minimum
+                           && min(ro.maxX, rc.maxX) - max(ro.minX, rc.minX) > min(ro.width, rc.width) / 4
+                           && rc.minY - ro.maxY <= 4 * rc.height
+                   }
+                   return over.max(by: { nodes[$0].rect.maxY < nodes[$1].rect.maxY }).map { ($0, c) }
+               }).first {
+                let a = nodes[above].rect, b = nodes[control].rect
+                let x = ((max(a.minX, b.minX) + min(a.maxX, b.maxX)) / 2).rounded()
+                spacing.append(RedlineMark(role: .gap, what: "Space above", start: CGPoint(x: x, y: a.maxY),
+                                           end: CGPoint(x: x, y: b.minY), axis: .vertical))
+            }
+
             // The gap between neighbouring controls in a row, buttons first.
             let pairs = controls.enumerated().flatMap { i, a in
                 controls[(i + 1)...].compactMap { b -> (Int, Int)? in
                     let ra = nodes[a].rect, rb = nodes[b].rect
                     guard nodes[a].parent == nodes[b].parent, sameRow(ra, rb) else { return nil }
                     let (l, r) = ra.minX < rb.minX ? (a, b) : (b, a)
-                    guard nodes[r].rect.minX - nodes[l].rect.maxX >= minimum else { return nil }
+                    let space = nodes[r].rect.minX - nodes[l].rect.maxX
+                    guard space >= minimum else { return nil }
+                    // Neighbours sit close: two things at either side of a
+                    // panel are not a gap anybody specifies.
+                    guard space <= 3 * max(ra.height, rb.height) else { return nil }
                     // Only next-door neighbours: nothing between them.
                     let between = controls.contains { c in
                         c != l && c != r && sameRow(nodes[c].rect, ra)
@@ -423,7 +493,9 @@ public enum RedlinePlan {
             // already carries its size's brackets.
             let buttons = kinds.prefix(mostSizes).first { $0.name == "Button" }?.members ?? []
             if let button = buttons.first(where: { !representatives.contains($0) }) ?? buttons.first,
-               let words = kids(button).first(where: { nodes[$0].kind == .text }) {
+               kids(button).contains(where: { nodes[$0].kind == .text }),
+               // To the first thing inside: an icon before the words counts.
+               let words = kids(button).min(by: { nodes[$0].rect.minX < nodes[$1].rect.minX }) {
                 let b = nodes[button].rect, w = nodes[words].rect
                 // Centred words in a wide button have no inset to specify.
                 if w.minX - b.minX >= minimum, w.minX - b.minX <= 1.5 * b.height {
@@ -435,7 +507,23 @@ public enum RedlinePlan {
                 }
             }
 
-            return Array((sizes + spacing).prefix(mostMarks))
+            guard let focus else { return Array((sizes + spacing).prefix(mostMarks)) }
+            // Only what is in and round the part named; its spacing before
+            // the sizes of the controls in it.
+            let room = focus.insetBy(dx: -24 * scale, dy: -24 * scale)
+            func within(_ m: RedlineMark) -> Bool {
+                room.contains(m.box ?? CGRect(x: min(m.start.x, m.end.x), y: min(m.start.y, m.end.y),
+                                              width: abs(m.end.x - m.start.x), height: abs(m.end.y - m.start.y)))
+            }
+            return Array((spacing.filter(within) + sizes.filter(within)).prefix(mostMarks))
+        }
+
+        /// How nearly node `i` is `r`: what they share over what either covers.
+        func overlap(_ i: Int, _ r: CGRect) -> CGFloat {
+            let a = nodes[i].rect, both = a.intersection(r)
+            guard !both.isNull else { return 0 }
+            let shared = both.width * both.height
+            return shared / max(1, a.width * a.height + r.width * r.height - shared)
         }
 
         /// Which of a kind gets the size: the first, unless another has far
@@ -475,12 +563,31 @@ public enum RedlinePlan {
             for (i, a) in controls.enumerated() {
                 for b in controls[(i + 1)...] {
                     let ra = nodes[a].rect, rb = nodes[b].rect
-                    guard nodes[a].parent == nodes[b].parent, name(a) == name(b), near(ra.minX, rb.minX),
+                    guard nodes[a].kind == .box, nodes[a].parent == nodes[b].parent, name(a) == name(b), near(ra.minX, rb.minX),
                       near(ra.width, rb.width), near(ra.height, rb.height), rb.minY > ra.maxY else { continue }
                     let x = (ra.maxX + 8 * scale).rounded()
                     return RedlineMark(role: .rhythm, what: "Row height", start: CGPoint(x: x, y: ra.minY),
                                        end: CGPoint(x: x, y: rb.minY), axis: .vertical)
                 }
+            }
+            // Nor those: a form or an inspector of labelled rows, three or
+            // more labels down one left edge, read baseline to baseline.
+            let labels = nodes.indices.filter { nodes[$0].kind == .text && nodes[$0].baseline != nil }
+                .sorted { nodes[$0].rect.minY < nodes[$1].rect.minY }
+            for a in labels {
+                let ra = nodes[a].rect
+                let column = labels.filter { b in
+                    nodes[b].parent == nodes[a].parent && near(nodes[b].rect.minX, ra.minX)
+                        && abs(nodes[b].rect.height - ra.height) <= ra.height / 4
+                }
+                guard column.count >= 3, let i = column.firstIndex(of: a), i + 1 < column.count else { continue }
+                let b = column[i + 1], rb = nodes[b].rect
+                guard let top = nodes[a].baseline, let bottom = nodes[b].baseline,
+                      bottom - top >= 1.2 * ra.height, bottom - top <= 5 * ra.height else { continue }
+                let x = (ra.minX - 6 * scale).rounded()
+                guard x > canvas.minX else { continue }
+                return RedlineMark(role: .rhythm, what: "Row height", start: CGPoint(x: x, y: top),
+                                   end: CGPoint(x: x, y: bottom), axis: .vertical, repeats: column.count)
             }
             return nil
         }

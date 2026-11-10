@@ -298,6 +298,21 @@ struct AgentDrawingTests {
                                      and: CGRect(x: 50, y: 50, width: 10, height: 10)) == nil, "corner to corner")
     }
 
+    /// "The gap between the card and its title" is the card's padding: a
+    /// model asks for it that way, and until 2026-11-09 it was refused as
+    /// two boxes that overlap.
+    @Test("The gap between a box and one inside it is the padding on its nearest side")
+    func gapIntoABox() {
+        let card = CGRect(x: 560, y: 24, width: 336, height: 360)
+        // A title 17 in from the left and 218 down: the left side is nearest.
+        let left = AgentMeasurePlan.gap(between: card, and: CGRect(x: 577, y: 242, width: 175, height: 25))
+        #expect(left == GapMeasurement(axis: .horizontal, start: CGPoint(x: 560, y: 255), end: CGPoint(x: 577, y: 255)))
+        // A photo 16 in from the left and 16 down: equal, so the top, read first.
+        let top = AgentMeasurePlan.gap(between: CGRect(x: 576, y: 40, width: 304, height: 176), and: card)
+        #expect(top == GapMeasurement(axis: .vertical, start: CGPoint(x: 728, y: 24), end: CGPoint(x: 728, y: 40)))
+        #expect(AgentMeasurePlan.gap(between: card, and: card) == nil, "the same box")
+    }
+
     @Test("A box on a painted button lands all four sides on its edges; one off to the side lands none")
     func sidesOnEdges() {
         var scene = PaintedCapture(w: 400, h: 300)
