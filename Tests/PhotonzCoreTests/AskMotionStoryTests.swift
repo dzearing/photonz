@@ -115,6 +115,10 @@ struct AskMotionStoryTests {
         let rules = AskMotion.drawRules
         #expect(rules.contains("in the order told"))
         #expect(AskMotion.designAsk.contains("in the order the request tells them"))
+        // The heart of 2026-11-10 showed a seam from its first frame and broke
+        // by hinging open, still joined at its tip (every look of the judge).
+        #expect(rules.contains("What breaks in two shows no line where it will part"))
+        #expect(rules.contains("never still joined at a point"))
     }
 }
 

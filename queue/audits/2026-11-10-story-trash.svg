@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <clipPath id="clip-1">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <g>
+    <g clip-path="url(#clip-1)">
+      <g transform="translate(8 10)">
+        <path d="M0 0 L0 8 C0 8.487 0.513 9 1 9 L7 9 C7.487 9 8 8.487 8 8 L8 0" fill="none" stroke="#1D1D1F" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(3 2)" d="M0 0 L0 4" fill="none" stroke="#1D1D1F" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(5 2)" d="M0 0 L0 4" fill="none" stroke="#1D1D1F" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g transform="rotate(0 6.891 9.08)">
+        <animateTransform attributeName="transform" type="rotate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0 0 1 1;0 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0.4 0 0.2 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1" keyTimes="0;0.133;0.133;0.333;0.533;0.667;0.676;0.686;0.695;0.705;0.714;0.724;0.733;0.743;0.752;0.762;0.771;0.781;0.79;0.8;0.933;0.938;0.943;0.948;0.952;0.957;0.962;0.967;0.971;0.976;0.981;0.986;0.99;0.995;1" values="0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;-40 6.891 9.08;-40 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;-25 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08;0 6.891 9.08"/>
+        <g transform="translate(7 8)">
+          <path transform="translate(0 1)" d="M0 0 L10 0" fill="none" stroke="#1D1D1F" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+          <path transform="translate(4 0)" d="M0 0 L2 0" fill="none" stroke="#1D1D1F" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g opacity="0">
+        <animate attributeName="opacity" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0 0 0.2 1;0.4 0 1 1;0.4 0 1 1;0.4 0 0.2 1" keyTimes="0;0.333;0.4;0.8;0.867;1" values="0;0;1;1;0;0"/>
+        <g>
+          <animateTransform attributeName="transform" type="translate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 1 1;0 0 0.2 1;0.4 0 1 1;0.4 0 1 1;0.4 0 0.2 1" keyTimes="0;0.333;0.533;0.667;0.8;0.867;1" values="0 0;0 0;-5.245 0.428;-4.38 0;-4.38 2.92;-4.38 2.92;0 0"/>
+          <g transform="translate(16 5)">
+            <path d="M1 0 L3 1 L2 3 L0 2 L1 0 Z" fill="#1D1D1F"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

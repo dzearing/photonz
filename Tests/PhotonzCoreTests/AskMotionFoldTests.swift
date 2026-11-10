@@ -304,6 +304,25 @@ struct AskMotionFoldTests {
         #expect(AskMotion.refusal(end, steps: [drawing]) == nil)
     }
 
+    @Test("Keys that hold one value the whole lap move nothing and are sent back, unless they replace keys written before")
+    func keysThatNeverChange() throws {
+        // The checkbox of 2026-11-10 keyed rotation, rotationX, rotationY and
+        // stroke width at 100 the whole lap, one after another: the tick
+        // stood folded flat, "a tiny malformed chevron" in every look.
+        let svg = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><path id="tick" d="M7 12.5 L10.5 16 L17 8"/></svg>"##
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(svg)])
+        let flat = try Self.args(#"{"layer":"$1/tick","property":"rotationX","keys":[{"seconds":0,"value":100},{"seconds":0.45,"value":100},{"seconds":1.1,"value":100}]}"#)
+        let said = try #require(AskMotion.refusal(flat, steps: [drawing]))
+        #expect(said.contains("never moves"), "\(said)")
+        let still = try Self.args(#"{"layer":"$1/tick","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":1.1,"value":{"x":0,"y":0}}]}"#)
+        #expect(AskMotion.refusal(still, steps: [drawing])?.contains("never moves") == true)
+        // A value that changes, and a replace that puts a value back to rest.
+        let hop = try Self.args(#"{"layer":"$1/tick","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":-3}},{"seconds":1.1,"value":{"x":0,"y":0}}]}"#)
+        #expect(AskMotion.refusal(hop, steps: [drawing]) == nil)
+        let rest = try Self.args(#"{"layer":"$1/tick","property":"rotationX","replace":true,"keys":[{"seconds":0,"value":0},{"seconds":1.1,"value":0}]}"#)
+        #expect(AskMotion.refusal(rest, steps: [drawing]) == nil)
+    }
+
     // MARK: Marks go with what leaves
 
     static let flyer = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><g id="craft"><path d="M4 12 L18 6 L12 18 Z"/></g><g id="lines"><path d="M1 15 L4 15"/><path d="M2 18 L5 18"/></g><path id="ground" d="M2 21 L22 21"/></svg>"##

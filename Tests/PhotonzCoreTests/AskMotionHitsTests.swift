@@ -78,8 +78,15 @@ struct AskMotionHitsTests {
         let made = AskMotion.hitStarts([Self.drawing, Self.timing, try Self.lid(), ball])
         #expect(made.last == ball)
         let lid = Self.keys(made[2])
-        #expect(lid.map(\.seconds) == [0, 0.05, 0.3, 0.6, 0.8, 1, 1.3])
+        // Started at the hit (0.6) it would sweep down through the ball as it
+        // drops in (2026-11-10), so it starts 0.1 s after, still 0.2 s
+        // before it was planned to.
+        #expect(lid.map(\.seconds) == [0, 0.05, 0.3, 0.7, 0.9, 1.1, 1.3])
         #expect(lid.map(\.value) == [0, 8, -55, -55, 0, 0, 0])
+        #expect(!AskMotion.crosses("lid", "trash", from: 0.6, lasting: 0.5, in: made))
+        var atTheHit = made
+        atTheHit[2] = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/lid","property":"rotation","pivot":{"x":5,"y":7},"keys":[{"curve":"Hold","seconds":0,"value":0},{"curve":"Ease in","seconds":0.05,"value":8},{"curve":"Ease out back","seconds":0.3,"value":-55},{"curve":"Ease out back","seconds":0.6,"value":-55},{"curve":"Ease out back","seconds":0.8,"value":0},{"seconds":1.3,"value":0}]}"#))
+        #expect(AskMotion.crosses("lid", "trash", from: 0.6, lasting: 0.5, in: atTheHit))
         #expect(Array(lid.map(\.curve).prefix(5)) == ["Hold", "Ease in", "Ease out back", "Hold", "Ease out back"])
         // Named the plain way, the same.
         #expect(AskMotion.hitStarts([Self.drawing, Self.timing, try Self.lid(), try Self.ball(touches: "lid")])[2] == made[2])
@@ -109,11 +116,15 @@ struct AskMotionHitsTests {
         let made = AskMotion.planned([Self.drawing, Self.timing, try Self.lid(), try Self.ball()])
         let lid = try #require(made.first { $0.arguments["layer"]?.stringValue == "$1/lid" })
         let keys = Self.keys(lid)
-        // Open (its swing may be narrowed to fit the room) until the hit at 0.6, then shut by 0.8.
+        // Open (its swing may be narrowed to fit the room) until just after
+        // the hit at 0.6, then shut by 0.9, not 1.1 as planned.
         let open = try #require(keys.first { $0.seconds == 0.3 }?.value)
         #expect(open < -20)
-        #expect(keys.contains { $0.seconds == 0.6 && $0.value == open && $0.curve == "Ease out back" })
-        #expect(keys.contains { $0.seconds == 0.8 && $0.value == 0 })
+        let starts = try #require(keys.last { $0.value == open && $0.curve == "Ease out back" }?.seconds)
+        #expect(starts >= 0.6 && starts < 0.9)
+        let shut = try #require(keys.first { $0.seconds > starts && $0.value == 0 }?.seconds)
+        #expect(shut < 1.1)
+        #expect(!AskMotion.crosses("lid", "trash", from: 0.6, lasting: 0.6, in: made))
     }
     // MARK: Seen the whole way
 

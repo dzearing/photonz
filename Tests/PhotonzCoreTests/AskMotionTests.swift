@@ -178,7 +178,7 @@ struct AskMotionTests {
     func partNames() throws {
         var talk = Self.conversation("make an animated icon of a thing")
         Self.drawn(&talk)
-        _ = talk.take(Self.reply("set_keys", try Self.args(#"{"layer":"$1/whole","property":"scale","keys":[{"seconds":0,"value":100},{"seconds":1,"value":100}]}"#)))
+        _ = talk.take(Self.reply("set_keys", try Self.args(#"{"layer":"$1/whole","property":"scale","keys":[{"seconds":0,"value":100},{"seconds":1,"value":110}]}"#)))
         #expect(talk.steps.count == 2)
         _ = talk.take(Self.reply("set_keys", try Self.args(#"{"layer":"$1/wing","property":"scale","keys":[{"seconds":0,"value":100}]}"#)))
         #expect(talk.steps.count == 2)
@@ -207,7 +207,7 @@ struct AskMotionTests {
     func pivotOnScale() throws {
         var talk = Self.conversation("make an animated icon of a thing")
         Self.drawn(&talk)
-        _ = talk.take(Self.reply("set_keys", try Self.args(#"{"layer":"$1/body","property":"scale","pivot":{"x":12,"y":10},"keys":[{"seconds":0,"value":100}]}"#)))
+        _ = talk.take(Self.reply("set_keys", try Self.args(#"{"layer":"$1/body","property":"scale","pivot":{"x":12,"y":10},"keys":[{"seconds":0,"value":100},{"seconds":0.5,"value":110}]}"#)))
         #expect(talk.steps.count == 2)
         #expect(talk.steps[1].arguments["pivot"] == nil)
     }

@@ -1,0 +1,29 @@
+{
+  "feature": "An animated icon told as a little story: the hit on the lid is kept and read off the drawing",
+  "epic": "icon-svg",
+  "summary": "When the agent says the trash hits the lid, that hit now survives its later rewrites, is placed where the drawn lines really meet (not their boxes), and the lid starts closing just after the hit without sweeping through the trash. Keys that never change are refused, which fixed the checkbox (31 to 71 and 74). In your trash sentence the trash still passes through the half-open lid in the best runs, so the bounce is not convincing yet.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-10-story-trash-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return." },
+    { "do": "Wait for Ask to finish (about three minutes), then press Space to play." },
+    { "do": "Watch the reel of the same sentence playing two laps.", "shot": "2026-11-10-story-trash-two-laps.gif" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-10-story-trash.svg" },
+    { "do": "Step through the two laps frame by frame.", "shot": "2026-11-10-story-trash-two-laps-frames.png" },
+    { "do": "Compare the six story icons on the contact sheet.", "shot": "2026-11-10-story-final-sheet.png" }
+  ],
+  "evaluate": [
+    "Does the lid closing now read as caused by the trash, now that it starts just after the trash meets it?",
+    "Is the trash passing through the half-open lid (about 0.9 to 1.05 s in the reel) the thing that most spoils it for you?",
+    "Does the checkbox tick now read as a tick that draws in and hops?",
+    "Is about three minutes for a story icon something you would wait for?"
+  ],
+  "rough": [
+    "The bounce off the lid is still not convincing: in the reel the trash fades in beside the open lid, meets it, then overlaps it for about 0.15 s on its way into the can. Ask is now told when that happens and asked to fix it, and the model moves the path by one unit and no more.",
+    "The trash fades in mid-air instead of being thrown in from outside (the rules ask for that; the model keeps planning it hidden until it is beside the lid).",
+    "The heart swings: 63.6 in one run, 31.7 in the next, where it turned into a teardrop with a line through it. Its halves still splay from a shared tip in most runs.",
+    "The envelope stays the weakest story (25 to 37): the letter is drawn over the flap and the flap opens instead of closing.",
+    "The bar for this task (five of six story icons read as asked at 7 or more) is not met: one of six in both runs on the final code (the checkbox, 7.3 and 7)."
+  ]
+}

@@ -1916,6 +1916,11 @@ private final class Run {
             let deadline = Date().addingTimeInterval(timeout)
             while !holds(condition, editor: editor) {
                 guard Date() < deadline else {
+                    // Where the app had got to when the wait ran out, so a
+                    // request that never ended leaves its whole Ask trace in
+                    // the log (the heart story ran out three times in a row
+                    // with only the three lines read before it planned).
+                    note(number, step.name, "ran out of time; the app as it stood", state: describe())
                     throw Failure(description: "\(condition) did not happen within \(timeout)s"
                                   + conditionHint(condition))
                 }

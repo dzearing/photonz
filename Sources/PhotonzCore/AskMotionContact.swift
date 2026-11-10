@@ -120,6 +120,52 @@ extension AskMotion {
             return AskMotionCheck.box(of: name, in: art).map(Self.corners)
         }
 
+        /// The ink of every drawn part `name` holds, each as the convex
+        /// outline of what it draws (a circle as drawn, a line as thick as
+        /// its stroke, a curve within its handles), carried by every keyed
+        /// group it sits in, to where the keys have it at `seconds`. What
+        /// touching is read off: boxes overlap where the ink does not (a
+        /// ball under a tilted bar, 2026-11-10).
+        func ink(_ name: String, at seconds: Double) -> [[CGPoint]] {
+            art.parts.filter { Self.holds($0, name) }.map { part in
+                // Innermost first: the part's own keys, then each group out.
+                let chain = ([part.name].compactMap { $0 } + part.groups.reversed()).compactMap { group in
+                    movers.first { plain($0) == plain(group) }
+                }
+                var points = Self.inkPoints(part)
+                for mover in chain { points = moved(points, by: mover, at: seconds) }
+                return AskMotion.hull(points)
+            }
+        }
+
+        static func inkPoints(_ part: SVGArtwork.Part) -> [CGPoint] {
+            let half = part.stroke == nil ? 0 : part.strokeWidth / 2
+            switch part.shape {
+            case .ellipse(let box):
+                return (0..<24).map { step in
+                    let angle = Double(step) * .pi / 12
+                    return CGPoint(x: box.midX + (box.width / 2 + half) * cos(angle), y: box.midY + (box.height / 2 + half) * sin(angle))
+                }
+            case .rect(let box, _):
+                return corners(box.insetBy(dx: -half, dy: -half))
+            case .path(let outline):
+                let points = outline.rings.flatMap { ring in
+                    ring.flatMap { anchor in
+                        [anchor.point] + [anchor.handleIn, anchor.handleOut].compactMap { handle in
+                            handle.map { CGPoint(x: anchor.point.x + $0.x, y: anchor.point.y + $0.y) }
+                        }
+                    }
+                }
+                guard half > 0 else { return points }
+                return points.flatMap { point in
+                    (0..<8).map { step in
+                        let angle = Double(step) * .pi / 4
+                        return CGPoint(x: point.x + half * cos(angle), y: point.y + half * sin(angle))
+                    }
+                }
+            }
+        }
+
         /// What `name` might touch at `seconds`: what stays, and what moves
         /// and is seen then, never what carries it or what it carries.
         func others(of name: String, at seconds: Double) -> [(name: String, quad: [CGPoint])] {
@@ -170,6 +216,56 @@ extension AskMotion {
         return .object(object)
     }
 
+    /// The steps with every key written again for the same value, at the same
+    /// moment as an earlier key that said what it `touches`, saying it too
+    /// when it says nothing itself. A model mending its keys writes them out
+    /// again and leaves the extra word off: on 2026-11-09 the trash of the
+    /// user's story lost its hit on the lid that way, and with it the bounce
+    /// and the lid shutting because of it.
+    public static func touchesKept(_ steps: [AskStep]) -> [AskStep] {
+        func value(of step: AskStep) -> String? {
+            guard step.tool == "set_keys", let layer = step.arguments["layer"]?.stringValue else { return nil }
+            return [layer, step.arguments["property"]?.stringValue ?? "", step.arguments["effect"]?.stringValue ?? ""]
+                .joined(separator: "\u{1F}")
+        }
+        let near = Double(PropertyKeys.nearMS) / 1000
+        var said: [String: [(seconds: Double, value: AgentJSON?, other: AgentJSON)]] = [:]
+        // The one key of `keys` that arrives at `value` (the key before it
+        // somewhere else), when exactly one does: the hit written again at
+        // another moment, the way a mend that slows the lap writes it.
+        func arriving(at value: AgentJSON?, in keys: [AgentJSON]) -> Double? {
+            guard let value else { return nil }
+            let timed = keys.compactMap { key in key["seconds"]?.doubleValue.map { ($0, key["value"]) } }
+                .sorted { $0.0 < $1.0 }
+            let arrivals = timed.indices.filter { at in timed[at].1 == value && (at == 0 || timed[at - 1].1 != value) }
+            return arrivals.count == 1 ? timed[arrivals[0]].0 : nil
+        }
+        var out = steps
+        for at in out.indices {
+            guard let own = value(of: out[at]), var object = out[at].arguments.objectValue,
+                  let keys = object["keys"]?.arrayValue else { continue }
+            let before = said[own] ?? []
+            var changed = false
+            let written: [AgentJSON] = keys.map { key in
+                guard var one = key.objectValue, one["touches"] == nil, let seconds = one["seconds"]?.doubleValue,
+                      let earlier = before.last(where: { abs($0.seconds - seconds) <= near })
+                        ?? before.last(where: { said in arriving(at: said.value, in: keys).map { abs($0 - seconds) <= near } ?? false })
+                else { return key }
+                one["touches"] = earlier.other
+                changed = true
+                return .object(one)
+            }
+            if changed {
+                object["keys"] = .array(written)
+                out[at] = AskStep(tool: out[at].tool, arguments: .object(object))
+            }
+            for key in written {
+                if let seconds = key["seconds"]?.doubleValue, let other = key["touches"] { said[own, default: []].append((seconds, key["value"], other)) }
+            }
+        }
+        return out
+    }
+
     /// The steps with every position key that says what it `touches` moved,
     /// straight towards that part, just far enough that the two meet at that
     /// moment, as the keys move them both; and `touches` taken off every key,
@@ -179,7 +275,8 @@ extension AskMotion {
         guard steps.contains(where: { step in (step.arguments["keys"]?.arrayValue ?? []).contains { $0["touches"] != nil } }) else {
             return steps
         }
-        var out = steps
+        // A key written again at a moment one said it touches says it too.
+        var out = touchesKept(steps)
         for at in out.indices where out[at].tool == "set_keys" {
             guard var object = out[at].arguments.objectValue, let keys = object["keys"]?.arrayValue,
                   keys.contains(where: { $0["touches"] != nil }) else { continue }
@@ -207,22 +304,56 @@ extension AskMotion {
 
     /// How far `part` moves at `seconds` to just meet `other`, or nil when
     /// they meet already or either cannot be found.
+    /// Read off the ink of both (`Lap.ink`), never their boxes.
     static func meeting(_ part: String, _ other: String, at seconds: Double, in lap: Lap) -> CGVector? {
-        guard lap.art.parts.contains(where: { Lap.holds($0, other) }),
-              let mine = lap.outline(part, at: seconds), let theirs = lap.outline(other, at: seconds),
-              !meet(mine, theirs) else { return nil }
-        let middle = CGPoint(x: mine.map(\.x).reduce(0, +) / CGFloat(mine.count), y: mine.map(\.y).reduce(0, +) / CGFloat(mine.count))
-        let target = nearest(to: middle, on: theirs)
+        let mine = lap.ink(part, at: seconds), theirs = lap.ink(other, at: seconds)
+        guard !mine.isEmpty, !theirs.isEmpty, !inkMeets(mine, theirs) else { return nil }
+        let all = mine.flatMap { $0 }
+        let middle = CGPoint(x: all.map(\.x).reduce(0, +) / CGFloat(all.count), y: all.map(\.y).reduce(0, +) / CGFloat(all.count))
+        guard let target = theirs.map({ nearest(to: middle, on: $0) })
+                .min(by: { hypot($0.x - middle.x, $0.y - middle.y) < hypot($1.x - middle.x, $1.y - middle.y) }) else { return nil }
         let way = CGVector(dx: target.x - middle.x, dy: target.y - middle.y)
-        func shifted(_ share: CGFloat) -> [CGPoint] { mine.map { CGPoint(x: $0.x + way.dx * share, y: $0.y + way.dy * share) } }
-        guard meet(shifted(1), theirs) else { return nil }
-        // The least share of the way that meets.
+        func shifted(_ share: CGFloat) -> [[CGPoint]] {
+            mine.map { hull in hull.map { CGPoint(x: $0.x + way.dx * share, y: $0.y + way.dy * share) } }
+        }
+        guard inkMeets(shifted(1), theirs, within: 0) else { return nil }
+        // The least share of the way at which the ink really meets, so the
+        // hit reads as one however the numbers round.
         var low: CGFloat = 0, high: CGFloat = 1
         for _ in 0..<24 {
             let mid = (low + high) / 2
-            if meet(shifted(mid), theirs) { high = mid } else { low = mid }
+            if inkMeets(shifted(mid), theirs, within: 0) { high = mid } else { low = mid }
         }
         return CGVector(dx: way.dx * high, dy: way.dy * high)
+    }
+
+    /// Whether any piece of ink of one meets any of the other's.
+    static func inkMeets(_ a: [[CGPoint]], _ b: [[CGPoint]], within slack: CGFloat = edgeTouch) -> Bool {
+        a.contains { one in b.contains { meet(one, $0, within: slack) } }
+    }
+
+    /// The convex hull of `points`, going round one way (monotone chain).
+    static func hull(_ points: [CGPoint]) -> [CGPoint] {
+        func snapped(_ point: CGPoint) -> CGPoint {
+            let x: CGFloat = (point.x * 1000).rounded() / 1000
+            let y: CGFloat = (point.y * 1000).rounded() / 1000
+            return CGPoint(x: x, y: y)
+        }
+        func before(_ a: CGPoint, _ b: CGPoint) -> Bool { a.x != b.x ? a.x < b.x : a.y < b.y }
+        var sorted: [CGPoint] = []
+        for point in points.map(snapped).sorted(by: before) where sorted.last != point { sorted.append(point) }
+        guard sorted.count > 2 else { return sorted }
+        func cross(_ o: CGPoint, _ a: CGPoint, _ b: CGPoint) -> CGFloat { (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x) }
+        var lower: [CGPoint] = [], upper: [CGPoint] = []
+        for point in sorted {
+            while lower.count >= 2, cross(lower[lower.count - 2], lower[lower.count - 1], point) <= 0 { lower.removeLast() }
+            lower.append(point)
+        }
+        for point in sorted.reversed() {
+            while upper.count >= 2, cross(upper[upper.count - 2], upper[upper.count - 1], point) <= 0 { upper.removeLast() }
+            upper.append(point)
+        }
+        return Array(lower.dropLast() + upper.dropLast())
     }
 
     /// The point of the convex outline `quad` nearest `point`, edges included.

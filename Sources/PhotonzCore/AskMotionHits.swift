@@ -70,15 +70,21 @@ extension AskMotion {
     /// look though the request said the hit closes it. Only moves (position,
     /// turn, size) of the part hit or a group carrying it; a part that is
     /// moving anyway, or waits longer than `hitStartsWithin`, keeps its keys.
+    ///
+    /// It starts as soon after the hit as it can without passing through the
+    /// part that hit it, tried every `hitStartStep`: on 2026-11-10 the trash's
+    /// lid, started at the very moment of the hit, swept down through the
+    /// ball as it dropped in. When every start would pass through, the keys
+    /// stay as planned.
     public static func hitStarts(_ steps: [AskStep]) -> [AskStep] {
-        var hits: [(seconds: Double, part: String)] = []
+        var hits: [(seconds: Double, part: String, by: String?)] = []
         for step in steps where step.tool == "set_keys" && step.arguments["property"]?.stringValue == MotionProperty.position.rawValue {
             let mine = (step.arguments["layer"]?.stringValue).flatMap(partReference)?.part
             for key in step.arguments["keys"]?.arrayValue ?? [] {
                 guard let word = key["touches"]?.stringValue, let seconds = key["seconds"]?.doubleValue else { continue }
                 let other = partReference(word)?.part ?? word
                 if let mine, plain(mine) == plain(other) { continue }
-                hits.append((seconds, other))
+                hits.append((seconds, other, mine))
             }
         }
         guard !hits.isEmpty, let lap = Lap(steps) else { return steps }
@@ -90,8 +96,8 @@ extension AskMotion {
             for at in out.indices where out[at].tool == "set_keys" {
                 guard let property = out[at].arguments["property"]?.stringValue, moveProperties.contains(property),
                       let name = (out[at].arguments["layer"]?.stringValue).flatMap(partReference)?.part,
-                      struck.contains(plain(name)), var object = out[at].arguments.objectValue else { continue }
-                var keys = AskMotionCheck.timed(out[at])
+                      struck.contains(plain(name)), let object = out[at].arguments.objectValue else { continue }
+                let keys = AskMotionCheck.timed(out[at])
                 guard keys.count == out[at].arguments["keys"]?.arrayValue?.count, let still = AskMotionCheck.value(of: out[at], at: hit.seconds),
                       AskMotionCheck.value(of: out[at], at: hit.seconds + near) == still,
                       let first = keys.firstIndex(where: { $0.seconds > hit.seconds + 0.0005 }) else { continue }
@@ -103,20 +109,55 @@ extension AskMotion {
                 guard wait > near, wait <= hitStartsWithin else { continue }
                 let lastSeconds = keys[keys.count - 1].seconds
                 let endsLap = lapEnd.map { lastSeconds >= $0 - 0.0005 } ?? true
-                var made = Array(keys[..<first]).filter { $0.seconds < hit.seconds - near }
-                for key in keys[starts...] { made.append((Double(rounded(CGFloat(key.seconds - wait))), key.value, key.curve)) }
-                if endsLap, let last = made.last, last.seconds < lastSeconds - near { made.append((lastSeconds, last.value, nil)) }
-                keys = made
-                object["keys"] = .array(keys.map { key in
-                    var json: [String: AgentJSON] = ["seconds": .number(key.seconds), "value": key.value]
-                    if let curve = key.curve { json["curve"] = .string(curve) }
-                    return .object(json)
-                })
-                out[at] = AskStep(tool: out[at].tool, arguments: .object(object))
+                let planned = keys
+                func started(after shift: Double) -> AskStep {
+                    var made = Array(planned[..<first]).filter { $0.seconds < hit.seconds - near }
+                    for key in planned[starts...] { made.append((Double(rounded(CGFloat(key.seconds - wait + shift))), key.value, key.curve)) }
+                    if endsLap, let last = made.last, last.seconds < lastSeconds - near { made.append((lastSeconds, last.value, nil)) }
+                    var changed = object
+                    changed["keys"] = .array(made.map { key in
+                        var json: [String: AgentJSON] = ["seconds": .number(key.seconds), "value": key.value]
+                        if let curve = key.curve { json["curve"] = .string(curve) }
+                        return .object(json)
+                    })
+                    return AskStep(tool: out[at].tool, arguments: .object(changed))
+                }
+                // How long the move it starts lasts, to watch it through.
+                let moveLasts = (planned.last { $0.value != still }.map(\.seconds) ?? planned[starts + 1].seconds) - planned[starts].seconds
+                var shift = 0.0
+                while shift < wait - near {
+                    let tried = started(after: shift)
+                    var trial = out
+                    trial[at] = tried
+                    if let by = hit.by, crosses(name, by, from: hit.seconds + shift, lasting: moveLasts + hitStartStep, in: trial) {
+                        shift += hitStartStep
+                        continue
+                    }
+                    out[at] = tried
+                    break
+                }
             }
         }
         return out
     }
+    /// How much later each try at starting what was hit comes.
+    static let hitStartStep = 0.05
+    /// How deep two parts' ink may overlap and still read as touching, not
+    /// one passing through the other.
+    static let passesThrough: CGFloat = 0.3
+
+    /// Whether `moving`, as `steps` key it with each hit placed, passes
+    /// through `other` at any moment from `from` for `lasting` seconds.
+    static func crosses(_ moving: String, _ other: String, from: Double, lasting: Double, in steps: [AskStep]) -> Bool {
+        guard let lap = Lap(touchesPlaced(steps)) else { return false }
+        var seconds = from + 0.02
+        while seconds <= from + lasting {
+            if inkMeets(lap.ink(moving, at: seconds), lap.ink(other, at: seconds), within: -passesThrough) { return true }
+            seconds += 0.02
+        }
+        return false
+    }
+
     // MARK: Seen the whole way
 
     /// How long what arrived takes to fade where it arrived.

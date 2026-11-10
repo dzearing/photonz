@@ -227,7 +227,9 @@ public enum AskMotion {
         - A change of state is a movement, never one picture fading into another. What breaks or bursts swells a \
         little, is gone within 100 ms, and at that moment separate small pieces fly out from where it was, slowing \
         and fading out within 400 ms: pieces never stand still. Three to six pieces in one <g>, drawn where they end \
-        up, keyed as that one group from scale 30 to 100 and opacity 100 to 0, are two calls. A part that swings on one point, seen side on (a door seen from above, an arm), \
+        up, keyed as that one group from scale 30 to 100 and opacity 100 to 0, are two calls. What breaks in two shows no line where it will part until it breaks: \
+        each half is drawn as an open path, the part of the outline it carries and nothing along the break. At the \
+        break the halves move apart, 1 or 2 on the grid each, as they tilt away, never still joined at a point. A part that swings on one point, seen side on (a door seen from above, an arm), \
         turns with rotation, hinged at its end on the object's real edge, no more than it could swing. Lifting is a \
         negative rotation when the hinge is at its left end and a positive one when the hinge is at its right end. A part hinged along a whole edge facing you (a cover, a page, a door seen from the front) folds over that \
         edge: rotationX for a top or bottom edge, rotationY for a side, pivot the middle of that edge, 180 to lie \
@@ -409,7 +411,7 @@ public enum AskMotion {
 
     /// Whether two convex outlines overlap or come within a quarter of a
     /// grid step of each other (separating axes).
-    static func meet(_ a: [CGPoint], _ b: [CGPoint]) -> Bool {
+    static func meet(_ a: [CGPoint], _ b: [CGPoint], within slack: CGFloat = edgeTouch) -> Bool {
         for quad in [a, b] {
             for (p, q) in zip(quad, quad.dropFirst() + quad.prefix(1)) {
                 let length = hypot(q.x - p.x, q.y - p.y)
@@ -417,7 +419,7 @@ public enum AskMotion {
                 let axis = CGPoint(x: -(q.y - p.y) / length, y: (q.x - p.x) / length)
                 let ta = a.map { $0.x * axis.x + $0.y * axis.y }, tb = b.map { $0.x * axis.x + $0.y * axis.y }
                 guard let a0 = ta.min(), let a1 = ta.max(), let b0 = tb.min(), let b1 = tb.max() else { continue }
-                if a1 < b0 - edgeTouch || b1 < a0 - edgeTouch { return false }
+                if a1 < b0 - slack || b1 < a0 - slack { return false }
             }
         }
         return true
@@ -511,9 +513,11 @@ public enum AskMotion {
     /// then hinges shared, what comes out put behind, and room made. Before
     /// any of it, a seen hold moves and a hit starts what it hits
     /// and what travels is seen the whole way (`holdsMove`, `travelsSeen`,
-    /// `hitStarts`), while the keys still say what they touch.
+    /// `hitStarts`), while the keys still say what they touch, on swings
+    /// already narrowed to the room (`swingsFitted`): a lid narrowed after
+    /// the trash was placed against it stood in the trash's way.
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
-        let timed = foldsOpen(foldsLand(touchesPlaced(hitStarts(travelsSeen(holdsMove(drawnNotFaded(landingFolded(steps))))))))
+        let timed = foldsOpen(foldsLand(touchesPlaced(hitStarts(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(steps))))))))))
         let made = fitted(comesClear(hidden(hingesShared(timed))))
         // Hinges again for the room made, if any: lines and corner rounds
         // keep their size on the final grid as the drawing shrinks.
@@ -1866,6 +1870,15 @@ public enum AskMotion {
         if arguments["property"]?.stringValue == MotionProperty.trimStart.rawValue {
             return "Not planned: a line drawing itself is keyed on trimEnd alone: 0 is none of it drawn, 100 all of it."
         }
+        // Keys that hold one value the whole lap move nothing, and one held
+        // away from rest stands the part there all lap: the checkbox of
+        // 2026-11-10 keyed every value of its tick at 100, one after another,
+        // and the tick stood folded flat. A replace may put a value to rest.
+        let values = (arguments["keys"]?.arrayValue ?? []).compactMap { $0["value"] }
+        if arguments["replace"]?.boolValue != true, let first = values.first, values.allSatisfy({ $0 == first }) {
+            let property = arguments["property"]?.stringValue ?? "that value"
+            return "Not planned: every key holds \(property) at one value, so it never moves. Key only a value that changes; what stays as drawn needs no keys. Plan the next beat, or finish."
+        }
         return nil
     }
 
@@ -2016,6 +2029,63 @@ public enum AskMotionCheck {
             func said(_ value: CGFloat) -> String { value == value.rounded() ? String(Int(value)) : String(format: "%.1f", value) }
             return "\(name(of: step))'s position starts at x \(said(start.x)) y \(said(start.y)), where it was drawn"
         }
+    }
+
+    /// "trash passes through lid from 0.96 s to 1.1 s", for a part a key
+    /// says touches another whose ink, while both are seen, from that touch
+    /// on overlaps that other's deeper than a touch (`AskMotion.passesThrough`). Only
+    /// pairs the plan says touch where the one touched moves too, and not
+    /// ones drawn overlapping: what is meant to slide in behind a front is
+    /// never asked about.
+    static func throughWhatItTouches(_ planned: [AskStep]) -> [String] {
+        var pairs: [(mine: String, other: String, touch: Double)] = []
+        for step in planned where step.tool == "set_keys" {
+            guard let mine = (step.arguments["layer"]?.stringValue).flatMap(AskMotion.partReference)?.part else { continue }
+            for key in step.arguments["keys"]?.arrayValue ?? [] {
+                guard let word = key["touches"]?.stringValue, let seconds = key["seconds"]?.doubleValue else { continue }
+                let other = AskMotion.partReference(word)?.part ?? word
+                guard AskMotion.plain(other) != AskMotion.plain(mine) else { continue }
+                if let at = pairs.firstIndex(where: { AskMotion.plain($0.mine) == AskMotion.plain(mine) && AskMotion.plain($0.other) == AskMotion.plain(other) }) {
+                    pairs[at].touch = min(pairs[at].touch, seconds)
+                } else {
+                    pairs.append((mine, other, seconds))
+                }
+            }
+        }
+        guard !pairs.isEmpty, let lap = AskMotion.Lap(AskMotion.touchesPlaced(planned)) else { return [] }
+        let end = planned.last { $0.tool == "set_timing" }?.arguments["seconds"]?.doubleValue
+            ?? lap.keyed.flatMap { timed($0).map(\.seconds) }.max() ?? 0
+        func seen(_ name: String, _ seconds: Double) -> Bool {
+            guard lap.isMover(name) || !lap.carriers(of: name).isEmpty else { return true }
+            return lap.placed(name, at: seconds)?.seen ?? true
+        }
+        func deep(_ a: String, _ b: String, _ seconds: Double) -> Bool {
+            AskMotion.inkMeets(lap.ink(a, at: seconds), lap.ink(b, at: seconds), within: -AskMotion.passesThrough)
+        }
+        var said: [String] = []
+        // Only what moves: going into something that stays still is going
+        // in behind its front, as the rules ask.
+        for (mine, other, touch) in pairs where !lap.ink(mine, at: 0).isEmpty && !lap.ink(other, at: 0).isEmpty
+            && (lap.isMover(other) || !lap.carriers(of: other).isEmpty) {
+            // Drawn overlapping: always "inside" it, nothing to say.
+            guard !deep(mine, other, 0) || !seen(mine, 0) else { continue }
+            // From the touch on: what it does after it meets the other.
+            var from: Double?, to: Double?
+            var seconds = touch
+            while seconds <= end + 0.0005 {
+                if seen(mine, seconds), seen(other, seconds), deep(mine, other, seconds) {
+                    if from == nil { from = seconds }
+                    to = seconds
+                } else if from != nil { break }
+                seconds += 0.02
+            }
+            // A blink of overlap (a snap home at the lap's end) is the
+            // landing's to hide, not a round of the plan.
+            guard let from, let to, to - from >= 0.06 - 0.0005 else { continue }
+            func said2(_ value: Double) -> String { String(format: "%g", (value * 100).rounded() / 100) }
+            said.append("\(AskMotion.plain(mine)) passes through \(AskMotion.plain(other)) from \(said2(from)) s to \(said2(to)) s")
+        }
+        return said
     }
 
     /// A still thing smaller than this across or down is a mark, not
@@ -2264,6 +2334,7 @@ public enum AskMotionCheck {
 
     /// What is wrong with `steps` as a moving icon, in words for the model.
     public static func problems(_ planned: [AskStep]) -> [String] {
+        let through = throughWhatItTouches(planned)
         let steps = AskMotion.folded(AskMotion.touchesPlaced(planned))
         let keyed = steps.filter { $0.tool == "set_keys" }
         guard !keyed.isEmpty else {
@@ -2280,6 +2351,9 @@ public enum AskMotionCheck {
         let placed = placedWhereDrawn(steps)
         if !placed.isEmpty {
             said.append("\(placed.joined(separator: "; ")): position is how far it has moved from where it was drawn, so where it was drawn is x 0 y 0. Call set_keys again with replace true, each value less where it was drawn.")
+        }
+        if !through.isEmpty {
+            said.append("\(through.joined(separator: "; ")): what bounces off a part comes away from it, never through it. Call set_keys again with replace true for its position, the path after the touch going back the way it came or around that part.")
         }
         let into = swingsInto(steps)
         if !into.isEmpty {
