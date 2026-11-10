@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T06:33:47.359Z",
-  "updated": "2026-11-08T17:12:57.360Z",
+  "updated": "2026-11-10T05:18:26.193Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured, not guessed: held-out run 20261021-010309-ask-held-out (before, commit 4514d304) redline group 35.4; after the calm redline (c9200d34) 20261021-050656-ask-held-out redline 19.5; after the follow-up fixes (aa4e3ce3: an empty find_measurements answer says to fall back to find_elements, Ask lays only the ids that answer the request, a redline never drops below three marks) 20261021-055152-ask-held-out redline 19.6. Totals 20.1 / 19.2 / 19.5. Only one baseline run exists, so a lucky baseline is possible: rerun the before commit's held-out once before chasing. A runner may not open Scripts/ask-eval/held-out/ or .ask-eval/held-out-runs/; the user can look at .ask-eval/held-out-runs/20261021-055152-ask-held-out/contact-sheet.png. Ideas not yet checked: requests that name a dimension the plan never measures (a card's width, the title's size), pictures LayoutRead reads poorly (dark app windows, photos), and the prompt sending every measuring request to find_measurements.",
@@ -125,7 +125,29 @@
     {
       "t": "2026-11-08T17:12:57.359Z",
       "note": "seq 110 -> 80"
+    },
+    {
+      "t": "2026-11-10T00:52:01.112Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T02:12:12.534Z",
+      "note": "Cause, in general terms: the layout reader under find_measurements was built on one light settings screenshot and misreads other kinds of screen. A window edge line joined to a full width divider swallowed every word of a dark panel; a gradient button with a glow read as a photo and was never measured; a photo in a card read as a box with a thick border. And requests that name one part (a card) or ask about one button got a crop that lost the card's edge, or nothing that answered, so the model fell back to guessing boxes. Three new climb cases show it: Ask scored 9.3, 17.7 and 21.7 on them at HEAD. Fixed in f5eab0d42; the four redline climb cases went 25.1 -> 43.6."
+    },
+    {
+      "t": "2026-11-10T02:22:32.922Z",
+      "note": "left rough: a glowing button swallows small words inside its glow (the version line under the download button) so they are not obstacles and a readout can sit on them; named-card requests still get oddly placed calipers from the model's own add_measurement calls (card case 27.9). Neither earned its own task: both show up in the redline cases this task added, so the next pass on Ask's redlines climbs on them. Readout placement folded into a-redline-of-a-2x-screenshot-reads-in-points-wit."
+    },
+    {
+      "t": "2026-11-10T05:18:26.103Z",
+      "note": "Measured on f5eab0d42 (new nine-look judge, rubric 4a03a8fc): held-out run 20261110-021212-ask-held-out redline 36.4 (bar 35), total 56 over 53; climb settings-measurements 48 (run 20261110-051609-ask; bar 47). The settings picture is byte for byte the same as on 2026-11-02 and read 51.6, 49.1, 43.7, 48 on four judgings, so that case's spread is the judge alone. One held-out reading: the old judge swung this 3-case group by about 10; the new one is steadier but a later run could still land under 35. No held-out case was opened."
+    },
+    {
+      "t": "2026-11-10T05:18:26.191Z",
+      "note": "Cause: the layout reader under find_measurements misread screens unlike the light settings pane (a window edge joined to a divider swallowed a dark panel's words, a glowing gradient button read as a photo, a photo in a card read as a bordered box), and a request naming one card or one button got a crop with no card edge, or nothing that answered. Fixed in f5eab0d42 (LayoutRead, RedlinePlan, region as focus, padding into a box, prompt line), with tests and three new climb redline cases. Held-out redline 36.4 (bar 35, run 20261110-021212-ask-held-out); climb settings-measurements 48 (bar 47); full test suite green. Audit queue/audits/2026-11-09-ask-redlines-on-unseen-screens.json."
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-11-10T00:52:01.111Z",
+  "completed": "2026-11-10T05:18:26.192Z"
 }

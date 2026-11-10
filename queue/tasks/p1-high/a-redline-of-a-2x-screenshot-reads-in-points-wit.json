@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-21T05:16:19.351Z",
-  "updated": "2026-11-08T17:12:57.907Z",
+  "updated": "2026-11-10T02:22:32.845Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried over from measuring-a-ui-gives-a-calm-redline-each-kind-of (2026-10-20), which shipped code-chosen marks and clear readout placement (Sources/PhotonzCore/Redline.swift, find_measurements / mark_measurements) and took the settings case from 32.5 to 59.0 for Ask (judge 2.8 to 4.8). What the judge still says, verbatim, from Scripts/ask-eval.sh run --engine ask --cases settings-measurements (runs 20261021-044351-ask, 20261021-044837-ask, 20261021-050243-ask or the latest): \"values don't match what they point at (124 px on a roughly 250 px button, 18 px on a gap that is clearly larger)\"; \"there are no end ticks to show what is being measured\"; \"the brackets don't clearly mark what they measure (26 px, 30 px, 17 px)\". The 124 is right in points (MeasureUnit.points, logical px) but labelled px: MeasureUnit.suffix is \"px\" for both units by design (Measure.swift line 12). Only three call sites use the suffix (Measure.swift label/chipText, MeasureSizeGroup.swift:176, DocumentUnit.swift:27) but about 46 test files and 38 walks expect px readouts, which is why it did not fit in the redline task. Size brackets are MeasureSizeGroup + caliper extension lines (MeasurePlan.swift, MeasureRasterizer.swift).",
@@ -111,6 +111,10 @@
     {
       "t": "2026-11-08T17:12:57.906Z",
       "note": "seq 190 -> 160"
+    },
+    {
+      "t": "2026-11-10T02:22:32.844Z",
+      "note": "also seen 2026-11-09 (ask-s-redlines task): on a dense dark panel (Scripts/ask-eval/cases/redline-dark-panel.json, run .ask-eval/runs/20261110-012428-ask) the readouts land far from their lines with long leaders (Row height readout ~280 px right of its line), and on the settings case mark_measurements laid 5 of the 8 marks asked for: RedlineLayout drops marks it finds no clean spot for. Readouts still say px on a 2x picture."
     }
   ],
   "walks": []
