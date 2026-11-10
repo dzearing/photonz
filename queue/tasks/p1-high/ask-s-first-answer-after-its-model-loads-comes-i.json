@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T20:25:25.315Z",
-  "updated": "2026-11-08T17:12:57.498Z",
+  "updated": "2026-11-10T10:30:13.561Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-10-24 by ask-uses-qwen3-8-27b-at-4-bit-by-default-instead: Qwen3.8 27B is dense and reads a prompt at 103-183 tok/s on the M4 Max (Qwen3.6 35B: 1,046), so Ask's ~10-12k-token first prompt costs 60-90 s cold. Warm reuse already works: /tmp bench with llama-server b11826, same 12.5k-token system prompt twice: 'read 12517 new tokens (0 cached), 62.8s' then 'read 20 new tokens (12498 cached), 1.6s'. Every eval case starts cold (the probe quits after each), and a person's first Ask after launch or after 5 idle minutes does too. Ideas: llama-server --slot-save-path plus POST /slots/0?action=save|restore keyed by model id + a hash of the standing prompt (system + tools, before the document), restored right after load in AskModelServer.start; or warm() sending the standing prompt as soon as the model loads (it already starts loading when a person opens Ask). Check qwen35 is hybrid (recurrent layers every 4th full attention), so a restore must carry the recurrent state too; llama.cpp's slot save does for whole-prompt matches. Trace of a cold case: scene-bird-singing-on-a-branch's first turn answered at 89.9 s.",
@@ -107,6 +107,32 @@
     {
       "t": "2026-11-08T17:12:57.497Z",
       "note": "seq 130 -> 100"
+    },
+    {
+      "t": "2026-11-10T06:14:38.744Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T06:22:39.130Z",
+      "note": "Reproduced and measured on b11826 with Qwen3.8 27B + mmproj + MTP draft (the app's own args, port 18950): a 23,611-token standing prefix primed with /completion n_predict 0 took 168 s, /slots/0?action=save wrote 2.1 GB in 0.6 s; a NEW server process restored it in 0.21 s and the chat request with the settings screenshot read only 1,413 new tokens (cache_n 23611) and answered the same tool call as the primed run. Slot save works with the picture model loaded. Template puts tools first, then the system text, and Ask's instructions end with the document, so the standing part is tools + rules up to 'The document now'. Latest climb settings-measurements (20261110-014205-ask): 101 s, first turn 94 s of which ~87 s reading ~15k tokens. Adversarial: the slot file is ~430 MB + ~72 KB a token, so ~1.4 GB per variant: kept in Caches, newest 3 only, dropped with the model; a hybrid model cannot roll back to the end of the standing part from a longer conversation, so the save is made of the standing part alone, before the real request, and a restore happens only on a request's first turn."
+    },
+    {
+      "t": "2026-11-10T06:55:14.556Z",
+      "note": "Landed 4c6f8a072. settings-measurements from a cold probe: 94.8 s on the run that reads and saves (20261110-062949-ask; standing part 13,488 tokens read in 75.1 s, 1.4 GB file), 16.4 s on the next (20261110-064155-ask; restored in 0.9 s, the request read 223 new tokens). Starting the before/after climb comparison on the same 41 cases as the 75.3 / 140.8 s baseline (20261024-131153-ask), since the climb set has grown to 95."
+    },
+    {
+      "t": "2026-11-10T08:31:55.074Z",
+      "note": "Climb comparison done, run 20261110-065514-ask on the 41 cases of 20261024-131153-ask minus video-case-titles-before-three-clips (its recording never opened twice, 540 s each; logged on the-ask-scoring-run-refuses-to-score-when-the-mo, which owns that case): median 56.9 s a request against 142.0 s on the same 40 (140.8 over the baseline's 41); total 73.7 against 75.1 on the same 40 (75.3 over 41). settings-measurements 17.4 s inside the run. Every first turn traced 'restored the standing read' in 0.8 to 1.0 s."
+    },
+    {
+      "t": "2026-11-10T10:29:57.015Z",
+      "note": "Held-out, whole set, 20261110-083155-ask-held-out: total 54.9 against 56 (20261110-021212-ask-held-out, just before); median 115.4 s a request against 146.5; redline 18 s against 100, video 24 s against 113; whole run 116 min against 176. Drawing 'stopped' 3 -> 6 (drawings rejected three times by the look check; the planning turns restored fine) and layout still loses 1 of 3 to the 300 s limit: both outside the first read, left in the audit's rough list for the next run to watch. Audit queue/audits/2026-11-10-ask-s-first-answer-after-its-model-loads-comes-i.json; design note docs/design/ask.md 'The first read is saved'. No follow-up filed: the three-clip case finding is folded into the-ask-scoring-run-refuses-to-score-when-the-mo."
+    },
+    {
+      "t": "2026-11-10T10:30:13.559Z",
+      "note": "Ask's built-in server now saves its read of the tools and rules every request starts with (13.5k tokens) and restores it in about 1 s on each first turn (AskStandingRead in PhotonzCore, keyed by model, its files, server build, window and exact tokens, with tests; AskModelServer.standingRead; commit 4c6f8a072). settings-measurements from a cold probe 16.4 s (17.4 s in the full run) against 83 to 101 s. On the baseline's own 40 climb cases median 56.9 s against 142.0, total 73.7 against 75.1; held-out total 54.9 against 56, median 115.4 s against 146.5. Scripts/test.sh green. Audit queue/audits/2026-11-10-ask-s-first-answer-after-its-model-loads-comes-i.json."
     }
-  ]
+  ],
+  "started": "2026-11-10T06:14:38.743Z",
+  "completed": "2026-11-10T10:30:13.560Z"
 }
