@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-10T13:20:43.339Z",
+  "updated": "2026-11-10T15:28:38.787Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -210,9 +210,37 @@
     {
       "t": "2026-11-10T13:20:43.338Z",
       "note": "Digest 2026-11-10, read as a user from 2026-11-10-story-trash-two-laps-frames.png: lid opens 0.29 to 0.48 s and that part reads well. The trash appears out of nothing at 0.58 s, already beside the lid, then from 0.87 to 1.06 s it is drawn on top of the lid's line and sinks through it, fading to grey as it enters the can. Nothing deflects, so 'thrown in' and 'bounces off the lid' are both still unseen. The lid closing at 1.35 s does follow the touch now, which is today's real gain. Eight passes over 2.5 days have moved this bar 2, 0, 0, 1, 1 of 6. Steer for the next pass: judge first on the user's own sentence (5.8 today) and the reel, since that is what they asked for; the other five cases are the guard against tuning for a trash can, not the goal. If one more pass ends without a visible bounce in the reel, write up what a person sees and let the user call it from the audit rather than starting a ninth pass."
+    },
+    {
+      "t": "2026-11-10T13:22:17.875Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T13:40:45.574Z",
+      "note": "Replayed run 20261110-121442's final trash plan through the landing (test fixture AskMotionBounceTests): hit placed at 0.8 s, then the key at 1.0 s moves the trash up-right back into the lid as it dips (-40 to -25), 0.84 to 1.1 s through; and the trash fades in at 0.5 s a few units from the lid tip. Built test first-ish (4 tests): bouncedAway (the key after a hit on a MOVING part that the part then goes through is re-aimed: the way in mirrored about the face struck, at least 1/8 of the drawing, wider or straighter off the face until nothing passes through), keys right after a hit at the same place go with the placed hit, thrownIn (in fitted, on the final frame: a part that comes into sight as it sets off on a journey ending against another part starts that journey off the frame on the same line). hitStarts now starts the lid at the very hit (the ball is no longer in its way). Running the six story cases (run 1)."
+    },
+    {
+      "t": "2026-11-10T14:49:51.125Z",
+      "note": "Run 1 20261110-134039 (bounce + thrown in): total 58.9 (bell 57.4, checkbox 72.6, heart 62.6, envelope 38.2, rocket 72.9, trash 49.5). Trash frames: thrown in from the right edge now, but it just touched the lid (black on black reads as overlap) and the lid dipped after it, never apart. Added bounceGap (apart by 6% of the drawing at the key after). Run 2 20261110-141555: total 55.4 (64.5, 76.8, 54.9, 35.9, 52.8, 47.2); trash frames show the trash come OFF the lid with a gap at 0.9 s (first time), then pushed against the can's wall: the model said touches lid at 0.8 AND 0.95 (the second two units inside the lid), the 0.8 bounce moved the 0.95 key and a second bounce shoved the trash into the wall. Replayed (whole plan from the trace): fixed test first, a run of touches on the same part is one contact, bounce after the last; a touch buried in a MOVING part is pushed out across its nearest face (pushedOut). Replay: no passes-through, trash slides on the lid 0.8 to 0.95 and drops into the can clear of it. Run 3 going."
+    },
+    {
+      "t": "2026-11-10T15:28:20.810Z",
+      "note": "walks ask-animates-a-story-walk, ask-animates-a-story-without-the-word-walk -> ask-animates-a-story-walk, ask-animates-a-story-without-the-word-walk"
+    },
+    {
+      "t": "2026-11-10T15:28:38.610Z",
+      "note": "Run 3 20261110-144951 (contact runs, pushedOut): total 57.3 (bell 69.7, checkbox 73.8, heart 62.9, envelope 23.9, rocket 72.9, trash 40.7); reads as asked bell 6.2, checkbox 7.2, heart 5.9, envelope 2.9, rocket 6.6, trash 4.0: 1 of 6. Three runs on this code: totals 58.9, 55.4, 57.3 (mean 57.2) vs 59.6 and 53.7 (mean 56.7) before; trash 49.5, 47.2, 40.7 (within its old spread). Run 2's rocket drop (52.8) is the model's plan (key times written in ms, no touches), not this change. Run 3's trash: the model planned its own hop after the hit, so the trash steps down off the lid, then rises back under it (zigzag). Shipped 06a359946 (pushed). Scripts/test.sh exit 0 (twice). Walk ask-animates-a-story-walk at Next defaults: ok, 209 s, Copy SVG repeatCount=indefinite x3. Reel of the user's sentence, two laps, from that walk's export: queue/audits/2026-11-10-story-trash-bounce-two-laps.gif + frames; audit queue/audits/2026-11-10-animated-icon-story-bounce.json. Pictures looked at: runs 1 to 3 trash result.png, all 32 reel frames (lid opens 0.29 to 0.39 s; trash sits beside the can from the lap start because the model drew it in view; it meets the lid at 0.77 to 0.87 s, steps down off it at 0.97 to 1.06 s, lid shuts 1.16 to 1.35 s with the trash fading; seam 0)."
+    },
+    {
+      "t": "2026-11-10T15:28:38.697Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases at reads as asked 7; reached 1 of 6 in each of three runs. As the 2026-11-10 digest steered, no tenth pass: the bounce is now visible but small, and the call goes to the user through a decision card with the marked reel frames. Chose a card over pending because pending hands the loop a tenth pass the digest said not to start. Left rough, no new task (all inside this one, and the card decides whether it continues): bounce size; thrownIn needs the model to plan the part hidden; the model's own hop after a hit zigzags against the bounce; the lid's Ease out back overshoot is not modelled by the contact checks."
+    },
+    {
+      "t": "2026-11-10T15:28:38.783Z",
+      "note": "Bounce away from what is hit, contact runs kept on the lid, buried touches pushed out, thrown in from outside (06a359946). Story bar not met (1 of 6 in three runs). Per the digest, the user decides whether to keep going: card with the marked reel frames."
     }
   ],
-  "started": "2026-11-10T10:41:14.285Z",
+  "started": "2026-11-10T13:22:17.874Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"

@@ -1,0 +1,41 @@
+{
+  "id": "an-animated-icon-told-as-a-little-story-moves-th-after-nine-passes-the-trash-meet",
+  "taskId": "an-animated-icon-told-as-a-little-story-moves-th",
+  "question": "After nine passes the trash meets the lid and steps a little way off it before the lid shuts (boxed frames). Stop here, or keep going on the bounce?",
+  "context": "Nine passes since 2026-11-08. The bar (five of six story icons read as asked at 7 or more) has reached at most two of six; your trash sentence reads at 4 to 5 out of 10 in every run. This pass made the trash come away from the lid instead of going through it, and fly in from outside when it is hidden before it is thrown. The boxed frames are your exact sentence, run in the app today.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Stop here, keep what ships",
+      "summary": "The task closes for good. Story icons stay as they are now: every beat is attempted in order, nothing passes through anything, and the trash steps a little way off the lid before it shuts.",
+      "pros": [
+        "Frees the loop for the next feature after nine passes over three days",
+        "What you asked for first, an animated icon instead of a still drawing, works every time"
+      ],
+      "cons": [
+        "The bounce stays small and easy to miss",
+        "Four of six story tests still read below 7"
+      ],
+      "mitigation": "If a story icon disappoints later, say so and it comes back as a new task with that example.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Keep going, judged on your trash",
+      "summary": "More passes, judged first on your own trash sentence and its reel: the trash flies in from outside every time, bounces clearly off the lid, and the lid shuts because of it.",
+      "pros": [
+        "Aims at the exact thing you asked for",
+        "Each pass so far fixed something real you can see in the reel"
+      ],
+      "cons": [
+        "About three hours of the loop per pass, and the score has not moved in nine",
+        "Your trash sentence varies as much between runs as any change has moved it"
+      ],
+      "mitigation": "Each pass ends with the reel in front of you, so you can stop it at any point."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-11-10T15:28:20.857Z",
+  "shot": "2026-11-10-story-trash-bounce-marked.png"
+}
