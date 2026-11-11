@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-10T23:55:50.898Z",
-  "updated": "2026-11-11T18:46:17.976Z",
+  "updated": "2026-11-11T21:20:19.747Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-10 at ebaf3abc (and with 07df11ac/ebaf3abc changes removed, and with 03eb6f22 reverted, so it is none of those): printf \"name-field-handback\\ncomponent-override-walk\\n\" > /tmp/two.txt; Scripts/playtest-all.sh --only /tmp/two.txt -> name-field-handback FAILED step 16 (type): no text field has the keyboard (first responder is CanvasNSView); component-override-walk FAILED step 15 (type): same. copy-own-color-walk (step 15) and copies-share-choice-walk (step 24) fail the same way. All four passed in every full sweep 2026-11-01..2026-11-08; 28 commits under Sources landed since. Each does action makeComponent (or a rename) then a type step. Bisect between the 11-08 sweep commit and b34fcb4a.",
@@ -38,6 +38,22 @@
     {
       "t": "2026-11-11T18:46:17.975Z",
       "note": "rotating check 2026-11-11T18:46:17Z, 33 walks run from 530 onward in the rotation: label-grows-walk failing."
+    },
+    {
+      "t": "2026-11-11T20:24:36.860Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T21:20:10.124Z",
+      "note": "Broke in 7bc8dd3d6 (2026-11-09, 'The panel's rows stop under the title bar instead of sliding under Ask'): PanelTopEdge put .mask{} on the inspector's scroller, and on macOS a masked subtree drops every FocusState request made in code (claim ran, focused stayed false 0.3s later even with retries). Bisected by taking the modifier out (walks pass), then only the mask (pass), then a constant Rectangle mask (fail), then .clipped() (pass). Fix: PanelTopEdge clips the scroller and draws its scrolled fade as a .regularMaterial band over the top edge, not a mask. All 13 owned walks + panel-stays-under-the-title-bar, picture-panel-stays-under-the-title-bar, ask-adds-a-title-page pass; the four named walks passed twice in a row. Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-11T21:20:10.201Z",
+      "note": "left rough: ScrollEdgeFade (InspectorSections.swift) still masks the layers list, Library shelf and dock-shortened section bodies, so a field inside one that claims focus in code on appear would hit the same drop. No walk fails on it today (layer rename claims after its field is shown); did not earn a task, noted here."
+    },
+    {
+      "t": "2026-11-11T21:20:19.745Z",
+      "note": "Fixed in 1d31de231: the panel's top-edge mask (from 7bc8dd3d6, 2026-11-09) dropped every focus a field asks for in code; PanelTopEdge now clips and draws its scrolled fade as a material band. All 13 owned walks plus the title-bar edge walks pass, the four named walks twice in a row; Scripts/test.sh green. Audit queue/audits/2026-11-11-naming-a-new-component-or-a-copy-takes-the-keybo.json"
     }
   ],
   "walks": [
@@ -54,5 +70,7 @@
     "icon-into-a-component-onto-the-timeline-walk",
     "label-grows-walk",
     "library-reveal-walk"
-  ]
+  ],
+  "started": "2026-11-11T20:24:36.859Z",
+  "completed": "2026-11-11T21:20:19.746Z"
 }
