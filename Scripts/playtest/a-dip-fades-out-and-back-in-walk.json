@@ -61,6 +61,20 @@
       "count": 1
     },
     {
+      "do": "action",
+      "action": "clipPickEditPoint",
+      "comment": "Transitions stays folded until a cut is picked (ad5e0e11, the user 2026-10-30), so the walk picks the edit point it is about to drop on, and the section opens on its own."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Dip to black",
+      "in": "Transitions"
+    },
+    {
       "do": "dropOnTimeline",
       "tile": "Dip to black",
       "track": "V1",
@@ -290,6 +304,20 @@
     {
       "do": "wait",
       "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "clipPickCut",
+      "comment": "The new cut picked, so Transitions opens on its own for the drop."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Dip to black",
+      "in": "Transitions"
     },
     {
       "do": "dropOnTimeline",

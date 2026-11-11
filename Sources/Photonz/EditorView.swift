@@ -750,7 +750,16 @@ struct EditorView: View {
             .font(.callout)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .glassEffect(.regular, in: .capsule)
+            // The glass BEHIND the line rather than on it, and deaf to the
+            // pointer: glass on the line itself takes every click on the pill
+            // (macOS 27), so a click on its words never reached the picture
+            // under them (a-notice-lets-a-click-through-walk). Only the
+            // buttons in it take the pointer.
+            .background {
+                Color.clear
+                    .glassEffect(.regular, in: .capsule)
+                    .allowsHitTesting(false)
+            }
             .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 

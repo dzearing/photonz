@@ -225,12 +225,12 @@
     {
       "do": "describe",
       "stage": "4-bent",
-      "note": "THE TEST: the bend handle dragged down eleven points: the fade's segment now bends low through where it was let go, and the level half way along reads about -22 dB rather than the near-full level of Ease out"
+      "note": "THE TEST: the bend handle dragged down eleven points: the fade's segment now bends low through where it was let go, and the level half way along reads about -22 dB rather than the near-full level of Ease out. Within a decibel, because the drag lands a fraction of a point apart run to run (-22.3, -22.5 and -23.1 on 2026-11-10)"
     },
     {
       "do": "expect",
       "field": "Volume",
-      "reads": "-22.3"
+      "reads": "-22.3 ±1"
     },
     {
       "do": "snapshot",
