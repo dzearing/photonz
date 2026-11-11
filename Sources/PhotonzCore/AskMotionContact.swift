@@ -341,6 +341,42 @@ extension AskMotion {
             out = bouncedAway(out, at: bounce.step, hit: bounce.seconds, off: bounce.off, keepingNext: planned)
         }
         for end in ends { if let part = hitter(end.step) { out = struckWaits(out, part: part, hit: end.seconds, off: end.off) } }
+        // Met at speed and left at speed: a contact's first key is arrived
+        // at accelerating, its last left decelerating.
+        let starts = bounces.filter { bounce in !bounces.contains(where: { earlier in
+            earlier.step == bounce.step && plain(earlier.off) == plain(bounce.off) && earlier.seconds < bounce.seconds - 0.0005
+                && AskMotionCheck.timed(out[bounce.step]).last(where: { $0.seconds < bounce.seconds - 0.0005 }).map { abs($0.seconds - earlier.seconds) <= 0.0005 } == true
+        }) }
+        for start in starts { out = curved(out, step: start.step, leaving: AskMotionCheck.timed(out[start.step]).last { $0.seconds < start.seconds - 0.0005 }?.seconds, arriving: true) }
+        for end in ends { out = curved(out, step: end.step, leaving: end.seconds, arriving: false) }
+        return out
+    }
+
+    /// The least speed, as a share of a leg's mean, a hit is met or left at.
+    static let hitSpeed = 0.5
+
+    /// `steps` with the curve of the leg leaving the key at `seconds` in
+    /// `step` made to arrive at speed (`arriving`, into a hit: Ease in) or
+    /// leave at speed (out of a hit: Ease out), when the curve it has (none
+    /// is Ease in out) is slower than `hitSpeed` of the leg's mean there.
+    /// A curve that already meets it, Linear or the model's own Ease in, is
+    /// kept. On 2026-11-11 the user's trash, keyed with no curves, stopped
+    /// dead against the lid and set off again slowly: a touch and a slide,
+    /// never seen as a bounce.
+    static func curved(_ steps: [AskStep], step index: Int, leaving seconds: Double?, arriving: Bool) -> [AskStep] {
+        guard let seconds, var object = steps[index].arguments.objectValue, var list = object["keys"]?.arrayValue,
+              let slot = list.firstIndex(where: { abs(($0["seconds"]?.doubleValue ?? -1) - seconds) <= 0.0005 }),
+              var key = list[slot].objectValue else { return steps }
+        let word = key["curve"]?.stringValue ?? AgentKeyCurve.easeInOut
+        guard let curve = AgentKeyCurve.curve(named: word), curve != .steps(1) else { return steps }
+        let edge = 0.02
+        let speed = arriving ? (1 - curve.value(at: 1 - edge)) / edge : curve.value(at: edge) / edge
+        guard speed < hitSpeed else { return steps }
+        key["curve"] = .string(arriving ? EasingCurve.easeIn.title : EasingCurve.easeOut.title)
+        list[slot] = .object(key)
+        object["keys"] = .array(list)
+        var out = steps
+        out[index] = AskStep(tool: out[index].tool, arguments: .object(object))
         return out
     }
 

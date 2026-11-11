@@ -238,6 +238,27 @@ struct AskIconTests {
         #expect(AskIconCheck.problems(hairline, look: nil, appIcon: false).contains { $0.contains("16") })
     }
 
+    /// The user's trash story, every run from 2026-11-08 to 11-11: a line
+    /// can and lid, and the trash a solid filled shape. Every look of the
+    /// judge read it as "a block", never rubbish, and marked it down.
+    @Test("In a line icon, a part drawn solid is sent back to be drawn in lines; a dot is not")
+    func solidAmongLines() throws {
+        let trash = try SVGArtwork.parse(AskMotionTuckedInTests.bin).get()
+        let said = AskIconCheck.problems(trash, look: nil, appIcon: false)
+        #expect(said.contains { $0.lowercased().contains("trash") && $0.contains("lines") }, "\(said)")
+        // A dot (no wider than a line is thick) is part of the line style.
+        let dot = try SVGArtwork.parse(##"""
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round">
+        <circle id="rim" cx="12" cy="12" r="9"/><line id="stem" x1="12" y1="11" x2="12" y2="16"/>
+        <circle id="dot" cx="12" cy="8" r="1" fill="#1D1D1F" stroke="none"/></svg>
+        """##).get()
+        #expect(AskIconCheck.problems(dot, look: nil, appIcon: false).isEmpty)
+        // A filled icon asked for keeps its fills.
+        #expect(!AskIconCheck.problems(trash, look: .filled, appIcon: false).contains { $0.lowercased().contains("trash") })
+        // And the clean line icon still passes.
+        #expect(AskIconCheck.problems(try SVGArtwork.parse(Self.bell).get(), look: nil, appIcon: false).isEmpty)
+    }
+
     @Test("A look asked for is held to: outline has no big fills, filled has fills, duotone has two tones")
     func looksHeld() throws {
         let filled = try SVGArtwork.parse(##"<svg viewBox="0 0 24 24"><circle id="disc" cx="12" cy="12" r="10" fill="#000000"/></svg>"##).get()

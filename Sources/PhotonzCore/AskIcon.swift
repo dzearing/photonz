@@ -195,6 +195,9 @@ public enum AskIconCheck {
     public static let mostSendBacks = 2
     /// A line under this share of the drawing is under a pixel at 16 px.
     static let thinnestLine: CGFloat = 1.0 / 20
+    /// A filled part no wider than this many line weights is a dot, part of a
+    /// line icon's style.
+    static let dotWidth: CGFloat = 1.25
     /// Line weights this close are one weight.
     static let sameWeight: CGFloat = 1.15
     /// An id that names the kind of shape, not the part it is.
@@ -242,6 +245,20 @@ public enum AskIconCheck {
             guard part.fill != nil else { return false }
             let own = SVGArtwork.shapeBounds(part.shape)
             return own.width * own.height >= (side / 3) * (side / 3)
+        }
+        // A line icon with one part drawn solid: it reads as a block. A dot,
+        // no wider than a line is thick, is part of the line style.
+        let lines = art.parts.filter { $0.fill == nil && $0.stroke != nil && $0.strokeWidth > 0 }
+        if look != .filled, look != .duotone, !appIcon, lines.count >= 2, let weight = lines.map(\.strokeWidth).max() {
+            let solid = art.parts.filter { part in
+                guard part.fill != nil, part.stroke == nil else { return false }
+                let own = SVGArtwork.shapeBounds(part.shape)
+                return min(own.width, own.height) > weight * dotWidth
+            }
+            if !solid.isEmpty, lines.count > solid.count {
+                let names = solid.map { $0.name ?? "a filled shape" }.joined(separator: ", ")
+                said.append("\(names) is drawn solid among lines and reads as a block: draw it in lines like the rest (fill none, the same stroke), big enough that its inside shows.")
+            }
         }
         switch look {
         case .outline? where art.parts.contains(where: big):
