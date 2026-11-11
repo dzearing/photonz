@@ -16750,3 +16750,7 @@
 {"t":"2026-11-11T07:39:30.430Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T07:39:30.507Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T07:39:30.583Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"The can keeps its drawn shape (fe40711be, 89dafc069); story bar (5 of 6 read as asked at 7) still not met, 0 of 6, totals 56.3 and 61.1"}
+{"t":"2026-11-11T07:40:14.142Z","ev":"task_started","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","title":"A redline of a 2x screenshot reads in points, with dimension lines that show what each number spans","priority":"p1-high"}
+{"t":"2026-11-11T09:00:12.446Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
+{"t":"2026-11-11T09:00:12.522Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
+{"t":"2026-11-11T09:00:12.597Z","ev":"task_pending","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":"in_progress","note":"Tidy spacing numbers landed (Ask 73, skill 71.2 on settings; clean 5.4/5.2); bar of 8 not reached and a hand-placed ideal tops out near 6, so left open for the user's read"}

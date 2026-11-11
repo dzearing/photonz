@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-21T05:16:19.351Z",
-  "updated": "2026-11-11T05:07:02.095Z",
+  "updated": "2026-11-11T09:00:12.596Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried over from measuring-a-ui-gives-a-calm-redline-each-kind-of (2026-10-20), which shipped code-chosen marks and clear readout placement (Sources/PhotonzCore/Redline.swift, find_measurements / mark_measurements) and took the settings case from 32.5 to 59.0 for Ask (judge 2.8 to 4.8). What the judge still says, verbatim, from Scripts/ask-eval.sh run --engine ask --cases settings-measurements (runs 20261021-044351-ask, 20261021-044837-ask, 20261021-050243-ask or the latest): \"values don't match what they point at (124 px on a roughly 250 px button, 18 px on a gap that is clearly larger)\"; \"there are no end ticks to show what is being measured\"; \"the brackets don't clearly mark what they measure (26 px, 30 px, 17 px)\". The 124 is right in points (MeasureUnit.points, logical px) but labelled px: MeasureUnit.suffix is \"px\" for both units by design (Measure.swift line 12). Only three call sites use the suffix (Measure.swift label/chipText, MeasureSizeGroup.swift:176, DocumentUnit.swift:27) but about 46 test files and 38 walks expect px readouts, which is why it did not fit in the redline task. Size brackets are MeasureSizeGroup + caliper extension lines (MeasurePlan.swift, MeasureRasterizer.swift).",
@@ -143,6 +143,22 @@
     {
       "t": "2026-11-11T05:07:02.094Z",
       "note": "Units (pt on 2x), end ticks and short-bracket hugging landed; eval clean 4.2 Ask / 3.9 skill against a bar of 8, and hand placement does not yet get the never-cover rule, so left open"
+    },
+    {
+      "t": "2026-11-11T07:40:14.137Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T09:00:12.444Z",
+      "note": "Second pass (7d9ae7b5c): spacing numbers placed tidy first (own card or page between cards, off edges/dividers, straight leaders), else left out unless under 3 marks; sizes fall back; brackets prefer their own card; no inset on centred words; mark_measurements reports leftOut/why; Ask row counts landed measurements. Tests green (test.sh exit 0), 15 walks ok incl. the 7 owned and ask-annotates/ask-redlines-a-dialog/feed. Audit queue/audits/2026-11-11-redline-tidy-numbers.json; looked at before/after/app capture: no number on a divider or inside another card, row says Added 5 over 5."
+    },
+    {
+      "t": "2026-11-11T09:00:12.520Z",
+      "note": "NOT DONE, left pending: bar is 8 on clean and aligned. Reached Ask 73 (clean 5.44, aligned 5.56, run 20261111-075754-ask), skill 71.2 (clean 5.22, aligned 5.33, run 20261111-080752-skill). Ceiling check: hand-placed redlines of the same screen judged clean 6.33/aligned 5.56 (6 marks, big pills), 5.0/4.9 and 6.1/5.8 (11 marks, small pills), so 8 looks unreachable for numbers drawn on this picture; the audit asks the user. Other redline climb cases unchanged vs HEAD (card-padding 18.7 at HEAD, 18-20 now). Held-out not re-run (20 min > runner limit), last 54.9. Next ideas if continued: shrink a redline's pills to fit the picture's gaps (0.7 scale judged clean 5.4, inside noise), or spec on a margin around the screenshot."
+    },
+    {
+      "t": "2026-11-11T09:00:12.595Z",
+      "note": "Tidy spacing numbers landed (Ask 73, skill 71.2 on settings; clean 5.4/5.2); bar of 8 not reached and a hand-placed ideal tops out near 6, so left open for the user's read"
     }
   ],
   "walks": [
@@ -154,5 +170,5 @@
     "size-reads-avatars-and-stacks-walk",
     "size-steps-and-resizes-walk"
   ],
-  "started": "2026-11-11T03:50:33.833Z"
+  "started": "2026-11-11T07:40:14.136Z"
 }
