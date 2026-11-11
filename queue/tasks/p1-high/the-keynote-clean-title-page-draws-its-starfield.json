@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T00:01:55.999Z",
-  "updated": "2026-11-11T16:14:02.316Z",
+  "updated": "2026-11-11T22:47:42.639Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the agent MCP montage scenario (an-agent-can-cut-a-video-from-history-clips-with) and reproduced by the runner on 2026-10-19 through the agent tools on the probe:\n  new_video {width:1920,height:1080,seconds:6}; add_title {seconds:0, style:\"Keynote Clean\", text:\"Hello\"}; video_frame {seconds:2.5, region:{x:0,y:0,width:1000,height:560}}\nOutput: queue/audits/2026-10-19-keynote-clean-blocks-1080p.png (blocks plainly visible). Same at 3456x2234: queue/audits/2026-10-19-keynote-clean-blocks-retina.png. video_frame draws through DocumentFrames, the code the video exporter writes frames with, so the exported file carries it too. Likely a per-glow blur or gradient cropped to its own extent (a CIGaussianBlur not clamped / cropped to the input rect) in the live backdrop renderer; unconfirmed.",
@@ -98,6 +98,41 @@
     {
       "t": "2026-11-11T16:14:02.315Z",
       "note": "seq 90 -> 40"
+    },
+    {
+      "t": "2026-11-11T22:25:36.663Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T22:47:32.023Z",
+      "note": "Reproduced on current code with a new test (LiveBackdropSeamTests) that renders through DocumentRenderer.render(doc.drawn(atTimeMS:)), the export path: Keynote Clean at 2.5 s had 218 straight seams at 1920x1080 (longest 151 px, step 33 levels) and 268 at 3456x2234 (longest 313 px). Cause: the particles shader evaluated each pixel against its own grid cell only, so every speck's halo was cut off at the cell edge."
+    },
+    {
+      "t": "2026-11-11T22:47:32.099Z",
+      "note": "Fix (Sources/PhotonzRender/LiveBackdrops.swift, live_particles): each pixel sums the specks of the 3x3 neighbouring cells, and the halo fades smoothly to nothing by 1.15 cells so even the smallest Scale stays inside the neighbourhood. Keynote: 0 seams at both sizes. Particles at default and Depth 100: 0."
+    },
+    {
+      "t": "2026-11-11T22:47:32.174Z",
+      "note": "Checked every other moving look the same way (default and knob at 100, 1080p, 2.5 s). Energy Streams had real cuts: at long Trail the trail stopped dead at exp(-trail) with a dark notch (step 91, 137 px tall); the packet glow was also a box with a straight front at the default (Stacked Stagger uses it). Fixed: the trail fades to zero at its tail, the packet glow narrows with brightness (comet shape), and the head fades in over 0.10 of phase instead of 0.04. Sketch and Grid Horizon draw straight lines on purpose (looked at, no boxes, so the test leaves them out). Aurora, Color Bubbles, Light Rays, Light Leaks, Wind Streams and Liquid Gradient show only 1-level-a-channel 8-bit banding, not cuts."
+    },
+    {
+      "t": "2026-11-11T22:47:32.249Z",
+      "note": "Chose to fix Energy Streams in this task instead of filing it, because it is the same defect (a glow cut off at a straight edge) and acceptance 3 asks for the other looks to be checked. Perf: Particles 3.8 -> 5.1 ms, Energy Streams 4.1 -> 4.5 ms per 1080p frame on the calibration clock (budget 21.8)."
+    },
+    {
+      "t": "2026-11-11T22:47:32.324Z",
+      "note": "Export verified on the probe through the agent tools (new_video, add_title Keynote Clean, video_frame 2.5 s, export mp4 full) at 1920x1080 and 3456x2234; ffmpeg frames at 2.5 s show no boxes. Full Scripts/test.sh green. Audit: queue/audits/2026-11-11-keynote-clean-no-boxes.json. No walk touched."
+    },
+    {
+      "t": "2026-11-11T22:47:32.401Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-11T22:47:42.637Z",
+      "note": "Keynote Clean's specks no longer sit in dark boxes: the particles look now reads the 3x3 neighbouring cells and fades each halo out inside them (LiveBackdrops.swift). Energy Streams' cut-off packets fixed too. New LiveBackdropSeamTests: Keynote Clean went from 218/268 seams to 0 at 1080p and 3456x2234; probe export at both sizes checked frame by frame; full suite green. Audit 2026-11-11-keynote-clean-no-boxes.json."
     }
-  ]
+  ],
+  "started": "2026-11-11T22:25:36.662Z",
+  "walks": [],
+  "completed": "2026-11-11T22:47:42.638Z"
 }
