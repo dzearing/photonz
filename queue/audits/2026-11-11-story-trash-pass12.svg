@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <clipPath id="clip-1">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <g>
+    <g clip-path="url(#clip-1)">
+      <g transform="translate(7.5 11)">
+        <path d="M0 0 L1 10.5 L8 10.5 L9 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(2.5 2)" d="M0 0 L0.5 6.5" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(6 2)" d="M0.5 0 L0 6.5" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g transform="rotate(0 6.42 10.14)">
+        <animateTransform attributeName="transform" type="rotate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0 0 1 1;0 0 0.2 1;0 0 1 1;0 0 1 1;0.4 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1" keyTimes="0;0.133;0.133;0.333;0.533;0.533;0.633;0.65;0.667;0.683;0.7;0.717;0.733;0.75;0.767;0.783;0.8;0.817;0.833;0.85;0.867;0.999;1" values="0 6.42 10.14;0 6.42 10.14;0 6.42 10.14;-40 6.42 10.14;-40 6.42 10.14;-40 6.42 10.14;-25 6.42 10.14;-17.396 6.42 10.14;-11.279 6.42 10.14;-6.499 6.42 10.14;-2.91 6.42 10.14;-0.363 6.42 10.14;1.288 6.42 10.14;2.192 6.42 10.14;2.497 6.42 10.14;2.349 6.42 10.14;1.897 6.42 10.14;1.289 6.42 10.14;0.671 6.42 10.14;0.192 6.42 10.14;0 6.42 10.14;0 6.42 10.14;0 6.42 10.14"/>
+        <g transform="translate(6.5 8.5)">
+          <path transform="translate(0 1.5)" d="M0 0 L11 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path transform="translate(4.5 0)" d="M0 0 L2 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="translate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 1 1;0 0 0.2 1;0.4 0 1 1;0 0 0.2 1" keyTimes="0;0.333;0.533;0.633;0.733;1" values="0 0;0 0;-4.226 2.185;-1.536 5.391;-1.86 3.72;0 0"/>
+        <path transform="translate(16.5 4.5)" d="M1 0 L4 1 L3 4 L0 3 L1 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+</svg>

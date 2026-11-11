@@ -1,0 +1,29 @@
+{
+  "feature": "An animated icon told as a little story: the trash goes in past the lid, is drawn in lines, and is met at speed",
+  "epic": "icon-svg",
+  "summary": "The trash no longer fades out across the line the lid shuts onto: it is pushed into the can first, so the lid shuts over nothing. It now meets the lid at speed instead of stopping dead against it. A solid or too-small part in a line icon is sent back to be drawn in lines you can see into. The bounce itself still does not read.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-11-story-trash-pass12-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return." },
+    { "do": "Wait for Ask to finish (about four minutes), then press Space to play." },
+    { "do": "Read the first walk's frames: the trash comes in from the right edge, meets the lid, and is inside the can as the lid shuts, with no grey ghost on the lid.", "shot": "2026-11-11-story-trash-tucked-two-laps-frames.png" },
+    { "do": "Watch that walk's reel, two laps.", "shot": "2026-11-11-story-trash-tucked-two-laps.gif" },
+    { "do": "Read the last walk's frames: the trash is a lined box now, but this plan gave it no fade, so it sits by the can and on its rim the whole lap.", "shot": "2026-11-11-story-trash-pass12-two-laps-frames.png" },
+    { "do": "Hover the last walk's exported icon to play it at real sizes.", "shot": "2026-11-11-story-trash-pass12.svg" }
+  ],
+  "evaluate": [
+    "In the first walk's frames, does the trash read as going into the can now that the lid shuts over nothing?",
+    "The trash is now a small box drawn in lines with a hole in it. Does that read as rubbish, or still as a block?",
+    "When the agent draws a small part solid, Ask now sends it back to be drawn in lines at least 4 across. Is that right for a line icon, or should a small solid part be left alone?",
+    "Twelve passes have moved the six-story score inside the same band (48 to 61). Keep going on the bounce, or accept the trash as it plays and move on?"
+  ],
+  "rough": [
+    "The bar is not met: five of six story icons should read as asked at 7 or more. This pass reached 0 of 6 (bell 5.0, checkbox 6.9, heart 5.4, envelope 2.7, rocket 6.7, trash 4.0; total 52.2, run 20261111-180738-ask). Totals in the last two passes ranged 47.9 to 61.1.",
+    "Your trash scored 40.7, inside its range across all passes (37 to 55). The judges still see no bounce, the trash fading in from nowhere, and the lined trash sitting across the can's inner ribs as an 'A' shape. That last one is new this pass: pushing the trash into the can puts it on the ribs.",
+    "Every walk gets a different plan from the agent. Four walks this pass: the first showed the lid shutting over nothing; the second sent the bounce through the can's wall (fixed); the third had the big trash sitting on the shutting lid (fixed); the last dropped the trash's fade ('Left out a layer: it could not be done'), so none of the landing rules applied.",
+    "Asking for a lined part at 5 across made the trash too big to pass between the open lid and the can's mouth, so it is now 4 across. It still fills a lot of a 24 unit can.",
+    "No mock covers animated icons; this is judged against your sentence and the eval."
+  ]
+}

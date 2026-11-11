@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-11T16:14:02.105Z",
+  "updated": "2026-11-11T18:33:10.973Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -302,9 +302,33 @@
     {
       "t": "2026-11-11T16:14:02.104Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-11-11T16:16:38.431Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T18:33:05.494Z",
+      "note": "Pass twelve, led by the reel against the digest's three faults. Replayed the 12:28 walk's plan (AskMotionTuckedInTests): the trash fades out across the shut lid's line (ghost) and, keyed with no curves (Ease in out), moved 0.04 units in the 20 ms before the lid against a mean of 1.04 (dead stop, never a bounce). Shipped 8b8291f0f: tuckedIn (a part going out of sight where a moving part comes to rest over it lands past that part's resting line), hits met at speed (curve into a contact Ease in, out Ease out when slower than half the leg's mean), AskIconCheck sends a solid part among lines back. Walk 1 at Next defaults: no ghost on the shut lid, trash in lines, but the model kept it 3 across (filled in) and the tuck sent a rim landing down the outside of the wall."
+    },
+    {
+      "t": "2026-11-11T18:33:05.569Z",
+      "note": "Shipped 28be5dc77 (tuck turns from the sweep until the part's middle is half its size inside what it landed in; a lined part under 2.5 weights across sent back), a0799b0d1 (with a landing said, a bounce goes no further from it than the hit left it, judged on its own leg; walk 2 had the bounce through the can wall 0.96 to 1.11 s, AskMotionBounceTowardsTests), 90fe32da6 (with no landing said, where the part goes out of sight is the landing, goneAt shared with the tuck; walk 3's 5-across trash sat on the shutting lid 0.81 to 1.06 s; size send-back lowered to 4 across since 5 left no room under the lid). Scripts/test.sh exit 0 on each commit (one run had the punch-in stopwatch 0.1 ms over under load; passed alone twice at 3.1/3.2 ms vs 5.1 and the next full run)."
+    },
+    {
+      "t": "2026-11-11T18:33:05.642Z",
+      "note": "Measured on 90fe32da6, story run 20261111-180738-ask (chunked with --minutes/--resume): total 52.2; reads as asked bell 5.0, checkbox 6.9, heart 5.4, envelope 2.7, rocket 6.7, trash 4.0: 0 of 6 at 7. Trash 40.7 (all-pass range 37 to 55). Judges: no visible bounce, trash fades in from nowhere (not thrown), lined trash across the ribs reads as an 'A', a faded ghost through the wall at 1.2 s. Walk 4 (final code) ok at Next defaults, Copy SVG loops (2 animated parts): the model's fade was left out ('Left out a layer: it could not be done') so the trash sits in view and on the rim all lap. Pictures looked at: all four walks' frames, walk 4's window capture, the reels. Audit queue/audits/2026-11-11-animated-icon-story-tucked.json."
+    },
+    {
+      "t": "2026-11-11T18:33:05.716Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases read as asked at 7; this pass 0 of 6 (best checkbox 6.9). Left rough, no new task (all inside this one): the tuck puts the lined trash across the can's ribs ('A' shape), a faded part could fade faster once inside what it lands in; thrownIn did not fire for a trash drawn in view with no fade before its journey; the model's fade 'left out' in walk 4 is worth a look (why a trash opacity key could not be done)."
+    },
+    {
+      "t": "2026-11-11T18:33:10.972Z",
+      "note": "Pass twelve: the lid shuts over nothing, the trash is drawn in lines and met at speed, a bounce goes towards where it lands (8b8291f0f, 28be5dc77, a0799b0d1, 90fe32da6); story bar (5 of 6 at 7) still not met, 0 of 6, total 52.2, trash 40.7"
     }
   ],
-  "started": "2026-11-11T09:12:30.129Z",
+  "started": "2026-11-11T16:16:38.430Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"

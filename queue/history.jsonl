@@ -16834,3 +16834,9 @@
 {"t":"2026-11-11T16:15:29.806Z","ev":"task_note","id":"the-whole-walk-set-finishes-at-least-once-every"}
 {"t":"2026-11-11T16:15:29.832Z","ev":"triage","summary":"merged 0, dropped 0, priority moves 0, filed 1 (whole walk set has not finished since 11-04: three runs stopped and thrown away), reset 0, leftovers 0, reproduced 2 new p1 bugs (component naming keyboard, Library tile pick-up) and kept both p1, retagged 1 (component naming to ui-components), walk ownership 2 (component naming owns 13 walks, redline owns copy-svg px walk), groomed 4 (story reel read, redline picture read, panel blank rows cousin, audit pictures), resequenced p1 (component naming to 2nd) and p2 (audit pictures to 9th, three new tasks to the end)"}
 {"t":"2026-11-11T16:16:20.545Z","ev":"digest","file":"2026-11-11.md"}
+{"t":"2026-11-11T16:16:38.436Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-11T18:33:05.496Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T18:33:05.571Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T18:33:05.644Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T18:33:05.718Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T18:33:10.974Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass twelve: the lid shuts over nothing, the trash is drawn in lines and met at speed, a bounce goes towards where it lands (8b8291f0f, 28be5dc77, a0799b0d1, 90fe32da6); story bar (5 of 6 at 7) still not met, 0 of 6, total 52.2, trash 40.7"}
