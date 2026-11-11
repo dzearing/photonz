@@ -210,6 +210,17 @@ extension AskMotion {
                 }) else { continue }
                 var arrives = moves[landing].seconds
                 if index + 2 < keys.count { arrives = min(arrives, keys[index + 2].seconds - near) }
+                // Faded out by the very moment it lands (run 20261111-103646:
+                // the trash faded over its whole throw into the can): seen
+                // the whole way, faded over the last of it.
+                if abs(arrives - to.seconds) <= near {
+                    let starts = to.seconds - fadesWhereItArrives
+                    guard starts > from.seconds + near else { continue }
+                    keys.insert((Double(rounded(CGFloat(starts))), from.value, from.curve), at: index + 1)
+                    changed = true
+                    index += 1
+                    continue
+                }
                 guard arrives > to.seconds + near else { continue }
                 let starts = max(to.seconds, arrives - fadesWhereItArrives)
                 keys[index + 1] = (Double(rounded(CGFloat(starts))), from.value, to.curve)

@@ -58,4 +58,17 @@ struct AskMotionUsedUpTests {
         let puff = try Self.steps(trash: drift)
         #expect(AskMotion.usedUpUnseen(puff) == puff)
     }
+
+    @Test("Faded over its whole throw to the moment it lands, it is seen the whole way and fades only where it lands")
+    func fadeEndingAtTheLanding() throws {
+        // Run 20261111-103646: 100 to 0 from 0.5 to 1.1 s, the moment it lands in the can.
+        let throwFade = #"[{"seconds":0,"value":100},{"seconds":0.5,"value":100},{"seconds":1.1,"value":0},{"seconds":1.2,"value":0},{"seconds":1.5,"value":100}]"#
+        let landed = AskMotion.planned(try Self.steps(fade: throwFade))
+        let lap = try #require(AskMotion.Lap(landed))
+        for moment in [0.6, 0.7, 0.8, 0.9, 0.95] {
+            #expect((lap.value("trash", .opacity, at: moment)?.doubleValue ?? 0) >= 90, "\(moment): \(String(describing: lap.value("trash", .opacity, at: moment)))")
+        }
+        #expect((lap.value("trash", .opacity, at: 1.1)?.doubleValue ?? 100) <= AskMotion.unseen)
+        for moment in [0.0, 0.25, 0.45] { #expect(lap.placed("trash", at: moment)?.seen == false, "\(moment)") }
+    }
 }
