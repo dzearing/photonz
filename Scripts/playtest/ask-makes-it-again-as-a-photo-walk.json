@@ -110,7 +110,7 @@
     {
       "do": "expect",
       "control": "Agent Change 1 Words",
-      "reads": "Made a photo of a fox"
+      "reads": "Made a photo of a*fox"
     },
     {
       "do": "describe",

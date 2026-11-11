@@ -11,6 +11,18 @@
   },
   "steps": [
     {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1360,
+      "height": 1000,
+      "note": "A canvas first, so the recording is not the first window the walk opens. Opened first, the title bar's chip read grey in dark in every frame (2026-11-10), while opened second, as here and in segmented-chip-refraction-film-walk, it reads the accent; see the task find-out-whether-the-view-edit-switch-s-picked-c."
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
       "do": "open",
       "file": "fixtures/Full screen Retina recording 3456x2234.mp4",
       "width": 1360,

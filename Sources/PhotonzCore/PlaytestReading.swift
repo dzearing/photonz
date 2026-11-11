@@ -2,7 +2,8 @@ import Foundation
 
 /// Whether what a field shows is what a walk's `expect` step claimed.
 ///
-/// Words are compared as words, ignoring case. A claim ending in `±<margin>`
+/// Words are compared as words, ignoring case; a "*" in a claim stands for
+/// any words there. A claim ending in `±<margin>`
 /// ("-9.3 dB ±0.5") compares the number instead: the reading has to carry the
 /// same unit and sit within the margin. A reading set by a drag a few points
 /// long lands wherever inside a pixel the drag let go, so the exact words can
@@ -14,6 +15,7 @@ public enum PlaytestReading {
         let showing = showing.trimmingCharacters(in: .whitespaces)
         let claimed = claimed.trimmingCharacters(in: .whitespaces)
         guard let plusMinus = claimed.range(of: "±") else {
+            if claimed.contains("*") { return starred(showing: showing, claimed: claimed) }
             return showing.caseInsensitiveCompare(claimed) == .orderedSame
         }
         let wanted = String(claimed[..<plusMinus.lowerBound])
@@ -22,6 +24,15 @@ public enum PlaytestReading {
               target.unit.caseInsensitiveCompare(shown.unit) == .orderedSame
         else { return false }
         return abs(target.value - shown.value) <= margin + 1e-9
+    }
+
+    /// A claim with "*" in it: each star stands for any words (or none), and
+    /// the rest must match from the first word to the last, ignoring case.
+    private static func starred(showing: String, claimed: String) -> Bool {
+        let pattern = claimed.components(separatedBy: "*")
+            .map { NSRegularExpression.escapedPattern(for: $0) }
+            .joined(separator: ".*")
+        return showing.range(of: "^" + pattern + "$", options: [.regularExpression, .caseInsensitive]) != nil
     }
 
     /// The leading number of a reading and whatever follows it, the unit.

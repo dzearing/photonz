@@ -267,6 +267,53 @@ struct AskPhotoTests {
         #expect(AskChangeWords.sentence([drawn], asked: "a dog").hasPrefix("Drew"))
     }
 
+    /// The subject is the model's own prompt for the picture, which can be a
+    /// sentence: "as a photo" after a fox read "Made a photo of A red fox
+    /// standing in p…" on 2026-11-10, a capital mid-sentence and a word cut in
+    /// half. The row says the thing it made, in whole words.
+    @Test("A long subject is said as the thing made, lower case, in whole words")
+    func longSubjectIsCutAtThePhrase() {
+        let fox = AskStep(tool: "add_photo", arguments: [
+            "subject": "A red fox standing in a snowy pine forest at dawn, soft golden light, shallow depth of field",
+        ])
+        #expect(AskChangeWords.sentence([fox], asked: "as a photo") == "Made a photo of a red fox")
+        let lighthouse = AskStep(tool: "add_photo", arguments: ["subject": "The lighthouse"])
+        #expect(AskChangeWords.sentence([lighthouse], asked: "as a photo") == "Made a photo of the lighthouse")
+        let painted = AskStep(tool: "add_photo", arguments: [
+            "subject": "A quiet harbour with small wooden fishing boats under red sails at dusk", "look": "painting",
+        ])
+        #expect(AskChangeWords.sentence([painted], asked: "paint it") == "Painted a quiet harbour")
+        // No preposition to stop at: as many whole words as fit, never part of one.
+        let words = "a majestic snowy mountain panorama sunrise glow"
+        let wide = AskStep(tool: "add_photo", arguments: ["subject": .string(words)])
+        let said = AskChangeWords.sentence([wide], asked: "as a photo")
+        #expect(said.count <= AskChangeWords.budget)
+        #expect(!said.contains("\u{2026}"))
+        #expect(said.hasPrefix("Made a photo of a majestic"))
+        #expect(said.dropFirst("Made a photo of ".count).split(separator: " ").allSatisfy {
+            words.split(separator: " ").contains($0)
+        })
+    }
+
+    /// "as a photo" after vector art of a fox: the model painted the photo and
+    /// hid the vector art it replaces. The hide does not name what it made, so
+    /// the row fell back to the request said back, "Made vector art of a fox,
+    /// as a photo" (2026-11-10), which names the kind it did NOT make.
+    @Test("A picture made again as another kind says the kind it made, not the request said back")
+    func remakeSaysWhatItMade() {
+        let layer = UUID().uuidString
+        let photo = AskStep(tool: "add_photo", arguments: ["subject": "A red fox sitting in the snow"])
+        let hide = AskStep(tool: "set_layer", arguments: ["layer": .string(layer), "visible": false])
+        #expect(AskChangeWords.sentence([photo, hide], asked: "make vector art of a fox, as a photo")
+                == "Made a photo of a red fox")
+        let drawn = AskStep(tool: "add_drawing", arguments: ["subject": "fox"])
+        #expect(AskChangeWords.sentence([drawn, hide], asked: "a photo of a fox, as vector art") == "Drew a fox")
+        // A hide the person asked for in a request of its own is still said.
+        let cat = AskStep(tool: "add_drawing", arguments: ["subject": "cat"])
+        #expect(AskChangeWords.sentence([cat, hide], asked: "draw a cat and hide the background")
+                != "Drew a cat")
+    }
+
     @Test("A photo counts as made for the request, never looked up")
     func photoIsDrawn() {
         #expect(AskDrawingSource.of(tool: "add_photo", answer: #"{"from":"painted: Z-Image Turbo"}"#) == .drawn)

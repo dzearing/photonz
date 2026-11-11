@@ -96,12 +96,31 @@ struct PlaytestThumbFilmTests {
 
     private let rail = 20...39
 
-    @Test("The backdrop is the middle brightness beside the rail, off its hairline, with the thumb at rest")
+    @Test("The backdrop is the middle reading of the quieter side of the rail, off its hairline, with the thumb at rest")
     func readsTheBackdrop() {
         var columns = strip(lit: 22...29)
         columns[17] = 0.5 // the rail's own edge, lit
         columns[1] = 0.6  // something bright beside it, the panel toggle
-        #expect(ThumbFootprint.backdrop(columns: columns, rail: rail) == 0.15)
+        #expect(ThumbFootprint.backdrop(columns: columns, rail: rail) == 0.02)
+        // With only one side in the strip, that side is the backdrop.
+        #expect(ThumbFootprint.backdrop(columns: Array(columns[0..<40]), rail: rail) == 0.15)
+    }
+
+    /// The title bar's View | Edit sits beside the Ask button, a purple pill
+    /// (0.47 here, measured 2026-11-10), and the strip reaches over it. Read
+    /// as the middle of both sides at once, the backdrop came out purple and
+    /// the blue chip (0.3) never cleared it, so every film of the title bar
+    /// failed with no thumb seen at rest from 2026-11-01 on.
+    @Test("A colourful button on one side of the rail is not taken for what the rail sits on")
+    func aColourfulNeighbourIsNotTheBackdrop() {
+        let columns = (0..<60).map { column -> Double in
+            if (22...29).contains(column) { return 0.3 }
+            if (20...39).contains(column) { return 0.02 }
+            return column < 20 ? 0.47 : 0.01
+        }
+        let backdrop = ThumbFootprint.backdrop(columns: columns, rail: rail)
+        #expect(backdrop == 0.01)
+        #expect(ThumbFootprint.read(columns: columns, rail: rail, backdrop: backdrop) == 22...29)
     }
 
     @Test("A pixel's colourfulness is 0 for any grey and 1 for a pure colour; the tinted chip is far from grey")

@@ -152,6 +152,10 @@ public enum AskStage: Hashable, Sendable {
             .replacingOccurrences(of: "—", with: ", ")
             .trimmingCharacters(in: .whitespaces)
         while let last = said.last, ".!".contains(last) { said.removeLast() }
+        // Every subject is said mid-line, so a model's "A red fox" is "a red fox".
+        if let space = said.firstIndex(of: " "), ["A", "An", "The"].contains(String(said[..<space])) {
+            said = said[..<space].lowercased() + said[space...]
+        }
         if lower, let first = said.first, said.dropFirst().first?.isLowercase ?? true {
             said = first.lowercased() + said.dropFirst()
         }

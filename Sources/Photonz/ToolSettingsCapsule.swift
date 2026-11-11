@@ -105,6 +105,19 @@ struct ToolSettingsCapsule: View {
         .accessibilityHidden(true)
     }
 
+    /// A list of choices in the capsule: the panel's own dropdown, the one
+    /// the brush's rows here already use (`BrushSettingControl`), so every
+    /// menu over the tool bar looks and opens alike, and a walk reads its rows
+    /// and picks one without the menu on screen. Until 2026-11-10 these were
+    /// SwiftUI pickers, which macOS 27 draws as a view of its own with no
+    /// pop-up button inside, so no walk could find them.
+    private func menu(_ name: String, value: String, help: String,
+                      choices: [VideoKit.Choice]) -> some View {
+        VideoKit.Dropdown(label: "Tool \(name)", value: value, size: .small, help: help, choices: choices)
+            .fixedSize()
+            .playtestField("Tool \(name)")
+    }
+
     private static func isBrushSetting(_ setting: ToolSetting) -> Bool {
         [.brushSize, .brushOpacity, .brushOwnFirst, .brushOwnSecond].contains(setting)
     }
@@ -202,28 +215,26 @@ struct ToolSettingsCapsule: View {
             .controlSize(.small)
             .help("Fill only the area joined to the click. Off fills that color everywhere on the layer.")
         case .measureSnap:
-            Picker("Snap", selection: $state.measureSnapsToCenters) {
-                Text("Edges").tag(false)
-                Text("Edges and centers").tag(true)
-            }
-            .labelsHidden()
-            .controlSize(.small)
-            .fixedSize()
-            .help("What measure points magnetize to. Hold Command to drag free.")
+            // Two answers, so both show, as in the panel's own Snap row
+            // (`MeasureToolInspector`): never a menu of two.
+            SegmentedControl("Snap", selection: state.measureSnapsToCenters,
+                             options: [false, true].map {
+                                 .init($0, MeasureToolInspector.snapTitle($0), help: MeasureToolInspector.snapHelp)
+                             },
+                             form: .natural,
+                             pick: { state.measureSnapsToCenters = $0 })
+                .controlSize(.small)
+                .fixedSize()
         case .lensAdjustment:
             // A menu rather than five segments: five words side by side is
             // wider than the narrowest window, and the capsule may never be
             // wider than the picture.
-            Picker("Lens", selection: $state.lensToolKind) {
-                ForEach(LensKind.allCases, id: \.self) { kind in
-                    Text(kind.title).tag(kind)
-                }
-            }
-            .labelsHidden()
-            .controlSize(.small)
-            .fixedSize()
-            .help("What the next lens does to the picture underneath it. A lens "
-                  + "already on the canvas is switched in its own section of the panel.")
+            menu("Lens", value: state.lensToolKind.title,
+                 help: "What the next lens does to the picture underneath it. A lens "
+                     + "already on the canvas is switched in its own section of the panel.",
+                 choices: LensKind.allCases.map { kind in
+                     .item(kind.title, isOn: state.lensToolKind == kind) { state.lensToolKind = kind }
+                 })
         case .lensAmount:
             // Nothing to set on Invert, so nothing is drawn: the capsule
             // narrows to the one control rather than parking a dead slider.
@@ -248,17 +259,16 @@ struct ToolSettingsCapsule: View {
         case .component:
             // A menu, because the shelf holds as many as you have made. It
             // names what the next click places before you click.
-            Picker("Component", selection: Binding(
-                get: { editorState.componentToolComponentID },
-                set: { if let id = $0 { editorState.setComponentToolComponent(id) } })) {
-                ForEach(editorState.componentToolOffers) { entry in
-                    Text(entry.name).tag(UUID(uuidString: entry.id))
-                }
-            }
-            .labelsHidden()
-            .controlSize(.small)
-            .fixedSize()
-            .help("What a click with the tool places. Picking one in the Library picks it here too.")
+            let offers = editorState.componentToolOffers
+            let picked = editorState.componentToolComponentID
+            menu("Component",
+                 value: offers.first { UUID(uuidString: $0.id) == picked }?.name ?? "",
+                 help: "What a click with the tool places. Picking one in the Library picks it here too.",
+                 choices: offers.map { entry in
+                     .item(entry.name, isOn: UUID(uuidString: entry.id) == picked) {
+                         if let id = UUID(uuidString: entry.id) { editorState.setComponentToolComponent(id) }
+                     }
+                 })
         case .brushMedium:
             // Picked by its stroke, not its name: the button shows the brush
             // in hand and opens the tiles (`BrushChooser`, the user,
@@ -278,18 +288,14 @@ struct ToolSettingsCapsule: View {
             // Drawn by `field` from the brush's own list.
             EmptyView()
         case .measureShow:
-            Picker("Show", selection: Binding(
-                get: { editorState.measureShowFilter },
-                set: { editorState.setMeasureShowFilter($0) })) {
-                ForEach(EditorState.MeasureShowFilter.allCases, id: \.self) { filter in
-                    Text(filter.title).tag(filter)
-                }
-            }
-            .labelsHidden()
-            .controlSize(.small)
-            .fixedSize()
-            .help("Which measurements the canvas shows. A view filter only: exports "
-                  + "always include every visible measurement.")
+            menu("Show", value: editorState.measureShowFilter.title,
+                 help: "Which measurements the canvas shows. A view filter only: exports "
+                     + "always include every visible measurement.",
+                 choices: EditorState.MeasureShowFilter.allCases.map { filter in
+                     .item(filter.title, isOn: editorState.measureShowFilter == filter) {
+                         editorState.setMeasureShowFilter(filter)
+                     }
+                 })
         }
     }
 }

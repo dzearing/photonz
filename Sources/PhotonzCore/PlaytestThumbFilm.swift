@@ -94,14 +94,20 @@ public enum ThumbFootprint {
     /// what it sits on.
     public static let edge = 6
 
-    /// What the rail sits on: the middle brightness either side of it, off its
-    /// hairline, in a frame where the thumb is at rest inside it.
+    /// What the rail sits on: the middle reading of each side of it, off its
+    /// hairline, in a frame where the thumb is at rest inside it, and of the
+    /// two the quieter. A control beside the rail is not what it sits on: the
+    /// title bar's Ask button is a purple pill to the left of View | Edit, and
+    /// read with both sides as one it set the backdrop above the chip itself
+    /// (2026-11-10).
     public static func backdrop(columns: [Double], rail: ClosedRange<Int>) -> Double {
-        let outside = columns.indices
-            .filter { $0 < rail.lowerBound - edge || $0 > rail.upperBound + edge }
-            .map { columns[$0] }
-            .sorted()
-        return outside.isEmpty ? 0 : outside[outside.count / 2]
+        func middle(_ indices: [Int]) -> Double? {
+            let sorted = indices.map { columns[$0] }.sorted()
+            return sorted.isEmpty ? nil : sorted[sorted.count / 2]
+        }
+        let left = middle(columns.indices.filter { $0 < rail.lowerBound - edge })
+        let right = middle(columns.indices.filter { $0 > rail.upperBound + edge })
+        return [left, right].compactMap { $0 }.min() ?? 0
     }
 
     /// The columns the thumb covers, or nil when no glass is drawn on the rail.

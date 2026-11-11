@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tool-and-library-dropdowns-open-on-a-click-walk",
-  "seed": "Every menu the tools, a lens, a saved text style and a component put in the panel opens when a person clicks it, at Next defaults with no flag changed. The Measure tool's Mode and Show, the Crop tool's Aspect, the Lens tool's Does and a drawn lens's Does, a Library text style's Font, Size and Weight, and a component's Place, Variant and choice menus each wear the panel's dropdown face and are clicked on it in the middle and 8pt in from each end, and the Measure tool's Snap, two answers, is a segmented control whose segments are pressed with the pointer; each pick reads back on the face, and one undo takes back one pick.",
+  "seed": "Every menu the tools, a lens, a saved text style and a component put in the panel opens when a person clicks it, at Next defaults with no flag changed. The Measure tool's Mode and Show, the Crop tool's Aspect, the Lens tool's Does and a drawn lens's Does, a Library text style's Font, Size and Weight, and a component's Place, Variant and choice menus and the menus over the tool bar for the Measure tool's Show, the Lens tool's kind and the Component tool's component each wear the panel's dropdown face and are clicked on it in the middle and 8pt in from each end, and the Measure tool's Snap, two answers, is a segmented control whose segments are pressed with the pointer; each pick reads back on the face, and one undo takes back one pick.",
   "setup": {
     "forget": [
       "all"
@@ -95,6 +95,42 @@
       "do": "expect",
       "menu": "Show",
       "reads": "Spacing"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Show",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "All"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Tool Show",
+      "reads": "All"
+    },
+    {
+      "do": "expect",
+      "menu": "Show",
+      "reads": "All"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Show",
+      "at": [
+        "centre"
+      ],
+      "choose": "Spacing"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
     },
     {
       "do": "snapshot",
@@ -199,7 +235,8 @@
       "seconds": 0.4
     },
     {
-      "do": "tool", "tool": "lens"
+      "do": "tool",
+      "tool": "lens"
     },
     {
       "do": "waitFor",
@@ -209,6 +246,25 @@
     {
       "do": "wait",
       "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Lens",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Greyscale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Tool Lens",
+      "reads": "Greyscale"
     },
     {
       "do": "panelMenu",
@@ -541,6 +597,52 @@
     {
       "do": "wait",
       "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "n"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "component",
+      "timeout": 2
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Component",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Card"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Tool Component",
+      "reads": "Card"
+    },
+    {
+      "do": "describe",
+      "stage": "8b-tool-component",
+      "note": "the Component tool's menu over the tool bar, the panel's dropdown, set to Card with the pointer"
+    },
+    {
+      "do": "snapshot",
+      "name": "8b-tool-component"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "click",

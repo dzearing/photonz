@@ -34,6 +34,11 @@ struct AskProgressTests {
         #expect(AskStage.checking(subject: "a fox", part: 1, of: 1).line == "Checking a fox")
         #expect(AskStage.tracing(subject: "a fox", part: 1, of: 1).line == "Turning a fox into layers")
         #expect(AskStage.photo(subject: "a beach", part: 1, of: 1).line == "Making a photo of a beach")
+        // The model's own prompt starts with a capital; mid-line it is lower
+        // case (seen 2026-11-10: "Making a photo of A red fox sitting…").
+        #expect(AskStage.photo(subject: "A red fox", part: 1, of: 1).line == "Making a photo of a red fox")
+        #expect(AskStage.painting(subject: "The harbour", part: 1, of: 1).line == "Painting the harbour")
+        #expect(AskStage.drawing(subject: "Eiffel Tower", part: 1, of: 1).line == "Drawing Eiffel Tower")
     }
 
     @Test("A try again says why in a few words")

@@ -128,6 +128,7 @@ public enum AskChangeWords {
                                 before: PhotonzDocument? = nil, after: PhotonzDocument? = nil,
                                 madeAll: Bool = true) -> String {
         let asked = madeAll ? asked : ""
+        let steps = withoutTheReplacedHidden(steps, asked: asked)
         // Grouped by what each step's words say, most first, ties in the order asked.
         var groups: [(key: String, kind: Kind, steps: [AskStep])] = []
         for step in steps {
@@ -167,9 +168,10 @@ public enum AskChangeWords {
             if first.tool == "add_photo" {
                 // "a photo of a dog on a beach", so the row says which kind it made.
                 let photo = group.kind.one == "a photo"
+                let lead = photo ? "a photo of " : ""
                 let subjects = group.steps.compactMap { step in
                     subjectPhrase(step.arguments["subject"]?.stringValue ?? "", icon: false, asked: asked)
-                        .map { photo ? "a photo of \($0)" : $0 }
+                        .map { lead + (group.steps.count == 1 ? shortened($0, room: room - lead.count) : $0) }
                 }
                 if subjects.count == group.steps.count, let listed = list(subjects, room: room, alone: alone) {
                     return listed
@@ -237,6 +239,25 @@ public enum AskChangeWords {
         return sentence.count <= budget ? sentence : String(sentence.prefix(budget - 1)) + "\u{2026}"
     }
 
+    /// How `AgentPictureKind.remade` ends a request made again as another
+    /// kind: "draw a dog, as a photo".
+    static let remadeEndings = [", as a photo", ", as vector art", ", as an icon", ", as a painting"]
+
+    /// A picture made again as another kind hides the one it replaces, and
+    /// that hide is part of making it, not a change of its own to report. Left
+    /// in, it sent the row to the request said back, "Made vector art of a
+    /// fox, as a photo", the one kind it did not make (2026-11-10).
+    private static func withoutTheReplacedHidden(_ steps: [AskStep], asked: String) -> [AskStep] {
+        let lowered = asked.lowercased().trimmingCharacters(in: .whitespaces)
+        guard remadeEndings.contains(where: { lowered.hasSuffix($0) }),
+              steps.contains(where: { ["add_photo", "add_drawing"].contains($0.tool) }) else { return steps }
+        return steps.filter { step in
+            guard step.tool == "set_layer", step.arguments["visible"]?.boolValue == false else { return true }
+            let keys = Set((step.arguments.objectValue ?? [:]).keys)
+            return !keys.isSubset(of: ["document", "layer", "layers", "visible"])
+        }
+    }
+
     /// "a cat", "a cat and a dog", "a cat, a dog and a bird", or when they do
     /// not fit, "a cat and 2 more" while it is the only clause. Nil when even
     /// that does not fit.
@@ -248,6 +269,35 @@ public enum AskChangeWords {
         if items.count == 1 { return head }
         let short = head + " and \(items.count - 1) more"
         return (alone || !more) && short.count <= room ? short : nil
+    }
+
+    /// A subject too long for the row, said as the thing itself: up to where
+    /// it starts saying where or doing what ("a red fox" of "a red fox
+    /// standing in the snow at dawn"), else as many whole words as fit. A
+    /// photo's subject is the model's own prompt for it, often a sentence.
+    static func shortened(_ phrase: String, room: Int) -> String {
+        guard phrase.count > room else { return phrase }
+        let words = phrase.split(whereSeparator: \.isWhitespace).map(String.init)
+        let named = determiners.contains(words.first?.lowercased() ?? "") ? 2 : 1
+        func bare(_ word: String) -> String { word.trimmingCharacters(in: .punctuationCharacters).lowercased() }
+        func joined(_ kept: ArraySlice<String>) -> String {
+            kept.joined(separator: " ").trimmingCharacters(in: .punctuationCharacters.union(.whitespaces))
+        }
+        if let stop = words.indices.dropFirst(named).first(where: { index in
+            let word = bare(words[index])
+            return prepositions.contains(word) || (word.count > 5 && word.hasSuffix("ing"))
+                || words[index - 1].hasSuffix(",")
+        }) {
+            let head = joined(words[..<stop])
+            if head.count <= room { return head }
+        }
+        var kept = words.prefix(named)
+        for word in words.dropFirst(named) {
+            guard joined(kept + [word]).count <= room else { break }
+            kept.append(word)
+        }
+        while kept.count > named, prepositions.contains(bare(kept.last ?? "")) { kept.removeLast() }
+        return joined(kept)
     }
 
     /// The names of the layers the steps acted on, first named first.
@@ -278,7 +328,8 @@ public enum AskChangeWords {
         guard !words.isEmpty else { return nil }
         if icon, !words.contains(where: { $0.lowercased().hasPrefix("icon") }) { words.append("icon") }
         let lead = words[0].lowercased()
-        if determiners.contains(lead) { return words.joined(separator: " ") }
+        // Said mid-sentence, so "A red fox" is "a red fox".
+        if determiners.contains(lead) { return ([lead] + words.dropFirst()).joined(separator: " ") }
         if lead == "my" { return (["your"] + words.dropFirst()).joined(separator: " ") }
         let phrase = words.joined(separator: " ")
         // The article the person put before it, past a few describing words.

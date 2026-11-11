@@ -33,4 +33,17 @@ struct PlaytestReadingTests {
         #expect(!PlaytestReading.matches(showing: "-9.4 s", claimed: "-9.3 dB ±0.5"))
         #expect(!PlaytestReading.matches(showing: "Silent", claimed: "-9.3 dB ±0.5"))
     }
+
+    /// Words an agent's model wrote can carry a describing word the walk
+    /// cannot know: "as a photo" after a fox reads "Made a photo of a red
+    /// fox" on one run and "a fox" on another. "*" stands for any words there.
+    @Test("A star in the claim stands for any words, and nothing else about it is loose")
+    func star() {
+        #expect(PlaytestReading.matches(showing: "Made a photo of a red fox", claimed: "Made a photo of a*fox"))
+        #expect(PlaytestReading.matches(showing: "Made a photo of a fox", claimed: "Made a photo of a*fox"))
+        #expect(PlaytestReading.matches(showing: "made a photo of A FOX", claimed: "Made a photo of a*fox"))
+        #expect(!PlaytestReading.matches(showing: "Drew a red fox", claimed: "Made a photo of a*fox"))
+        #expect(!PlaytestReading.matches(showing: "Made a photo of a fox cub", claimed: "Made a photo of a*fox"))
+        #expect(!PlaytestReading.matches(showing: "Made a photo of a red fox", claimed: "Made a photo of a fox"))
+    }
 }

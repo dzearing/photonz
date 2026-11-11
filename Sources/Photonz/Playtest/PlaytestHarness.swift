@@ -12437,6 +12437,12 @@ private final class Run {
         // holds, so a flung thumb shows as glass pressed over the padding a
         // resting one never covers, not as glass past the rail.
         guard let before = thumbs.first ?? nil, let after = thumbs.last ?? nil else {
+            // Keep the two frames that were read, so the failure can be seen.
+            for (index, each) in [frames[0], frames[frames.count - 1]].enumerated() {
+                if let data = ImageCodec.encode(each.image, format: .png) {
+                    try? data.write(to: out.appendingPathComponent("\(film.name)-unread-\(index)-sc.png"))
+                }
+            }
             throw Failure(description: "no thumb could be seen at rest on the rail in the first or last frame")
         }
         let room = min(before.lowerBound, after.lowerBound)...max(before.upperBound, after.upperBound)

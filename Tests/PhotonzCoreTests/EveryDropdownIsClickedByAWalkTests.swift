@@ -55,9 +55,14 @@ struct EveryDropdownIsClickedByAWalkTests {
         // (`PathBrushSettingRow`): a pencil line's Hardness
         // (path-brush-dropdowns-open-on-a-click-walk).
         "Line Hardness",
+        // The tool options over the tool bar (`ToolSettingsCapsule.menu`), on
+        // the panel's dropdown since 2026-11-10: the Measure tool's Show, the
+        // Lens tool's kind and the Component tool's component
+        // (tool-and-library-dropdowns-open-on-a-click-walk).
+        "Tool Show", "Tool Lens", "Tool Component",
     ]
     /// How many dropdown call sites build their row name from a variable.
-    static let builtSites = 12
+    static let builtSites = 13
 
     /// The name a walk finds each dropdown by: the first `playtestField` or
     /// `playtestControl` after the call, nil when that name is built at run

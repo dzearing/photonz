@@ -1,0 +1,26 @@
+{
+  "feature": "Tool bar menus and Ask's photo row, from the walks that failed in the sweep",
+  "epic": "unmanned-loop",
+  "summary": "The menus over the tool bar (Measure's Show, the Lens tool's kind, the Component tool's component) now wear the panel's own dropdown, and Measure's Snap there is the same two-part switch as in the panel. Ask's row says the kind of picture it made again ('Made a photo of a red fox'), not the request read back.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a picture, press the Measure tool's key, and look at the bar over the tools: Snap is two buttons, Show is a dropdown.", "shot": "2026-11-10-tool-bar-menus-snap-show-sc.png", "shotNote": "The window was behind another app when this was taken, so the picked half of Snap shows grey instead of the accent." },
+    { "do": "Click Show over the tool bar and pick Spacing; the panel's Show row reads Spacing too." },
+    { "do": "Open the Library's Comps, press N, and click the Component menu over the tool bar; pick Card.", "shot": "2026-11-10-tool-bar-menus-component-sc.png" },
+    { "do": "Pick the Lens tool and choose its kind from the menu over the tool bar." },
+    { "do": "In a blank picture, ask 'make vector art of a fox', then ask 'as a photo'.", "shot": "2026-11-10-ask-as-a-photo-sc.png" },
+    { "do": "Read the newest row in the Agent section: it says 'Made a photo of' and the animal, in lower case, in whole words." }
+  ],
+  "evaluate": [
+    "Do the menus over the tool bar look like the panel's dropdowns, and does a click anywhere on one open it?",
+    "Is Snap as two buttons over the tool bar better than the menu it was?",
+    "After 'as a photo', does the Agent row say what you got, in words you would use?",
+    "While a photo is being made, does the progress line read naturally ('Making a photo of a red fox')?"
+  ],
+  "rough": [
+    "The Ask row takes the photo's subject from the model's own prompt, so it can say 'a red fox' when you asked for 'a fox'; it is cut at the first 'standing', 'in' or comma, never part way through a word.",
+    "No mock draws the bar over the tool bar with these menus; it now matches the panel's own rows for the same settings.",
+    "In a scripted walk, the title bar's View | Edit chip came out grey in dark when the recording was the first window opened; whether a person can ever see that is filed as find-out-whether-the-view-edit-switch-s-picked-c."
+  ]
+}
