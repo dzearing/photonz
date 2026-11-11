@@ -552,22 +552,37 @@ private struct ScrollEdgeFade: ViewModifier {
 /// the safe area above it, so a panel scrolled even a little slid its rows
 /// straight under those buttons with nothing between them: a section header
 /// read through Ask, a field you could see and not click (reported on a video
-/// 2026-10-20, and true of a picture's Layers pane too). The mask is what stops
-/// it: it is the scroller's own frame, which starts under the title bar, and
-/// it is the same fade `ScrollEdgeFade` uses for "there is more this way", so
-/// the panel says it one way at every edge it cuts.
+/// 2026-10-20, and true of a picture's Layers pane too). The clip is what
+/// stops it: it is the scroller's own frame, which starts under the title bar.
+///
+/// It is a CLIP and a band over the top, never a mask over the scroller. The
+/// first build (2026-11-09) masked the whole scroller, and a masked subtree on
+/// macOS drops every focus a field asks for in code: Make Component's new Name
+/// field, a copy's name, every field that takes the keyboard when it appears
+/// all left it on the picture, so the name being typed went to the tools
+/// instead (thirteen walks, `name-field-handback` first). A click still
+/// focused them, which is why nothing else noticed. Even a mask of one plain
+/// rectangle does it; `.clipped()` does not. So the fade is drawn OVER the
+/// rows, in the panel's own material, rather than cut out of them.
 private struct PanelTopEdge: ViewModifier {
     /// Whether anything is scrolled up past the top. Nothing is on the first
     /// frame, so the edge starts sharp, as a panel at rest should look.
     @State private var scrolled = false
 
+    /// The panel's own material (`InspectorPanel` is `.regularMaterial`),
+    /// solid at the top edge and gone 14pt down, so rows scrolled up past the
+    /// edge thin out into the panel the way a masked fade would. Nothing at
+    /// rest: its height is zero until something is scrolled up.
     private var fade: some View {
-        VStack(spacing: 0) {
-            LinearGradient(colors: [.black.opacity(0), .black],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: scrolled ? DockMetrics.bodyEdgeFade : 0)
-            Rectangle()
-        }
+        Rectangle()
+            .fill(.regularMaterial)
+            .mask {
+                LinearGradient(colors: [.black, .black.opacity(0)],
+                               startPoint: .top, endPoint: .bottom)
+            }
+            .frame(height: scrolled ? DockMetrics.bodyEdgeFade : 0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     func body(content: Content) -> some View {
@@ -577,7 +592,8 @@ private struct PanelTopEdge: ViewModifier {
             } action: { _, now in
                 scrolled = now
             }
-            .mask { fade }
+            .clipped()
+            .overlay(alignment: .top) { fade }
             .animation(.easeOut(duration: 0.12), value: scrolled)
             // Where the edge is, for `expectTitleBarClear`. Nothing in the
             // shipping app.

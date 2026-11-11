@@ -1,0 +1,22 @@
+{
+  "feature": "Naming a new component takes the keyboard again",
+  "epic": "ui-components",
+  "summary": "After Make Component you can type the name straight away again; the letters no longer go to the picture and pick tools. The same goes for any panel field that takes the keyboard when it appears.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Draw a rectangle, add some text on it, select both and press Command G." },
+    { "do": "Press Option Command K (Layer > Make Component)." },
+    { "do": "Without clicking, type a name and press Return.", "shot": "2026-11-11-component-name-keyboard-1.png", "shotNote": "Taken with the window behind another app, so it shows the window's background look." },
+    { "do": "Press R: the rectangle tool should come up, so the keyboard went back to the picture." },
+    { "do": "Open a video, pick a cut and scroll the right panel up a little: rows stop under Ask and View | Edit and thin out at the edge.", "shot": "2026-11-11-component-name-keyboard-2-panel-edge.png" }
+  ],
+  "evaluate": [
+    "Does typing right after Make Component name the component every time?",
+    "Does the panel's top edge, scrolled, still look like a soft fade rather than a hard cut?"
+  ],
+  "rough": [
+    "The panel's top fade is now a band of the panel's own material laid over the rows instead of the rows being faded out; at rest nothing is drawn, scrolled it reads the same in the pictures, but a very busy row may look slightly blurred rather than transparent in that 14pt band.",
+    "Other panel scrollers that fade at their edges (the layers list, the Library shelf, sections the dock shortens) still use the same kind of fade that drops typed-in-code focus; nothing on them asks for the keyboard when it appears today, so no walk fails, but it is logged on this task."
+  ]
+}
