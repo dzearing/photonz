@@ -22879,3 +22879,22 @@ units.
 - Harness fix: a walk's file drag from disk was carried as a file promise, so drops on the panel landed nowhere.
 - Most of the rest were walks out of date (arrow settings moved under Advanced, taller timeline lanes, Transitions folded until a cut is picked).
 - Open: design-mode-tool-strip (SwiftUI popup in the tool capsule is not an NSPopUpButton), ask-makes-it-again-as-a-photo, two segmented thumb films. Filed: naming-a-new-component-or-a-copy-takes-the-keybo (four walks lose the keyboard after Make Component; not caused by this run).
+
+## 2026-11-10 (evening) — walks failing in the sweep, the last four
+
+- All 33 walks the sweep handed this task pass twice in a row on their own.
+- App: the tool options over the tool bar (Measure's Show, the Lens tool's kind,
+  the Component tool's component) are the panel's own dropdown, and Measure's
+  Snap there is the two-part segmented control; SwiftUI pickers on macOS 27 had
+  no pop-up button a walk could find. Ask's row after "as a photo" says the
+  photo it made ("Made a photo of a red fox"), never the request read back or
+  the model's prompt with a capital mid-sentence; the progress line likewise.
+- Harness: filmThumb takes the quieter side of the rail as the backdrop (the
+  purple Ask button lifted it), a failed film keeps its two frames, and a
+  walk's `reads` takes `*` for words a model writes.
+- Walks that were wrong: transitions-where-clips-meet (Transitions folded),
+  title-pages-and-name-cards (no fade rows in a clip's right-click).
+- Open: four pickUpTile walks never see a tile come away on macOS 27
+  (a-walk-that-pulls-a-library-tile-by-hand-sees-it, p1); the View | Edit chip
+  reads grey in dark when a recording is a walk's first window
+  (find-out-whether-the-view-edit-switch-s-picked-c, p2).
