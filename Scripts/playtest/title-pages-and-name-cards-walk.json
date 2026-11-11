@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-pages-and-name-cards-walk",
-  "seed": "The user's basic edit, end to end at Next defaults with no switch touched, every step from a right-click: a recording with a second clip cut on after it; a track added above V1 and, from that empty track's right-click, Add Title Page > More Styles > Keynote Clean at the start with its words typed straight in; the page at the start pushes the recording later by its length less its half-second fade out, so it dissolves into the recording with no frame lost; another track and Add Name Card > Split Wipe at five seconds, wiping in and out, its name typed in; the last clip faded to black from its right-click; the card saved as a preset from its right-click and inserted again from the empty-track menu; and the edit written out as an MP4. Frames are photographed at each step.",
+  "seed": "The user's basic edit, end to end at Next defaults with no switch touched, every step from a right-click: a recording with a second clip cut on after it; a track added above V1 and, from that empty track's right-click, Add Title Page > More Styles > Keynote Clean at the start with its words typed straight in; the page at the start pushes the recording later by its length less its half-second fade out, so it dissolves into the recording with no frame lost; another track and Add Name Card > Split Wipe at five seconds, wiping in and out, its name typed in; the last clip faded to black from the Time section (its right-click has no fade rows since 2026-10-29); the card saved as a preset from its right-click and inserted again from the empty-track menu; and the edit written out as an MP4. Frames are photographed at each step.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -323,7 +323,26 @@
     {
       "do": "rightClick",
       "on": "b-roll clip",
-      "choose": "More > Fade Out > 1s"
+      "lacks": [
+        "Fade In",
+        "Fade Out",
+        "Fade In and Out"
+      ],
+      "comment": "A clip's right-click has no fade rows since the user's 2026-10-29 call (redundant and one sided): a free end fades from the Time section, as a-video-clip-fades-walk does."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Fade Out",
+      "choose": "1s"
+    },
+    {
+      "do": "expect",
+      "menu": "Fade Out",
+      "reads": "1s"
     },
     {
       "do": "wait",
@@ -336,7 +355,7 @@
     {
       "do": "rightClick",
       "on": "Name Card clip",
-      "choose": "Save as Preset\u2026"
+      "choose": "Save as Preset…"
     },
     {
       "do": "wait",

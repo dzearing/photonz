@@ -9,7 +9,8 @@
     "scratch": [
       "sample:recording as b-roll.mp4",
       "sample:recording as c-roll.mp4"
-    ]
+    ],
+    "front": true
   },
   "steps": [
     {
@@ -83,6 +84,17 @@
     {
       "do": "snapshot",
       "name": "0-nothing-picked"
+    },
+    {
+      "do": "press",
+      "control": "Transitions section",
+      "comment": "Transitions starts folded until a cut is picked (ad5e0e11, the user 2026-10-30); with nothing picked a person opens it by its header, as here."
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionOpen",
+      "value": "Transitions",
+      "timeout": 2
     },
     {
       "do": "reveal",
