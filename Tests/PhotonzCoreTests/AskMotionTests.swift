@@ -281,7 +281,7 @@ struct AskMotionTests {
         #expect(AskMotionCheck.problems([fine]) == [])
     }
 
-    @Test("A motion that needs room gets it: the viewBox widens around the middle, so nothing is cut off and nobody is asked to move less")
+    @Test("A motion that needs room gets it: the viewBox widens round what moves, so nothing is cut off and nobody is asked to move less")
     func fitsItsMotion() throws {
         let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(Self.svg)])
         func step(_ json: String) throws -> AskStep { AskStep(tool: "set_keys", arguments: try Self.args(json)) }
@@ -293,8 +293,10 @@ struct AskMotionTests {
         let box = try view([drawing, grown])
         #expect(box.width > 24)
         #expect(abs(box.width - box.height) < 0.01)
-        #expect(abs(box.midX - 12) < 0.01)
-        #expect(abs(box.midY - 12) < 0.01)
+        // Round what is drawn and what moves, as near the middle as that
+        // allows (AskMotionRoomTests): it holds the whole of the growth.
+        let art = try SVGArtwork.parse(Self.svg, keepingGroups: true).get()
+        #expect(box.insetBy(dx: -AskMotionCheck.edgeSlack, dy: -AskMotionCheck.edgeSlack).contains(AskMotionCheck.reach(of: [grown], in: art)))
         let inside = try step(#"{"layer":"$1/spark","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":4,"y":-3}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
         #expect(AskMotion.fitted([drawing, inside]) == [drawing, inside])
         let gone = try step(#"{"layer":"$1/spark","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":-60}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)

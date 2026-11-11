@@ -278,6 +278,9 @@ extension AskMotion {
         // A key written again at a moment one said it touches says it too.
         var out = touchesKept(steps)
         var bounces: [(step: Int, seconds: Double, off: String)] = []
+        // The moments each step's keys said they touch something: a contact
+        // planned after a hit is kept, and the bounce goes between.
+        var contacts: [Int: [Double]] = [:]
         for at in out.indices where out[at].tool == "set_keys" {
             guard var object = out[at].arguments.objectValue, let keys = object["keys"]?.arrayValue,
                   keys.contains(where: { $0["touches"] != nil }) else { continue }
@@ -300,6 +303,7 @@ extension AskMotion {
                 }
                 if isPosition, let part, let other, plain(other) != plain(part), let seconds = one["seconds"]?.doubleValue {
                     bounces.append((at, seconds, other))
+                    contacts[at, default: []].append(seconds)
                 }
                 written.append(.object(one))
             }
@@ -325,7 +329,9 @@ extension AskMotion {
             later.step == bounce.step && plain(later.off) == plain(bounce.off) && later.seconds > bounce.seconds + 0.0005
                 && AskMotionCheck.timed(out[bounce.step]).first(where: { $0.seconds > bounce.seconds + 0.0005 }).map { abs($0.seconds - later.seconds) <= 0.0005 } == true
         }) {
-            out = bouncedAway(out, at: bounce.step, hit: bounce.seconds, off: bounce.off)
+            let next = AskMotionCheck.timed(out[bounce.step]).first { $0.seconds > bounce.seconds + 0.0005 }?.seconds
+            let planned = next.map { next in (contacts[bounce.step] ?? []).contains { abs($0 - next) <= 0.0005 } } ?? false
+            out = bouncedAway(out, at: bounce.step, hit: bounce.seconds, off: bounce.off, keepingNext: planned)
         }
         return out
     }
@@ -355,7 +361,14 @@ extension AskMotion {
     /// A part hit that stays still is left alone (going in behind its front
     /// is meant), and so is a part that comes away already, or stays where it
     /// hit, or a hit no try keeps clear of. Keys and time only, any subject.
-    static func bouncedAway(_ steps: [AskStep], at index: Int, hit seconds: Double, off other: String) -> [AskStep] {
+    ///
+    /// `keepingNext` is a key after the hit that says it touches something
+    /// itself (the trash at the can's mouth after the lid): it is where the
+    /// model sent the part next, so it stays, and the bounce is a key of its
+    /// own halfway between. On 2026-11-11 re-aiming that key threw the
+    /// user's trash down the outside of the can.
+    static func bouncedAway(_ steps: [AskStep], at index: Int, hit seconds: Double, off other: String,
+                            keepingNext: Bool = false) -> [AskStep] {
         guard steps.indices.contains(index), let part = (steps[index].arguments["layer"]?.stringValue).flatMap(partReference)?.part,
               let lap = Lap(steps), lap.isMover(other) || !lap.carriers(of: other).isEmpty else { return steps }
         func point(_ value: AgentJSON?) -> CGPoint? {
@@ -365,7 +378,13 @@ extension AskMotion {
         let keys = AskMotionCheck.timed(steps[index])
         guard let k = keys.firstIndex(where: { abs($0.seconds - seconds) <= 0.0005 }), k + 1 < keys.count,
               let hitAt = point(keys[k].value), let nextAt = point(keys[k + 1].value), nextAt != hitAt else { return steps }
-        let until = k + 2 < keys.count ? keys[k + 2].seconds : keys[k + 1].seconds
+        // Kept, the next key is where the part goes after the bounce: halfway
+        // there it comes off what it hit, on a key of its own.
+        let width = PropertyKeys.nearMS
+        let middle = Double(rounded(CGFloat((seconds + keys[k + 1].seconds) / 2)))
+        if keepingNext, (middle - seconds) * 1000 <= Double(width) || (keys[k + 1].seconds - middle) * 1000 <= Double(width) { return steps }
+        let after = keepingNext ? middle : keys[k + 1].seconds
+        let until = keepingNext ? keys[k + 1].seconds : k + 2 < keys.count ? keys[k + 2].seconds : keys[k + 1].seconds
         func through(_ trial: [AskStep]) -> Bool {
             guard let lap = Lap(trial) else { return false }
             func seen(_ name: String, _ moment: Double) -> Bool {
@@ -383,8 +402,7 @@ extension AskMotion {
         // Seen apart from what it hit by the key after: a gap at icon size.
         func apart(_ trial: [AskStep]) -> Bool {
             guard let lap = Lap(trial) else { return true }
-            let at = keys[k + 1].seconds
-            return !inkMeets(lap.ink(part, at: at), lap.ink(other, at: at), within: bounceGap * (lap.art.viewBox?.width ?? 24))
+            return !inkMeets(lap.ink(part, at: after), lap.ink(other, at: after), within: bounceGap * (lap.art.viewBox?.width ?? 24))
         }
         guard through(steps) || !apart(steps) else { return steps }
         // The way in: from just before the hit, or from the key before.
@@ -394,28 +412,28 @@ extension AskMotion {
         // The face struck: from the nearest ink of what was hit to the middle of the part.
         let mine = lap.ink(part, at: seconds).flatMap { $0 }, theirs = lap.ink(other, at: seconds)
         guard !mine.isEmpty, !theirs.isEmpty else { return steps }
-        let middle = CGPoint(x: mine.map(\.x).reduce(0, +) / CGFloat(mine.count), y: mine.map(\.y).reduce(0, +) / CGFloat(mine.count))
-        guard let struck = theirs.map({ nearest(to: middle, on: $0) })
-                .min(by: { hypot($0.x - middle.x, $0.y - middle.y) < hypot($1.x - middle.x, $1.y - middle.y) }) else { return steps }
+        let centre = CGPoint(x: mine.map(\.x).reduce(0, +) / CGFloat(mine.count), y: mine.map(\.y).reduce(0, +) / CGFloat(mine.count))
+        guard let struck = theirs.map({ nearest(to: centre, on: $0) })
+                .min(by: { hypot($0.x - centre.x, $0.y - centre.y) < hypot($1.x - centre.x, $1.y - centre.y) }) else { return steps }
         func unit(_ v: CGVector) -> CGVector? {
             let length = hypot(v.dx, v.dy)
             return length > 1e-6 ? CGVector(dx: v.dx / length, dy: v.dy / length) : nil
         }
-        guard let face = unit(CGVector(dx: middle.x - struck.x, dy: middle.y - struck.y)) ?? unit(CGVector(dx: -way.dx, dy: -way.dy)) else { return steps }
+        guard let face = unit(CGVector(dx: centre.x - struck.x, dy: centre.y - struck.y)) ?? unit(CGVector(dx: -way.dx, dy: -way.dy)) else { return steps }
         let dot = way.dx * face.dx + way.dy * face.dy
         let mirrored = dot < 0 ? unit(CGVector(dx: way.dx - 2 * dot * face.dx, dy: way.dy - 2 * dot * face.dy)) ?? face : face
-        let width = lap.art.viewBox?.width ?? 24
-        let least = max(hypot(nextAt.x - hitAt.x, nextAt.y - hitAt.y), leastBounce * width)
+        let side = lap.art.viewBox?.width ?? 24
+        let least = keepingNext ? leastBounce * side : max(hypot(nextAt.x - hitAt.x, nextAt.y - hitAt.y), leastBounce * side)
         let ways = [mirrored, unit(CGVector(dx: mirrored.dx + face.dx, dy: mirrored.dy + face.dy)) ?? face, face]
         guard var object = steps[index].arguments.objectValue, let list = object["keys"]?.arrayValue,
               let slot = list.firstIndex(where: { abs(($0["seconds"]?.doubleValue ?? -1) - keys[k + 1].seconds) <= 0.0005 }),
-              var key = list[slot].objectValue else { return steps }
+              var key = keepingNext ? ["seconds": .number(middle)] : list[slot].objectValue else { return steps }
         for share: CGFloat in [1, 1.5, 2, 2.5, 3] {
             for direction in ways {
                 key["value"] = ["x": .number(Double(rounded(hitAt.x + direction.dx * least * share))),
                                 "y": .number(Double(rounded(hitAt.y + direction.dy * least * share)))]
                 var changed = list
-                changed[slot] = .object(key)
+                if keepingNext { changed.insert(.object(key), at: slot) } else { changed[slot] = .object(key) }
                 object["keys"] = .array(changed)
                 var trial = steps
                 trial[index] = AskStep(tool: steps[index].tool, arguments: .object(object))

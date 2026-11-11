@@ -548,32 +548,64 @@ public enum AskMotion {
         var still = art.parts.map { SVGArtwork.shapeBounds($0.shape).insetBy(dx: -$0.strokeWidth / 2, dy: -$0.strokeWidth / 2) }
             .reduce(CGRect.null) { $0.union($1) }
         if !reach.isNull, view.insetBy(dx: -slack, dy: -slack).contains(reach) { still = still.union(reach) }
-        let farthest = still.isNull ? 0 : [view.midX - still.minX, still.maxX - view.midX,
-                                            view.midY - still.minY, still.maxY - view.midY].max() ?? 0
-        let clear = view.width / 2 - farthest >= restMargin * view.width * 0.75 ? view.width
-            : min(max(view.width, 2 * farthest + 2 * restMargin * view.width), view.width * mostRest)
-        func room(holding reach: CGRect) -> CGRect {
-            let needed = reach.isNull ? 0 : [view.midX - reach.minX, reach.maxX - view.midX, view.midY - reach.minY, reach.maxY - view.midY].max() ?? 0
-            let side = max(clear, min((needed + 2 * slack) * 2, view.width * mostRoom))
-            return CGRect(x: view.midX - side / 2, y: view.midY - side / 2, width: side, height: side)
+        let margin = restMargin * view.width
+        let cut = !still.isNull && !view.insetBy(dx: margin * 0.75, dy: margin * 0.75).contains(still)
+        let past = !reach.isNull && !view.insetBy(dx: -slack, dy: -slack).contains(reach)
+        guard cut || past else { return (steps, view) }
+        // What the frame has to hold: the ink at rest with an icon's margin,
+        // and what the keys do with a little slack.
+        func holding(_ reach: CGRect) -> CGRect {
+            var needed = still.isNull ? CGRect.null : still.insetBy(dx: -margin, dy: -margin)
+            if !reach.isNull { needed = needed.union(reach.insetBy(dx: -slack, dy: -slack)) }
+            return needed
         }
-        guard clear > view.width || (!reach.isNull && !view.insetBy(dx: -slack, dy: -slack).contains(reach)) else { return (steps, view) }
+        let most = view.width * (past ? mostRoom : mostRest)
         var out = steps
-        var box = room(holding: reach)
-        if !box.insetBy(dx: -slack, dy: -slack).contains(reach) {
+        var box = Self.room(holding: holding(reach), in: view, least: view.width, most: most)
+        if past, !box.insetBy(dx: -slack, dy: -slack).contains(reach) {
             // Something travels past all the room there is: it is meant to
             // leave, and leaves whole rather than stopping half over the edge.
-            (out, box) = leaving(steps, in: art, most: box,
-                                 view: CGRect(x: view.midX - clear / 2, y: view.midY - clear / 2, width: clear, height: clear))
+            (out, box) = leaving(steps, in: art, most: box, view: view, resting: holding(.null), mostSide: most)
         }
-        if box.width > view.width {
-            let said = [box.minX, box.minY, box.width, box.height].map { String(format: "%.3f", Double($0)) }.joined(separator: " ")
-            guard let found = svg.range(of: #"viewBox="[^"]*""#, options: .regularExpression) else { return (out, view) }
-            object["svg"] = .string(svg.replacingCharacters(in: found, with: "viewBox=\"\(said)\""))
-            out[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
-            return (out, box)
+        guard abs(box.minX - view.minX) > 0.0005 || abs(box.minY - view.minY) > 0.0005 || abs(box.width - view.width) > 0.0005 else {
+            return (out, view)
         }
-        return (out, view)
+        let said = [box.minX, box.minY, box.width, box.height].map { String(format: "%.3f", Double($0)) }.joined(separator: " ")
+        guard let found = svg.range(of: #"viewBox="[^"]*""#, options: .regularExpression) else { return (out, view) }
+        object["svg"] = .string(svg.replacingCharacters(in: found, with: "viewBox=\"\(said)\""))
+        out[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
+        return (out, box)
+    }
+
+    /// The smallest square of at least `least` and at most `most` across that
+    /// holds `needed`, as near the middle of `view` as that allows. Room is
+    /// taken where the drawing leaves it before the drawing is made smaller:
+    /// a lid that swings past the top of a can drawn low has the space below
+    /// the can. When nothing has to grow it moves by whole units, so a drawing
+    /// made on its grid stays on it. Geometry only, true of any drawing.
+    static func room(holding needed: CGRect, in view: CGRect, least: CGFloat, most: CGFloat) -> CGRect {
+        guard !needed.isNull else { return view }
+        let side = min(max(least, needed.width, needed.height), max(least, most))
+        func along(_ low: CGFloat, _ high: CGFloat, middle: CGFloat) -> CGFloat {
+            let centred = middle - side / 2
+            // The frame's start that keeps `low` and `high` in, nearest the middle.
+            let (first, last) = (high - side, low)
+            // More than all the room there is: about the middle, and what
+            // goes further is meant to leave (`leaving`).
+            guard first <= last + 0.0005 else { return centred }
+            var start = min(max(centred, first), last)
+            if side <= view.width + 0.0005 {
+                // Whole units from the grid's own frame, still holding all of it.
+                let offset = start - (middle - view.width / 2)
+                let whole = offset.rounded()
+                let nearer = [whole, offset.rounded(.down), offset.rounded(.up)]
+                    .first { (middle - view.width / 2) + $0 >= first - 0.0005 && (middle - view.width / 2) + $0 <= last + 0.0005 }
+                if let nearer { start = (middle - view.width / 2) + nearer }
+            }
+            return start
+        }
+        return CGRect(x: along(needed.minX, needed.maxX, middle: view.midX), y: along(needed.minY, needed.maxY, middle: view.midY),
+                      width: side, height: side)
     }
 
     /// A fold this far from its rest is a real opening, and its way home a
@@ -787,7 +819,8 @@ public enum AskMotion {
     /// 2026-11-08), so each such place goes to whichever is nearer: a little
     /// further in, or far enough on to clear the frame. Geometry only, about
     /// boxes and keys, true of anything that travels.
-    static func leaving(_ steps: [AskStep], in art: SVGArtwork, most: CGRect, view: CGRect) -> ([AskStep], CGRect) {
+    static func leaving(_ steps: [AskStep], in art: SVGArtwork, most: CGRect, view: CGRect,
+                        resting: CGRect = .null, mostSide: CGFloat? = nil) -> ([AskStep], CGRect) {
         let slack = AskMotionCheck.edgeSlack
         let keyed = steps.filter { $0.tool == "set_keys" }
         let isMove = { (step: AskStep) in step.arguments["property"]?.stringValue == MotionProperty.position.rawValue }
@@ -820,9 +853,8 @@ public enum AskMotion {
             }
             plans[index] = (box, places)
         }
-        let needed = [view.midX - holding.minX, holding.maxX - view.midX, view.midY - holding.minY, holding.maxY - view.midY].max() ?? 0
-        let side = holding.isNull ? view.width : max(view.width, min((needed + 2 * slack) * 2, most.width))
-        let room = CGRect(x: view.midX - side / 2, y: view.midY - side / 2, width: side, height: side)
+        let needed = holding.isNull ? resting : holding.insetBy(dx: -slack, dy: -slack).union(resting)
+        let room = Self.room(holding: needed, in: view, least: view.width, most: mostSide ?? most.width)
         var out = steps
         for (index, plan) in plans {
             guard var object = steps[index].arguments.objectValue else { continue }

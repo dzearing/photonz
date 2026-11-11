@@ -126,7 +126,12 @@ struct AskMotionBounceTests {
         }
         // Nothing passes through the lid from the first touch to the drop, and it is apart by then.
         #expect(try !Self.through(placed, from: 0.8, to: 1.2))
-        #expect(!AskMotion.inkMeets(lap.ink("trash", at: 1.1), lap.ink("lid", at: 1.1), within: AskMotion.bounceGap * 24))
+        // Apart on a bounce key of its own before the drop the model planned
+        // into the bin, which stays where it was (AskMotionBounceThenInTests).
+        let keys = AskMotionCheck.timed(try #require(placed.last))
+        let bounce = try #require(keys.first { $0.seconds > 0.95 + 0.0005 && $0.seconds < 1.1 - 0.0005 }, "\(keys)")
+        #expect(!AskMotion.inkMeets(lap.ink("trash", at: bounce.seconds), lap.ink("lid", at: bounce.seconds), within: AskMotion.bounceGap * 24))
+        #expect(Self.trash(placed, at: 1.1) == CGPoint(x: -7, y: 4))
         #expect(!AskMotionCheck.problems(try Self.steps(trash: run)).contains { $0.contains("passes through") })
     }
 

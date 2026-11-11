@@ -426,7 +426,8 @@ struct AskMotionFoldTests {
         let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(Self.flyer)])
         let lines = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/lines","property":"opacity","keys":[{"seconds":0,"value":0},{"seconds":0.6,"value":100},{"seconds":1.3,"value":0},{"seconds":2.4,"value":0}]}"#))
         let svg = try #require(AskMotion.fitted([drawing, lines]).first?.arguments["svg"]?.stringValue)
-        #expect(svg.contains(#"viewBox="-1.000 -1.000 26.000 26.000""#))
+        // Grown only by what the margin needs, round the ink rather than about the middle (AskMotionRoomTests).
+        #expect(svg.contains(#"viewBox="-1.000 -0.500 25.000 25.000""#))
         let roomy = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(Self.flyer.replacingOccurrences(of: "M1 15", with: "M2 15"))])
         #expect(AskMotion.fitted([roomy, lines]).first == roomy)
     }
@@ -439,7 +440,8 @@ struct AskMotionFoldTests {
         let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(svg)])
         let fold = AskStep(tool: "set_keys", arguments: try Self.args(#"{"layer":"$1/flap","property":"rotationX","pivot":{"x":12,"y":8},"keys":[{"seconds":0,"value":0},{"seconds":0.5,"value":180},{"seconds":1.5,"value":180},{"seconds":2,"value":0}]}"#))
         let made = try #require(AskMotion.fitted([drawing, fold]).first?.arguments["svg"]?.stringValue)
-        #expect(made.contains(#"viewBox="-1.000 -1.000 26.000 26.000""#))
+        // Room taken from below the envelope, a whole unit, so nothing shrinks (AskMotionRoomTests).
+        #expect(made.contains(#"viewBox="0.000 -1.000 24.000 24.000""#))
         // A fold that stays a unit clear keeps its frame.
         let shallow = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(svg.replacingOccurrences(of: "L12 15", with: "L12 13"))])
         #expect(AskMotion.fitted([shallow, fold]).first == shallow)

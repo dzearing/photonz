@@ -369,8 +369,11 @@ public struct SVGArtwork: Hashable, Sendable {
                                                      grid: IconGridLanding(side: side)),
                                     backgroundHex: nil)
         }
+        // A frame grown past its grid to make room scales the drawing by a
+        // fraction: its points land on half units, its line weights as ever.
+        let grown = abs(viewBox.width - IconKeylines.artboardSide) > 1e-3
         let drawn = layers(named: name, fitting: CGRect(origin: .zero, size: size), within: viewBox,
-                           grid: IconGridLanding(side: side))
+                           grid: IconGridLanding(side: side, halves: grown))
         return Layer.frameLayer(name: name, origin: origin, size: size,
                                 children: nested(drawn, named: name), backgroundHex: nil)
     }
@@ -1365,16 +1368,26 @@ enum SVGColor {
 public struct IconGridLanding: Sendable {
     public let unit: CGFloat
     let middle: CGFloat
+    /// Where a point may land, in units: 1, or a half for a drawing that
+    /// came to the grid through a scale it was not made at.
+    let pointStep: CGFloat
 
     /// The landing for an icon of this side, or nil where it has no 24 units.
-    public init?(side: CGFloat) {
+    /// `halves` lands points on half units: a moving icon whose frame grew
+    /// to make room for its motion is scaled by a fraction, and rounding
+    /// that to whole units leaned a line drawn half a unit off upright a
+    /// whole unit and folded a corner's ends into a hook (the user's trash
+    /// of 2026-11-10, its ribs a W and its bottom corners blobs).
+    public init?(side: CGFloat, halves: Bool = false) {
         guard side == IconUnits.pictureSide else { return nil }
         unit = side / IconKeylines.artboardSide
         middle = side / 2
+        pointStep = halves ? 0.5 : 1
     }
 
     func landing(_ point: CGPoint) -> CGPoint {
-        CGPoint(x: middle + units(point.x - middle) * unit, y: middle + units(point.y - middle) * unit)
+        func land(_ value: CGFloat) -> CGFloat { middle + units((value - middle) / pointStep) * pointStep * unit }
+        return CGPoint(x: land(point.x), y: land(point.y))
     }
 
     /// A corner, never rounded away to nothing.
