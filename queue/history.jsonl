@@ -16840,3 +16840,16 @@
 {"t":"2026-11-11T18:33:05.644Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T18:33:05.718Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T18:33:10.974Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass twelve: the lid shuts over nothing, the trash is drawn in lines and met at speed, a bounce goes towards where it lands (8b8291f0f, 28be5dc77, a0799b0d1, 90fe32da6); story bar (5 of 6 at 7) still not met, 0 of 6, total 52.2, trash 40.7"}
+{"t":"2026-11-11T18:33:50.198Z","ev":"loop_reloaded","from":"83d83fbfbbdf","to":"34d7ce29f87b"}
+{"t":"2026-11-11T18:33:50.305Z","ev":"loop_started","pid":36463}
+{"t":"2026-11-11T18:33:50.353Z","ev":"loop_awake","held":true,"pid":36473,"screenLocked":false}
+{"t":"2026-11-11T18:46:17.977Z","ev":"task_note","id":"naming-a-new-component-or-a-copy-takes-the-keybo"}
+{"t":"2026-11-11T18:46:18.016Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-11T18:48:22.307Z","ev":"slice_pass","walks":33,"passed":30,"failed":3,"seconds":746,"of":1141,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-11T18:48:22.490Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-11T19:20:28.083Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T20:13:50.448Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T20:23:53.677Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T20:23:53.753Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T20:23:53.827Z","ev":"task_walks","id":"an-animated-icon-told-as-a-little-story-moves-th","walks":["ask-animates-a-story-walk","ask-animates-a-story-without-the-word-walk"]}
+{"t":"2026-11-11T20:23:53.901Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 13: the planned fade is kept (it was refused whole), thrown in from off the frame, comes back off the lid, lands in the can's middle (a8a571008); story total 61.2, trash 57.7 (its best); bar (5 of 6 at reads as asked 7) not met, 1 of 6"}

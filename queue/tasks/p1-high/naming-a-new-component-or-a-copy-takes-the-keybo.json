@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-10T23:55:50.898Z",
-  "updated": "2026-11-11T16:14:02.169Z",
+  "updated": "2026-11-11T18:46:17.976Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-10 at ebaf3abc (and with 07df11ac/ebaf3abc changes removed, and with 03eb6f22 reverted, so it is none of those): printf \"name-field-handback\\ncomponent-override-walk\\n\" > /tmp/two.txt; Scripts/playtest-all.sh --only /tmp/two.txt -> name-field-handback FAILED step 16 (type): no text field has the keyboard (first responder is CanvasNSView); component-override-walk FAILED step 15 (type): same. copy-own-color-walk (step 15) and copies-share-choice-walk (step 24) fail the same way. All four passed in every full sweep 2026-11-01..2026-11-08; 28 commits under Sources landed since. Each does action makeComponent (or a rename) then a type step. Bisect between the 11-08 sweep commit and b34fcb4a.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-11T16:14:02.168Z",
       "note": "seq 3980 -> 20"
+    },
+    {
+      "t": "2026-11-11T18:46:17.975Z",
+      "note": "rotating check 2026-11-11T18:46:17Z, 33 walks run from 530 onward in the rotation: label-grows-walk failing."
     }
   ],
   "walks": [
