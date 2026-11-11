@@ -200,7 +200,7 @@ public enum AskIconCheck {
     static let dotWidth: CGFloat = 1.25
     /// A closed shape drawn in lines shows its inside from this many line
     /// weights across.
-    static let smallestInside: CGFloat = 2.5
+    static let smallestInside: CGFloat = 2.0
     /// Line weights this close are one weight.
     static let sameWeight: CGFloat = 1.15
     /// An id that names the kind of shape, not the part it is.

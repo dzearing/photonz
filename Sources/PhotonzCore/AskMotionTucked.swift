@@ -48,17 +48,8 @@ extension AskMotion {
             let keys = AskMotionCheck.timed(out[index])
             guard keys.count >= 2 else { continue }
             func seen(_ at: Double, in lap: Lap) -> Bool { lap.placed(part, at: at)?.seen ?? true }
-            // Where it goes out of sight, after being seen.
-            var gone: Double?
-            var moment = 0.01
-            while moment < lapEnd - 0.0005 {
-                if seen(moment - 0.01, in: current), !seen(moment, in: current) { gone = moment }
-                moment += 0.01
-            }
-            // The key it is heading for as it goes, or holding at.
-            guard let gone, let before = keys.lastIndex(where: { $0.seconds <= gone + 0.0005 }) else { continue }
-            let landing = before + 1 < keys.count && keys[before + 1].value != keys[before].value ? before + 1 : before
-            guard landing > 0 else { continue }
+            guard let landedAt = goneAt(part, keys: keys, in: out),
+                  let landing = keys.firstIndex(where: { abs($0.seconds - landedAt) <= 0.0005 }), landing > 0 else { continue }
             let from = keys[landing - 1].seconds, landed = keys[landing].seconds
             // The keys holding it where it landed go with it.
             var moved = [landing]
@@ -145,6 +136,25 @@ extension AskMotion {
             }
         }
         return out
+    }
+
+    /// The moment of the key `part` is heading for as it goes out of sight
+    /// (the last time it does in the lap, after being seen), or holding at
+    /// then: where it lands. nil when it never goes out of sight.
+    static func goneAt(_ part: String, keys: [(seconds: Double, value: AgentJSON, curve: String?)], in steps: [AskStep]) -> Double? {
+        guard let lap = Lap(steps) else { return nil }
+        let keyedEnds = steps.filter { $0.tool == "set_keys" }.flatMap { AskMotionCheck.timed($0).map(\.seconds) }
+        guard let lapEnd = steps.last(where: { $0.tool == "set_timing" })?.arguments["seconds"]?.doubleValue ?? keyedEnds.max() else { return nil }
+        func seen(_ at: Double) -> Bool { lap.placed(part, at: at)?.seen ?? true }
+        var gone: Double?
+        var moment = 0.01
+        while moment < lapEnd - 0.0005 {
+            if seen(moment - 0.01), !seen(moment) { gone = moment }
+            moment += 0.01
+        }
+        guard let gone, let before = keys.lastIndex(where: { $0.seconds <= gone + 0.0005 }) else { return nil }
+        let landing = before + 1 < keys.count && keys[before + 1].value != keys[before].value ? before + 1 : before
+        return keys[landing].seconds
     }
 
     /// How far `point` is inside the convex outline `hull`: the distance to

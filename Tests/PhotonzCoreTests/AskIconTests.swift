@@ -258,7 +258,7 @@ struct AskIconTests {
         // shape with a stroke of 2), and is sent back with a size to draw it.
         let small = try SVGArtwork.parse(AskMotionTuckedInTests.stroked).get()
         let smallSaid = AskIconCheck.problems(small, look: nil, appIcon: false)
-        #expect(smallSaid.contains { $0.lowercased().contains("trash") && $0.contains("5") }, "\(smallSaid)")
+        #expect(smallSaid.contains { $0.lowercased().contains("trash") && $0.contains("4 across") }, "\(smallSaid)")
         // A filled icon asked for keeps its fills.
         #expect(!AskIconCheck.problems(trash, look: .filled, appIcon: false).contains { $0.lowercased().contains("trash") })
         // And the clean line icon still passes.

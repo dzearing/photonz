@@ -43,4 +43,31 @@ struct AskMotionBounceTowardsTests {
         }
         #expect(outside.isEmpty, "\(outside)")
     }
+
+    /// Walked again at 14:30 on the same day: the trash drawn 5 across, and
+    /// no landing said. It sat on the shutting lid from 0.9 to 1.0 s.
+    static let big = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g id="bin"><path id="body" d="M7 9 L8 20 L16 20 L17 9"/><line id="rib-left" x1="10" y1="11" x2="10.5" y2="18"/><line id="rib-right" x1="14" y1="11" x2="13.5" y2="18"/></g><g id="lid"><line id="lid-bar" x1="6" y1="8" x2="18" y2="8"/><line id="lid-knob" x1="11" y1="6" x2="13" y2="6"/></g><path id="trash" d="M17 1 L22 2 L21 7 L16 6 Z"/></svg>"##
+
+    static func bigSteps() throws -> [AskStep] {
+        let args = AskMotionTuckedInTests.args
+        return [AskStep(tool: "add_drawing", arguments: ["icon": true, "subject": "trash bin with hinged lid", "svg": .string(big)]),
+                AskStep(tool: "set_timing", arguments: ["loop": true, "seconds": .number(1.5)]),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"curve":"Hold","seconds":0,"value":0},{"curve":"Ease out","seconds":0.2,"value":0},{"curve":"Hold","seconds":0.5,"value":-40},{"curve":"Ease in out","seconds":0.8,"value":-40},{"curve":"Ease out back","seconds":0.95,"value":-30},{"curve":"Hold","seconds":1.3,"value":0},{"seconds":1.5,"value":0}],"layer":"$1/lid","pivot":{"x":6,"y":8},"property":"rotation"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":100},{"seconds":0.5,"value":100},{"seconds":1.1,"value":0},{"seconds":1.2,"value":0},{"seconds":1.5,"value":100}],"layer":"$1/trash","property":"opacity"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"touches":"lid","value":{"x":-6,"y":3}},{"seconds":0.95,"value":{"x":-7,"y":1}},{"seconds":1.1,"value":{"x":-7,"y":6}},{"seconds":1.2,"value":{"x":-7,"y":6}},{"seconds":1.5,"value":{"x":0,"y":0}}],"layer":"$1/trash","property":"position","replace":true}"#))]
+    }
+
+    @Test("A big trash with no landing said is never seen through the lid")
+    func bigNeverThrough() throws {
+        let landed = AskMotion.planned(try Self.bigSteps())
+        let lap = try #require(AskMotion.Lap(landed))
+        var through: [Double] = []
+        var moment = 0.5
+        while moment < 1.5 {
+            if lap.placed("trash", at: moment)?.seen ?? false,
+               AskMotion.inkMeets(lap.ink("trash", at: moment), lap.ink("lid", at: moment), within: -AskMotion.passesThrough) { through.append(moment) }
+            moment += 0.01
+        }
+        #expect(through.isEmpty, "\(through)")
+    }
 }

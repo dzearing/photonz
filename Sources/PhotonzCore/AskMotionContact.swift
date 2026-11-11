@@ -339,7 +339,10 @@ extension AskMotion {
             let next = AskMotionCheck.timed(out[bounce.step]).first { $0.seconds > bounce.seconds + 0.0005 }?.seconds
             let planned = next.map { next in (contacts[bounce.step] ?? []).contains { abs($0 - next) <= 0.0005 } } ?? false
             // The next contact the model planned for it after this one, if any: where it lands.
+            // Or, with none, the key it is heading for as it goes out of sight.
             let landing = (contacts[bounce.step] ?? []).filter { $0 > bounce.seconds + 0.0005 }.min()
+                ?? hitter(bounce.step).flatMap { goneAt($0, keys: AskMotionCheck.timed(out[bounce.step]), in: out) }
+                    .flatMap { $0 > bounce.seconds + 0.0005 ? $0 : nil }
             out = bouncedAway(out, at: bounce.step, hit: bounce.seconds, off: bounce.off, keepingNext: planned, landing: landing)
         }
         for end in ends { if let part = hitter(end.step) { out = struckWaits(out, part: part, hit: end.seconds, off: end.off) } }
