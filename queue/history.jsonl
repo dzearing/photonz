@@ -16743,3 +16743,10 @@
 {"t":"2026-11-11T05:07:01.941Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T05:07:02.018Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T05:07:02.096Z","ev":"task_pending","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":"in_progress","note":"Units (pt on 2x), end ticks and short-bracket hugging landed; eval clean 4.2 Ask / 3.9 skill against a bar of 8, and hand placement does not yet get the never-cover rule, so left open"}
+{"t":"2026-11-11T05:08:01.694Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-11T05:25:37.182Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T06:49:34.178Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T07:39:30.352Z","ev":"task_walks","id":"an-animated-icon-told-as-a-little-story-moves-th","walks":["ask-animates-a-story-walk","ask-animates-a-story-without-the-word-walk"]}
+{"t":"2026-11-11T07:39:30.430Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T07:39:30.507Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T07:39:30.583Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"The can keeps its drawn shape (fe40711be, 89dafc069); story bar (5 of 6 read as asked at 7) still not met, 0 of 6, totals 56.3 and 61.1"}

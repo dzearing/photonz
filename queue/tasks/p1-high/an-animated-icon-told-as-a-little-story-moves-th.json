@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-11T04:57:24.742Z",
+  "updated": "2026-11-11T07:39:30.582Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -242,9 +242,37 @@
     {
       "t": "2026-11-11T04:57:24.741Z",
       "note": "decision \"After nine passes the trash meets the lid and steps a little way off it before the lid shuts (boxed frames). Stop here, or keep going on the bounce?\" resolved: Keep going, judged on your trash (/Users/dzearing/Pictures/Screenshots/Screenshot 2026-11-10 at 20.57.06.png this is the ugliest trashcan icon i've ever seen.)"
+    },
+    {
+      "t": "2026-11-11T05:08:01.689Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T05:25:37.180Z",
+      "note": "Pass ten, judged on the user's screenshot ('ugliest trashcan icon'). Found the ugliness is the app's, not the model's: the model drew a clean can 12 across (run 20261110-144951 trace), then roomFitted grew the frame evenly about the middle to 32.9 for the lid's swing past the top (can played at 73%), and IconGridLanding rounded every point of that fractionally scaled drawing to whole units: ribs drawn leaning 0.44 leaned a whole unit (the W), the bottom corners' ends folded into hooks (blobs). Built test first (AskMotionRoomTests, 5): room is the smallest square round the resting ink (one unit margin) and the motion, as near the middle as allowed, shifting by whole units before it grows (the trash: 27.2, 88%); a moving icon whose frame grew lands its points on half units, line weights as ever. Three older tests pinned the even growth and were updated (flyer 26 to 25, envelope shift only)."
+    },
+    {
+      "t": "2026-11-11T06:49:34.176Z",
+      "note": "Shipped fe40711be: room round the drawing (trash frame 32.9 to 27.2), half-unit landing for a grown frame, and a bounce keeps a contact the model planned after it (the walk's trash had its 'touches bin' landing at the can's mouth thrown 4 right and 3 down by the bounce, down the outside of the can; now a bounce key goes between). Walk ask-animates-a-story-walk at Next defaults ok twice (221 s, 273 s), Copy SVG repeatCount=indefinite x3. Run 1 20261111-061223: total 56.3 (bell 57, checkbox 70.2, heart 60.3, envelope 33.6, rocket 65.8, trash 50.7; trash reads as asked 5.9). Its bell frames showed the rim cut at the left edge at 0.48 s: reach() sampled a swing's angles every 15 degrees from the least and never the widest key (-12 then 3, never 14); the old even growth had hidden it. Fixed test first, plus the room's middle kept within a twelfth of the drawing's (a look called the trash off centre): 89dafc069. Trash keeps 85 percent of its drawn size."
+    },
+    {
+      "t": "2026-11-11T07:39:30.350Z",
+      "note": "walks ask-animates-a-story-walk, ask-animates-a-story-without-the-word-walk -> ask-animates-a-story-walk, ask-animates-a-story-without-the-word-walk"
+    },
+    {
+      "t": "2026-11-11T07:39:30.428Z",
+      "note": "Run 2 20261111-064936 on 89dafc069: total 61.1, best story total yet (bell 56, checkbox 71.4, heart 57, envelope 53.5, rocket 74.1, trash 54.3); reads as asked bell 5.3, trash 5. Single motions guard 20261111-071652 once: heart 91, bell 75.4, trash lid 75.4, envelope 65.3 in range; checkmark 70.6 and plane 56.4 below their best, both from the plan (start dot and cut at lap end; plane rises 3 and never leaves), the checkmark exported where it was drawn. Walk ask-animates-a-story-walk at Next defaults ok on the final code (276 s, probe built after 89dafc069), Copy SVG repeatCount=indefinite x3. Pictures looked at: the user's screenshot, before/after of the can, the reel frames of three walks (latest: ball meets the lid at 0.9 s, pops up off it at 1.0 s, lid shuts with settle, ball crosses the closing lid into the can 1.1 to 1.2 s), the eval contact sheets and the bell frames (rim cut at 0.48 s in run 1, fixed). Audit queue/audits/2026-11-11-animated-icon-story-room.json with reel 2026-11-11-story-trash-in-two-laps.gif."
+    },
+    {
+      "t": "2026-11-11T07:39:30.505Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases at reads as asked 7; reached 0 of 6 in runs 1 and 2 of this pass (best 5.7 checkbox; trash 5). The drawing the user called ugly is fixed; what is left is motion: the ball crosses the closing lid on its way in (the pass-through check only looks at parts a key says it touches), the trash is in view at rest unless the agent hides it, the bell's body is judged to shear under its fixed mount. Left rough, no new task (inside this one): rib caps touching the base in the agent's latest drawing; the lid brushing the resting trash at 0.24 s."
+    },
+    {
+      "t": "2026-11-11T07:39:30.581Z",
+      "note": "The can keeps its drawn shape (fe40711be, 89dafc069); story bar (5 of 6 read as asked at 7) still not met, 0 of 6, totals 56.3 and 61.1"
     }
   ],
-  "started": "2026-11-10T13:22:17.874Z",
+  "started": "2026-11-11T05:08:01.688Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
