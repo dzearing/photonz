@@ -82,68 +82,68 @@ struct ShapeDetectionFixtureTests {
 
     @Test func aPhotoAvatarReadsItsSizeFromAnywhereOnIt() {
         for (x, y) in [(40.0, 40.0), (39.0, 35.0), (30.0, 45.0)] {
-            #expect(reads(x, y) == "32 px by 32 px")
+            #expect(reads(x, y) == "32 pt by 32 pt")
             expectEdges(ladder(x, y).first, CGRect(x: 24, y: 24, width: 32, height: 32))
         }
     }
 
     @Test func aPalePhotoAvatarReads() {
-        #expect(reads(44, 136) == "40 px by 40 px")
+        #expect(reads(44, 136) == "40 pt by 40 pt")
         expectEdges(ladder(44, 136).first, CGRect(x: 24, y: 116, width: 40, height: 40))
     }
 
     @Test func anInitialsAvatarReadsFromItsFillAndFromItsLetters() {
-        #expect(reads(30, 88) == "32 px by 32 px")
-        #expect(reads(35, 88) == "32 px by 32 px")
-        #expect(reads(40, 88) == "32 px by 32 px")
+        #expect(reads(30, 88) == "32 pt by 32 pt")
+        #expect(reads(35, 88) == "32 pt by 32 pt")
+        #expect(reads(40, 88) == "32 pt by 32 pt")
     }
 
     @Test func aPresenceDotReadsOnItsOwn() {
-        #expect(reads(51, 51) == "10 px by 10 px")
+        #expect(reads(51, 51) == "10 pt by 10 pt")
     }
 
     @Test func aStackedAvatarReadsAsOneAvatarAndRightBracketReadsTheStack() {
         // The first three are cut by the ring of the one after; a spec quotes
         // the avatar, so each reads whole.
         for x in [36.0, 52.0, 68.0, 84.0] {
-            #expect(reads(x, 188) == "24 px by 24 px", "avatar at \(x)")
-            #expect(reads(x, 188, level: 1) == "104 px by 24 px", "stack from \(x)")
+            #expect(reads(x, 188) == "24 pt by 24 pt", "avatar at \(x)")
+            #expect(reads(x, 188, level: 1) == "104 pt by 24 pt", "stack from \(x)")
         }
         expectEdges(ladder(52, 188).first, CGRect(x: 48, y: 176, width: 24, height: 24))
         expectEdges(ladder(52, 188).dropFirst().first, CGRect(x: 32, y: 176, width: 104, height: 24))
     }
 
     @Test func theCountPillAtTheEndOfTheStackReadsItself() {
-        #expect(reads(125, 188) == "40 px by 24 px")
-        #expect(reads(116, 188) == "40 px by 24 px", "from over its +3")
-        #expect(reads(125, 188, level: 1) == "104 px by 24 px")
+        #expect(reads(125, 188) == "40 pt by 24 pt")
+        #expect(reads(116, 188) == "40 pt by 24 pt", "from over its +3")
+        #expect(reads(125, 188, level: 1) == "104 pt by 24 pt")
     }
 
     @Test func iconTilesReadTheTileFromTheTileOrItsGlyph() {
-        #expect(reads(28, 244) == "40 px by 40 px")
-        #expect(reads(44, 244) == "40 px by 40 px", "from the white glyph")
-        #expect(reads(150, 244) == "40 px by 40 px")
+        #expect(reads(28, 244) == "40 pt by 40 pt")
+        #expect(reads(44, 244) == "40 pt by 40 pt", "from the white glyph")
+        #expect(reads(150, 244) == "40 pt by 40 pt")
     }
 
     @Test func badgesRead() {
-        #expect(reads(28, 298) == "40 px by 20 px")
-        #expect(reads(79, 298) == "18 px by 18 px")
+        #expect(reads(28, 298) == "40 pt by 20 pt")
+        #expect(reads(79, 298) == "18 pt by 18 pt")
     }
 
     @Test func aPhotoInACardReadsThePhoto() {
-        #expect(reads(364, 100) == "152 px by 88 px")
+        #expect(reads(364, 100) == "152 pt by 88 pt")
     }
 
     // MARK: Nothing that read right before moves
 
     @Test func textAndTheButtonReadAsTheyDidBefore() {
         // The name beside an avatar is a line of text.
-        #expect(reads(100, 33)?.hasSuffix("by 12 px") == true || reads(100, 33)?.hasSuffix("by 13 px") == true)
+        #expect(reads(100, 33)?.hasSuffix("by 12 pt") == true || reads(100, 33)?.hasSuffix("by 13 pt") == true)
         // The bordered button reads to the outer edge of its border: the pair
         // reader's 78 x 26 is the inside of it, and when two readings of one
         // thing tie the outer one wins (2026-10-13).
         #expect(reads(300, 234) == reads(320, 234))
-        #expect(reads(300, 234) == "80 px by 28 px")
+        #expect(reads(300, 234) == "80 pt by 28 pt")
         expectEdges(ladder(300, 234).first, CGRect(x: 280, y: 220, width: 80, height: 28))
     }
 

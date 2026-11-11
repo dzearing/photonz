@@ -81,30 +81,30 @@ struct ElementDetectionFixtureTests {
         // Truly 124 x 30. Used to read nothing at all: the four directional
         // walks landed on glyph strokes and disagreed so badly the rect
         // inverted.
-        #expect(reading(at: 295, y: 786) == Reading("124 px", "30 px"))
+        #expect(reading(at: 295, y: 786) == Reading("124 pt", "30 pt"))
     }
 
     @Test func aButtonReadsTheSameFromOverItsLabel() {
         // The pick must not change as the pointer crosses the text inside the
         // button — a readout that flickers between a word and a button is worse
         // than one that is quietly wrong.
-        #expect(reading(at: 340, y: 786) == Reading("124 px", "30 px"))
+        #expect(reading(at: 340, y: 786) == Reading("124 pt", "30 pt"))
     }
 
     @Test func aSecondaryButtonReadsItsRealSize() {
         // Truly 72 x 30, and harder than the primary: its border is a whisper
         // against the page while its label is nearly black, so the boldest
         // boundary anywhere near the pointer belongs to the text.
-        #expect(reading(at: 150, y: 786) == Reading("72 px", "30 px"))
+        #expect(reading(at: 150, y: 786) == Reading("72 pt", "30 pt"))
     }
 
     @Test func aSwitchReadsTheSwitchNotItsKnob() {
         // Truly 42 x 24. The center of a switch lands ON the knob, which is a
         // perfectly real 20 x 20 element — but nobody pointing at the middle of
         // a switch means the knob. Used to read a 12 x 12 sliver of it.
-        #expect(reading(at: 1302, y: 191) == Reading("42 px", "24 px"))
+        #expect(reading(at: 1302, y: 191) == Reading("42 pt", "24 pt"))
         // And from the green, well away from the knob.
-        #expect(reading(at: 1275, y: 191) == Reading("42 px", "24 px"))
+        #expect(reading(at: 1275, y: 191) == Reading("42 pt", "24 pt"))
     }
 
     @Test func aSettingsRowReadsTheRowNotTheCard() {
@@ -112,9 +112,9 @@ struct ElementDetectionFixtureTests {
         // only knowable from how far the hairline under it runs, which is why
         // detection reads pixels and not just the edge map. Used to stop at the
         // label text and read 490 x 42.
-        #expect(reading(at: 700, y: 192) == Reading("624 px", "44 px"))
-        #expect(reading(at: 700, y: 280) == Reading("624 px", "44 px"))
-        #expect(reading(at: 700, y: 368) == Reading("624 px", "44 px"))
+        #expect(reading(at: 700, y: 192) == Reading("624 pt", "44 pt"))
+        #expect(reading(at: 700, y: 280) == Reading("624 pt", "44 pt"))
+        #expect(reading(at: 700, y: 368) == Reading("624 pt", "44 pt"))
     }
 
     @Test func aSettingsRowIsOneStepUpFromItsLabel() {
@@ -122,8 +122,8 @@ struct ElementDetectionFixtureTests {
         // pointer actually lands. The label is the first rung (below); the
         // row is one press of `]` away, and reads as it always did.
         let row = reading(at: 200, y: 192, level: 1)
-        #expect(row?.height == "44 px")
-        #expect(row?.width == "623 px" || row?.width == "624 px")
+        #expect(row?.height == "44 pt")
+        #expect(row?.width == "623 pt" || row?.width == "624 pt")
     }
 
     // MARK: A line of text is an element
@@ -141,7 +141,7 @@ struct ElementDetectionFixtureTests {
         // anywhere near it. Used to read nothing at all.
         let heading = CGRect(x: 65, y: 66, width: 157, height: 34)
         #expect(ink(at: 140, y: 82) == heading)
-        #expect(reading(at: 140, y: 82)?.height == "17 px")
+        #expect(reading(at: 140, y: 82)?.height == "17 pt")
         // From the first letter and the last, the same heading.
         #expect(ink(at: 75, y: 90) == heading)
         #expect(ink(at: 215, y: 80) == heading)
@@ -186,7 +186,7 @@ struct ElementDetectionFixtureTests {
         // The row divider under "Launch at login" and the empty text field's
         // inside: no words, no rung from the text reader.
         #expect(ink(at: 700, y: 235) == nil || (ink(at: 700, y: 235)?.height ?? 0) >= 40)
-        #expect(reading(at: 1124, y: 495)?.height == "26 px")
+        #expect(reading(at: 1124, y: 495)?.height == "26 pt")
     }
 
     @Test func growingThePickReachesTheCard() {
@@ -212,8 +212,8 @@ struct ElementDetectionFixtureTests {
         // because a 1 px border between two whites puts the gradient peak on its
         // inside flank on both sides. Pinned so the known error cannot grow.
         let field = reading(at: 1124, y: 495)
-        #expect(field?.height == "26 px")
-        #expect(field?.width == "218 px")
+        #expect(field?.height == "26 pt")
+        #expect(field?.width == "218 pt")
     }
 
     @Test func flatBackgroundStaysQuiet() {

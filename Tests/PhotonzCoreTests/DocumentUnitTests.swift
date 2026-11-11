@@ -18,13 +18,20 @@ struct DocumentUnitTests {
         #expect(DocumentUnit.word == "px")
     }
 
-    // The measure readouts are the number a redliner copies into a spec, so
-    // they are what everything else has to agree with rather than the other
-    // way round.
+    // On a 1x picture a caliper reads in the picture's own pixels whichever
+    // unit it is set to, so it says the same word as everything else. On a
+    // Retina picture a caliper in points says pt, since that is a different
+    // number (MeasurePointsAndEndsTests).
     @Test func theWordIsTheOneTheCaliperReadsOut() {
         for unit in MeasureUnit.allCases {
-            #expect(DocumentUnit.word == unit.suffix)
+            #expect(DocumentUnit.word == unit.suffix(pixelScale: 1))
         }
+        #expect(DocumentUnit.word == MeasureUnit.pixels.suffix(pixelScale: 2))
+    }
+
+    @Test func aMeasurementInPointsOnARetinaPictureIsNotAStray() {
+        #expect(DocumentUnit.strays(in: ["124 pt"], measuringIn: "pt").isEmpty)
+        #expect(DocumentUnit.strays(in: ["124 pt"]).map(\.word) == ["pt"])
     }
 
     @Test func layerGeometryUsesTheSameWord() {

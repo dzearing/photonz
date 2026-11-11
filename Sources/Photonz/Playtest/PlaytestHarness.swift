@@ -14299,7 +14299,11 @@ private final class Run {
     /// way it is written on screen, so the fix is the row rather than a hunt.
     private func checkOneUnit() throws -> String {
         let readouts = try panelReadouts()
-        let strays = DocumentUnit.strays(in: readouts)
+        // A measurement on a Retina picture says pt, and that is its own unit
+        // rather than a second word for the picture's pixels.
+        let measureWord = MeasureUnit.points.suffix(pixelScale: editor?.document?.pixelScale ?? 1)
+        let strays = DocumentUnit.strays(in: readouts,
+                                         measuringIn: measureWord == DocumentUnit.word ? nil : measureWord)
         let saying = readouts.filter { $0.contains(DocumentUnit.word) }
         guard strays.isEmpty else {
             let named = strays.map { "\"\($0.text)\" says \($0.word)" }

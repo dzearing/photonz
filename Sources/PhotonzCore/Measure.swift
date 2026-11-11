@@ -9,19 +9,35 @@ public enum MeasureMode: String, CaseIterable, Hashable, Codable, Sendable {
     case vertical
 }
 
-/// The unit a measure's readout is shown in. Both read out as "px" — the
-/// distinction is logical vs device pixels, matching how CSS treats `px` as a
-/// logical unit. `points` divides the raw bitmap distance by the document's
-/// `pixelScale`, so a 2× Retina capture reads in LOGICAL pixels (on-screen /
-/// design size); `pixels` shows the raw DEVICE-pixel distance (2× larger on
-/// Retina — an opt-in for when you truly want bitmap pixels).
+/// The unit a measure's readout is shown in. `points` divides the raw bitmap
+/// distance by the document's `pixelScale`, so a 2× Retina capture reads its
+/// on-screen (design) size; `pixels` shows the raw device-pixel distance (2×
+/// larger on Retina, an opt-in for when you truly want bitmap pixels).
+///
+/// The word follows the number: points on a scaled picture say `pt`, because
+/// a 248 pixel button reading "124 px" is a number a reader takes for wrong
+/// (the user's calm-redline checklist, 2026-10-20: "points on a 2x screenshot
+/// unless the person asked for pixels"). On a 1× picture a point IS a pixel,
+/// and `px` is the word everyone expects of a plain image.
 public enum MeasureUnit: String, CaseIterable, Hashable, Codable, Sendable {
     case points
     case pixels
 
-    /// Both units are pixels; the mode (Logical vs Actual) carries the
-    /// distinction, so the readout stays a plain, familiar "px".
-    public var suffix: String { "px" }
+    /// The word after a readout's number on a picture of `pixelScale`.
+    public func suffix(pixelScale: CGFloat) -> String {
+        switch self {
+        case .points: pixelScale > 1 ? "pt" : "px"
+        case .pixels: "px"
+        }
+    }
+
+    /// What the unit is called where a person picks it.
+    public var title: String {
+        switch self {
+        case .points: "Points"
+        case .pixels: "Pixels"
+        }
+    }
 }
 
 /// What a measurement is calling out — the mock legend's Size (red) vs Spacing
@@ -527,10 +543,10 @@ extension MeasureContent {
             guard let verdict = alignment.verdict else { return "no edges" }
             guard !verdict.isAligned else { return "aligned" }
             let delta = displayValue(verdict.maxDelta, pixelScale: pixelScale)
-            return String(format: "off %.\(max(0, decimals))f %@", delta, unit.suffix)
+            return String(format: "off %.\(max(0, decimals))f %@", delta, unit.suffix(pixelScale: pixelScale))
         }
         let value = displayDistance(pixelScale: pixelScale)
-        return String(format: "%.\(max(0, decimals))f %@", value, unit.suffix)
+        return String(format: "%.\(max(0, decimals))f %@", value, unit.suffix(pixelScale: pixelScale))
     }
 
     /// For an alignment guide, the edges it judged as words: "Left edges", or
@@ -554,6 +570,43 @@ extension MeasureContent {
         guard let verdict = alignment.verdict else { return "No edges" }
         guard !verdict.isAligned else { return "\(edges) aligned" }
         return "\(edges), \(label(pixelScale: pixelScale))"
+    }
+
+    /// The short ticks across each end of a measuring line that is drawn on
+    /// its own feet, one per end, each crossing the line at the edge it
+    /// measures: |<-- 12 -->|. A bracket (a caliper whose head stands off its
+    /// feet) has none, since its legs already land on the edges; nor has an
+    /// alignment guide, which draws its own.
+    public var endTicks: [(CGPoint, CGPoint)] {
+        guard alignment == nil, abs(headOffset) < MeasureBuilder.endTickHalf else { return [] }
+        let g = caliperGeometry()
+        let half = MeasureBuilder.endTickHalf
+        return [g.headA, g.headB].map { end in
+            switch mode {
+            case .horizontal: (CGPoint(x: end.x, y: end.y - half), CGPoint(x: end.x, y: end.y + half))
+            case .vertical: (CGPoint(x: end.x - half, y: end.y), CGPoint(x: end.x + half, y: end.y))
+            }
+        }
+    }
+
+    /// How much of a dimension line must still show on each side of a readout
+    /// riding it, so the line visibly runs from one edge to the other.
+    public static let minimumVisibleArm: CGFloat = 8
+
+    /// True when the readout, riding its own line, leaves less than
+    /// `minimumVisibleArm` of the line showing on either side: the number sits
+    /// over the very span it is about, and nobody can tell what it measures
+    /// (a "26" chip parked over a 26 point bracket hides its head; a "16" chip
+    /// on a 32 pixel padding hides the whole line). A redline steps such a
+    /// readout off the line instead.
+    public func labelHidesItsLine(chipSize: CGSize) -> Bool {
+        guard showLabel, alignment == nil, labelRidesTheLine(chipSize: chipSize) else { return false }
+        let offset = labelOffset(chipSize: chipSize)
+        let along = mode == .horizontal ? offset.x : offset.y
+        let half = chipAxisHalfExtent(chipSize: chipSize)
+        let low = rawDistance / 2 + along - half
+        let high = rawDistance / 2 - along - half
+        return min(low, high) < Self.minimumVisibleArm
     }
 
     /// Drawable geometry for this measure's own points (feet + head + anchor).
@@ -740,6 +793,13 @@ public enum MeasureBuilder {
     /// work.
     public static let alignmentTickHalf: CGFloat = 8
 
+    /// Half the length of the tick across each end of a measuring line drawn
+    /// on its own feet (a gap, a padding, a row height): the same reach as an
+    /// alignment guide's ticks, so it reads as a mark at 1:1 on a Retina
+    /// capture. Without it a straight line had no visible ends, and a reader
+    /// could not tell where the span started or stopped.
+    public static let endTickHalf: CGFloat = 8
+
     /// The stock layer names a fresh caliper / alignment guide is born with.
     /// `MeasureSpecList.displayName` treats these as "never renamed" and shows
     /// the derived name instead, so they double as that sentinel.
@@ -812,7 +872,8 @@ public enum MeasureBuilder {
         content.end = end
         let g = content.caliperGeometry()
         let pad = content.renderPadding
-        var box = boundingBox(of: [g.footA, g.footB, g.headA, g.headB]).insetBy(dx: -pad, dy: -pad)
+        let ticks = content.endTicks.flatMap { [$0.0, $0.1] }
+        var box = boundingBox(of: [g.footA, g.footB, g.headA, g.headB] + ticks).insetBy(dx: -pad, dy: -pad)
         // Reserve room for the chip WHERE IT ACTUALLY LANDS — which, when the
         // readout has moved out of the way of its subject (D14), is not on the
         // head line at all.

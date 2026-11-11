@@ -223,14 +223,14 @@ struct MeasureChipSettings: View {
             // No segment lit while they disagree: Mixed, and either press
             // sets them all.
             SegmentedControl("Unit", selection: units.count == 1 ? units.first : nil,
-                             options: [.init(MeasureUnit.points, "Logical"),
-                                       .init(MeasureUnit.pixels, "Actual")],
+                             options: [.init(MeasureUnit.points, MeasureUnit.points.title),
+                                       .init(MeasureUnit.pixels, MeasureUnit.pixels.title)],
                              form: .natural) {
                 editorState.setMeasureUnit($0)
             }
             .controlSize(.small)
-            .panelHelp("Both read out in px. Logical is the on-screen size (like CSS px, the "
-                  + "default); Actual is raw device pixels, 2× larger on a Retina screenshot.")
+            .panelHelp("Points is the size on screen, the default: a 2x screenshot reads half its "
+                  + "pixels, in pt. Pixels counts the picture's own pixels, in px.")
             Spacer(minLength: 0)
         }
         .playtestField("Unit")

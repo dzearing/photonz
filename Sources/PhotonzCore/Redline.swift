@@ -671,7 +671,7 @@ public enum RedlineLayout {
                 return c
             })
         }
-        state.lines = drawn.flatMap { $0.calipers.map(\.subjectRects) }
+        state.lines = drawn.flatMap { $0.calipers.map(RedlineLayout.inked) }
         let unplaced = drawn
         var failed = Set<Int>()
         for i in drawn.indices {
@@ -696,6 +696,21 @@ public enum RedlineLayout {
     public static func leader(of c: MeasureContent) -> (CGPoint, CGPoint)? {
         let plan = MeasurePlan.make(c, geometry: c.caliperGeometry(), chipSize: c.estimatedLabelSize)
         return plan.leader.map { ($0.from, $0.to) }
+    }
+
+    /// Everything a caliper draws, as thin rects a readout must stay off: its
+    /// measuring line and, for a bracket, its legs and its head. Only the
+    /// measuring line used to count, so a readout could sit on another
+    /// bracket's head (the 30 point number on the 124 point line).
+    static func inked(_ c: MeasureContent) -> [CGRect] {
+        let g = c.caliperGeometry()
+        let half = c.strokeWidth / 2 + 1
+        let strokes = abs(c.headOffset) < MeasureBuilder.endTickHalf
+            ? [] : [(g.footA, g.headA), (g.headA, g.headB), (g.headB, g.footB)]
+        return c.subjectRects + strokes.map { a, b in
+            CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(a.x - b.x), height: abs(a.y - b.y))
+                .insetBy(dx: -half, dy: -half)
+        }
     }
 
     /// The boxes a leader from `start` may run across: only one it starts
@@ -765,13 +780,27 @@ public enum RedlineLayout {
             // The side that holds the head and a readout beside it, below or
             // right when both do; failing that, the roomier one.
             let chip = probe.estimatedLabelSize
-            let needed = clearing + (horizontal ? chip.height : chip.width) / 2 + MeasureBuilder.canvasEdgeGap
+            let across = horizontal ? chip.height : chip.width
+            // A span shorter than its readout cannot carry the number on its
+            // head without hiding it (`labelHidesItsLine`), so the readout
+            // goes just past the head instead, and the head has no reason to
+            // stand a readout's reach off the box: it hugs it. A bracket
+            // standing far off a small box, with nothing riding it, read as
+            // an empty box rather than a dimension (the judge on the 26 and
+            // 30 point brackets, 2026-11-11).
+            let span = horizontal ? box.width : box.height
+            let alongHalf = (horizontal ? chip.width : chip.height) / 2
+            let hugs = span / 2 - alongHalf < MeasureContent.minimumVisibleArm
+            let standoff = hugs ? MeasureBuilder.minimumClearingReach : clearing
+            let needed = hugs
+                ? standoff + MeasureContent.chipLineGap + across + MeasureBuilder.canvasEdgeGap
+                : clearing + across / 2 + MeasureBuilder.canvasEdgeGap
             let below = room(true), above = room(false)
             let positive = below >= needed || (above < needed && below >= above)
             // Where neither side holds it, the head stops short of whatever
             // is next (the picture's edge included) rather than run past it.
             let room = positive ? below : above
-            let reach = min(clearing, max(room - MeasureBuilder.canvasEdgeGap, MeasureBuilder.minimumClearingReach))
+            let reach = min(standoff, max(room - MeasureBuilder.canvasEdgeGap, MeasureBuilder.minimumClearingReach))
             if horizontal {
                 let y = positive ? box.maxY : box.minY
                 return (CGPoint(x: box.minX, y: y), CGPoint(x: box.maxX, y: y), positive ? reach : -reach)
@@ -790,7 +819,7 @@ public enum RedlineLayout {
             let chip = c.estimatedLabelSize
             let step = c.chipAxisHalfExtent(chipSize: chip) + MeasureContent.chipLineGap
             let crossStep = (c.mode == .horizontal ? chip.height : chip.width) / 2
-            let ownLines = c.subjectRects
+            let ownLines = RedlineLayout.inked(c)
             let otherLines = lines.filter { $0 != ownLines }.flatMap { $0 }
             let blocked = obstacles.filter { o in !subjects.contains(o) } + readouts + otherLines
             let mine = subjects.map { $0.insetBy(dx: -1, dy: -1) }
@@ -811,6 +840,9 @@ public enum RedlineLayout {
                        let slide = probe.edgeSlide(for: probe.labelRect(chipSize: chip), within: bounds) {
                         probe.labelCrossReach = slide
                     }
+                    // A number over the whole span it is about says nothing
+                    // about what it spans: it steps off the line instead.
+                    guard !probe.labelHidesItsLine(chipSize: chip) else { return }
                     let rect = probe.labelRect(chipSize: chip)
                     guard bounds.contains(rect) else { return }
                     var extra = cost
@@ -833,14 +865,27 @@ public enum RedlineLayout {
                     consider(.onLine, nudge: step * m, reach: 0, cost: abs(m) * LabelPlacer.nudgeCost)
                 }
                 for (rank, placement) in [outward, inward].enumerated() {
+                    // Stepping off on the outside, the first spot is just
+                    // past the head: the readout sits against the bracket it
+                    // belongs to, with no leader to draw.
+                    let pastHead = placement == outward && abs(c.headOffset) > c.subjectCrossReach
+                        ? [abs(c.headOffset)] : []
+                    var reaches = pastHead
                     var reach: CGFloat = 0
                     while reach <= leash {
-                        for m in nudges {
-                            consider(placement, nudge: step * m, reach: reach,
-                                     cost: CGFloat(rank + 1) * LabelPlacer.rankCost + abs(m) * LabelPlacer.nudgeCost
-                                        + reach / max(crossStep, 1) * LabelPlacer.nudgeCost)
-                        }
+                        reaches.append(reach)
                         reach += crossStep
+                    }
+                    for reach in reaches {
+                        for m in nudges {
+                            // Just past the head is as good a spot as the
+                            // head itself: it is where a redline puts the
+                            // number of a span too short to carry it.
+                            let ranked = pastHead.contains(reach) ? 0 : CGFloat(rank + 1) * LabelPlacer.rankCost
+                                + reach / max(crossStep, 1) * LabelPlacer.nudgeCost
+                            consider(placement, nudge: step * m, reach: reach,
+                                     cost: ranked + abs(m) * LabelPlacer.nudgeCost)
+                        }
                     }
                 }
                 for (rank, placement) in [MeasureLabelPlacement.afterEnd, .beforeStart].enumerated() {

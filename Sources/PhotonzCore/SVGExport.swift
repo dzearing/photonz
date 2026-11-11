@@ -1677,6 +1677,11 @@ private struct Writer {
                     lines.append(indent(level) + "<path d=\"\(data)\"\(stroke)/>")
                 }
             }
+            // The ticks across a flat line's ends, as the rasterizer draws them.
+            for tick in measure.endTicks where !(plan.pill?.contains(MeasurePlan.midpoint(tick)) ?? false) {
+                lines.append(indent(level) + "<line x1=\"\(n(tick.0.x))\" y1=\"\(n(tick.0.y))\""
+                    + " x2=\"\(n(tick.1.x))\" y2=\"\(n(tick.1.y))\"\(stroke)/>")
+            }
         }
         if let leader = plan.leader {
             lines.append(indent(level) + "<line x1=\"\(n(leader.from.x))\""

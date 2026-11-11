@@ -99,16 +99,16 @@ struct MeasureInspector: View {
                 }
                 if showsLookControls {
                 row("Unit") {
-                    // "Logical" = on-screen/design size (points); "Actual" =
-                    // raw bitmap pixels (2× on a Retina screenshot).
+                    // Points = on-screen/design size, said in pt on a Retina
+                    // picture; Pixels = raw bitmap pixels (2× on a Retina screenshot).
                     SegmentedControl("Unit", selection: c.unit,
-                                     options: [.init(MeasureUnit.points, "Logical"),
-                                               .init(MeasureUnit.pixels, "Actual")]) {
+                                     options: [.init(MeasureUnit.points, MeasureUnit.points.title),
+                                               .init(MeasureUnit.pixels, MeasureUnit.pixels.title)]) {
                         editorState.setMeasureUnit($0)
                     }
                     .controlSize(.small)
-                    .panelHelp("Both read out in px. Logical is the on-screen size (like CSS px, the "
-                          + "default); Actual is raw device pixels, 2× larger on a Retina screenshot.")
+                    .panelHelp("Points is the size on screen, the default: a 2x screenshot reads half its "
+                          + "pixels, in pt. Pixels counts the picture's own pixels, in px.")
                 }
                 row("Thickness") {
                     SegmentedControl("Thickness", selection: c.strokeWidth,
@@ -250,12 +250,12 @@ struct MeasureInspector: View {
             readoutRow("To", point(g.footB, in: frame, scale: scale))
             readoutRow(c.alignment == nil ? "Distance" : "Length",
                        String(format: "%.\(max(0, c.decimals))f %@",
-                              c.displayDistance(pixelScale: scale), c.unit.suffix))
+                              c.displayDistance(pixelScale: scale), c.unit.suffix(pixelScale: scale)))
             if let check = c.alignment {
                 readoutRow("Edge", edgeReadout(c, check, in: frame, scale: scale))
                 readoutRow("Items", itemsReadout(check))
             }
-            readoutRow("Units", c.unit == .points ? "Logical px" : "Actual px")
+            readoutRow("Units", c.unit.title)
         }
     }
 
@@ -270,10 +270,10 @@ struct MeasureInspector: View {
         switch c.mode {
         case .vertical:
             let x = c.displayValue(frame.minX + verdict.reference, pixelScale: scale)
-            position = "x \(Int(x.rounded())) \(c.unit.suffix)"
+            position = "x \(Int(x.rounded())) \(c.unit.suffix(pixelScale: scale))"
         case .horizontal:
             let y = c.displayValue(frame.minY + verdict.reference, pixelScale: scale)
-            position = "y \(Int(y.rounded())) \(c.unit.suffix)"
+            position = "y \(Int(y.rounded())) \(c.unit.suffix(pixelScale: scale))"
         }
         guard let edge = c.alignedEdge else { return position }
         return "\(edge.word), \(position)"

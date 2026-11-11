@@ -173,7 +173,7 @@ public enum MeasureSizeGroup {
     public static func valueText(of group: Layer, pixelScale: CGFloat) -> String? {
         guard let numbers = numbers(of: group, pixelScale: pixelScale),
               let unit = calipers(of: group).first?.measure?.unit else { return nil }
-        return "\(numbers) \(unit.suffix)"
+        return "\(numbers) \(unit.suffix(pixelScale: pixelScale))"
     }
 
     /// Whether a group's name is still the one the app gave it, so it should

@@ -90,6 +90,15 @@ public enum MeasureRasterizer {
         drawSide(foot: g.footA, head: g.headA, mid: g.labelAnchor, plan: plan, in: context)
         drawSide(foot: g.footB, head: g.headB, mid: g.labelAnchor, plan: plan, in: context)
 
+        // A line drawn on its own feet shows its ends with a tick across each,
+        // on the edge it measures. A tick the readout sits on is left out, so
+        // a see-through chip never shows a stroke through it.
+        for tick in measure.endTicks where !(plan.pill?.contains(MeasurePlan.midpoint(tick)) ?? false) {
+            context.move(to: tick.0)
+            context.addLine(to: tick.1)
+            context.strokePath()
+        }
+
         if let leader = plan.leader { drawLeader(leader, in: context) }
 
         if measure.showLabel {

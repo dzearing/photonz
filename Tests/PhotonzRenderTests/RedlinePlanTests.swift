@@ -227,6 +227,23 @@ struct RedlinePlanTests {
         }
     }
 
+    /// The judge on the calm redline, 2026-10-21: "the brackets don't clearly
+    /// mark what they measure (26 px, 30 px, 17 px)" and "there are no end
+    /// ticks to show what is being measured". A readout parked over the whole
+    /// of a short span hid the very line it labels.
+    @Test("Every dimension line shows both its ends: no readout covers its own line, and a straight line has a tick at each edge",
+          arguments: screens)
+    func everyLineShowsItsEnds(_ name: String) throws {
+        let r = try Self.read(name)
+        for c in Self.laid(r) where c.alignment == nil {
+            #expect(!c.labelHidesItsLine(chipSize: c.estimatedLabelSize),
+                    "\(name): the \(c.label(pixelScale: 2)) readout covers the line it measures")
+            if abs(c.headOffset) < MeasureBuilder.endTickHalf {
+                #expect(c.endTicks.count == 2, "\(name): \(c.label(pixelScale: 2)) has no ticks at its ends")
+            }
+        }
+    }
+
     // MARK: Screens unlike the settings pane
 
     /// A dark inspector panel cropped from a window: the window's one pixel

@@ -141,7 +141,7 @@ public enum MeasureSpecList {
         let w = Int((document.canvasSize.width / divisor).rounded())
         let h = Int((document.canvasSize.height / divisor).rounded())
         let suffix = (!devicePixels && scale != 1) ? " @\(Self.scaleText(scale))" : ""
-        return "\(w) × \(h) px\(suffix)"
+        return "\(w) × \(h) \(devicePixels ? "px" : MeasureUnit.points.suffix(pixelScale: scale))\(suffix)"
     }
 
     /// "2x", "1.5x".

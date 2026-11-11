@@ -120,7 +120,7 @@
       "do": "expectMeasures",
       "count": 1,
       "reads": [
-        "off 4 px"
+        "off 4 pt"
       ]
     },
     {
@@ -153,7 +153,7 @@
       "do": "expectMeasures",
       "count": 1,
       "reads": [
-        "off 2 px"
+        "off 2 pt"
       ]
     },
     {
@@ -173,7 +173,7 @@
       "do": "expectMeasures",
       "count": 1,
       "reads": [
-        "off 4 px"
+        "off 4 pt"
       ]
     },
     {
@@ -230,7 +230,7 @@
       "do": "expectMeasures",
       "count": 1,
       "reads": [
-        "off 4 px"
+        "off 4 pt"
       ]
     },
     {
@@ -267,7 +267,7 @@
       "do": "expectMeasures",
       "count": 1,
       "reads": [
-        "off 3 px"
+        "off 3 pt"
       ]
     },
     {
@@ -311,8 +311,8 @@
       "do": "expectMeasures",
       "count": 2,
       "reads": [
-        "off 3 px",
-        "off 4 px"
+        "off 3 pt",
+        "off 4 pt"
       ]
     }
   ]

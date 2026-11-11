@@ -356,7 +356,7 @@ struct LayerGeometryTests {
 
     @Test("The unit word is the one the measure readouts already use")
     func unitMatchesMeasure() {
-        #expect(LayerGeometry.unitSuffix == MeasureUnit.pixels.suffix)
+        #expect(LayerGeometry.unitSuffix == MeasureUnit.pixels.suffix(pixelScale: 1))
     }
 
     // MARK: Round trip through a real layer

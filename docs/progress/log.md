@@ -22898,3 +22898,11 @@ units.
   (a-walk-that-pulls-a-library-tile-by-hand-sees-it, p1); the View | Edit chip
   reads grey in dark when a recording is a walk's first window
   (find-out-whether-the-view-edit-switch-s-picked-c, p2).
+
+## 2026-11-11 — a redline of a 2x screenshot reads in points, and its lines show their ends
+
+- Measurements on a scaled picture say pt (124 pt for a 248 pixel button) unless Pixels is picked; 1x pictures still say px. Chips, Measurements rows, size group values, the spec list header and the inspector all follow `MeasureUnit.suffix(pixelScale:)`; the unit choice is Points / Pixels.
+- A caliper drawn on its own feet (gaps, padding, row height) draws a tick across each end, in the raster and the SVG.
+- The redline never parks a number over the whole of a short span: such a bracket hugs its box and its number sits just past the head; other brackets' legs and heads count as lines a number stays off.
+- 47 test lines and 7 walks moved from px to pt; full suite and 63 measurement walks green.
+- Open: the settings eval is 63.3 Ask / 61.1 skill (clean 4.2 / 3.9) against a bar of 8; hand-placed calipers do not get the never-cover rule yet. Task left pending.

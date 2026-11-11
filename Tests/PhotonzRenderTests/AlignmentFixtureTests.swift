@@ -103,14 +103,14 @@ struct AlignmentFixtureTests {
     /// say 5.
     @Test func theVerdictReadsTheRealOffset() {
         let (content, _, _) = committed(scan())
-        #expect(content.label(pixelScale: Self.pixelScale) == "off 4 px")
+        #expect(content.label(pixelScale: Self.pixelScale) == "off 4 pt")
     }
 
     /// What the exported picture says, with nothing else to read: the edge the
     /// guide judged and the verdict, in one line.
     @Test func theChipNamesTheEdgeOnTheCapture() {
         let (content, _, _) = committed(scan())
-        #expect(content.chipText(pixelScale: Self.pixelScale) == "Left edges, off 4 px")
+        #expect(content.chipText(pixelScale: Self.pixelScale) == "Left edges, off 4 pt")
     }
 
     /// And it accuses the right row: the middle label, not the ghost under it.
@@ -228,7 +228,7 @@ struct AlignmentFixtureTests {
         }
         let content = buttonsContent(in: doctored)
         #expect(content.alignment?.items.count == 2)
-        #expect(content.chipText(pixelScale: Self.pixelScale) == "Top edges, off 2 px")
+        #expect(content.chipText(pixelScale: Self.pixelScale) == "Top edges, off 2 pt")
     }
 
     /// The fixture with the Save Changes button (device x 220...492,
@@ -289,7 +289,7 @@ struct AlignmentFixtureTests {
         #expect(items.count == 6)
         let (content, _, _) = committed(items)
         #expect(MeasureSpecList.derivedName(for: content) == "Left edges, 6 items")
-        #expect(content.label(pixelScale: Self.pixelScale) == "off 4 px")
+        #expect(content.label(pixelScale: Self.pixelScale) == "off 4 pt")
     }
 
     /// Along the top of one label: its cap line and x-height line are one
@@ -354,7 +354,7 @@ struct AlignmentFixtureTests {
         }
         let content = togglesContent(in: doctored)
         #expect(content.alignment?.items.count == 4)
-        #expect(content.chipText(pixelScale: Self.pixelScale) == "Left edges, off 3 px")
+        #expect(content.chipText(pixelScale: Self.pixelScale) == "Left edges, off 3 pt")
     }
 
     private static let togglesX: CGFloat = 1259
@@ -434,7 +434,7 @@ struct AlignmentFixtureTests {
     @Test func everyReasonableDragDownTheseLabelsAgrees() {
         for position in [CGFloat(94), 96, 98] {
             let (content, _, _) = committed(scan(at: position))
-            #expect(content.label(pixelScale: Self.pixelScale) == "off 4 px",
+            #expect(content.label(pixelScale: Self.pixelScale) == "off 4 pt",
                     "guide at x \(position)")
         }
     }

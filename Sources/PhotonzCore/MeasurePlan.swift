@@ -201,6 +201,11 @@ public struct MeasurePlan: Equatable, Sendable {
         return (centre - half)...(centre + half)
     }
 
+    /// The middle of a segment.
+    public static func midpoint(_ segment: (CGPoint, CGPoint)) -> CGPoint {
+        CGPoint(x: (segment.0.x + segment.1.x) / 2, y: (segment.0.y + segment.1.y) / 2)
+    }
+
     /// Closest point on any of the measurement's own segments to `p`.
     public static func nearestPoint(on segments: [(CGPoint, CGPoint)], to p: CGPoint) -> CGPoint? {
         var best: CGPoint?

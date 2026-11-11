@@ -14,7 +14,7 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "click", "at": [520, 330] },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expectMeasures", "count": 2, "reads": ["274 px", "62 px"] },
+    { "do": "expectMeasures", "count": 2, "reads": ["274 pt", "62 pt"] },
     { "do": "expectSizeMeasure", "count": 1, "name": "Size 274 × 62", "boxOpacity": 0.1, "boxInSizeInk": true, "at": [492, 270] },
     { "do": "expectPicked", "layers": [] },
     { "do": "waitFor", "condition": "tool", "value": "measure" },
@@ -36,7 +36,7 @@
     { "do": "key", "key": "right", "modifiers": ["shift"] },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectSizeMeasure", "count": 1, "name": "Size 274 × 62", "at": [502, 270] },
-    { "do": "expectMeasures", "count": 2, "reads": ["274 px", "62 px"] },
+    { "do": "expectMeasures", "count": 2, "reads": ["274 pt", "62 pt"] },
     { "do": "describe", "stage": "3-moved", "note": "THE SECOND CLAIM: Shift-Right moved the group ten points, box and both calipers together" },
     { "do": "snapshot", "name": "3-moved-as-one" },
 

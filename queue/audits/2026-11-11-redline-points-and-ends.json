@@ -1,0 +1,28 @@
+{
+  "feature": "A redline of a 2x screenshot reads in points, and its lines show their ends",
+  "epic": "measure-redline",
+  "summary": "On a Retina screenshot every measurement now says pt (124 pt for a 248 pixel button) unless you pick Pixels. Straight measuring lines (gaps, padding, row height) carry a tick at each end, and in a redline a number never sits over the whole span it labels: short brackets hug their box and the number sits just past them.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: size-reads-buttons-and-pills-walk, caliper-foot-keeps-its-grip-walk, an-alignment-guide-re-measures-as-you-drag-walk. Pictures marked before/after are the renderer's own drawing of the redline (Tests/PhotonzRenderTests/RedlineSheetTests.swift).",
+  "switched": {},
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png, pick the Measure tool in Size mode and click the Download button.", "shot": "2026-11-11-redline-points-hand-size-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Read the Measurements list: each row says 274 × 62 pt." },
+    { "do": "In the panel, switch Unit to Pixels: the same measurement reads in px, doubled." },
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, press Ask and send \"annotate the ux with measurements around the major ui elements\".", "shot": "2026-11-11-redline-points-ask-after.png" },
+    { "do": "Compare the buttons before and after: 26, 30 and 24 now hug their box with the number beside them.", "shot": "2026-11-11-redline-points-buttons.png" },
+    { "do": "Compare the field and switch before and after.", "shot": "2026-11-11-redline-points-field-switch.png" },
+    { "do": "Compare the spacing lines: 16, 44 and 18 now show a tick at each edge.", "shot": "2026-11-11-redline-points-spacing.png" }
+  ],
+  "evaluate": [
+    "Does pt on a Retina screenshot read right to you, with px kept for 1x pictures?",
+    "Do the end ticks make a gap or a padding line read as a dimension, or are they noise?",
+    "Is a short bracket hugging its box with the number beside it clearer than the old bracket standing off with the number on it?",
+    "Is Points / Pixels clearer than the old Logical / Actual for the unit choice?"
+  ],
+  "rough": [
+    "The eval bar is not reached: the settings case scores 63.3 for Ask (judge clean 4.2, was 3.1 on this run's first try and 4 when the calm redline shipped) and 61.1 for the skill (clean 3.9); the bar is 8. The judge's remaining complaints: numbers on dividers and card edges (16 pt on the row divider, 18 pt inside the second card) and the 12 pt number on a long leader. Left open on a-redline-of-a-2x-screenshot-reads-in-points-wit.",
+    "Measurements placed by hand get the pt word and the end ticks, but not the redline's hugging brackets or the rule that a number never covers its own short line: you chose earlier that a hand-placed number between two rows stays on its line, so changing that for the Measure tool is left on a-redline-of-a-2x-screenshot-reads-in-points-wit.",
+    "The unit choice is now called Points / Pixels instead of Logical / Actual, and its tip says what each reads in.",
+    "The mock prints px on its sample redline; pt on a 2x picture follows your calm-redline checklist (your call on 2026-10-20: points on a 2x screenshot unless the person asked for pixels)."
+  ]
+}

@@ -17,7 +17,7 @@
     { "do": "click", "at": [400, 160] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectMeasures", "count": 1 },
-    { "do": "expectFeet", "start": [400, 142], "end": [400, 216], "reads": "37 px", "within": 2 },
+    { "do": "expectFeet", "start": [400, 142], "end": [400, 216], "reads": "37 pt", "within": 2 },
     { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "waitFor", "condition": "tool", "value": "measure" },
@@ -28,7 +28,7 @@
     { "do": "click", "at": [300, 205] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectMeasures", "count": 1 },
-    { "do": "expectFeet", "start": [300, 142], "end": [300, 216], "reads": "37 px", "within": 2 },
+    { "do": "expectFeet", "start": [300, 142], "end": [300, 216], "reads": "37 pt", "within": 2 },
     { "do": "describe", "stage": "2-same-gap-anywhere-in-the-band", "note": "THE SECOND CLAIM: close to the lower line, above the top of a short letter, it is still the same line to line gap, not the space down to that letter" },
     { "do": "snapshot", "name": "gap-near-the-lower-line" },
 

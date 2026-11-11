@@ -16,36 +16,36 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "key", "key": "v" },
     { "do": "waitFor", "condition": "tool", "value": "select" },
-    { "do": "expectFeet", "start": [600, 500], "end": [800, 500], "reads": "100 px" },
+    { "do": "expectFeet", "start": [600, 500], "end": [800, 500], "reads": "100 pt" },
     { "do": "describe", "stage": "1-placed", "note": "THE SETUP: a caliper reading 100 px, feet at (600, 500) and (800, 500), readout chip at (700, 440)" },
 
     { "do": "drag", "from": [792, 500], "to": [798, 500], "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expectFeet", "start": [600, 500], "end": [806, 500], "reads": "103 px", "within": 1 },
+    { "do": "expectFeet", "start": [600, 500], "end": [806, 500], "reads": "103 pt", "within": 1 },
     { "do": "describe", "stage": "2-pulled-right", "note": "THE CLAIM: the press landed 8 points LEFT of the right foot and the hand travelled 6 points RIGHT, so the foot is 6 points right of where it was, at (806, 500), and the measurement got longer: 103 px, on a picture at 2x so 206 document points is 103 px. It used to end up at (798, 500) reading 99 px, shorter than it started" },
     { "do": "snapshot", "name": "caliper-foot-keeps-its-grip" },
 
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "expectFeet", "end": [800, 500], "reads": "100 px" },
+    { "do": "expectFeet", "end": [800, 500], "reads": "100 pt" },
 
     { "do": "drag", "from": [807, 500], "to": [797, 500], "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expectFeet", "start": [600, 500], "end": [790, 500], "reads": "95 px", "within": 1 },
+    { "do": "expectFeet", "start": [600, 500], "end": [790, 500], "reads": "95 pt", "within": 1 },
     { "do": "describe", "stage": "3-pushed-left", "note": "THE SAME GRIP THE OTHER WAY: taken hold of 7 points RIGHT of the foot and pushed 10 points LEFT, the foot is 10 points left of where it was, at (790, 500), reading 95 px" },
 
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "expectFeet", "end": [800, 500], "reads": "100 px" },
+    { "do": "expectFeet", "end": [800, 500], "reads": "100 pt" },
 
     { "do": "drag", "from": [795, 504], "to": [895, 560], "modifiers": ["command", "shift"] },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expectFeet", "start": [600, 500], "end": [900, 500], "reads": "150 px", "within": 1 },
+    { "do": "expectFeet", "start": [600, 500], "end": [900, 500], "reads": "150 pt", "within": 1 },
     { "do": "describe", "stage": "4-held", "note": "THE HOLD IS UNTOUCHED: shift still holds the foot on the caliper's line. The press was 5 left and 4 below the foot, the hand went 100 right and 56 down, and the foot lands 100 right ON the line, at (900, 500). The other foot has not moved" },
 
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "expectFeet", "end": [800, 500], "reads": "100 px" },
+    { "do": "expectFeet", "end": [800, 500], "reads": "100 pt" },
 
     { "do": "drag", "from": [600, 500], "to": [560, 500] },
     { "do": "wait", "seconds": 0.5 },

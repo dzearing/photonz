@@ -69,7 +69,7 @@ struct MeasureUnitsTests {
         var m = measureContent(mode: .horizontal, unit: .points, decimals: 0)
         m.start = .zero
         m.end = CGPoint(x: 201, y: 0)
-        #expect(m.label(pixelScale: 2) == "100 px") // 201 @2× → 100.5 → 100 at 0 decimals
+        #expect(m.label(pixelScale: 2) == "100 pt") // 201 @2× → 100.5 → 100 at 0 decimals
 
         var p = measureContent(mode: .horizontal, unit: .pixels, decimals: 1)
         p.start = .zero

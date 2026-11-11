@@ -47,7 +47,11 @@ extension MeasureContent {
     /// can sit well off the guide.
     public var subjectCrossReach: CGFloat {
         let stroke = strokeWidth / 2
-        guard let check = alignment, !check.items.isEmpty else { return stroke }
+        // A flat line's ticks are part of what it draws, so a readout pushed
+        // off it clears them too.
+        guard let check = alignment, !check.items.isEmpty else {
+            return endTicks.isEmpty ? stroke : MeasureBuilder.endTickHalf + stroke
+        }
         let worst = check.items.map { abs($0.edge - lineCross) }.max() ?? 0
         return worst + MeasureBuilder.alignmentTickHalf + stroke
     }
@@ -67,7 +71,8 @@ extension MeasureContent {
         guard let check = alignment, !check.items.isEmpty else {
             let a = min(alongCoordinate(start), alongCoordinate(end))
             let b = max(alongCoordinate(start), alongCoordinate(end))
-            return [rect(cross: (lineCross - stroke)...(lineCross + stroke), along: a...b)]
+            let reach = subjectCrossReach
+            return [rect(cross: (lineCross - reach)...(lineCross + reach), along: a...b)]
         }
         let tick = MeasureBuilder.alignmentTickHalf
         return check.items.map { item in

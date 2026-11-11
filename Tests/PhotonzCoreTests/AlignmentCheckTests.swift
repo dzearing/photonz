@@ -514,7 +514,7 @@ struct AlignmentContentTests {
     @Test func deltaLabelRespectsLogicalUnits() {
         var content = alignedContent(edges: [100, 104, 100])
         content.unit = .points
-        #expect(content.label(pixelScale: 2) == "off 2 px")
+        #expect(content.label(pixelScale: 2) == "off 2 pt")
     }
 
     @Test func aGuideWithNothingToCheckSaysSo() {
@@ -551,7 +551,7 @@ struct AlignmentContentTests {
     @Test func theChipDeltaRespectsLogicalUnits() {
         var content = alignedContent(edges: [100, 104, 100], side: .after)
         content.unit = .points
-        #expect(content.chipText(pixelScale: 2) == "Left edges, off 2 px")
+        #expect(content.chipText(pixelScale: 2) == "Left edges, off 2 pt")
     }
 
     /// Fewer than two edges is nothing to compare, so there is no edge to name.

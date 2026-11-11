@@ -10,12 +10,14 @@ import Foundation
 /// screenshot copies those numbers into a spec side by side, so two words for
 /// one space is two units to reconcile in their head, every time.
 ///
-/// The word is `px`, and that is not a fresh choice: `MeasureUnit` picked it for
-/// the caliper readouts, which are the numbers a redliner actually hands off, so
-/// everything else agrees with THEM rather than the other way round. Both
-/// measure units read out as px on purpose (the Logical/Actual mode carries the
-/// device-pixel distinction, matching how CSS treats px as a logical unit), so
-/// there is no case where a document length is honestly spelled anything else.
+/// The word is `px`: a layer's position, size, corners and outline are in the
+/// picture's own pixels. A measurement is the one readout that may say
+/// something else, and only because it measures something else: on a Retina
+/// picture its default unit is points (the on-screen size a developer types
+/// into a layout), and it says `pt` there so "124" is never mistaken for the
+/// 248 pixels it spans (`MeasureUnit.suffix(pixelScale:)`, the user's
+/// calm-redline checklist of 2026-10-20). On a 1x picture the two are the
+/// same number and both say px.
 ///
 /// Write every readout through here. The panel drifted in the first place
 /// because the unit was an independent string literal in nine files, and a
@@ -24,7 +26,7 @@ public enum DocumentUnit {
 
     /// The word itself, for a control that draws the number and the unit apart
     /// (a field with its suffix beside the box).
-    public static var word: String { MeasureUnit.pixels.suffix }
+    public static var word: String { MeasureUnit.pixels.suffix(pixelScale: 1) }
 
     /// A whole length, rounded the way a readout rounds it: "18 px".
     public static func text(_ value: CGFloat) -> String {
@@ -74,9 +76,13 @@ extension DocumentUnit {
     /// A unit only counts when it is sitting ON a number, so "Points of
     /// interest" is prose and "18 pt" is a readout, and it has to be a whole
     /// word, so the Border's "Inside" is not an inch.
-    public static func strays(in readouts: [String]) -> [Stray] {
+    ///
+    /// `measuringIn` is the word a measurement on this picture says, when it
+    /// says another one (`pt` on a Retina picture); a readout in it is a
+    /// measurement's, not a stray.
+    public static func strays(in readouts: [String], measuringIn measureWord: String? = nil) -> [Stray] {
         readouts.compactMap { text in
-            guard let stray = strayWord(in: text) else { return nil }
+            guard let stray = strayWord(in: text), stray != measureWord else { return nil }
             return Stray(text: text, word: stray)
         }
     }
