@@ -338,7 +338,9 @@ extension AskMotion {
         for bounce in ends {
             let next = AskMotionCheck.timed(out[bounce.step]).first { $0.seconds > bounce.seconds + 0.0005 }?.seconds
             let planned = next.map { next in (contacts[bounce.step] ?? []).contains { abs($0 - next) <= 0.0005 } } ?? false
-            out = bouncedAway(out, at: bounce.step, hit: bounce.seconds, off: bounce.off, keepingNext: planned)
+            // The next contact the model planned for it after this one, if any: where it lands.
+            let landing = (contacts[bounce.step] ?? []).filter { $0 > bounce.seconds + 0.0005 }.min()
+            out = bouncedAway(out, at: bounce.step, hit: bounce.seconds, off: bounce.off, keepingNext: planned, landing: landing)
         }
         for end in ends { if let part = hitter(end.step) { out = struckWaits(out, part: part, hit: end.seconds, off: end.off) } }
         // Met at speed and left at speed: a contact's first key is arrived
@@ -522,13 +524,18 @@ extension AskMotion {
     /// is meant), and so is a part that comes away already, or stays where it
     /// hit, or a hit no try keeps clear of. Keys and time only, any subject.
     ///
+    /// `landing`, the moment of the next contact the model planned after the
+    /// hit, is where the part goes next: a bounce goes no further from there
+    /// than the hit left it, when any way does (on 2026-11-11 the mirror off
+    /// the lid sent the user's trash through the can's wall, and it hung
+    /// outside the can before dropping in), trying straight towards it too.
     /// `keepingNext` is a key after the hit that says it touches something
     /// itself (the trash at the can's mouth after the lid): it is where the
     /// model sent the part next, so it stays, and the bounce is a key of its
     /// own halfway between. On 2026-11-11 re-aiming that key threw the
     /// user's trash down the outside of the can.
     static func bouncedAway(_ steps: [AskStep], at index: Int, hit seconds: Double, off other: String,
-                            keepingNext: Bool = false) -> [AskStep] {
+                            keepingNext: Bool = false, landing: Double? = nil) -> [AskStep] {
         guard steps.indices.contains(index), let part = (steps[index].arguments["layer"]?.stringValue).flatMap(partReference)?.part,
               let lap = Lap(steps), lap.isMover(other) || !lap.carriers(of: other).isEmpty else { return steps }
         func point(_ value: AgentJSON?) -> CGPoint? {
@@ -544,7 +551,10 @@ extension AskMotion {
         let middle = Double(rounded(CGFloat((seconds + keys[k + 1].seconds) / 2)))
         if keepingNext, (middle - seconds) * 1000 <= Double(width) || (keys[k + 1].seconds - middle) * 1000 <= Double(width) { return steps }
         let after = keepingNext ? middle : keys[k + 1].seconds
-        let until = keepingNext ? keys[k + 1].seconds : k + 2 < keys.count ? keys[k + 2].seconds : keys[k + 1].seconds
+        // With a landing planned, the bounce is judged on its own leg: what
+        // comes after is the landing's (`tuckedIn`, `struckWaits`).
+        let until = keepingNext ? keys[k + 1].seconds : landing != nil ? keys[k + 1].seconds
+            : k + 2 < keys.count ? keys[k + 2].seconds : keys[k + 1].seconds
         func through(_ trial: [AskStep]) -> Bool {
             guard let lap = Lap(trial) else { return false }
             func seen(_ name: String, _ moment: Double) -> Bool {
@@ -584,21 +594,37 @@ extension AskMotion {
         let mirrored = dot < 0 ? unit(CGVector(dx: way.dx - 2 * dot * face.dx, dy: way.dy - 2 * dot * face.dy)) ?? face : face
         let side = lap.art.viewBox?.width ?? 24
         let least = keepingNext ? leastBounce * side : max(hypot(nextAt.x - hitAt.x, nextAt.y - hitAt.y), leastBounce * side)
-        let ways = [mirrored, unit(CGVector(dx: mirrored.dx + face.dx, dy: mirrored.dy + face.dy)) ?? face, face]
+        // Where it goes after the bounce: a bounce never takes it further
+        // from there than the hit left it. On 2026-11-11 the mirror off the
+        // lid sent the user's trash through the can's wall, and it hung
+        // outside the can before dropping in.
+        let goal = keepingNext ? nextAt : landing.flatMap { at in keys.first { abs($0.seconds - at) <= 0.0005 } }.flatMap { point($0.value) }
+        var ways = [mirrored, unit(CGVector(dx: mirrored.dx + face.dx, dy: mirrored.dy + face.dy)) ?? face, face]
+        if let goal, let towards = unit(CGVector(dx: goal.x - hitAt.x, dy: goal.y - hitAt.y)) {
+            ways += [unit(CGVector(dx: face.dx + towards.dx, dy: face.dy + towards.dy)) ?? towards, towards]
+        }
         guard var object = steps[index].arguments.objectValue, let list = object["keys"]?.arrayValue,
               let slot = list.firstIndex(where: { abs(($0["seconds"]?.doubleValue ?? -1) - keys[k + 1].seconds) <= 0.0005 }),
               var key = keepingNext ? ["seconds": .number(middle)] : list[slot].objectValue else { return steps }
-        for share: CGFloat in [1, 1.5, 2, 2.5, 3] {
-            for direction in ways {
-                key["value"] = ["x": .number(Double(rounded(hitAt.x + direction.dx * least * share))),
-                                "y": .number(Double(rounded(hitAt.y + direction.dy * least * share)))]
-                var changed = list
-                if keepingNext { changed.insert(.object(key), at: slot) } else { changed[slot] = .object(key) }
-                object["keys"] = .array(changed)
-                var trial = steps
-                trial[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
-                if !through(trial), apart(trial) { return trial }
+        func nearer(_ at: CGPoint) -> Bool {
+            guard let goal else { return true }
+            return hypot(at.x - goal.x, at.y - goal.y) <= hypot(hitAt.x - goal.x, hitAt.y - goal.y) + 0.0005
+        }
+        for towardsOnly in [true, false] {
+            for share: CGFloat in [1, 1.5, 2, 2.5, 3] {
+                for direction in ways {
+                    let at = CGPoint(x: hitAt.x + direction.dx * least * share, y: hitAt.y + direction.dy * least * share)
+                    guard !towardsOnly || nearer(at) else { continue }
+                    key["value"] = ["x": .number(Double(rounded(at.x))), "y": .number(Double(rounded(at.y)))]
+                    var changed = list
+                    if keepingNext { changed.insert(.object(key), at: slot) } else { changed[slot] = .object(key) }
+                    object["keys"] = .array(changed)
+                    var trial = steps
+                    trial[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
+                    if !through(trial), apart(trial) { return trial }
+                }
             }
+            if goal == nil { break }
         }
         return steps
     }
