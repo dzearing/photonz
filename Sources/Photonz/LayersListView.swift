@@ -594,11 +594,14 @@ struct LayersListView: View {
         // over. Only on the shrink that strands the offset, so a delete in a
         // long list keeps its place.
         .onChange(of: editorState.layerRows.count) { old, new in
-            guard new < old, scroll.offset > 0 else { return }
+            // A point of slack: the offset reads a fraction over zero at
+            // rest, and starting the list over takes the keyboard from a
+            // row being named (name-field-handback, after Make Component).
+            guard new < old, scroll.offset > 1 else { return }
             let content = LayerListMetrics.naturalHeight(rowCount: new, rowHeight: rowHeight,
                                                          canvasRowHeight: canvasRowHeight)
             let furthest = max(0, content - scroll.viewport)
-            guard scroll.offset > furthest else { return }
+            guard scroll.offset > furthest + 1 else { return }
             scroll.offset = furthest
             firstVisibleRow = LayerListMetrics.firstVisibleRow(scrollOffset: furthest,
                                                               rowHeight: rowHeight)

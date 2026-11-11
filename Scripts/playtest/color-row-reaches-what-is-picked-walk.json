@@ -24,6 +24,8 @@
     { "do": "click", "at": [290, 360] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectPicked", "layers": ["Arrow"] },
+    { "do": "press", "control": "Advanced", "in": "Advanced" },
+    { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "holdColorRow" },
 
     { "do": "describe", "stage": "2-the-row-paints-what-is-picked-now",

@@ -83,6 +83,11 @@ extension EditorState {
         if let drawing = spaceHistory.current.mainComponent(componentID: componentID, version: version) {
             selectLayer(drawing.id, inGroup: nil)
         }
+        // The keyboard to the picture, as a field hands it back when done:
+        // Edit Original is pressed in the panel, and the canvas it opens is a
+        // new one, so the window itself was left holding the keys and Escape
+        // reached nothing (component-drag-lands-a-copy-walk, 2026-11-10).
+        KeyboardHandback.toCanvas()
         TutorialController.shared.note(.originalOpened, from: self)
     }
 
@@ -98,6 +103,8 @@ extension EditorState {
         if let id = session.cameFrom, document?.layer(id: id) != nil {
             selectLayer(id, inGroup: session.cameFromGroup)
         }
+        // Done is a button in the title bar: the keys go back to the picture.
+        KeyboardHandback.toCanvas()
         // Last, after the copy you came from is picked again, so a guide step
         // after Done that waits on picking a copy waits for the person.
         TutorialController.shared.note(.originalFinished, from: self)

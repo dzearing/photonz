@@ -212,13 +212,17 @@ struct MarkupInkRow: View, Equatable {
                 }
                 Spacer(minLength: 0)
             }
-            HStack(spacing: 5) {
+            // Nine wells at 22 with 4 between come to 230, inside the 236 a
+            // 264 dock leaves. At 5, with the gap HStack also put before a
+            // trailing Spacer, the row asked for 243 and pushed the whole
+            // panel 7pt over the canvas (every-panel-keeps-its-margins-walk).
+            HStack(spacing: 4) {
                 ForEach(Array(InkPlate.palette.enumerated()), id: \.offset) { index, hex in
                     swatchButton(index, hex)
                 }
                 custom
-                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .playtestField(field)
     }
