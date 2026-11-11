@@ -22871,3 +22871,11 @@ units.
 - Tool fields are checked against each tool's schema and commands against `AppCommandID`, so a stale mapping fails too. A probe "Duck" switch on the Track section failed the build with its file and line (output in `queue/audits/2026-11-10-agent-reach-failing.txt`).
 - Gaps filed as one task, `an-agent-can-change-what-it-made-fonts-captions` (p2): an agent can make most things but not change their settings afterwards. Counts in `docs/design/agent-mcp.md`.
 - Next: lower `panelNotYetPin` / `rowNotYetPin` as tool fields land.
+
+## 2026-11-10 — walks failing in the sweep (walks-that-fail-in-the-full-sweep-26)
+
+- 27 of the 33 walks the task owned pass twice in a row again (07df11ac, ebaf3abc, 6037d21c, 7f1ecd99, ea1e7271).
+- App fixes: the Layers list went blank after an undo shrank it while scrolled; an arrow's Color row pushed the panel 7pt over the canvas; Escape did nothing right after Edit Original; a click on a canvas notice's words never reached the picture (macOS 27 glass).
+- Harness fix: a walk's file drag from disk was carried as a file promise, so drops on the panel landed nowhere.
+- Most of the rest were walks out of date (arrow settings moved under Advanced, taller timeline lanes, Transitions folded until a cut is picked).
+- Open: design-mode-tool-strip (SwiftUI popup in the tool capsule is not an NSPopUpButton), ask-makes-it-again-as-a-photo, two segmented thumb films. Filed: naming-a-new-component-or-a-copy-takes-the-keybo (four walks lose the keyboard after Make Component; not caused by this run).
