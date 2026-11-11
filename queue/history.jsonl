@@ -16857,3 +16857,10 @@
 {"t":"2026-11-11T21:20:10.126Z","ev":"task_note","id":"naming-a-new-component-or-a-copy-takes-the-keybo"}
 {"t":"2026-11-11T21:20:10.203Z","ev":"task_note","id":"naming-a-new-component-or-a-copy-takes-the-keybo"}
 {"t":"2026-11-11T21:20:19.748Z","ev":"task_done","id":"naming-a-new-component-or-a-copy-takes-the-keybo","from":"in_progress","note":"Fixed in 1d31de231: the panel's top-edge mask (from 7bc8dd3d6, 2026-11-09) dropped every focus a field asks for in code; PanelTopEdge now clips and draws its scrolled fade as a material band. All 13 owned walks plus the title-bar edge walks pass, the four named walks twice in a row; Scripts/test.sh green. Audit queue/audits/2026-11-11-naming-a-new-component-or-a-copy-takes-the-keybo.json"}
+{"t":"2026-11-11T21:20:57.826Z","ev":"task_started","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","title":"A redline of a 2x screenshot reads in points, with dimension lines that show what each number spans","priority":"p1-high"}
+{"t":"2026-11-11T22:22:49.935Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
+{"t":"2026-11-11T22:22:50.011Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
+{"t":"2026-11-11T22:22:50.087Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
+{"t":"2026-11-11T22:22:50.162Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
+{"t":"2026-11-11T22:22:50.237Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
+{"t":"2026-11-11T22:22:50.312Z","ev":"task_pending","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":"in_progress","note":"Pictures fixed (hugging brackets, field width inside the field, no touching marks, short leaders, copy-svg walk on pt); eval bar of 8 not reached (Ask 63-65, clean ~5.1; skill 59.8) and the judge prefers the older layout, so left open for the user's read of the audit"}
