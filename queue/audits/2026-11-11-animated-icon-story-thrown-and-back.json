@@ -1,0 +1,29 @@
+{
+  "feature": "An animated icon told as a little story: the trash is thrown in from outside, comes back off the lid, and goes into the middle of the can",
+  "epic": "icon-svg",
+  "summary": "On your sentence the trash is now hidden until it is thrown in from off the right edge. It meets the open lid, comes back off it with a visible gap, drops into the middle of the can and fades inside it, and the lid shuts over nothing. Last pass it sat beside the can the whole lap, because Photonz itself was throwing away the fade the agent had planned.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-11-story-trash-pass13-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return." },
+    { "do": "Wait for Ask to finish (about four minutes), then press Space to play." },
+    { "do": "Read the frames: in from the right edge at 0.58 s, meets the lid at 0.77 s, back off it 0.87 to 0.97 s, into the can at 1.06 s, lid shut by 1.26 s.", "shot": "2026-11-11-story-trash-pass13-two-laps-frames.png" },
+    { "do": "Watch the reel, two laps.", "shot": "2026-11-11-story-trash-pass13-two-laps.gif" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-11-story-trash-pass13.svg" }
+  ],
+  "evaluate": [
+    "In the reel, do you see the trash come back off the lid before it drops in, or does it still read as sliding?",
+    "Does the trash read as going into the can now that it lands across the middle of the mouth and fades inside?",
+    "Is a hop of about two units off the lid big enough at 24 and 48, or should a bounce be bigger?",
+    "The trash is a small lined box that reads nearly solid at icon size. Is that close enough to rubbish, or should it read as crumpled paper?"
+  ],
+  "rough": [
+    "The bar is not met: five of six story icons should read as asked at 7 or more. This pass reached 1 of 6 (bell 6.1, checkbox 7.1, heart 5.2, envelope 3.9, rocket 6.9, trash 5.4; total 61.2, run 20261111-200328-ask, one run). The total matches the best story total so far (61.1), and your trash scored 57.7, its best yet (37 to 55 before).",
+    "The eval's own trash, a slightly different plan from the walk's, now visibly comes back off the lid. Then it heads for the can over the shutting lid and ends sitting on top of the shut lid at 1.1 s before it vanishes. That is what is left to fix on that plan.",
+    "When the trash only just fits the can's mouth, there is no bounce path clear of the walls, so it comes off the lid as it did before (dropping, not turning). It turns where there is room, as in the walk above.",
+    "The agent's look still asks to change things after the motion lands, and in one walk its fix made the plan worse (it read its own keys as places, not moves). This pass did not change the look.",
+    "Also from this pass: 2026-11-11-story-trash-pass13-replay-walk1.png, the first walk's plan replayed through the new landing without the model, and 2026-11-11-story-pass13-eval-sheet.png, the six story cases.",
+    "No mock covers animated icons; this is judged against your sentence and the eval."
+  ]
+}

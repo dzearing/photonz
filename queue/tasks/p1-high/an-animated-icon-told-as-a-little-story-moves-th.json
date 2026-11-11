@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-11T18:33:10.973Z",
+  "updated": "2026-11-11T20:23:53.900Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -326,9 +326,37 @@
     {
       "t": "2026-11-11T18:33:10.972Z",
       "note": "Pass twelve: the lid shuts over nothing, the trash is drawn in lines and met at speed, a bounce goes towards where it lands (8b8291f0f, 28be5dc77, a0799b0d1, 90fe32da6); story bar (5 of 6 at 7) still not met, 0 of 6, total 52.2, trash 40.7"
+    },
+    {
+      "t": "2026-11-11T18:48:22.485Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T19:20:28.081Z",
+      "note": "Pass thirteen. Replayed pass twelve's walk 4 plan (trace in /tmp/photonz-playtest/ask-animates-a-story-walk/log.json): the model DID plan the trash's fade (100 to 0 by 1.1 s, in the can); travelsSeen read the lap's end as where it arrives (the trash goes back to its start by 1.5 s), moved the fade to 1.38 to 1.48 s, 20 ms before the 1.5 s key, and the app refuses keys that close ('two keys ... are one key'): the whole fade went, 'Left out a layer', trash in view all lap. Fixed test first (AskMotionFadeKeptTests): a journey key at the very moment the fade completes is where it arrives; keysApart (last landing step) moves or merges any pair of keys the app would refuse. Then, read with a new lap contact sheet (LapDump + Scripts/ask-eval/lap-frames.py, a plan's frames in seconds without the model): thrownIn was refused because the last of the way in met the lid, which is the planned hit itself: now only crossings the plan did not already have count (trash thrown in from the right edge). The bounce slid down the lid's underside (mirror of a glancing hit): bouncedAway now asks a bounce to turn a right angle or more from its way in, with the way back as a candidate, clear of still walls (segment by segment, an open can's U is its walls) where there is room. Replay: trash in from the right, hits the lid's underside 0.8 s, kicks right off it, drops into the can, gone by 1.1 s, lid shuts 1.0 to 1.34 s."
+    },
+    {
+      "t": "2026-11-11T20:13:50.446Z",
+      "note": "Shipped a8a571008 (local, pushing at the end): keysApart + travelsSeen arrival at the fade's end (the fade was refused whole), thrownIn ignores crossings the plan already had, bouncedAway prefers a turn of a right angle or more clear of still lines (segment by segment) and otherwise goes as before, landsInTheMiddle (what goes out of sight at an open outline's mouth lands across its middle: the trash landed 2.6 right, across the wall), staysTillGone (fading while setting off home holds where it landed). Tests: AskMotionFadeKeptTests (4 suites); AskMotionTouchesKeptTests updated (the landing now turns the trash's bounce off the lid itself, so nothing is sent back). Scripts/test.sh exit 0. Walk ask-animates-a-story-walk at Next defaults ok twice (walk 1 on the first half, walk 2 on a8a571008: 249 s, Copy SVG repeatCount=indefinite x3, the agent's own look saw the bounce 'Bouncing off the lid: 0.75 s, 0.88 s' for the first time). Pictures looked at: walk 1 and walk 2 frames from the exported SVG played in Chromium (walk 2: hidden at rest, thrown in from the right edge 0.58 s, meets the lid 0.77 s, comes back off it with a gap 0.87 to 0.97 s, into the can 1.06 s, faded inside 1.16 s as the lid shuts, settle; both laps alike), the window capture (no 'Left out a layer' row, an Opacity track on Trash), replays of walk 1's plans."
+    },
+    {
+      "t": "2026-11-11T20:23:53.675Z",
+      "note": "Measured a8a571008, story run 20261111-200328-ask (one run): total 61.2 (best before 61.1); reads as asked bell 6.1, checkbox 7.1, heart 5.2, envelope 3.9, rocket 6.9, trash 5.4: 1 of 6 at 7. Trash 57.7, its best across all passes (37 to 55). Eval trash frames (its plan differs from the walk's): thrown in from the right 0.6 s, through the lid's line 0.8 s, back out off it 0.9 s (the bounce reads), then over the shutting lid to sit on top of it at 1.1 s and vanish. Pushed a8a571008. Audit queue/audits/2026-11-11-animated-icon-story-thrown-and-back.json with reel 2026-11-11-story-trash-pass13-two-laps.gif."
+    },
+    {
+      "t": "2026-11-11T20:23:53.751Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases read as asked at 7; this pass 1 of 6 (checkbox 7.1), one run. Next levers, from the eval's trash: (1) after a bounce, the way to the landing must not cross a part that is closing over the landing; route it in before the closer gets there, or hold the closer (struckWaits) until it is in; (2) the 0.8 s contact overlaps the lid's line on the eval's plan (approach through the lid before the placed hit). (3) The look's mend can make a plan worse (walk 1: the model read its own position keys as absolute and moved the landing outside the can); judging the mend's result against the looked-at one before keeping it is worth trying. Left rough, no new task (all inside this one): a turned bounce needs room in the mouth, so a trash that only just fits drops off the lid as before; the lined trash reads nearly solid at icon size; lap-frames.py draws open paths as lines but curves as straight segments."
+    },
+    {
+      "t": "2026-11-11T20:23:53.825Z",
+      "note": "walks ask-animates-a-story-walk, ask-animates-a-story-without-the-word-walk -> ask-animates-a-story-walk, ask-animates-a-story-without-the-word-walk"
+    },
+    {
+      "t": "2026-11-11T20:23:53.899Z",
+      "note": "Pass 13: the planned fade is kept (it was refused whole), thrown in from off the frame, comes back off the lid, lands in the can's middle (a8a571008); story total 61.2, trash 57.7 (its best); bar (5 of 6 at reads as asked 7) not met, 1 of 6"
     }
   ],
-  "started": "2026-11-11T16:16:38.430Z",
+  "started": "2026-11-11T18:48:22.484Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
