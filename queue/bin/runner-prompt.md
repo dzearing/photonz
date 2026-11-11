@@ -136,7 +136,7 @@ The machine you run on is the user's. Anything you start, you finish.
   shape (a title's single Fade row, a shadow's Kind as a dropdown twice, a lifted
   clip called Sample Talk copy). Each one turned rotating checks red and cost a
   separate task to fix walks that were wrong, not the app.
-  The whole set is about 1140 walks and about 395 minutes, which is 40 times the 600s ceiling
+  The whole set is about 1140 walks and about 440 minutes, which is 44 times the 600s ceiling
   on your background work, so starting it inside a task ends with you
   terminated and your task handed back unfinished. That is not hypothetical:
   eight of the twenty recorded runner failures are exactly this, including
