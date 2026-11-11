@@ -1,0 +1,29 @@
+{
+  "feature": "An animated icon told as a little story: the lid waits for the trash",
+  "epic": "icon-svg",
+  "summary": "The app was checking the trash against a lid that moved at a steady speed, while the icon plays the lid on its curve, so the shutting lid swept through the trash every time. It now reads the lid where it really is and keeps it open until the trash is in. The trash is also hidden until it is thrown, and comes in from the edge.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-11-story-trash-waits-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return." },
+    { "do": "Wait for Ask to finish (about four minutes), then press Space to play." },
+    { "do": "Watch the reel of the same sentence from today's walk, two laps.", "shot": "2026-11-11-story-trash-waits-two-laps.gif" },
+    { "do": "Read its frames: hidden at rest, thrown in from the right edge at 0.68 s, then from 1.06 to 1.26 s it still crosses the shutting lid.", "shot": "2026-11-11-story-trash-waits-two-laps-frames.png" },
+    { "do": "Compare an eval run where the agent said the trash touches the lid: the lid stays open until the trash is inside, then shuts.", "shot": "2026-11-11-story-trash-lid-waits-frames.png" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-11-story-trash-waits.svg" }
+  ],
+  "evaluate": [
+    "In the eval frames the lid holds open until the trash is in. Does that read as the trash closing it, or as the lid waiting?",
+    "The trash is now out of sight until it is thrown, then comes in from the right edge. Better than seeing it sit beside the can?",
+    "In today's walk the trash still crosses the shutting lid, because the agent never said the trash touches it. Worth another pass, or stop here?",
+    "The trash is a filled shape in a line icon in every run, and the judges mark it down for that. Should a thrown part be drawn in lines like the rest?"
+  ],
+  "rough": [
+    "The bar is not met: five of six story icons should read as asked at 7 or more. This pass reached 1 of 6 or fewer in three runs (totals 50.9, 47.9, 52.3, against 56.3 and 61.1 last pass).",
+    "Your trash read lower this pass: 41.8, 42.2, 42.1 and 37.6, against 50.7 and 54.3 last pass. Its range across all passes is 37 to 55, so four runs cannot say whether these changes helped or hurt it.",
+    "The lid only waits when the agent says the trash touches it. In today's walk it said nothing, so the trash rose into the dipping lid on its own keys at 1.0 s, then sat at the can's mouth right where the shut lid goes. I tried making any part that moves into a travelling one wait as well, and replayed it: waiting cannot clear a trash that sits where the lid shuts, so I took it out.",
+    "The trash is hidden at rest only when it fades out before the lap ends. When the agent fades it in where it sits, it still appears in mid-air (eval run 20261111-112934, 0.6 s), and its trip home can show above the closed lid at 1.4 s.",
+    "The rocket scored 45 to 48 in all three runs because the agent wrote its key times in milliseconds (100 to 3000 on a 3 second lap). Those are now read as seconds, but no full story run has measured that fix yet."
+  ]
+}

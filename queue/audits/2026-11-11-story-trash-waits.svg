@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <clipPath id="clip-1">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <g>
+    <g clip-path="url(#clip-1)">
+      <g transform="translate(7.5 11)">
+        <path d="M0 0 L1 10.5 L8 10.5 L9 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(2.5 2)" d="M0 0 L0.5 6.5" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(6 2)" d="M0.5 0 L0 6.5" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g transform="rotate(0 6.42 10.14)">
+        <animateTransform attributeName="transform" type="rotate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0 0 1 1;0 0 0.2 1;0.4 0 0.2 1;0 0 0.2 1;0.4 0 0.2 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1" keyTimes="0;0.133;0.133;0.333;0.533;0.633;0.733;0.743;0.752;0.762;0.771;0.781;0.79;0.8;0.81;0.819;0.829;0.838;0.848;0.857;0.867;0.999;1" values="0 6.42 10.14;0 6.42 10.14;0 6.42 10.14;-40 6.42 10.14;-40 6.42 10.14;-25 6.42 10.14;-25 6.42 10.14;-17.533 6.42 10.14;-11.117 6.42 10.14;-6.457 6.42 10.14;-2.94 6.42 10.14;-0.426 6.42 10.14;1.313 6.42 10.14;2.192 6.42 10.14;2.496 6.42 10.14;2.339 6.42 10.14;1.892 6.42 10.14;1.295 6.42 10.14;0.688 6.42 10.14;0.185 6.42 10.14;0 6.42 10.14;0 6.42 10.14;0 6.42 10.14"/>
+        <g transform="translate(6.5 8.5)">
+          <path transform="translate(0 1.5)" d="M0 0 L11 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path transform="translate(4.5 0)" d="M0 0 L2 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g opacity="0">
+        <animate attributeName="opacity" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.333;0.367;0.867;0.933;1" values="0;0;1;1;0;0"/>
+        <g>
+          <animateTransform attributeName="transform" type="translate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.333;0.667;0.767;0.867;0.933;1" values="0 0;7.35 -3.675;-3.72 1.86;-4.65 0;-4.65 3.72;-4.65 3.72;0 0"/>
+          <path transform="translate(17.5 5.5)" d="M1 0 L3 1 L2 3 L0 2 L1 0 Z" fill="#1D1D1F"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

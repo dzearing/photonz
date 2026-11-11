@@ -22922,3 +22922,12 @@ units.
 - `mark_measurements` answers which ids it left out and why (`leftOut`, `why`); the skill engine had drawn the left-out padding and section gap back by hand. Ask's row counts the measurements that landed (`AskChangeWords`), not the ids asked for ("Added 7" over five).
 - Evals, settings case: Ask 63.3 to 73 (clean 4.2 to 5.4, aligned 4.2 to 5.6), skill 61.1 to 71.2 (clean 3.9 to 5.2). Other redline climb cases unchanged (button-size 77.2, dark-panel 26.7, card-padding 18 to 20 against 18.7 at HEAD). Held-out not re-run (about 20 minutes, past a runner's limit); last 54.9.
 - Open: the task's bar is 8 on clean and aligned. A hand-placed redline of the same screen scored clean 6.1 to 6.3, so the bar looks out of reach for numbers on the picture; the audit asks the user.
+
+## 2026-11-11: story icons read motion on its curves, and the lid waits for the trash
+
+- The contact checks (`AskMotion.Lap`) read every part in a straight line between keys, while the icon plays each run on its curve. The user's lid, shutting on Ease out back, was read at -26 degrees where it played at -14, and it swept through the trash every check called clear. Parts are now read where they play (`AskMotionCheck.played`).
+- A struck part stands until whatever hit it is clear, and its later moves fit into the rest of the lap (`struckWaits`, in `touchesPlaced`). This only applies to contacts the model declares with `touches`.
+- A part the story uses up (seen at rest, sets off, meets something, ends out of sight) is hidden until it sets off, so `thrownIn` brings it in from the edge (`usedUpUnseen`). `travelsSeen` now also covers a fade that ends at the very moment of landing.
+- Key times copied from the design's milliseconds (100 to 3000 on a 3 s lap: the rocket, three runs) are read as seconds at plan time (`AskMotion.keysInSeconds`).
+- Story eval: 50.9, 47.9, 52.3. The trash scored 41.8, 42.2, 42.1 and 37.6, inside its range across all passes (37 to 55). Bar (5 of 6 read as asked at 7) still not met; task left pending.
+- Open: with no `touches` the lid does not wait. A general "whatever moves into a traveller waits" was tried and taken out, because it cannot clear a trash that sits exactly where the shut lid goes.
