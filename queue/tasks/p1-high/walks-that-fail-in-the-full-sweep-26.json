@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-10-17T18:11:57.395Z",
-  "updated": "2026-11-10T15:37:00.609Z",
+  "updated": "2026-11-11T01:00:02.947Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-08T17:10:10Z DID NOT FINISH (the run was interrupted: whoever was running it went away): it reached 854 of 1134 walks in 383 minutes, of which 812 passed. The walks it never reached are unknown, not passing.\n\nFailing walks (42): 3d-grippers-on-a-picked-layer-walk, a-click-on-the-cut-opens-its-tiles-walk, a-cut-opens-into-its-two-clips-walk, a-dip-fades-out-and-back-in-walk, a-notice-lets-a-click-through-walk, a-sound-s-bend-handle-follows-the-hand-walk, arrow-parts-walk, ask-finds-nothing-off-walk, ask-makes-it-again-as-a-photo-walk, ask-paints-then-edits-walk, border-follows-the-path-walk, caption-lines-join-and-a-word-moves-back-walk, caption-two-lines-walk, color-row-reaches-what-is-picked-walk, component-drag-lands-a-copy-walk, component-preview-walk, copy-and-paste-a-range-walk, design-mode-tool-strip-walk, drop-hands-you-the-pointer-walk, every-panel-keeps-its-margins-walk, expand-the-cut-from-its-menus-walk, find-what-stayed-a-picture-walk, frame-live-other-kinds-walk, icon-stroke-weight-walk, insert-a-title-before-a-clip-walk, library-import-walk, measure-row-menu-walk, name-field-handback-redline, one-unit-word-walk, outline-width-walk, panel-takes-picture-walk, paste-a-clip-from-the-ruler-menu-walk, pick-leaves-settings-alone-walk, picking-a-title-holds-the-picture-walk, roll-the-cut-between-two-clips-from-the-menu-bar-walk, roll-the-cut-between-two-clips-walk, saved-colour-cannot-come-walk, section-fold-motion-walk, segment-tooltips-walk, segmented-chip-refraction-film-walk, segmented-thumb-film-walk, separate-shadow-walk\n\nThose 42 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: shift-m-jumps-between-markers-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nNot run this time and still failing from the last check (10): text-style-comes-away-walk, tile-comes-away-walk, title-pages-and-name-cards-walk, title-presets-library-shelf-walk, tool-settings-capsule-walk, transition-edge-follows-the-pointer-walk, transition-picker-at-a-cut-walk, transition-placement-and-hold-walk, transition-tile-comes-away-walk, transitions-where-clips-meet-walk\nThis run was interrupted before reaching them. They are unread, not fixed.\n\nAlready named by another open task, so read that one before re-diagnosing (9):\n  a-click-on-the-cut-opens-its-tiles-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  a-cut-opens-into-its-two-clips-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  component-preview-walk -> a-copy-s-own-words-stay-centred-in-their-control, leaving-preview-slides-back-without-a-hitch (guessed from its wording, so read it before believing it)\n  copy-and-paste-a-range-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  expand-the-cut-from-its-menus-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  insert-a-title-before-a-clip-walk -> a-clip-or-title-held-as-an-insert-shows-what-mov (guessed from its wording, so read it before believing it)\n  roll-the-cut-between-two-clips-from-the-menu-bar-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  roll-the-cut-between-two-clips-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  section-fold-motion-walk -> folding-a-section-that-lets-the-panel-fit-again (that task says it owns this walk)\n\n2 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 33: 3d-grippers-on-a-picked-layer-walk, a-dip-fades-out-and-back-in-walk, a-notice-lets-a-click-through-walk, a-sound-s-bend-handle-follows-the-hand-walk, arrow-parts-walk, ask-finds-nothing-off-walk, ask-makes-it-again-as-a-photo-walk, ask-paints-then-edits-walk, border-follows-the-path-walk, caption-lines-join-and-a-word-moves-back-walk, caption-two-lines-walk, color-row-reaches-what-is-picked-walk, component-drag-lands-a-copy-walk, design-mode-tool-strip-walk, drop-hands-you-the-pointer-walk, every-panel-keeps-its-margins-walk, find-what-stayed-a-picture-walk, frame-live-other-kinds-walk, icon-stroke-weight-walk, library-import-walk, measure-row-menu-walk, name-field-handback-redline, one-unit-word-walk, outline-width-walk, panel-takes-picture-walk, paste-a-clip-from-the-ruler-menu-walk, pick-leaves-settings-alone-walk, picking-a-title-holds-the-picture-walk, saved-colour-cannot-come-walk, segment-tooltips-walk, segmented-chip-refraction-film-walk, segmented-thumb-film-walk, separate-shadow-walk\n\nFull output: queue/sweep/2026-11-08-024725.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-clip-s-own-sound-is-the-bottom-half-of-the-cli: The timeline lanes changed height for every recording with sound; walks aiming at fixed window points outside the sets run by the task may need moving\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -100,49 +100,9 @@
       "note": "seq 40 -> 80"
     },
     {
-      "t": "2026-11-10T15:37:00.608Z",
-      "note": "... 37 earlier entries elided",
-      "elided": 37
-    },
-    {
-      "t": "2026-10-30T17:21:39.151Z",
-      "note": "rotating check 2026-10-30T17:21:38Z, 40 walks run from 302 onward in the rotation: 3d-grippers-on-a-picked-layer-walk, custom-goes-back-walk, cut-panel-names-the-clip-walk, delete-track-menu-shows-its-key-walk, design-mode-tool-strip-walk, design-ui-start-walk, dock-headers-walk, dock-picked-first-walk, double-click-clears-a-range-walk, drag-path-points-on-the-grid-walk, draw-on-the-grid-walk, drawn-shape-gets-a-timeline-row-walk, drop-hands-you-the-pointer-walk, every-section-header-opens-walk (its script changed since the last check), transitions-group-walk (its script changed since the last check) failing. This is a slice, not a sweep: the rest of the set is unchecked."
-    },
-    {
-      "t": "2026-10-30T21:15:06.230Z",
-      "note": "rotating check 2026-10-30T21:15:06Z, 42 walks run from 335 onward in the rotation: 3d-grippers-on-a-picked-layer-walk, each-brush-shows-its-own-settings-walk, each-corner-on-its-own-walk, editing-a-title-never-plays-walk, effect-colour-walk, effect-style-walk, effects-open-into-view-walk, effects-remembered-walk, effects-room-for-the-one-you-opened-walk, effects-say-their-reach-walk, ellipse-border-walk, every-caption-control-changes-the-captions-walk, every-dropdown-opens-on-a-click-walk, every-handle-lights-on-hover-walk, every-key-dot-picks-walk, every-measurement-shares-one-look-walk, every-section-header-opens-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
-    },
-    {
-      "t": "2026-10-31T01:17:02.372Z",
-      "note": "rotating check 2026-10-31T01:17:02Z, 40 walks run from 412 onward in the rotation: 3d-grippers-on-a-picked-layer-walk, grid-bar-two-buttons-walk, grid-chosen-size-walk, grid-guides-walk, grid-live-spacing-walk, grid-nudge-walk, grid-off-takes-no-room-walk, grid-origin-walk, grid-settings-narrow-walk, grid-surround-snap-walk, grid-visible-snap-walk, group-name-double-click-renames-walk, group-says-it-overflows-walk, guides-catch-marks-walk, hide-picture-and-clean-noise-for-a-section-walk, highlight-one-outline-walk, hold-pushes-the-sound-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
-    },
-    {
-      "t": "2026-10-31T01:46:23.921Z",
-      "note": "rotating check 2026-10-31T01:46:23Z, 40 walks run from 449 onward in the rotation: 3d-grippers-on-a-picked-layer-walk, icon-frame-walk, icon-preview-walk, icon-previews-dark-chip-walk, icon-previews-stay-with-nothing-picked-walk, icon-stroke-weight-walk, icon-width-row-reads-true-walk, icon-width-row-with-nothing-picked-walk, instance-properties-variants-mock-walk, key-a-title-s-scale-walk, key-lanes-walk, key-value-popover-walk, key-values-clear-of-the-graph-line-walk, keys-copy-between-layers-walk, keys-on-a-later-shadow-walk, label-border-follows-walk, label-fills-a-row-walk, label-size-walk, label-weight-walk, landing-mark-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
-    },
-    {
-      "t": "2026-10-31T02:27:42.079Z",
-      "note": "From ask-walks-share-one-model (2026-10-30): every Ask walk that opens the composer by pressing the title bar's Ask (press control Ask, a pointer click at window 1197,824) fails at its type step, 'no text field has the keyboard (first responder is CanvasNSView)', and has since between the 2026-10-23 and 2026-10-26 sweeps (they passed on 10-23). Reproduced: a scratch walk (open dialog-clean.png, press Ask, wait, snapshot) shows NO composer at all, also with setup front:true, and Command-K on a picture opens nothing either; askFromNothing from the New window fails the same way ('the picture ... did not appear within 15.0s'). Only ask-is-command-k-on-a-video-walk (front, a video) opens the composer. Suspects by date: 224236f2 'the title bar's Ask is the design's hero button' and 69d1a7a9 'Command K is Ask on videos too, and the sheen sweeps on every hover'. Until this is fixed no Ask walk reaches the model at all."
-    },
-    {
-      "t": "2026-10-31T03:03:08.984Z",
-      "note": "rotating check 2026-10-31T03:03:08Z, 40 walks run from 486 onward in the rotation: 3d-grippers-on-a-picked-layer-walk, layer-row-lifts-by-pointer-walk, layer-row-lifts-walk, layers-combine-walk, layers-divider-drags-by-pointer-walk, layers-header-make-component-walk, layers-list-follows-pick-walk, layers-menu-icon-rows-right-click-walk, layers-menu-icon-rows-walk, layers-rows-say-row-or-column-walk, layers-rows-stack-by-right-click-walk, layout-fits-walk, layout-mixed-foot-walk, library-clip-onto-a-track-walk, library-last-tile-reachable-walk, library-tile-click-latency-picture-walk, library-tile-click-latency-walk, lists-pane-holds-still-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
-    },
-    {
-      "t": "2026-10-31T04:53:10.427Z",
-      "note": "rotating check 2026-10-31T04:53:10Z, 38 walks run from 523 onward in the rotation: 3d-grippers-on-a-picked-layer-walk, live-title-backgrounds-walk, locked-layer-delete-command-walk, lower-third-plate-keeps-its-gradient-walk, marker-and-airbrush-walk, measure-parts-walk, measure-row-menu-walk, measurements-named-for-their-mode-walk, mirror-across-center-right-click-walk, mirror-across-center-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
-    },
-    {
-      "t": "2026-10-31T05:55:37.262Z",
-      "note": "outline-width-walk (step 57: ink 4px where 26 expected) and path-line-style-walk (step 36: no Square in Ends after pressing Dashed) also fail on main as of 2026-10-31 with no brush change in the tree (checked by stashing a-vector-path-s-line-can-be-painted-with-a-brush's Sources edits)."
-    },
-    {
-      "t": "2026-10-31T06:13:32.315Z",
-      "note": "rotating check 2026-10-31T06:13:32Z, 39 walks run from 557 onward in the rotation: 3d-grippers-on-a-picked-layer-walk, mixed-padding-walk, mixed-part-keeps-its-colour-walk, modes-follow-the-document-walk, motion-colour-picker-walk, motion-loop-preview-walk, motion-one-play-rule-walk, motion-path-walk, motion-strip-way-back-walk, motion-swings-a-layer-walk, normalize-cleans-noise-walk, normalize-quiet-system-audio-walk, notices-say-what-happened-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
-    },
-    {
-      "t": "2026-10-31T06:35:44.660Z",
-      "note": "2026-10-31, from the brush epic audit: the brush chooser's popover over the tool bar does not open under a walk even with setup front:true, by press (posted mouse events at the button, 'Choose brush at window (169, 110), one click') AND by windowClick at (160,730) top-left: the picture taken 1.5 s later shows no popover and 'shelf tiles: none'. So the unconfirmed 'popover in a window that is never key' cause is not the whole story: the window was key and frontmost. Walks red from it since the 2026-10-26 sweep: watercolour-wash-and-bloom-walk, brushes-picked-from-tiles-walk, brush-settings-on-a-click-walk, each-brush-shows-its-own-settings-walk (its first failure is a remembered Brush Size 40 not 16, the armed brush surviving forget tools/panel), brush-dry-media-and-smudge-walk. Whether a person's real click opens it is not known: this terminal has no Accessibility grant to drive the HID pointer. brush-epic-try-path-walk uses pickBrush instead of the chooser for now."
+      "t": "2026-11-11T01:00:02.946Z",
+      "note": "... 47 earlier entries elided",
+      "elided": 47
     },
     {
       "t": "2026-10-31T06:56:05.524Z",
@@ -499,10 +459,54 @@
     {
       "t": "2026-11-10T15:37:00.607Z",
       "note": "rotating check 2026-11-10T15:37:00Z, 28 walks run from 459 onward in the rotation: 3d-grippers-on-a-picked-layer-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-11-10T21:34:33.784Z",
+      "note": "rotating check 2026-11-10T21:34:33Z, 32 walks run from 483 onward in the rotation: 3d-grippers-on-a-picked-layer-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-11-10T21:36:34.919Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-10T21:49:01.515Z",
+      "note": "2026-11-10 21:50 re-ran all 33 owned walks at b34fcb4a: 31 fail, 2 pass (ask-finds-nothing-off-walk, ask-paints-then-edits-walk). Working through the failures one cause at a time."
+    },
+    {
+      "t": "2026-11-10T22:28:58.339Z",
+      "note": "07df11ac: 16 of the 31 pass again. App bug fixed: separate-shadow-walk found the Layers list blank after an undo shrank it while scrolled (LayersListView restarts its scroll view; fixed in shared code since the repo forbids branching on release and it is a defect in both). Walks that were WRONG, not broken: outline-width, icon-stroke-weight, one-unit-word, segment-tooltips, saved-colour-cannot-come, caption-two-lines, name-field-handback-redline (arrow Width/endings/caption moved under Advanced); pick-leaves-settings-alone (25 not 26 under the wider Advanced slider); border-follows-the-path (two Width sliders); arrow-parts (default chip already the line colour); caption-lines-join (rows that cannot act are left out, harness check updated); measure-row-menu (reveal); paste-a-clip-from-the-ruler-menu (ruler at y 833); library-import (Audio track already exists)."
+    },
+    {
+      "t": "2026-11-10T23:09:00.501Z",
+      "note": "ebaf3abc: 22 of 31 pass now. panel-takes-picture-walk and drop-hands-you-the-pointer-walk were a HARNESS bug, not the app: since f2f9ac1f (2026-10-28) a walk's file drag from disk was carried as a file promise, so the panel's drop got no link and added nothing (a canvas drop still landed). Fixed with asTheFinder in PlaytestPanelDrag.pasteboard; all 9 dragFile walks and 15 dropImage walks pass. Walks that were WRONG: 3d-grippers (canvas at 67% made its 50pt rectangle too small for edge pills), picking-a-title-holds-the-picture (zoom 71 not 74), frame-live-other-kinds (corner keeps proportions: 614 not 550), find-what-stayed-a-picture (lazy list releases scrolled-past rows; harness accepts that as out of sight)."
+    },
+    {
+      "t": "2026-11-11T00:09:48.983Z",
+      "note": "6037d21c: 25 of 31 pass. App bugs fixed: every-panel-keeps-its-margins (an arrow's Color row asked 243pt of 236 and pushed the panel 7pt over the canvas) and component-drag-lands-a-copy (after Edit Original the window held the keys, so Escape did nothing; now handed to the canvas). color-row-reaches-what-is-picked was WRONG (arrow part rows moved under Advanced). Found while checking: name-field-handback, component-override, copy-own-color, copies-share-choice now fail at their type step after Make Component, on main with or without my changes and with 03eb6f22 reverted; filed as naming-a-new-component-or-a-copy-takes-the-keybo (p1)."
+    },
+    {
+      "t": "2026-11-11T01:00:02.720Z",
+      "note": "2026-11-10 end of run (7f1ecd99, ea1e7271): 27 of the 33 owned walks now pass twice in a row on their own, plus a-dip-fades (twice, 118s each). More app fixes: a-notice-lets-a-click-through (the notice pill's glass took every click on macOS 27; glass is now a background that ignores the pointer, same look). WRONG walks: a-dip-fades (Transitions folded until a cut is picked: picks the edit point / new cut first), a-sound-s-bend-handle and pick-leaves (same drag lands a fraction apart run to run: reads now carry ±1). Chose to fix the Layers list and Color row in shared code over a Next-only flag because they are defects in both releases and the repo forbids branching on the release."
+    },
+    {
+      "t": "2026-11-11T01:00:02.795Z",
+      "note": "STILL FAILING, 4: (1) design-mode-tool-strip-walk step 54: the tool settings capsule's Component popup (ToolSettingsCapsule .component, a SwiftUI Picker in glass) is drawn by SwiftUI as _NSGraphicsView, not an NSPopUpButton, so PlaytestPanelMenu.buttons never finds it; a person sees and uses it fine (picture /tmp/photonz-playtest/zz-dm). Fix is harness support for a SwiftUI menu, or the capsule using the panel's own dropdown; tool-settings-capsule-walk (Tool Snap) is the same cause. (2) ask-makes-it-again-as-a-photo-walk step 21: the change line reads 'Made a photo of A red fox standing in p…' (the model's own prompt, capitalised mid-sentence and cut) where the walk wants 'Made a photo of a fox'; not judged yet whether the line or the walk is wrong. (3)+(4) segmented-thumb-film-walk and segmented-chip-refraction-film-walk: filmThumb on the title bar View | Edit switch finds no thumb at rest in the first or last frame, while the same film on the Library's Media | Systems rail passes; the thumb is plainly visible in a snapshot, so suspect the band filmThumb reads (rows 19-27% of the rail) against the title bar switch. Also from the sweep's 'not run' list: transitions-where-clips-meet, transition-tile-comes-away, transition-picker-at-a-cut, transition-placement-and-hold, transition-edge-follows-the-pointer likely share the folded-Transitions cause a-dip had (pick the cut first)."
+    },
+    {
+      "t": "2026-11-11T01:00:02.870Z",
+      "note": "27 of 33 owned walks pass twice; 4 still fail (design-mode-tool-strip, ask-makes-it-again-as-a-photo, two segmented thumb films), diagnosis in the log"
+    },
+    {
+      "t": "2026-11-11T01:00:02.945Z",
+      "note": "walks chip-styles-picking-walk -> design-mode-tool-strip-walk, ask-makes-it-again-as-a-photo-walk, segmented-thumb-film-walk, segmented-chip-refraction-film-walk"
     }
   ],
   "standing": "walk-sweep",
   "walks": [
-    "chip-styles-picking-walk"
-  ]
+    "design-mode-tool-strip-walk",
+    "ask-makes-it-again-as-a-photo-walk",
+    "segmented-thumb-film-walk",
+    "segmented-chip-refraction-film-walk"
+  ],
+  "started": "2026-11-10T21:36:34.918Z"
 }

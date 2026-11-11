@@ -16708,3 +16708,15 @@
 {"t":"2026-11-10T21:24:57.069Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
 {"t":"2026-11-10T21:24:57.145Z","ev":"task_walks","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","walks":["a-cut-opens-into-its-two-clips-walk","expand-the-cut-from-its-menus-walk","roll-the-cut-between-two-clips-walk","roll-the-cut-between-two-clips-from-the-menu-bar-walk","copy-and-paste-a-range-walk","transition-edge-follows-the-pointer-walk","transition-picker-at-a-cut-walk","transition-placement-and-hold-walk","a-click-on-the-cut-opens-its-tiles-walk","command-drag-ripple-trims-an-edge-walk"]}
 {"t":"2026-11-10T21:24:57.272Z","ev":"task_done","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","from":"in_progress","note":"Drop beside a cut snaps (9cb260dbd) and Escape mid drag calls the drag off (03eb6f222): macOS 27 AppKit drops keys during SwiftUI drags, HeldDragKeys catches them where the run loop takes them off the queue. All 9 walks + the ripple walk pass twice in a row, test.sh green, audit 2026-11-10-escape-mid-drag."}
+{"t":"2026-11-10T21:34:33.787Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-10T21:36:34.739Z","ev":"slice_pass","walks":32,"passed":31,"failed":1,"seconds":545,"of":1141,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-10T21:36:34.924Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-26","title":"Walks that fail in the full sweep","priority":"p1-high"}
+{"t":"2026-11-10T21:49:01.518Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-10T22:28:58.342Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-10T23:09:00.504Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-10T23:55:50.902Z","ev":"task_created","id":"naming-a-new-component-or-a-copy-takes-the-keybo","priority":"p1-high","title":"Naming a new component or a copy takes the keyboard again"}
+{"t":"2026-11-11T00:09:48.986Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-11T01:00:02.723Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-11T01:00:02.798Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-11T01:00:02.873Z","ev":"task_pending","id":"walks-that-fail-in-the-full-sweep-26","from":"in_progress","note":"27 of 33 owned walks pass twice; 4 still fail (design-mode-tool-strip, ask-makes-it-again-as-a-photo, two segmented thumb films), diagnosis in the log"}
+{"t":"2026-11-11T01:00:02.948Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-26","walks":["design-mode-tool-strip-walk","ask-makes-it-again-as-a-photo-walk","segmented-thumb-film-walk","segmented-chip-refraction-film-walk"]}
