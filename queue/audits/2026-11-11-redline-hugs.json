@@ -1,0 +1,28 @@
+{
+  "feature": "A redline's dimension lines hug what they measure",
+  "epic": "measure-redline",
+  "summary": "In a redline of a screenshot, every size bracket now stands just off its object with its number beside it, an empty text field carries its width line across its own middle, no two marks' lines touch, and no number hangs on a leader longer than its own pill.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: ask-annotates-a-screenshot-walk. The before and after pictures are the renderer's own drawing of each redline (Tests/PhotonzRenderTests/RedlineSheetTests.swift, PHOTONZ_REDLINE_SHEETS=<folder>).",
+  "switched": {},
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, press Ask and send \"annotate the ux with measurements around the major ui elements\".", "shot": "2026-11-11-redline-hugs-ask-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at the redline before this change: the 124 pt and 220 pt brackets stand a pill's height off their objects, the 220 pt bracket's leg runs down into the 26 pt bracket, and 12 pt hangs far below on a long line.", "shot": "2026-11-11-redline-hugs-before.png" },
+    { "do": "Look at the redline after: 124 pt hugs Save Changes with its number under it, 220 pt runs across the empty field from edge to edge, and 12 pt sits just under its gap.", "shot": "2026-11-11-redline-hugs-after.png" },
+    { "do": "Compare the sign-in screen before: its brackets reach out past the card and two numbers hang on long lines.", "shot": "2026-11-11-redline-hugs-login-before.png" },
+    { "do": "And after: the first field's width runs inside it, both buttons' brackets hug, and nothing crosses anything else.", "shot": "2026-11-11-redline-hugs-login-after.png" },
+    { "do": "Look at the people list: the avatar's brackets now stay inside the card.", "shot": "2026-11-11-redline-hugs-feed-after.png" }
+  ],
+  "evaluate": [
+    "Does a width line drawn across the middle of an empty text field, with its number on it, read as the field's width to you?",
+    "Do you prefer brackets that hug the object with the number beside them (after), or the number riding a bracket that stands further off (before)? The agent judge prefers before by about 10 points.",
+    "The settings case's bar is 8 on clean and aligned, and hand-drawn ideals of this screen scored about 6 from the same judge. Should the bar become the pictures (no mark touching another, no long leaders, lines on their edges) instead of that score?",
+    "On the sign-in screen the left padding and the row height are now left out because their lines would cross the field's marks. Is a redline with fewer, untangled marks the right trade?"
+  ],
+  "rough": [
+    "The eval bar of 8 on clean and aligned is not reached and this pass moves away from it: Ask 63.1 and 65.3 (clean 5.0 and 5.2, aligned 5.0 and 4.9; runs 20261111-215613-ask, 20261111-222136-ask), skill 59.8 (clean 4.9, aligned 4.8; run 20261111-222106-skill). The layout before this change scored 72.4 and 75.4 on the same day. Left open on a-redline-of-a-2x-screenshot-reads-in-points-wit.",
+    "The judge names the 220 pt pill sitting on the field in every look, and calls hugging brackets crowded. A version with the field's width hugging above it instead scored 61.5 and 62.7, so the field is not the whole of the drop.",
+    "Within one mark, a width bracket and a height bracket still meet at the box's corner (the toggle's 24 pt and 42 pt). They are short, so they read as a corner; nothing else touches.",
+    "On the dialog, the Keep Both button's 94 pt number sits at the left end of its bracket and the 28 pt number above its bracket, both by the same corner, because the spot under the bracket crosses the dialog's edge.",
+    "Measurements placed by hand are unchanged by this pass: they have pt and end ticks, not the hug or the inside line."
+  ]
+}

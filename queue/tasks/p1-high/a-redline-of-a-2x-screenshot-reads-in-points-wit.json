@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-21T05:16:19.351Z",
-  "updated": "2026-11-11T16:14:02.232Z",
+  "updated": "2026-11-11T22:22:50.311Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried over from measuring-a-ui-gives-a-calm-redline-each-kind-of (2026-10-20), which shipped code-chosen marks and clear readout placement (Sources/PhotonzCore/Redline.swift, find_measurements / mark_measurements) and took the settings case from 32.5 to 59.0 for Ask (judge 2.8 to 4.8). What the judge still says, verbatim, from Scripts/ask-eval.sh run --engine ask --cases settings-measurements (runs 20261021-044351-ask, 20261021-044837-ask, 20261021-050243-ask or the latest): \"values don't match what they point at (124 px on a roughly 250 px button, 18 px on a gap that is clearly larger)\"; \"there are no end ticks to show what is being measured\"; \"the brackets don't clearly mark what they measure (26 px, 30 px, 17 px)\". The 124 is right in points (MeasureUnit.points, logical px) but labelled px: MeasureUnit.suffix is \"px\" for both units by design (Measure.swift line 12). Only three call sites use the suffix (Measure.swift label/chipText, MeasureSizeGroup.swift:176, DocumentUnit.swift:27) but about 46 test files and 38 walks expect px readouts, which is why it did not fit in the redline task. Size brackets are MeasureSizeGroup + caliper extension lines (MeasurePlan.swift, MeasureRasterizer.swift).",
@@ -171,6 +171,34 @@
     {
       "t": "2026-11-11T16:14:02.231Z",
       "note": "seq 80 -> 30"
+    },
+    {
+      "t": "2026-11-11T21:20:57.822Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T22:22:49.933Z",
+      "note": "Fixed copy-svg-into-a-code-editor-walk: its redline clipboard step now expects '124 pt' (was px); walk ok in the probe."
+    },
+    {
+      "t": "2026-11-11T22:22:50.009Z",
+      "note": "Built (Redline.swift, RedlineLayout): every size bracket hugs at 14 px with its number past the head; an empty box with no room for a number on either side inside its card carries its width line across its own middle (220 pt field); a size bracket with no clean spot tries the box's other side; no leader longer than its pill; a mark whose lines touch an earlier mark's is left out; the three-mark floor takes only marks that land clean (only an otherwise empty redline takes one as it falls). New tests: sizeBracketsHug, marksStayApart, shortLeaders (all four screens); RedlineSheetTests draws every screen with PHOTONZ_REDLINE_SHEETS."
+    },
+    {
+      "t": "2026-11-11T22:22:50.085Z",
+      "note": "Chose hugging brackets + inside line over the riding-number layout because it meets all three points of the 2026-11-11 user-eye read (no leg into another mark, no long leader, brackets on their objects); the judge prefers the old layout (HEAD today 72.4/75.4 vs this 63.1/65.3 Ask, skill 59.8). Tried: hug without inside line 61.5/62.7; old standoff + new rules dropped the 12 pt and kept the corner leg. Audit queue/audits/2026-11-11-redline-hugs.json asks the user which and whether the bar of 8 should become the pictures."
+    },
+    {
+      "t": "2026-11-11T22:22:50.160Z",
+      "note": "Verified: Scripts/test.sh exit 0 (14521 + 1384 + 111 + 179 + 24); 15 walks ok (the 8 owned, ask-annotates, ask-redlines-dialog/feed, redline-walk, capture-to-redline, svg-export-redline, redline-with-components, name-field-handback-redline) plus copy-svg. Looked at every shipped picture: settings before/after, login before/after, feed after, the Ask capture (220 inside the field, 124 hugging, 12 on a short leader)."
+    },
+    {
+      "t": "2026-11-11T22:22:50.235Z",
+      "note": "left rough: dialog's 94 pt and 28 pt numbers share Keep Both's left corner (the spot under the bracket crosses the dialog edge); not filed, in the audit's rough list."
+    },
+    {
+      "t": "2026-11-11T22:22:50.310Z",
+      "note": "Pictures fixed (hugging brackets, field width inside the field, no touching marks, short leaders, copy-svg walk on pt); eval bar of 8 not reached (Ask 63-65, clean ~5.1; skill 59.8) and the judge prefers the older layout, so left open for the user's read of the audit"
     }
   ],
   "walks": [
@@ -183,5 +211,5 @@
     "size-steps-and-resizes-walk",
     "copy-svg-into-a-code-editor-walk"
   ],
-  "started": "2026-11-11T07:40:14.136Z"
+  "started": "2026-11-11T21:20:57.821Z"
 }

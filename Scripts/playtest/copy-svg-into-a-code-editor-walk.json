@@ -56,7 +56,7 @@
     { "do": "clearClipboard" },
     { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "readClipboard", "stage": "5-a-redline-pastes-its-list", "behind": "painted", "svg": false, "textHas": "px" },
+    { "do": "readClipboard", "stage": "5-a-redline-pastes-its-list", "behind": "painted", "svg": false, "textHas": "124 pt" },
     { "do": "readClipboard", "stage": "5-no-code-in-the-text", "svg": false, "svgAsText": true }
   ]
 }

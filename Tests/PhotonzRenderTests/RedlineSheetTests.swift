@@ -40,7 +40,19 @@ struct RedlineSheetTests {
     func settingsSheet() throws {
         let image = try Self.drawn(RedlinePlanTests.settings)
         #expect(image.width > 0)
-        guard let path = ProcessInfo.processInfo.environment["PHOTONZ_REDLINE_SHEET"] else { return }
+        if let path = ProcessInfo.processInfo.environment["PHOTONZ_REDLINE_SHEET"] {
+            try Self.write(image, to: path)
+        }
+        // `PHOTONZ_REDLINE_SHEETS=<folder>` draws every screen the layout is
+        // tested on, one picture each.
+        guard let folder = ProcessInfo.processInfo.environment["PHOTONZ_REDLINE_SHEETS"] else { return }
+        for name in RedlinePlanTests.screens {
+            let file = name.replacingOccurrences(of: "/", with: "-") + ".png"
+            try Self.write(try Self.drawn(name), to: (folder as NSString).appendingPathComponent(file))
+        }
+    }
+
+    static func write(_ image: CGImage, to path: String) throws {
         let url = URL(fileURLWithPath: path)
         let destination = try #require(CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil))
         CGImageDestinationAddImage(destination, image, nil)

@@ -176,7 +176,12 @@ struct RedlinePlanTests {
                 for b in rects[(i + 1)...] where a.intersects(b) {
                     Issue.record("\(name): readouts \(a) and \(b) overlap")
                 }
+                // Save one inside the empty box its own line runs across
+                // the middle of (a text field's width).
+                let c = calipers[i]
+                let middle = CGPoint(x: (c.start.x + c.end.x) / 2, y: (c.start.y + c.end.y) / 2)
                 for o in obstacles where a.intersects(o) {
+                    if c.headOffset == 0, o.contains(a), o.contains(middle) { continue }
                     Issue.record("\(name): readout \(i) \(a) sits on \(o)")
                 }
             }
@@ -293,6 +298,73 @@ struct RedlinePlanTests {
             if abs(c.headOffset) < MeasureBuilder.endTickHalf {
                 #expect(c.endTicks.count == 2, "\(name): \(c.label(pixelScale: 2)) has no ticks at its ends")
             }
+        }
+    }
+
+    /// The strokes a caliper draws, each as a thin rect: a bracket's two legs
+    /// and its head, or a flat line and the ticks at its ends.
+    static func strokes(_ c: MeasureContent) -> [CGRect] {
+        let g = c.caliperGeometry()
+        let runs = abs(c.headOffset) < MeasureBuilder.endTickHalf
+            ? [(g.headA, g.headB)] + c.endTicks
+            : [(g.footA, g.headA), (g.headA, g.headB), (g.headB, g.footB)]
+        let half = c.strokeWidth / 2 + 1
+        return runs.map { a, b in
+            CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(a.x - b.x), height: abs(a.y - b.y))
+                .insetBy(dx: -half, dy: -half)
+        }
+    }
+
+    static func drawn(_ r: Read) -> [RedlineDrawn] {
+        RedlineLayout.lay(r.marks, obstacles: RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2),
+                          edges: Self.edges(r), regions: Self.regions(r), canvas: r.canvas,
+                          size: MeasureStyles().content(for: .size), spacing: MeasureStyles().content(for: .spacing))
+    }
+
+    /// The user's read of the settings redline, 2026-11-11: "the 124 pt and
+    /// 220 pt brackets sit well off their objects". A size's dimension line
+    /// stands just off the box it measures, its number beside it, rather
+    /// than a whole readout's height away with the number riding it.
+    @Test("A size's dimension line stands just off its box", arguments: screens)
+    func sizeBracketsHug(_ name: String) throws {
+        let r = try Self.read(name)
+        for drawn in Self.drawn(r) where drawn.mark.role == .size {
+            for c in drawn.calipers {
+                #expect(abs(c.headOffset) <= MeasureBuilder.minimumClearingReach,
+                        "\(name): \(drawn.mark.what)'s \(c.label(pixelScale: 2)) line stands \(abs(c.headOffset)) off its box")
+            }
+        }
+    }
+
+    /// The same read: "the 220 pt bracket's left leg runs straight down into
+    /// the 26 pt bracket so the two marks look like one". No stroke of one
+    /// mark touches a stroke of another.
+    @Test("No mark's lines touch another mark's lines", arguments: screens)
+    func marksStayApart(_ name: String) throws {
+        let r = try Self.read(name)
+        let drawn = Self.drawn(r)
+        for (i, a) in drawn.enumerated() {
+            for b in drawn[(i + 1)...] {
+                let touch = a.calipers.flatMap(Self.strokes).contains { s in
+                    b.calipers.flatMap(Self.strokes).contains { s.intersects($0) }
+                }
+                if touch { Issue.record("\(name): \(a.mark.what) \(a.calipers.map { $0.label(pixelScale: 2) }) touches \(b.mark.what) \(b.calipers.map { $0.label(pixelScale: 2) })") }
+            }
+        }
+    }
+
+    /// The same read: "the 12 pt gap between Reset and Save Changes hangs on
+    /// a long leader to a chip far below". A number stepped off its line is
+    /// never further from it than its own pill is long.
+    @Test("No leader is longer than its number's pill", arguments: screens)
+    func shortLeaders(_ name: String) throws {
+        let r = try Self.read(name)
+        for c in Self.laid(r) {
+            guard let run = RedlineLayout.leader(of: c) else { continue }
+            let chip = c.estimatedLabelSize
+            let length = hypot(run.1.x - run.0.x, run.1.y - run.0.y)
+            #expect(length <= max(chip.width, chip.height),
+                    "\(name): \(c.label(pixelScale: 2)) hangs on a \(length) leader")
         }
     }
 

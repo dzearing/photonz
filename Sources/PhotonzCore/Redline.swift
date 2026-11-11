@@ -652,20 +652,44 @@ public enum RedlineLayout {
         // But a redline is never thrown away for it: with fewer than three
         // clean marks, the ones left out land as the Measure tool itself
         // would place them, overlap and all.
+        // Only one that lands clean, though: its number on nothing and its
+        // lines touching no other mark's. A number dropped into a text field
+        // or a line run into another mark's tick is worse than one mark
+        // fewer (the login screen, 2026-11-11). Only a redline that would
+        // otherwise be empty takes the first left-out mark as it falls.
         let floor = min(3, marks.count)
         guard drawn.count < floor, !left.isEmpty else { return drawn }
         var readouts = placed + drawn.flatMap { $0.calipers.map { $0.labelRect(chipSize: $0.estimatedLabelSize) } }
-        for mark in left.prefix(floor - drawn.count) {
+        func piece(for mark: RedlineMark) -> RedlineDrawn {
             var piece = attempt([mark], obstacles: [], edges: [], regions: [], canvas: canvas, size: size, spacing: spacing,
                                 placed: [], tidySpacing: false).unplaced[0]
+            var chips = readouts
             for j in piece.calipers.indices {
                 let c = piece.calipers[j]
-                piece.calipers[j].apply(MeasureLabelPlanner.plan(for: c, canvas: canvas, avoiding: readouts + obstacles,
+                piece.calipers[j].apply(MeasureLabelPlanner.plan(for: c, canvas: canvas, avoiding: chips + obstacles,
                                                                  describing: mark.box.map { [$0] } ?? []))
-                readouts.append(piece.calipers[j].labelRect(chipSize: c.estimatedLabelSize))
+                chips.append(piece.calipers[j].labelRect(chipSize: c.estimatedLabelSize))
             }
-            drawn.append(piece)
+            return piece
         }
+        func clean(_ p: RedlineDrawn) -> Bool {
+            let subjects = p.mark.box.map { [$0] } ?? []
+            let lines = drawn.flatMap(\.calipers).flatMap(inked)
+            for c in p.calipers {
+                let chip = c.labelRect(chipSize: c.estimatedLabelSize)
+                if (obstacles.filter { !subjects.contains($0) } + subjects + readouts + lines).contains(where: chip.intersects) {
+                    return false
+                }
+            }
+            return !drawn.contains { touches($0.calipers, p.calipers) }
+        }
+        for mark in left where drawn.count < floor {
+            let p = piece(for: mark)
+            guard clean(p) else { continue }
+            readouts += p.calipers.map { $0.labelRect(chipSize: $0.estimatedLabelSize) }
+            drawn.append(p)
+        }
+        if drawn.isEmpty, let first = left.first { drawn.append(piece(for: first)) }
         return drawn
     }
 
@@ -704,15 +728,69 @@ public enum RedlineLayout {
             let subjects = drawn[i].mark.box.map { [$0] } ?? []
             let saved = state
             for j in drawn[i].calipers.indices {
-                guard let c = state.place(drawn[i].calipers[j], describing: subjects) else {
+                // A size bracket with no clean spot for its number on the
+                // side it chose tries the box's other side before giving up.
+                let first = drawn[i].calipers[j]
+                let tries = [first] + (subjects.isEmpty || first.headOffset == 0 ? [] : [Self.mirrored(first, across: subjects[0])])
+                var placed: MeasureContent?
+                for t in tries where placed == nil {
+                    if t != first { state.swapLine(first, for: t) }
+                    placed = state.place(t, describing: subjects)
+                    if placed == nil, t != first { state.swapLine(t, for: first) }
+                }
+                guard let c = placed else {
                     failed.insert(i)
                     state = saved
                     break
                 }
                 drawn[i].calipers[j] = c
             }
+            // Two marks whose lines meet read as one shape (a padding line
+            // running into a row height's tick): the later one is left out.
+            if !failed.contains(i), drawn[..<i].indices.contains(where: { k in
+                !failed.contains(k) && touches(drawn[k].calipers, drawn[i].calipers)
+            }) {
+                failed.insert(i)
+                state = saved
+            }
         }
         return (drawn.enumerated().filter { !failed.contains($0.offset) }.map(\.element), failed, unplaced)
+    }
+
+    /// The strokes a caliper draws, each as a thin rect: a bracket's two
+    /// legs and its head, or a flat line and the ticks at its ends.
+    static func strokes(_ c: MeasureContent) -> [CGRect] {
+        let g = c.caliperGeometry()
+        let runs = abs(c.headOffset) < MeasureBuilder.endTickHalf
+            ? [(g.headA, g.headB)] + c.endTicks
+            : [(g.footA, g.headA), (g.headA, g.headB), (g.headB, g.footB)]
+        let half = c.strokeWidth / 2 + 1
+        return runs.map { a, b in
+            CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(a.x - b.x), height: abs(a.y - b.y))
+                .insetBy(dx: -half, dy: -half)
+        }
+    }
+
+    /// Whether any stroke of `a` meets any stroke of `b`.
+    static func touches(_ a: [MeasureContent], _ b: [MeasureContent]) -> Bool {
+        let theirs = b.flatMap(strokes)
+        return a.flatMap(strokes).contains { s in theirs.contains { s.intersects($0) } }
+    }
+
+    /// `c`, a bracket on one side of `box`, moved to the opposite side.
+    static func mirrored(_ c: MeasureContent, across box: CGRect) -> MeasureContent {
+        var m = c
+        if c.mode == .horizontal {
+            let y = c.start.y >= box.midY ? box.minY : box.maxY
+            m.start.y = y
+            m.end.y = y
+        } else {
+            let x = c.start.x >= box.midX ? box.minX : box.maxX
+            m.start.x = x
+            m.end.x = x
+        }
+        m.headOffset = -c.headOffset
+        return m
     }
 
     /// The leader the canvas draws from a caliper to a readout that has
@@ -778,8 +856,8 @@ public enum RedlineLayout {
 
         /// Which side of `box` a size caliper goes on: the side with the more
         /// open room before the next word or control, below or right on a tie.
-        /// The head stands off by exactly the air a readout keeps from what
-        /// it measures, so the dimension line hugs the box.
+        /// The head stands just off the box (`minimumClearingReach`), so the
+        /// dimension line hugs it and its number sits beside the line.
         func side(of box: CGRect, horizontal: Bool,
                   template: MeasureContent) -> (start: CGPoint, end: CGPoint, head: CGFloat) {
             // The card the box is in: a bracket that fits inside it stays
@@ -811,27 +889,37 @@ public enum RedlineLayout {
             var probe = template
             probe.start = box.origin
             probe.end = CGPoint(x: box.maxX, y: box.maxY)
-            let clearing = MeasureBuilder.clearingHeadOffset(content: probe, from: probe.start, to: probe.end)
             // The side that holds the head and a readout beside it, below or
             // right when both do; failing that, the roomier one.
             let chip = probe.estimatedLabelSize
             let across = horizontal ? chip.height : chip.width
-            // A span shorter than its readout cannot carry the number on its
-            // head without hiding it (`labelHidesItsLine`), so the readout
-            // goes just past the head instead, and the head has no reason to
-            // stand a readout's reach off the box: it hugs it. A bracket
-            // standing far off a small box, with nothing riding it, read as
-            // an empty box rather than a dimension (the judge on the 26 and
-            // 30 point brackets, 2026-11-11).
+            // Every bracket hugs its box, its number just past the head. A
+            // short span's number on its head hid the line (the judge on the
+            // 26 and 30 point brackets), and a long span's head standing a
+            // readout's height off the box, number riding it, read as a line
+            // floating off its object (the user on the 124 and 220 point
+            // brackets, 2026-11-11).
             let span = horizontal ? box.width : box.height
             let alongHalf = (horizontal ? chip.width : chip.height) / 2
-            let hugs = span / 2 - alongHalf < MeasureContent.minimumVisibleArm
-            let standoff = hugs ? MeasureBuilder.minimumClearingReach : clearing
-            let needed = hugs
-                ? standoff + MeasureContent.chipLineGap + across + MeasureBuilder.canvasEdgeGap
-                : clearing + across / 2 + MeasureBuilder.canvasEdgeGap
+            let standoff = MeasureBuilder.minimumClearingReach
+            let needed = standoff + MeasureContent.chipLineGap + across + MeasureBuilder.canvasEdgeGap
             let homeBelow = room(true, inHome: true), homeAbove = room(false, inHome: true)
             let below = room(true), above = room(false)
+            // An empty box (a text field, a well) with no room for the number
+            // on either side inside its card carries its dimension line
+            // across its own middle, ticks on its edges and the number on
+            // the line. Hung outside, the line crossed into the next card and
+            // its leg ran into the box's other bracket (the 220 point field).
+            let thick = horizontal ? box.height : box.width
+            // Only a line long enough to show a good arm either side of its
+            // number: a field's height carried inside it is all number.
+            if homeBelow < needed, homeAbove < needed, span >= 4 * alongHalf, thick >= across + 2,
+               isEmpty(box) {
+                if horizontal {
+                    return (CGPoint(x: box.minX, y: box.midY), CGPoint(x: box.maxX, y: box.midY), 0)
+                }
+                return (CGPoint(x: box.midX, y: box.minY), CGPoint(x: box.midX, y: box.maxY), 0)
+            }
             let positive: Bool
             if homeBelow >= needed || homeAbove >= needed {
                 positive = homeBelow >= needed
@@ -850,12 +938,34 @@ public enum RedlineLayout {
             return (CGPoint(x: x, y: box.minY), CGPoint(x: x, y: box.maxY), positive ? reach : -reach)
         }
 
+        /// Puts `new` where `old` was among the lines readouts stay off.
+        mutating func swapLine(_ old: MeasureContent, for new: MeasureContent) {
+            let was = RedlineLayout.inked(old)
+            if let k = lines.firstIndex(of: was) { lines[k] = RedlineLayout.inked(new) }
+        }
+
+        /// Whether `box` holds nothing: no word, mark or control inside it.
+        func isEmpty(_ box: CGRect) -> Bool {
+            !regions.contains(box) && !obstacles.contains { o in
+                o != box && !o.contains(box) && o.intersects(box.insetBy(dx: 2, dy: 2))
+            }
+        }
+
         /// The smallest card the middle of `c`'s line is in, or nil for the
         /// page.
         func homeRegion(of c: MeasureContent) -> CGRect? {
             let g = c.caliperGeometry()
             let mid = CGPoint(x: (g.headA.x + g.headB.x) / 2, y: (g.headA.y + g.headB.y) / 2)
             return regions.filter { $0.contains(mid) }.min { $0.width * $0.height < $1.width * $1.height }
+        }
+
+        /// Everything round `box`, so a readout kept off it stays inside it.
+        static func outside(_ box: CGRect) -> [CGRect] {
+            let big: CGFloat = 1_000_000
+            return [CGRect(x: -big, y: -big, width: 2 * big, height: box.minY + big),
+                    CGRect(x: -big, y: box.maxY, width: 2 * big, height: big),
+                    CGRect(x: -big, y: box.minY, width: box.minX + big, height: box.height),
+                    CGRect(x: box.maxX, y: box.minY, width: big, height: box.height)]
         }
 
         /// What a readout keeps off to stay in `home`: every card that is
@@ -883,7 +993,17 @@ public enum RedlineLayout {
             let ownLines = RedlineLayout.inked(c)
             let otherLines = lines.filter { $0 != ownLines }.flatMap { $0 }
             let blocked = obstacles.filter { o in !subjects.contains(o) } + readouts + otherLines
-            let mine = subjects.map { $0.insetBy(dx: -1, dy: -1) }
+            // A line across the middle of an empty box (`side(of:)`) carries
+            // its number inside that box and nowhere else; any other keeps
+            // its number off the box it measures.
+            let g = c.caliperGeometry()
+            let middle = CGPoint(x: (g.headA.x + g.headB.x) / 2, y: (g.headA.y + g.headB.y) / 2)
+            let within = c.headOffset == 0 ? subjects.first { $0.insetBy(dx: 1, dy: 1).contains(middle) } : nil
+            let mine = within.map(Self.outside) ?? subjects.map { $0.insetBy(dx: -1, dy: -1) }
+            // A number stepped off its line stays within its own pill's
+            // length of it: further, and nobody ties the two together (the
+            // 12 point gap's number, 2026-11-11).
+            let longestLeader = max(chip.width, chip.height)
             let outward: MeasureLabelPlacement = c.headOffset < 0 ? .clearNegative : .clearPositive
             let inward: MeasureLabelPlacement = outward == .clearPositive ? .clearNegative : .clearPositive
 
@@ -916,6 +1036,7 @@ public enum RedlineLayout {
                         // note tied to its mark.
                         if straight, abs(run.1.x - run.0.x) > 1, abs(run.1.y - run.0.y) > 1 { return }
                         if leaders.contains(where: { RedlineLayout.cross($0, run) }) { return }
+                        if hypot(run.1.x - run.0.x, run.1.y - run.0.y) > longestLeader { return }
                         let over = RedlineLayout.inWay(of: run.0, among: blocked + subjects)
                         if LabelPlacer.segment(from: run.0, to: run.1, crosses: over) {
                             guard leadersMayCross else { return }
