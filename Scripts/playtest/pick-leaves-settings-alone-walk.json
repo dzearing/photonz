@@ -154,7 +154,7 @@
   {
    "do": "expect",
    "field": "Width",
-   "reads": "25"
+   "reads": "25 ±1"
   },
   {
    "do": "click",
@@ -191,7 +191,7 @@
   {
    "do": "expect",
    "field": "Width",
-   "reads": "25"
+   "reads": "25 ±1"
   },
   {
    "do": "click",
