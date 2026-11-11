@@ -202,4 +202,80 @@ extension AskMotion {
         guard length > 0.05 else { return nil }
         return CGVector(dx: way.dx / length, dy: way.dy / length)
     }
+
+    // MARK: What lands in an opening lands in its middle
+
+    /// `steps` with a part that goes out of sight landing at the mouth of an
+    /// open outline that stays still (a can's U, a box, a cup: a drawn line
+    /// whose two ends are its mouth) moved across that mouth to its middle:
+    /// its landing key and the keys holding it there, along the line between
+    /// the two ends, never towards or away from it. On 2026-11-11 the user's
+    /// trash landed 2.6 right of the can's middle, across its right wall, and
+    /// faded there in every frame: it read as stuck on the rim, and no bounce
+    /// into the can was clear of the wall. Only a part narrower than the
+    /// mouth, landing within the mouth's span or a little past it, and near
+    /// the mouth's line (no further from it than its own size). Ink, keys and
+    /// time only, any subject.
+    static func landsInTheMiddle(_ steps: [AskStep]) -> [AskStep] {
+        guard let lap = Lap(steps) else { return steps }
+        func layer(_ step: AskStep) -> String? { step.arguments["layer"]?.stringValue }
+        func isPosition(_ step: AskStep) -> Bool {
+            step.tool == "set_keys" && step.arguments["property"]?.stringValue == MotionProperty.position.rawValue
+        }
+        // The mouths: each still open line of three points or more, its two ends.
+        let stillNames = Set(lap.still.map { plain($0.name) })
+        let mouths: [(a: CGPoint, b: CGPoint, half: CGFloat)] = lap.art.parts.compactMap { part in
+            guard let unit = part.groups.first ?? part.name, stillNames.contains(plain(unit)),
+                  case .path(let outline) = part.shape, !outline.closed, outline.rings.count == 1,
+                  let ring = outline.rings.first, ring.count >= 3,
+                  let a = ring.first?.point, let b = ring.last?.point, hypot(b.x - a.x, b.y - a.y) > 0.5 else { return nil }
+            return (a, b, part.strokeWidth / 2)
+        }
+        guard !mouths.isEmpty else { return steps }
+        var out = steps
+        for index in out.indices where isPosition(out[index]) {
+            guard let name = layer(out[index]), let part = partReference(name)?.part, lap.isMover(part),
+                  !out[(index + 1)...].contains(where: { isPosition($0) && layer($0) == name }),
+                  let current = Lap(out) else { continue }
+            let keys = AskMotionCheck.timed(out[index])
+            guard let landedAt = goneAt(part, keys: keys, in: out),
+                  let landing = keys.firstIndex(where: { abs($0.seconds - landedAt) <= 0.0005 }), landing > 0 else { continue }
+            let points = current.ink(part, at: keys[landing].seconds).flatMap { $0 }
+            guard let left = points.map(\.x).min(), let right = points.map(\.x).max(),
+                  let top = points.map(\.y).min(), let bottom = points.map(\.y).max() else { continue }
+            let middle = CGPoint(x: (left + right) / 2, y: (top + bottom) / 2)
+            let size = max(right - left, bottom - top)
+            for mouth in mouths {
+                let span = hypot(mouth.b.x - mouth.a.x, mouth.b.y - mouth.a.y)
+                let along = CGVector(dx: (mouth.b.x - mouth.a.x) / span, dy: (mouth.b.y - mouth.a.y) / span)
+                // Narrower than the mouth inside its lines.
+                let inside = span - 2 * mouth.half
+                let across = points.map { $0.x * along.dx + $0.y * along.dy }
+                guard let low = across.min(), let high = across.max(), high - low < inside else { continue }
+                let t = (middle.x - mouth.a.x) * along.dx + (middle.y - mouth.a.y) * along.dy
+                let off = abs((middle.x - mouth.a.x) * along.dy - (middle.y - mouth.a.y) * along.dx)
+                guard t >= -0.25 * span, t <= 1.25 * span, off <= size else { continue }
+                let shift = span / 2 - t
+                guard abs(shift) > 0.25 else { break }
+                let way = CGVector(dx: along.dx * shift, dy: along.dy * shift)
+                guard var object = out[index].arguments.objectValue, var list = object["keys"]?.arrayValue else { break }
+                var moved = [keys[landing].seconds]
+                for later in keys.indices where later > landing {
+                    guard keys[later].value == keys[landing].value else { break }
+                    moved.append(keys[later].seconds)
+                }
+                for slot in list.indices {
+                    guard let at = list[slot]["seconds"]?.doubleValue, moved.contains(where: { abs($0 - at) <= 0.0005 }),
+                          var one = list[slot].objectValue,
+                          let x = one["value"]?["x"]?.doubleValue, let y = one["value"]?["y"]?.doubleValue else { continue }
+                    one["value"] = ["x": .number(rounded(CGFloat(x) + way.dx)), "y": .number(rounded(CGFloat(y) + way.dy))]
+                    list[slot] = .object(one)
+                }
+                object["keys"] = .array(list)
+                out[index] = AskStep(tool: out[index].tool, arguments: .object(object))
+                break
+            }
+        }
+        return out
+    }
 }

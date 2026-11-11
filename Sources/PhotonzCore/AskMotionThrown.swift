@@ -65,13 +65,21 @@ extension AskMotion {
                 object["keys"] = .array(changed)
                 var trial = out
                 trial[index] = AskStep(tool: out[index].tool, arguments: .object(object))
-                // Its way in from the edge crosses nothing seen.
+                // Its way in from the edge crosses nothing seen that the
+                // plan did not already have it meet then: the last of the way
+                // into what it arrives against is the hit the plan made (pass
+                // twelve's walk: the trash met the open lid's underside at
+                // 0.78 s on the model's own way in, and was left appearing in
+                // mid-air for it).
                 guard let after = Lap(trial) else { continue }
                 let reaches = keys[start + 1].seconds
                 var moment = from, crosses = false
                 while moment < reaches, !crosses {
-                    let mine = after.ink(part, at: moment)
-                    crosses = seen(moment) && others.contains { inkMeets(mine, after.ink($0, at: moment), within: -passesThrough) }
+                    let mine = after.ink(part, at: moment), was = lap.ink(part, at: moment)
+                    crosses = seen(moment) && others.contains { other in
+                        inkMeets(mine, after.ink(other, at: moment), within: -passesThrough)
+                            && !inkMeets(was, lap.ink(other, at: moment), within: -passesThrough)
+                    }
                     moment += 0.02
                 }
                 guard !crosses else { object["keys"] = .array(list); continue }

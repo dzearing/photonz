@@ -128,8 +128,16 @@ struct AskMotionTouchesKeptTests {
         let away = AskMotionCheck.problems(steps).joined(separator: " ")
         #expect(!away.contains("passes through"), "\(away)")
         let up = try Self.ball(#"[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.3,"value":{"x":0,"y":0}},{"seconds":0.8,"touches":"$1/lid","value":{"x":-7,"y":1}},{"seconds":1.1,"value":{"x":-8,"y":-7}},{"seconds":1.6,"value":{"x":0,"y":0}}]"#, replace: false)
+        // Since 2026-11-11 the landing turns that bounce off the lid itself
+        // (`bouncedAway` takes the way back too): sent back only if, landed,
+        // it still goes through.
         let through = AskMotionCheck.problems([steps[0], steps[1], up]).joined(separator: " ")
-        #expect(through.contains("trash passes through lid from 0."), "\(through)")
+        let landed = try #require(AskMotion.Lap(AskMotion.touchesPlaced([steps[0], steps[1], up])))
+        let goesThrough = stride(from: 0.82, through: 1.6, by: 0.02).contains { moment in
+            AskMotion.inkMeets(landed.ink("trash", at: moment), landed.ink("lid", at: moment), within: -AskMotion.passesThrough)
+        }
+        #expect(through.contains("trash passes through lid from 0.") == goesThrough, "\(through)")
+        #expect(!goesThrough)
         // Into what stays still is in behind its front: never asked about.
         let into = try Self.ball(#"[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.3,"value":{"x":0,"y":0}},{"seconds":0.8,"touches":"$1/can","value":{"x":-7,"y":6}},{"seconds":1.0,"value":{"x":-7,"y":12}},{"seconds":1.6,"value":{"x":0,"y":0}}]"#, replace: false)
         #expect(!AskMotionCheck.problems([steps[0], steps[1], into, hide]).joined().contains("passes through can"))

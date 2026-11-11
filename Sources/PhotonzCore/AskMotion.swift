@@ -519,13 +519,13 @@ public enum AskMotion {
     /// out of sight where something shuts over it goes in past it, once
     /// every hit is placed (`tuckedIn`).
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
-        let timed = foldsOpen(foldsLand(tuckedIn(touchesPlaced(hitStarts(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(steps)))))))))))
+        let timed = foldsOpen(foldsLand(tuckedIn(touchesPlaced(landsInTheMiddle(hitStarts(staysTillGone(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(steps)))))))))))))
         let made = fitted(comesClear(hidden(hingesShared(timed))))
         // Hinges again for the room made, if any: lines and corner rounds
         // keep their size on the final grid as the drawing shrinks.
         let grow = viewBoxWidth(made).flatMap { after in viewBoxWidth(timed).map { after / $0 } } ?? 1
-        guard grow > 1.001 else { return jumpsUnseen(made) }
-        return jumpsUnseen(fitted(comesClear(hidden(hingesShared(timed, grow: grow)))))
+        guard grow > 1.001 else { return keysApart(jumpsUnseen(made)) }
+        return keysApart(jumpsUnseen(fitted(comesClear(hidden(hingesShared(timed, grow: grow))))))
     }
 
     /// The width of the drawing's viewBox, if it has one.

@@ -204,12 +204,17 @@ extension AskMotion {
                     moment = next
                 }
                 guard far >= AskMotionCheck.longJourney else { continue }
-                // Where it arrives: the first key after the fade starts that the next one does not move from.
+                // Where it arrives: a key of its journey at the very moment
+                // it is gone (pass twelve's walk: gone at 1.1 s in the can,
+                // then back to the start unseen by the lap's end), else the
+                // first key after the fade starts that the next one does not
+                // move from.
+                let goneThere = moves.contains { abs($0.seconds - to.seconds) <= near }
                 guard let landing = moves.indices.first(where: { at in
                     moves[at].seconds > from.seconds + 0.0005 && (at + 1 == moves.count || moves[at + 1].value == moves[at].value)
                 }) else { continue }
-                var arrives = moves[landing].seconds
-                if index + 2 < keys.count { arrives = min(arrives, keys[index + 2].seconds - near) }
+                var arrives = goneThere ? to.seconds : moves[landing].seconds
+                if index + 2 < keys.count { arrives = min(arrives, keys[index + 2].seconds - 2 * near) }
                 // Faded out by the very moment it lands (run 20261111-103646:
                 // the trash faded over its whole throw into the can): seen
                 // the whole way, faded over the last of it.
@@ -222,6 +227,9 @@ extension AskMotion {
                     continue
                 }
                 guard arrives > to.seconds + near else { continue }
+                // Its fade's last key has to stand apart from the key after,
+                // or the app reads the two as one and refuses the fade.
+                if index + 2 < keys.count, keys[index + 2].seconds - arrives <= near { continue }
                 let starts = max(to.seconds, arrives - fadesWhereItArrives)
                 keys[index + 1] = (Double(rounded(CGFloat(starts))), from.value, to.curve)
                 keys.insert((Double(rounded(CGFloat(arrives))), to.value, nil), at: index + 2)
@@ -234,6 +242,106 @@ extension AskMotion {
                 if let curve = key.curve { json["curve"] = .string(curve) }
                 return .object(json)
             })
+            return AskStep(tool: step.tool, arguments: .object(object))
+        }
+    }
+
+    // MARK: Gone where it landed
+
+    /// `steps` with a part that is still fading out when it sets off back the
+    /// way it came (its next key turns it round, more than a right angle)
+    /// held where it arrived until it is out of sight: a position key at the
+    /// moment its fade ends, the arrival's value. Coming back is for the next
+    /// lap, unseen. On 2026-11-11 the model faded the trash from 1.1 to
+    /// 1.2 s and sent it home from 1.1 s: a grey ghost of it rose out of the
+    /// can over the shutting lid. Keys and time only.
+    static func staysTillGone(_ steps: [AskStep]) -> [AskStep] {
+        func layer(_ step: AskStep) -> String? { step.arguments["layer"]?.stringValue }
+        func property(_ step: AskStep) -> String? { step.arguments["property"]?.stringValue }
+        func point(_ value: AgentJSON) -> CGPoint? {
+            guard let x = value["x"]?.doubleValue, let y = value["y"]?.doubleValue else { return nil }
+            return CGPoint(x: x, y: y)
+        }
+        let near = Double(PropertyKeys.nearMS) / 1000
+        var out = steps
+        for index in out.indices where out[index].tool == "set_keys" && property(out[index]) == MotionProperty.position.rawValue {
+            guard let name = layer(out[index]),
+                  !out[(index + 1)...].contains(where: { $0.tool == "set_keys" && layer($0) == name && property($0) == MotionProperty.position.rawValue }),
+                  let fade = out.last(where: { $0.tool == "set_keys" && layer($0) == name && property($0) == MotionProperty.opacity.rawValue }),
+                  var object = out[index].arguments.objectValue, var list = object["keys"]?.arrayValue else { continue }
+            let keys = AskMotionCheck.timed(out[index])
+            guard keys.count == list.count else { continue }
+            let fades = AskMotionCheck.timed(fade)
+            // Each fade out: from seen to out of sight.
+            for (from, to) in zip(fades, fades.dropFirst()) where (from.value.doubleValue ?? 0) >= 50 && (to.value.doubleValue ?? 100) <= unseen {
+                // The key it arrived at as the fade began, or during it.
+                guard let k = keys.indices.last(where: { $0 > 0 && keys[$0].seconds <= to.seconds - near && keys[$0].seconds >= from.seconds - near }),
+                      k + 1 < keys.count, keys[k + 1].seconds > to.seconds + near,
+                      let before = point(keys[k - 1].value), let here = point(keys[k].value), let next = point(keys[k + 1].value) else { continue }
+                let came = CGVector(dx: here.x - before.x, dy: here.y - before.y), goes = CGVector(dx: next.x - here.x, dy: next.y - here.y)
+                let lengths = hypot(came.dx, came.dy) * hypot(goes.dx, goes.dy)
+                guard lengths > 1e-6, (came.dx * goes.dx + came.dy * goes.dy) / lengths < 0 else { continue }
+                var hold: [String: AgentJSON] = ["seconds": .number(rounded(CGFloat(to.seconds))), "value": keys[k].value]
+                if let curve = keys[k].curve { hold["curve"] = .string(curve) }
+                // The way home keeps the curve it had; the arrival stands still.
+                if let slot = list.firstIndex(where: { abs(($0["seconds"]?.doubleValue ?? -1) - keys[k].seconds) <= 0.0005 }),
+                   var arrival = list[slot].objectValue {
+                    arrival["curve"] = .string(AgentKeyCurve.hold)
+                    list[slot] = .object(arrival)
+                }
+                list.append(.object(hold))
+                list.sort { ($0["seconds"]?.doubleValue ?? 0) < ($1["seconds"]?.doubleValue ?? 0) }
+                object["keys"] = .array(list)
+                out[index] = AskStep(tool: out[index].tool, arguments: .object(object))
+                break
+            }
+        }
+        return out
+    }
+
+    // MARK: Keys the app takes
+
+    /// The least gap `keysApart` leaves between two keys it moves apart.
+    static let keyGap = 0.03
+
+    /// `steps` with no two keys of one set_keys closer than the app takes
+    /// (`PropertyKeys.nearMS`): the inner key of a pair too close moves away
+    /// from its neighbour by `keyGap` where there is room, and goes where
+    /// there is not. The app refuses the whole call for one such pair, and
+    /// on 2026-11-11 a fade the landing had moved to 20 ms before the lap's
+    /// last key was refused whole: the trash sat in view all lap and the row
+    /// said "Left out a layer: it could not be done". Time only.
+    public static func keysApart(_ steps: [AskStep]) -> [AskStep] {
+        func seconds(_ key: AgentJSON) -> Double { key["seconds"]?.doubleValue ?? 0 }
+        func at(_ key: AgentJSON, _ moment: Double) -> AgentJSON {
+            guard var object = key.objectValue else { return key }
+            object["seconds"] = .number(rounded(CGFloat(moment)))
+            return .object(object)
+        }
+        return steps.map { step in
+            guard step.tool == "set_keys", var object = step.arguments.objectValue,
+                  var keys = object["keys"]?.arrayValue, keys.count > 1 else { return step }
+            keys.sort { seconds($0) < seconds($1) }
+            func tooClose(_ a: Double, _ b: Double) -> Bool { ((b - a) * 1000).rounded() <= Double(PropertyKeys.nearMS) }
+            var changed = false
+            var index = 0
+            while index + 1 < keys.count {
+                let (a, b) = (seconds(keys[index]), seconds(keys[index + 1]))
+                guard tooClose(a, b) else { index += 1; continue }
+                changed = true
+                let last = index + 1 == keys.count - 1
+                if !last, !tooClose(a + keyGap, seconds(keys[index + 2])) {
+                    keys[index + 1] = at(keys[index + 1], a + keyGap)
+                } else if index > 0, !tooClose(seconds(keys[index - 1]), b - keyGap) {
+                    keys[index] = at(keys[index], b - keyGap)
+                } else if last, index == 0 {
+                    keys.remove(at: index + 1)
+                } else {
+                    keys.remove(at: last ? index : index + 1)
+                }
+            }
+            guard changed else { return step }
+            object["keys"] = .array(keys)
             return AskStep(tool: step.tool, arguments: .object(object))
         }
     }
