@@ -1,0 +1,32 @@
+{
+  "id": "find-out-whether-the-view-edit-switch-s-picked-c",
+  "title": "Find out whether the View | Edit switch's picked chip stays grey in a window that should be active",
+  "goal": "In a scripted walk, the picked half of the title bar's View | Edit switch is drawn grey instead of the accent blue when the recording is the first window the walk opens, in dark appearance, even though the window is in front and active. Find out whether a person can ever see that, for example when a recording opens while Photonz is in the background and they then click into it.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 4090,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-11T02:28:03.058Z",
+  "updated": "2026-11-11T02:28:07.834Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-10 on 7f1ecd99+ with the probe in front (setup front, person away): a copy of segmented-thumb-film-walk that opens the recording first and switches to dark photographs the chip grey (#4a-ish, colourfulness 0.03 against a rail of 0.01) in a snapshot AND in every film frame, with the window key, main and the app active (logged isKeyWindow/isMainWindow/NSApp.isActive all true), the traffic lights and the transport's play button in colour. Not fixed by: the appearance step before open, ordering the window to the front at .normal level during the film (watcher held off), a click on the canvas first. Fixed by: opening a blank canvas first, then the recording (the same order segmented-chip-refraction-film-walk uses, whose dark title bar film passes). The walk now opens a blank canvas first so it films the motion it is about; this task is the open question. Not checked: light appearance with the recording first, and anything outside a walk (the terminal has no Screen Recording grant, so no picture of a background-opened window could be taken). The chip is SegmentedControl's chip, `.glassEffect(.regular.tint(...))` in TitlebarViewEditSwitch.",
+  "acceptance": [
+    "Says, with a picture, whether a person opening a recording while Photonz is in the background and then clicking into the window sees the View | Edit chip grey or blue",
+    "If a person can see it grey, the chip shows the accent as soon as the window is active, and a walk proves it with the recording as the walk's first window",
+    "segmented-thumb-film-walk no longer needs its leading blank canvas, or its note says why it still does"
+  ],
+  "log": [
+    {
+      "t": "2026-11-11T02:28:03.060Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-11T02:28:07.833Z",
+      "note": "walks segmented-thumb-film-walk -> none"
+    }
+  ],
+  "walks": []
+}

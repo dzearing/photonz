@@ -16720,3 +16720,15 @@
 {"t":"2026-11-11T01:00:02.798Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-11T01:00:02.873Z","ev":"task_pending","id":"walks-that-fail-in-the-full-sweep-26","from":"in_progress","note":"27 of 33 owned walks pass twice; 4 still fail (design-mode-tool-strip, ask-makes-it-again-as-a-photo, two segmented thumb films), diagnosis in the log"}
 {"t":"2026-11-11T01:00:02.948Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-26","walks":["design-mode-tool-strip-walk","ask-makes-it-again-as-a-photo-walk","segmented-thumb-film-walk","segmented-chip-refraction-film-walk"]}
+{"t":"2026-11-11T01:00:44.586Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-26","title":"Walks that fail in the full sweep","priority":"p1-high"}
+{"t":"2026-11-11T02:28:03.062Z","ev":"task_created","id":"find-out-whether-the-view-edit-switch-s-picked-c","priority":"p2-normal","title":"Find out whether the View | Edit switch's picked chip stays grey in a window that should be active"}
+{"t":"2026-11-11T02:28:07.835Z","ev":"task_walks","id":"find-out-whether-the-view-edit-switch-s-picked-c","walks":[]}
+{"t":"2026-11-11T02:28:24.868Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-11T02:28:24.947Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-11T02:28:25.023Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-11T02:41:08.297Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-11T03:28:42.114Z","ev":"task_created","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it","priority":"p1-high","title":"A walk that pulls a Library tile by hand sees it come away again on macOS 27"}
+{"t":"2026-11-11T03:33:42.219Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-26","walks":[]}
+{"t":"2026-11-11T03:33:42.296Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-11T03:33:48.008Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-26","walks":["design-mode-tool-strip-walk","ask-makes-it-again-as-a-photo-walk","segmented-thumb-film-walk","segmented-chip-refraction-film-walk","tool-settings-capsule-walk","transitions-where-clips-meet-walk","title-pages-and-name-cards-walk"]}
+{"t":"2026-11-11T03:34:10.127Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep-26","from":"in_progress","note":"All 33 walks the sweep gave this task pass twice in a row on their own. Last four fixed in e34c74ea: the tool options bar's Show/Lens/Component are now the panel's dropdown and Snap is segmented (design-mode-tool-strip, tool-settings-capsule); Ask's photo row says what it made, 'Made a photo of a red fox' (ask-makes-it-again-as-a-photo, two passes of about 9.5 min each); filmThumb's backdrop no longer reads the purple Ask button (both segmented films). 5107bcbc: transitions-where-clips-meet and title-pages-and-name-cards were wrong walks, now pass twice. Four pickUpTile walks filed p1 (a-walk-that-pulls-a-library-tile-by-hand-sees-it); grey View|Edit chip in a walk's first window filed p2. Scripts/test.sh green. Audit 2026-11-10-tool-bar-menus-and-ask-photo-row."}

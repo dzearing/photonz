@@ -1,0 +1,33 @@
+{
+  "id": "a-walk-that-pulls-a-library-tile-by-hand-sees-it",
+  "title": "A walk that pulls a Library tile by hand sees it come away again on macOS 27",
+  "goal": "Four scripted walks press a Library tile (a colour, a text style, a title preset, a transition) and pull it toward the picture the way a hand does, to prove a person can drag it out. On this Mac every one of them reports the tile never came away, in every sweep since at least 2026-11-01. Find out whether a person's drag is really broken or only the walk's way of watching for it, and fix whichever it is.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 3990,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-11T03:28:42.110Z",
+  "updated": "2026-11-11T03:28:42.113Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-10 on e34c74ea (person away, screen unlocked): `Scripts/playtest-all.sh --no-build tile-comes-away-walk text-style-comes-away-walk title-presets-library-shelf-walk transition-tile-comes-away-walk` -> all FAILED at pickUpTile, e.g. 'the tile \"Accent\" did not come away: it was pressed at (1127, 255) and pulled to (508, 611) in the window, and nothing asked to start a drag.' Same with setup front: true (the probe active and key), so it is not the front. Every sweep log under queue/sweep (2026-11-01 to 11-08) shows the three Library ones failing the same way. pickUpTile (PlaytestHarness.pickUpTile) posts mouseMoved/down/dragged/up with NSApp.postEvent and watches NSView.beginDraggingSession via a swizzle on NSView (Sources/Photonz/Playtest/PlaytestTilePickUp.swift, unchanged since 2026-09-12). Suspects, not checked: on macOS 27 SwiftUI's draggable begins its session through a subclass override or another API the NSView swizzle never sees, or no longer starts a drag from posted (non-HID) events. dragTile (payload handed over directly) still passes, so drops work; only the pick-up is unproved. transition-tile-comes-away-walk now opens Transitions by its header with the probe in front (Transitions starts folded, ad5e0e11) and fails only at the pick-up.",
+  "acceptance": [
+    "Says, with evidence, whether dragging a Library tile out by hand works for a person on macOS 27",
+    "tile-comes-away-walk, text-style-comes-away-walk, title-presets-library-shelf-walk and transition-tile-comes-away-walk each pass twice in a row on their own",
+    "If the app was broken, a person can drag each of those four kinds of tile onto the picture or timeline again"
+  ],
+  "log": [
+    {
+      "t": "2026-11-11T03:28:42.112Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "tile-comes-away-walk",
+    "text-style-comes-away-walk",
+    "title-presets-library-shelf-walk",
+    "transition-tile-comes-away-walk"
+  ]
+}
