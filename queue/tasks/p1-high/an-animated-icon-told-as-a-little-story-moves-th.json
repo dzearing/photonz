@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 10,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-10T15:28:38.787Z",
+  "updated": "2026-11-11T04:57:24.742Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -238,6 +238,10 @@
     {
       "t": "2026-11-10T15:28:38.783Z",
       "note": "Bounce away from what is hit, contact runs kept on the lid, buried touches pushed out, thrown in from outside (06a359946). Story bar not met (1 of 6 in three runs). Per the digest, the user decides whether to keep going: card with the marked reel frames."
+    },
+    {
+      "t": "2026-11-11T04:57:24.741Z",
+      "note": "decision \"After nine passes the trash meets the lid and steps a little way off it before the lid shuts (boxed frames). Stop here, or keep going on the bounce?\" resolved: Keep going, judged on your trash (/Users/dzearing/Pictures/Screenshots/Screenshot 2026-11-10 at 20.57.06.png this is the ugliest trashcan icon i've ever seen.)"
     }
   ],
   "started": "2026-11-10T13:22:17.874Z",

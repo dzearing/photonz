@@ -35,7 +35,12 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
+  "status": "resolved",
   "created": "2026-11-10T15:28:20.857Z",
-  "shot": "2026-11-10-story-trash-bounce-marked.png"
+  "shot": "2026-11-10-story-trash-bounce-marked.png",
+  "answer": {
+    "choice": "b",
+    "note": "/Users/dzearing/Pictures/Screenshots/Screenshot 2026-11-10 at 20.57.06.png this is the ugliest trashcan icon i've ever seen.",
+    "resolved": "2026-11-11T04:57:24.701Z"
+  }
 }
