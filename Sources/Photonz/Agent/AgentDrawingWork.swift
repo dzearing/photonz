@@ -378,7 +378,7 @@ enum AgentDrawingWork {
     /// The redline of the picture, chosen in code off its layout
     /// (`RedlinePlan`): the same picture and region read the same every time,
     /// so the ids a look handed out name the same marks when they are laid.
-    private static func redline(_ editor: EditorState, region: CGRect?) async throws -> (marks: [RedlineMark], obstacles: [CGRect], edges: [CGRect]) {
+    private static func redline(_ editor: EditorState, region: CGRect?) async throws -> (marks: [RedlineMark], obstacles: [CGRect], edges: [CGRect], regions: [CGRect]) {
         let document = try AgentWork.document(of: editor)
         let read = await analysis(of: editor)
         guard !read.luma.isEmpty else {
@@ -394,7 +394,8 @@ enum AgentDrawingWork {
             let canvas = CGRect(x: 0, y: 0, width: luma.width, height: luma.height)
             return (RedlinePlan.marks(in: nodes, canvas: canvas, pixelScale: scale, focus: region),
                     RedlinePlan.obstacles(in: nodes, canvas: canvas, pixelScale: scale),
-                    RedlinePlan.edges(in: nodes, canvas: canvas, pixelScale: scale))
+                    RedlinePlan.edges(in: nodes, canvas: canvas, pixelScale: scale),
+                    RedlinePlan.regions(in: nodes, canvas: canvas, pixelScale: scale))
         }.value
     }
 
@@ -412,10 +413,21 @@ enum AgentDrawingWork {
         let chosen = found.marks.enumerated().filter { ids.contains(RedlinePlan.id($0.offset)) }
         let before = Set(editor.document?.layers.map(\.id) ?? [])
         editor.setTool(.measure)
-        editor.asOneUndoStep { editor.addRedline(chosen.map(\.element), obstacles: found.obstacles, edges: found.edges) }
+        var laid: [RedlineMark] = []
+        editor.asOneUndoStep {
+            laid = editor.addRedline(chosen.map(\.element), obstacles: found.obstacles, edges: found.edges,
+                                     regions: found.regions)
+        }
         let added = (editor.document?.layers ?? []).filter { !before.contains($0.id) }
         guard !added.isEmpty else { throw Failure("Photonz could not lay those measurements.") }
-        return .json(Marked(layers: added.map(\.id.uuidString), marked: chosen.map { RedlinePlan.id($0.offset) }))
+        // A mark whose number had no clear spot is left out on purpose, and
+        // says so, so nobody draws it back by hand on a divider.
+        let marked = chosen.filter { laid.contains($0.element) }.map { RedlinePlan.id($0.offset) }
+        let left = chosen.filter { !laid.contains($0.element) }
+        return .json(Marked(layers: added.map(\.id.uuidString), marked: marked,
+                            leftOut: left.isEmpty ? nil : left.map { RedlinePlan.id($0.offset) },
+                            why: left.isEmpty ? nil
+                                : "Left out on purpose: no clear spot for the number off the cards' edges and dividers. Do not add them by hand."))
     }
 
     // MARK: Misalignments
@@ -443,6 +455,8 @@ enum AgentDrawingWork {
     struct Marked: Encodable {
         let layers: [String]
         let marked: [String]
+        var leftOut: [String]? = nil
+        var why: String? = nil
     }
 
     private static func markMisalignments(_ editor: EditorState, region: CGRect?, ids: [String]) async throws -> Answer {

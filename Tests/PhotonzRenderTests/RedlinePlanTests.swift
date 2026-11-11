@@ -94,11 +94,11 @@ struct RedlinePlanTests {
         #expect(fields.first?.what == "Field")
     }
 
-    @Test("The spacing a designer marks: padding, row height, section gap, the gap between buttons, a label's inset; never a margin to where the screenshot was cropped")
+    @Test("The spacing a designer marks: padding, row height, section gap, the gap between buttons; never a margin to where the screenshot was cropped")
     func spacingRoles() throws {
         let r = try Self.read(Self.settings)
         let roles = Set(r.marks.map(\.role))
-        for role in [RedlineMark.Role.padding, .rhythm, .sectionGap, .gap, .inset] {
+        for role in [RedlineMark.Role.padding, .rhythm, .sectionGap, .gap] {
             #expect(roles.contains(role), "missing \(role): \(r.marks.map(\.what))")
         }
         func value(_ role: RedlineMark.Role) -> CGFloat? { r.marks.first { $0.role == role }?.value(pixelScale: 2) }
@@ -137,13 +137,18 @@ struct RedlinePlanTests {
         RedlinePlan.edges(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2)
     }
 
+    static func regions(_ r: Read) -> [CGRect] {
+        RedlinePlan.regions(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2)
+    }
+
     /// Every caliper the redline draws, placed as the app places them.
     static func laid(_ r: Read) -> [MeasureContent] {
         // The Measure tool's own default styles, as the app lays them.
         let size = MeasureStyles().content(for: .size)
         let spacing = MeasureStyles().content(for: .spacing)
         let obstacles = RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2)
-        return RedlineLayout.lay(r.marks, obstacles: obstacles, edges: Self.edges(r), canvas: r.canvas,
+        return RedlineLayout.lay(r.marks, obstacles: obstacles, edges: Self.edges(r), regions: Self.regions(r),
+                                 canvas: r.canvas,
                                  size: size, spacing: spacing).flatMap(\.calipers)
     }
 
@@ -153,10 +158,14 @@ struct RedlinePlanTests {
             let r = try Self.read(name)
             let calipers = Self.laid(r)
             if name == Self.settings {
-                // Leaving a mark out is the last resort, not the habit.
+                // Every size is laid; spacing is left out only when its
+                // number has no tidy spot, and most of the redline stays.
                 let laid = RedlineLayout.lay(r.marks, obstacles: RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2), edges: Self.edges(r),
-                                             canvas: r.canvas, size: MeasureStyles().content(for: .size), spacing: MeasureStyles().content(for: .spacing))
-                #expect(laid.count == r.marks.count, "\(laid.map(\.mark.what)) of \(r.marks.map(\.what))")
+                                             regions: Self.regions(r), canvas: r.canvas,
+                                             size: MeasureStyles().content(for: .size), spacing: MeasureStyles().content(for: .spacing))
+                #expect(laid.filter { $0.mark.role == .size }.count == r.marks.filter { $0.role == .size }.count,
+                        "\(laid.map(\.mark.what)) of \(r.marks.map(\.what))")
+                #expect(laid.count >= 5, "\(laid.map(\.mark.what)) of \(r.marks.map(\.what))")
             }
             #expect(!calipers.isEmpty, "\(name) laid nothing")
             let rects = calipers.map { $0.labelRect(chipSize: $0.estimatedLabelSize) }
@@ -204,13 +213,56 @@ struct RedlinePlanTests {
         }
     }
 
+    /// The judge on the settings redline, 2026-11-11: "the 16 pt badge sits
+    /// on a row divider", "the 18 pt pill lands inside the second card", "a
+    /// diagonal leader cuts across the row". A number about spacing sits in
+    /// the region its line is in, off every card edge and divider, on a
+    /// straight leader or none; with no such spot it is left out. (A
+    /// screen where that would leave fewer than three marks is laid the
+    /// looser way, numbers on edges and all, as before.)
+    @Test("A spacing number keeps to its line's own card or to the page between cards, off every edge, on a straight leader")
+    func spacingStaysTidy() throws {
+        let name = Self.settings
+        let r = try Self.read(name)
+        let regions = Self.regions(r), edges = Self.edges(r)
+        let laid = RedlineLayout.lay(r.marks, obstacles: RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2),
+                                     edges: edges, regions: regions, canvas: r.canvas,
+                                     size: MeasureStyles().content(for: .size), spacing: MeasureStyles().content(for: .spacing))
+        for drawn in laid where drawn.mark.role != .size {
+            for c in drawn.calipers {
+                let chip = c.labelRect(chipSize: c.estimatedLabelSize)
+                for e in edges where chip.intersects(e) {
+                    Issue.record("\(name): \(drawn.mark.what)'s number \(chip) sits on the edge \(e)")
+                }
+                let g = c.caliperGeometry()
+                let mid = CGPoint(x: (g.headA.x + g.headB.x) / 2, y: (g.headA.y + g.headB.y) / 2)
+                let home = regions.filter { $0.contains(mid) }.min { $0.width * $0.height < $1.width * $1.height }
+                for region in regions where chip.intersects(region) {
+                    let ok = home.map { region.contains($0) } ?? false
+                    if !ok { Issue.record("\(name): \(drawn.mark.what)'s number \(chip) strays into \(region)") }
+                }
+                if let home { #expect(home.contains(chip), "\(name): \(drawn.mark.what)'s number leaves its card") }
+                if let run = RedlineLayout.leader(of: c) {
+                    #expect(abs(run.1.x - run.0.x) <= 1 || abs(run.1.y - run.0.y) <= 1,
+                            "\(name): \(drawn.mark.what)'s leader slants from \(run.0) to \(run.1)")
+                }
+            }
+        }
+    }
+
+    @Test("A button whose words sit in its middle gets no label inset: its width says it")
+    func centredWordsNoInset() throws {
+        let r = try Self.read(Self.settings)
+        #expect(!r.marks.contains { $0.role == .inset }, "\(r.marks.map(\.what))")
+    }
+
     @Test("A size's calipers sit on the box they measure, and never reach past the picture")
     func sizeCalipersHug() throws {
         let r = try Self.read(Self.settings)
         let canvas = CGRect(origin: .zero, size: r.canvas)
         let size = MeasureStyles().content(for: .size)
         let laid = RedlineLayout.lay(r.marks, obstacles: RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2), edges: Self.edges(r),
-                                     canvas: r.canvas, size: size, spacing: size)
+                                     regions: Self.regions(r), canvas: r.canvas, size: size, spacing: size)
         for drawn in laid where drawn.mark.role == .size {
             let box = try #require(drawn.mark.box)
             #expect(drawn.calipers.count == 2)

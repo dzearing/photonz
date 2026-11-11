@@ -294,13 +294,18 @@ extension EditorState {
     /// dividers (`edges`) wherever it has the choice. A size lands as the same
     /// group a Size click makes, spacing as the caliper a Gap click makes, each
     /// in its role's style. The caller makes them one undo step.
-    func addRedline(_ marks: [RedlineMark], obstacles: [CGRect], edges: [CGRect] = []) {
-        guard let document, !marks.isEmpty else { return }
+    /// Answers the marks it laid: one whose number had no tidy spot is left
+    /// out.
+    @discardableResult
+    func addRedline(_ marks: [RedlineMark], obstacles: [CGRect], edges: [CGRect] = [],
+                    regions: [CGRect] = []) -> [RedlineMark] {
+        guard let document, !marks.isEmpty else { return [] }
         var size = measureStyles.content(for: .size)
         size.madeBy = namedMode(.size)
         var spacing = measureStyles.content(for: .spacing)
         spacing.madeBy = namedMode(.gap)
-        let drawn = RedlineLayout.lay(marks, obstacles: obstacles, edges: edges, canvas: document.canvasSize,
+        let drawn = RedlineLayout.lay(marks, obstacles: obstacles, edges: edges, regions: regions,
+                                      canvas: document.canvasSize,
                                       size: size, spacing: spacing, placed: placedReadoutRects())
         for piece in drawn {
             var calipers = piece.calipers.map { c -> Layer in
@@ -326,6 +331,7 @@ extension EditorState {
             perform { doc in calipers.forEach { doc.addLayer($0) } }
         }
         recordRecentColor(hex: size.strokeColorHex)
+        return drawn.map(\.mark)
     }
 
     /// What "find the misalignments" found, marked one layer a finding in the

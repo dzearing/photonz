@@ -193,6 +193,15 @@ public enum AskChangeWords {
                 if !names.isEmpty, let listed = list(names, room: room, alone: alone, more: false) { return listed }
                 if !names.isEmpty, names.count > 1 { return "\(names.count) \(group.kind.many)" }
             }
+            // With the picture either side, a redline's count is the
+            // measurements that landed: one whose number had no tidy spot is
+            // left out, so the ids asked for can be more than were laid.
+            if group.steps.contains(where: { $0.tool == "mark_measurements" }), let before, let after {
+                let old = Set(before.layers.map(\.id))
+                let landed = after.layers.filter { !old.contains($0.id) && $0.isMeasurement }.count
+                if landed > 1 { return "\(landed) \(group.kind.many)" }
+                if landed == 1 { return group.kind.one }
+            }
             // One mark_misalignments or mark_measurements step marks each id it names.
             let count = group.steps.reduce(0) { n, step in
                 switch step.tool {

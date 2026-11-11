@@ -22914,3 +22914,11 @@ units.
 - A swing's reach now counts its widest key (from -12 in steps of 15 a swing to 14 was measured at 3; the bell's rim was cut).
 - A bounce no longer re-aims the contact the model planned next (the trash's landing in the can's mouth was thrown down the outside of the can); the bounce gets a key of its own.
 - Story eval: 56.3 and 61.1 (best yet). Bar (5 of 6 read as asked at 7) still not met; the trash reads as asked at 5. Task left pending.
+
+## 2026-11-11: a redline's spacing numbers stay off dividers and card edges
+
+- `RedlineLayout` places a number in a tidy pass first: inside the card its line is in (or on the page between cards, `RedlinePlan.regions`), off every card edge and divider, on a straight leader or none. Spacing with no tidy spot is left out unless that leaves fewer than three marks; sizes fall back to the old looser spots. A size bracket picks a side that stays inside its card when one has room.
+- A button whose words are centred gets no label inset mark.
+- `mark_measurements` answers which ids it left out and why (`leftOut`, `why`); the skill engine had drawn the left-out padding and section gap back by hand. Ask's row counts the measurements that landed (`AskChangeWords`), not the ids asked for ("Added 7" over five).
+- Evals, settings case: Ask 63.3 to 73 (clean 4.2 to 5.4, aligned 4.2 to 5.6), skill 61.1 to 71.2 (clean 3.9 to 5.2). Other redline climb cases unchanged (button-size 77.2, dark-panel 26.7, card-padding 18 to 20 against 18.7 at HEAD). Held-out not re-run (about 20 minutes, past a runner's limit); last 54.9.
+- Open: the task's bar is 8 on clean and aligned. A hand-placed redline of the same screen scored clean 6.1 to 6.3, so the bar looks out of reach for numbers on the picture; the audit asks the user.

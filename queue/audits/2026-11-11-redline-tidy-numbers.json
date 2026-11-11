@@ -1,0 +1,27 @@
+{
+  "feature": "A redline's spacing numbers stay off dividers and card edges",
+  "epic": "measure-redline",
+  "summary": "In a redline of a screenshot, a number about spacing now sits in the card its line is in (or on the page between cards), never on a divider or a card's edge, and never on a slanted leader. A number with no such spot is left out, and Ask's row says how many measurements actually landed.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: ask-annotates-a-screenshot-walk. The before and after pictures are the renderer's own drawing of the settings redline (Tests/PhotonzRenderTests/RedlineSheetTests.swift).",
+  "switched": {},
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, press Ask and send \"annotate the ux with measurements around the major ui elements\".", "shot": "2026-11-11-redline-tidy-ask-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Read the Agent row: it says Added 5 measurements, the same count as the Measurements list." },
+    { "do": "Compare the redline before this change: 16 pt sat on a row divider, 18 pt sat inside the second card, 20 pt crossed the Reset button.", "shot": "2026-11-11-redline-tidy-before.png" },
+    { "do": "Compare the redline after: no number touches a divider or a card edge it does not measure.", "shot": "2026-11-11-redline-tidy-after.png" },
+    { "do": "Look at a hand-placed redline drawn for comparison: the best the judge gave any version of this screen.", "shot": "2026-11-11-redline-tidy-hand-ceiling.png" }
+  ],
+  "evaluate": [
+    "Is the redline calmer with the card padding and the gap between the cards left out, or do you miss those two numbers more than you mind where they used to sit?",
+    "Should a redline shrink its number pills on a dense screen so the gap between cards and the padding fit, even though that departs from the size set in the Measure tool?",
+    "Does the 220 pt bracket above the field, crossing into the gap between the cards, read as clear enough?",
+    "Is the 12 pt number on its long line down below the buttons easy to tie to the gap it measures?"
+  ],
+  "rough": [
+    "The eval bar of 8 on clean and aligned is still not reached: Ask scores 73 on the settings case (clean 5.4, aligned 5.6; was 63.3 at 4.2 and 4.2), the skill 71.2 (clean 5.2, aligned 5.3; was 61.1 at 3.9). Left open on a-redline-of-a-2x-screenshot-reads-in-points-wit.",
+    "A redline drawn by hand with every number in clear space scored clean 6.1 to 6.3 and aligned 5.6 to 5.8 from the same judge (three tries, small and full-size pills), so 8 does not look reachable for numbers drawn on this screenshot. The judge always names something: a leader, a bracket crossing a card edge, a missing card width or margin.",
+    "On this screen the card padding and the gap between the cards are left out: their numbers are taller than the 20 pt gaps they would sit in. Screens where tidy placing would leave fewer than three marks are laid the old way, numbers on edges and all.",
+    "A button whose words are centred no longer gets a label inset mark: the judge read it as a stray mark every time.",
+    "Measurements placed by hand still get pt and end ticks but not this tidy rule; you chose earlier that a hand-placed number between rows stays on its line."
+  ]
+}

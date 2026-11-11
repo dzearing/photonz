@@ -78,4 +78,21 @@ struct RedlineToolTests {
         let hand = AskStep(tool: "add_measurement", arguments: ["kind": "size"])
         #expect(AskChangeWords.sentence([step, hand]) == "Added 5 measurements")
     }
+
+    /// A redline leaves out a mark whose number has no tidy spot, so the row
+    /// counts what landed: the panel said "Added 7 measurements" over five on
+    /// 2026-11-11.
+    @Test("With the picture before and after, the row counts the measurements that landed, not the ids asked for")
+    func rowCountsWhatLanded() {
+        let step = AskStep(tool: "mark_measurements", arguments: ["marks": .array(["r1", "r2", "r3", "r4"])])
+        var c = MeasureContent(mode: .horizontal, unit: .points)
+        c.start = CGPoint(x: 10, y: 10)
+        c.end = CGPoint(x: 90, y: 10)
+        let picture = Layer(name: "Shot", content: .annotation(AnnotationContent(shape: .rectangle, colorHex: "#000000")),
+                            frame: CGRect(x: 0, y: 0, width: 800, height: 600))
+        let before = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600), layers: [picture])
+        let laid = (0..<3).map { _ in MeasureBuilder.layer(content: c, from: c.start, to: c.end) }
+        let after = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600), layers: [picture] + laid)
+        #expect(AskChangeWords.sentence([step], before: before, after: after) == "Added 3 measurements")
+    }
 }
