@@ -1,0 +1,36 @@
+{
+  "id": "the-whole-walk-set-finishes-at-least-once-every",
+  "title": "The whole walk set finishes at least once every three days, even when the person comes back part way",
+  "goal": "The full check of every scripted walk has not finished since 4 November. The last three runs (5, 8 and 11 November) were each stopped when the user came back to the Mac, after 951, 854 and 620 walks, and because new code had landed each time, everything they found was thrown away and the next run starts again from the first walk. The whole set takes about seven hours, longer than the quiet stretch it usually gets, so as things stand it may never finish again.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 720,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-11T16:15:21.510Z",
+  "updated": "2026-11-11T16:15:29.805Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence (digest 2026-11-11): grep '\"sweep_pass\"' queue/history.jsonl | tail -6 -> complete:true on 11-02, 11-03, 11-04 (24,883 to 25,469 s each); then 11-05 interrupted at 951/1096, 11-08 at 854/1134, 11-11 at 620/1141 (began 11:38Z, i.e. 03:38 local, stopped 08:08 local when the user came back). queue/bin/sweep-resume.mjs only resumes a stopped run when nothing a walk runs has changed since; the loop lands app code several times a day, so in practice the resume never applies and the 72 hour floor then pushes the next try three more days out. Ideas, not decisions: let a stopped run's unanswered walks run first next time even on new code, and count the set complete when every walk has an answer inside one 72 hour window; or start the whole set early enough in the person's quiet hours to fit seven hours; or order the set so the walks least recently answered go first. Whatever the change, sweep.sh status and the dashboard should say how many days since every walk last had an answer.",
+  "acceptance": [
+    "Over a week of normal use, with the user coming and going, every walk in the set gets an answer at least once in each three day window, shown by the sweep records",
+    "A run stopped part way is not thrown away just because code landed: its answers count toward the set, or the next run starts with the walks it never reached",
+    "queue/bin/sweep.sh status says how long it has been since every walk last had an answer",
+    "queue/bin/sweep-resume-drill.mjs (or a new drill) proves the stopped-then-code-landed case"
+  ],
+  "log": [
+    {
+      "t": "2026-11-11T16:15:21.512Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-11T16:15:29.739Z",
+      "note": "seq 4080 -> 720"
+    },
+    {
+      "t": "2026-11-11T16:15:29.804Z",
+      "note": "digest 2026-11-11: checked against where-the-loop-s-day-went-counts-a-resumed-walk, which is about how the day is counted, not whether the set finishes; kept separate."
+    }
+  ]
+}

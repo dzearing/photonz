@@ -4,12 +4,12 @@
   "goal": "Four scripted walks press a Library tile (a colour, a text style, a title preset, a transition) and pull it toward the picture the way a hand does, to prove a person can drag it out. On this Mac every one of them reports the tile never came away, in every sweep since at least 2026-11-01. Find out whether a person's drag is really broken or only the walk's way of watching for it, and fix whichever it is.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 3990,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-11T03:28:42.110Z",
-  "updated": "2026-11-11T03:48:30.920Z",
+  "updated": "2026-11-11T16:14:02.711Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-10 on e34c74ea (person away, screen unlocked): `Scripts/playtest-all.sh --no-build tile-comes-away-walk text-style-comes-away-walk title-presets-library-shelf-walk transition-tile-comes-away-walk` -> all FAILED at pickUpTile, e.g. 'the tile \"Accent\" did not come away: it was pressed at (1127, 255) and pulled to (508, 611) in the window, and nothing asked to start a drag.' Same with setup front: true (the probe active and key), so it is not the front. Every sweep log under queue/sweep (2026-11-01 to 11-08) shows the three Library ones failing the same way. pickUpTile (PlaytestHarness.pickUpTile) posts mouseMoved/down/dragged/up with NSApp.postEvent and watches NSView.beginDraggingSession via a swizzle on NSView (Sources/Photonz/Playtest/PlaytestTilePickUp.swift, unchanged since 2026-09-12). Suspects, not checked: on macOS 27 SwiftUI's draggable begins its session through a subclass override or another API the NSView swizzle never sees, or no longer starts a drag from posted (non-HID) events. dragTile (payload handed over directly) still passes, so drops work; only the pick-up is unproved. transition-tile-comes-away-walk now opens Transitions by its header with the probe in front (Transitions starts folded, ad5e0e11) and fails only at the pick-up.",
@@ -26,6 +26,14 @@
     {
       "t": "2026-11-11T03:48:30.919Z",
       "note": "rotating check 2026-11-11T03:48:30Z, 33 walks run from 505 onward in the rotation: transition-tile-comes-away-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-11-11T16:13:33.922Z",
+      "note": "digest 2026-11-11: reproduced. Ran Scripts/playtest-all.sh --no-build tile-comes-away-walk text-style-comes-away-walk title-presets-library-shelf-walk transition-tile-comes-away-walk: 0 passed, 4 failed, every one at pickUpTile with 'nothing asked to start a drag' (Accent at (1127,255), Heading at (1127,168), Film Super at (1657,376), Cross dissolve at (1533,535)). Stays p1, after the component naming bug, which breaks thirteen walks and a person's typing."
+    },
+    {
+      "t": "2026-11-11T16:14:02.710Z",
+      "note": "seq 3990 -> 100"
     }
   ],
   "walks": [

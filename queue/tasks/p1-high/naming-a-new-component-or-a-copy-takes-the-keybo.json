@@ -2,14 +2,14 @@
   "id": "naming-a-new-component-or-a-copy-takes-the-keybo",
   "title": "Naming a new component or a copy takes the keyboard again",
   "goal": "After Make Component, the new component name field should have the keyboard so typing names it. Since the 2026-11-08 sweep it does not: the keys go to the picture instead, where letters pick tools. Four walks that name a component or a copy fail the same way.",
-  "epic": "unmanned-loop",
+  "epic": "ui-components",
   "priority": "p1-high",
-  "seq": 3980,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-10T23:55:50.898Z",
-  "updated": "2026-11-10T23:55:50.901Z",
+  "updated": "2026-11-11T16:14:02.169Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-10 at ebaf3abc (and with 07df11ac/ebaf3abc changes removed, and with 03eb6f22 reverted, so it is none of those): printf \"name-field-handback\\ncomponent-override-walk\\n\" > /tmp/two.txt; Scripts/playtest-all.sh --only /tmp/two.txt -> name-field-handback FAILED step 16 (type): no text field has the keyboard (first responder is CanvasNSView); component-override-walk FAILED step 15 (type): same. copy-own-color-walk (step 15) and copies-share-choice-walk (step 24) fail the same way. All four passed in every full sweep 2026-11-01..2026-11-08; 28 commits under Sources landed since. Each does action makeComponent (or a rename) then a type step. Bisect between the 11-08 sweep commit and b34fcb4a.",
@@ -22,12 +22,33 @@
     {
       "t": "2026-11-10T23:55:50.900Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-11T16:13:33.793Z",
+      "note": "walks name-field-handback, component-override-walk, copy-own-color-walk, copies-share-choice-walk -> name-field-handback, component-override-walk, copy-own-color-walk, copies-share-choice-walk, component-choice-one-step-walk, component-choice-walk, component-instance-walk, component-look-walk, component-text-halo-walk, copy-own-number-walk, icon-into-a-component-onto-the-timeline-walk, label-grows-walk, library-reveal-walk"
+    },
+    {
+      "t": "2026-11-11T16:13:33.857Z",
+      "note": "digest 2026-11-11: reproduced. Ran Scripts/playtest-all.sh --no-build --only /tmp/two.txt (name-field-handback, component-override-walk) on the probe built 2026-11-11 03:38 local: both FAILED at the type step, 'no text field has the keyboard (first responder is CanvasNSView)'. Stays p1. The interrupted sweep at 2026-11-11T16:08Z failed nine more walks with the exact same message (component-choice-one-step, component-choice, component-instance, component-look, component-text-halo, copy-own-number, icon-into-a-component-onto-the-timeline, label-grows, library-reveal): this task now owns all thirteen. Epic moved from unmanned-loop to ui-components: a person who makes a component and types its name has letters pick tools instead, which is an app defect, not a loop one."
+    },
+    {
+      "t": "2026-11-11T16:14:02.168Z",
+      "note": "seq 3980 -> 20"
     }
   ],
   "walks": [
     "name-field-handback",
     "component-override-walk",
     "copy-own-color-walk",
-    "copies-share-choice-walk"
+    "copies-share-choice-walk",
+    "component-choice-one-step-walk",
+    "component-choice-walk",
+    "component-instance-walk",
+    "component-look-walk",
+    "component-text-halo-walk",
+    "copy-own-number-walk",
+    "icon-into-a-component-onto-the-timeline-walk",
+    "label-grows-walk",
+    "library-reveal-walk"
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "When you press Stop on a request while Ask's model is still loading, a request waiting behind it should start at once. Today it sits there waiting until the load is over.",
   "epic": "agent-ask",
   "priority": "p2-normal",
-  "seq": 220,
+  "seq": 230,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T15:47:48.927Z",
-  "updated": "2026-11-09T14:31:41.937Z",
+  "updated": "2026-11-11T16:14:30.138Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-04 on source without typing-in-ask-lists-the-commands-you-can-run applied (its Sources diff reversed, probe rebuilt): Scripts/playtest.sh Scripts/playtest/ask-stops-a-running-request-walk.json printed: step 19 (expect): the control called \"Agent Waiting 1\" is in the panel, and this step says it should not be. Same failure with that change in, twice. Passes warm: ask-stops-a-running-request-walk 137s ok, after other model walks in one playtest-all run, and 116s ok in sweep 2026-11-03-230840, which is why sweeps never show it. Not yet looked at: where the cancelled request sits during the load; AskSession.stop cancels work, and finished() starts the next only when that task ends.",
@@ -45,6 +45,10 @@
     {
       "t": "2026-11-09T14:31:41.936Z",
       "note": "seq 230 -> 220"
+    },
+    {
+      "t": "2026-11-11T16:14:30.137Z",
+      "note": "seq 220 -> 230"
     }
   ],
   "walks": [

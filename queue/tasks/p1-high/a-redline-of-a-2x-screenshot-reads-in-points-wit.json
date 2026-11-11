@@ -4,12 +4,12 @@
   "goal": "This finishes what the user asked for in the calm redline and did not get: a redline of a Retina screenshot should say its numbers in points (\"124 pt\" for a button 248 pixels wide), and every dimension line should start and stop on the edges it measures. Today the numbers say px, and several brackets (under Save Changes, beside the folder field) wander off what they measure, so a reader cannot tell what a number spans.",
   "epic": "measure-redline",
   "priority": "p1-high",
-  "seq": 80,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T05:16:19.351Z",
-  "updated": "2026-11-11T09:00:12.596Z",
+  "updated": "2026-11-11T16:14:02.232Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried over from measuring-a-ui-gives-a-calm-redline-each-kind-of (2026-10-20), which shipped code-chosen marks and clear readout placement (Sources/PhotonzCore/Redline.swift, find_measurements / mark_measurements) and took the settings case from 32.5 to 59.0 for Ask (judge 2.8 to 4.8). What the judge still says, verbatim, from Scripts/ask-eval.sh run --engine ask --cases settings-measurements (runs 20261021-044351-ask, 20261021-044837-ask, 20261021-050243-ask or the latest): \"values don't match what they point at (124 px on a roughly 250 px button, 18 px on a gap that is clearly larger)\"; \"there are no end ticks to show what is being measured\"; \"the brackets don't clearly mark what they measure (26 px, 30 px, 17 px)\". The 124 is right in points (MeasureUnit.points, logical px) but labelled px: MeasureUnit.suffix is \"px\" for both units by design (Measure.swift line 12). Only three call sites use the suffix (Measure.swift label/chipText, MeasureSizeGroup.swift:176, DocumentUnit.swift:27) but about 46 test files and 38 walks expect px readouts, which is why it did not fit in the redline task. Size brackets are MeasureSizeGroup + caliper extension lines (MeasurePlan.swift, MeasureRasterizer.swift).",
@@ -159,6 +159,18 @@
     {
       "t": "2026-11-11T09:00:12.595Z",
       "note": "Tidy spacing numbers landed (Ask 73, skill 71.2 on settings; clean 5.4/5.2); bar of 8 not reached and a hand-placed ideal tops out near 6, so left open for the user's read"
+    },
+    {
+      "t": "2026-11-11T16:13:33.990Z",
+      "note": "digest 2026-11-11: the switch to pt left a walk behind. copy-svg-into-a-code-editor-walk failed in the 2026-11-11 sweep at step 47 (readClipboard): it expects 'px' and the clipboard now reads 'Width: 124 pt (size)'. This task's checklist says every walk expecting px on a 2x picture changes in the same change, so it is this task's to fix. User-eye read of 2026-11-11-redline-tidy-after.png: pt reads right, and the size brackets now carry end legs. What still reads clumsy: the 220 pt bracket's left leg runs straight down into the 26 pt bracket so the two marks look like one; the 12 pt gap between Reset and Save Changes hangs on a long leader to a chip far below; the 124 pt and 220 pt brackets sit well off their objects. The runner measured hand-placed ideals of this screen at clean 5 to 6.3, so the bar of 8 cannot be reached by a judge score on this picture; judge the rest of this task on the pictures (no mark's leg runs into another, no leader longer than its number's own chip) and put the reachable score question in the audit for the user, not another pass at the number."
+    },
+    {
+      "t": "2026-11-11T16:13:38.026Z",
+      "note": "walks size-reads-buttons-and-pills-walk, caliper-foot-keeps-its-grip-walk, an-alignment-guide-re-measures-as-you-drag-walk, a-size-measurement-is-one-group-walk, gap-reads-line-to-line-walk, size-reads-avatars-and-stacks-walk, size-steps-and-resizes-walk -> size-reads-buttons-and-pills-walk, caliper-foot-keeps-its-grip-walk, an-alignment-guide-re-measures-as-you-drag-walk, a-size-measurement-is-one-group-walk, gap-reads-line-to-line-walk, size-reads-avatars-and-stacks-walk, size-steps-and-resizes-walk, copy-svg-into-a-code-editor-walk"
+    },
+    {
+      "t": "2026-11-11T16:14:02.231Z",
+      "note": "seq 80 -> 30"
     }
   ],
   "walks": [
@@ -168,7 +180,8 @@
     "a-size-measurement-is-one-group-walk",
     "gap-reads-line-to-line-walk",
     "size-reads-avatars-and-stacks-walk",
-    "size-steps-and-resizes-walk"
+    "size-steps-and-resizes-walk",
+    "copy-svg-into-a-code-editor-walk"
   ],
   "started": "2026-11-11T07:40:14.136Z"
 }

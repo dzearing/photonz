@@ -4,12 +4,12 @@
   "goal": "Ask's sealed test set scored lower on still drawings and video edits on 8 November than on 7 November, with nothing aimed at those changed on purpose. Find whether it is a real loss (and from which change) or run-to-run noise, so Ask is not quietly getting worse.",
   "epic": "agent-ask",
   "priority": "p2-normal",
-  "seq": 90,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T10:46:11.903Z",
-  "updated": "2026-11-09T14:31:36.446Z",
+  "updated": "2026-11-11T16:14:29.001Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen, not explained. Scripts/ask-eval.sh time 20261108-075845-ask-held-out 20261107-130822-ask-held-out:\n  8 Nov (41f4aabbe, 53 cases): total 56.9; drawing 63.1 (1 of 36 ran out of time, 4 stopped part way, 181s median), layout 68.1, redline 31.2, video 48.7, animated 37.3 (8 new cases).\n  7 Nov (45 cases): total 66.4; drawing 70.8 (0 out of time, 2 stopped part way, 148s median), layout 44.6, redline 33.9, video 67.\nLike for like on the 45 shared cases about 60.4 vs 66.4. Commit 41f4aabbe only changes the moving-icon route (AskMotion, MotionSVG folds, set_keys pivot for rotationX/Y), which drawing and video cases never take. Landed between the two runs: c41e1fcd3 (New window makes an animated icon), bf3e65120 (a round thing bursting opens), b491f6529 (torn icon teeth), the still icon route's breaks. Video is 3 cases, so one case moves the group ~18 points. Never read held-out cases one by one: rerun the whole set and compare totals and groups only.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-09T14:31:36.445Z",
       "note": "triage 2026-11-09: start from the judge finding of find-out-why-the-eval-judge-scores-one-identical (done 2026-11-09): the old judge took the median of three looks, and a case whose did-what-was-asked sits between 6 and 7 could drop 14 points on one look (the 6/7 cliff). Both runs compared here used that judge. Rescore both on the steady judge (mean of nine looks, b564b9f01) before looking for a commit; if the gap closes, that is the answer and this task can close on the numbers."
+    },
+    {
+      "t": "2026-11-11T16:14:29.000Z",
+      "note": "seq 90 -> 100"
     }
   ]
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-11T11:37:51.842Z",
+  "updated": "2026-11-11T16:14:02.105Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -294,6 +294,14 @@
     {
       "t": "2026-11-11T11:37:51.841Z",
       "note": "Lid reads where it plays and waits for the trash (92a4a3725, ff287e9ce); story bar (5 of 6 at 7) still not met; trash 37.6 to 42.2 this pass"
+    },
+    {
+      "t": "2026-11-11T16:13:57.413Z",
+      "note": "digest 2026-11-11, user-eye read of 2026-11-11-story-trash-waits-two-laps-frames.png (eleventh pass): the can itself is now clean and even, which answers the 'ugliest trashcan' screenshot. The lid opens smoothly (0.29 to 0.39 s) and the trash now comes from off the right edge (0.68 s), so 'thrown in' reads. Still wrong to the eye: (1) no bounce anyone would see, the square touches the lid's underside at 0.97 to 1.06 s and goes on down; (2) from 1.16 to 1.26 s the lid is already shutting while the square sits across its line, and at 1.35 s a grey ghost of it shows through the shut lid, so it still reads as passing through; (3) the trash is a solid black square in a line-drawn icon, which reads as a block, not rubbish, and the judges mark it down in every run. The user's sentence scored lower this pass (37.6 to 42.2) than last (50.7, 54.3). Next pass: lead with the reel against those three, in that order; the six-case total is secondary."
+    },
+    {
+      "t": "2026-11-11T16:14:02.104Z",
+      "note": "seq 10 -> 10"
     }
   ],
   "started": "2026-11-11T09:12:30.129Z",

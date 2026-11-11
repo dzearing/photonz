@@ -4,12 +4,12 @@
   "goal": "The arrow and measurement panel the user approved on 2026-10-31 opens with the arrow's own choices: Arrow, Chip, Color, Marker, Size. The shipped panel puts Opacity, Blending and Masked by on top, so the first three rows of a picked arrow are ones every layer has, and the choices the prototype leads with sit below them.",
   "epic": "epic-uehjr1",
   "priority": "p1-high",
-  "seq": 140,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T14:52:46.945Z",
-  "updated": "2026-11-10T13:21:02.746Z",
+  "updated": "2026-11-11T16:14:02.647Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the digest on 2026-11-01 in the runner's own side by side, queue/audits/2026-11-01-markup-appearance-vs-proto.png: the prototype column starts at Arrow; the shipped column starts Opacity, Blending, Masked by, then Arrow. Same in 2026-10-31-five-arrow-styles-6-every-new-style-sc.png. docs/design/markup.md section 8 lists Appearance as Arrow, Chip, Color, Marker, Size, Advanced, with no Opacity, Blending or Masked by. The task that shipped it (arrow-and-measurement-appearance-shows-only-styl, eac717d7) closed with the side by side in its audit but did not mention the difference. Decide where the three shared rows go for a picked arrow or measurement (under Advanced is the obvious place, since markup.md calls everything else there; Photoshop keeps opacity and blending on the Layers panel, not in the shape's properties) and log the choice; a card only if it is a costly call.",
@@ -51,6 +51,10 @@
     {
       "t": "2026-11-10T13:21:02.745Z",
       "note": "seq 220 -> 140"
+    },
+    {
+      "t": "2026-11-11T16:14:02.646Z",
+      "note": "seq 140 -> 90"
     }
   ]
 }
