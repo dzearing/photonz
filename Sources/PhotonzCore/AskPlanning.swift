@@ -933,6 +933,15 @@ public struct AskConversation: Sendable {
                     step = AskStep(tool: name, arguments: arguments)
                 }
                 if icon, name == "add_drawing" { arguments = Self.asIcon(arguments, request: request) }
+                // Key times copied from the design's milliseconds are read as seconds.
+                if drawsMotion, name == "set_keys" {
+                    let lap = steps.last(where: { $0.tool == "set_timing" })?.arguments["seconds"]?.doubleValue
+                    let read = AskMotion.keysInSeconds(arguments, lap: lap)
+                    if read != arguments {
+                        arguments = read
+                        step = AskStep(tool: name, arguments: read)
+                    }
+                }
                 if drawsMotion, name == "add_drawing", var object = arguments.objectValue {
                     object["forMotion"] = true
                     arguments = .object(object)

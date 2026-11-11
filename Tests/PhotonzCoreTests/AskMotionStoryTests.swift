@@ -300,13 +300,14 @@ struct AskMotionWhereTheyAreTests {
         #expect(said.contains("trash x 10 to 14, y 12 to 16, inside can"), "\(said)")
     }
 
-    @Test("A part keyed out of sight is said to be hidden, and halfway between keys it is halfway")
+    @Test("A part keyed out of sight is said to be hidden, and between keys it is where its curve has it")
     func hiddenAndBetween() throws {
         let fade = try Self.keys(#"{"layer":"$1/trash","property":"opacity","keys":[{"seconds":0,"value":0},{"seconds":0.4,"value":100},{"seconds":1,"value":0}]}"#)
         let drop = try Self.keys(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.8,"value":{"x":8,"y":0}},{"seconds":1,"value":{"x":0,"y":0}}]}"#)
         let said = try #require(AskMotion.whereParts([Self.drawing, fade, drop]))
         #expect(said.contains("0 s: trash hidden"), "\(said)")
-        #expect(said.contains("0.4 s: trash x 14 to 18"), "\(said)")
+        // Halfway in time on Ease in out (no curve named) is 0.775 of the way, as the icon plays it.
+        #expect(said.contains("0.4 s: trash x 16.2 to 20.2"), "\(said)")
     }
 
     @Test("Nothing keyed, nothing said")

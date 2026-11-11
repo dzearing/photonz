@@ -450,7 +450,7 @@ public enum AskMotion {
     /// the plan each time (the eval, 2026-11-06).
     public static func fitted(_ planned: [AskStep]) -> [AskStep] {
         let (steps, view) = roomFitted(swingsFitted(foldsOpen(foldsLand(landingFolded(planned)))))
-        return view.map { marksGo(comesBack(edgeHides(thrownIn(steps, view: $0), view: $0), view: $0), view: $0) } ?? steps
+        return view.map { marksGo(comesBack(edgeHides(thrownIn(usedUpUnseen(steps), view: $0), view: $0), view: $0), view: $0) } ?? steps
     }
 
     /// Below this opacity a part is out of sight.
@@ -2176,6 +2176,31 @@ public enum AskMotionCheck {
             }
         }
         return said
+    }
+
+    /// `step`'s value at `seconds` as the icon plays it: each run between
+    /// keys on the curve of the key it leaves (Ease in out when it names
+    /// none, as set_keys makes it), standing on a Hold, overshooting where
+    /// the curve does. What contact is read off (`AskMotion.Lap`): on
+    /// 2026-11-11 a lid closing on Ease out back was read in a straight line
+    /// at -26 degrees where the icon played it at -14, through the trash.
+    static func played(of step: AskStep, at seconds: Double) -> AgentJSON? {
+        let keys = timed(step)
+        guard let first = keys.first else { return nil }
+        if seconds <= first.seconds { return first.value }
+        for (one, next) in zip(keys, keys.dropFirst()) where seconds < next.seconds {
+            let curve = AgentKeyCurve.curve(named: one.curve ?? AgentKeyCurve.easeInOut) ?? .easeInOut
+            if curve == .steps(1) { return one.value }
+            let share = curve.value(at: (seconds - one.seconds) / max(next.seconds - one.seconds, 0.001))
+            func mix(_ a: Double, _ b: Double) -> Double { a + (b - a) * share }
+            if let a = one.value.doubleValue, let b = next.value.doubleValue { return .number(mix(a, b)) }
+            if let ax = one.value["x"]?.doubleValue, let ay = one.value["y"]?.doubleValue,
+               let bx = next.value["x"]?.doubleValue, let by = next.value["y"]?.doubleValue {
+                return ["x": .number(mix(ax, bx)), "y": .number(mix(ay, by))]
+            }
+            return one.value
+        }
+        return keys.last?.value
     }
 
     /// `step`'s value at `seconds`: straight between keys, standing on a

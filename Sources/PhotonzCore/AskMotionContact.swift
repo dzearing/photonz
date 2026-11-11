@@ -59,13 +59,14 @@ extension AskMotion {
 
         func isMover(_ name: String) -> Bool { movers.contains { plain($0) == plain(name) } }
 
-        /// A value at `seconds`: straight between keys, standing on a Hold.
+        /// A value at `seconds` as the icon plays it, on each key's curve
+        /// (`AskMotionCheck.played`).
         func value(_ name: String, _ property: MotionProperty, at seconds: Double) -> AgentJSON? {
             guard let step = keyed.last(where: { one in
                 (one.arguments["layer"]?.stringValue).flatMap(partReference).map { plain($0.part) == plain(name) } ?? false
                     && one.arguments["property"]?.stringValue == property.rawValue
             }) else { return nil }
-            return AskMotionCheck.value(of: step, at: seconds)
+            return AskMotionCheck.played(of: step, at: seconds)
         }
 
         func pivot(of name: String) -> CGPoint? {
@@ -325,15 +326,138 @@ extension AskMotion {
         // others really are.
         // A run of keys touching the same part is one contact (it slides or
         // rests along it): it comes away after the last of them, and only then.
-        for bounce in bounces where !bounces.contains(where: { later in
+        let ends = bounces.filter { bounce in !bounces.contains(where: { later in
             later.step == bounce.step && plain(later.off) == plain(bounce.off) && later.seconds > bounce.seconds + 0.0005
                 && AskMotionCheck.timed(out[bounce.step]).first(where: { $0.seconds > bounce.seconds + 0.0005 }).map { abs($0.seconds - later.seconds) <= 0.0005 } == true
-        }) {
+        }) }
+        func hitter(_ step: Int) -> String? { (out[step].arguments["layer"]?.stringValue).flatMap(partReference)?.part }
+        // What was hit waits for what hit it to get clear, before the bounce
+        // is aimed (it is aimed against where the struck part really goes)
+        // and again after it (the bounce's own path is waited for too).
+        for end in ends { if let part = hitter(end.step) { out = struckWaits(out, part: part, hit: end.seconds, off: end.off) } }
+        for bounce in ends {
             let next = AskMotionCheck.timed(out[bounce.step]).first { $0.seconds > bounce.seconds + 0.0005 }?.seconds
             let planned = next.map { next in (contacts[bounce.step] ?? []).contains { abs($0 - next) <= 0.0005 } } ?? false
             out = bouncedAway(out, at: bounce.step, hit: bounce.seconds, off: bounce.off, keepingNext: planned)
         }
+        for end in ends { if let part = hitter(end.step) { out = struckWaits(out, part: part, hit: end.seconds, off: end.off) } }
         return out
+    }
+
+    // MARK: What is hit waits for what hit it
+
+    /// The longest what was hit waits, and the least share of the time left
+    /// in the lap its moves after the hit keep.
+    static let longestWait = 0.5
+    static let leastKeptShare = 0.5
+
+    /// `steps` with the MOVING part `other`, hit by `part` at `seconds` (the
+    /// last key of a contact), made to wait before its moves after the hit
+    /// until `part`, seen, no longer passes through it for the rest of the
+    /// lap, or until it goes out of sight: it stands where it was at the hit for the wait, and its moves
+    /// after run in the time left before the lap ends (the lap's last key
+    /// stays put). Tried every `hitStartStep`, the least wait that clears;
+    /// none clears and the keys stay as planned. On 2026-11-11 the user's
+    /// trash bounced off the lid and dropped into the can while the lid,
+    /// closing on Ease out back from the hit, swept down through it: every
+    /// look of the judge read "falls straight through the lid". A lid stays
+    /// open until the trash is in, a door until whoever walked in is
+    /// through. Keys and time only, any subject.
+    static func struckWaits(_ steps: [AskStep], part: String, hit seconds: Double, off other: String) -> [AskStep] {
+        guard let lap = Lap(steps), lap.isMover(other) || !lap.carriers(of: other).isEmpty, plain(part) != plain(other) else { return steps }
+        let keyedEnds = steps.filter { $0.tool == "set_keys" }.flatMap { AskMotionCheck.timed($0).map(\.seconds) }
+        guard let lapEnd = steps.last(where: { $0.tool == "set_timing" })?.arguments["seconds"]?.doubleValue ?? keyedEnds.max(),
+              lapEnd - seconds > 0.1 else { return steps }
+        // Its journey from the hit ends where it goes out of sight: coming
+        // back unseen for the next lap is not part of it.
+        var until = lapEnd
+        var look = seconds + 0.02
+        while look < lapEnd - 0.0005 {
+            if lap.placed(part, at: look)?.seen == false { until = look; break }
+            look += 0.02
+        }
+        func through(_ trial: [AskStep]) -> Bool {
+            guard let lap = Lap(trial) else { return false }
+            var moment = seconds + 0.02
+            while moment < until - 0.0005 {
+                if lap.placed(part, at: moment)?.seen ?? true, (lap.placed(other, at: moment)?.seen ?? true),
+                   inkMeets(lap.ink(part, at: moment), lap.ink(other, at: moment), within: -passesThrough) { return true }
+                moment += 0.02
+            }
+            return false
+        }
+        guard through(steps) else { return steps }
+        let struck = Set(([other] + lap.carriers(of: other)).map(plain))
+        let near = Double(PropertyKeys.nearMS) / 1000
+        let room = lapEnd - seconds
+        func waited(_ wait: Double) -> [AskStep]? {
+            var trial = steps
+            var changedAny = false
+            for at in trial.indices where trial[at].tool == "set_keys" {
+                guard let property = trial[at].arguments["property"]?.stringValue, moveProperties.contains(property),
+                      let name = (trial[at].arguments["layer"]?.stringValue).flatMap(partReference)?.part, struck.contains(plain(name)),
+                      var object = trial[at].arguments.objectValue, let list = object["keys"]?.arrayValue else { continue }
+                let keys = AskMotionCheck.timed(trial[at])
+                // Only what moves after the hit waits.
+                guard let still = AskMotionCheck.played(of: trial[at], at: seconds),
+                      keys.contains(where: { $0.seconds > seconds + 0.0005 && $0.seconds < lapEnd - 0.0005 && $0.value != still })
+                        || (keys.last.map { $0.seconds > seconds + 0.0005 && $0.value != still } ?? false) else { continue }
+                let share = (room - wait) / room
+                var made: [AgentJSON] = []
+                var standsAt: AgentJSON?
+                for key in list {
+                    guard var one = key.objectValue, let at = one["seconds"]?.doubleValue else { made.append(key); continue }
+                    if abs(at - seconds) <= 0.0005 {
+                        // The key at the hit: it stands for the wait, and its run starts after.
+                        standsAt = key
+                        var stand = one
+                        stand["curve"] = nil
+                        made.append(.object(stand))
+                        continue
+                    }
+                    if at > seconds + 0.0005, at < lapEnd - 0.0005 {
+                        one["seconds"] = .number(rounded(CGFloat(seconds + wait + (at - seconds) * share)))
+                    }
+                    made.append(.object(one))
+                }
+                // Where it stood at the hit, keyed when no key was there, and
+                // again at the end of the wait with the run's own curve.
+                var resume: [String: AgentJSON]
+                if let standsAt, let object = standsAt.objectValue {
+                    resume = object
+                } else if keys.first(where: { $0.seconds > seconds + 0.0005 })?.value == still {
+                    // Standing already at the hit: its next keys coming later is the wait.
+                    made.sort { ($0["seconds"]?.doubleValue ?? 0) < ($1["seconds"]?.doubleValue ?? 0) }
+                    let times = made.compactMap { $0["seconds"]?.doubleValue }
+                    guard zip(times, times.dropFirst()).allSatisfy({ $1 - $0 > near }) else { return nil }
+                    object["keys"] = .array(made)
+                    trial[at] = AskStep(tool: trial[at].tool, arguments: .object(object))
+                    changedAny = true
+                    continue
+                } else {
+                    let running = keys.last { $0.seconds < seconds }
+                    made.append(.object(["seconds": .number(seconds), "value": still]))
+                    resume = ["value": still]
+                    if let curve = running?.curve { resume["curve"] = .string(curve) }
+                }
+                resume["seconds"] = .number(rounded(CGFloat(seconds + wait)))
+                resume["touches"] = nil
+                made.append(.object(resume))
+                made.sort { ($0["seconds"]?.doubleValue ?? 0) < ($1["seconds"]?.doubleValue ?? 0) }
+                let times = made.compactMap { $0["seconds"]?.doubleValue }
+                guard zip(times, times.dropFirst()).allSatisfy({ $1 - $0 > near }) else { return nil }
+                object["keys"] = .array(made)
+                trial[at] = AskStep(tool: trial[at].tool, arguments: .object(object))
+                changedAny = true
+            }
+            return changedAny ? trial : nil
+        }
+        var wait = hitStartStep
+        while wait <= min(longestWait, room * (1 - leastKeptShare)) + 0.0005 {
+            if let trial = waited(wait), !through(trial) { return trial }
+            wait += hitStartStep
+        }
+        return steps
     }
 
     // MARK: What bounces comes away

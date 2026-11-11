@@ -32,7 +32,7 @@ struct AskMotionBounceThenInTests {
         }.sorted { $0.seconds < $1.seconds }
     }
 
-    @Test("The trash lands in the can's mouth where the model put it, and bounces off the lid on a key of its own before that")
+    @Test("The trash lands in the can's mouth where the model put it, and is off the lid before that")
     func landsInAfterTheBounce() throws {
         let placed = AskMotion.touchesPlaced(try Self.steps())
         let keys = Self.keys(placed)
@@ -40,10 +40,11 @@ struct AskMotionBounceThenInTests {
         // Drawn at x 18 to 21: between the can's walls (7 to 17) at its mouth.
         #expect(landing.at.x + 18 >= 7 && landing.at.x + 21 <= 17.5, "\(landing)")
         #expect(landing.at.y + 3 <= 10, "at the mouth, not down the side: \(landing)")
-        // A bounce key between the last lid hit and the landing, apart from the lid.
-        let bounce = try #require(keys.first { $0.seconds > 1.05 + 0.0005 && $0.seconds < 1.2 - 0.0005 }, "\(keys)")
+        // Off the lid before the landing: on a bounce key of its own, or on
+        // its own way down once the lid waits for it (AskMotionStruckWaitsTests).
         let lap = try #require(AskMotion.Lap(placed))
-        #expect(!AskMotion.inkMeets(lap.ink("trash", at: bounce.seconds), lap.ink("lid", at: bounce.seconds), within: 0), "\(bounce)")
+        let off = keys.first { $0.seconds > 1.05 + 0.0005 && $0.seconds < 1.2 - 0.0005 }?.seconds ?? 1.125
+        #expect(!AskMotion.inkMeets(lap.ink("trash", at: off), lap.ink("lid", at: off), within: 0), "\(keys)")
         // And never through the lid from the hit to the landing.
         #expect(try !AskMotionBounceTests.through(placed, from: 1.05, to: 1.2))
     }
