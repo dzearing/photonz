@@ -361,8 +361,20 @@ public enum LiveBackdropPainter {
                 float core = exp(-(dist * dist) / (width * width));
                 float halo = 0.22 * exp(-dist / (width * 14.0));
                 float phase = fract(x * (0.45 + 0.3 * h2) - t * (0.30 + 0.35 * h) + h * 7.0);
-                float pulse = exp(-(1.0 - phase) * trail) * smoothstep(1.0, 0.96, phase);
-                float w = (core + halo) * (0.10 + 1.4 * pulse) * k.y * 1.1;
+                // The trail fades all the way out at its tail. Left at
+                // exp(-trail) there, a long trail stopped dead at a straight
+                // edge across the streak, its halo with it.
+                float tail = exp(-trail);
+                float pulse = max(exp(-(1.0 - phase) * trail) - tail, 0.0) / (1.0 - tail)
+                    * smoothstep(1.0, 0.90, phase);
+                // A packet's glow is as wide as the streak's own halo only at
+                // its brightest, and narrows with it, so a packet is a comet
+                // with a round head and a tapering tail. Spread the full
+                // width all along it, a packet was a glowing box with a
+                // straight front.
+                float reach = width * 14.0 * sqrt(pulse) + px;
+                float packet = core + 0.22 * exp(-dist / reach);
+                float w = ((core + halo) * 0.10 + 1.4 * pulse * packet) * k.y * 1.1;
                 float3 c = live::lights(h + 0.1 * fi, c1, c2, c3);
                 glow += c * w;
                 weight += w;
@@ -559,23 +571,37 @@ public enum LiveBackdropPainter {
                 float cell = mix(0.045, 0.14, depth) * k.z;
                 float2 velocity = float2(0.025, -0.05) * (0.4 + 1.8 * depth * mix(0.6, 1.4, k.w));
                 float2 q = uv - velocity * t + float2(float(layer) * 3.7, float(layer) * 1.3);
-                float2 id = floor(q / cell);
-                float2 within = fract(q / cell);
-                float h = live::hash2(id + float(layer) * 17.0);
-                float h2 = live::hash2(id * 1.7 + 3.0);
-                float2 at = 0.25 + 0.5 * float2(h, h2)
-                    + 0.08 * float2(sin(t * (0.6 + h) + h * 6.0), cos(t * (0.5 + h2) + h2 * 6.0));
-                float r = mix(0.0016, 0.0065, near) * (0.6 + 0.8 * h2);
-                float soft = r * mix(0.4, 1.6, near * k.w);
-                float dist = length((within - at) * cell);
-                float spot = 1.0 - smoothstep(max(r - soft, 0.0), r + soft + px, dist);
-                float halo = 0.35 * exp(-dist / (r * 3.0 + px));
-                float twinkle = 0.55 + 0.45 * sin(t * (2.0 + 3.0 * h) + h * 40.0);
-                float shown = step(0.5, h2);
-                float w = (spot + halo) * twinkle * shown * mix(0.45, 1.0, depth) * k.y;
-                float3 col = live::lights(h * 0.7 + float(layer) * 0.3, c1, c2, c3);
-                glow += col * w;
-                weight += w;
+                float2 home = floor(q / cell);
+                // A speck's halo spills past its own cell, so each pixel takes
+                // the specks of the eight cells round it as well. Read from its
+                // own cell alone, a halo was cut off at the cell's edge and
+                // every bright speck sat in a dark box.
+                for (int j = -1; j <= 1; j++) {
+                    for (int i = -1; i <= 1; i++) {
+                        float2 id = home + float2(float(i), float(j));
+                        float2 within = q / cell - id;
+                        float h = live::hash2(id + float(layer) * 17.0);
+                        float h2 = live::hash2(id * 1.7 + 3.0);
+                        if (h2 < 0.5) { continue; }
+                        float2 at = 0.25 + 0.5 * float2(h, h2)
+                            + 0.08 * float2(sin(t * (0.6 + h) + h * 6.0), cos(t * (0.5 + h2) + h2 * 6.0));
+                        float r = mix(0.0016, 0.0065, near) * (0.6 + 0.8 * h2);
+                        float soft = r * mix(0.4, 1.6, near * k.w);
+                        float dist = length((within - at) * cell);
+                        float spot = 1.0 - smoothstep(max(r - soft, 0.0), r + soft + px, dist);
+                        // A speck sits at least 0.17 of a cell inside its own,
+                        // so the nine cells reach 1.17 cells from it every way:
+                        // its halo is brought to nothing before that, softly,
+                        // however small the cells are drawn.
+                        float halo = 0.35 * exp(-dist / (r * 3.0 + px))
+                            * (1.0 - smoothstep(0.6 * cell, 1.15 * cell, dist));
+                        float twinkle = 0.55 + 0.45 * sin(t * (2.0 + 3.0 * h) + h * 40.0);
+                        float w = (spot + halo) * twinkle * mix(0.45, 1.0, depth) * k.y;
+                        float3 col = live::lights(h * 0.7 + float(layer) * 0.3, c1, c2, c3);
+                        glow += col * w;
+                        weight += w;
+                    }
+                }
             }
             float fog = 0.10 * k.y * live::fbm(uv * 1.8 + float2(t * 0.05, -t * 0.03));
             glow += c3 * fog;

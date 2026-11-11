@@ -1,0 +1,27 @@
+{
+  "feature": "Moving title backgrounds without boxes round their glows",
+  "epic": "video-titles-graphics",
+  "summary": "The Keynote Clean page's specks of light now fade into the night with no dark square round each one, in the editor and in an exported MP4. Energy Streams (behind Stacked Stagger) also lost the hard vertical edges at the front and back of each bright packet.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "File > New > Video, then Sequence > Insert Title Page and pick Keynote Clean.", "shot": "2026-11-11-keynote-clean-no-boxes-1080p.png", "shotNote": "A frame 2.5 s in, the same corner of the page as the original report (2026-10-19-keynote-clean-blocks-1080p.png), drawn by the probe the way export draws it." },
+    { "do": "Move the playhead to 2.5 s and look closely round the brighter specks in the top left." },
+    { "do": "File > Export as MP4 at full size and open the movie.", "shot": "2026-11-11-keynote-clean-mp4-1080p-frame.png", "shotNote": "A frame 2.5 s into the exported 1920x1080 MP4." },
+    { "do": "Do the same on a 3456 by 2234 video.", "shot": "2026-11-11-keynote-clean-mp4-retina-frame.png", "shotNote": "A frame 2.5 s into the exported 3456x2234 MP4, scaled down to 1920 wide for this report." },
+    { "do": "Insert a Stacked Stagger page and watch the bright packets running along the streaks.", "shot": "2026-11-11-energy-streams-default-after.png" },
+    { "do": "Pick its background and drag Trail all the way up.", "shot": "2026-11-11-energy-streams-long-trail-after.png", "shotNote": "Before this change the same frame had a hard vertical edge with a dark notch at every packet: 2026-11-11-energy-streams-long-trail-before.png." }
+  ],
+  "evaluate": [
+    "Can you see any square or straight edge round a speck of light on Keynote Clean, while it plays or when paused?",
+    "Do the Keynote Clean specks still read as the same calm starfield as before, just without the boxes?",
+    "Do the Energy Streams packets now read as soft comets rather than glowing boxes?",
+    "Does the longest Trail setting still look like a trail rather than a smear?"
+  ],
+  "rough": [
+    "No mock covers these backgrounds; the fix keeps every look as it was designed and only removes the cut edges.",
+    "The pictures are frames drawn the way export draws them, and frames taken from the exported MP4s, not captures of the window: the change is in how the background is drawn, which the window and export share.",
+    "Architectural Sketch and Grid Horizon draw straight lines on purpose (a blueprint grid, a floor grid and a sun setting behind the horizon). They were looked at and have no boxes, so the new seam test leaves them out.",
+    "The other soft looks (Aurora, Color Bubbles, Light Rays, Light Leaks, Wind Streams, Liquid Gradient) show only 8-bit banding, one level a channel, on smooth slopes. That is not a box and was left as it is."
+  ]
+}
