@@ -91,6 +91,35 @@ struct AskMotionTuckedInTests {
         #expect(after.value("trash", .position, at: 0.95) == before.value("trash", .position, at: 0.95))
     }
 
+    /// The same story walked again on 2026-11-11 at 13:20, after the trash was
+    /// sent back to be drawn in lines: the model moved its landing onto the
+    /// can's right rim, (-2, 3), and pushed the way the lid's end sweeps
+    /// (down and to the right) the trash went down the outside of the wall.
+    static let stroked = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g id="bin"><path id="body" d="M7 9 L8 20 Q8 21 9 21 L15 21 Q16 21 16 20 L17 9"/><line id="rib-left" x1="10" y1="11" x2="10.5" y2="19"/><line id="rib-right" x1="14" y1="11" x2="13.5" y2="19"/></g><g id="lid"><line id="lid-bar" x1="6" y1="8" x2="18" y2="8"/><line id="lid-knob" x1="11" y1="6" x2="13" y2="6"/></g><path id="trash" d="M19 3 L21 4 L20 6 L18 5 Z"/></svg>"##
+
+    static func rimSteps() throws -> [AskStep] {
+        [AskStep(tool: "add_drawing", arguments: ["icon": true, "subject": "trash bin with hinged lid", "svg": .string(stroked)]),
+         AskStep(tool: "set_timing", arguments: ["loop": true, "seconds": .number(1.5)]),
+         AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"curve":"Hold","seconds":0,"value":0},{"curve":"Ease out","seconds":0.2,"value":0},{"curve":"Hold","seconds":0.5,"value":-40},{"curve":"Ease in","seconds":0.8,"value":-40},{"curve":"Ease out back","seconds":0.95,"value":-25},{"curve":"Hold","seconds":1.3,"value":0},{"seconds":1.5,"value":0}],"layer":"$1/lid","pivot":{"x":6,"y":8},"property":"rotation"}"#)),
+         AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":100},{"seconds":0.5,"value":100},{"seconds":1.1,"value":0},{"seconds":1.2,"value":0},{"seconds":1.5,"value":100}],"layer":"$1/trash","property":"opacity"}"#)),
+         AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"touches":"lid","value":{"x":-4,"y":3}},{"seconds":0.95,"value":{"x":-5,"y":1}},{"seconds":1.1,"touches":"bin","value":{"x":-5,"y":5}},{"seconds":1.2,"value":{"x":-5,"y":5}},{"seconds":1.5,"value":{"x":0,"y":0}}],"layer":"$1/trash","property":"position"}"#)),
+         AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"value":{"x":-4,"y":3}},{"seconds":0.95,"value":{"x":-3,"y":1}},{"seconds":1.1,"value":{"x":-2,"y":3}},{"seconds":1.2,"value":{"x":-2,"y":3}},{"seconds":1.5,"value":{"x":0,"y":0}}],"layer":"$1/trash","property":"position","replace":true}"#))]
+    }
+
+    @Test("Landing on the rim, the trash goes in past the lid into the can, never down the outside of its wall")
+    func intoTheCan() throws {
+        let raw = Self.beforeTuck(try Self.rimSteps())
+        let tucked = AskMotion.tuckedIn(raw)
+        #expect(tucked != raw)
+        let lap = try #require(AskMotion.Lap(tucked))
+        let ink = lap.ink("trash", at: 1.1).flatMap { $0 }
+        let middle = CGPoint(x: ink.map(\.x).reduce(0, +) / CGFloat(ink.count), y: ink.map(\.y).reduce(0, +) / CGFloat(ink.count))
+        // Between the can's walls (7 to 17 at the top, 8 to 16 at the foot), below the shut lid.
+        #expect(middle.x > 8.5 && middle.x < 15.5, "\(middle)")
+        #expect(middle.y > 10 && middle.y < 20, "\(middle)")
+        #expect(!AskMotion.inkMeets(lap.ink("trash", at: 1.1), lap.ink("lid", at: 1.5), within: 0))
+    }
+
     @Test("A part that goes out of sight clear of what closes keeps its keys")
     func leftAlone() throws {
         // The lid stays open to the lap's end: nothing closes over the trash.

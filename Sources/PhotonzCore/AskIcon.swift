@@ -198,6 +198,9 @@ public enum AskIconCheck {
     /// A filled part no wider than this many line weights is a dot, part of a
     /// line icon's style.
     static let dotWidth: CGFloat = 1.25
+    /// A closed shape drawn in lines shows its inside from this many line
+    /// weights across.
+    static let smallestInside: CGFloat = 2.5
     /// Line weights this close are one weight.
     static let sameWeight: CGFloat = 1.15
     /// An id that names the kind of shape, not the part it is.
@@ -255,9 +258,20 @@ public enum AskIconCheck {
                 let own = SVGArtwork.shapeBounds(part.shape)
                 return min(own.width, own.height) > weight * dotWidth
             }
+            let across = Int((weight * smallestInside).rounded(.up))
             if !solid.isEmpty, lines.count > solid.count {
                 let names = solid.map { $0.name ?? "a filled shape" }.joined(separator: ", ")
-                said.append("\(names) is drawn solid among lines and reads as a block: draw it in lines like the rest (fill none, the same stroke), big enough that its inside shows.")
+                said.append("\(names) is drawn solid among lines and reads as a block: draw it in lines like the rest (fill none, the same stroke), at least \(across) across so its inside shows.")
+            }
+            // Drawn in lines, but a small closed shape whose lines meet in
+            // the middle: it fills in and reads as a block all the same.
+            let filledIn = lines.filter { part in
+                let own = SVGArtwork.shapeBounds(part.shape)
+                return min(own.width, own.height) > weight * dotWidth && max(own.width, own.height) < weight * smallestInside
+            }
+            if !filledIn.isEmpty {
+                let names = filledIn.map { $0.name ?? "a small shape" }.joined(separator: ", ")
+                said.append("\(names) is too small for its lines: they meet in the middle and it reads as a block. Draw it at least \(across) across so its inside shows.")
             }
         }
         switch look {

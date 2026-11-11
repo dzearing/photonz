@@ -253,6 +253,12 @@ struct AskIconTests {
         <circle id="dot" cx="12" cy="8" r="1" fill="#1D1D1F" stroke="none"/></svg>
         """##).get()
         #expect(AskIconCheck.problems(dot, look: nil, appIcon: false).isEmpty)
+        // Drawn in lines but too small for them, it fills in all the same
+        // (the model's answer to the send-back on 2026-11-11: the same 3 by 3
+        // shape with a stroke of 2), and is sent back with a size to draw it.
+        let small = try SVGArtwork.parse(AskMotionTuckedInTests.stroked).get()
+        let smallSaid = AskIconCheck.problems(small, look: nil, appIcon: false)
+        #expect(smallSaid.contains { $0.lowercased().contains("trash") && $0.contains("5") }, "\(smallSaid)")
         // A filled icon asked for keeps its fills.
         #expect(!AskIconCheck.problems(trash, look: .filled, appIcon: false).contains { $0.lowercased().contains("trash") })
         // And the clean line icon still passes.

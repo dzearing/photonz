@@ -23,6 +23,11 @@ extension AskMotion {
     /// shuts onto: the agent's own look called it "vanishes in place", and
     /// the reel showed a grey ghost of it on the shut lid. Pushed in, it is
     /// seen going into the can as it fades and the lid shuts over nothing.
+    /// The push starts the way the closer sweeps and turns from it as far as
+    /// a right angle, shortest first, until the part's middle is half its
+    /// size inside what it landed in (later that day the model moved the
+    /// landing onto the can's rim, and the sweep alone, down and out with the
+    /// lid's end, sent the trash down the outside of the wall).
     /// Only the latest keys of each value are read and changed (as they
     /// will play), and a landing no push within `mostTuck` clears keeps
     /// its keys. Ink, keys and time only, any subject.
@@ -71,14 +76,14 @@ extension AskMotion {
                 // gets there after it set off for the landing.
                 guard inkMeets(current.ink(part, at: landed), rest, within: tuckGap * width),
                       let sweep = sweep(of: closer, onto: current.ink(part, at: landed), from: from, to: lapEnd, in: current) else { continue }
-                func trial(_ push: CGFloat) -> [AskStep]? {
+                func trial(_ way: CGVector) -> [AskStep]? {
                     guard var object = out[index].arguments.objectValue, var list = object["keys"]?.arrayValue else { return nil }
                     for slot in list.indices {
                         guard let at = list[slot]["seconds"]?.doubleValue,
                               moved.contains(where: { abs(keys[$0].seconds - at) <= 0.0005 }),
                               var one = list[slot].objectValue,
                               let x = one["value"]?["x"]?.doubleValue, let y = one["value"]?["y"]?.doubleValue else { continue }
-                        one["value"] = ["x": .number(rounded(CGFloat(x) + sweep.dx * push)), "y": .number(rounded(CGFloat(y) + sweep.dy * push))]
+                        one["value"] = ["x": .number(rounded(CGFloat(x) + way.dx)), "y": .number(rounded(CGFloat(y) + way.dy))]
                         list[slot] = .object(one)
                     }
                     object["keys"] = .array(list)
@@ -98,15 +103,65 @@ extension AskMotion {
                     }
                     return true
                 }
-                var push = tuckStep * width
-                while push <= mostTuck * width + 0.0005 {
-                    if let made = trial(push), clear(made) { out = made; break }
-                    push += tuckStep * width
+                // What it lands in: the still parts it meets as it lands. Its
+                // middle ends at least half its own size inside their outline,
+                // or as deep as any push gets it, so it goes into the can, not
+                // down the outside of its wall.
+                let landedInk = current.ink(part, at: landed)
+                let points = landedInk.flatMap { $0 }
+                guard !points.isEmpty else { break }
+                let middle = CGPoint(x: points.map(\.x).reduce(0, +) / CGFloat(points.count), y: points.map(\.y).reduce(0, +) / CGFloat(points.count))
+                let size = min((points.map(\.x).max() ?? 0) - (points.map(\.x).min() ?? 0), (points.map(\.y).max() ?? 0) - (points.map(\.y).min() ?? 0))
+                let into = hull(current.still.map(\.name).flatMap { name -> [CGPoint] in
+                    let ink = current.ink(name, at: landed)
+                    return inkMeets(landedInk, ink, within: tuckGap * width) ? ink.flatMap { $0 } : []
+                })
+                // The sweep first, then turned a little more each way.
+                let turns: [Double] = into.count >= 3 ? [0, 15, -15, 30, -30, 45, -45, 60, -60, 75, -75, 90, -90] : [0]
+                var tries: [(length: CGFloat, turn: Double, way: CGVector)] = []
+                var length = tuckStep * width
+                while length <= mostTuck * width + 0.0005 {
+                    for turn in turns {
+                        let angle = turn * .pi / 180
+                        let way = CGVector(dx: (sweep.dx * cos(angle) - sweep.dy * sin(angle)) * length,
+                                           dy: (sweep.dx * sin(angle) + sweep.dy * cos(angle)) * length)
+                        tries.append((length, turn, way))
+                    }
+                    length += tuckStep * width
+                }
+                func depth(_ way: CGVector) -> CGFloat {
+                    into.count >= 3 ? AskMotion.depth(of: CGPoint(x: middle.x + way.dx, y: middle.y + way.dy), in: into) : 0
+                }
+                let deepest = tries.map { depth($0.way) }.max() ?? 0
+                let need = min(size / 2, deepest)
+                for one in tries where depth(one.way) >= need - 0.0005 {
+                    // Cheap first: clear of where the closer rests.
+                    let shifted = landedInk.map { $0.map { CGPoint(x: $0.x + one.way.dx, y: $0.y + one.way.dy) } }
+                    guard !inkMeets(shifted, rest, within: tuckGap * width), let made = trial(one.way), clear(made) else { continue }
+                    out = made
+                    break
                 }
                 break
             }
         }
         return out
+    }
+
+    /// How far `point` is inside the convex outline `hull`: the distance to
+    /// its nearest edge, less than nothing outside it.
+    static func depth(of point: CGPoint, in hull: [CGPoint]) -> CGFloat {
+        guard hull.count >= 3 else { return 0 }
+        var area: CGFloat = 0
+        for (a, b) in zip(hull, hull.dropFirst() + [hull[0]]) { area += a.x * b.y - b.x * a.y }
+        let turn: CGFloat = area >= 0 ? 1 : -1
+        var nearest = CGFloat.greatestFiniteMagnitude
+        for (a, b) in zip(hull, hull.dropFirst() + [hull[0]]) {
+            let length = hypot(b.x - a.x, b.y - a.y)
+            guard length > 0 else { continue }
+            let side = turn * ((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)) / length
+            nearest = min(nearest, side)
+        }
+        return nearest
     }
 
     /// The way `closer` sweeps onto what lies at `onto`: the point of it that
