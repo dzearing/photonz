@@ -16754,3 +16754,11 @@
 {"t":"2026-11-11T09:00:12.446Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T09:00:12.522Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T09:00:12.597Z","ev":"task_pending","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":"in_progress","note":"Tidy spacing numbers landed (Ask 73, skill 71.2 on settings; clean 5.4/5.2); bar of 8 not reached and a hand-placed ideal tops out near 6, so left open for the user's read"}
+{"t":"2026-11-11T09:10:24.452Z","ev":"task_note","id":"a-clip-or-title-held-as-an-insert-shows-what-mov"}
+{"t":"2026-11-11T09:12:29.947Z","ev":"slice_pass","walks":32,"passed":31,"failed":1,"seconds":563,"of":1141,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-11T09:12:30.135Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-11T09:29:33.277Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T11:15:18.567Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T11:37:51.694Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T11:37:51.769Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-11T11:37:51.843Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Lid reads where it plays and waits for the trash (92a4a3725, ff287e9ce); story bar (5 of 6 at 7) still not met; trash 37.6 to 42.2 this pass"}

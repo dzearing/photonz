@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-11T07:39:30.582Z",
+  "updated": "2026-11-11T11:37:51.842Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -270,9 +270,33 @@
     {
       "t": "2026-11-11T07:39:30.581Z",
       "note": "The can keeps its drawn shape (fe40711be, 89dafc069); story bar (5 of 6 read as asked at 7) still not met, 0 of 6, totals 56.3 and 61.1"
+    },
+    {
+      "t": "2026-11-11T09:12:30.130Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T09:29:33.275Z",
+      "note": "Pass eleven. Replayed run 20261111-064936's final trash plan: the contact checks (Lap) read every part in a straight line between keys, the icon plays each run on its curve. The lid closing on Ease out back from 0.95 s was read at -26 deg at 1.0 s where it plays at -14, so it swept through the trash 1.0 to 1.1 s while every check said clear: exactly the judge's 'passes straight through the lid'. Built test first: AskMotionCheck.played (curve-aware, Lap uses it; AskMotionPlayedTests 3) and struckWaits (what was hit stands until the hitter, seen, is clear of it, its later moves squeezed into the lap; AskMotionStruckWaitsTests 3). Replay: trash in from the right, meets the lid's underside 0.8 s, off it 1.0 s, into the mouth 1.1 s; lid holds open to 1.1 s and shuts by 1.36 s; no pass-through while seen."
+    },
+    {
+      "t": "2026-11-11T11:15:18.565Z",
+      "note": "Measured 92a4a3725 (played curves + struckWaits + usedUpUnseen + ms keys): three story runs 20261111-092934 50.9, 095723 47.9, 103646 52.3; trash 41.8, 42.2, 42.1 (last pass 50.7, 54.3). Frames: the pass-through is gone in all three (lid waits open until the trash is in). Run 103646's trash came in already fading: the model faded it over its whole throw to the landing, travelsSeen skipped a fade ending AT the landing, and usedUpUnseen (now hiding it at rest) exposed that. Fixed test first (fadeEndingAtTheLanding), committed. The rocket's low 45 to 48 in all three: the model wrote its key times in milliseconds (100 to 3000 on a 3 s lap), now read as seconds at plan time (keysInSeconds)."
+    },
+    {
+      "t": "2026-11-11T11:37:51.692Z",
+      "note": "Shipped 92a4a3725 + ff287e9ce (pushed): contact read on played curves, struckWaits, usedUpUnseen, keysInSeconds, travelsSeen for a fade ending at the landing. Scripts/test.sh exit 0 (twice). Walk ask-animates-a-story-walk at Next defaults ok (237 s, Copy SVG repeatCount=indefinite), reel queue/audits/2026-11-11-story-trash-waits-two-laps.gif; audit queue/audits/2026-11-11-animated-icon-story-lid-waits.json. Pictures looked at: replays of runs 064936 and 103646, eval frames for 092934 (lid holds open until the trash is in, no pass-through), 103646 (trash came in fading: fixed), 112934 (trash faded in where it sat, returns seen at 1.4 s), and the walk reel (hidden at rest, thrown from the right edge at 0.68 s, but crosses the shutting lid 1.06 to 1.26 s because the plan had no touches)."
+    },
+    {
+      "t": "2026-11-11T11:37:51.767Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases read as asked at 7. Three story runs on this code: 50.9, 47.9, 52.3 (1 of 6 or fewer). The user's trash: 41.8, 42.2, 42.1, 37.6 (last pass 50.7, 54.3; range across all passes 37 to 55). Next levers, from the traces: (1) contacts the model never declares: its plan sends the trash up into the dipping lid and parks it at the can's mouth where the shut lid goes; a general 'whatever moves into a traveller waits' was tried and taken out (replay showed no wait clears a part sitting where the lid shuts); placing the landing clear of what closes over it is the next tool to try. (2) A part faded in where it sits is still seen appearing in mid-air. (3) The judges mark down a filled trash in a line icon in every run. Left rough, no new task (all inside this one)."
+    },
+    {
+      "t": "2026-11-11T11:37:51.841Z",
+      "note": "Lid reads where it plays and waits for the trash (92a4a3725, ff287e9ce); story bar (5 of 6 at 7) still not met; trash 37.6 to 42.2 this pass"
     }
   ],
-  "started": "2026-11-11T05:08:01.688Z",
+  "started": "2026-11-11T09:12:30.129Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
