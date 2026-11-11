@@ -577,6 +577,9 @@ public enum AskMotion {
         return (out, box)
     }
 
+    /// How far the room's middle may sit from the drawing's, a share of its side.
+    static let offMiddle: CGFloat = 1.0 / 12
+
     /// The smallest square of at least `least` and at most `most` across that
     /// holds `needed`, as near the middle of `view` as that allows. Room is
     /// taken where the drawing leaves it before the drawing is made smaller:
@@ -585,7 +588,16 @@ public enum AskMotion {
     /// made on its grid stays on it. Geometry only, true of any drawing.
     static func room(holding needed: CGRect, in view: CGRect, least: CGFloat, most: CGFloat) -> CGRect {
         guard !needed.isNull else { return view }
-        let side = min(max(least, needed.width, needed.height), max(least, most))
+        // An icon at rest sits near the middle of its frame: the room moves
+        // off the middle by a twelfth at most, and grows for the rest (a
+        // look at the trash of 2026-11-11 called it off centre, padded
+        // unevenly, when it moved by more than two units).
+        let off = offMiddle * view.width
+        func span(_ low: CGFloat, _ high: CGFloat, _ middle: CGFloat) -> CGFloat {
+            let centre = min(max((low + high) / 2, middle - off), middle + off)
+            return 2 * max(centre - low, high - centre)
+        }
+        let side = min(max(least, span(needed.minX, needed.maxX, view.midX), span(needed.minY, needed.maxY, view.midY)), max(least, most))
         func along(_ low: CGFloat, _ high: CGFloat, middle: CGFloat) -> CGFloat {
             let centred = middle - side / 2
             // The frame's start that keeps `low` and `high` in, nearest the middle.
@@ -2302,7 +2314,9 @@ public enum AskMotionCheck {
            hypot(pivot.x - box.midX, pivot.y - box.midY) >= 1 {
             let angles = keys.compactMap { $0["value"]?.doubleValue }
             if let least = angles.min(), let most = angles.max() {
-                for degrees in stride(from: least, through: most, by: 15) {
+                // The widest key too: from -12 in steps of 15 a swing to 14
+                // was measured at 3 (the bell of 2026-11-11, cut by the frame).
+                for degrees in Array(stride(from: least, through: most, by: 15)) + [most] {
                     let turn = degrees * .pi / 180
                     for corner in corners {
                         let (x, y) = (corner.x - pivot.x, corner.y - pivot.y)

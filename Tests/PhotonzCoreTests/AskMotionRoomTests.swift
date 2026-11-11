@@ -18,17 +18,19 @@ struct AskMotionRoomTests {
         return try #require(try SVGArtwork.parse(svg).get().viewBox)
     }
 
-    @Test("The trash whose lid swings past the top keeps nine tenths of its size, and every resting line and the open lid stay in the frame")
+    @Test("The trash whose lid swings past the top keeps over four fifths of its size, near the middle, and every resting line and the open lid stay in the frame")
     func trashKeepsItsSize() throws {
         let steps = try AskMotionBounceTests.steps()
         let landed = AskMotion.planned(steps)
         let box = try Self.view(landed)
         #expect(abs(box.width - box.height) < 0.01)
-        #expect(box.width <= 24 / 0.88, "the can stays near the size it was drawn: \(box)")
+        #expect(box.width <= 24 / 0.84, "the can stays near the size it was drawn: \(box)")
         let art = try SVGArtwork.parse(try #require(landed.first?.arguments["svg"]?.stringValue), keepingGroups: true).get()
         let ink = art.parts.map { SVGArtwork.shapeBounds($0.shape).insetBy(dx: -$0.strokeWidth / 2, dy: -$0.strokeWidth / 2) }
             .reduce(CGRect.null) { $0.union($1) }
         #expect(box.insetBy(dx: 0.5, dy: 0.5).contains(ink), "resting ink \(ink) clear of the edge of \(box)")
+        // Near the middle: off it by a twelfth of the drawing at most.
+        #expect(abs(box.midX - 12) <= 2 + 0.01 && abs(box.midY - 12) <= 2 + 0.01, "\(box)")
         let lid = try #require(landed.first { $0.arguments["layer"]?.stringValue == "$1/lid" })
         #expect(box.contains(AskMotionCheck.reach(of: [lid], in: art)), "the open lid is in the frame")
     }
@@ -101,5 +103,25 @@ struct AskMotionRoomTests {
         let frame = art.iconFrame(named: "Thing", side: 512, origin: .zero, onGrid: true)
         let points = try #require(Self.landed("Leaning", in: frame))
         for point in points { #expect(abs(point.x - point.x.rounded()) < 1e-6 && abs(point.y - point.y.rounded()) < 1e-6, "\(points)") }
+    }
+
+    @Test("A swing's reach counts its widest key: a bell swung -12 then +14 degrees is measured at 14, not at 3")
+    func swingReachesItsWidestKey() throws {
+        // The bell of 2026-11-11, run 20261111-061223: angles were sampled
+        // every 15 degrees from the least, -12 and 3, never 14, so the room
+        // was made for a swing to the left a fifth the size and the rim was
+        // cut by the frame at 0.48 s.
+        let svg = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><line id="mount" x1="9" y1="3" x2="15" y2="3"/><g id="bell"><path id="body" d="M12 4 C8 4 6 7 6 11 L6 14 L4 17 L20 17 L18 14 L18 11 C18 7 16 4 12 4 Z"/><circle id="clapper" cx="12" cy="19" r="1.5"/></g></svg>"##
+        let art = try SVGArtwork.parse(svg, keepingGroups: true).get()
+        let swing = AskStep(tool: "set_keys", arguments: try AgentJSON.parse(Data(#"{"keys":[{"seconds":0,"value":0},{"seconds":0.5,"value":14},{"seconds":0.8,"value":-12},{"seconds":1.2,"value":0}],"layer":"$1/bell","pivot":{"x":12,"y":3},"property":"rotation"}"#.utf8)))
+        let reach = AskMotionCheck.reach(of: [swing], in: art)
+        // The box's bottom left corner (3, 21.5) turned 14 degrees about (12, 3).
+        let turn = 14 * CGFloat.pi / 180
+        let corner = 12 + (3 - 12) * cos(turn) - (21.5 - 3) * sin(turn)
+        #expect(reach.minX <= corner + 0.01, "\(reach)")
+        // And the room made holds it, the drawing kept in the middle.
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "bell", "svg": .string(svg)])
+        let box = try Self.view(AskMotion.fitted([drawing, swing]))
+        #expect(box.insetBy(dx: -AskMotionCheck.edgeSlack, dy: -AskMotionCheck.edgeSlack).contains(reach), "\(box) \(reach)")
     }
 }
