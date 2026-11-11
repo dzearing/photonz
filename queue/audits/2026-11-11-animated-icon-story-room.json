@@ -1,0 +1,30 @@
+{
+  "feature": "An animated icon told as a little story: the trash can keeps the shape it was drawn with",
+  "epic": "icon-svg",
+  "summary": "The trash can you called the ugliest you had seen was drawn cleanly by the agent and then spoiled by the app: shrunk to 73 percent to make room for the lid, with every point snapped to whole units, which merged the ribs into a W and blobbed the corners. It now keeps 85 percent of its size and its shape, and the trash lands inside the can instead of sliding down its outside.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Compare the can you sent back (left) with today's (right).", "shot": "2026-11-11-story-trash-before-after.png" },
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-11-story-trash-in-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return." },
+    { "do": "Wait for Ask to finish (about four and a half minutes), then press Space to play." },
+    { "do": "Watch the reel of the same sentence playing two laps.", "shot": "2026-11-11-story-trash-in-two-laps.gif" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-11-story-trash-in.svg" },
+    { "do": "Read the frames: the ball meets the lid at 0.9 s, pops up off it at 1.0 s, and the lid shuts.", "shot": "2026-11-11-story-trash-in-frames.png" }
+  ],
+  "evaluate": [
+    "Does the can on the right still look ugly to you, or is the drawing now acceptable and the motion the thing left?",
+    "In the latest reel the ball pops up off the lid at 1.0 s. Does that read as a bounce?",
+    "The icon now sits up to two units off centre at rest to leave room for the lid above. Is that off-centre noticeable at 24 and 48 points?",
+    "Is it worth another pass on the motion, or is this good enough for now?"
+  ],
+  "rough": [
+    "In the latest walk the ball pops up off the lid but then crosses the closing lid to get into the can (1.1 to 1.2 s). The check for passing through only looks at a part the agent said it touches.",
+    "The trash still sits in view at rest in the corner from the start of the lap in most runs. It only flies in from outside when the agent plans it hidden until it is thrown.",
+    "In the latest drawing the agent ended the ribs one unit above the base, so their round ends touch the base line and leave small notches at the bottom.",
+    "The opening lid brushes the resting trash at about 0.24 s in some runs.",
+    "The bar for this task (five of six story icons read as asked at 7 or more) is not met. Two runs: totals 56.3 and 61.1 (61.1 is the best yet; before this pass 53.7 to 59.6). Your trash reads as asked at 5 in both runs, and the judge still says the bounce does not read.",
+    "Single moving icons, measured once after this change: heart 91, bell 75.4, trash lid 75.4 and envelope 65.3 are in their usual ranges. The checkmark (70.6) and the paper plane (56.4) are lower, but both from their plans (a start dot and a cut at the lap's end; a plane that never takes off), not from the size or snapping change: the checkmark was exported exactly where it was drawn."
+  ]
+}

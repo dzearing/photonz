@@ -22906,3 +22906,11 @@ units.
 - The redline never parks a number over the whole of a short span: such a bracket hugs its box and its number sits just past the head; other brackets' legs and heads count as lines a number stays off.
 - 47 test lines and 7 walks moved from px to pt; full suite and 63 measurement walks green.
 - Open: the settings eval is 63.3 Ask / 61.1 skill (clean 4.2 / 3.9) against a bar of 8; hand-placed calipers do not get the never-cover rule yet. Task left pending.
+
+## 2026-11-11 — the story trash keeps the shape it was drawn with
+
+- The user's "ugliest trashcan icon" was the app's doing: the agent drew a clean can 12 across, then the room for the lid's swing grew the frame evenly about the middle (can at 73 percent) and every point of that fractionally scaled drawing was rounded to whole units (ribs into a W, corners into hooks).
+- Room is now the smallest square round the resting ink and the motion, within a twelfth of the middle, shifting by whole units before it grows; a grown frame lands points on half units. The trash keeps 85 percent.
+- A swing's reach now counts its widest key (from -12 in steps of 15 a swing to 14 was measured at 3; the bell's rim was cut).
+- A bounce no longer re-aims the contact the model planned next (the trash's landing in the can's mouth was thrown down the outside of the can); the bounce gets a key of its own.
+- Story eval: 56.3 and 61.1 (best yet). Bar (5 of 6 read as asked at 7) still not met; the trash reads as asked at 5. Task left pending.
