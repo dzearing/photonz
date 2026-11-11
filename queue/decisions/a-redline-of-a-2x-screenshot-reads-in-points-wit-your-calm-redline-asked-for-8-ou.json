@@ -1,0 +1,56 @@
+{
+  "id": "a-redline-of-a-2x-screenshot-reads-in-points-wit-your-calm-redline-asked-for-8-ou",
+  "taskId": "a-redline-of-a-2x-screenshot-reads-in-points-wit",
+  "question": "Your calm redline asked for 8 out of 10 from the agent judge on clean and aligned. After four passes the boxed marks are tidy, but the score is stuck near 5 to 6 and hand-drawn ideals of this screen score about 6 too. Close it on the pictures, go back to the older layout the judge likes better, or keep going for 8?",
+  "context": "Three passes on 2026-11-11 moved the readouts to pt, added end ticks, then tidied placement. Scores (Ask, out of 100): older layout 72 to 75, current 63 to 65; clean about 5 now. Hand-placed ideals of this screen judged 5.0 to 6.3 on clean. Pictures: the redline's own drawing of the settings screenshot, before on the left, now on the right, boxes on what changed.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Close it on the pictures (right)",
+      "summary": "The redline stays as on the right: numbers say pt, brackets hug what they measure, the field width runs inside the field, no mark touches another, no long lines to a number. The task closes for good.",
+      "pros": [
+        "Meets every point of your read: no leg running into another mark, no long leader, brackets on their objects",
+        "Frees the loop for the next feature after four passes in one day"
+      ],
+      "cons": [
+        "The agent judge scores it about 10 points lower than the older layout",
+        "The judge calls hugging brackets a little crowded"
+      ],
+      "mitigation": "If a redline looks wrong to you later, say so on the picture and it comes back as a new task with that example.",
+      "declines": true,
+      "shot": "2026-11-11-redline-bar-card-a.png"
+    },
+    {
+      "id": "b",
+      "label": "Go back to the left layout",
+      "summary": "Numbers ride brackets set a little off their objects, as on the left, keeping pt and end ticks. The 220 pt bracket stands above the field and its leg runs toward the 26 pt mark; 12 pt hangs lower on a longer line. Then the task closes.",
+      "pros": [
+        "The agent judge scores it highest (72 to 75)",
+        "Every number sits on its own bracket"
+      ],
+      "cons": [
+        "Brings back the leg-into-another-mark and the long line to 12 pt you called clumsy",
+        "Still short of 8"
+      ],
+      "mitigation": "One more short pass that restores the older placement and keeps the pt and end-tick work.",
+      "shot": "2026-11-11-redline-bar-card-b.png"
+    },
+    {
+      "id": "c",
+      "label": "Keep going for 8",
+      "summary": "More passes at the layout until the judge scores 8 on clean and aligned for this screen, judged first on the score.",
+      "pros": [
+        "Holds to the bar you set"
+      ],
+      "cons": [
+        "Hand-drawn redlines of this same screen score about 6 from the same judge, so 8 may not exist here",
+        "Each pass takes the loop for hours ahead of other work"
+      ],
+      "mitigation": "Cap it at two more passes and come back with the best of them."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-11-11T22:24:59.424Z",
+  "shot": "2026-11-11-redline-bar-card.png"
+}

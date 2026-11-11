@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T05:16:19.351Z",
-  "updated": "2026-11-11T22:22:50.311Z",
+  "updated": "2026-11-11T22:25:11.725Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried over from measuring-a-ui-gives-a-calm-redline-each-kind-of (2026-10-20), which shipped code-chosen marks and clear readout placement (Sources/PhotonzCore/Redline.swift, find_measurements / mark_measurements) and took the settings case from 32.5 to 59.0 for Ask (judge 2.8 to 4.8). What the judge still says, verbatim, from Scripts/ask-eval.sh run --engine ask --cases settings-measurements (runs 20261021-044351-ask, 20261021-044837-ask, 20261021-050243-ask or the latest): \"values don't match what they point at (124 px on a roughly 250 px button, 18 px on a gap that is clearly larger)\"; \"there are no end ticks to show what is being measured\"; \"the brackets don't clearly mark what they measure (26 px, 30 px, 17 px)\". The 124 is right in points (MeasureUnit.points, logical px) but labelled px: MeasureUnit.suffix is \"px\" for both units by design (Measure.swift line 12). Only three call sites use the suffix (Measure.swift label/chipText, MeasureSizeGroup.swift:176, DocumentUnit.swift:27) but about 46 test files and 38 walks expect px readouts, which is why it did not fit in the redline task. Size brackets are MeasureSizeGroup + caliper extension lines (MeasurePlan.swift, MeasureRasterizer.swift).",
@@ -199,6 +199,18 @@
     {
       "t": "2026-11-11T22:22:50.310Z",
       "note": "Pictures fixed (hugging brackets, field width inside the field, no touching marks, short leaders, copy-svg walk on pt); eval bar of 8 not reached (Ask 63-65, clean ~5.1; skill 59.8) and the judge prefers the older layout, so left open for the user's read of the audit"
+    },
+    {
+      "t": "2026-11-11T22:23:36.855Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T22:25:11.634Z",
+      "note": "Fourth claim, one minute after the third pass committed (f6a1c7b07). Nothing left to build that the pictures ask for; the only open item is the eval bar of 8, which hand-drawn ideals of this screen do not reach (5.0 to 6.3) and which the done rule forbids closing short of. Four claims in a day with no path to 8, and the judge prefers the older layout the user's read called clumsy: opened a card with the marked before/after (queue/audits/2026-11-11-redline-bar-card*.png) so the loop stops spinning on it."
+    },
+    {
+      "t": "2026-11-11T22:25:11.720Z",
+      "note": "Pictures fixed and committed (pt, end ticks, hugging brackets, untangled marks, copy-svg walk on pt). The eval bar of 8 looks unreachable on this screen and the judge prefers the older layout: asked the user to close on the pictures, go back to the older layout, or keep going."
     }
   ],
   "walks": [
@@ -211,5 +223,5 @@
     "size-steps-and-resizes-walk",
     "copy-svg-into-a-code-editor-walk"
   ],
-  "started": "2026-11-11T21:20:57.821Z"
+  "started": "2026-11-11T22:23:36.854Z"
 }
