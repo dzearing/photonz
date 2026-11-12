@@ -1,0 +1,39 @@
+{
+  "feature": "A saved stroke's tile counts its lines straight away",
+  "epic": "icon-svg",
+  "summary": "The tile for a saved line on the Library's Styles shelf now says how many things use it the moment another line takes it. Before, it could say 1 use with three lines wearing it until something else redrew the shelf.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. File, New, Image, Icon, and open the Library on Styles.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Draw a line with the Pen (P), set Width to 1.75 and Corners to Round, then press Save as Style and Return.",
+      "shot": "2026-11-12-stroke-tile-count-1-one-use.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw a second line with the Pen and press V. Read the tile under the shelf: it says 2 uses.",
+      "shot": "2026-11-12-stroke-tile-count-2-two-uses.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw a line with the Line tool, then click Glyph / stroke 1.75 on its Style row. The tile says 3 uses.",
+      "shot": "2026-11-12-stroke-tile-count-3-three-uses.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw an oval, add a Border from the Effects plus, and click the saved stroke on its Stroke row. The tile says 4 uses.",
+      "shot": "2026-11-12-stroke-tile-count-4-four-uses.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does the count on the tile change at the same moment the line on the canvas changes?",
+    "With a long shelf, does it still feel instant when a count changes?",
+    "Is \"4 uses\" the number you expect for two paths, a line and an oval's edge?"
+  ],
+  "rough": [
+    "No mock covers this count's timing; it matches the Styles scope in the icon mock, which prints how many use each style.",
+    "The oval in picture 4 wears a black border at the saved width; that is the border's own default colour, not part of this change.",
+    "Colour, text and effect style tiles had the same cause (a shelf entry with new words compared equal to its old self) and share the fix, but only the stroke tile was walked."
+  ]
+}

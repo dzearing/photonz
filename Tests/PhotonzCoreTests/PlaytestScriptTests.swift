@@ -4737,10 +4737,8 @@ struct PlaytestScriptTests {
         }
     }
 
-    // A field, a menu and a control all SHOW words that change. A tile shows
-    // its own name, so "reads" on one is a walk author expecting something the
-    // step cannot check.
-    @Test("Only a field, a menu, a control or a row can be asked what it reads")
+    // A field, a menu and a control all SHOW words that change.
+    @Test("A control can be asked what it reads")
     func expectStepReadsOnlyWhereThereAreWords() throws {
         let script = try decode("""
         { "steps": [ { "do": "expect", "control": "Outline", "reads": "off" } ] }
@@ -4750,11 +4748,24 @@ struct PlaytestScriptTests {
         }
         #expect(thing == .control)
         #expect(reads == "off")
-        #expect(throws: PlaytestScriptError.self) {
-            _ = try decode("""
-            { "steps": [ { "do": "expect", "tile": "Card", "reads": "Card" } ] }
-            """)
+    }
+
+    // A tile says more than its name too: a saved style's tile says how many
+    // things use it, and that count went stale on screen while every walk
+    // could only claim the tile was there (2026-11-12). It reads the words its
+    // marker carries: the shelf it is on, then its own line.
+    @Test("A tile can be asked what it says under its name")
+    func expectStepReadsATilesOwnWords() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expect", "tile": "Glyph / stroke 1.75",
+                       "reads": "Styles, 2 uses" } ] }
+        """)
+        guard case .expect(let thing, let named, _, let reads, _) = script.steps[0] else {
+            Issue.record("expect"); return
         }
+        #expect(thing == .tile)
+        #expect(named == "Glyph / stroke 1.75")
+        #expect(reads == "Styles, 2 uses")
     }
 
     // A row says MORE than its name: whether it is a group and open, what a

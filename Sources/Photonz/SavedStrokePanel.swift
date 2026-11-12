@@ -231,7 +231,9 @@ struct LibrarySavedStrokeTile: View {
         }
         .buttonStyle(.plain)
         .panelHelp("\(entry.name) • \(stroke.look.summary(in: lengths)) • \(entry.detail)")
-        .playtestTarget(entry.name, kind: .tile, detail: "Styles")
+        // The words under the name ride on the marker, so a walk can read
+        // the count a person reads: `expect tile ... reads "Styles, 2 uses"`.
+        .playtestTarget(entry.name, kind: .tile, detail: "Styles, \(entry.detail)")
     }
 }
 

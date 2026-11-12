@@ -39,6 +39,7 @@
     {"do": "wait", "seconds": 1},
     {"do": "expect", "control": "Style", "reads": "Line Style, Glyph / stroke 1.75"},
     {"do": "expect", "tile": "Glyph / stroke 1.75", "present": true},
+    {"do": "expect", "tile": "Glyph / stroke 1.75", "reads": "Styles, 1 use"},
     {"do": "snapshot", "name": "3-saved-and-on-the-shelf"},
 
     {"do": "tool", "tool": "pen"},
@@ -57,6 +58,7 @@
     {"do": "expect", "control": "Style", "reads": "Line Style, Glyph / stroke 1.75"},
     {"do": "expectPath", "ink": "#B0184A", "closed": false},
     {"do": "expectInView", "field": "Style", "whole": true},
+    {"do": "expect", "tile": "Glyph / stroke 1.75", "reads": "Styles, 2 uses"},
     {"do": "panel", "stage": "4-next-line-matches"},
     {"do": "snapshot", "name": "4-next-line-matches"},
 

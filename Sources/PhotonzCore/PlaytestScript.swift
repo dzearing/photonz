@@ -5898,18 +5898,17 @@ public enum PlaytestStep: Sendable, Equatable {
             guard reads != nil || present != nil else {
                 throw f.invalid("reads", "expect has to claim something: \"reads\" for the words it is showing, or \"present\" for whether it is there at all")
             }
-            // A tile shows its own name and nothing else, so asking one what
-            // it reads is a claim the step could never test. A ROW is not like
-            // that: it says whether it is a group and open, what a shut group
-            // is hiding, whether it is a copy of a component, what a
+            // A tile or a row can be asked what it reads as well as whether it
+            // is there. A ROW says whether it is a group and open, what a shut
+            // group is hiding, whether it is a copy of a component, what a
             // separation left in it, how many pieces a clip is cut into and
             // which half of a mask it is, all in captions six points high
-            // (`LayersRow.rowDetail`).
-            // Claiming those in words is the only alternative to photographing
-            // them and squinting.
-            if reads != nil, thing == .tile {
-                throw f.invalid("reads", "only a field, a menu, a control or a row can be asked what it reads; a \(thing.rawValue) shows its own name, so claim \"present\" instead")
-            }
+            // (`LayersRow.rowDetail`). A TILE says the shelf it is on and,
+            // where it has one, the line under its name: how many things use
+            // a saved style. That count went stale on screen while walks could
+            // only claim the tile was there (2026-11-12). Claiming those in
+            // words is the only alternative to photographing them and
+            // squinting.
             // Only a control and a tooltip are looked up by the row they are
             // on; everything else is found by its own name, so an `in` there
             // would be a narrowing the step quietly ignored. A tooltip needs it

@@ -10214,8 +10214,8 @@ private final class Run {
     /// A field says the text in its box, or nothing when the box is empty and
     /// only its own name is showing. A menu says the value it wears, and a
     /// control says what it is saying right now ("Outline, off"). A row and a
-    /// tile say their own names, which is why `expect` will not let a walk ask
-    /// those two what they read.
+    /// tile read the words their marker carries beside the name: a row's
+    /// caption, a tile's shelf and the line under its name ("Styles, 2 uses").
     private func panelReading(_ thing: PlaytestPanelThing, named: String,
                               inRow: String?) throws
     -> (found: Bool, reads: String, says: String, others: [String]) {

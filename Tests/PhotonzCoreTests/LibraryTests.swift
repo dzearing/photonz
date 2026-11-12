@@ -108,6 +108,19 @@ struct LibraryTests {
         #expect(a.id == b.id)
     }
 
+    /// A tile is a view holding its entry, and SwiftUI skips redrawing a view
+    /// whose inputs compare equal. When equality was the id alone, a saved
+    /// stroke's tile kept saying "1 use" while three lines wore it
+    /// (2026-11-12). Same item, new words: not equal, so the tile redraws.
+    @Test func anEntryWhoseWordsChangedIsNotEqualToItsOldSelf() {
+        let before = LibraryEntry(id: "x", scope: .styles, name: "Glyph", detail: "1 use")
+        let after = LibraryEntry(id: "x", scope: .styles, name: "Glyph", detail: "2 uses")
+        let renamed = LibraryEntry(id: "x", scope: .styles, name: "Glyph 2", detail: "1 use")
+        #expect(before.id == after.id)
+        #expect(before != after)
+        #expect(before != renamed)
+    }
+
     @Test func itemsOfAScopeAreTheOnesTheScopeShows() {
         let mixed = [item("A", .media), item("B", .components), item("C", .media)]
         #expect(LibrarySearch.filter(mixed, scope: .media, query: "").map(\.name) == ["A", "C"])

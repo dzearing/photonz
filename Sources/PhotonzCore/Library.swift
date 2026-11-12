@@ -138,10 +138,12 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable {
         self.detail = detail
     }
 
-    /// Identity is the id: two readings of the same file are the same item
-    /// even if its detail line (a relative date) has moved on.
-    public static func == (lhs: LibraryEntry, rhs: LibraryEntry) -> Bool { lhs.id == rhs.id }
-    public func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    // Identity is the id (`Identifiable`): that is what selection, `ForEach`
+    // and the reveal key on. EQUALITY is every field, synthesized, because a
+    // tile is a view holding its entry and SwiftUI skips a view whose inputs
+    // compare equal. While `==` was the id alone, a saved stroke's tile kept
+    // reading "1 use" with three lines wearing it, until something else
+    // redrew the shelf (2026-11-12).
 }
 
 /// The Library's search: pure list policy, so the field and its filtering are
