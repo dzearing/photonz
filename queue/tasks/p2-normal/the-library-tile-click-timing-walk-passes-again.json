@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p2-normal",
   "seq": 87.5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-12T16:42:47.700Z",
-  "updated": "2026-11-12T16:42:47.703Z",
+  "updated": "2026-11-12T17:56:02.819Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-12 on main at 5862475dd with no local change to the app (Library.swift put back to HEAD): Scripts/playtest-all.sh library-tile-click-latency-walk -> 'FAILED step 11 (timeTileClicks): click 1 on \"Keynote Section\" never picked it'. The step's own note in log.json: 'switching from tile to tile: \"Film Super\", 10 clicks: picked on screen median 14ms ... \"Keynote Section\" ... never picked on click 1'. Step 9 (from nothing picked) passes. library-tile-click-latency-picture-walk passes. Found while running Library walks for a-saved-stroke-tile-on-the-styles-shelf-counts-e.",
@@ -21,9 +21,23 @@
     {
       "t": "2026-11-12T16:42:47.702Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-12T17:09:19.051Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T17:55:57.677Z",
+      "note": "Verdict: the walk was wrong, no click was lost in the app. Picking Film Super opens the Title Page section above the shelf; once the double-click hold ends (shelfHoldSeconds+0.02) the shelf pane settles shorter and the title row slides under the panel's bottom edge. The walk woke ~20ms before that, found Keynote Section in reach with no scroll, then the settle moved it out of reach; settled() gave up after 2s ('never settled, pressed where it last was', measured: aimed at window y 203, inReach=false) and the click landed below the shelf. Next click had to scroll 82pt. Fix in PlaytestHarness.timeTileClicks: reach again (up to 3 looks, each scrolling) when the tile ends out of reach, and fail with the reach trouble instead of pressing beside the tile; the row in tile-clicks-N.json now says what reaching took. Walk passed 4 runs of 4 after the fix; library-tile-click-latency-picture-walk passes too. The person-facing part (picked tile slides partly out of view after the settle) is filed as a-title-tile-you-pick-on-the-video-library-stays with picture and panel listing."
+    },
+    {
+      "t": "2026-11-12T17:56:02.817Z",
+      "note": "The walk read wrong, the app lost no click: the shelf settled the tile out of reach and the walk pressed where it had been. timeTileClicks now re-reaches (scrolling) and fails with why instead of clicking beside a tile. library-tile-click-latency-walk passed 4 of 4, the picture walk passes, Scripts/test.sh green. Committed ae7ba9d01. The picked tile sliding out of view is filed as a-title-tile-you-pick-on-the-video-library-stays."
     }
   ],
   "walks": [
     "library-tile-click-latency-walk"
-  ]
+  ],
+  "started": "2026-11-12T17:09:19.050Z",
+  "completed": "2026-11-12T17:56:02.818Z"
 }
