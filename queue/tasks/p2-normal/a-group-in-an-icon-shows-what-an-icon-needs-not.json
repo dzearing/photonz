@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T17:38:05.109Z",
-  "updated": "2026-11-08T17:12:58.420Z",
+  "updated": "2026-11-12T13:16:43.723Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen three times now: audits of 2026-11-06 and 2026-11-07 (icon-place-tag-1-box-sc.png) and 9-grouped in the-whole-icon-workflow-walk. Picture: queue/audits/2026-11-07-icon-workflow-group-panel-sc.png. Not a bug, a panel that speaks about the wrong job; the panel rows are not covered by the-panel-shows-what-the-picked-thing-is-and-its, which moves one-shot buttons.",
@@ -26,9 +26,28 @@
     {
       "t": "2026-11-08T17:12:58.419Z",
       "note": "seq 45 -> 50"
+    },
+    {
+      "t": "2026-11-12T12:46:07.209Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T13:16:28.856Z",
+      "note": "walks the-whole-icon-workflow-walk -> a-group-in-an-icon-shows-no-page-layout-walk, the-whole-icon-workflow-walk"
+    },
+    {
+      "t": "2026-11-12T13:16:36.373Z",
+      "note": "Reproduced on the probe before the fix: a group on an Icon picture showed Layers, Color, Effects, Motion, Layout; a shape in a 24 icon frame showed Columns on Frame and Layout. Fix: PhotonzDocument.isAllDrawnInAnIcon (core, IconPanelRowsTests, 5 tests) feeds EditorState.pickIsDrawnInAnIcon, which keeps .placement off the panel; columnsTargetFrameID is nil for an icon frame, so Columns and Layer > Show Columns both go. Gated on next-icon-frames (on at Next defaults). Chose to hide Layout for the icon frame itself too, because its Contents rows (Arrangement, Hug) mean nothing for an icon either; Frame stays. Chose 'every picked layer in an icon' over 'any' so a mixed pick keeps the rows the outside layer needs. Pictures looked at: 1-group-on-an-icon-picture (Appearance, Effects, Motion only), 2-shape-in-an-icon-frame (Arrange kept, no Columns or Layout), 3-group-on-a-picture (Layout present), whole workflow 9-grouped (ends at Motion). Walks run green: new walk plus the-whole-icon-workflow, the-whole-icon-workflow-on-a-frame, screen-columns, columns-follow-the-screen, a-picked-icon-shape-names-its-place, a-glyph-takes-the-saved-stroke. Full Scripts/test.sh green. Rough items in the audit are notes only, nothing filed."
+    },
+    {
+      "t": "2026-11-12T13:16:43.721Z",
+      "note": "A group or shape picked in an icon (Icon picture or icon frame) no longer shows Layout or Columns at Next defaults; a group on an ordinary picture keeps Layout. Core rule isAllDrawnInAnIcon with 5 tests; panel and Columns target read it. Verified by the new walk a-group-in-an-icon-shows-no-page-layout-walk (no flags) plus 6 related walks green, full Scripts/test.sh green. Audit: queue/audits/2026-11-12-a-group-in-an-icon-shows-what-an-icon-needs-not.json"
     }
   ],
   "walks": [
+    "a-group-in-an-icon-shows-no-page-layout-walk",
     "the-whole-icon-workflow-walk"
-  ]
+  ],
+  "started": "2026-11-12T12:46:07.208Z",
+  "completed": "2026-11-12T13:16:43.722Z"
 }
