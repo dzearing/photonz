@@ -1,0 +1,29 @@
+{
+  "id": "the-title-presets-walk-pulls-film-super-off-the",
+  "title": "The title presets walk pulls Film Super off the video Library's short shelf again",
+  "goal": "Since a video's Library opens as a short shelf, one walk tries to pull the Film Super title off it while that tile is half scrolled out of sight, so the walk fails although a person can still scroll to it and drag it. The walk should scroll to the tile first, the way a person would, and pass again.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 4080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-12T06:38:56.969Z",
+  "updated": "2026-11-12T06:38:56.972Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-12 on HEAD bb0f48d7b: Scripts/playtest-all.sh comes-away title-presets-library-shelf -> title-presets-library-shelf-walk FAILED step 25 (pickUpTile): the tile \"Film Super\" is not all the way where a person could pull on it: it is at (1600, 312) (114, 106) and the window is (1728, 990). A `reveal` step scrolls the shelf until it is. The other three pick-up walks passed in the same run. Cause: 1db5bdff4 (A video's Library opened by hand is the mock's short shelf) capped the video shelf at header + 118pt, so its tiles scroll inside it. The walk passed at 05:02Z before that commit (a-walk-that-pulls-a-library-tile-by-hand-sees-it). Fix is most likely a {\"do\":\"reveal\",...} step before step 25; keep the short shelf, it is the mock.",
+  "acceptance": [
+    "title-presets-library-shelf-walk passes at Next defaults, twice in a row",
+    "The walk brings Film Super fully into view before pulling it (a reveal step), rather than the shelf being made taller again"
+  ],
+  "log": [
+    {
+      "t": "2026-11-12T06:38:56.971Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "title-presets-library-shelf-walk"
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 4000,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-12T05:02:56.684Z",
-  "updated": "2026-11-12T05:02:56.687Z",
+  "updated": "2026-11-12T06:39:15.362Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-11-202247.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nRun.pickUpTile(_:to:number:) (PlaytestHarness.swift:16236)\nRun.perform(_:number:) (PlaytestHarness.swift:3094)\nRun.start() (PlaytestHarness.swift:544)\nclosure #1 in static PlaytestHarness.startIfRequested(coordinator:) (PlaytestHarness.swift:138)",
@@ -22,6 +22,33 @@
     {
       "t": "2026-11-12T05:02:56.686Z",
       "note": "created (crash-watch)"
+    },
+    {
+      "t": "2026-11-12T06:36:17.175Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T06:39:09.867Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-12T06:39:09.943Z",
+      "note": "Conditions shown from the report: the crashing probe (launched 20:22:31, binary uuid 0e14c0dd) was built from UNCOMMITTED source. Line 16236 of PlaytestHarness.swift at HEAD then (97b0a0e01) is a doc comment, and the top frames are CoreFoundation ___forwarding___.cold.5 called straight from pickUpTile. The session of a-walk-that-pulls-a-library-tile-by-hand-sees-it (transcript 0c46ebe3) shows that at 04:16Z it pasted diagnostic code into pickUpTile that looped objc_copyClassList and called NSStringFromClass on each class; its very next walk (04:22:49Z) printed this exact CRASHED line, and at 04:23Z it switched to class_getName and later removed all diagnostics before committing be6e82181."
+    },
+    {
+      "t": "2026-11-12T06:39:10.020Z",
+      "note": "Not reproducible on landed code: grep for objc_copyClassList / diag hooks in Sources finds nothing. Built the probe from HEAD bb0f48d7b and ran the four pick-up walks: tile-comes-away, text-style-comes-away and transition-tile-comes-away ok, no crash; title-presets-library-shelf-walk fails cleanly at step 25 because 1db5bdff4's short video shelf leaves Film Super half scrolled out (filed the-title-presets-walk-pulls-film-super-off-the, p2). No app code to fix and so no test: the crash was never in shipped code. crash-watch.json marks the report as a runner diagnostic."
+    },
+    {
+      "t": "2026-11-12T06:39:10.096Z",
+      "note": "left rough: crash-watch cannot tell a probe built from a runner's uncommitted experiment from landed code, so a runner's own diagnostic crash files a p1. First such case in crash-watch's history (the two earlier crash tasks were real bugs), so not filed; if it happens again, stamp the probe build with the git tree state and have crash-watch log a dirty-build crash on the running task instead."
+    },
+    {
+      "t": "2026-11-12T06:39:15.360Z",
+      "note": "Not an app bug: the probe that crashed at 20:22 was built from another runner's uncommitted diagnostic code in pickUpTile (NSStringFromClass over objc_copyClassList, trapping in ___forwarding___), shown from the report's line numbers and that runner's session, which hit this exact crash at 04:22Z and removed the code before committing be6e82181. On HEAD the pick-up walks run with no crash (3 ok; title presets walk fails cleanly on the new short shelf, filed the-title-presets-walk-pulls-film-super-off-the). crash-watch.json marks the report as a runner diagnostic."
     }
-  ]
+  ],
+  "started": "2026-11-12T06:36:17.174Z",
+  "walks": [],
+  "completed": "2026-11-12T06:39:15.361Z"
 }

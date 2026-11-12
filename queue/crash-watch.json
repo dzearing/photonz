@@ -29,12 +29,14 @@
     "Photonz Probe-2026-10-03-070610.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
     "Photonz Probe-2026-10-03-070643.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
     "Photonz Probe-2026-10-03-071209.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
-    "Photonz Probe-2026-10-03-071248.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes"
+    "Photonz Probe-2026-10-03-071248.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
+    "Photonz Probe-2026-11-11-202247.ips": "runner diagnostic: a-walk-that-pulls-a-library-tile-by-hand-sees-it built the probe with throwaway code in pickUpTile that called NSStringFromClass on every objc_copyClassList class (a non-NSObject root traps in ___forwarding___); never committed. probe|Run.pickUpTile(_:to:number:) < Run.perform(_:number:) < Run.start()"
   },
   "signatures": {
     "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter",
     "probe|specialized VideoKit.TileGrid.plan(width:count:) < VideoKit.TileGrid.sizeThatFits(proposal:subviews:cache:) < static PhotonzApp.$main()": "the-app-crashed-in-specialized-videokit-tilegrid",
-    "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter"
+    "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter",
+    "probe|Run.pickUpTile(_:to:number:) < Run.perform(_:number:) < Run.start()": "the-app-crashed-in-run-pickuptile"
   },
   "faults": {
     "probe|macos-ax-notify": {
