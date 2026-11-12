@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-11T20:23:53.900Z",
+  "updated": "2026-11-12T09:03:15.440Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -354,9 +354,29 @@
     {
       "t": "2026-11-11T20:23:53.899Z",
       "note": "Pass 13: the planned fade is kept (it was refused whole), thrown in from off the frame, comes back off the lid, lands in the can's middle (a8a571008); story total 61.2, trash 57.7 (its best); bar (5 of 6 at reads as asked 7) not met, 1 of 6"
+    },
+    {
+      "t": "2026-11-12T08:05:41.512Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T09:03:09.631Z",
+      "note": "Pass fourteen, from run 20261111-200328's judge lines. Shipped fe236ffc8, tests first (AskMotionTurnInPlaceRoomTests 2, AskMotionCarriedTests 3, AskMotionMarksClearTests 3): (1) a turn about a part's own middle was taken to need no room, so the heart's halves tipping 20 degrees as they parted were cut off at 1.28 to 1.70 s; the reach now turns the part's own lines (a ring still needs none). (2) carried: a small still part a swing turns about (pivot on it, touching, longest side at most half the swinging part's, one swing claiming it) takes the same turn; the bell's bar stayed level and nine looks of nine read the bell as shearing. (3) marksOver: a mark (hidden at the top of the lap, travelling 3 units at most) whose lines cross a moving part's while it shows is sent back with when; the bell's right ring flashed as the rim swung into it. Scripts/test.sh exit 0. Walk ask-animates-a-story-walk at Next defaults ok (240 s, Copy SVG repeatCount=indefinite x3)."
+    },
+    {
+      "t": "2026-11-12T09:03:09.705Z",
+      "note": "Measured fe236ffc8, story run 20261112-082819-ask (one run, three resumes): total 52.4 (last pass 61.2); reads as asked bell 5.3, checkbox 7.4, heart 5.1, envelope 3.1, rocket 5.1, trash 5.3: 1 of 6 at 7. Rocket 80 to 49 from a different plan (flew back up through its own smoke), envelope 33.5 to 26.6 (letter never goes in, flap opens); neither touched by this change. Pictures looked at: bell frames (bar tips with the bell; rings moved to the frame edge, six flashes), heart frames (halves inside the frame, lobe a quarter unit from the edge at 1.70 s, still read as cut off), walk trash frames (thrown in from the right 0.65 s, rests against the lid 0.78 to 0.91 s with no visible bounce, across the right wall 1.04 s, faded inside 1.17 s, shut 1.30 s; solid block again). Tried a wider margin for what moves (half and three quarters of the rest margin): shrank the trash to 83 and 82 percent, below its floor, reverted. Audit queue/audits/2026-11-12-animated-icon-story-hangs-and-marks.json, reel 2026-11-12-story-trash-pass14-two-laps.gif."
+    },
+    {
+      "t": "2026-11-12T09:03:09.780Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases read as asked at 7; this pass 1 of 6 (checkbox 7.4). Next levers: (1) the trash after its hit: the route to the landing crosses the can's wall and no bounce shows (a hit placed against the underside with no rebound gap seen); (2) the solid trash: the lined-part send-back did not hold in the walk; (3) the bell: sound marks shown once per ring asked, not per swing; (4) heart lobe margin without shrinking the trash (a margin only on the side the part moves past, or only for parts that turn). Left rough, no new task (all inside this one)."
+    },
+    {
+      "t": "2026-11-12T09:03:15.439Z",
+      "note": "Pass 14: a swing carries what it hangs from, a part tipping about its middle gets room, a mark over a mover is sent back (fe236ffc8); story bar (5 of 6 at 7) not met, 1 of 6, total 52.4"
     }
   ],
-  "started": "2026-11-11T18:48:22.484Z",
+  "started": "2026-11-12T08:05:41.511Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"

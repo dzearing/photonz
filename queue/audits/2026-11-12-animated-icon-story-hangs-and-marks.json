@@ -1,0 +1,29 @@
+{
+  "feature": "An animated icon told as a little story: a swing carries what it hangs from, a part tipping out gets room, a mark over a moving part goes back to the agent",
+  "epic": "icon-svg",
+  "summary": "A bell's little top bar now swings with the bell instead of staying level while the bell tips under it, a heart's halves tipping out as they part are no longer cut off by the frame, and a sound mark that would flash over a swinging rim is sent back to the agent to move. Your trash sentence plays every beat but still does not show a clear bounce, and the bar (five of six stories reading as asked) is not met: one of six this pass.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-12-story-trash-pass14-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return." },
+    { "do": "Wait for Ask to finish (about four minutes), then press Space to play." },
+    { "do": "Read the trash frames, two laps: lid open 0.26 s, thrown in from the right 0.65 s, against the lid 0.78 to 0.91 s, across the right wall 1.04 s, shut 1.30 s.", "shot": "2026-11-12-story-trash-pass14-frames.png" },
+    { "do": "Watch the trash reel.", "shot": "2026-11-12-story-trash-pass14-two-laps.gif" },
+    { "do": "Hover the exported trash icon to play it at real sizes.", "shot": "2026-11-12-story-trash-pass14.svg" },
+    { "do": "Look at the bell from the eval: its top bar tips with it now.", "shot": "2026-11-12-story-bell-pass14-frames.png" },
+    { "do": "Look at the heart from the eval: the halves part inside the frame.", "shot": "2026-11-12-story-heart-pass14-frames.png" }
+  ],
+  "evaluate": [
+    "Does the bell read as one solid piece now that its top bar swings with it, or does a swing pivoting from the very top still look like a slide?",
+    "On the heart at 1.70 s the left lobe stays inside the frame but close to the edge. Is that close enough, or does it still read as cut off?",
+    "In the trash reel, does anything read as a bounce, or does the trash just rest against the lid before dropping?",
+    "Should a bell's sound marks show once per ring (twice in all), even if the bell swings more times than that?"
+  ],
+  "rough": [
+    "The bar is not met: five of six story icons should read as asked at 7 or more. This pass reached 1 of 6 (bell 5.3, checkbox 7.4, heart 5.1, envelope 3.1, rocket 5.1, trash 5.3; total 52.4, run 20261112-082819-ask, one run) against 61.2 last pass. The fall is mostly the rocket (80 to 49), whose plan this time flew back up through its own smoke, and the envelope; neither touched what changed here.",
+    "Your trash in the walk: no bounce anyone would see, the trash a solid block again, and at 1.04 s it sits across the can's right wall before fading inside. These are the same three faults as last pass, still open in this task.",
+    "The heart's lobe still comes within a quarter unit of the frame edge, which the looks call cut off. Giving moving parts a wider margin shrank your trash below its floor (to 83 percent), so it was not kept.",
+    "The bell's ring marks were moved out to the frame edge and flashed six times instead of twice; the looks marked that down."
+  ]
+}
