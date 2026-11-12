@@ -1,0 +1,96 @@
+{
+  "out": "/tmp/photonz-playtest/panel-rows-drawn-after-wheeling-back-walk",
+  "clock": 120,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "comment": "A wheel the way a trackpad sends it, with the probe in front (a wheel made up for an app behind the others is ignored): scroll the box's Appearance rows down, then back up and past the top. Every row stays drawn; the empty band of 2026-10-20 was a walk shoving the rows past their end, which no hand can do.",
+      "do": "wait",
+      "seconds": 0.1
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 560
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        88,
+        330
+      ],
+      "to": [
+        400,
+        410
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "wheel",
+      "control": "Blending",
+      "by": -40
+    },
+    {
+      "do": "wheel",
+      "control": "Masked by",
+      "by": -40
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "1-wheeled-down"
+    },
+    {
+      "do": "wheel",
+      "control": "Masked by",
+      "by": 40
+    },
+    {
+      "do": "wheel",
+      "control": "Masked by",
+      "by": 400
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectInView",
+      "field": "Opacity"
+    },
+    {
+      "do": "describe",
+      "stage": "2-wheeled-back",
+      "note": "wheeled back up and on past the top: Opacity and Blending drawn under the Appearance header"
+    },
+    {
+      "do": "expectInView",
+      "field": "Blending"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-wheeled-back"
+    }
+  ]
+}

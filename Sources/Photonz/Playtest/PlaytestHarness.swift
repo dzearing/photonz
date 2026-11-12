@@ -4189,11 +4189,15 @@ private final class Run {
             // run in three, and the step after it, looking for the row at the
             // bottom, found no such row. Each round asks for what is left, and
             // it stops as soon as a round moves nothing.
-            var moved = try scroll(from: target, by: by)
+            // Every round turns the scroller the first one found. The row it
+            // started from can be dropped by a lazy list once it is scrolled
+            // off, and looking it up again then finds nothing that scrolls.
+            let scroller = try panelScroller(from: target)
+            var moved = scroll(scroller, by: by)
             await sleep(0.4)
             var left = by - Self.distance(scrolled: moved, asked: by)
             for _ in 0..<5 where abs(left) > 1 {
-                let again = try scroll(from: panelScrollTarget(target), by: left)
+                let again = scroll(scroller, by: left)
                 let delivered = Self.distance(scrolled: again, asked: left)
                 await sleep(0.3)
                 guard abs(delivered) > 1 else { break }
@@ -8673,6 +8677,18 @@ private final class Run {
         return match
     }
 
+    /// How far a scroll really went, out of what it was asked for. `scroll`
+    /// reports in words for the log; this reads the number back out of it, and
+    /// gives up and claims the whole ask when it cannot, so an unreadable
+    /// report ends the rounds rather than repeating them.
+    private static func distance(scrolled report: String, asked: Double) -> Double {
+        // A scroller already at its end moves nothing, and says so.
+        if report.contains("DID NOT MOVE") { return 0 }
+        guard let match = report.firstMatch(of: /(-?[0-9]+(?:\.[0-9]+)?)pt/) else { return asked }
+        let size = Double(match.1) ?? abs(asked)
+        return asked < 0 ? -abs(size) : abs(size)
+    }
+
     /// Something in the panel to scroll from, named the way the walk names it.
     ///
     /// A row in the layers list first, since that is the list most walks are
@@ -8681,22 +8697,6 @@ private final class Run {
     /// buttons once a second layer is picked and an Arrange section arrives —
     /// can be reached no other way, because the layers list is not the list it
     /// is in.
-    /// The same row, looked up again after a scroll: the view a lazily built
-    /// list hands back is not the one it handed back before.
-    private func panelScrollTarget(_ was: PanelTargetView) throws -> PanelTargetView {
-        (try? panelScrollTarget(was.name)) ?? was
-    }
-
-    /// How far a scroll really went, out of what it was asked for. `scroll`
-    /// reports in words for the log; this reads the number back out of it, and
-    /// gives up and claims the whole ask when it cannot, so an unreadable
-    /// report ends the rounds rather than repeating them.
-    private static func distance(scrolled report: String, asked: Double) -> Double {
-        guard let match = report.firstMatch(of: /(-?[0-9]+(?:\.[0-9]+)?)pt/) else { return asked }
-        let size = Double(match.1) ?? abs(asked)
-        return asked < 0 ? -abs(size) : abs(size)
-    }
-
     private func panelScrollTarget(_ name: String) throws -> PanelTargetView {
         let all = try panelTargets()
         if let steady = all.first(where: { PlaytestSteadyName.matches(name, steady: $0.steady) }) {
@@ -10112,7 +10112,7 @@ private final class Run {
         if abs(clip.bounds.origin.y - start) > 0.5 { return abs(clip.bounds.origin.y - start) }
         // Down the list is +y in a flipped clip view and -y in one that is
         // not, which is the same direction the wheel means by a negative
-        // number. Same reasoning as `scroll(from:by:)`.
+        // number. Same reasoning as `scroll(_:by:)`.
         let step = clip.isFlipped ? -points : points
         // Held inside its own ends, so a list already scrolled to the bottom
         // reports honestly that it did not move rather than shoving its
@@ -20434,13 +20434,17 @@ private final class Run {
     /// wheel finds it: a dock section the dock may shorten keeps a scroller
     /// round its body even while it is whole (`SectionBodyHost`), and a turn
     /// over one that has nothing to scroll belongs to the dock around it.
-    private func scroll(from target: PanelTargetView, by points: Double) throws -> String {
+    private func panelScroller(from target: PanelTargetView) throws -> NSScrollView {
         guard var scrollView = target.enclosingScrollView else {
             throw Failure(description: "\"\(target.name)\" is not inside anything that scrolls")
         }
         while !Self.hasRoomToScroll(scrollView), let outer = scrollView.enclosingScrollView {
             scrollView = outer
         }
+        return scrollView
+    }
+
+    private func scroll(_ scrollView: NSScrollView, by points: Double) -> String {
         let clip = scrollView.contentView
         let start = clip.bounds.origin.y
         if let wheel = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
@@ -20454,7 +20458,13 @@ private final class Run {
         // Down the list is +y in a flipped clip view and -y in one that is not,
         // which is the same direction the wheel means by a negative number.
         let step = clip.isFlipped ? -points : points
-        let wanted = CGPoint(x: clip.bounds.origin.x, y: start + step)
+        // Held to the range a wheel can reach. `scroll(to:)` takes any origin,
+        // and a turn past the top or the bottom left the content pushed out of
+        // the clip: a section header drawn over an empty band where its rows
+        // should be (the blank Opacity and Blending of 2026-10-20). No hand on
+        // a wheel or trackpad can leave a scroller there; it springs back.
+        let asked = NSRect(origin: CGPoint(x: clip.bounds.origin.x, y: start + step), size: clip.bounds.size)
+        let wanted = clip.constrainBoundsRect(asked).origin
         clip.scroll(to: wanted)
         scrollView.reflectScrolledClipView(clip)
         let delta = clip.bounds.origin.y - start

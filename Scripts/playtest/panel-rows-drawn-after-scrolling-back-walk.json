@@ -1,0 +1,35 @@
+{
+  "out": "/tmp/photonz-playtest/panel-rows-drawn-after-scrolling-back-walk",
+  "clock": 180,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 560 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [88, 330], "to": [400, 410], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectInView", "field": "Opacity" },
+    { "do": "expectInView", "field": "Blending" },
+    { "do": "snapshot", "name": "1-before" },
+    { "do": "scrollPanel", "by": -900, "row": "Blending" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-scrolled-down", "note": "the box's Appearance rows scrolled down as far as they go" },
+    { "do": "snapshot", "name": "2-scrolled-down" },
+    { "do": "scrollPanel", "by": 900, "row": "Fill" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-scrolled-back", "note": "scrolled back to the top: Opacity and Blending are drawn under the Appearance header, no empty band" },
+    { "do": "expectInView", "field": "Opacity" },
+    { "do": "expectInView", "field": "Blending" },
+    { "do": "snapshot", "name": "3-scrolled-back" },
+    { "do": "scrollPanel", "by": 900, "row": "Blending" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-past-the-top", "note": "a further turn up from the top goes nowhere, the way a wheel springs back: the rows stay drawn" },
+    { "do": "expectInView", "field": "Opacity" },
+    { "do": "expectInView", "field": "Blending" },
+    { "do": "snapshot", "name": "4-past-the-top" }
+  ]
+}
