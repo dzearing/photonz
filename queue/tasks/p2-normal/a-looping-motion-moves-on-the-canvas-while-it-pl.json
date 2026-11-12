@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T12:14:52.180Z",
-  "updated": "2026-11-07T15:49:05.337Z",
+  "updated": "2026-11-12T06:52:09.896Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-06. Insert {\"do\":\"expectPictureMoves\",\"seconds\":0.2} after the second {\"do\":\"key\",\"key\":\"space\"} of Scripts/playtest/motion-loop-preview-walk.json and run Scripts/playtest.sh on it with --no-build. Output: '[29 expectPictureMoves] FAILED: the canvas's picture stood still for 0.2s'. Two window captures 0.2 s apart showed the previews at different angles, the strip's playhead moved, and the main canvas square and its selection flat in both. NOT the crisp tile cause that froze keyed pictures: letting the tile go on every play in Next (letGoOfCrispTileForPlay, EditorState.swift) left this check failing, so that widening was reverted. Unconfirmed: the cause, and whether a first play is affected. EditorState.displayDocument does ask for document.moved(toMotionTimeMS:) while isMotionPlaying, so look past it. Walks stayed green because they only read 'playing'.\n\nDigest 2026-11-06: the check above sets next-picture-keys OFF in the walk's setup. Same walk with the flag left alone stops at step 16: no menu called \"Add Motion\" is in the window. The keyed route a person has at defaults is covered: picture-keys-walk, agent-keys-walk and ask-animates-an-icon-walk each carry expectPictureMoves. Theory only, not tested: the crisp tile is let go only when isKeyedPicture (EditorState.swift ~5820), and a picture with saved motion and no keys is not one. Folded in from the-repeats-label-on-the-timing-strip-s-ruler-ne: label is MotionStripMarksView in MotionStripView.swift (~1102); repro Scripts/playtest.sh Scripts/playtest/a-lone-spinner-strip-reads-one-turn-walk.json, which also pins the flag off, then look at 1-one-turn-sc.png; mock icon-loop-wt.html #wrapMark keeps \"and again\" in the lanes. The strip people get at defaults (PictureKeyStrip) draws no ruler tick at a 2 s lap end: queue/audits/2026-11-05-picture-keys-5.png.",
@@ -39,6 +39,26 @@
     {
       "t": "2026-11-07T15:49:05.336Z",
       "note": "seq 50 -> 10"
+    },
+    {
+      "t": "2026-11-12T06:39:38.342Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T06:43:55.690Z",
+      "note": "owns these walks: a-saved-looping-turn-plays-at-defaults-walk"
+    },
+    {
+      "t": "2026-11-12T06:52:09.820Z",
+      "note": "Opened three saved pictures at Next defaults, no switch changed (Scripts/playtest/a-saved-looping-turn-plays-at-defaults-walk.json): the bell (pivot-of-its-own.photonz, -12 to 12 for ever there and back), a glyph in a 512 icon frame (new fixture saved-looping-icon.photonz) and a lone ring 0 to 360 Linear Forever 800 ms (new fixture saved-lone-spinner.photonz). Each starts playing when opened; Space stops it and the canvas is back as drawn; Space plays it again and expectPictureMoves straight after passes on all three, first and second play, with the Actual sizes card playing too for the icon. The check does tell: an earlier version of the walk pressed Space while it was already playing (which stops it) and failed 'the canvas's picture stood still for 0.2s'. Strip: these pictures show the older Motion strip (ONE CYCLE / ONE TURN). On the 800 ms spinner the ruler reads 800 and the repeats label sits just under it, both readable (queue/audits/2026-11-11-saved-loop-at-defaults-5.png); on the bell's 900 ms lap ending between ticks the label stays in the ruler row (-6.png). So neither fault reaches a person at defaults. The canvas freeze on a second play is only seen with next-picture-keys forced off (motion-loop-preview-walk's setup); left rough, not filed, since only someone who turns that experiment off sees it."
+    },
+    {
+      "t": "2026-11-12T06:52:09.895Z",
+      "note": "Housekeeping: killed an idle orphan swift-test (pid 28271, PhotonzMediaTests, parent 1, 2 days old, 0% CPU) found while checking for leftovers."
     }
+  ],
+  "started": "2026-11-12T06:39:38.341Z",
+  "walks": [
+    "a-saved-looping-turn-plays-at-defaults-walk"
   ]
 }

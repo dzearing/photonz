@@ -1,0 +1,111 @@
+{
+  "canvasSize": [
+    900,
+    560
+  ],
+  "layers": [
+    {
+      "content": {
+        "annotation": {
+          "_0": {
+            "arrowheadScale": 1,
+            "arrowheadStyle": "triangle",
+            "captionFontSize": 20,
+            "captionPinned": false,
+            "captionRoundness": 1,
+            "colorHex": "#2F6FED",
+            "cornerRadius": 0,
+            "end": [
+              0,
+              0
+            ],
+            "headColorHex": "#2F6FED",
+            "lineEnd": "round",
+            "shape": "ellipse",
+            "start": [
+              0,
+              0
+            ],
+            "strokePosition": "inside",
+            "strokeWidth": 0
+          }
+        }
+      },
+      "frame": [
+        [
+          340,
+          200
+        ],
+        [
+          160,
+          160
+        ]
+      ],
+      "id": "A4D5E6F7-0819-4A2B-9C3D-E4F5061728A9",
+      "isLocked": false,
+      "isVisible": true,
+      "motions": [
+        {
+          "curve": {
+            "linear": {}
+          },
+          "from": {
+            "number": {
+              "_0": 0
+            }
+          },
+          "id": "B5E6F708-192A-4B3C-8D4E-F5061728394A",
+          "isOn": true,
+          "pivot": {
+            "unit": [
+              0.5,
+              0.5
+            ]
+          },
+          "property": "rotation",
+          "repeats": {
+            "forever": {}
+          },
+          "timing": {
+            "durationMS": 800,
+            "startMS": 0
+          },
+          "to": {
+            "number": {
+              "_0": 360
+            }
+          }
+        }
+      ],
+      "name": "Ring",
+      "style": {
+        "blendMode": "normal",
+        "blurRadius": 0,
+        "borderColorHex": "#2F6FED",
+        "borderWidth": 4,
+        "cornerRadius": 0,
+        "effects": [
+          {
+            "border": {
+              "colorHex": "#2F6FED",
+              "isOn": true,
+              "position": "inside",
+              "width": 4
+            },
+            "kind": "border"
+          }
+        ],
+        "opacity": 1,
+        "ringIsAnEffect": true
+      },
+      "transform": {
+        "flipHorizontal": false,
+        "flipVertical": false,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      }
+    }
+  ],
+  "pixelScale": 1
+}

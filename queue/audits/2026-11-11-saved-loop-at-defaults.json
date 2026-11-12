@@ -1,0 +1,47 @@
+{
+  "feature": "A picture saved with a looping motion, opened at Next defaults",
+  "epic": "icon-animate",
+  "summary": "Checked what a person at Next defaults sees when they open a picture saved with a looping turn. The shape swings on the canvas, plays again after Space, and the timing strip's repeats label stays readable. Nothing needed fixing; a walk now guards it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-saved-looping-turn-plays-at-defaults-walk.json",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a picture saved with a looping Rotation (the walk uses fixtures/pivot-of-its-own.photonz) and click the bell.",
+      "shot": "2026-11-11-saved-loop-at-defaults-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Space: the swing stops and the bell is back as drawn.",
+      "shot": "2026-11-11-saved-loop-at-defaults-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Space again: the bell swings on the canvas, not only in the strip."
+    },
+    {
+      "do": "Open a glyph saved with a loop inside a 512 icon frame, click it, press Space twice: the glyph and the Actual sizes card both swing.",
+      "shot": "2026-11-11-saved-loop-at-defaults-3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open a lone ring saved spinning 0 to 360 for ever over 800 ms and look at the strip's ruler at 800.",
+      "shot": "2026-11-11-saved-loop-at-defaults-4.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Compare the label on an 800 ms turn with the bell's 900 ms lap that ends between ticks.",
+      "shot": "2026-11-11-saved-loop-at-defaults-5.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does the bell swing on the canvas every time you press Space, not only the first time?",
+    "Is the repeats label readable next to the 800 on the spinner's ruler?",
+    "Does the glyph in the icon frame swing with its Actual sizes previews?"
+  ],
+  "rough": [
+    "The canvas standing still on a second play still happens, but only with the picture keys switch turned off in Experiments. A person at Next defaults never sees it, so it was not worked on, as this task's checklist asks.",
+    "No mock covers how a picture saved with a looping motion opens once Add Motion is gone; it opens with the older Motion section and timing strip, which is what is shown here.",
+    "These pictures were taken with the window behind another app, so picked controls show their background look."
+  ]
+}

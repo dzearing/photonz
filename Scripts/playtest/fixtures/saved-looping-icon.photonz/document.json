@@ -1,0 +1,153 @@
+{
+  "canvasSize": [
+    820,
+    620
+  ],
+  "layers": [
+    {
+      "content": {
+        "group": {
+          "_0": {
+            "children": [
+              {
+                "content": {
+                  "annotation": {
+                    "_0": {
+                      "arrowheadScale": 1,
+                      "arrowheadStyle": "triangle",
+                      "captionFontSize": 20,
+                      "captionPinned": false,
+                      "captionRoundness": 1,
+                      "colorHex": "#2F6FED",
+                      "cornerRadius": 0,
+                      "end": [
+                        0,
+                        0
+                      ],
+                      "headColorHex": "#2F6FED",
+                      "lineEnd": "round",
+                      "shape": "rectangle",
+                      "start": [
+                        0,
+                        0
+                      ],
+                      "strokePosition": "inside",
+                      "strokeWidth": 0
+                    }
+                  }
+                },
+                "frame": [
+                  [
+                    106,
+                    106
+                  ],
+                  [
+                    300,
+                    300
+                  ]
+                ],
+                "id": "7A1C2E40-1B2C-4D5E-8F90-A1B2C3D4E5F6",
+                "isLocked": false,
+                "isVisible": true,
+                "motions": [
+                  {
+                    "curve": {
+                      "easeInOutSine": {}
+                    },
+                    "from": {
+                      "number": {
+                        "_0": -20
+                      }
+                    },
+                    "id": "8B2D3F51-2C3D-4E6F-9A01-B2C3D4E5F607",
+                    "isOn": true,
+                    "pivot": {
+                      "unit": [
+                        0.5,
+                        0.5
+                      ]
+                    },
+                    "property": "rotation",
+                    "repeats": {
+                      "foreverThereAndBack": {}
+                    },
+                    "timing": {
+                      "durationMS": 900,
+                      "startMS": 0
+                    },
+                    "to": {
+                      "number": {
+                        "_0": 20
+                      }
+                    }
+                  }
+                ],
+                "name": "Glyph",
+                "style": {
+                  "blendMode": "normal",
+                  "blurRadius": 0,
+                  "borderColorHex": "#2F6FED",
+                  "borderWidth": 4,
+                  "cornerRadius": 0,
+                  "effects": [
+                    {
+                      "border": {
+                        "colorHex": "#2F6FED",
+                        "isOn": true,
+                        "position": "inside",
+                        "width": 4
+                      },
+                      "kind": "border"
+                    }
+                  ],
+                  "opacity": 1,
+                  "ringIsAnEffect": true
+                },
+                "transform": {
+                  "flipHorizontal": false,
+                  "flipVertical": false,
+                  "rotation": 0,
+                  "skewX": 0,
+                  "skewY": 0
+                }
+              }
+            ],
+            "isFrame": true
+          }
+        }
+      },
+      "frame": [
+        [
+          154,
+          54
+        ],
+        [
+          512,
+          512
+        ]
+      ],
+      "id": "9C3E4062-3D4E-4F70-8B12-C3D4E5F60718",
+      "isLocked": false,
+      "isVisible": true,
+      "name": "Icon",
+      "style": {
+        "blendMode": "normal",
+        "blurRadius": 0,
+        "borderColorHex": "#2F6FED",
+        "borderWidth": 0,
+        "cornerRadius": 0,
+        "effects": [],
+        "opacity": 1,
+        "ringIsAnEffect": true
+      },
+      "transform": {
+        "flipHorizontal": false,
+        "flipVertical": false,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      }
+    }
+  ],
+  "pixelScale": 1
+}
