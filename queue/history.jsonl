@@ -16983,3 +16983,9 @@
 {"t":"2026-11-12T13:20:17.066Z","ev":"task_resequenced","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":30,"to":20}
 {"t":"2026-11-12T13:20:17.098Z","ev":"triage","summary":"merged 0, dropped 0, reset 0, moved 1 (colour swatch bug p3 to p2: its epic is staged now), renumbered 3 (title presets walk 4080 to 730, swatch to 740, redline 30 to 20), groomed 3 (story icon user-eye read of pass 16, swatch and title presets walk notes); open 72 to 72"}
 {"t":"2026-11-12T13:21:21.947Z","ev":"digest","file":"2026-11-12.md"}
+{"t":"2026-11-12T13:21:35.248Z","ev":"task_started","id":"the-saved-stroke-button-stays-on-screen-beside-a","title":"The saved stroke button stays on screen beside a long layers list","priority":"p2-normal"}
+{"t":"2026-11-12T13:54:41.669Z","ev":"task_note","id":"the-saved-stroke-button-stays-on-screen-beside-a"}
+{"t":"2026-11-12T13:54:41.746Z","ev":"task_note","id":"the-saved-stroke-button-stays-on-screen-beside-a"}
+{"t":"2026-11-12T13:54:41.821Z","ev":"task_note","id":"the-saved-stroke-button-stays-on-screen-beside-a"}
+{"t":"2026-11-12T13:54:41.897Z","ev":"task_note","id":"the-saved-stroke-button-stays-on-screen-beside-a"}
+{"t":"2026-11-12T13:54:46.311Z","ev":"task_done","id":"the-saved-stroke-button-stays-on-screen-beside-a","from":"in_progress","note":"An icon's Layers pane starts at 0.25 of the panel (PanelListsPane.iconShare) so with 4 or 5 layers and the Styles shelf open at 1280x900 the Style row under Line is whole on screen. Reproduced failing first (23pt past the fold), walk a-glyph-takes-the-saved-stroke-walk now asserts expectInView Style at 4 and 5 layers at Next defaults and passes; 19 icon/svg walks pass; Scripts/test.sh green. Audit 2026-11-12-the-saved-stroke-button-stays-on-screen-beside-a.json."}

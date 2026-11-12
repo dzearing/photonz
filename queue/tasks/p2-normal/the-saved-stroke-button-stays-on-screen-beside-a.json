@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T20:50:43.132Z",
-  "updated": "2026-11-08T17:12:58.488Z",
+  "updated": "2026-11-12T13:54:46.310Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in queue/audits/2026-11-07-saved-stroke-7-width-by-hand-sc.png: with four layers Line is the last visible row. Reproduce: Scripts/playtest.sh Scripts/playtest/a-glyph-takes-the-saved-stroke-walk.json --no-build, picture 11-a-width-set-by-hand-wins-sc.png. The Layers list takes the room, so moving the row further cannot fix it. The row is already directly under Line.",
@@ -25,9 +25,35 @@
     {
       "t": "2026-11-08T17:12:58.487Z",
       "note": "seq 47.5 -> 60"
+    },
+    {
+      "t": "2026-11-12T13:21:35.242Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T13:54:41.667Z",
+      "note": "Reproduced on today's build: added expectInView Style after picture 11 (four layers); it FAILED: 'Style ... 23 pt of it is past the bottom'. Dock numbers at 1280x900: column 841, Layers pane 251, pick 320, shelf 252; Appearance drawn 128 of 432, Effects 68, Motion 79. Style needs ~165."
+    },
+    {
+      "t": "2026-11-12T13:54:41.744Z",
+      "note": "Adversarial pass: Motion giving way to the fold would buy 79pt but hides Add Key, the entry to animating an icon (the focus epic's ANIMATE criterion); hiding the shelf search or 'No effects' each buys ~35pt, not enough alone, and touches 30+ walks; reordering Opacity under Line contradicts every mock (Opacity first). Layers is the list the dock rule says gives way, and the icon mock budgets Layers short (md rung) and Properties tall (lg)."
+    },
+    {
+      "t": "2026-11-12T13:54:41.819Z",
+      "note": "Chose an icon-only starting share of 0.25 for the Layers pane (PanelListsPane.iconShare, share(forKind:)) over a global change, because the squeeze is a path's long line settings and only icon walks need re-proving; the divider still sets any height. Picture and screenshot documents keep 0.4. left rough: the same squeeze can still happen on an image document with a path picked and a long list; no report asks, so not filed."
+    },
+    {
+      "t": "2026-11-12T13:54:41.895Z",
+      "note": "Verified: walk extended with a fifth layer and expectInView Style at 4 and 5 layers, passes; 17 other icon walks + 2 svg walks pass; PanelListsPaneTests new test; Scripts/test.sh green. Audit queue/audits/2026-11-12-the-saved-stroke-button-stays-on-screen-beside-a.json; looked at both -sc pictures: Style row and its Glyph / stroke 1.75 button whole in view, Layers shows four rows and scrolls."
+    },
+    {
+      "t": "2026-11-12T13:54:46.308Z",
+      "note": "An icon's Layers pane starts at 0.25 of the panel (PanelListsPane.iconShare) so with 4 or 5 layers and the Styles shelf open at 1280x900 the Style row under Line is whole on screen. Reproduced failing first (23pt past the fold), walk a-glyph-takes-the-saved-stroke-walk now asserts expectInView Style at 4 and 5 layers at Next defaults and passes; 19 icon/svg walks pass; Scripts/test.sh green. Audit 2026-11-12-the-saved-stroke-button-stays-on-screen-beside-a.json."
     }
   ],
   "walks": [
     "a-glyph-takes-the-saved-stroke-walk"
-  ]
+  ],
+  "started": "2026-11-12T13:21:35.241Z",
+  "completed": "2026-11-12T13:54:46.309Z"
 }
