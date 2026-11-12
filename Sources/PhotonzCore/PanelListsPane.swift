@@ -38,6 +38,24 @@ public enum PanelListsPane {
     /// divider, when its lists need that much.
     public static let defaultShare: CGFloat = 0.4
 
+    /// ...and how much it takes on an icon. A glyph is a handful of paths
+    /// whose LINE is the thing you tune, and a path's line settings (its saved
+    /// style, brush, width, pattern, caps, corners, align) hang under Line at
+    /// the foot of Appearance. At the 0.4 share, five layers and the Styles
+    /// shelf open in a 1280 by 900 window left Appearance 88 of its 432 points
+    /// and the saved stroke's one click row needed a scroll (2026-11-07). A
+    /// quarter of the column still shows four whole rows there, and the icon
+    /// mock budgets the same way: Layers a short group that scrolls inside
+    /// itself, Properties the tall one (`photonz-ds.css`, the md and lg
+    /// rungs). The divider still sets any height the person wants.
+    public static let iconShare: CGFloat = 0.25
+
+    /// The share the pane starts at on one kind of document (a window mode's
+    /// id): `iconShare` on an icon, `defaultShare` everywhere else.
+    public static func share(forKind kind: String?) -> CGFloat {
+        kind == WindowModes.iconID ? iconShare : defaultShare
+    }
+
     /// ...and how tall it starts before the panel has been laid out at all.
     public static let defaultHeight: CGFloat = 300
 
@@ -64,11 +82,12 @@ public enum PanelListsPane {
     }
 
     /// The height chosen for the pane: where the divider was left, or its
-    /// share of the column until it has been moved. Nought or less is "never
-    /// moved", which is what double clicking the divider writes.
-    public static func chosenHeight(stored: CGFloat?, column: CGFloat?) -> CGFloat {
+    /// share of the column until it has been moved (`share(forKind:)`).
+    /// Nought or less is "never moved", which is what double clicking the
+    /// divider writes.
+    public static func chosenHeight(stored: CGFloat?, column: CGFloat?, kind: String? = nil) -> CGFloat {
         if let stored, stored > 0 { return stored }
-        return column.map { $0 * defaultShare } ?? defaultHeight
+        return column.map { $0 * share(forKind: kind) } ?? defaultHeight
     }
 
     /// The highest the divider may set the pane in a column this tall: all of

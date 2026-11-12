@@ -794,7 +794,8 @@ struct InspectorPanel: View {
         let stored = listsPaneStored.wrappedValue
         return PanelListsPane.height(
             chosen: PanelListsPane.chosenHeight(stored: stored > 0 ? CGFloat(stored) : nil,
-                                                column: listsColumnHeight),
+                                                column: listsColumnHeight,
+                                                kind: editorState.windowMode.id),
             column: listsColumnHeight,
             listsNeed: sectionsNeed(lists),
             belowIsEmpty: belowIsEmpty,
@@ -2491,7 +2492,8 @@ struct InspectorPanel: View {
         // picked it is the whole column and its lists give way like any list.
         let paneChosen = min(PanelListsPane.chosenHeight(stored: listsPaneStored.wrappedValue > 0
                                                               ? CGFloat(listsPaneStored.wrappedValue) : nil,
-                                                          column: column),
+                                                          column: column,
+                                                          kind: editorState.windowMode.id),
                              PanelListsPane.maxAllowedHeight(column: column, floor: listsPaneFloor(lists)))
         for section in lists {
             guard let whole = full.openHeight(of: section, whole: true) else {

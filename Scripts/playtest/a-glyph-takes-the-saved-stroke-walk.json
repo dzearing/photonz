@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-glyph-takes-the-saved-stroke",
-  "seed": "The icon mock says the set's stroke is saved as a style, so a glyph takes it in one click and every glyph follows a change of weight. On a File, New, Image, Icon picture at Next defaults: a line is saved as a style, a new Pen line starts in that line with nothing set, a third line tuned away comes back with one pointer click on the row, and one pull on the saved stroke moves every glyph in one undo step.",
+  "seed": "The icon mock says the set's stroke is saved as a style, so a glyph takes it in one click and every glyph follows a change of weight. On a File, New, Image, Icon picture at Next defaults: a line is saved as a style, a new Pen line starts in that line with nothing set, a third line tuned away comes back with one pointer click on the row, and one pull on the saved stroke moves every glyph in one undo step. With five layers in the 900 point window the Style row is still on screen without a scroll.",
   "setup": {
     "forget": ["all"]
   },
@@ -150,6 +150,26 @@
     {"do": "wait", "seconds": 0.8},
     {"do": "expect", "field": "Width", "reads": "3"},
     {"do": "expectPath", "ink": "#B0184A", "closed": false},
-    {"do": "snapshot", "name": "11-a-width-set-by-hand-wins"}
+    {"do": "expectInView", "field": "Style", "whole": true},
+    {"do": "snapshot", "name": "11-a-width-set-by-hand-wins"},
+
+    {"do": "click", "at": [60, 470]},
+    {"do": "wait", "seconds": 0.6},
+    {"do": "tool", "tool": "pen"},
+    {"do": "wait", "seconds": 0.5},
+    {"do": "click", "at": [360, 330]},
+    {"do": "wait", "seconds": 0.3},
+    {"do": "click", "at": [470, 330]},
+    {"do": "wait", "seconds": 0.3},
+    {"do": "click", "at": [470, 460]},
+    {"do": "wait", "seconds": 0.3},
+    {"do": "key", "key": "return"},
+    {"do": "wait", "seconds": 0.5},
+    {"do": "tool", "tool": "select"},
+    {"do": "wait", "seconds": 1},
+    {"do": "expect", "control": "Style", "present": true},
+    {"do": "expectInView", "field": "Style", "whole": true},
+    {"do": "panel", "stage": "12-five-layers"},
+    {"do": "snapshot", "name": "12-five-layers-the-style-row-in-reach"}
   ]
 }

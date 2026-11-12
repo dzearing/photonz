@@ -108,6 +108,27 @@ struct PanelListsPaneTests {
         #expect(PanelListsPane.chosenHeight(stored: 0, column: 800) == 800 * PanelListsPane.defaultShare)
     }
 
+    @Test("An icon's Layers pane starts at a quarter of the panel, so a glyph's line settings stay in reach")
+    func iconStartsShorter() {
+        // The numbers the walk measured at 1280 by 900 (a 841pt column), five
+        // layers and the Styles shelf open: a 0.4 share left Appearance 88 of
+        // the 165 its Style row needs; a quarter leaves it about 169.
+        let icon = PanelListsPane.chosenHeight(stored: nil, column: 841, kind: WindowModes.iconID)
+        #expect(icon == 841 * PanelListsPane.iconShare)
+        #expect(icon <= 215)
+        // Four layer rows of 40 still show under the 51pt of header and padding.
+        #expect(icon - 51 >= 4 * 39)
+        // Every other kind of document keeps its share.
+        #expect(PanelListsPane.chosenHeight(stored: nil, column: 841, kind: WindowModes.imageID)
+                == 841 * PanelListsPane.defaultShare)
+        #expect(PanelListsPane.chosenHeight(stored: nil, column: 841, kind: WindowModes.videoID)
+                == 841 * PanelListsPane.defaultShare)
+        // A divider the person moved is theirs, on an icon too.
+        #expect(PanelListsPane.chosenHeight(stored: 320, column: 841, kind: WindowModes.iconID) == 320)
+        #expect(PanelListsPane.chosenHeight(stored: nil, column: nil, kind: WindowModes.iconID)
+                == PanelListsPane.defaultHeight)
+    }
+
     @Test("The divider runs from the pane's first header to whatever its lists need, short of the floor below")
     func gripRange() {
         // Lists longer than the panel can spare: the floor below stops it.

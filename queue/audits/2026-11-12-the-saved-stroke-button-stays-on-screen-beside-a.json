@@ -1,0 +1,26 @@
+{
+  "feature": "The saved stroke's one click row stays on screen beside a long layers list",
+  "epic": "icon-vector",
+  "summary": "On an icon, the Layers pane now starts at a quarter of the panel instead of 40 percent, so with four or five layers and the Styles shelf open the Style row under Line (and its one click Glyph / stroke 1.75 button) is on screen without a scroll in a 1280 by 900 window.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Divider over Layers never dragged (or double clicked back).",
+  "switched": {},
+  "try": [
+    { "do": "File > New > Image, pick Icon, Create, in a window about 900 points tall." },
+    { "do": "With the Pen draw a two segment line, press Return, pick it with the Select tool (V) and set Width to 1.75 and Corners to Round." },
+    { "do": "Press Save as Style under Line and press Return to keep the suggested name. The Styles shelf opens at the foot of the panel." },
+    { "do": "Draw three more Pen lines so Layers counts 5, then pick the last one.", "shot": "2026-11-12-style-row-five-layers-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press the Glyph / stroke 1.75 button on the Style row without scrolling the panel." },
+    { "do": "Scroll the Layers list to reach Background and Canvas, or drag the divider under Layers down to show them all." }
+  ],
+  "evaluate": [
+    "Is four rows of Layers on an icon enough at rest, now that the rest scrolls inside the pane?",
+    "Does the cut at the foot of Layers read as a list with more in it, with the count 5 on its header?",
+    "Is the Style row where your eye goes when you want the set's stroke?"
+  ],
+  "rough": [
+    "Only icon documents changed. A picture or a screenshot keeps the 40 percent share, so the same Appearance squeeze still happens there with a path picked and a long list; filed nothing because no report asks for it, noted in the task log.",
+    "In a 900 point window the cut under Layers lands exactly between the fourth and fifth row, so no sliver of the fifth row shows; the header count is the only cue there is more. In other window heights the cut falls part way through a row.",
+    "Width, Caps and Align under Style are still below the fold with the shelf open; the Style row is the one click that sets them all, so that is the row kept in reach.",
+    "Before, for comparison: queue/audits/2026-11-07-saved-stroke-7-width-by-hand-sc.png (four layers, Line the last row in view). After, four layers: 2026-11-12-style-row-four-layers-sc.png."
+  ]
+}
