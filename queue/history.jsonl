@@ -16974,3 +16974,12 @@
 {"t":"2026-11-12T13:16:28.858Z","ev":"task_walks","id":"a-group-in-an-icon-shows-what-an-icon-needs-not","walks":["a-group-in-an-icon-shows-no-page-layout-walk","the-whole-icon-workflow-walk"]}
 {"t":"2026-11-12T13:16:36.375Z","ev":"task_note","id":"a-group-in-an-icon-shows-what-an-icon-needs-not"}
 {"t":"2026-11-12T13:16:43.724Z","ev":"task_done","id":"a-group-in-an-icon-shows-what-an-icon-needs-not","from":"in_progress","note":"A group or shape picked in an icon (Icon picture or icon frame) no longer shows Layout or Columns at Next defaults; a group on an ordinary picture keeps Layout. Core rule isAllDrawnInAnIcon with 5 tests; panel and Columns target read it. Verified by the new walk a-group-in-an-icon-shows-no-page-layout-walk (no flags) plus 6 related walks green, full Scripts/test.sh green. Audit: queue/audits/2026-11-12-a-group-in-an-icon-shows-what-an-icon-needs-not.json"}
+{"t":"2026-11-12T13:20:11.196Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-12T13:20:11.273Z","ev":"task_reprioritized","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","from":"p3-low","to":"p2-normal"}
+{"t":"2026-11-12T13:20:11.347Z","ev":"task_note","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope"}
+{"t":"2026-11-12T13:20:11.422Z","ev":"task_resequenced","id":"the-title-presets-walk-pulls-film-super-off-the","from":4080,"to":730}
+{"t":"2026-11-12T13:20:11.496Z","ev":"task_resequenced","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","from":20,"to":740}
+{"t":"2026-11-12T13:20:11.580Z","ev":"task_note","id":"the-title-presets-walk-pulls-film-super-off-the"}
+{"t":"2026-11-12T13:20:17.066Z","ev":"task_resequenced","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":30,"to":20}
+{"t":"2026-11-12T13:20:17.098Z","ev":"triage","summary":"merged 0, dropped 0, reset 0, moved 1 (colour swatch bug p3 to p2: its epic is staged now), renumbered 3 (title presets walk 4080 to 730, swatch to 740, redline 30 to 20), groomed 3 (story icon user-eye read of pass 16, swatch and title presets walk notes); open 72 to 72"}
+{"t":"2026-11-12T13:21:21.947Z","ev":"digest","file":"2026-11-12.md"}
