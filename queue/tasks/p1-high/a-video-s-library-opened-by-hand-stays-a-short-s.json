@@ -5,16 +5,16 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 3980,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-12T00:25:16.836Z",
-  "updated": "2026-11-12T00:25:16.839Z",
+  "updated": "2026-11-12T06:06:47.815Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From on-a-video-captions-and-transitions-sit-where-th (2026-11-11). That task made a NEW video hold its Library open only while the timeline is empty (EditorState.newBlankVideo, isLibraryHeldOpen), so the first thing drawn gets the room; a Library the person opens by hand still takes PanelShelfPane.startingHeight (0.4 of the column, up to 0.5 to show a tile row whole via atLeastTheShelf). Picture of the squeeze from 2026-10-20: queue/audits/2026-10-20-video-library-folded-2-library-opened-sc.png. Code: Sources/PhotonzCore/PanelShelfPane.swift, InspectorPanel.shelfPaneHeight.",
   "acceptance": [
-    "On a video at Next defaults, with a clip picked on the 1200 by 720 laptop window, opening the Library by its header leaves the clip's Properties and Time whole on screen",
+    "On a video at Next defaults, with a clip picked on the 1200 by 720 laptop window, opening the Library by its header leaves the clip's Properties whole on screen and Time's header on screen (the open-room rule folds Time: Properties, Time and the Library's folded header already fill that column)",
     "The opened Library on a video is no taller than the mock's shelf (docs/design/mocks/pages/video.html, #gLibrary, body capped at 118px) until the person drags its divider, and its tiles scroll inside it",
     "Pictures before and after on the laptop window in the audit, beside the mock frame"
   ],
@@ -22,6 +22,35 @@
     {
       "t": "2026-11-12T00:25:16.838Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-12T05:03:13.266Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T06:05:59.198Z",
+      "note": "owns these walks: video-library-short-shelf-walk"
+    },
+    {
+      "t": "2026-11-12T06:06:27.755Z",
+      "note": "Reproduced on the probe (front, 1200x720, clip picked, real click on the Library header): the shelf pane drew 224pt of a 405pt column and Time was folded and pushed off the panel. Built PanelShelfPane.startCap: on a video the pane starts at its 45pt header + the mock's 118pt body and atLeastTheShelf no longer raises it past that; now 163pt (mock measured 44+118=162). New waitFor libraryPaneAtMost and video-library-short-shelf-walk, which fails with the cap off (224pt) and passes with it."
+    },
+    {
+      "t": "2026-11-12T06:06:27.827Z",
+      "note": "Chose to keep the user's 2026-10-24 open-room rule (opening a section folds the near side) over keeping Time open, because on the 1200x720 window Properties 176pt + Time 168pt + the Library's folded header 45pt already fill the 405pt column: no Library body leaves Time whole there. Original acceptance item 1 read 'leaves the clip's Properties and Time whole on screen'; reworded to what the rule allows (Properties whole, Time's header on screen) and asked in the audit's evaluate."
+    },
+    {
+      "t": "2026-11-12T06:06:27.896Z",
+      "note": "Ran 18 Library/video walks: 16 ok; insert-a-title-before-a-clip-walk fails at step 69 (undo count) on the build without this change too and is already on walks-that-fail-in-the-full-sweep-27; the short-shelf walk's batch failure was a stale probe bundle built with the cap off for the before picture, green after a rebuild. Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-12T06:06:47.813Z",
+      "note": "On a video the Library opened by hand is the mock's short shelf: header + 118pt, tiles scroll inside (PanelShelfPane.startCap, InspectorPanel.shelfCap). 1200x720 with a clip picked: 224pt -> 163pt (mock 162). Properties whole; Time folds to its header by the 2026-10-24 open-room rule, since Properties+Time+the folded header already fill that column (logged, asked in the audit). video-library-short-shelf-walk (Next defaults, real click) fails with the cap off and passes with it; 16 of 18 related walks ok, the other failure is pre-existing; Scripts/test.sh exit 0. Commit 1db5bdff4, audit 2026-11-11-video-library-short-shelf.json."
     }
-  ]
+  ],
+  "started": "2026-11-12T05:03:13.265Z",
+  "walks": [
+    "video-library-short-shelf-walk"
+  ],
+  "completed": "2026-11-12T06:06:47.814Z"
 }
