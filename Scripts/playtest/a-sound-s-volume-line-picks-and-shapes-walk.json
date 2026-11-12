@@ -60,21 +60,21 @@
     {
       "comment": "THE FIRST TEST: Command-click on the line adds a point there, holding the line's level.",
       "do": "windowClick",
-      "at": [721, 891],
+      "at": [721, 874],
       "modifiers": [
         "command"
       ]
     },
     {
       "do": "windowClick",
-      "at": [1057, 891],
+      "at": [1057, 874],
       "modifiers": [
         "command"
       ]
     },
     {
       "do": "windowClick",
-      "at": [1393, 891],
+      "at": [1393, 874],
       "modifiers": [
         "command"
       ]
@@ -321,7 +321,7 @@
     {
       "comment": "...the line itself past the last point, where it was dead before:",
       "do": "rightClick",
-      "at": [1600, 891],
+      "at": [1600, 874],
       "space": "window",
       "shot": "4-line-menu"
     },

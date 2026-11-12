@@ -1,0 +1,44 @@
+{
+  "feature": "A sound's volume line at the top of its lane",
+  "epic": "video-audio",
+  "summary": "A sound at the level it was recorded at now draws its volume line near the top of its lane, 12 of 100 down as the audio mock places it, with the waveform under it. The thin strip above that line is the room to turn a sound up to +6 dB.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-sound-lane-is-as-tall-as-the-mock-walk.json",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the sample talk recording and drop the sample music on the timeline.",
+      "shot": "2026-11-11-sound-volume-line-at-the-top-1-recorded-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Look at the music's lane beside the mock's Music lane.",
+      "shot": "2026-11-11-sound-volume-line-at-the-top-side-by-side.png"
+    },
+    {
+      "do": "Drag the music's line down about twenty points: the Volume reading says about -3 dB.",
+      "shot": "2026-11-11-sound-volume-line-at-the-top-2-down-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the line up past where it started: it rides the strip above and reads a few dB up.",
+      "shot": "2026-11-11-sound-volume-line-at-the-top-3-up-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Push the panel's Volume slider to its right end: the line climbs to just under the top.",
+      "shot": "2026-11-11-sound-volume-line-at-the-top-4-panel-up-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does a sound nobody has touched now read as full, with its line at the top of the waveform?",
+    "Is the strip above the line (about 4.5 points for +6 dB) enough room to turn a sound up by hand, or would you rather use the slider for that?",
+    "Does the line crossing the sound's name tag at the top left bother you? The mock draws it the same way."
+  ],
+  "rough": [
+    "The room above the recorded level is thin: about 4.5 points of an 84 point lane for the whole +6 dB, so a drag up is coarse (about 1.3 dB a point). The mock draws no room at all above its recorded level; the panel slider is the fine control.",
+    "Below the recorded level the line now falls in a straight line as the mock draws it, where it used to follow a fader curve. A duck to -12 dB now sits about seven tenths of the way down rather than half way.",
+    "The line's height matches the mock's formula (yOfLevel), which puts the recorded level at 12 of 100, and the mock's sample music at 26 of 100 because those points are set to 0.82.",
+    "On the short 36 point bar a sound gets on the icon strip the recorded level sits 8.5 points down rather than 12 of 100, so there are still 3 points above it to turn the sound up in. No mock covers that bar."
+  ]
+}

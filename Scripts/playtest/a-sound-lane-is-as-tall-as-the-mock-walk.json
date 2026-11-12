@@ -1,35 +1,200 @@
 {
   "out": "/tmp/photonz-playtest/a-sound-lane-is-as-tall-as-the-mock-walk",
   "seed": "The talking sample at Next defaults, nothing switched, with the sample music added on the Audio track. The music's lane stands as tall as video-audio.html draws a sound lane (84 points in a wide window), on the panel's own colour with a thin purple edge, its waveform one purple shape mirrored about the middle and its level line purple near the top. The track's name sits at the top of its header. The talk's own sound stays the bottom half of its clip, green as before. Photographed in dark and light; then the music is picked and its level line dragged down a quarter of the lane, and the volume follows the hand.",
-  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
   "steps": [
-    { "do": "appearance", "value": "dark" },
-    { "do": "action", "action": "openSampleTalk" },
-    { "do": "wait", "seconds": 2.0 },
-    { "do": "action", "action": "videoPause" },
-    { "do": "tool", "tool": "select" },
-    { "do": "action", "action": "videoSeekStart" },
-    { "do": "action", "action": "soundAddSample" },
-    { "do": "wait", "seconds": 1.5 },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expectTracks", "tracks": ["V1", "Audio"] },
-    { "do": "describe", "stage": "1-dark", "note": "Dark: the music's lane 84 points tall on the panel colour, a purple waveform shape and a purple level line; the talk's own sound the green bottom half of its clip on V1" },
-    { "do": "snapshot", "name": "1-dark" },
-    { "do": "appearance", "value": "light" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "2-light", "note": "Light: the same, the music's name, waveform and level line legible on the light panel colour" },
-    { "do": "snapshot", "name": "2-light" },
-    { "do": "appearance", "value": "dark" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "windowClick", "at": [1000, 935] },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "field": "Volume reading", "reads": "0.0 dB" },
-    { "do": "windowDrag", "from": [1000, 889], "to": [1000, 909], "steps": 10, "hold": "3-level-in-hand" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "field": "Volume reading", "reads": "-7.5 dB ±1.5" },
-    { "do": "describe", "stage": "3-turned-down", "note": "The music's level line dragged down twenty points: the line sits under the pointer, the waveform shrinks with it, and the volume reads a few decibels down" },
-    { "do": "panel", "stage": "3-turned-down" },
-    { "do": "snapshot", "name": "3-turned-down" }
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V1",
+        "Audio"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-dark",
+      "note": "Dark: the music's lane 84 points tall on the panel colour, a purple waveform shape and a purple level line; the talk's own sound the green bottom half of its clip on V1"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-dark"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-light",
+      "note": "Light: the same, the music's name, waveform and level line legible on the light panel colour"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1000,
+        935
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Volume reading",
+      "reads": "0.0 dB"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        1000,
+        874
+      ],
+      "to": [
+        1000,
+        894
+      ],
+      "steps": 10,
+      "hold": "3-level-in-hand"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Volume reading",
+      "reads": "-3.2 dB ±1.5"
+    },
+    {
+      "do": "describe",
+      "stage": "3-turned-down",
+      "note": "The music's level line dragged down twenty points: the line sits under the pointer, the waveform shrinks with it, and the volume reads a few decibels down"
+    },
+    {
+      "do": "panel",
+      "stage": "3-turned-down"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-turned-down"
+    },
+    {
+      "comment": "Turned UP past the level it was recorded at: the strip above the recorded level's line is the room for it.",
+      "do": "windowDrag",
+      "from": [
+        1000,
+        894
+      ],
+      "to": [
+        1000,
+        871
+      ],
+      "steps": 10,
+      "hold": "4-level-up-in-hand"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Volume reading",
+      "reads": "4.5 dB ±1.5"
+    },
+    {
+      "do": "describe",
+      "stage": "4-turned-up",
+      "note": "The music's level line dragged up above where it sits at its recorded level: the line rides just under the top of the lane and the volume reads a few decibels up"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-turned-up"
+    },
+    {
+      "comment": "The panel's Volume slider turns it up too, and the line follows.",
+      "do": "press",
+      "control": "Volume",
+      "across": 0.97
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Volume reading",
+      "reads": "5.0 dB ±1"
+    },
+    {
+      "do": "describe",
+      "stage": "5-panel-up",
+      "note": "The Volume slider pressed near its right end: the reading is above 0 dB and the line sits above its recorded level"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-panel-up"
+    }
   ]
 }

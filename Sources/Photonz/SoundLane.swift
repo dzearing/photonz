@@ -613,27 +613,17 @@ struct SoundLevelLine: View {
         return fromMS + Int((Double(min(max(0, x), width)) / Double(width) * span).rounded())
     }
 
-    /// The top of the bar is as loud as a level goes and the bottom is silence,
-    /// so the line sitting high means loud without anything having to say so.
-    ///
-    /// **Not a straight mapping.** Level goes to twice as loud, so spread
-    /// evenly the ordinary level would sit exactly halfway up the bar, drawn
-    /// straight through the middle of the waveform where it reads as an axis
-    /// rather than as a control. Squared instead: the level it was recorded at
-    /// sits about seven tenths of the way up, the six decibels of headroom take
-    /// the top third, and the quiet end — where a duck lives and where a
-    /// hand needs the most room — gets the rest. It is also how a fader feels
-    /// under a hand, which is why every mixer ever made is marked this way.
+    /// Where the mock draws it: the level a sound was recorded at near the top
+    /// of the bar (12 of 100), so the line reads as full with the waveform
+    /// under it, silence near the bottom (90 of 100), and the strip above the
+    /// recorded level kept for turning it up to twice as loud
+    /// (`SoundLaneShape.levelY`).
     private func y(forGain gain: Double) -> CGFloat {
-        let through = min(max(0, gain), AudioLevel.loudestGain) / AudioLevel.loudestGain
-        return Self.inset + (height - Self.inset * 2) * (1 - CGFloat(through.squareRoot()))
+        SoundLaneShape.levelY(forGain: gain, height: height, inset: Self.inset)
     }
 
     private func gain(atY y: CGFloat) -> Double {
-        let usable = height - Self.inset * 2
-        guard usable > 0 else { return AudioLevel.unityGain }
-        let through = 1 - Double(min(max(0, y - Self.inset), usable)) / Double(usable)
-        return AudioLevel.bounded(through * through * AudioLevel.loudestGain)
+        SoundLaneShape.gain(atLevelY: y, height: height, inset: Self.inset)
     }
 }
 
