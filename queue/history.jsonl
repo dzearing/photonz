@@ -16962,3 +16962,7 @@
 {"t":"2026-11-12T11:53:32.853Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T11:53:32.929Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T11:53:33.003Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 16: the letter goes into the envelope, a ticked box starts over cleanly, a position written as a place is sent back (86ec35420, 08488d859); story bar (5 of 6 at 7) not met, 1 of 6, total 57.5"}
+{"t":"2026-11-12T11:54:32.381Z","ev":"task_started","id":"find-out-whether-boxes-and-ovals-ask-draws-land","title":"Find out whether boxes and ovals Ask draws land half a line too small","priority":"p2-normal"}
+{"t":"2026-11-12T12:08:42.643Z","ev":"task_walks","id":"find-out-whether-boxes-and-ovals-ask-draws-land","walks":[]}
+{"t":"2026-11-12T12:08:42.719Z","ev":"task_note","id":"find-out-whether-boxes-and-ovals-ask-draws-land"}
+{"t":"2026-11-12T12:08:48.590Z","ev":"task_done","id":"find-out-whether-boxes-and-ovals-ask-draws-land","from":"in_progress","note":"Yes, they did, and it is already fixed: the same model SVG box (3,3 18x18 rx 4, line 2) landed at 4,4 16x16 rx 3 before 5ced1498a (run 20261108-235558-ask) and lands exactly as written since (run 20261112-105732-ask). Pinned through Ask's addDrawing, on and off the icon grid, in AskIconTests (6763c0ea2); it fails with the line put back inside. Climb 57.5, held-out 54.9, both run after the fix. Scripts/test.sh green."}

@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T08:29:05.863Z",
-  "updated": "2026-11-07T15:49:05.491Z",
+  "updated": "2026-11-12T12:08:48.589Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced through Ask itself, hence p2 and a question. Seen through SVGArtwork.layers, which Ask also uses: lucide mail.svg scored 53.08 of 255 mean difference from macOS's drawing with the line inside the box and left the worst of the list once SVGOpening set style.borderPosition = .center. Ask's path was left alone on purpose: its grid landing and tests are pinned to today's numbers.",
@@ -25,6 +25,25 @@
     {
       "t": "2026-11-07T15:49:05.490Z",
       "note": "seq 59.6875 -> 30"
+    },
+    {
+      "t": "2026-11-12T11:54:32.376Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T12:08:42.641Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-12T12:08:42.717Z",
+      "note": "Compared the model's own SVG with what Ask made, same case before and after: ticked-box eval case, model wrote <rect x=3 y=3 width=18 height=18 rx=4> at stroke-width 2 both times. Run 20261108-235558-ask (before 5ced1498a, 2026-11-09 00:08) exported it at 4,4 16x16 rx 3: the box DID move, half a line small all round. Run 20261112-105732-ask exports 3,3 18x18 rx 4 with the line on the edge, exactly as written. Ovals: recent runs land model circles r 1.5 to 2 after grid rounding, never the r 0.5 an inside line would give. Already fixed by 5ced1498a (SVGArtwork.layers sets strokePosition and borderPosition to .center), which every Ask route uses (addDrawing -> iconFrame or group). Added AskIconTests 'A box and an oval Ask draws on an icon's grid land where the model's SVG put them': through addDrawing, with and without onGrid, box at 3,3 18x18 corner 4 and oval at 8,8 8x8, both centred. It fails with the line put back inside. Eval (Scripts/ask-eval.sh report): climb 57.5 (6 cases, 20261112-105732-ask), held-out 54.9 (53 cases, 20261110-083155-ask-held-out), both run after the fix; no lookups."
+    },
+    {
+      "t": "2026-11-12T12:08:48.587Z",
+      "note": "Yes, they did, and it is already fixed: the same model SVG box (3,3 18x18 rx 4, line 2) landed at 4,4 16x16 rx 3 before 5ced1498a (run 20261108-235558-ask) and lands exactly as written since (run 20261112-105732-ask). Pinned through Ask's addDrawing, on and off the icon grid, in AskIconTests (6763c0ea2); it fails with the line put back inside. Climb 57.5, held-out 54.9, both run after the fix. Scripts/test.sh green."
     }
-  ]
+  ],
+  "started": "2026-11-12T11:54:32.375Z",
+  "walks": [],
+  "completed": "2026-11-12T12:08:48.588Z"
 }
