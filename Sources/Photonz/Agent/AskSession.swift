@@ -534,27 +534,78 @@ final class AskSession {
         // The moving icon as it was looked at, while its mend runs: what
         // lands if the mend fails or runs out of time (`AskMotionLook.latestMendRound`).
         var lookedAt: AskPlan?
+        // What landed is recorded as a change and the request ends having run.
+        func land(_ landed: Ran) {
+            if openedForIcon, let person = editor.document, let after = canvas.document {
+                // The person's picture did not change: the row says where it went.
+                let name = after.layers.first(where: \.isFrame)?.name ?? "Icon"
+                changes.recordElsewhere(asked: words, sentence: AskChangeWords.madeNewIcon(name), document: person,
+                                        sources: landed.sources, leftOut: landed.leftOut,
+                                        understood: AskUnderstanding.lines(summary: self.plan?.summary ?? "", steps: landed.landed))
+            } else if let after = editor.document {
+                let made = AskChangeWords.sentence(landed.landed, asked: words, before: landed.before, after: after,
+                                                   madeAll: landed.leftOut == nil)
+                let components = landed.landed.filter { $0.tool == AskWeb.pageTool && $0.arguments["component"] != nil }.count
+                // A request that looked something up says where it looked.
+                let said = webRead.map { AskWeb.sentence(host: $0.page.host, components: components) }
+                    ?? lookedUp.map { AskLookup.sentence(hosts: $0.hosts, made: made,
+                                                         components: landed.landed.filter { $0.tool == "add_component" }.count) }
+                    ?? made
+                changes.record(asked: words, sentence: said,
+                               before: landed.before, after: after, sources: landed.sources, leftOut: landed.leftOut,
+                               understood: AskUnderstanding.lines(summary: self.plan?.summary ?? "", steps: landed.landed))
+            }
+            lastPlanSeconds = Date().timeIntervalSince(started)
+            note("done")
+            let sayings = [talk.note, landed.layoutSentence, unclear ? AskCopy.iconMayNotRead : nil,
+                           Self.motionNote(of: landed, in: canvas)].compactMap { $0 }
+            said = sayings.isEmpty ? nil : sayings.joined(separator: " ")
+            leftOut = landed.leftOut
+            if let line = landed.leftOut { note("left out: \(line)") }
+            phase = .ran
+            revealRows()
+        }
         while true {
+            // Every plan ends inside the request's five minutes (`AskRequestTime`);
+            // a moving icon's mend has its own later bounds (`AskMotionLook`).
+            // A first plan out of time offers what it planned; a drawing
+            // drawn again plans it all afresh, so it keeps the closest instead.
+            let mending = lookedAt != nil
             let outcome = await Self.plan(&talk, model: model, in: editor, note: note, say: say, first: retrying,
-                                          stopBy: lookedAt.map { _ in started.addingTimeInterval(AskMotionLook.latestMendRound) },
-                                          cutAt: lookedAt.map { _ in started.addingTimeInterval(AskMotionLook.mendCut) })
+                                          stopBy: started.addingTimeInterval(mending ? AskMotionLook.latestMendRound
+                                                                             : AskRequestTime.latestRound(within: AskLocalModel.walkSeconds)),
+                                          cutAt: started.addingTimeInterval(mending ? AskMotionLook.mendCut
+                                                                            : AskRequestTime.roundCut(within: AskLocalModel.walkSeconds)),
+                                          offersPlanned: !mending && revisions == 0)
             guard !Task.isCancelled else { return }
             lastPlanSeconds = Date().timeIntervalSince(started)
             var plan: AskPlan
             switch outcome {
             case .success(let planned): plan = planned
             case .failure(let trouble):
-                guard let held = lookedAt else {
+                if let held = lookedAt {
+                    note("motion mend: \(trouble.sentence); landing the motion as it was looked at")
+                    plan = held
+                } else if trouble == .tooSlow, let held = closest {
+                    // Drawing again ran out of time: the closest try so far lands.
+                    note("drawing again ran out of time: keeping an earlier drawing that showed all but \(held.attempt.missed) of its plan")
+                    enter(.keepingClosest)
+                    canvas.perform { $0 = held.after }
+                    lastSources = held.ran.sources
+                    self.plan = held.plan
+                    land(held.ran)
+                    return
+                } else {
+                    closeOpened()
                     phase = .stopped(trouble.sentence)
                     return
                 }
-                note("motion mend: \(trouble.sentence); landing the motion as it was looked at")
-                plan = held
             }
             lookedAt = nil
             if let carrying = carried.flatMap({ AskDrawingCheck.carryingPlans($0, into: plan) }) {
                 plan = carrying
-            } else if !AskIcon.isIn(plan) {
+            } else if !AskIcon.isIn(plan),
+                      AskRequestTime.startsRound(at: Date().timeIntervalSince(started), within: AskLocalModel.walkSeconds) {
                 plan = await Self.withDrawingPlans(plan, asked: words, model: model, note: note, say: say)
             }
             guard !Task.isCancelled else { return }
@@ -601,7 +652,15 @@ final class AskSession {
                     continue
                 }
             }
-            let miss = talk.landsAsDrawn ? nil : await look(at: plan, made: ran.made, in: canvas, model: model, note: note, say: say)
+            // Past the latest start nothing could be drawn again, so what
+            // landed stays unlooked at rather than carry the request past
+            // its five minutes (`AskRequestTime.drawsAgain`).
+            let inTime = AskRequestTime.drawsAgain(at: Date().timeIntervalSince(started), within: AskLocalModel.walkSeconds)
+            if !inTime, !talk.landsAsDrawn, !AskDrawingCheck.drawings(in: plan).isEmpty {
+                note("look skipped: the request's time is nearly up")
+            }
+            let miss = talk.landsAsDrawn || !inTime ? nil
+                : await look(at: plan, made: ran.made, in: canvas, model: model, note: note, say: say)
             if Task.isCancelled {
                 // Stopped while it looked at what it drew: what ran comes
                 // back off, so a stop leaves the document as it was.
@@ -660,34 +719,7 @@ final class AskSession {
                 phase = .planning
                 continue
             }
-            if openedForIcon, let person = editor.document, let after = canvas.document {
-                // The person's picture did not change: the row says where it went.
-                let name = after.layers.first(where: \.isFrame)?.name ?? "Icon"
-                changes.recordElsewhere(asked: words, sentence: AskChangeWords.madeNewIcon(name), document: person,
-                                        sources: landed.sources, leftOut: landed.leftOut,
-                                        understood: AskUnderstanding.lines(summary: self.plan?.summary ?? "", steps: landed.landed))
-            } else if let after = editor.document {
-                let made = AskChangeWords.sentence(landed.landed, asked: words, before: landed.before, after: after,
-                                                   madeAll: landed.leftOut == nil)
-                let components = landed.landed.filter { $0.tool == AskWeb.pageTool && $0.arguments["component"] != nil }.count
-                // A request that looked something up says where it looked.
-                let said = webRead.map { AskWeb.sentence(host: $0.page.host, components: components) }
-                    ?? lookedUp.map { AskLookup.sentence(hosts: $0.hosts, made: made,
-                                                         components: landed.landed.filter { $0.tool == "add_component" }.count) }
-                    ?? made
-                changes.record(asked: words, sentence: said,
-                               before: landed.before, after: after, sources: landed.sources, leftOut: landed.leftOut,
-                               understood: AskUnderstanding.lines(summary: self.plan?.summary ?? "", steps: landed.landed))
-            }
-            lastPlanSeconds = Date().timeIntervalSince(started)
-            note("done")
-            let sayings = [talk.note, landed.layoutSentence, unclear ? AskCopy.iconMayNotRead : nil,
-                           Self.motionNote(of: landed, in: canvas)].compactMap { $0 }
-            said = sayings.isEmpty ? nil : sayings.joined(separator: " ")
-            leftOut = landed.leftOut
-            if let line = landed.leftOut { note("left out: \(line)") }
-            phase = .ran
-            revealRows()
+            land(landed)
             return
         }
     }
@@ -1155,12 +1187,24 @@ final class AskSession {
     /// more than thinking (a try again and why).
     private static func plan(_ talk: inout AskConversation, model: String, in editor: EditorState,
                              note: (String) -> Void, say: @escaping @MainActor (AskStage) -> Void,
-                             first: AskStage? = nil, stopBy: Date? = nil,
-                             cutAt: Date? = nil) async -> Result<AskPlan, AskLocalModel.Trouble> {
+                             first: AskStage? = nil, stopBy: Date, cutAt: Date,
+                             offersPlanned: Bool) async -> Result<AskPlan, AskLocalModel.Trouble> {
         guard let document = editor.agentID else { return .failure(.said(AskCopy.noDocumentSentence)) }
+        // Out of time (`AskRequestTime`): the steps planned so far land when
+        // `offersPlanned` and there are some; otherwise it took too long, and
+        // nothing changes.
+        func outOfTime(_ talk: AskConversation) -> Result<AskPlan, AskLocalModel.Trouble> {
+            let steps = talk.steps.count
+            guard offersPlanned, AskRequestTime.whenOutOfTime(stepsPlanned: steps) == .offerPlanned else {
+                note("out of time with \(steps) steps planned")
+                return .failure(.tooSlow)
+            }
+            note("out of time: offering the \(steps) steps planned")
+            return .success(talk.plan(summary: "", stoppedShort: true))
+        }
         while talk.rounds < AskConversation.mostRounds {
             // No round starts past `stopBy`: a round can take a minute.
-            if let stopBy, Date() >= stopBy { return .failure(.said(AskMotionLook.outOfTime)) }
+            if Date() >= stopBy { return outOfTime(talk) }
             let reply: AgentJSON
             // Every request fits the window before it goes (`AskConversation.fittedMessages`):
             // one that still cannot is said plainly here, never sent for the server to refuse.
@@ -1202,19 +1246,51 @@ final class AskSession {
                     heardFromServer.lines.removeAll()
                 }
                 defer { noteServer() }
-                if let cutAt {
-                    // A round still going at `cutAt` is cut off: its request
-                    // is cancelled, which a stop of the whole request does too.
-                    let asking = Task { try await AskLocalModel.chat(body, standing: standing, said: said) }
-                    let cut = Task {
-                        try? await Task.sleep(for: .seconds(max(0, cutAt.timeIntervalSinceNow)))
-                        if !Task.isCancelled { asking.cancel() }
+                // A round still going at `cutAt` is cut off, and one whose
+                // server reads and writes nothing for a minute and a half is
+                // given up (`AskModelWatch`): its request is cancelled, which
+                // a stop of the whole request does too.
+                let asking = Task { try await AskLocalModel.chat(body, standing: standing, said: said) }
+                let ended = AskTurnEnd()
+                let minder = Task { @MainActor in
+                    let sent = Date()
+                    var watch = AskModelWatch(at: 0)
+                    let listens = AskLocalModel.runtime == .builtIn && !AskLocalModel.answersAreScripted
+                    while !Task.isCancelled {
+                        try? await Task.sleep(for: .seconds(1))
+                        guard !Task.isCancelled else { return }
+                        let now = Date().timeIntervalSince(sent)
+                        if Date() >= cutAt {
+                            ended.why = .cut
+                        } else if listens {
+                            if AskModelServer.shared.loading {
+                                watch.loading(at: now)
+                            } else {
+                                watch.heard(await AskModelServer.shared.progress(), at: now)
+                                if watch.stalled(at: Date().timeIntervalSince(sent)) { ended.why = .quiet }
+                            }
+                        }
+                        if ended.why != nil, !Task.isCancelled {
+                            asking.cancel()
+                            return
+                        }
                     }
-                    defer { cut.cancel() }
+                }
+                defer { minder.cancel() }
+                do {
                     reply = try await withTaskCancellationHandler { try await asking.value } onCancel: { asking.cancel() }
-                    if asking.isCancelled { return .failure(.said(AskMotionLook.outOfTime)) }
-                } else {
-                    reply = try await AskLocalModel.chat(body, standing: standing, said: said)
+                } catch where ended.why != nil && !Task.isCancelled {
+                    // Whatever the cancel threw, it was the minder's.
+                    noteServer()
+                    switch ended.why {
+                    case .quiet:
+                        note("the model's server read and wrote nothing for \(Int(AskModelWatch.quietSeconds)) s: giving up")
+                        AskModelServer.shared.letGoOfQuietServer()
+                        return .failure(.stalled)
+                    default:
+                        note("the round was still going when the request's time ran out: cut off")
+                        return outOfTime(talk)
+                    }
                 }
                 watch?.cancel()
                 noteServer()
@@ -1497,4 +1573,13 @@ enum AskHandoff {
 @MainActor
 final class AskServerLines {
     var lines: [String] = []
+}
+
+/// Why a planning round's request was cancelled by its minder rather than by
+/// a person's Stop: the request's time ran out (`AskRequestTime.roundCut`) or
+/// its server went quiet (`AskModelWatch`).
+@MainActor
+final class AskTurnEnd {
+    enum Why { case cut, quiet }
+    var why: Why?
 }

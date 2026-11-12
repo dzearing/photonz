@@ -49,9 +49,6 @@ public enum AskMotionLook {
     /// may carry a request past five minutes.
     public static let mendCut: TimeInterval = 285
 
-    /// Why a mend stopped, in the trace.
-    public static let outOfTime = "the mend ran out of time"
-
     /// Whether a moving icon that landed `seconds` after it was asked is
     /// looked at, having been looked at `looked` times already.
     public static func looks(after seconds: TimeInterval, looked: Int) -> Bool {

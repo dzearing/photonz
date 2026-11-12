@@ -372,6 +372,13 @@ final class AskModelServer {
         throw Failure.wouldNotStart
     }
 
+    /// A server that went quiet on a request (`AskModelWatch`) is no use to
+    /// the next one: it is stopped, shared or not, so the next starts clean.
+    func letGoOfQuietServer() {
+        if shared { AskWalkServerProcess.stop() }
+        stop()
+    }
+
     /// Lets the server go after a few minutes with nothing asked of it.
     private func keepWatch() {
         watch?.cancel()

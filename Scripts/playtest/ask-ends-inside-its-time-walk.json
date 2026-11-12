@@ -1,0 +1,63 @@
+{
+  "out": "/tmp/photonz-playtest/ask-ends-inside-its-time-walk",
+  "seed": "Ask ends a request inside its time (AskRequestTime, task find-out-why-ask-sometimes-waits-five-minutes-fo). The pricing section, the request that most often planned past five minutes, is given 60 seconds instead: planning stops starting rounds at 48 s and cuts a round still going at 54 s, then lands the steps it planned with what it left out on its row, or says it took too long and changes nothing. Either way the request has ended well before the old five minutes. Needs the built-in model.",
+  "clock": 180,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "askSeconds": 60
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 900,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Make a pricing section on brand"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 80
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-ended",
+      "note": "the request ended inside its 60 seconds: what it planned in time is on the canvas with its row, or Ask says it took too long"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-ended"
+    }
+  ]
+}

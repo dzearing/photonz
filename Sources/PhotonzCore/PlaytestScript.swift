@@ -264,6 +264,10 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// GB) instead of this one's, so a walk about what an 8 GB Mac is offered
     /// means the same on a 64 GB Mac. Nil means this Mac.
     public var askMac: Int?
+    /// A request to Ask has this many seconds instead of five minutes
+    /// (`AskRequestTime`), so a walk sees planning run out of time with the
+    /// real model in under a minute. Nil means five minutes.
+    public var askSeconds: Int?
     /// Ask searches a stand-in for its search service on this Mac's own
     /// loopback, at this port (`AskLookup.walkEndpoint`), with no key: how a
     /// walk proves looking things up without the web. Nil means the real one.
@@ -279,9 +283,10 @@ public struct PlaytestSetup: Sendable, Equatable {
                 front: Bool = false, behindLook: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
                 askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false, askMac: Int? = nil,
-                askSearch: Int? = nil, askReplies: [String] = []) {
+                askSearch: Int? = nil, askReplies: [String] = [], askSeconds: Int? = nil) {
         self.askReplies = askReplies
         self.askMac = askMac
+        self.askSeconds = askSeconds
         self.askSearch = askSearch
         self.offline = offline
         self.agentHome = agentHome
@@ -304,6 +309,7 @@ public struct PlaytestSetup: Sendable, Equatable {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
             && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && !behindLook && history == nil && !timedWithoutMarkers
             && !askModelMissing && askModelsOnly == nil && !offline && !agentHome && askMac == nil && askSearch == nil && askReplies.isEmpty
+            && askSeconds == nil
     }
 
     /// The kind of each capture in a generated history, newest first: every
@@ -313,7 +319,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
+    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "askSeconds", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
                             "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -375,6 +381,15 @@ public struct PlaytestSetup: Sendable, Equatable {
             }
             mac = number.intValue
         }
+        var seconds: Int?
+        if let raw = fields["askSeconds"], !(raw is NSNull) {
+            guard let number = raw as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+                  Double(number.intValue) == number.doubleValue, (10...300).contains(number.intValue) else {
+                throw PlaytestScriptError.invalidSetup(
+                    field: "askSeconds", reason: "is how many seconds a request to Ask has, 10 to 300")
+            }
+            seconds = number.intValue
+        }
         var search: Int?
         if let raw = fields["askSearch"], !(raw is NSNull) {
             guard let number = raw as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
@@ -411,7 +426,8 @@ public struct PlaytestSetup: Sendable, Equatable {
                   agentHome: try Self.yesOrNo(fields["agentHome"], field: "agentHome") ?? false,
                   askMac: mac,
                   askSearch: search,
-                  askReplies: replies)
+                  askReplies: replies,
+                  askSeconds: seconds)
     }
 
     private static func count(_ raw: Any?, field: String) throws -> Int? {

@@ -45,6 +45,9 @@ enum AskLocalModel {
 
     /// Set by a walk's setup only (`PlaytestSetup.askMac`): plan as a Mac of this size.
     static var walkMac: Int?
+    /// Set by a walk's setup only (`PlaytestSetup.askSeconds`): a request has
+    /// this many seconds instead of five minutes.
+    static var walkSeconds: Int?
     /// What the model answers, turn by turn, in a walk that says
     /// (`PlaytestSetup.askReplies`): the last one again once they run out. How
     /// a walk reaches a stop no model can be counted on to make.
@@ -77,6 +80,8 @@ enum AskLocalModel {
         case wouldNotStart
         /// The model was still answering when the turn's time ran out.
         case tooSlow
+        /// The model's server read and wrote nothing for `AskModelWatch.quietSeconds`.
+        case stalled
         /// One of Ask's own sentences, or the model's own "I can't".
         case said(String)
         /// The model's server failed, in its own words: kept for the trace,
@@ -91,6 +96,7 @@ enum AskLocalModel {
             case .downloading: "Ask is getting its model ready."
             case .wouldNotStart: "Ask's model didn't start. Try again."
             case .tooSlow: "Ask's model took too long. Try again."
+            case .stalled: "Ask's model went quiet. Try again."
             case .said(let words): words
             case .server(let words): AskTrouble.sentence(forServerError: words)
             }
@@ -224,6 +230,9 @@ enum AskLocalModel {
                     }
                 }
                 box.task = task
+                // A cancel that came before the request existed found
+                // nothing to cancel: this one is cancelled before it goes.
+                if Task.isCancelled { task.cancel() }
                 task.resume()
             }
         } onCancel: {
