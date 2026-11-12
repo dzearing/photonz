@@ -16297,7 +16297,7 @@
 {"t":"2026-11-08T06:10:18.666Z","ev":"task_pending","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Balloon 66.6-69.3 to 72-85.6 (mean 81.2 over four readings), still under 85; heart, egg and bubble bars met and holding. Open for the balloon."}
 {"t":"2026-11-08T06:20:05.148Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-08T06:22:09.299Z","ev":"slice_pass","walks":24,"passed":22,"failed":2,"seconds":553,"of":1134,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-08T06:22:09.480Z","ev":"task_started","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","title":"An animated icon's flap reads, and a drawn line ends its lap cleanly","priority":"p1-high"}
+{"t":"2026-11-08T06:22:09.480Z","ev":"task_started","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","title":"An animated icon's flap reads, and a drawn line ends its lap cleanly","priority":"p1-high","repeats":1,"until":"2026-11-08T06:22:09.480Z","rolledUp":true}
 {"t":"2026-11-08T06:53:41.653Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
 {"t":"2026-11-08T06:53:41.726Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
 {"t":"2026-11-08T07:01:36.267Z","ev":"task_created","id":"an-animated-icon-told-as-a-little-story-moves-th","priority":"p1-high","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'"}
@@ -16404,7 +16404,7 @@
 {"t":"2026-11-08T17:13:09.911Z","ev":"triage","summary":"merged 0, dropped 0, priority moves 0, epic fixes 2, reset 0, groomed 3 (findings folded into the flap, balloon and held-out tasks), spot-checked 2 new p1 bugs (both kept), renumbered 86"}
 {"t":"2026-11-08T17:13:39.580Z","ev":"task_note","id":"a-looping-turn-comes-home-and-spins-evenly-witho"}
 {"t":"2026-11-08T17:14:17.260Z","ev":"digest","file":"2026-11-08.md"}
-{"t":"2026-11-08T17:14:41.369Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-08T17:14:41.369Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high","repeats":3,"until":"2026-11-08T22:46:23.330Z","rolledUp":true}
 {"t":"2026-11-08T17:26:42.859Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-08T17:57:55.357Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-08T20:30:18.296Z","ev":"task_walks","id":"an-animated-icon-told-as-a-little-story-moves-th","walks":["ask-animates-a-story-walk","ask-animates-a-story-without-the-word-walk"]}
@@ -16412,12 +16412,10 @@
 {"t":"2026-11-08T20:30:18.432Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-08T20:30:18.499Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Routing fixed and shipped (b438830e8): a story always animates; story eval bar not met (0 of 6 at 7), left open for a look-and-revise pass"}
 {"t":"2026-11-08T20:38:43.430Z","ev":"slice_pass","walks":22,"passed":20,"failed":0,"seconds":343,"of":1136,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-08T20:38:43.609Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-08T22:45:45.688Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-08T22:45:45.764Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-08T22:45:45.840Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-08T22:45:50.317Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Look before landing shipped (e78463fd9): story total 34.8 to 49.1, reads as asked best 6; bar (5 of 6 at 7) not met. Next lever: a quicker story plan so the look fits the user's trash sentence."}
-{"t":"2026-11-08T22:46:23.330Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-09T00:31:41.739Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T00:42:12.142Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T00:42:12.224Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
@@ -16426,7 +16424,7 @@
 {"t":"2026-11-09T00:52:12.733Z","ev":"task_note","id":"leaving-preview-slides-back-without-a-hitch"}
 {"t":"2026-11-09T00:52:12.771Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-09T00:54:17.334Z","ev":"slice_pass","walks":25,"passed":23,"failed":2,"seconds":569,"of":1136,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-09T00:54:17.515Z","ev":"task_started","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","title":"A broken icon reads as what breaks it: a crack through a heart, a split egg, a bubble in pieces","priority":"p1-high"}
+{"t":"2026-11-09T00:54:17.515Z","ev":"task_started","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","title":"A broken icon reads as what breaks it: a crack through a heart, a split egg, a bubble in pieces","priority":"p1-high","repeats":3,"until":"2026-11-09T02:13:24.289Z","rolledUp":true}
 {"t":"2026-11-09T01:51:30.747Z","ev":"task_walks","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","walks":["a-torn-icon-writes-whole-units-walk"]}
 {"t":"2026-11-09T01:51:54.277Z","ev":"task_created","id":"find-out-why-the-eval-judge-scores-one-identical","priority":"p2-normal","title":"Find out why the eval judge scores one identical icon picture 85.6 and then 69.9 within an hour"}
 {"t":"2026-11-09T01:52:04.017Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
@@ -16435,25 +16433,23 @@
 {"t":"2026-11-09T01:52:04.239Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T01:52:04.315Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T01:52:04.389Z","ev":"task_pending","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Wedge knot fixed (3a83d3993, 85.6 on it); balloon mean of five 76.0 against 85, held down by an untouched drawing the judge read 85.6 to 69.9. Open for the balloon."}
-{"t":"2026-11-09T01:52:39.823Z","ev":"task_started","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","title":"A broken icon reads as what breaks it: a crack through a heart, a split egg, a bubble in pieces","priority":"p1-high"}
 {"t":"2026-11-09T01:53:27.189Z","ev":"task_reprioritized","id":"find-out-why-the-eval-judge-scores-one-identical","from":"p2-normal","to":"p1-high"}
 {"t":"2026-11-09T01:53:27.264Z","ev":"task_resequenced","id":"find-out-why-the-eval-judge-scores-one-identical","from":85,"to":15}
 {"t":"2026-11-09T01:53:27.339Z","ev":"task_note","id":"find-out-why-the-eval-judge-scores-one-identical"}
 {"t":"2026-11-09T01:53:27.416Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T01:53:30.718Z","ev":"task_pending","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Waiting on find-out-why-the-eval-judge-scores-one-identical (now a dep, p1 seq 15): the balloon bar of 85 is inside the judge's swing on one identical picture. Heart, egg, bubble bars met."}
-{"t":"2026-11-09T01:53:48.941Z","ev":"task_started","id":"find-out-why-the-eval-judge-scores-one-identical","title":"Find out why the eval judge scores one identical icon picture 85.6 and then 69.9 within an hour","priority":"p1-high"}
+{"t":"2026-11-09T01:53:48.941Z","ev":"task_started","id":"find-out-why-the-eval-judge-scores-one-identical","title":"Find out why the eval judge scores one identical icon picture 85.6 and then 69.9 within an hour","priority":"p1-high","repeats":1,"until":"2026-11-09T01:53:48.941Z","rolledUp":true}
 {"t":"2026-11-09T02:04:12.184Z","ev":"task_note","id":"find-out-why-the-eval-judge-scores-one-identical"}
 {"t":"2026-11-09T02:04:12.262Z","ev":"task_note","id":"find-out-why-the-eval-judge-scores-one-identical"}
 {"t":"2026-11-09T02:04:12.338Z","ev":"task_note","id":"find-out-why-the-eval-judge-scores-one-identical"}
 {"t":"2026-11-09T02:04:12.413Z","ev":"task_note","id":"find-out-why-the-eval-judge-scores-one-identical"}
 {"t":"2026-11-09T02:04:12.488Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T02:13:02.394Z","ev":"task_done","id":"find-out-why-the-eval-judge-scores-one-identical","from":"in_progress","note":"Cause: sampling, not time. The balloon's didWhatWasAsked sits between 6 and 7 (7 in ~1/3 of looks); the median of 3 looks snapped it to 6 or 7 and asked<7 scales the whole score by 6/7, a 14-point cliff. A lab re-render (200 edge pixels different) read 7 twice as often, so lab readings do not stand in. Fix (b564b9f01): judge lines are the mean of 9 looks (JUDGE_LOOKS, also naming/rescore/calibrate), method folded into RUBRIC_ID (now 4a03a8fc), runs record looks; judge.test.mjs covers it. Verified: six readings of the same balloon read 73.9-75.6 (mean 74.8, max 0.85 off), one a full eval run. Written up in Scripts/ask-eval/README.md 'How steady a reading is'. Scripts/test.sh green."}
-{"t":"2026-11-09T02:13:24.289Z","ev":"task_started","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","title":"A broken icon reads as what breaks it: a crack through a heart, a split egg, a bubble in pieces","priority":"p1-high"}
 {"t":"2026-11-09T03:41:18.090Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T03:41:18.167Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T03:41:18.242Z","ev":"task_note","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th"}
 {"t":"2026-11-09T03:41:24.434Z","ev":"task_done","id":"a-broken-icon-reads-as-what-breaks-it-a-crack-th","from":"in_progress","note":"Every bar met on the steady judge (mean of nine looks), three readings each, tear on vs break step off: heart 86.5/86.5/87.3 with asked 7.9-8.3 and icon 7.0-7.3 (off 42-43); egg 88.8 x3 (off 80-84); bubble 82.7-86.2 (off 11-16, a refresh arrow); balloon 80.4-85.6 (off 11-49). Balloon item restated from 85, a median-judge number, to the egg/bubble bar. No app code changed this run (59a72e2f3, queue and docs); audit queue/audits/2026-11-09-icon-break-kinds-steady.json; walk a-torn-icon-writes-whole-units-walk ok."}
-{"t":"2026-11-09T03:41:53.085Z","ev":"task_started","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","title":"An animated icon's flap reads, and a drawn line ends its lap cleanly","priority":"p1-high"}
+{"t":"2026-11-09T03:41:53.085Z","ev":"task_started","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","title":"An animated icon's flap reads, and a drawn line ends its lap cleanly","priority":"p1-high","repeats":3,"until":"2026-11-09T14:33:13.960Z","rolledUp":true}
 {"t":"2026-11-09T04:41:50.531Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
 {"t":"2026-11-09T04:41:50.609Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
 {"t":"2026-11-09T04:41:50.695Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
@@ -16464,13 +16460,12 @@
 {"t":"2026-11-09T05:25:41.301Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
 {"t":"2026-11-09T05:25:41.342Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-09T05:27:46.553Z","ev":"slice_pass","walks":26,"passed":24,"failed":2,"seconds":419,"of":1136,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-09T05:27:46.746Z","ev":"task_started","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","title":"An animated icon's flap reads, and a drawn line ends its lap cleanly","priority":"p1-high"}
 {"t":"2026-11-09T08:08:47.814Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
 {"t":"2026-11-09T08:08:47.888Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
 {"t":"2026-11-09T08:22:20.149Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-09T08:22:47.709Z","ev":"task_walks","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","walks":[]}
 {"t":"2026-11-09T08:22:47.784Z","ev":"task_pending","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","from":"in_progress","note":"Plane (7.6, 7.9, loop fixed), wifi (8.1), the flap landing and the held-out set are met. The envelope went from reads-as-asked 5 to 6.0-6.8 (best 71.8) and stays open against its bar of 7: what is left is the model's tiny letter, which reads as a blob tangled with the flap. Shipped 5ced1498a; audit queue/audits/2026-11-09-envelope-from-behind.json"}
-{"t":"2026-11-09T08:23:44.887Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-09T08:23:44.887Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high","repeats":3,"until":"2026-11-09T12:58:58.902Z","rolledUp":true}
 {"t":"2026-11-09T08:51:34.571Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T09:30:23.988Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T10:09:57.778Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
@@ -16479,12 +16474,10 @@
 {"t":"2026-11-09T11:19:00.902Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Mend and contact shipped (a2012994a): story total 48.6 to 57.4; bar (5 of 6 at reads as asked 7) not met, best 0 to 2 of 6 per run"}
 {"t":"2026-11-09T11:27:50.502Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-09T11:29:55.329Z","ev":"slice_pass","walks":26,"passed":24,"failed":2,"seconds":497,"of":1136,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-09T11:29:55.506Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-09T11:51:53.301Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T12:58:24.520Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T12:58:24.595Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T12:58:24.671Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Beats kept as planned (ed452a4ef): bell up to 77, checkbox reads as asked 8; story bar (5 of 6 at 7) not met, 1 of 6 at best"}
-{"t":"2026-11-09T12:58:58.902Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-09T14:27:55.670Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T14:27:55.746Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-09T14:27:55.823Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
@@ -16549,7 +16542,6 @@
 {"t":"2026-11-09T14:31:49.122Z","ev":"triage","summary":"merged 0, dropped 0, priority moves 1 (flaky test suite to p1), epic fixes 1, reset 0, leftovers 0, groomed 4 (steer and reel on the story icon task, envelope overlap on the flap task, judge finding on the held-out task, a third sighting on the test suite task), no new p1 bugs to spot-check, renumbered 52"}
 {"t":"2026-11-09T14:32:04.288Z","ev":"task_note","id":"find-out-why-ask-sometimes-waits-five-minutes-fo"}
 {"t":"2026-11-09T14:32:57.562Z","ev":"digest","file":"2026-11-09.md"}
-{"t":"2026-11-09T14:33:13.960Z","ev":"task_started","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","title":"An animated icon's flap reads, and a drawn line ends its lap cleanly","priority":"p1-high"}
 {"t":"2026-11-09T15:16:35.426Z","ev":"task_created","id":"try-an-animated-svg-in-a-real-web-page-preview-a","priority":"p1-high","title":"Try an animated SVG in a real web page: Preview as Web Page, playback on hover, and colours that follow the page"}
 {"t":"2026-11-09T15:16:35.547Z","ev":"task_resequenced","id":"try-an-animated-svg-in-a-real-web-page-preview-a","from":45,"to":7e-10}
 {"t":"2026-11-09T16:23:41.822Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
@@ -16560,50 +16552,49 @@
 {"t":"2026-11-09T16:24:42.654Z","ev":"task_done","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e","from":"in_progress","note":"Envelope reads as asked 7.0-7.1 in four runs (was 6.1): folds shut in steps at an even pace and into the lap's end, fold ends tucked round inside the body's corners for the frame's growth, what comes out comes 70% clear. Plane 7.0, wifi 7.9, trash lid 87.4. d441abba2, Scripts/test.sh green, audit queue/audits/2026-11-09-envelope-reads-as-asked.json"}
 {"t":"2026-11-09T16:33:31.056Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-09T16:35:36.252Z","ev":"slice_pass","walks":28,"passed":26,"failed":2,"seconds":493,"of":1136,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-09T16:35:36.436Z","ev":"task_started","id":"try-an-animated-svg-in-a-real-web-page-preview-a","title":"Try an animated SVG in a real web page: Preview as Web Page, playback on hover, and colours that follow the page","priority":"p1-high"}
+{"t":"2026-11-09T16:35:36.436Z","ev":"task_started","id":"try-an-animated-svg-in-a-real-web-page-preview-a","title":"Try an animated SVG in a real web page: Preview as Web Page, playback on hover, and colours that follow the page","priority":"p1-high","repeats":1,"until":"2026-11-09T16:35:36.436Z","rolledUp":true}
 {"t":"2026-11-09T17:48:10.165Z","ev":"task_note","id":"try-an-animated-svg-in-a-real-web-page-preview-a"}
 {"t":"2026-11-09T17:48:10.239Z","ev":"task_note","id":"try-an-animated-svg-in-a-real-web-page-preview-a"}
 {"t":"2026-11-09T17:48:10.314Z","ev":"task_note","id":"try-an-animated-svg-in-a-real-web-page-preview-a"}
 {"t":"2026-11-09T17:48:10.390Z","ev":"task_note","id":"try-an-animated-svg-in-a-real-web-page-preview-a"}
 {"t":"2026-11-09T17:48:10.466Z","ev":"task_walks","id":"try-an-animated-svg-in-a-real-web-page-preview-a","walks":["svg-preview-web-page-walk"]}
 {"t":"2026-11-09T17:48:49.089Z","ev":"task_done","id":"try-an-animated-svg-in-a-real-web-page-preview-a","from":"in_progress","note":"Shipped in f6ed6ea15 (Next, no flag change): Export sheet Plays (Always/On hover/Once) and Colour (As drawn/Follow the page) remembered per document; File > Preview as Web Page plus layer and canvas right-click rows and a sheet button write an offline page (hover button, 16-96 px light and dark, looping copy, Copy SVG/HTML, Refresh) and open it, rewritten as the drawing changes; Copy SVG and agent export follow the choice; export gains plays/colour and new MCP tool preview_web_page. Verified: SVGPlaybackTests (17) + agent/render tests, full Scripts/test.sh green; svg-preview-web-page-walk ok at Next defaults; Scripts/svg-preview-check.mjs 30/30 in WebKit and Chromium (found and fixed two bugs: hyphenated SMIL event ids never start, ink tie picked the accent); 15 export/Copy SVG walks re-run green. runner-prompt.md and the photonz skill note the preview. Audit: queue/audits/2026-11-09-try-an-animated-svg-in-a-real-web-page-preview-a.json"}
-{"t":"2026-11-09T17:49:17.683Z","ev":"task_started","id":"a-playing-icon-stays-sharp-on-a-zoomed-canvas","title":"A playing icon stays sharp on a zoomed canvas","priority":"p1-high"}
+{"t":"2026-11-09T17:49:17.683Z","ev":"task_started","id":"a-playing-icon-stays-sharp-on-a-zoomed-canvas","title":"A playing icon stays sharp on a zoomed canvas","priority":"p1-high","repeats":1,"until":"2026-11-09T17:49:17.683Z","rolledUp":true}
 {"t":"2026-11-09T18:25:55.053Z","ev":"task_note","id":"a-playing-icon-stays-sharp-on-a-zoomed-canvas"}
 {"t":"2026-11-09T18:25:55.130Z","ev":"task_note","id":"a-playing-icon-stays-sharp-on-a-zoomed-canvas"}
 {"t":"2026-11-09T18:25:55.205Z","ev":"task_note","id":"a-playing-icon-stays-sharp-on-a-zoomed-canvas"}
 {"t":"2026-11-09T18:26:06.250Z","ev":"task_done","id":"a-playing-icon-stays-sharp-on-a-zoomed-canvas","from":"in_progress","note":"Each playing frame on a zoomed canvas now gets a sharp tile of the window (TileScheduler, latest wins; EditorState.drawPlayTile), held through stop until the stopped tile replaces it. Measured on captures: 800% playing 0.133-0.143 soft share vs 0.138 stopped (0.508 before); 512 Icon 0.049-0.063 vs 0.061 (0.097 before). ~28 sharp frames/s of the 30 asked; tile 1.8/4.1/3.1ms on a ten layer icon (PlayTilePerfTests). Both icon walks film it and expectSharp while playing; 19 motion walks and Scripts/test.sh green. Audit 2026-11-09-a-playing-icon-stays-sharp-on-a-zoomed-canvas.json with sheet, two GIF reels and a window film."}
-{"t":"2026-11-09T18:26:54.140Z","ev":"task_started","id":"a-looping-turn-comes-home-and-spins-evenly-witho","title":"A looping turn comes home and spins evenly without extra keys","priority":"p1-high"}
+{"t":"2026-11-09T18:26:54.140Z","ev":"task_started","id":"a-looping-turn-comes-home-and-spins-evenly-witho","title":"A looping turn comes home and spins evenly without extra keys","priority":"p1-high","repeats":1,"until":"2026-11-09T18:26:54.140Z","rolledUp":true}
 {"t":"2026-11-09T19:18:17.546Z","ev":"task_note","id":"a-looping-turn-comes-home-and-spins-evenly-witho"}
 {"t":"2026-11-09T19:18:17.622Z","ev":"task_note","id":"a-looping-turn-comes-home-and-spins-evenly-witho"}
 {"t":"2026-11-09T19:18:17.697Z","ev":"task_note","id":"a-looping-turn-comes-home-and-spins-evenly-witho"}
 {"t":"2026-11-09T19:18:17.773Z","ev":"task_note","id":"a-looping-turn-comes-home-and-spins-evenly-witho"}
 {"t":"2026-11-09T19:18:43.946Z","ev":"task_done","id":"a-looping-turn-comes-home-and-spins-evenly-witho","from":"in_progress","note":"A turn keyed on a repeating icon now comes home with a key at the lap end (on the strip, changeable, one undo step), a key set at the end of the ruler lands on the lap end, a key there rides the repeats mark, and a turn passing through the seam keeps one pace (Linear on a two key spin, matched Bezier handles on a swing). Commit 9cd3c912a. Verified: 23 new unit tests and full Scripts/test.sh green; both icon workflow walks pass at Next defaults with their workarounds removed, expectLapSeam reads 0.03 deg (swing) and 0.18 deg with 0% pace spread (spin); Scripts/svg-lap-seam-check.mjs reads 0.06 / 0.36 deg over three laps in WebKit and Chromium. Reels and sheets in queue/audits/2026-11-09-looping-turn-*, audit 2026-11-09-a-looping-turn-comes-home-and-spins-evenly-witho.json."}
-{"t":"2026-11-09T19:24:15.431Z","ev":"task_started","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","title":"The full test suite never fails on unchanged code when the Mac is busy","priority":"p1-high"}
+{"t":"2026-11-09T19:24:15.431Z","ev":"task_started","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","title":"The full test suite never fails on unchanged code when the Mac is busy","priority":"p1-high","repeats":2,"until":"2026-11-09T21:17:09.722Z","rolledUp":true}
 {"t":"2026-11-09T20:09:16.444Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-09T20:59:59.467Z","ev":"task_walks","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","walks":[]}
 {"t":"2026-11-09T20:59:59.544Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-09T20:59:59.621Z","ev":"task_pending","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","from":"in_progress","note":"Encoder fallback fixed in the app (362de972e), size-check and flat-budget test bugs fixed; still open: the 30 s reader stall (2 of 9 runs beside a release build) and the chart frame budget under a compile, so 10 green runs in a row is not reached yet"}
 {"t":"2026-11-09T21:15:04.919Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-09T21:17:09.544Z","ev":"slice_pass","walks":28,"passed":27,"failed":1,"seconds":677,"of":1137,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-09T21:17:09.722Z","ev":"task_started","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","title":"The full test suite never fails on unchanged code when the Mac is busy","priority":"p1-high"}
 {"t":"2026-11-09T23:16:52.751Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-09T23:16:52.830Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-09T23:16:52.907Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-09T23:16:52.985Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-09T23:16:53.062Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-09T23:17:04.543Z","ev":"task_done","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh","from":"in_progress","note":"Pushed adffb6e37 (with 362de972e before it). Exports: a picture pass whose read stalls on a lost hardware decode (caught answering after 59.7 s) goes again once on a fresh reader; the 30 s give-up clock no longer depends on the global pool (a full pool parked exports for good). Perf gates: a CPU ruler beside the GPU frame ruler, so the chart budget (reproduced failing with all cores busy) and the alignment re-measure scale with a busy CPU. Verified: ten full Scripts/test.sh runs in a row green, five beside a from-scratch release build; Aurora/Behind Glass agreed in 27 full runs in a row."}
-{"t":"2026-11-09T23:20:47.793Z","ev":"task_started","id":"the-name-chips-over-component-copies-stay-clear","title":"The name chips over component copies stay clear of a sheet of components header row","priority":"p1-high"}
+{"t":"2026-11-09T23:20:47.793Z","ev":"task_started","id":"the-name-chips-over-component-copies-stay-clear","title":"The name chips over component copies stay clear of a sheet of components header row","priority":"p1-high","repeats":1,"until":"2026-11-09T23:20:47.793Z","rolledUp":true}
 {"t":"2026-11-09T23:55:28.507Z","ev":"task_walks","id":"the-name-chips-over-component-copies-stay-clear","walks":["ask-builds-base-components-walk","component-sheet-chips-clear-walk"]}
 {"t":"2026-11-09T23:55:36.308Z","ev":"task_note","id":"the-name-chips-over-component-copies-stay-clear"}
 {"t":"2026-11-09T23:55:54.820Z","ev":"task_done","id":"the-name-chips-over-component-copies-stay-clear","from":"in_progress","note":"A component chip that would print over the picture's own words (a sheet's state headers) is left off at rest and comes back on top while its copy is pointed at or picked. CanvasNameLabels.covering in PhotonzCore (5 unit tests), wired in CanvasNames/CanvasComponents. New walk step expectNamesClearOfWords; ask-builds-base-components-walk (real Ask, 462s) and new component-sheet-chips-clear-walk both green at Next defaults with real window captures. Export untouched. Full Scripts/test.sh green. Audit queue/audits/2026-11-09-component-sheet-chips-clear.json. Commit 56121e73d."}
-{"t":"2026-11-09T23:56:23.390Z","ev":"task_started","id":"on-a-video-the-ask-button-never-sits-on-top-of-t","title":"On a video the Ask button never sits on top of the panel","priority":"p1-high"}
+{"t":"2026-11-09T23:56:23.390Z","ev":"task_started","id":"on-a-video-the-ask-button-never-sits-on-top-of-t","title":"On a video the Ask button never sits on top of the panel","priority":"p1-high","repeats":1,"until":"2026-11-09T23:56:23.390Z","rolledUp":true}
 {"t":"2026-11-10T00:50:34.651Z","ev":"task_walks","id":"on-a-video-the-ask-button-never-sits-on-top-of-t","walks":["panel-stays-under-the-title-bar-walk","picture-panel-stays-under-the-title-bar-walk","ask-adds-a-title-page-walk"]}
 {"t":"2026-11-10T00:51:31.210Z","ev":"task_note","id":"on-a-video-the-ask-button-never-sits-on-top-of-t"}
 {"t":"2026-11-10T00:51:31.286Z","ev":"task_note","id":"on-a-video-the-ask-button-never-sits-on-top-of-t"}
 {"t":"2026-11-10T00:51:31.360Z","ev":"task_note","id":"on-a-video-the-ask-button-never-sits-on-top-of-t"}
 {"t":"2026-11-10T00:51:31.436Z","ev":"task_note","id":"on-a-video-the-ask-button-never-sits-on-top-of-t"}
 {"t":"2026-11-10T00:51:31.522Z","ev":"task_done","id":"on-a-video-the-ask-button-never-sits-on-top-of-t","from":"in_progress","note":"Panel rows now stop at the title bar's lower edge and fade there instead of sliding under Ask, View/Edit and the panel toggle, on videos and pictures (PanelTopEdge on both panel scrollers). Proved by new step expectTitleBarClear in panel-stays-under-the-title-bar-walk, picture-panel-stays-under-the-title-bar-walk and ask-adds-a-title-page-walk, all at Next defaults; fails with the fix removed. Picture at rest pixel-identical. Audit queue/audits/2026-11-09-panel-stays-under-the-title-bar.json. Commit 7bc8dd3d6, tests green."}
-{"t":"2026-11-10T00:52:01.117Z","ev":"task_started","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req","title":"Ask's redlines do at least as well on unseen requests as before the calm redline change","priority":"p1-high"}
+{"t":"2026-11-10T00:52:01.117Z","ev":"task_started","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req","title":"Ask's redlines do at least as well on unseen requests as before the calm redline change","priority":"p1-high","repeats":1,"until":"2026-11-10T00:52:01.117Z","rolledUp":true}
 {"t":"2026-11-10T02:12:12.536Z","ev":"task_note","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req"}
 {"t":"2026-11-10T02:22:32.846Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-10T02:22:32.924Z","ev":"task_note","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req"}
@@ -16612,12 +16603,12 @@
 {"t":"2026-11-10T05:39:05.638Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
 {"t":"2026-11-10T05:39:05.679Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-10T05:41:10.438Z","ev":"slice_pass","walks":28,"passed":25,"failed":3,"seconds":1207,"of":1140,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-10T05:41:10.619Z","ev":"task_started","id":"the-agent-coverage-check-counts-panel-controls-a","title":"The agent coverage check counts panel controls and every right-click row","priority":"p1-high"}
+{"t":"2026-11-10T05:41:10.619Z","ev":"task_started","id":"the-agent-coverage-check-counts-panel-controls-a","title":"The agent coverage check counts panel controls and every right-click row","priority":"p1-high","repeats":1,"until":"2026-11-10T05:41:10.619Z","rolledUp":true}
 {"t":"2026-11-10T06:09:36.934Z","ev":"task_created","id":"an-agent-can-change-what-it-made-fonts-captions","priority":"p2-normal","title":"An agent can change what it made: fonts, captions, titles, effects and sound"}
 {"t":"2026-11-10T06:13:58.240Z","ev":"task_walks","id":"the-agent-coverage-check-counts-panel-controls-a","walks":[]}
 {"t":"2026-11-10T06:13:58.318Z","ev":"task_note","id":"the-agent-coverage-check-counts-panel-controls-a"}
 {"t":"2026-11-10T06:14:16.823Z","ev":"task_done","id":"the-agent-coverage-check-counts-panel-controls-a","from":"in_progress","note":"Shipped f3926c5c3: Tests/PhotonzCoreTests/AgentReachTests.swift + AgentReachSource.swift list every panel control (440: 160 reached, 67 left out with reasons, 213 not yet, pinned) and every right-click menu by name (69 menus, 351 rows: 311 reached, 27 left out, 13 not yet, pinned; timeline clip rows all named or left out). Tool fields checked against schemas, commands against AppCommandID. A probe unmapped control failed with its file and line (queue/audits/2026-11-10-agent-reach-failing.txt). Counts in docs/design/agent-mcp.md and the audit; gaps filed as an-agent-can-change-what-it-made-fonts-captions. Full Scripts/test.sh green."}
-{"t":"2026-11-10T06:14:38.748Z","ev":"task_started","id":"ask-s-first-answer-after-its-model-loads-comes-i","title":"Ask's first answer after its model loads comes in seconds on Qwen3.8 27B, not a minute","priority":"p1-high"}
+{"t":"2026-11-10T06:14:38.748Z","ev":"task_started","id":"ask-s-first-answer-after-its-model-loads-comes-i","title":"Ask's first answer after its model loads comes in seconds on Qwen3.8 27B, not a minute","priority":"p1-high","repeats":1,"until":"2026-11-10T06:14:38.748Z","rolledUp":true}
 {"t":"2026-11-10T06:22:39.132Z","ev":"task_note","id":"ask-s-first-answer-after-its-model-loads-comes-i"}
 {"t":"2026-11-10T06:55:14.558Z","ev":"task_note","id":"ask-s-first-answer-after-its-model-loads-comes-i"}
 {"t":"2026-11-10T08:27:23.991Z","ev":"task_note","id":"the-ask-scoring-run-refuses-to-score-when-the-mo"}
@@ -16626,7 +16617,7 @@
 {"t":"2026-11-10T10:30:13.562Z","ev":"task_done","id":"ask-s-first-answer-after-its-model-loads-comes-i","from":"in_progress","note":"Ask's built-in server now saves its read of the tools and rules every request starts with (13.5k tokens) and restores it in about 1 s on each first turn (AskStandingRead in PhotonzCore, keyed by model, its files, server build, window and exact tokens, with tests; AskModelServer.standingRead; commit 4c6f8a072). settings-measurements from a cold probe 16.4 s (17.4 s in the full run) against 83 to 101 s. On the baseline's own 40 climb cases median 56.9 s against 142.0, total 73.7 against 75.1; held-out total 54.9 against 56, median 115.4 s against 146.5. Scripts/test.sh green. Audit queue/audits/2026-11-10-ask-s-first-answer-after-its-model-loads-comes-i.json."}
 {"t":"2026-11-10T10:39:08.010Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-10T10:41:14.108Z","ev":"slice_pass","walks":28,"passed":25,"failed":3,"seconds":506,"of":1140,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-10T10:41:14.291Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-10T10:41:14.291Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high","repeats":1,"until":"2026-11-10T10:41:14.291Z","rolledUp":true}
 {"t":"2026-11-10T12:14:55.155Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-10T12:14:55.231Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-10T12:14:55.306Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
@@ -16966,3 +16957,8 @@
 {"t":"2026-11-12T10:24:15.447Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T10:24:15.521Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T10:24:15.597Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 15: the hit is met where the trash's own rebound off the lid drops it into the can, a fall keeps its speed, ribs are not walls (909f3b0a6); story bar (5 of 6 at 7) not met, 1 of 6, total 58.1"}
+{"t":"2026-11-12T10:25:07.203Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-12T10:43:19.978Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-12T11:53:32.853Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-12T11:53:32.929Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-12T11:53:33.003Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 16: the letter goes into the envelope, a ticked box starts over cleanly, a position written as a place is sent back (86ec35420, 08488d859); story bar (5 of 6 at 7) not met, 1 of 6, total 57.5"}

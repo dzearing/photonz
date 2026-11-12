@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-12T10:24:15.596Z",
+  "updated": "2026-11-12T11:53:33.002Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -394,9 +394,29 @@
     {
       "t": "2026-11-12T10:24:15.595Z",
       "note": "Pass 15: the hit is met where the trash's own rebound off the lid drops it into the can, a fall keeps its speed, ribs are not walls (909f3b0a6); story bar (5 of 6 at 7) not met, 1 of 6, total 58.1"
+    },
+    {
+      "t": "2026-11-12T10:25:07.199Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T10:43:19.976Z",
+      "note": "Pass sixteen, from run 20261112-095935's judge lines and traces. Found (replayed the envelope's exact plan, AskMotionLetterGoesInTests): the model keyed the letter 8 DOWN into the envelope and said it touches it; pushedOut took the envelope for a moving part the letter was buried in (it flies off later) and pushed the letter out the top (y -0.95, then -10 after the keys that followed), so nine looks of nine read 'the letter rises up instead of going in'. Fixed test first: a part lying wholly inside a closed outline it touches has gone in and stays (Lap.within). hidden() could not put the letter behind the envelope's front because moving it before the body took it into the envelope's group; it now goes before that group (body filled white). The checkbox's tick drew itself and held drawn to the lap end, snapping to an empty box at every loop: startsOver (AskMotionStartsOverTests) holds a self-drawing line 0.4 s after everything stops, fades it over 0.3 s and undraws it unseen, using end stillness first and growing the lap up to 4 s. Prompt: the draw rules and design ask say a part the story closes starts open (the envelope's flap was drawn shut and folded open)."
+    },
+    {
+      "t": "2026-11-12T11:53:32.851Z",
+      "note": "Shipped 86ec35420 (pushOut skips a part wholly inside a closed outline it touches; hidden puts it before the outline's group; startsOver: a self-drawn line holds 0.4 s, fades 0.3 s and is undrawn unseen; draw rules and design ask say a part the story closes starts open) and 08488d859 (a position starting anywhere on where the part was drawn, far from 0, is sent back: the walk's scrap was keyed from x 18 y 2, its first corner, 1.8 from its middle, and rested 18 units off the icon). Scripts/test.sh exit 0 on each. Story run 20261112-105732-ask (one run, four chunks): total 57.5 (last 58.1); reads as asked bell 7.0, checkbox 6.9, heart 5.2, envelope 3.2, rocket 6.0, trash 4.0: 1 of 6 at 7. Checkbox loops 4.7 to 8.1 and score 72.6 to 83.7; bell 69.7 to 77.2; envelope 23.7 to 26.3 (the letter goes in now; the flap still folds open: the model draws a downward V and calls it open, its own look says 'open (pointing down)'). Walk ask-animates-a-story-walk at Next defaults ok twice (196 s, then 282 s on 08488d859), Copy SVG repeatCount=indefinite x3. Pictures looked at: both walks' two-lap sheets (walk 1: scrap off the icon at rest; walk 2: in from the right, meets the lid 0.78 s, lid shuts, scrap ends on top of the shut lid 1.04 to 1.43 s, solid), the eval checkbox frames (draws, bounces, fades 2.24 s, starts empty) and envelope frames (letter behind the front, flap opens, fly-off one frame). Audit queue/audits/2026-11-12-animated-icon-story-goes-in.json, reel 2026-11-12-story-trash-pass16-two-laps.gif."
+    },
+    {
+      "t": "2026-11-12T11:53:32.927Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases read as asked at 7; this pass 1 of 6 (bell 7.0; checkbox 6.89 just under). Next levers: (1) the flap's direction: read which way a fold opens from the geometry (a fold whose 180 turned pose lies outside the outline it hinges on opens) and, when the design says it closes, send the turn back with the opposite sign or ask for the part drawn open; (2) the trash after the hit lands on the shut lid: the lid shuts before the scrap is in (struckWaits did not hold it); (3) the scrap drawn solid again. Left rough, no new task (all inside this one): the plan took 282 s in walk 2, close to the 300 s limit."
+    },
+    {
+      "t": "2026-11-12T11:53:33.001Z",
+      "note": "Pass 16: the letter goes into the envelope, a ticked box starts over cleanly, a position written as a place is sent back (86ec35420, 08488d859); story bar (5 of 6 at 7) not met, 1 of 6, total 57.5"
     }
   ],
-  "started": "2026-11-12T09:07:13.248Z",
+  "started": "2026-11-12T10:25:07.198Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
