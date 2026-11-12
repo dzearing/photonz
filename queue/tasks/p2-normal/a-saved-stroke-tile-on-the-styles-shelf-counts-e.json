@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 85,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-12T14:33:58.303Z",
-  "updated": "2026-11-12T14:33:58.306Z",
+  "updated": "2026-11-12T16:56:16.979Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-12. Command: Scripts/playtest.sh Scripts/playtest/a-glyph-takes-the-saved-stroke-walk.json --no-build. Its picture 4-next-line-matches-sc.png (two paths wear Glyph / stroke 1.75) shows the tile reading 1 use; crop at /tmp/crop-4-next-line-matches-sc.png. Same in a-line-and-an-oval-wear-the-saved-stroke-walk picture 4 (path, line and oval wear it, tile says 1 use); by picture 6, after the shelf tile was picked and the width changed, it reads 3 uses. PhotonzDocument.savedStrokeUsageCount is right (SavedStrokeShapesTests.usesUnlinkAndRemoveReachLinesAndEdges), so the stale part is the shelf view: LibraryPanel.visibleSavedStrokes reads editorState.savedStrokeEntries, so suspect the Library pane is skipped by a cached or equatable body that does not key on the use counts. Check whether colour, text and effect style tiles lag the same way.",
@@ -22,9 +22,28 @@
     {
       "t": "2026-11-12T14:33:58.305Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-12T15:48:59.575Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T16:55:57.371Z",
+      "note": "walks a-glyph-takes-the-saved-stroke-walk -> a-saved-stroke-tile-counts-its-lines-walk, a-glyph-takes-the-saved-stroke-walk"
+    },
+    {
+      "t": "2026-11-12T16:56:16.889Z",
+      "note": "Cause: LibraryEntry == compared the id only, so SwiftUI kept the tile whose detail changed. Made equality synthesized (identity stays Identifiable.id). Walk check: lifted the script guard against a tile 'reads'; stroke tile marker detail is 'Styles, <n uses>'. New walk a-saved-stroke-tile-counts-its-lines-walk failed on old code ('reads Styles, 1 use, not Styles, 2 uses') and passes with the fix; looked at pictures 2 and 4: tile shows 2 uses and 4 uses. Library walks run: library-walk, library-reveal, colour-onto-the-library, tutorial-the-library, title-presets-library-shelf (one flaky failure, passed twice after), latency-picture all ok. library-tile-click-latency-walk fails identically on HEAD without this change: filed the-library-tile-click-timing-walk-passes-again. CI red run 43238687651 was a GPU out-of-memory on the CI runner (MPS kIOGPUCommandBufferCallbackErrorOutOfMemory); the next main run 43251828185 passed, so nothing filed. Audit rough lines: no-mock + black oval border default stay in this log; colour/text/effect tiles share the fix unwalked (not filed, same root cause fixed)."
+    },
+    {
+      "t": "2026-11-12T16:56:16.977Z",
+      "note": "The stroke tile on the Styles shelf now reads 2, 3, 4 uses the moment each line takes it (LibraryEntry equality was id-only, so SwiftUI kept the stale tile). Walk a-saved-stroke-tile-counts-its-lines reads and photographs each count at Next defaults; it fails on the old code and passes now. Scripts/test.sh green. Audit 2026-11-12-a-saved-stroke-tile-on-the-styles-shelf-counts-e.json."
     }
   ],
   "walks": [
+    "a-saved-stroke-tile-counts-its-lines-walk",
     "a-glyph-takes-the-saved-stroke-walk"
-  ]
+  ],
+  "started": "2026-11-12T15:48:59.574Z",
+  "completed": "2026-11-12T16:56:16.978Z"
 }
