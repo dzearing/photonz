@@ -22970,3 +22970,10 @@ units.
 - `fe236ffc8`, tests first: a part turning about its own middle gets room for what its lines really sweep (the heart's halves were cut off); `AskMotion.carried` makes a small still part a swing turns about take the same turn (the bell's top bar); `AskMotionCheck.marksOver` sends back a mark drawn over a moving part while it shows.
 - Story run `20261112-082819-ask`: total 52.4 (last pass 61.2), 1 of 6 read as asked at 7. The rocket and envelope fell on different plans, not on this change. Walk `ask-animates-a-story-walk` ok at Next defaults.
 - Next: the trash's bounce and its route into the can past the wall, a solid trash in a line icon, a bell's marks once per ring, and a margin for a tipping part that does not shrink the trash. A wider margin for everything that moves was tried and reverted (trash to 83 percent).
+
+## 2026-11-12 — animated story icon, pass fifteen
+
+- Shipped 909f3b0a6 (Next): when no bounce off what was hit turns a right angle clear of the walls, the hit is met where the part's own mirror off the struck face turns 60 degrees or more and carries it in clear (`aimedHit`); detail drawn inside another part's outline (a can's ribs) is not a wall (`walls`); a fall that carries on past the bounce key keeps its speed (`carriesOn`). Tests: `AskMotionBounceSeenTests`.
+- Replay of pass fourteen's walk plan now ricochets straight into the can. This pass's walk and the test run drew a scrap nearly as wide as the mouth, where no such rebound exists, so they still slide over the wall.
+- Story run 20261112-095935-ask: total 58.1, 1 of 6 read as asked at 7. Bar not met; task left pending.
+- Next: a thrown-in part drawn at most about half the mouth it goes into, or a wider lid where the room allows.
