@@ -459,6 +459,16 @@ extension EditorState {
         return document.placementSelection(layerIDs: orderedSelectedLayerIDs)
     }
 
+    /// Whether everything picked is drawn in an icon: on a picture made as an
+    /// icon, or inside an icon frame (`isAllDrawnInAnIcon`). The Layout and
+    /// Columns sections are for laying out screens, so the panel leaves them
+    /// out here and an icon's own rows stay near the top. Next only, with the
+    /// icon sizes (`next-icon-frames`).
+    var pickIsDrawnInAnIcon: Bool {
+        guard Experiments.shared.iconFramesEnabled, let document else { return false }
+        return document.isAllDrawnInAnIcon(orderedSelectedLayerIDs)
+    }
+
     /// The group the picked layers sit in, or nil when they sit loose on the
     /// canvas or in more than one thing. What the Layout section asks before it
     /// offers a row about "the container", since without one there is nothing

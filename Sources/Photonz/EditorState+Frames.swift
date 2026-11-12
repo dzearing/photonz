@@ -294,9 +294,14 @@ extension EditorState {
     /// The panel reads this too, so the numbers are wherever the menu row
     /// works and never the other way round (the menu row used to work with a
     /// button picked while the section had gone).
+    ///
+    /// Never an icon frame: an icon is drawn on its own units and keylines,
+    /// and page columns change nothing in it, so with the icon sizes on
+    /// (`next-icon-frames`) neither the section nor the menu row offers them.
     var columnsTargetFrameID: UUID? {
-        guard framesEnabled else { return nil }
-        return selectedFrameID
+        guard framesEnabled, let id = selectedFrameID else { return nil }
+        if iconFramesEnabled, document?.isIconFrame(id: id) == true { return nil }
+        return id
     }
 
     /// That same screen as a layer, so the panel can say its name in the

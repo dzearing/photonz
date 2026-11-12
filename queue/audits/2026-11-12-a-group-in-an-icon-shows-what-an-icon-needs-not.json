@@ -1,0 +1,24 @@
+{
+  "feature": "An icon's panel shows only icon rows",
+  "epic": "icon-grid",
+  "summary": "Picking a group or a shape in an icon no longer fills the panel with page layout rows (Layout: Arrangement, Hug and Fixed, Padding, Scale; and Columns). Motion now sits right under Effects. A group on an ordinary picture keeps its Layout section.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/a-group-in-an-icon-shows-no-page-layout-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "File > New Image, pick Icon, Create.", "shot": "2026-11-12-icon-group-panel-1-icon-picture-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Draw a rectangle and an oval, Shift-click both, press Command-G. The panel shows Appearance, Effects and Motion, and no Layout." },
+    { "do": "On an ordinary picture, Layer > New Frame, pick 24 under Icons, draw a rectangle inside it and pick it. No Columns, no Layout; Arrange in Frame stays.", "shot": "2026-11-12-icon-group-panel-2-icon-frame-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "On an ordinary picture, group two shapes. Layout is still there, under Motion.", "shot": "2026-11-12-icon-group-panel-3-plain-picture-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Group the finished cloud in the whole icon workflow: the panel ends at Motion.", "shot": "2026-11-12-icon-group-panel-4-workflow-grouped-sc.png" }
+  ],
+  "evaluate": [
+    "With an icon group picked, is there anything you miss from the old Layout section?",
+    "Is Arrange (align in frame) still worth keeping for a shape in an icon frame?",
+    "Should Layer > Show Columns be dimmed for an icon frame, as it now is?"
+  ],
+  "rough": [
+    "The rule is 'everything picked is in an icon': pick one shape in an icon and one outside it and Layout comes back, because the outside one still has a page to sit on.",
+    "An icon frame picked on its own also loses Layout and Columns; its Frame section (size, clipping, surface) is untouched.",
+    "No mock covers this surface directly; none of the icon mocks draw a Layout or Columns section, so the panel now matches them more closely."
+  ]
+}

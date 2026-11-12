@@ -1489,7 +1489,10 @@ struct InspectorPanel: View {
         // one at a time; the section leaves only when nothing picked has a
         // place in anything. A picked GROUP also brings it for what it holds,
         // one group or three, which is the Contents half of the same section.
-        if Experiments.shared.placementEnabled,
+        // ...except in an icon, where Arrangement, Hug and Fixed, Padding and
+        // following a resized screen change nothing anybody draws
+        // (`pickIsDrawnInAnIcon`).
+        if Experiments.shared.placementEnabled, !editorState.pickIsDrawnInAnIcon,
            editorState.placementSelection.isPresent || editorState.contentsSelection.isPresent {
             set.insert(.placement)
         }

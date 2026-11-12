@@ -1,0 +1,331 @@
+{
+  "out": "/tmp/photonz-playtest/a-group-in-an-icon-shows-no-page-layout",
+  "seed": "Picking a group on an icon picture, or a shape in an icon frame, brings only rows that change the icon: no Layout section (Arrangement, Hug and Fixed, Padding, Scale) and no Columns. A group on an ordinary picture still has its Layout section.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "startFromEmpty",
+      "row": "New image",
+      "answer": [
+        "Icon",
+        "Create"
+      ],
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        96.4,
+        96.3
+      ],
+      "to": [
+        224.4,
+        224.3
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        256.4,
+        256.3
+      ],
+      "to": [
+        416.4,
+        416.3
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        160.4,
+        160.3
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        336.4,
+        336.3
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Group"
+      ]
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Layout",
+        "Columns"
+      ]
+    },
+    {
+      "do": "panel",
+      "stage": "1-group-on-an-icon-picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-group-on-an-icon-picture"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "24",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "pinch",
+      "to": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        797.3,
+        548.4
+      ],
+      "to": [
+        803.2,
+        551.1
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        800,
+        549.5
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Columns",
+        "Layout"
+      ]
+    },
+    {
+      "do": "panel",
+      "stage": "2-shape-in-an-icon-frame"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-shape-in-an-icon-frame"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 900,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        200
+      ],
+      "to": [
+        400,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        300
+      ],
+      "to": [
+        700,
+        500
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        300
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        600,
+        400
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Group"
+      ]
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Columns"
+      ]
+    },
+    {
+      "do": "expect",
+      "control": "Stack",
+      "in": "Arrangement",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "3-group-on-a-picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-group-on-a-picture"
+    }
+  ]
+}
