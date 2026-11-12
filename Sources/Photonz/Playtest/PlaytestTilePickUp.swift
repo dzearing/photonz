@@ -9,9 +9,16 @@
 //
 // This settles it. A press and a pull are posted at the tile, and the moment
 // AppKit is asked to start a drag session is caught on its way past, with the
-// payload it was asked to carry. That is the question the audits asked: does
-// this tile have a handle, and does pulling on it put the right thing in the
-// air.
+// payload it was asked to carry. AppKit has more than one door for that ask:
+// up to macOS 26 SwiftUI used `beginDraggingSession(with:event:source:)`; from
+// macOS 27 a tile is lifted by SwiftUI's own `DragLiftGestureRecognizer`, which
+// asks through `beginDraggingSessionWithItems:gesture:source:` (not in any SDK
+// header yet). Every door is watched, because watching one was how all four
+// pick up walks read "nothing asked to start a drag" from the day the Mac was
+// updated to 27.0.1 (2026-10-25), while SwiftUI was asking all along.
+//
+// That is the question the audits asked: does this tile have a handle, and
+// does pulling on it put the right thing in the air.
 //
 // The session itself is then not allowed to start. A real one takes the main
 // thread hostage in a loop of its own that only a mouse coming up on a real
@@ -95,10 +102,27 @@ enum PlaytestDragWatch {
     private static func install() {
         guard !installed else { return }
         installed = true
-        let original = #selector(NSView.beginDraggingSession(with:event:source:))
-        let replacement = Selector("photonzPlaytestBeginDraggingSessionWithItems:event:source:")
-        guard let from = class_getInstanceMethod(NSView.self, original),
-              let to = class_getInstanceMethod(NSView.self, replacement) else { return }
+        // Every door AppKit has for starting a drag. Up to macOS 26 SwiftUI
+        // went through the first, with the mouse event that crossed the drag
+        // threshold. From macOS 27 it lifts a tile with a gesture recogniser of
+        // its own and goes through the second, which takes that recogniser in
+        // place of an event and is in no SDK header yet: watching only the
+        // first, every pick up read as a tile with no handle from the day the
+        // Mac was updated (2026-10-25). The window's own door (macOS 15) is
+        // watched too, so no way in is left unseen.
+        exchange(NSView.self, "beginDraggingSessionWithItems:event:source:",
+                 "photonzPlaytestBeginDraggingSessionWithItems:event:source:")
+        exchange(NSView.self, "beginDraggingSessionWithItems:gesture:source:",
+                 "photonzPlaytestBeginDraggingSessionWithItems:gesture:source:")
+        exchange(NSWindow.self, "beginDraggingSessionWithItems:event:source:",
+                 "photonzPlaytestWindowBeginDraggingSessionWithItems:event:source:")
+    }
+
+    /// Swaps one door for its stand-in. A door this Mac's AppKit does not have
+    /// (the gesture one before macOS 27) is left alone.
+    private static func exchange(_ cls: AnyClass, _ original: String, _ replacement: String) {
+        guard let from = class_getInstanceMethod(cls, NSSelectorFromString(original)),
+              let to = class_getInstanceMethod(cls, NSSelectorFromString(replacement)) else { return }
         method_exchangeImplementations(from, to)
     }
 }
@@ -116,6 +140,33 @@ extension NSView {
         // The ask is the answer, so the real call is never made. The empty
         // session handed back in its place is dropped on the floor by
         // everything that asks for one.
+        return NSDraggingSession()
+    }
+
+    /// Stands in for macOS 27's `beginDraggingSessionWithItems:gesture:source:`,
+    /// the door a SwiftUI drag lifted by its own recogniser goes through.
+    @objc(photonzPlaytestBeginDraggingSessionWithItems:gesture:source:)
+    func photonzPlaytestBeginDraggingSession(with items: [NSDraggingItem], gesture: NSGestureRecognizer,
+                                             source: NSDraggingSource) -> NSDraggingSession {
+        guard MainActor.assumeIsolated({ PlaytestDragWatch.isWatching }) else {
+            return photonzPlaytestBeginDraggingSession(with: items, gesture: gesture, source: source)
+        }
+        MainActor.assumeIsolated { PlaytestDragWatch.record(view: self, items: items) }
+        return NSDraggingSession()
+    }
+}
+
+extension NSWindow {
+    /// Stands in for the window's own `beginDraggingSession(items:event:source:)`.
+    @objc(photonzPlaytestWindowBeginDraggingSessionWithItems:event:source:)
+    func photonzPlaytestBeginDraggingSession(items: [NSDraggingItem], event: NSEvent,
+                                             source: NSDraggingSource) -> NSDraggingSession {
+        guard MainActor.assumeIsolated({ PlaytestDragWatch.isWatching }) else {
+            return photonzPlaytestBeginDraggingSession(items: items, event: event, source: source)
+        }
+        MainActor.assumeIsolated {
+            PlaytestDragWatch.record(view: self.contentView ?? NSView(), items: items)
+        }
         return NSDraggingSession()
     }
 }
