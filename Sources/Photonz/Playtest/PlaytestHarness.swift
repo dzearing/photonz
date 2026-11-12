@@ -16102,8 +16102,31 @@ private final class Run {
                 if !switching { editor.selectLibraryItem(nil) }
                 await sleep(NSEvent.doubleClickInterval + 0.15)
                 let before = editor.selectedLibraryItemID
-                var (target, _) = try await reachableTarget(tile, in: nil)
-                target = await settled(target, named: tile, in: nil).target
+                // Reached the way `press` reaches, and reached AGAIN if the
+                // shelf moved it out of reach while it settled. Picking a tile
+                // opens its section above the shelf, and once the double-click
+                // hold is over the shelf's pane settles shorter, which carries
+                // the row of tiles under the panel's bottom edge: a scroll made
+                // a moment before that is undone by it. Pressing where the tile
+                // last was then lands on the panel's edge, picks nothing, and
+                // reads as a dead click the app never had (2026-11-12, click 1
+                // on Keynote Section when switching from Film Super).
+                var target: PlaytestPressTarget?
+                var reach: [String] = []
+                for _ in 1...3 {
+                    let (found, effort) = try await reachableTarget(tile, in: nil)
+                    let look = await settled(found, named: tile, in: nil)
+                    target = look.target
+                    let inReach = Self.isInReach(look.target)
+                    reach += [effort, inReach ? look.effort : "moved out of reach as the shelf settled"]
+                        .filter { !$0.isEmpty }
+                    if inReach { break }
+                }
+                guard let target, Self.isInReach(target) else {
+                    throw Failure(description: "the tile \"\(tile)\" stayed out of reach for click \(click): "
+                        + (target.flatMap { Self.reachTrouble($0) } ?? "it could not be found")
+                        + ", so a press would land beside it rather than on it")
+                }
                 guard let window = target.window else {
                     throw Failure(description: "the tile \"\(tile)\" is in no window to click")
                 }
@@ -16179,6 +16202,7 @@ private final class Run {
                 row["highlightMS"] = highlight
                 row["settledMS"] = settledAt
                 row["picked"] = editor.selectedLibraryItemID
+                if !reach.isEmpty { row["reach"] = reach.joined(separator: "; ") }
                 rows.append(row)
                 PlaytestHarness.sendWindowsBehindThePerson()
             }
