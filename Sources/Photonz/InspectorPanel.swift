@@ -674,6 +674,14 @@ struct InspectorPanel: View {
                   refold { folds.hold(.transitions, open: picked) }
               }
           }
+          // A new video holds its Library open on Media until something is on
+          // the timeline, then lets it fold back to its header without writing
+          // anything down (`EditorState.newBlankVideo`).
+          .onChange(of: editorState.isLibraryHeldOpen, initial: true) { _, held in
+              withAnimation(foldMotion) {
+                  refold { folds.hold(.library, open: held) }
+              }
+          }
             if Experiments.shared.panelSectionsEnabled, editorState.document != nil {
                 PanelSectionsFooter(offered: offeredOptionalSections,
                                     situation: editorState.panelSectionSituation)
@@ -1595,7 +1603,27 @@ struct InspectorPanel: View {
             set.insert(.track)
         }
         if selectedLayer?.isCaptionsLayer == true { set.remove(.placement) }
+        // Captions and the Transitions tiles only where they apply to the
+        // pick (`VideoDocumentSections`): Captions with nothing or the
+        // captions picked, the tiles with a cut picked.
+        if editorState.documentHasTime {
+            let pick = videoPick
+            for id in [InspectorSectionID.captions, .transitions] where set.contains(id) {
+                if VideoDocumentSections.shows(id.rawValue, for: pick) == false { set.remove(id) }
+            }
+        }
         return set
+    }
+
+    /// What is in hand, as `VideoDocumentSections` reads it.
+    private var videoPick: VideoDocumentSections.Pick {
+        if editorState.isACutPicked { return .cut }
+        if let layer = selectedLayer, layer.isCaptionsLayer || layer.isCaption { return .captions }
+        if editorState.selectedLayerID != nil || !editorState.multiSelectedLayerIDs.isEmpty
+            || editorState.zoomInHand != nil || !editorState.tracksInHand.isEmpty {
+            return .other
+        }
+        return .nothing
     }
 
     /// What a piece inside a copy does not answer for. Everything here is a

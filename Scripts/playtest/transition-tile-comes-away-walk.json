@@ -22,20 +22,33 @@
       "action": "videoPause"
     },
     {
-      "do": "press",
-      "control": "Transitions section",
-      "comment": "Transitions starts folded until a cut is picked (ad5e0e11, the user 2026-10-30); with nothing picked a person opens it by its header, as here."
+      "do": "action",
+      "action": "showLibrary",
+      "comment": "With nothing picked a video has no Transitions section (the tiles come with a picked cut, VideoDocumentSections 2026-11-11): the Library's Transitions kind is where a person finds one to drag."
     },
     {
-      "do": "waitFor",
-      "condition": "sectionOpen",
-      "value": "Transitions",
-      "timeout": 2
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Catalog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Transitions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "reveal",
-      "control": "Cross dissolve",
-      "in": "Transitions"
+      "control": "Cross dissolve"
     },
     {
       "do": "pickUpTile",

@@ -1,0 +1,54 @@
+{
+  "feature": "Captions and Transitions where a video editor expects them",
+  "epic": "video-editing",
+  "summary": "On a video the panel now shows Captions only with nothing or the captions picked, and the Transitions tiles only with a cut picked. A picked clip, title, sound or graphic shows its own sections and nothing else. A new video's Library folds back once something is on the timeline, so the first thing you draw gets the room.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The laptop window is 1200 by 720 (the walks use it).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a recording and click empty canvas so nothing is picked. The panel shows Time, then Captions, then the Library folded. There is no Transitions section.",
+      "shot": "2026-11-11-video-panel-1b-nothing-picked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the clip on the timeline. Its Properties, Time, Appearance, Effects and Audio sections show, then the Library. No Captions, no Transitions.",
+      "shot": "2026-11-11-video-panel-1-clip-select-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press B, cut the clip, then click the cut. The cut's Properties show with the Transitions tiles under them, open.",
+      "shot": "2026-11-11-video-panel-1c-cut-picked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Escape. The Transitions section goes with the cut. To drag a transition with no cut picked, open the Library, pick Catalog, then Transitions."
+    },
+    {
+      "do": "Add a piece of music and click it. Channel and Fades are on screen without scrolling, with no Captions under them.",
+      "shot": "2026-11-11-video-panel-3-sound-select-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "File > New Video. The Library is open on Media. Draw a line with the Line tool: the Library folds to its header and the line's Appearance, Width included, is on screen.",
+      "shot": "2026-11-11-video-panel-new-video-line-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the Captions row on the timeline of a captioned recording. The Captions section (style, cue, timing) shows as the captions' own."
+    }
+  ],
+  "evaluate": [
+    "With a clip picked, do you miss Captions under it, or is the menu bar and the clip's right click (Add Captions) enough?",
+    "With nothing picked, is the Library's Transitions kind an obvious enough place to find a transition to drag?",
+    "With a cut picked, do the Transitions tiles under the cut's Properties read as the place to pick one, the way Premiere's Effects panel does?",
+    "After a new video, does the Library folding back when the first thing lands feel right, or should it stay open?"
+  ],
+  "rough": [
+    "Before: Captions (its whole style form once captions exist) and a folded Transitions header sat under every pick, so a picked arrow or line carried the document's captions under its own rows; a sound's Fades and a line's Appearance fell under the fold on smaller windows.",
+    "Matches both mocks: the Transitions tiles sit under a picked cut as video-transitions.html draws them, and in the Library's Transitions kind as video-library.html draws it. They show twice only while a cut is picked AND the Library is opened on Catalog > Transitions; otherwise in one place at a time.",
+    "The tiles section is headed Transitions where video-transitions.html heads its group Effects with Transitions as its count; settled by the-panel-has-a-transitions-group-of-tiles-as-th, which named it.",
+    "A Library opened by hand on a video still takes about 40 to 50 per cent of the panel where video.html caps its body at 118px; filed as a-video-s-library-opened-by-hand-stays-a-short-s.",
+    "With a cut picked on the laptop window, the cut's Properties take about half the panel and the Transitions tiles show one row before scrolling; same follow-up does not cover it, left in the task log.",
+    "No picture of the panel before the change was kept; the before state is the order recorded in the task log on 2026-11-11."
+  ]
+}

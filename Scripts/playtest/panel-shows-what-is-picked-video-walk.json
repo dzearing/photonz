@@ -56,12 +56,19 @@
       "do": "expectSections",
       "absent": [
         "Measure Tool",
-        "3D"
+        "3D",
+        "Captions",
+        "Transitions"
       ],
       "leading": [
-        "Properties"
+        "Properties",
+        "Time",
+        "Color",
+        "Effects",
+        "Channel"
       ],
-      "lists": []
+      "lists": [],
+      "comment": "A clip picked: its own sections, its audio under its picture, then the Library. Captions and the Transitions tiles are about the whole video, not settings of a clip (VideoDocumentSections, 2026-11-11)."
     },
     {
       "do": "describe",
@@ -71,6 +78,86 @@
     {
       "do": "snapshot",
       "name": "1-clip-select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Transitions",
+        "Properties"
+      ],
+      "leading": [
+        "Time",
+        "Captions"
+      ],
+      "lists": [],
+      "comment": "Nothing picked: the panel speaks for the video, its Time then its Captions; no Transitions section until there is a cut in hand."
+    },
+    {
+      "do": "describe",
+      "stage": "1b-nothing-picked",
+      "note": "nothing picked: Time, then Captions, then the Library folded at the foot; no Transitions section"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-nothing-picked"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "clipPickFirstCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Captions",
+        "Time"
+      ],
+      "leading": [
+        "Properties",
+        "Transitions"
+      ],
+      "lists": [],
+      "comment": "A cut picked: the cut's Properties, then the Transitions tiles to put on it, as video-transitions.html draws it."
+    },
+    {
+      "do": "describe",
+      "stage": "1c-cut-picked",
+      "note": "the cut picked: its Properties (the edit point) and the Transitions tiles under it, open; no Captions"
+    },
+    {
+      "do": "snapshot",
+      "name": "1c-cut-picked"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
     },
     {
       "do": "tool",
@@ -118,10 +205,14 @@
       "do": "expectSections",
       "absent": [
         "Measure Tool",
-        "3D"
+        "3D",
+        "Captions",
+        "Transitions"
       ],
       "leading": [
-        "Properties"
+        "Properties",
+        "Time",
+        "Text"
       ],
       "lists": []
     },
@@ -133,6 +224,41 @@
     {
       "do": "snapshot",
       "name": "2-title-select"
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Captions",
+        "Transitions"
+      ],
+      "leading": [
+        "Properties",
+        "Channel",
+        "Fades"
+      ],
+      "lists": [],
+      "comment": "A sound picked: its Channel and Fades lead, on screen on the laptop window, with no Captions or Transitions under them."
+    },
+    {
+      "do": "expectInView",
+      "field": "Fade in"
+    },
+    {
+      "do": "describe",
+      "stage": "3-sound-select",
+      "note": "a piece of music picked: Properties, Channel, Fades on screen, then Gain, Audio Effects, Time; no Captions or Transitions"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-sound-select"
     }
   ]
 }

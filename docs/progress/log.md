@@ -22931,3 +22931,10 @@ units.
 - Key times copied from the design's milliseconds (100 to 3000 on a 3 s lap: the rocket, three runs) are read as seconds at plan time (`AskMotion.keysInSeconds`).
 - Story eval: 50.9, 47.9, 52.3. The trash scored 41.8, 42.2, 42.1 and 37.6, inside its range across all passes (37 to 55). Bar (5 of 6 read as asked at 7) still not met; task left pending.
 - Open: with no `touches` the lid does not wait. A general "whatever moves into a traveller waits" was tried and taken out, because it cannot clear a trash that sits exactly where the shut lid goes.
+
+## 2026-11-11: On a video, Captions and Transitions sit where a video editor expects them
+
+- New pure rule `VideoDocumentSections` (PhotonzCore, tests first): on a video, Captions shows with nothing or the captions picked, and the Transitions tiles only with a cut picked. A picked clip, title, sound or graphic shows its own sections only. Add Captions stays in the menu bar, the clip's and sound's right click and the timeline's +; the Library catalog's Transitions kind is where a transition is found with no cut.
+- A new video's Library is HELD open on Media while its timeline is empty and folds back when something lands, nothing stored (`EditorState.newBlankVideo`, `isLibraryHeldOpen`), so a drawn line's Appearance and Width are on screen at 1400x900.
+- UX-PATTERNS shell item 6 (Right dock) rewritten for the panel as it is. Ten walks updated; audit `queue/audits/2026-11-11-video-panel-captions-transitions.json`.
+- Next: `a-video-s-library-opened-by-hand-stays-a-short-s` (opened Library on a video capped as video.html draws it).

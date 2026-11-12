@@ -2730,9 +2730,32 @@ final class EditorState {
     /// Library open on Media so Import is right there (`video.html`, the New
     /// video on ramp, steps 1 and 2). No pixels at all: the frame is black
     /// until something lands on a track.
+    ///
+    /// The Library is HELD open rather than opened: nothing is written down,
+    /// and once the timeline holds something the hold lets go and the shelf
+    /// folds back to its header, so the first thing made gets the panel's
+    /// room (a line's Appearance was a sliver under a 45 per cent shelf on a
+    /// 1400 by 900 window, 2026-10-19), and one new video never leaves every
+    /// video after it with its Library open.
     func newBlankVideo(size: CGSize, lengthMS: Int) {
         installDocument(.emptyVideo(size: size, lengthMS: lengthMS), url: nil)
-        if Experiments.shared.libraryEnabled { showMediaShelf(revealing: nil) }
+        guard Experiments.shared.libraryEnabled else { return }
+        setLibraryScope(.media)
+        holdsLibraryOpenWhileEmpty = true
+        if !isLibraryShown {
+            setLibraryVisible(true)
+            // Shown, not opened: the hold opens it (`isLibraryHeldOpen`).
+            pendingLibraryReveal = false
+        }
+    }
+
+    /// A new video's Library is held open on Media while its timeline is
+    /// still empty (`newBlankVideo`).
+    var holdsLibraryOpenWhileEmpty = false
+
+    /// Whether the panel holds the Library open for now, never stored.
+    var isLibraryHeldOpen: Bool {
+        holdsLibraryOpenWhileEmpty && (document?.timelineClipLayers.isEmpty ?? false)
     }
 
     /// Starts a UI design (`ui-entry-wt.html`, steps 3 to 7): a 1280 by 800

@@ -26,7 +26,8 @@
     },
     {
       "do": "selectRow",
-      "row": "Sample Talk"
+      "row": "Captions",
+      "comment": "The Captions section is the captions' own: it shows with them picked (or nothing picked), not under a picked recording (VideoDocumentSections, 2026-11-11)."
     },
     {
       "do": "action",
@@ -159,7 +160,9 @@
       "note": "The clip's Properties (its clip line and Centre, picked from Animate a property), Time and Sound rows at 220pt: a value that cannot sit beside its name drops under it, so Centre keeps its name and px never wraps, and a long clip name is cut short before its times are."
     },
     {
-      "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
+      "do": "panelMenu",
+      "menu": "Add Key Menu",
+      "choose": "Animate a Property"
     },
     {
       "do": "wait",
@@ -194,6 +197,14 @@
     {
       "do": "wait",
       "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "describe",

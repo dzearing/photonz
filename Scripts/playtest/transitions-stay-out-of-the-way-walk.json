@@ -41,10 +41,15 @@
       "name": "1-nothing-picked-later"
     },
     {
-      "do": "waitFor",
-      "condition": "sectionFolded",
-      "value": "Transitions",
-      "timeout": 2
+      "do": "expectSections",
+      "leading": [
+        "Time",
+        "Captions"
+      ],
+      "absent": [
+        "Transitions"
+      ],
+      "comment": "With nothing picked there is no Transitions section at all: the Library's Transitions kind is where you find one, and the tiles come with a picked cut (VideoDocumentSections, 2026-11-11)."
     },
     {
       "do": "expect",
@@ -54,7 +59,7 @@
     {
       "do": "describe",
       "stage": "A-idle-nothing-picked",
-      "note": "nothing picked: Transitions is folded"
+      "note": "nothing picked: no Transitions section, nothing moving"
     },
     {
       "do": "wait",
@@ -171,15 +176,18 @@
       "seconds": 0.6
     },
     {
-      "do": "waitFor",
-      "condition": "sectionFolded",
-      "value": "Transitions",
-      "timeout": 2
+      "do": "expectSections",
+      "leading": [
+        "Edit point"
+      ],
+      "absent": [
+        "Transitions"
+      ]
     },
     {
       "do": "describe",
       "stage": "5-cut-let-go",
-      "note": "the cut let go: Transitions folds back the way it was left"
+      "note": "the cut let go: the Transitions section goes with it"
     },
     {
       "do": "snapshot",
