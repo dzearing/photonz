@@ -119,6 +119,16 @@ extension CanvasNSView {
         if let viewport, let marquee, let box = marquee.selectionRect(in: viewport.documentSize) {
             return reading(.sweep, canvasBox: box, of: nil)
         }
+        // The same band drawn while a picked path shows its points: a press
+        // on bare canvas starts THIS sweep instead of the one above
+        // (`beginPathPointSweep`), and it looks the same and goes round the
+        // same box, so it says its size the same way. It reads the band as it
+        // is drawn, and stays quiet until the press has travelled far enough
+        // to be a band at all, exactly as the layer band does.
+        if let viewport, let sweep = pathPointSweep,
+           sweep.drag.selectionRect(in: viewport.documentSize) != nil {
+            return reading(.sweep, canvasBox: pathPointSweepRect(sweep), of: nil)
+        }
         if let viewport, let session = regionDrag,
            let box = session.drag.selectionRect(in: viewport.documentSize) {
             return reading(.sweep, canvasBox: box, of: nil)

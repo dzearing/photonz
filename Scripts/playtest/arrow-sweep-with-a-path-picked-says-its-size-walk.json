@@ -1,0 +1,29 @@
+{
+ "out": "/tmp/photonz-playtest/arrow-sweep-with-a-path-picked-says-its-size",
+ "setup": { "forget": ["all"] },
+ "seed": "With a pen path picked its points show, and a press on bare canvas with the arrow tool starts a band over those points rather than the layer band. That band says its size under it like every other band, in the icon's own units on an Icon picture. Before 2026-11-12 it said nothing, on every kind of picture.",
+ "steps": [
+  { "do": "startFromEmpty", "row": "New image", "answer": ["Icon", "Create"], "width": 1280, "height": 900 },
+  { "do": "wait", "seconds": 1.2 },
+  { "do": "tool", "tool": "pen" },
+  { "do": "wait", "seconds": 0.4 },
+  { "do": "click", "at": [200, 200] },
+  { "do": "wait", "seconds": 0.3 },
+  { "do": "click", "at": [400, 200] },
+  { "do": "wait", "seconds": 0.3 },
+  { "do": "click", "at": [400, 400] },
+  { "do": "wait", "seconds": 0.3 },
+  { "do": "key", "key": "return" },
+  { "do": "wait", "seconds": 0.5 },
+  { "do": "tool", "tool": "select" },
+  { "do": "wait", "seconds": 0.8 },
+  { "do": "expectReadout", "absent": true },
+  { "do": "drag", "from": [20, 440], "to": [148, 504], "steps": 12, "readout": "6 × 3", "hold": "1-mid-sweep-over-points" },
+  { "do": "wait", "seconds": 0.6 },
+  { "do": "expectReadout", "absent": true },
+  { "do": "describe", "stage": "1-swept", "note": "an arrow band drawn on bare canvas while the path's points show read 6 x 3, the icon's own units, with the button down, and went away on release" },
+  { "do": "drag", "from": [20, 440], "to": [148, 504], "steps": 1, "readout": "6 × 3", "hold": "2-mid-sweep-one-step" },
+  { "do": "wait", "seconds": 0.4 },
+  { "do": "expectReadout", "absent": true }
+ ]
+}

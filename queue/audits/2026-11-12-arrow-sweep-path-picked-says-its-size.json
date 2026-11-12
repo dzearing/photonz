@@ -1,0 +1,23 @@
+{
+  "feature": "A band swept with a path picked says its size",
+  "epic": "icon-grid",
+  "summary": "Sweeping a band with the arrow tool while a pen path is picked now shows the band's size under it, like every other band. On an Icon picture it reads in the icon's units.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/arrow-sweep-with-a-path-picked-says-its-size-walk.json",
+  "switched": {},
+  "try": [
+    { "do": "File, New, Image, pick Icon and Create." },
+    { "do": "Press P and click three points, then Return, to draw a pen path." },
+    { "do": "Press V for the arrow tool. The path stays picked with its points showing." },
+    { "do": "Drag a band on empty canvas below the shape and keep the button down.", "shot": "2026-11-12-arrow-sweep-path-picked-1.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Let go. The size pill goes away with the band." },
+    { "do": "Do the same on an ordinary picture: the pill reads in points." }
+  ],
+  "evaluate": [
+    "Does the size pill under the band read the same as when nothing is picked?",
+    "With the path's tag still up above the shape, is a second label under the band too much, or useful?"
+  ],
+  "rough": [
+    "It was never about icons: any picture with a pen path picked swept a band with no size, because that band picks the path's points first and the size pill did not know that band existed.",
+    "No mock covers this band; it now matches the layer band and the region band, which both say their size."
+  ]
+}
