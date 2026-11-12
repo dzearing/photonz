@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T08:29:05.561Z",
-  "updated": "2026-11-07T15:49:05.415Z",
+  "updated": "2026-11-12T07:51:30.775Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-07. Fixture: <svg width=100 height=100><rect width=100 height=100 fill=#000000 fill-opacity=0.3/></svg>. DocumentRenderer on white printed 'OURS 30% black on white: 218 218 218 layer opacity 0.3'; NSImage of the same file on white printed 'macOS 30% black on white: 178 178 178'. 178 is 0.7 x 255, a blend of the encoded values; 218 is what a blend in linear light gives. Seen on real files in the comparison: VS Code letterpress, ONNX logo, a record button's halo. Not diagnosed further: DocumentRenderer sets workingColorSpace extendedSRGB at line 193, so the cause is still to find. A renderer wide change, hence not done inside the SVG task.",
@@ -30,6 +30,43 @@
     {
       "t": "2026-11-07T15:49:05.414Z",
       "note": "seq 58.75 -> 20"
+    },
+    {
+      "t": "2026-11-12T06:52:41.479Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T07:50:40.992Z",
+      "note": "owns these walks: see-through-svg-walk"
+    },
+    {
+      "t": "2026-11-12T07:50:55.618Z",
+      "note": "Measured at Next (sRGB mixing, what the canvas uses at Next defaults) against NSImage on white, max diff away from edges: 30% black square 0 (178 vs 178; 218 is only the light mix Current uses), shape drawn in Photonz at 30% black/red/blue then exported 0/1/0, VS Code letterpress-dark 1, letterpress-light 0, record button (stop-profiling, red dot with 20% halo) 0, ONNX logo 0 (no see-through paint in it; its 7.45 mean is edges, centroid 0.5px left of macOS)."
+    },
+    {
+      "t": "2026-11-12T07:50:55.692Z",
+      "note": "Widened to any see-through shape and found three that DID differ, all in reading the file: stroke-opacity beside a fill ignored (line solid black, 0 vs macOS 153), rgba() alpha dropped (59 vs 157), a faded <g> of overlapping shapes faded per shape (overlap 128,165,201 vs 181,218,255). Gradient stop-opacity and nested g opacity x fill-opacity already matched."
+    },
+    {
+      "t": "2026-11-12T07:50:55.768Z",
+      "note": "Fixed in SVGArtwork: colour alpha read from rgba()/rgb(/ a)/#RGBA/#RRGGBBAA and multiplied into fill/stroke amounts; a shape with both fill and line and any see-through amount puts each amount into its colour (#RRGGBBAA) with element opacity on the layer; a fill-only or line-only shape keeps its amount on the layer as before. SVGOpening reads with fadingGroups: a <g opacity> around 2+ shapes becomes a group layer at that opacity (unnamed ones 'Group N'); around one shape it still fades the shape. Chose putting the line's amount in its colour over two layers per shape because one shape should stay one layer. Chose keeping group fading to File > Open only because Ask matches parts by group names and nothing it builds needs it."
+    },
+    {
+      "t": "2026-11-12T07:50:55.843Z",
+      "note": "Verified: SVGOpeningTests (4 new), SeeThroughSVGRenderTests (8 files + drawn box x3, max 3 levels away from edges, mean 1), full Scripts/test.sh exit 0 incl. speed suites (renderer untouched); see-through-svg-walk green with no flags and its captures read 178 box, overlap within 3 of 181,218,255 and 0 px of the old 128,165,201, line 153 outside and 0 solid black in the ring, rgba band within 3 of 255,157,151; the same walk on the unfixed build showed 94653 px old overlap, solid black ring, solid red. All 14 svg walks green. Looked at the before/after pairs for group, line and colours and the group capture: each shows the change."
+    },
+    {
+      "t": "2026-11-12T07:50:55.919Z",
+      "note": "left rough: ONNX logo half a pixel left of macOS at 217x74 (placement, not see-through; under the bar, nobody would see it); hsl() colours are not read by SVGColor at all (not reproduced, no file seen using it); Ask's own see-through groups still fade per shape (by choice above)."
+    },
+    {
+      "t": "2026-11-12T07:51:30.773Z",
+      "note": "At Next defaults a 30% shape, a shape drawn at 30%, and the named real files (VS Code letterpress, record button halo, ONNX) all match macOS within 1 level of 255. Three other see-through cases differed and are fixed in the SVG reader: stroke-opacity beside a fill, rgba()/#RRGGBBAA alpha, and a faded group of overlapping shapes (now a group at that opacity on File > Open). Commit f5e479dbd. Verified by SeeThroughSVGRenderTests + 4 SVGOpeningTests, full Scripts/test.sh exit 0 incl. speed suites, see-through-svg-walk green with no flags (captures read the macOS shades; the unfixed build showed the old ones), all 14 svg walks green. Audit queue/audits/2026-11-12-see-through-svg.json with before/after pictures."
     }
-  ]
+  ],
+  "started": "2026-11-12T06:52:41.478Z",
+  "walks": [
+    "see-through-svg-walk"
+  ],
+  "completed": "2026-11-12T07:51:30.774Z"
 }
