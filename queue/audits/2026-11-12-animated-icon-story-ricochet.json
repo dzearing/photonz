@@ -1,0 +1,28 @@
+{
+  "feature": "An animated icon told as a little story: the trash ricochets off the lid into the can when there is room for it",
+  "epic": "icon-svg",
+  "summary": "When the trash is thrown at the open lid, the app now places the hit where the trash's own rebound off the lid carries it into the can, and keeps it moving at speed as it falls instead of stopping in mid-air. It works when the scrap is small next to the can's mouth. When the agent draws a scrap that nearly fills the mouth, which happened in this pass's walk and its test run, it still slides down the lid and over the can's wall. The bar (five of six stories reading as asked) is not met: one of six.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-12-story-trash-pass15-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return." },
+    { "do": "Wait for Ask to finish (about three minutes), then press Space to play." },
+    { "do": "Watch your sentence's reel from this pass's walk, two laps.", "shot": "2026-11-12-story-trash-pass15-two-laps.gif" },
+    { "do": "Read its frames: thrown in from the upper right 0.60 s, meets the lid 0.80 s, drops straight down 0.87 to 1.00 s, lid shut 1.13 s.", "shot": "2026-11-12-story-trash-pass15-frames.png" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-12-story-trash-pass15.svg" },
+    { "do": "Compare last pass's walk plan as the app lands it now (line drawing, no model run): off the lid at 0.80 s and straight into the can's mouth.", "shot": "2026-11-12-story-trash-pass15-replay-walk14.png" },
+    { "do": "The same plan as it landed before this pass: it backs off the lid, stops over the right wall at 0.96 s and drops across it.", "shot": "2026-11-12-story-trash-pass15-replay-walk14-before.png" }
+  ],
+  "evaluate": [
+    "In the replay of last pass's plan, does the trash coming off the lid and dropping straight in read as a bounce, or does it need a hop up first?",
+    "In this pass's reel the scrap is drawn as a hollow square instead of a solid block. Does it read better as trash?",
+    "The lid still waits about a quarter of a second after the hit before it shuts. Does the hit read as what shuts it?",
+    "Would you rather the scrap be drawn smaller so it has room to bounce in the mouth, even if it reads a little less at 16 points?"
+  ],
+  "rough": [
+    "The bar is not met: five of six story icons should read as asked at 7 or more. This pass reached 1 of 6 (bell 6.2, checkbox 7.2, heart 5.1, envelope 2.9, rocket 6.8, trash 5.1; total 58.1 against 52.4 last pass and 61.2 at best; run 20261112-095935-ask, one run). Still open in an-animated-icon-told-as-a-little-story-moves-th.",
+    "Your sentence in this pass's walk: the scrap is 6 units across in a mouth 8 across, under a lid opened 40 degrees. No rebound off the lid both turns sharply and fits that mouth, so it drops down over the can's right wall (0.93 to 1.00 s) as before. The test run's trash did the same and its judges still saw no bounce. Still open in an-animated-icon-told-as-a-little-story-moves-th.",
+    "The lid still waits after the hit: shut sooner, it would sweep through the falling trash. Letting the lid give a little at the hit cost room past the top and shrank the can below its size floor, so it was taken out. Still open in an-animated-icon-told-as-a-little-story-moves-th."
+  ]
+}

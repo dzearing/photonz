@@ -73,3 +73,35 @@ extension AskMotionBounceSeenTests {
         }
     }
 }
+
+/// The same sentence walked again on 2026-11-12 at 03:20 on the first half
+/// of this change: a smaller can (mouth 8 across between the walls' lines)
+/// and the model's last keys sent with no `touches` (kept from the ones
+/// they replace). Off the lid the trash dropped down the can's right wall.
+enum AskMotionBounceSeenWalkTwo {
+    static let bin = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g id="bin"><path id="body" d="M7 9 L8 20 L16 20 L17 9"/><line id="rib-left" x1="10" y1="11" x2="10.5" y2="18"/><line id="rib-right" x1="14" y1="11" x2="13.5" y2="18"/></g><g id="lid"><line id="lid-bar" x1="6" y1="8" x2="18" y2="8"/><line id="lid-knob" x1="11" y1="6" x2="13" y2="6"/></g><path id="trash" d="M18 2 L21 3 L20 6 L17 5 Z"/></svg>"##
+    static let throwKeys = #"[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"value":{"x":-4,"y":3}},{"seconds":0.95,"value":{"x":-5,"y":1}},{"seconds":1.1,"value":{"x":-5,"y":6}},{"seconds":1.5,"value":{"x":0,"y":0}}]"#
+    static let touchedKeys = #"[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"touches":"$1/lid","value":{"x":-4,"y":3}},{"seconds":0.95,"value":{"x":-5,"y":1}},{"seconds":1.1,"touches":"$1/bin","value":{"x":-5,"y":6}},{"seconds":1.5,"value":{"x":0,"y":0}}]"#
+
+    static func steps() throws -> [AskStep] {
+        let args = AskMotionBounceSeenTests.args
+        return [AskStep(tool: "add_drawing", arguments: ["icon": true, "subject": "trash bin with hinged lid", "svg": .string(bin)]),
+                AskStep(tool: "set_timing", arguments: ["loop": true, "seconds": .number(1.5)]),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"curve":"Hold","seconds":0,"value":0},{"curve":"Ease out","seconds":0.2,"value":0},{"curve":"Hold","seconds":0.5,"value":-40},{"curve":"Ease in","seconds":0.8,"value":-40},{"curve":"Ease out back","seconds":0.95,"value":-25},{"curve":"Hold","seconds":1.3,"value":0},{"seconds":1.5,"value":0}],"layer":"$1/lid","pivot":{"x":6,"y":8},"property":"rotation"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(throwKeys),"layer":"$1/trash","property":"position"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":100},{"seconds":0.5,"value":100},{"seconds":1.1,"value":0},{"seconds":1.5,"value":100}],"layer":"$1/trash","property":"opacity"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(touchedKeys),"layer":"$1/trash","property":"position","replace":true}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(throwKeys),"layer":"$1/trash","property":"position","replace":true}"#))]
+    }
+}
+
+extension AskMotionBounceSeenTests {
+    @Test("Walk two's frames, written out on request",
+          .enabled(if: ProcessInfo.processInfo.environment["PHOTONZ_LAP_DUMP2"] != nil))
+    func dumpTwo() throws {
+        let path = try #require(ProcessInfo.processInfo.environment["PHOTONZ_LAP_DUMP2"])
+        let landed = AskMotion.planned(try AskMotionBounceSeenWalkTwo.steps())
+        for step in landed where step.tool == "set_keys" { print("LANDED", step.arguments.encodedString()) }
+        try LapDump.write(landed, to: path, frames: 48)
+    }
+}
