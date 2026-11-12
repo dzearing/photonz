@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T06:06:22.564Z",
-  "updated": "2026-11-11T16:14:02.454Z",
+  "updated": "2026-11-12T01:16:19.084Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the IA contract task. Blocked on the card below. Inventory of panel verbs (docs/design/ia-audit-2026-09-29.md, Inspector): Layers 'Separate again' (LayersListView.swift:810), 'Out of view' (:957); Measurements header menu Show All/Hide All/Copy as Spec List/Clear (MeasurementsListView.swift:35-55); Arrange align/space buttons (ArrangeInspector.swift); component verbs (ComponentPanel.swift:310-2059); Canvas Size... (CanvasInspector.swift:21); Copy Measurement (MeasureInspector.swift:219); Key it / Key it again (CompositingInspector.swift:91,116); Clear stale (PlacementInspector.swift:726); Flatten, Normalize, Remove Noise Cleaning (SoundInspector.swift:95,170,218); Add Captions, Generate/Rewrite, Cancel, Earlier/Later, Export, Clear (CaptionsInspector.swift:96-257); Save/Delete caption style; Add transition (TransitionInspector.swift:115); Apply to Every Cut / Set as Default (TransitionsGroup.swift:107,133); Properties ... menu, Animate a property, Stop animating, key diamonds (PropertyKeysInspector.swift); Library Add at Playhead / Place in Picture (LibraryPanel.swift:720,741); Use Automatic For All (PanelSectionsFooter.swift:165); caption track bar Clear/Reset and readouts (CaptionTrackBar.swift:44-85). Depends on every-command-in-the-app-is-also-in-the-menu-bar for the menu rows.",
@@ -191,6 +191,37 @@
     {
       "t": "2026-11-11T16:14:02.453Z",
       "note": "seq 110 -> 60"
+    },
+    {
+      "t": "2026-11-12T00:26:54.114Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T01:16:00.013Z",
+      "note": "owns these walks: the-panel-keeps-one-main-action-walk, captions-guides-and-track-bar-walk, captions-panel-keeps-its-margins-walk"
+    },
+    {
+      "t": "2026-11-12T01:16:00.089Z",
+      "note": "Adversarial review: a Premiere editor finds Flatten-style verbs on the clip/keyframe line's right-click and in menus, not in the Effect Controls panel, so moving them meets expectation. Risk: Timing (Earlier/Later) was the one place a person saw the nudge; it remains in the menu bar with Option-Shift arrows and on the caption right-click > More > Timing. The caption mock's bar Clear/Reset/readouts are dropped per the answered card, not quietly."
+    },
+    {
+      "t": "2026-11-12T01:16:00.164Z",
+      "note": "Buttons each section keeps (one main action): Gain = Normalize (Clean noise is its setting); Captions = Add Captions / Rewrite / Cancel (one button, three states); Measurement = Copy Measurement; Key = Key It / Key It Again; Canvas = Canvas Size…; Transition = Add transition (or Shorten the cut, never both); Animating = Graph link; Layout = Clear <stale> link; Library Media = Add at Playhead / Place in Picture. Lists keep their own + and row x (Effects, Chart sets and rows, Motion list), which the contract allows. Moved out: Channel's Flatten (now the volume line's right-click + Clip > Flatten Level), Captions Timing Earlier/Later, Subtitles Export, Clear (caption right-click > More, Sequence/Clip menu rows), caption track bar Clear, Reset, Active word and time readouts."
+    },
+    {
+      "t": "2026-11-12T01:16:00.238Z",
+      "note": "Chose to leave the Measurements list header ... menu (Show All, Hide All, Copy as Spec List, Clear) and the Transitions header + menu as they are: they are a list's own menu, the contract's 'a list may carry its own +', and each row is in the menu bar already (EveryCommandIsInTheMenuBarTests)."
+    },
+    {
+      "t": "2026-11-12T01:16:19.082Z",
+      "note": "One main action per section: Sound Channel's Flatten moved to the volume line's right-click (+ Clip > Flatten Level); Captions section's Timing and Subtitles rows moved to the caption right-click (More) and the menu bar; caption track bar lost Clear, Reset and readouts. Rule written into UX-PATTERNS Inspector row and enforced by PanelKeepsOneMainActionTests; kept buttons listed in the log. Verified: Scripts/test.sh green, the-panel-keeps-one-main-action-walk (measurement, clip, sound, captions at Next defaults) plus 9 touched walks green; audit queue/audits/2026-11-11-the-panel-shows-what-the-picked-thing-is-and-its.json."
     }
-  ]
+  ],
+  "started": "2026-11-12T00:26:54.113Z",
+  "walks": [
+    "the-panel-keeps-one-main-action-walk",
+    "captions-guides-and-track-bar-walk",
+    "captions-panel-keeps-its-margins-walk"
+  ],
+  "completed": "2026-11-12T01:16:19.083Z"
 }
