@@ -313,6 +313,26 @@ struct AskIconTests {
         #expect(document.layer(id: id)?.group?.background == nil)
     }
 
+    @Test("A box and an oval Ask draws on an icon's grid land where the model's SVG put them, line on the edge")
+    func outlinesLandWhereWritten() throws {
+        // The SVG the model wrote for the eval's ticked box (run
+        // 20261108-235558-ask): before 2026-11-09 its box landed at 4,4 16x16,
+        // corner 3, half a line small all round, because a box's line starts
+        // inside its edge (task find-out-whether-boxes-and-ovals-ask-draws-land).
+        let svg = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><rect id="box" x="3" y="3" width="18" height="18" rx="4"/><circle id="dot" cx="12" cy="12" r="4"/></svg>"##
+        let drawing = try SVGArtwork.parse(svg).get()
+        for onGrid in [false, true] {
+            var document = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024))
+            document.addDrawing(drawing, named: "Ticked", icon: true, side: 24, box: nil, blank: true, onGrid: onGrid)
+            let box = try #require(document.allLayers.first { $0.name == "Box" })
+            let dot = try #require(document.allLayers.first { $0.name == "Dot" })
+            #expect(document.canvasFrame(of: box.id) == CGRect(x: 3, y: 3, width: 18, height: 18), "onGrid \(onGrid)")
+            #expect(document.canvasFrame(of: dot.id) == CGRect(x: 8, y: 8, width: 8, height: 8), "onGrid \(onGrid)")
+            #expect(box.outlinePosition == .center && dot.outlinePosition == .center, "onGrid \(onGrid)")
+            #expect(box.annotation?.cornerRadius == 4, "onGrid \(onGrid)")
+        }
+    }
+
     @Test("An icon with a box given is drawn in that box, and the canvas never grows")
     func boxKeepsTheCanvas() throws {
         var document = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600))
