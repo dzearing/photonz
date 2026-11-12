@@ -1,0 +1,46 @@
+{
+  "feature": "An animated picture exports as a GIF",
+  "epic": "icon-svg",
+  "summary": "A picture with something moving on it now offers GIF on Export, and the file plays the same loop the timeline plays: round for ever, or once and holding where it landed when Repeat is off.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-moving-picture-exports-as-a-gif-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "On a still picture press Shift Command E. The format row has no GIF.",
+      "shot": "2026-11-12-gif-1-still-has-no-gif-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw a ball, press Add Key, drag it down, key it back at the top, press space to watch it bounce."
+    },
+    {
+      "do": "Press Shift Command E. GIF sits at the end of the format row, after SVG. Pick it.",
+      "shot": "2026-11-12-gif-2-gif-beside-svg-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read the size line: a 512 ball is Animated GIF · 14 KB without its canvas, 33 KB with it."
+    },
+    {
+      "do": "Press Export… and open the file in Safari, Chrome and Preview.",
+      "shot": "2026-11-12-gif-3-ball-alone.gif"
+    },
+    {
+      "do": "Turn Repeat off on the keys bar, export again: the GIF bounces once and stays at the top.",
+      "shot": "2026-11-12-gif-4-ball-once.gif"
+    }
+  ],
+  "evaluate": [
+    "Is GIF where you looked for it, at the end of the format row?",
+    "Does the exported ball bounce at the same speed as it does on the canvas?",
+    "Is 14 to 33 KB for a 512 icon a size you would put in a README?",
+    "With Include the background off, are the GIF's hard edges acceptable, or should a GIF open with the background ticked?"
+  ],
+  "rough": [
+    "A GIF keeps a pixel either fully there or fully empty, so with the background left out the ball's edge is stepped rather than smooth. That is the format, not the export.",
+    "Bound for A README on a code host, the sheet picks PNG and says to record a video, which matches the mock icon-export-anim-wt.html.",
+    "The list of what survives now describes the format you picked, not only the destination's: GIF picked for a web page ticks the motion and crosses out Sharp at every size. Before, a PNG picked for a web page was said to keep its motion.",
+    "Frames are taken 25 a second (four hundredths each). A spinner on its own pace and a lap that only line up after more than 12 seconds export one lap long, with a small step at the seam.",
+    "The mock's sheet has no GIF button; it mentions a GIF only as the struck-out size beside the animated SVG. The app goes further than the mock here, as the task asked."
+  ]
+}

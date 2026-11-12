@@ -521,3 +521,28 @@ nearest its heading, not two ends rounded alone. A line weight may land on a hal
 unit (`IconGridLanding.weight`): it is not a place, and 2 is too heavy on a balloon
 brought down to fit. A curve's handles stay fractions, and a span that will not come
 out even sits up to a unit off centre.
+
+## A picture that moves, as a GIF
+
+Somebody who asks for "a gif of a bouncing ball" gets a moving picture, and the
+file they asked for is a GIF. With `next-export-gif` (on in Next), the Export
+sheet adds GIF to the end of the format row whenever the canvas, or the frame
+being exported, has something moving on it, and never otherwise.
+
+- **Which moments** (`PictureGIF`, PhotonzCore): 25 a second, each held four
+  hundredths, read off `moved(toMotionTimeMS:)`, the same reading the canvas
+  plays. A repeating keyed lap, or any motion that goes round for ever, is one
+  lap long and loops; a spinner on its own pace stretches the file to where it
+  and the lap line up again (one lap past 12 seconds). Everything that stops
+  plays until the last of it has, then holds the landed picture: no loop block
+  in the file, which every reader takes as play once.
+- **The file** (`PictureGIFEncoder`, made through `ExportSizer.gifData` so the
+  size on the sheet is the file that gets saved). Scale and Include the
+  background behave as they do for PNG; GIF transparency is all or nothing, so
+  edges against nothing are stepped.
+- **The list of what survives** describes the format picked, not only the
+  destination's answer (`SVGHandoff.lines(chosen:)`). A README still gets PNG
+  on its own, as the mock draws it; GIF is one click away.
+- A 512 bouncing ball, one second lap: 33 KB with its canvas, 14 KB without,
+  69 KB at 2x. Checked playing in WebKit and Chromium and through ImageIO.
+  Walk: `a-moving-picture-exports-as-a-gif-walk`.

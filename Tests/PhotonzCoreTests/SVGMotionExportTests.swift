@@ -432,6 +432,36 @@ struct SVGHandoffTests {
         #expect(motion?.detail?.isEmpty == false)
     }
 
+    @Test("A GIF picked by hand for a code host keeps the motion, and the list says so")
+    func aGIFPickedForAReadmeKeepsTheMotion() {
+        let document = Self.movingDocument()
+        let lines = SVGHandoff.lines(for: .readme, in: document, chosen: .gif)
+        #expect(lines.first { $0.text.contains("motion") }?.survives == true)
+        let sharp = lines.first { $0.text.contains("Sharp") }
+        #expect(sharp?.survives == false)
+        #expect(sharp?.detail?.isEmpty == false)
+    }
+
+    @Test("A format picked by hand is the file the list describes, not the destination's")
+    func aPickedFormatIsWhatTheListSays() {
+        let document = Self.movingDocument()
+        let gif = SVGHandoff.lines(for: .webPage, in: document, chosen: .gif)
+        #expect(gif.first { $0.text.contains("motion") }?.survives == true)
+        #expect(gif.first { $0.text.contains("Sharp") }?.survives == false)
+        let png = SVGHandoff.lines(for: .webPage, in: document, chosen: .picture)
+        let motion = png.first { $0.text.contains("motion") }
+        #expect(motion?.survives == false)
+        #expect(motion?.detail?.isEmpty == false)
+        #expect(png.first { $0.text.contains("Sharp") }?.survives == false)
+    }
+
+    @Test("A still icon still goes to a code host as an SVG")
+    func aStillReadmeIsAnSVG() {
+        var document = Self.movingDocument()
+        document.layers[0].motions = []
+        #expect(SVGHandoff.format(for: .readme, in: document) == .stillSVG)
+    }
+
     @Test("A design tool takes the shapes and throws the motion away")
     func aDesignToolKeepsTheShapes() {
         let document = Self.movingDocument()

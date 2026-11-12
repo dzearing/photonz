@@ -104,10 +104,31 @@ public actor ExportSizer {
         return data
     }
 
+    /// The last GIF made, and what it was made of. Kept for the same reason
+    /// as `encoded`, and more so: a GIF is a render per moment of the loop, so
+    /// the file the sheet weighed is the file that gets saved.
+    private var encodedGIF: (of: Render, data: Data)?
+
+    /// A moving picture as a GIF (`PictureGIFEncoder`), or nil for one with
+    /// nothing moving in it.
+    public func gifData(of document: PhotonzDocument, frameID: UUID?, scale: CGFloat,
+                        background: SVGExport.Background = .keep) -> Data? {
+        let key = Render(frameID: frameID, scale: scale, background: background)
+        if let encodedGIF, encodedGIF.of == key { return encodedGIF.data }
+        guard let data = PictureGIFEncoder.data(of: document, frameID: frameID, scale: scale,
+                                                background: background, renderer: renderer,
+                                                store: store,
+                                                onFrame: { [self] _ in rendersMade += 1 })
+        else { return nil }
+        encodedGIF = (key, data)
+        return data
+    }
+
     /// Throws away what has been kept, for a caller whose document changed.
     public func forget() {
         kept = nil
         encoded = nil
+        encodedGIF = nil
     }
 
     private func picture(of document: PhotonzDocument, frameID: UUID?, scale: CGFloat,

@@ -8,6 +8,9 @@ import SwiftUI
 enum ExportChoice: Hashable {
     case picture(ImageCodec.Format)
     case svg
+    /// A picture that moves, every moment of its loop (`PictureGIF`). Only
+    /// offered while the thing being exported has something moving on it.
+    case gif
 
     var isVector: Bool { self == .svg }
 
@@ -18,6 +21,7 @@ enum ExportChoice: Hashable {
     var stored: String {
         switch self {
         case .svg: "svg"
+        case .gif: "gif"
         case .picture(let format): format.rawValue
         }
     }
@@ -25,9 +29,13 @@ enum ExportChoice: Hashable {
     /// The choice last used, or PNG. An answer this build cannot offer — SVG or
     /// WebP with the flag off — comes back as PNG rather than as a format with
     /// no button, which would leave the picker showing nothing selected.
-    static func remembered(offeringSVG: Bool, offeringWebP: Bool) -> ExportChoice {
+    static func remembered(offeringSVG: Bool, offeringWebP: Bool,
+                           offeringGIF: Bool = false) -> ExportChoice {
         let stored = UserDefaults.standard.string(forKey: rememberedKey)
         if stored == "svg" { return offeringSVG ? .svg : .picture(.png) }
+        // A GIF last time and a still picture now opens on PNG: the GIF
+        // button is not on the sheet for a picture with nothing moving.
+        if stored == "gif" { return offeringGIF ? .gif : .picture(.png) }
         guard let format = ImageCodec.Format(rawValue: stored ?? "") else { return .picture(.png) }
         if format == .webp, !offeringWebP { return .picture(.png) }
         return .picture(format)
@@ -155,6 +163,12 @@ struct ExportDialog: View {
 
     private var offersWebP: Bool { Experiments.shared.webPExportEnabled }
 
+    /// Whether the GIF button is on the sheet: the canvas, or the frame being
+    /// exported, has something on it that moves.
+    private var offersGIF: Bool {
+        Experiments.shared.gifExportEnabled && (target.map(PictureGIF.offers) ?? false)
+    }
+
     /// Whether the hand-off question is worth asking at all: something in the
     /// drawing moves, so where it is going decides whether that survives.
     private var asksWhereItIsGoing: Bool {
@@ -165,6 +179,19 @@ struct ExportDialog: View {
     private var handoffFormat: SVGHandoff.Format? {
         guard asksWhereItIsGoing, let target else { return nil }
         return SVGHandoff.format(for: destination, in: target)
+    }
+
+    /// The file being written, in the hand-off's own terms, so the list of
+    /// what survives describes it rather than the file the destination
+    /// would have picked.
+    private var chosenFormat: SVGHandoff.Format? {
+        switch choice {
+        // SVG picked where the destination would send a GIF is written
+        // standing still (`carriesTheMotion`), and the list says so.
+        case .svg: handoffFormat?.isVector == true ? handoffFormat : .stillSVG
+        case .gif: .gif
+        case .picture: .picture
+        }
     }
 
     /// Whether the motion travels with the file.
@@ -181,6 +208,7 @@ struct ExportDialog: View {
         switch format {
         case .animatedSVG, .stillSVG: offersSVG ? .svg : .picture(.png)
         case .picture: .picture(.png)
+        case .gif: offersGIF ? .gif : .picture(.png)
         }
     }
 
@@ -230,7 +258,7 @@ struct ExportDialog: View {
     /// for them and the canvas goes in as it always did.
     private var holdsTransparency: Bool {
         switch choice {
-        case .svg: true
+        case .svg, .gif: true
         case .picture(let format): format.holdsTransparency
         }
     }
@@ -317,6 +345,9 @@ struct ExportDialog: View {
             return ExportQuality.note(forName: vectorName, bytes: byteCount,
                                       weighed: vectorWeighed)
         }
+        if choice == .gif {
+            return ExportQuality.note(forName: "Animated GIF", bytes: pictureBytes, weighed: weighed)
+        }
         return ExportQuality.note(forFormat: weighedFormat?.rawValue ?? "", percent: qualityPercent,
                                   bytes: pictureBytes, weighed: weighed)
     }
@@ -346,6 +377,10 @@ struct ExportDialog: View {
     /// until a newer one is ready.
     private func refreshPictureSize() {
         weighTask?.cancel()
+        if choice == .gif {
+            refreshGIFSize()
+            return
+        }
         guard let weighedFormat, let document = editorState.document else {
             weighTask = nil
             pictureBytes = nil
@@ -373,6 +408,32 @@ struct ExportDialog: View {
             let bytes = await sizer.byteCount(of: document, frameID: frameID, scale: scale,
                                               format: weighedFormat, quality: quality,
                                               background: background)
+            guard !Task.isCancelled else { return }
+            pictureBytes = bytes
+            weighed = true
+            weighing = false
+        }
+    }
+
+    /// Makes the GIF to find out what it weighs, exactly as the picture
+    /// formats are weighed: the very file Export saves, made off the main
+    /// actor and kept by the sizer, so pressing Export after reading the
+    /// number writes a file that already exists. A GIF is a render per moment
+    /// of the loop, a fraction of a second for an icon.
+    private func refreshGIFSize() {
+        guard let document = editorState.document else { return }
+        let sizer = sizer ?? ExportSizer(renderer: editorState.previewRenderer,
+                                         store: editorState.store)
+        self.sizer = sizer
+        let scale = scale
+        let frameID = frameID
+        let background = background
+        weighing = true
+        weighTask = Task {
+            try? await Task.sleep(for: .milliseconds(140))
+            guard !Task.isCancelled else { return }
+            let bytes = await sizer.gifData(of: document, frameID: frameID, scale: scale,
+                                            background: background)?.count
             guard !Task.isCancelled else { return }
             pictureBytes = bytes
             weighed = true
@@ -459,7 +520,8 @@ struct ExportDialog: View {
                                            .init(ExportChoice.picture(.jpeg), "JPEG"),
                                            .init(ExportChoice.picture(.heic), "HEIC")]
                                     + (offersWebP ? [.init(ExportChoice.picture(.webp), "WebP")] : [])
-                                    + (offersSVG ? [.init(ExportChoice.svg, "SVG")] : []))
+                                    + (offersSVG ? [.init(ExportChoice.svg, "SVG")] : [])
+                                    + (offersGIF ? [.init(ExportChoice.gif, "GIF")] : []))
             }
             if asksWhereItIsGoing {
                 handoffNote
@@ -479,7 +541,7 @@ struct ExportDialog: View {
                 }
                 if lossyFormat != nil {
                     qualityRow
-                } else if weighedFormat != nil {
+                } else if weighedFormat != nil || choice == .gif {
                     // The same line in the same place, minus the slider there
                     // is nothing to choose with. PNG is the format an icon is
                     // saved in, so "what will this weigh" is asked here more
@@ -521,6 +583,9 @@ struct ExportDialog: View {
                                                     quality: ExportQuality.fraction(percent),
                                                     frameID: frameID, background: background,
                                                     using: sizer)
+                    case .gif:
+                        editorState.exportGIF(scale: scale, frameID: frameID,
+                                              background: background, using: sizer)
                     case .svg:
                         editorState.setSVGPlayback(playback)
                         editorState.exportSVG(frameID: frameID, animated: carriesTheMotion,
@@ -544,7 +609,8 @@ struct ExportDialog: View {
         .onAppear {
             frameID = editorState.selectedFrameID
             playback = editorState.document?.svgPlayback ?? .standard
-            choice = ExportChoice.remembered(offeringSVG: offersSVG, offeringWebP: offersWebP)
+            choice = ExportChoice.remembered(offeringSVG: offersSVG, offeringWebP: offersWebP,
+                                             offeringGIF: offersGIF)
             destination = SVGHandoff.remembered
             #if PHOTONZ_PLAYTEST
             if let asked = editorState.playtestExportDestination { destination = asked }
@@ -554,6 +620,10 @@ struct ExportDialog: View {
             }
             #if PHOTONZ_PLAYTEST
             if editorState.playtestOpensExportOnSVG, offersSVG { choice = .svg }
+            if editorState.playtestOpensExportOnGIF {
+                editorState.playtestOpensExportOnGIF = false
+                if offersGIF { choice = .gif }
+            }
             if let asked = editorState.playtestOpensExportOnPicture {
                 choice = .picture(asked)
                 // Taken once. A walk that photographs the quality slider and
@@ -582,7 +652,12 @@ struct ExportDialog: View {
         }
         .onChange(of: choice) { refreshSize() }
         .onChange(of: playback) { refreshVectorSize() }
-        .onChange(of: frameID) { refreshSize() }
+        .onChange(of: frameID) {
+            // A frame with nothing moving in it has no GIF to write, and the
+            // button goes with it, so the answer falls back to a still.
+            if choice == .gif, !offersGIF { choice = .picture(.png) }
+            refreshSize()
+        }
         // A file with nothing behind it is a different file, so it is a
         // different number, whether it is shapes or pixels.
         .onChange(of: keepsBackground) {
@@ -668,7 +743,7 @@ struct ExportDialog: View {
         if let target {
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(SVGHandoff.lines(for: destination, in: target,
-                                         flatImages: flatImages)) { line in
+                                         flatImages: flatImages, chosen: chosenFormat)) { line in
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Image(systemName: line.survives ? "checkmark" : "xmark")
                             .font(.caption)

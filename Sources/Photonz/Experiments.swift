@@ -796,6 +796,12 @@ extension Experiments {
             && isEnabled(FeatureCatalog.animatedSVGExportFlag)
     }
 
+    /// `next-export-gif`: a picture that moves offers GIF on Export. Needs the
+    /// Motion list, which is the only way anything on a picture moves.
+    var gifExportEnabled: Bool {
+        motionEnabled && isEnabled(FeatureCatalog.gifExportFlag)
+    }
+
     /// `next-a-row-says-its-words`: whether a piece of text nobody has named by
     /// hand wears its own words in the layers list instead of "Text 9". It
     /// takes away nothing and writes nothing down — the name is read off the

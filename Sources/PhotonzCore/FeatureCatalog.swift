@@ -272,6 +272,10 @@ public enum FeatureCatalog {
 
     public static let animatedSVGExportFlag = "next-export-animated-svg"
 
+    /// A picture that moves offers GIF on Export (task
+    /// `an-animated-picture-exports-as-a-gif`).
+    public static let gifExportFlag = "next-export-gif"
+
     public static let cutRecordingFlag = "next-cut-a-recording"
 
     public static let openingARecordingFlag = "next-opening-a-recording"
@@ -929,6 +933,16 @@ public enum FeatureCatalog {
                     name: animatedSVGExportFlag,
                     title: "An animated icon leaves the app as an animated SVG",
                     description: "Export first asks where the file is going, and a web page gets an animated SVG that keeps its motion. Off means Export never asks and an SVG is always still.",
+                    area: .export,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: gifExportFlag,
+                    title: "A picture that moves exports as a GIF",
+                    description: "Export on a picture with something moving on it offers GIF beside the other formats, playing the same loop the timeline plays. Off means a moving picture exports as SVG or a still.",
                     area: .export,
                     isEnabled: false,
                     parameters: []),

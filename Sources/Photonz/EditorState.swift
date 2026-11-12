@@ -306,6 +306,9 @@ final class EditorState {
     /// inside a sheet to pick it (`PlaytestAction.exportDialogAsSVG`). Compiled
     /// out of every shipping build.
     var playtestOpensExportOnSVG = false
+    /// Export opens on GIF, once, for a walk photographing a moving picture's
+    /// GIF answer (`exportDialogAsGIF`).
+    var playtestOpensExportOnGIF = false
     /// Probe only: the files Import Media… (or the first of them, Add Media
     /// at Playhead…) hands back instead of showing its Open panel, which a
     /// walk cannot click inside.
@@ -4357,6 +4360,46 @@ final class EditorState {
                 try data.write(to: url)
             } catch {
                 self.presentError("Couldn't export the image.", error)
+            }
+        }
+    }
+
+    /// Writes a picture that moves as a GIF where the user picks: every
+    /// moment of the loop the timeline plays, going round for ever or playing
+    /// once, as the picture does (`PictureGIF`).
+    ///
+    /// Made off the main actor by the sizer the Export sheet weighed with, so
+    /// the file that lands is the one the sheet put a number on and is usually
+    /// already made by the time Export is pressed.
+    func exportGIF(scale: CGFloat, frameID: UUID? = nil,
+                   background: SVGExport.Background = .keep, using warm: ExportSizer? = nil) {
+        guard let document else { return }
+        let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
+        let base = frame.flatMap { document.layer(id: $0)?.name }
+            ?? documentURL?.deletingPathExtension().lastPathComponent
+            ?? "Photonz Export"
+        let sizer = warm ?? ExportSizer(renderer: previewRenderer, store: store)
+        Task { [weak self] in
+            let data = await sizer.gifData(of: document, frameID: frame, scale: scale,
+                                           background: background)
+            guard let self else { return }
+            guard let data else {
+                let alert = NSAlert()
+                alert.alertStyle = .warning
+                alert.messageText = "Couldn't export the GIF."
+                alert.informativeText = "Nothing in this picture moves, so there is no loop to write."
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+                return
+            }
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.gif]
+            panel.nameFieldStringValue = "\(base)\(scale == 2 ? "@2x" : "").gif"
+            guard panel.runModal() == .OK, let url = panel.url else { return }
+            do {
+                try data.write(to: url)
+            } catch {
+                self.presentError("Couldn't export the GIF.", error)
             }
         }
     }

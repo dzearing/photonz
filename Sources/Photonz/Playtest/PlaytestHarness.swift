@@ -991,6 +991,43 @@ private final class Run {
         }
     }
 
+    /// A `writePicture` step asking for `gif`: the very file Export's GIF
+    /// button saves, through the same sizer, with what a reader sees of it.
+    private func writeGIF(_ editor: EditorState, name: String, scale: CGFloat,
+                          background: SVGExport.Background,
+                          behind: PictureCorners?) async throws -> String {
+        guard let document = editor.document else {
+            throw Failure(description: "there is no document to write")
+        }
+        let target = document.exportTarget(frameID: editor.selectedFrameID)
+        guard let plan = PictureGIF.plan(for: target) else {
+            throw Failure(description: "nothing moves in this picture, so it has no GIF")
+        }
+        let sizer = ExportSizer(renderer: editor.previewRenderer, store: editor.store)
+        let started = Date()
+        guard let data = await sizer.gifData(of: document, frameID: editor.selectedFrameID,
+                                             scale: scale, background: background) else {
+            throw Failure(description: "the document did not write as a GIF")
+        }
+        let took = Int(Date().timeIntervalSince(started) * 1000)
+        let file = "\(name).gif"
+        try data.write(to: out.appendingPathComponent(file))
+        let corners = try cornersOf(data, named: file, claim: behind)
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let first = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            throw Failure(description: "\(file) could not be read back")
+        }
+        let frames = CGImageSourceGetCount(source)
+        guard frames == plan.timesMS.count else {
+            throw Failure(description: "\(file) holds \(frames) pictures where the loop has "
+                          + "\(plan.timesMS.count) moments")
+        }
+        let loop = plan.loops ? "goes round for ever" : "plays once and holds"
+        return "\(file) is \(data.count) bytes (\(ExportQuality.fileSize(bytes: data.count))), "
+            + "\(first.width) × \(first.height), \(frames) frames over \(plan.durationMS) ms, "
+            + "\(loop), made in \(took) ms, \(corners)"
+    }
+
     private func cornersOf(_ data: Data, named file: String,
                            claim: PictureCorners?) throws -> String {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
@@ -2961,6 +2998,12 @@ private final class Run {
         case .writePicture(let name, let format, let quality, let scale, let background,
                            let behind):
             let editor = try requireEditor()
+            if format == "gif" {
+                note(number, step.name,
+                     try await writeGIF(editor, name: name, scale: scale, background: background,
+                                        behind: behind))
+                break
+            }
             guard let picture = ImageCodec.Format(rawValue: format) else {
                 throw Failure(description: "\(format) is not a picture format Export writes")
             }
@@ -8296,6 +8339,9 @@ private final class Run {
                 editor.isExportDialogPresented = true
             case .exportDialogAsWebP:
                 editor.playtestOpensExportOnPicture = .webp
+                editor.isExportDialogPresented = true
+            case .exportDialogAsGIF:
+                editor.playtestOpensExportOnGIF = true
                 editor.isExportDialogPresented = true
             case .exportDialogAsVideo:
                 editor.isExportDialogPresented = true

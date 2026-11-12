@@ -1,0 +1,50 @@
+{
+  "out": "/tmp/photonz-playtest/a-moving-picture-exports-as-a-gif-walk",
+  "seed": "Somebody who asked for a gif of a bouncing ball has a ball that bounces, and wants the .gif (task an-animated-picture-exports-as-a-gif). A still picture's Export offers no GIF; once the ball is keyed, Export offers GIF beside SVG, says what the file weighs, and the list of what survives describes the GIF, not the SVG the destination would have picked. The files written are the very ones the GIF button saves, with their bytes, frames and loop in the log. Next defaults, no flag.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 512, "canvasHeight": 512, "width": 1420, "height": 980 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [196, 40], "to": [316, 160], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [256, 100] },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "exportDialogAsPNG" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-a-still-has-no-gif", "note": "THE TEST: a picture with nothing moving in it has no GIF button on its Export sheet; the formats are the still ones." },
+    { "do": "snapshot", "name": "1-a-still-has-no-gif" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "agentTool", "tool": "set_keys", "arguments": "{\"layer\": \"$picked\", \"property\": \"position\", \"keys\": [{\"seconds\": 0, \"value\": {\"x\": 196, \"y\": 40}, \"curve\": \"Ease in\"}, {\"seconds\": 0.5, \"value\": {\"x\": 196, \"y\": 360}, \"curve\": \"Ease out\"}, {\"seconds\": 1, \"value\": {\"x\": 196, \"y\": 40}}]}" },
+    { "do": "agentTool", "tool": "set_timing", "arguments": "{\"seconds\": 1}" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "agentTool", "tool": "run_command", "arguments": "{\"command\": \"play_pause\"}" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPictureMoves" },
+    { "do": "agentTool", "tool": "run_command", "arguments": "{\"command\": \"play_pause\"}" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "writePicture", "name": "2-ball-on-its-canvas", "format": "gif", "background": "keep", "behind": "painted" },
+    { "do": "writePicture", "name": "2-ball-alone", "format": "gif", "background": "drop", "behind": "empty" },
+    { "do": "writePicture", "name": "2-ball-at-2x", "format": "gif", "scale": 2, "background": "keep" },
+    { "do": "agentTool", "tool": "set_timing", "arguments": "{\"loop\": false}" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "writePicture", "name": "2-ball-once", "format": "gif", "background": "keep" },
+    { "do": "agentTool", "tool": "set_timing", "arguments": "{\"loop\": true}" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-written", "note": "THE TEST: the GIF Export saves, written three ways. Each log line says its bytes, its size, how many frames over how long, and that it goes round for ever as the timeline does; with Repeat turned off the same ball plays once and holds where it landed." },
+
+    { "do": "action", "action": "exportDialogAsGIF" },
+    { "do": "wait", "seconds": 2 },
+    { "do": "wait", "seconds": 1, "onTheClock": true },
+    { "do": "expect", "control": "What it will weigh", "reads": "Animated GIF · 14 KB" },
+    { "do": "describe", "stage": "3-gif-beside-svg", "note": "THE TEST: the same picture, keyed, offers GIF beside SVG. On GIF the sheet keeps the picture rows (scale, pixel size, the background box) and says what the GIF weighs, and the list of what survives describes the GIF: the motion ticked, Sharp at every size crossed out with its reason." },
+    { "do": "snapshot", "name": "3-gif-beside-svg" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 }
+  ]
+}

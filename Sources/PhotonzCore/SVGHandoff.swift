@@ -71,16 +71,21 @@ public enum SVGHandoff {
         case stillSVG
         /// Pixels: one size, one moment.
         case picture
+        /// Pixels that move: one size, every moment of the loop. Never a
+        /// destination's own answer (the mock sends a README a video); only
+        /// ever picked by hand on the format row (`PictureGIF`).
+        case gif
 
         public var title: String {
             switch self {
             case .animatedSVG: "Animated SVG"
             case .stillSVG: "SVG"
             case .picture: "PNG"
+            case .gif: "GIF"
             }
         }
 
-        public var isVector: Bool { self != .picture }
+        public var isVector: Bool { self == .animatedSVG || self == .stillSVG }
     }
 
     /// Where Export last sent something, or a web page.
@@ -127,25 +132,36 @@ public enum SVGHandoff {
     /// `flatImages` is the same reading `SVGExport` takes: a background that is
     /// one flat colour is a rectangle in the file, so it must not be listed as
     /// a photograph riding along.
+    ///
+    /// `chosen` is a format somebody picked by hand over the one the
+    /// destination would pick: the list describes the file being written, so
+    /// a GIF or a PNG picked for a web page is not said to be sharp at every
+    /// size.
     public static func lines(for destination: Destination,
                              in document: PhotonzDocument,
-                             flatImages: [UUID: RGBA] = [:]) -> [Line] {
-        let format = format(for: destination, in: document)
-        let moves = document.hasMotion && destination.carriesMotion
+                             flatImages: [UUID: RGBA] = [:],
+                             chosen: Format? = nil) -> [Line] {
+        let format = chosen ?? format(for: destination, in: document)
+        let moves = document.hasMotion && (format == .animatedSVG || format == .gif)
+        // Why the motion stays behind: the destination's own reason where it
+        // has one, and otherwise that a still picture is one moment.
+        let stays = destination.motionNote
+            ?? (format == .picture ? "A still picture is one moment of the drawing. A GIF keeps the motion."
+                                   : "This file is the drawing standing still.")
         var lines: [Line] = []
 
         lines.append(Line(text: "The motion runs in the file",
-                          detail: moves ? nil : destination.motionNote,
+                          detail: moves ? nil : stays,
                           survives: moves))
         lines.append(Line(text: repeatText(in: document),
-                          detail: moves ? nil : destination.motionNote,
+                          detail: moves ? nil : stays,
                           survives: moves))
 
         // Sharpness is the SVG's whole argument, so it is only claimed where
         // it is true: a picture has one size, and a drawing carrying a
         // photograph has one part of it that does.
         let photographs = embedded(in: document, flatImages: flatImages)
-        if format == .picture {
+        if !format.isVector {
             lines.append(Line(text: "Sharp at every size",
                               detail: "A picture has one size. Send it at the size it will be"
                                   + " used at, or twice that for a sharp screen.",
@@ -208,6 +224,7 @@ public enum SVGHandoff {
         switch format {
         case .animatedSVG, .stillSVG: return trimmed + ".svg"
         case .picture: return trimmed + ".png"
+        case .gif: return trimmed + ".gif"
         }
     }
 }
