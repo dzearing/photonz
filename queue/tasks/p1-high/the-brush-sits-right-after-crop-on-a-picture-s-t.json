@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T06:35:31.316Z",
-  "updated": "2026-11-11T16:14:02.584Z",
+  "updated": "2026-11-12T03:22:18.553Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the brush epic final audit (a-brush-tool-paints-with-realistic-charcoal-chal), 2026-10-31. Mock order: Select, Lasso, Magic wand, Crop, Brush (B), Eraser, Heal, Clone stamp, Patch, Dodge/Burn, Pen, Text, Shape, Measure, Hand, Zoom. Shipped (Next defaults, 1280 pt window, 2026-10-31-brush-epic-1-watercolour-in-hand-sc.png): Select, Marquee, Crop, Measure | Arrow, Line, Highlighter, Text, Combine, Rectangle, Pen, Component | Brush | Bucket | Hand | Color. The bar adds flag tools at the end of the drawing family (slice 1 note on the umbrella, 2026-10-25). Brush is absent on a document with time (B is the Blade there), so only the picture bar changes. grep Scripts/playtest for tool bar points before moving it.",
@@ -58,6 +58,36 @@
     {
       "t": "2026-11-11T16:14:02.583Z",
       "note": "seq 130 -> 80"
+    },
+    {
+      "t": "2026-11-12T02:56:57.373Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T03:21:08.677Z",
+      "note": "owns these walks: brush-sits-after-crop-walk, design-mode-tool-strip-walk"
+    },
+    {
+      "t": "2026-11-12T03:22:04.713Z",
+      "note": "Review before building: a Photoshop user looks for the Brush among the first tools, and the mock (image.html tool bar) draws Select, Lasso, Wand | Crop, Brush. Moving it shifts Measure and every drawing tool one slot right; on a narrow window it now folds after the drawing tools rather than first, which suits a tool you paint dozens of strokes with. Video bars have no Brush, so nothing there moves."
+    },
+    {
+      "t": "2026-11-12T03:22:04.790Z",
+      "note": "Chose Brush inside the first family (Select, Marquee, Crop, Brush, Measure | drawing...) over starting a new family at Crop, because the acceptance names that order and it keeps the families the tool bar grouping task set; the mock's hairline placement and Measure's late slot are listed in the audit's rough lines."
+    },
+    {
+      "t": "2026-11-12T03:22:04.864Z",
+      "note": "Built: ToolBarLayout.bar puts .brush after .crop (test theBrushSitsRightAfterCrop, TDD). Walks: new brush-sits-after-crop-walk (Next defaults, no flags; pointer windowClick on the fourth slot picks the Brush, B too) and design-mode-tool-strip-walk's two bar-order claims updated. Ran 6 tool bar/brush walks green; full Scripts/test.sh exit 0. Looked at both -sc captures and the side by side: Brush is fourth, lit blue when picked."
+    },
+    {
+      "t": "2026-11-12T03:22:18.551Z",
+      "note": "On a picture at Next defaults the tool bar reads Select, Marquee, Crop, Brush, Measure, then the drawing family (ToolBarLayout.bar, test theBrushSitsRightAfterCrop). New walk brush-sits-after-crop-walk (no flags) asserts the order and picks the Brush with a pointer click on the fourth slot; design-mode-tool-strip-walk updated. 6 walks green, full test.sh green. Audit queue/audits/2026-11-11-brush-after-crop.json with the mock side by side."
     }
-  ]
+  ],
+  "started": "2026-11-12T02:56:57.372Z",
+  "walks": [
+    "brush-sits-after-crop-walk",
+    "design-mode-tool-strip-walk"
+  ],
+  "completed": "2026-11-12T03:22:18.552Z"
 }
