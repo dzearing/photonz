@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T12:42:20.635Z",
-  "updated": "2026-11-11T16:14:28.912Z",
+  "updated": "2026-11-12T19:37:50.152Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: grep -l 'behind another app' queue/audits/2026-10-2*.json lists 10 of 12; for example queue/audits/2026-10-20-calm-redline-settings-after-sc.png (the Agent row switch is grey) and the rough list of queue/audits/2026-10-20-ask-rows.json ('the switch shows grey instead of the accent colour'). Walks stay behind on purpose (CLAUDE.md, Walks run while the person works; queue/bin/focus-drill.sh), so the fix must not take the front or a key while the person is at the Mac. Options to measure, not assume: render the snapshot with the window drawn in its active look (an offscreen render of the window content), or retake only the audit pictures, not every walk picture, in the whole-set window when nobody is at the Mac.",
@@ -103,6 +103,45 @@
     {
       "t": "2026-11-11T16:14:28.911Z",
       "note": "seq 530 -> 90"
+    },
+    {
+      "t": "2026-11-12T17:56:35.917Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T19:33:40.228Z",
+      "note": "Reproduced: a measuring walk run with the old behaviour photographed Settings' Open at login switch track at (77,75,74) and the bar's picked Snap segment at (52,55,60); the same walk with \"front\": true read (56,122,244) and (31,83,141). Whole pictures differed from in front on 2.17% (editor) and 0.36% (Settings) of pixels."
+    },
+    {
+      "t": "2026-11-12T19:33:40.306Z",
+      "note": "Chose lending the window AppKit's key look (acquireKeyAppearance, probe build only) over retaking audit pictures in the whole-set window, because it fixes every picture, film and menu picture at once, needs nobody away from the Mac, and matched the in-front pictures to the pixel (0.00% differ). Measured in a standalone window first: app stays inactive, window stays unkeyed, no become-key notification; NSSwitch, SwiftUI switch, borderedProminent and segmented all take the accent. Default (Return) buttons do not."
+    },
+    {
+      "t": "2026-11-12T19:33:40.382Z",
+      "note": "Found on a recording's window: the window server takes a lent look back within 0.1s (an AppKit-defined event, subtype 22, through sendEvent), so a-video-clip-fades-walk stayed grey. Fixed by refusing resignKeyAppearance for a window the walk lent the look to, for the rest of the walk (Sources/Photonz/Playtest/PlaytestFrontLook.swift). Its pictures now report no background look; the View | Edit chip stays grey because it is grey in front too (checked with a front walk)."
+    },
+    {
+      "t": "2026-11-12T19:33:40.459Z",
+      "note": "Focus drill clean on the final build: the measuring walk, a recording walk, agents-section-in-settings-walk, painting-holds-still-walk, ask-sheen-every-hover-walk (films), edit-original-done-reads-behind-walk. a-video-clip-fades-walk reads 'as declared' (its menu picture). Ten timing and rebuild-counting walks with snapshots still pass. section-fold-motion-walk fails step 14 as it did in the 11-02, 11-05 and 11-08 sweeps (owned by folding-a-section-that-lets-the-panel-fit-again), not this change."
+    },
+    {
+      "t": "2026-11-12T19:33:40.536Z",
+      "note": "The Agent row switch the acceptance names appears only after a real Ask run; measured on Settings' Open at login switch instead, the same system switch. New setup key behindLook keeps the old look for the two walks about it (blue-confirm-buttons-read-behind-walk, edit-original-done-reads-behind-walk). Runner prompt line about the 'behind another app' note rewritten; docs/design/playtest-harness.md updated. Left rough (log only): a default Return button cannot be lent its blue; no walk picture showed one."
+    },
+    {
+      "t": "2026-11-12T19:33:40.611Z",
+      "note": "owns these walks: pictures-show-the-in-front-look-walk, blue-confirm-buttons-read-behind-walk, edit-original-done-reads-behind-walk"
+    },
+    {
+      "t": "2026-11-12T19:37:50.150Z",
+      "note": "Walk pictures now show the window's in-front look (accent switches, picked segments, traffic lights) without taking key or the front: the probe lends each photographed window AppKit's key look and holds it for the walk (Sources/Photonz/Playtest/PlaytestFrontLook.swift). Verified against the same walk with front:true: 0.00% of pixels differ (was 2.17%); focus drill clean on 6 walks; setup behindLook keeps the old look for the 2 walks about it; runner prompt and harness doc updated; test.sh green. Audit 2026-11-12-audit-pictures-front-look.json. Commit a78fb4838."
     }
-  ]
+  ],
+  "started": "2026-11-12T17:56:35.916Z",
+  "walks": [
+    "pictures-show-the-in-front-look-walk",
+    "blue-confirm-buttons-read-behind-walk",
+    "edit-original-done-reads-behind-walk"
+  ],
+  "completed": "2026-11-12T19:37:50.151Z"
 }
