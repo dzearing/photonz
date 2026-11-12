@@ -354,6 +354,42 @@ extension AskMotion {
         }) }
         for start in starts { out = curved(out, step: start.step, leaving: AskMotionCheck.timed(out[start.step]).last { $0.seconds < start.seconds - 0.0005 }?.seconds, arriving: true) }
         for end in ends { out = curved(out, step: end.step, leaving: end.seconds, arriving: false) }
+        for end in ends { out = carriesOn(out, step: end.step, hit: end.seconds) }
+        return out
+    }
+
+    /// The most two legs either side of a key may turn, as a cosine, and
+    /// still be one fall: 45 degrees.
+    static let carriesOnTurn: CGFloat = 0.7
+
+    /// `steps` with the key after a hit, where the part goes on the same
+    /// way it came off (turning less than 45 degrees), passed through at
+    /// speed: the hit's key and that key run evenly (Linear), instead of
+    /// slowing to a stop between them. A stop is right at the top of a
+    /// bounce that comes back down, never in the middle of a fall: on
+    /// 2026-11-12 the user's trash came off the lid, slowed to a stop in mid
+    /// air over the can's mouth and then dropped in. Keys and time only.
+    static func carriesOn(_ steps: [AskStep], step index: Int, hit seconds: Double) -> [AskStep] {
+        func point(_ value: AgentJSON?) -> CGPoint? {
+            guard let x = value?["x"]?.doubleValue, let y = value?["y"]?.doubleValue else { return nil }
+            return CGPoint(x: x, y: y)
+        }
+        let keys = AskMotionCheck.timed(steps[index])
+        guard let k = keys.firstIndex(where: { abs($0.seconds - seconds) <= 0.0005 }), k + 2 < keys.count,
+              let a = point(keys[k].value), let b = point(keys[k + 1].value), let c = point(keys[k + 2].value),
+              var object = steps[index].arguments.objectValue, var list = object["keys"]?.arrayValue else { return steps }
+        let first = CGVector(dx: b.x - a.x, dy: b.y - a.y), second = CGVector(dx: c.x - b.x, dy: c.y - b.y)
+        let lengths = hypot(first.dx, first.dy) * hypot(second.dx, second.dy)
+        guard lengths > 1e-6, (first.dx * second.dx + first.dy * second.dy) / lengths >= carriesOnTurn else { return steps }
+        for moment in [keys[k].seconds, keys[k + 1].seconds] {
+            guard let slot = list.firstIndex(where: { abs(($0["seconds"]?.doubleValue ?? -1) - moment) <= 0.0005 }),
+                  var key = list[slot].objectValue else { return steps }
+            key["curve"] = .string(EasingCurve.linear.title)
+            list[slot] = .object(key)
+        }
+        object["keys"] = .array(list)
+        var out = steps
+        out[index] = AskStep(tool: out[index].tool, arguments: .object(object))
         return out
     }
 
@@ -520,7 +556,34 @@ extension AskMotion {
     /// as its stroke, segment by segment, so an open outline (a can's U)
     /// is its walls and not the space they hold. Where it rests; still parts only.
     static func lines(of name: String, in lap: Lap) -> [[CGPoint]] {
-        lap.art.parts.filter { Lap.holds($0, name) }.flatMap { part -> [[CGPoint]] in
+        lap.art.parts.filter { Lap.holds($0, name) }.flatMap(lines(of:))
+    }
+
+    /// The lines of the still parts `names` that something moving can run
+    /// into, stroke by stroke (`lines`), leaving out a part drawn wholly
+    /// inside another one's outline: a rib on a can's front, a stripe on a
+    /// box. That is detail on a face, which a part going in passes in front
+    /// of or behind; counted as a wall, nothing could ever fall into the
+    /// can (2026-11-12). Points only, any subject.
+    static func walls(of names: [String], in lap: Lap) -> [[CGPoint]] {
+        let parts = lap.art.parts.filter { part in names.contains { Lap.holds(part, $0) } }
+        func points(_ part: SVGArtwork.Part) -> [CGPoint] {
+            guard case .path(let outline) = part.shape else { return Lap.inkPoints(part) }
+            return outline.rings.flatMap { $0.map(\.point) }
+        }
+        let outlines = parts.indices.map { hull(points(parts[$0])) }
+        return parts.indices.filter { index in
+            let mine = points(parts[index])
+            return !outlines.indices.contains { other in
+                other != index && outlines[other].count >= 3 && !mine.isEmpty
+                    && mine.allSatisfy { inside($0, outlines[other]) }
+            }
+        }.flatMap { lines(of: parts[$0]) }
+    }
+
+    /// Every stroke of `part` on its own, as ink (see `lines(of:in:)`).
+    static func lines(of part: SVGArtwork.Part) -> [[CGPoint]] {
+        [part].flatMap { part -> [[CGPoint]] in
             guard case .path(let outline) = part.shape else { return [hull(Lap.inkPoints(part))] }
             let half = max(part.strokeWidth / 2, 0.01)
             return outline.rings.flatMap { ring -> [[CGPoint]] in
@@ -588,8 +651,7 @@ extension AskMotion {
         // next: the last of that is going in, past the rim, where a part that
         // only just fits brushes the walls whatever the bounce did.
         let wallsUntil = k + 2 < keys.count && !keepingNext ? after + (keys[k + 2].seconds - after) * 0.5 : after
-        let walls = lap.still.filter { plain($0.name) != plain(other) && plain($0.name) != plain(part) }
-            .flatMap { lines(of: $0.name, in: lap) }
+        let walls = walls(of: lap.still.map(\.name).filter { plain($0) != plain(other) && plain($0) != plain(part) }, in: lap)
             .filter { !inkMeets(lap.ink(part, at: seconds), [$0], within: -passesThrough) }
         func through(_ trial: [AskStep], walled: Bool = false) -> Bool {
             guard let lap = Lap(trial) else { return false }
@@ -672,6 +734,12 @@ extension AskMotion {
         let passes: [(walled: Bool, towardsOnly: Bool, turnedOnly: Bool)] =
             [(true, true, true), (true, false, true), (false, true, false), (false, false, false)]
         for (walled, towardsOnly, turnedOnly) in passes {
+            // No turn clear of the walls from where it hit: met further along
+            // the face, where its own mirror turns (`aimedHit`).
+            if walled, !towardsOnly, !clean, let goal,
+               let trial = aimedHit(steps, at: index, key: k, hit: seconds, off: other, face: face, goal: goal,
+                                    least: least, bounceAt: after, keepingNext: keepingNext,
+                                    clear: { !through($0, walled: true) && apart($0) }) { return trial }
             if !towardsOnly, goal == nil, walled { continue }
             // Already clear and apart, only not turning: a turn clear of the
             // walls, or the model's own way off.
@@ -691,6 +759,124 @@ extension AskMotion {
             }
         }
         return steps
+    }
+
+    /// How far along the face it struck a hit may be moved to bounce clear,
+    /// as a share of the drawing.
+    static let aimedReach: CGFloat = 0.25
+
+    /// The most a bounce met where its mirror turns (`aimedHit`) may go
+    /// along its way in, as a cosine: 60 degrees of turn or more. Its own
+    /// mirror, at speed and off a face it leaves, reads as a ricochet; a
+    /// right angle (`bounceTurns`) cannot be had off a lid open 40 degrees
+    /// without running into the can's wall.
+    static let aimedTurn: CGFloat = 0.5
+
+    /// `steps` with the hit at key `key` of step `index` met where it was
+    /// planned or further along the face of `other` it struck, where the way
+    /// in from the key before meets that face steeply enough that its mirror
+    /// off it turns `aimedTurn` or more, goes towards `goal` (where it lands), and passes
+    /// through nothing (`clear`), with the bounce a key of its own at
+    /// `bounceAt`: a ball coming off a wall the way a ball does. The nearest
+    /// such place along the face wins; nil when there is none within
+    /// `aimedReach`, or the way in to it passes through anything.
+    ///
+    /// On 2026-11-12 the user's trash met the underside of a lid open 40
+    /// degrees on a way in nearly along it, about 25 degrees: every bounce
+    /// that turned ran into the can's wall, so it went back the way it came,
+    /// stopped in mid-air over the right wall and dropped across it, and no
+    /// look saw a bounce. Its own mirror off the lid, 66 degrees, drops it
+    /// straight into the can's mouth. Ink, keys and time only, any subject.
+    static func aimedHit(_ steps: [AskStep], at index: Int, key k: Int, hit seconds: Double, off other: String,
+                         face planned: CGVector, goal: CGPoint, least: CGFloat, bounceAt: Double, keepingNext: Bool,
+                         clear: ([AskStep]) -> Bool) -> [AskStep]? {
+        guard k > 0, let part = (steps[index].arguments["layer"]?.stringValue).flatMap(partReference)?.part,
+              var object = steps[index].arguments.objectValue, let list = object["keys"]?.arrayValue,
+              let lap = Lap(steps) else { return nil }
+        func point(_ value: AgentJSON?) -> CGPoint? {
+            guard let x = value?["x"]?.doubleValue, let y = value?["y"]?.doubleValue else { return nil }
+            return CGPoint(x: x, y: y)
+        }
+        let keys = AskMotionCheck.timed(steps[index])
+        guard k + 1 < keys.count, let from = point(keys[k - 1].value), let hitAt = point(keys[k].value),
+              let hitSlot = list.firstIndex(where: { abs(($0["seconds"]?.doubleValue ?? -1) - seconds) <= 0.0005 }),
+              let nextSlot = list.firstIndex(where: { abs(($0["seconds"]?.doubleValue ?? -1) - keys[k + 1].seconds) <= 0.0005 }),
+              var hitKey = list[hitSlot].objectValue else { return nil }
+        let setOff = keys[k - 1].seconds
+        let side = lap.art.viewBox?.width ?? 24
+        func unit(_ v: CGVector) -> CGVector? {
+            let length = hypot(v.dx, v.dy)
+            return length > 1e-6 ? CGVector(dx: v.dx / length, dy: v.dy / length) : nil
+        }
+        func value(_ at: CGPoint) -> AgentJSON { ["x": .number(Double(rounded(at.x))), "y": .number(Double(rounded(at.y)))] }
+        func with(hit at: CGPoint, bounce: CGPoint? = nil) -> [AskStep] {
+            var changed = list
+            hitKey["value"] = value(at)
+            changed[hitSlot] = .object(hitKey)
+            if let bounce {
+                if keepingNext {
+                    changed.insert(.object(["seconds": .number(bounceAt), "value": value(bounce)]), at: nextSlot)
+                } else if var next = list[nextSlot].objectValue {
+                    next["value"] = value(bounce)
+                    changed[nextSlot] = .object(next)
+                }
+            }
+            var trial = steps
+            var arguments = object
+            arguments["keys"] = .array(changed)
+            trial[index] = AskStep(tool: steps[index].tool, arguments: .object(arguments))
+            return trial
+        }
+        // Just touching what it hits, moved along `planned` (out of it) or
+        // straight to it.
+        func touching(_ at: CGPoint) -> CGPoint? {
+            var at = at
+            for _ in 0..<24 {
+                guard let lap = Lap(with(hit: at)), inkMeets(lap.ink(part, at: seconds), lap.ink(other, at: seconds), within: 0) else { break }
+                at = CGPoint(x: at.x + planned.dx * 0.25, y: at.y + planned.dy * 0.25)
+            }
+            guard let lap = Lap(with(hit: at)) else { return nil }
+            if let move = meeting(part, other, at: seconds, in: lap) { at = CGPoint(x: at.x + move.dx, y: at.y + move.dy) }
+            return inkMeets(lap.ink(part, at: seconds), lap.ink(other, at: seconds)) || meeting(part, other, at: seconds, in: lap) != nil ? at : nil
+        }
+        // What stays still, stroke by stroke, that it does not already meet as it sets off.
+        let walls = walls(of: lap.still.map(\.name).filter { plain($0) != plain(other) && plain($0) != plain(part) }, in: lap)
+            .filter { !inkMeets(lap.ink(part, at: setOff), [$0], within: -passesThrough) }
+        let tangent = CGVector(dx: -planned.dy, dy: planned.dx)
+        let offsets: [CGFloat] = [0] + stride(from: CGFloat(0.5), through: aimedReach * side, by: 0.5).flatMap { [$0, -$0] }
+        for offset in offsets {
+            guard let at = touching(CGPoint(x: hitAt.x + tangent.dx * offset, y: hitAt.y + tangent.dy * offset)),
+                  let met = Lap(with(hit: at)) else { continue }
+            // The face where it meets it now, and the way it comes in.
+            let mine = met.ink(part, at: seconds).flatMap { $0 }, theirs = met.ink(other, at: seconds)
+            guard !mine.isEmpty else { continue }
+            let centre = CGPoint(x: mine.map(\.x).reduce(0, +) / CGFloat(mine.count), y: mine.map(\.y).reduce(0, +) / CGFloat(mine.count))
+            guard let struck = theirs.map({ nearest(to: centre, on: $0) })
+                    .min(by: { hypot($0.x - centre.x, $0.y - centre.y) < hypot($1.x - centre.x, $1.y - centre.y) }),
+                  let face = unit(CGVector(dx: centre.x - struck.x, dy: centre.y - struck.y)) else { continue }
+            let way = CGVector(dx: at.x - from.x, dy: at.y - from.y)
+            let dot = way.dx * face.dx + way.dy * face.dy
+            guard dot < 0, let mirror = unit(CGVector(dx: way.dx - 2 * dot * face.dx, dy: way.dy - 2 * dot * face.dy)),
+                  mirror.dx * way.dx + mirror.dy * way.dy <= aimedTurn * hypot(way.dx, way.dy) else { continue }
+            // The way in passes through nothing seen.
+            var moment = setOff + 0.02, blocked = false
+            while moment < seconds - 0.01, !blocked {
+                if met.placed(part, at: moment)?.seen ?? true {
+                    let ink = met.ink(part, at: moment)
+                    blocked = inkMeets(ink, walls, within: -passesThrough)
+                        || inkMeets(ink, met.ink(other, at: moment), within: -passesThrough)
+                }
+                moment += 0.02
+            }
+            guard !blocked else { continue }
+            for share: CGFloat in [1, 1.5, 2, 2.5, 3] {
+                let bounce = CGPoint(x: at.x + mirror.dx * least * share, y: at.y + mirror.dy * least * share)
+                guard hypot(bounce.x - goal.x, bounce.y - goal.y) <= hypot(at.x - goal.x, at.y - goal.y) + 0.0005 else { continue }
+                let trial = with(hit: at, bounce: bounce)
+                if clear(trial) { return trial }
+            }
+        }
+        return nil
     }
 
     /// How far `part` moves at `seconds` to just meet `other`, or nil when
