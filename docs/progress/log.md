@@ -22964,3 +22964,9 @@ units.
 - Measured the question the task asked: at Next defaults (browser mixing) a 30 percent square, a shape drawn in Photonz at 30 percent, and the real files named (VS Code letterpress, a record button's halo, the ONNX logo) all sit within 1 level of 255 of macOS's drawing. The 218 against 178 in the note was the light mix Current uses.
 - Widened to any see-through shape and found three that differed, all in reading the file (`SVGArtwork`, tests first): a line's own `stroke-opacity` beside a fill was ignored, `rgba()` lost its see-through part, and a faded `<g>` of overlapping shapes was faded shape by shape. Each now matches; File > Open keeps a faded group of two or more shapes as a group at that opacity (`fadingGroups`, opening only, so Ask is unchanged).
 - New `SeeThroughSVGRenderTests` (eight files plus a drawn box, each against macOS's drawing) and walk `see-through-svg-walk`. Audit `queue/audits/2026-11-12-see-through-svg.json` with before and after pictures. Renderer untouched; speed suites pass.
+
+## 2026-11-12: Animated story icon, pass fourteen (bar still not met)
+
+- `fe236ffc8`, tests first: a part turning about its own middle gets room for what its lines really sweep (the heart's halves were cut off); `AskMotion.carried` makes a small still part a swing turns about take the same turn (the bell's top bar); `AskMotionCheck.marksOver` sends back a mark drawn over a moving part while it shows.
+- Story run `20261112-082819-ask`: total 52.4 (last pass 61.2), 1 of 6 read as asked at 7. The rocket and envelope fell on different plans, not on this change. Walk `ask-animates-a-story-walk` ok at Next defaults.
+- Next: the trash's bounce and its route into the can past the wall, a solid trash in a line icon, a bell's marks once per ring, and a margin for a tipping part that does not shrink the trash. A wider margin for everything that moves was tried and reverted (trash to 83 percent).
