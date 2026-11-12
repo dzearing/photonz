@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T10:46:11.903Z",
-  "updated": "2026-11-11T16:14:29.001Z",
+  "updated": "2026-11-12T21:42:51.259Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen, not explained. Scripts/ask-eval.sh time 20261108-075845-ask-held-out 20261107-130822-ask-held-out:\n  8 Nov (41f4aabbe, 53 cases): total 56.9; drawing 63.1 (1 of 36 ran out of time, 4 stopped part way, 181s median), layout 68.1, redline 31.2, video 48.7, animated 37.3 (8 new cases).\n  7 Nov (45 cases): total 66.4; drawing 70.8 (0 out of time, 2 stopped part way, 148s median), layout 44.6, redline 33.9, video 67.\nLike for like on the 45 shared cases about 60.4 vs 66.4. Commit 41f4aabbe only changes the moving-icon route (AskMotion, MotionSVG folds, set_keys pivot for rotationX/Y), which drawing and video cases never take. Landed between the two runs: c41e1fcd3 (New window makes an animated icon), bf3e65120 (a round thing bursting opens), b491f6529 (torn icon teeth), the still icon route's breaks. Video is 3 cases, so one case moves the group ~18 points. Never read held-out cases one by one: rerun the whole set and compare totals and groups only.",
@@ -38,6 +38,32 @@
     {
       "t": "2026-11-11T16:14:29.000Z",
       "note": "seq 90 -> 100"
+    },
+    {
+      "t": "2026-11-12T19:38:18.100Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T19:59:12.033Z",
+      "note": "Rescored copies of both runs on the steady judge (9 looks, mean; rubric 4a03a8fc; originals and their history lines left alone, copies are <run>-steady). Like for like on the 45 shared cases: 7 Nov 66.4 -> 62.7 (drawing 70.8 -> 67.6, video 67 -> 59.2); 8 Nov 60.3 -> 60.6 (drawing 63.1 -> 63.1, video 48.7 -> 48.4). Gap 6.1 -> 2.1 total, drawing 7.7 -> 4.5, video 18.3 -> 10.8. The 7 Nov run was the lucky side of the old median judge. Fresh run on current code 20261112-193948-ask-held-out started (5d233f4f3)."
+    },
+    {
+      "t": "2026-11-12T21:42:51.021Z",
+      "note": "Fresh held-out run on current code (5d233f4f3, steady judge): 20261112-193948-ask-held-out, total 58.5 over 53 (drawing 65.1, video 58.9, layout 63, redline 29.2, animated 37.7); like for like on the 45 shared cases 62.2. Drawing 1 of 36 ran out of time, 3 stopped part way, 128s median."
+    },
+    {
+      "t": "2026-11-12T21:42:51.094Z",
+      "note": "Noise band: rescored copies of every held-out run from 4 to 7 Nov on the steady judge too (<run>-steady under .ask-eval/held-out-runs, recorded:false so the history is untouched). Drawing group across ten runs 4-12 Nov on the steady judge: 63.1, 65.2, 69.4, 62.3, 59.0, 67.6, 63.1 (8 Nov), 61.6, 60.2, 65.1 (now): mean 63.6, sd 3.2. Video: 59.2, 60.7, 58.9, 59.6, 60.1, 59.2, 48.4 (8 Nov), 59.0, 59.6, 58.9."
+    },
+    {
+      "t": "2026-11-12T21:42:51.168Z",
+      "note": "Cause: noise, no commit. (1) About 4 of the 6 points were the old median-of-three judge: the 7 Nov run drew the lucky side of the 6/7 cliff (66.4 -> 62.7 rescored, 8 Nov 60.3 -> 60.6 like for like). (2) The drawing gap left (67.6 vs 63.1) is inside the run-to-run band: the 7 Nov 01:33 run twelve hours before read 59.0, and 8 Nov's 63.1 is the ten-run mean. (3) Video at 48.4 was one of three cases scoring lower on that one run (none ran out of time); every run since, with 41f4aabbe still in, reads 59 to 60. Nothing to win back, so no follow-up filed. Worth knowing for anyone reading one held-out run: on drawings a single run swings about plus or minus 5 with no code change."
+    },
+    {
+      "t": "2026-11-12T21:42:51.257Z",
+      "note": "Measured: steady-judge rescores of the 7 and 8 Nov runs plus a fresh held-out run on current code (20261112-193948, total 58.5, drawing 65.1, video 58.9). Cause named in the log with numbers: noise. The old median judge made the 7 Nov run read high (gap 6.1 -> 2.1 like for like), drawings swing 59-69 run to run with no code change (ten runs, sd 3.2), and video's 48.4 was one case on one run, back to 59 in every run since with the same code. No commit to blame, so no win-back task."
     }
-  ]
+  ],
+  "started": "2026-11-12T19:38:18.099Z",
+  "completed": "2026-11-12T21:42:51.258Z"
 }
