@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T20:37:25.808Z",
-  "updated": "2026-11-11T16:14:29.088Z",
+  "updated": "2026-11-12T22:55:44.192Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-20 while building asking-always-shows-the-agent-area-even-from-a-c. Repro: open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png at 1280x560, R and drag a box (88,330)->(400,410), ask once (the Agent group scrolls into view, Appearance goes off the top), Stop, then scrollPanel row Blending by 900 then by -900. Picture: the Appearance header is drawn, then an empty band where Opacity and Blending should be, then Masked by. The same blank band shows when the second move is an ask scrolling the Agent group back (queue/audits/2026-10-20-ask-reveal-6-scrolled-back.png), so it is not the ask reveal. The harness says the wheel did nothing (probe in the background) so it scrolled the clip view directly: that may be the whole cause. Not reproduced by a real wheel or trackpad, hence p2.",
@@ -49,7 +49,32 @@
     {
       "t": "2026-11-11T16:14:29.087Z",
       "note": "seq 100 -> 110"
+    },
+    {
+      "t": "2026-11-12T21:53:42.467Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T22:39:54.776Z",
+      "note": "walks none -> panel-rows-drawn-after-scrolling-back-walk"
+    },
+    {
+      "t": "2026-11-12T22:46:57.557Z",
+      "note": "walks panel-rows-drawn-after-scrolling-back-walk -> panel-rows-drawn-after-scrolling-back-walk, panel-rows-drawn-after-wheeling-back-walk"
+    },
+    {
+      "t": "2026-11-12T22:55:44.105Z",
+      "note": "Reproduced on 5911db63f with the task's steps (scrollPanel Blending by 900 then back): the Appearance header over an empty band. Cause: the Appearance rows sit in their own scroller; when the made-up wheel is ignored (probe in the background) the harness moved the clip view directly with NSClipView.scroll(to:), which takes any origin, so +900 from the top left the rows 900pt below the clip. Clamped with constrainBoundsRect (reveal already did): the same turn now reports IT DID NOT MOVE and the rows stay drawn. A real wheel (wheel step, continuous events, probe in front, nobody at the Mac) scrolled the rows down and back, and 400pt past the top: every row drawn, Opacity and Blending in view. Not the lazy-stack cousin from 07df11ac4: the Appearance rows are not lazy, and in-range offsets always draw. Side fix: scrollPanel rounds now keep the first scroller (a lazy list dropped the start row on round 2, layers-lazy-rows-walk). Ran all 30 scrollPanel walks: 25 ok; ask-shows-the-agent-group, tool-and-library-dropdowns and title-presets-library-shelf fail at non-scroll steps and are owned by open tasks; library-last-tile-reachable-walk fails identically on the unchanged harness (step 31, Library header out of view) and was folded into walks-that-fail-in-the-full-sweep-27. Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-12T22:55:44.190Z",
+      "note": "No person sees it: the blank band was the walk harness scrolling a section's own scroller past its top, which no wheel can do. Real wheel events (probe in front) scroll the Appearance rows down, back and past the top with every row drawn. Harness now holds direct scrolls inside the ends (9842f94ad); panel-rows-drawn-after-scrolling-back-walk and panel-rows-drawn-after-wheeling-back-walk check Opacity and Blending are drawn after scrolling back. 25 of 30 scrollPanel walks pass; the 4 others fail at steps unrelated to scrolling and are on open tasks. Scripts/test.sh green."
     }
   ],
-  "walks": []
+  "walks": [
+    "panel-rows-drawn-after-scrolling-back-walk",
+    "panel-rows-drawn-after-wheeling-back-walk"
+  ],
+  "started": "2026-11-12T21:53:42.466Z",
+  "completed": "2026-11-12T22:55:44.191Z"
 }
