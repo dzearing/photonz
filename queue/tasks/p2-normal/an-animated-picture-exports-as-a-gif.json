@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T01:56:23.505Z",
-  "updated": "2026-11-08T17:12:58.625Z",
+  "updated": "2026-11-12T15:48:33.467Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by asking-the-new-window-for-an-animated-icon-makes (2026-11-07): 'a gif' now routes to Ask's moving icon (AskMotion.gifWords). ExportDialog.swift ExportChoice is picture(ImageCodec.Format) or svg; the moving route is animatedSVG only. Recordings already write GIF (Recording.swift case gif, RecordingExport.swift), which may help render a timed picture's frames.",
@@ -26,6 +26,43 @@
     {
       "t": "2026-11-08T17:12:58.624Z",
       "note": "seq 49.375 -> 80"
+    },
+    {
+      "t": "2026-11-12T14:35:23.905Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T15:10:00.000Z",
+      "note": "Adversarial pass before building: a person who asked for 'a gif' expects the file named .gif from Export, the way Photoshop's Export As / Save for Web offers GIF for a timeline. Mock icon-export-anim-wt.html has no GIF button (it shows GIF only as the bigger alternative to the animated SVG) and tells a README to use a video. Nothing the app lacks: frames come from PhotonzDocument.moved(toMotionTimeMS:), the same reading the canvas plays."
+    },
+    {
+      "t": "2026-11-12T15:40:00.000Z",
+      "note": "Built: PictureGIF plan (PhotonzCore, tests PictureGIFTests), PictureGIFEncoder + ExportSizer.gifData (PhotonzRender, tests PictureGIFEncoderTests), GIF segment on the Export sheet behind next-export-gif (on in Next), EditorState.exportGIF, walk action exportDialogAsGIF, writePicture format gif. Chose 25 fps over 50 because a 512 icon at 50 doubles the file for no visible gain. Chose GIF at the END of the format row (after SVG) so the still formats keep their places. Chose the list of what survives to describe the picked format (SVGHandoff.lines chosen:) because with GIF picked it otherwise ticked Sharp at every size."
+    },
+    {
+      "t": "2026-11-12T15:45:00.000Z",
+      "note": "Tried and reverted: README destination auto-picking GIF. The mock sends a README a video, so that would be an unsettled mock departure; left as drawn and noted in the audit's rough list."
+    },
+    {
+      "t": "2026-11-12T15:50:00.000Z",
+      "note": "Measured (walk log): 512x512 ball, 1 s lap: 33,408 bytes with canvas, 14,433 without, 71,104 at 2x (1024), 25 frames, made in about 50 ms; Repeat off: 26 frames, no NETSCAPE loop block, plays once. Browsers: sampled the ball's top every ~60 ms for 3 s in Playwright WebKit and Chromium; looping file bottoms out at ~500/1500/2500 ms (the 1 s lap), play-once file bounces once and holds at y=40. Preview reads it through ImageIO, which the render tests check (frame count, per-frame delays summing to the lap, loop count 0). Pictures looked at: 1-a-still-has-no-gif-sc (no GIF in row), 3-gif-beside-svg-sc (GIF picked, motion ticked, Sharp crossed out, 14 KB), see-through frame on dark and enlarged edge on white (stepped edge, no halo)."
+    },
+    {
+      "t": "2026-11-12T15:52:00.000Z",
+      "note": "left rough: GIF's 1-bit transparency gives stepped edges with the background left out; a format limit, in the audit's rough list, not filed."
+    },
+    {
+      "t": "2026-11-12T15:43:13.487Z",
+      "note": "owns these walks: a-moving-picture-exports-as-a-gif-walk"
+    },
+    {
+      "t": "2026-11-12T15:48:33.465Z",
+      "note": "Export on a picture that moves offers GIF at the end of the format row (next-export-gif, on in Next); a still picture does not. The GIF plays the timeline's loop: round for ever, or once and holding where it landed when Repeat is off. Checked by sampling it playing in WebKit and Chromium and by reading it back through ImageIO (frames, delays, loop count). A 512 ball with a 1 s lap is 33 KB with its canvas, 14 KB without and 69 KB at 2x. Commit 2d97652a8. Unit tests PictureGIFTests and PictureGIFEncoderTests; walk a-moving-picture-exports-as-a-gif-walk passes at Next defaults; full Scripts/test.sh green. Audit queue/audits/2026-11-12-an-animated-picture-exports-as-a-gif.json."
     }
-  ]
+  ],
+  "started": "2026-11-12T14:35:23.904Z",
+  "walks": [
+    "a-moving-picture-exports-as-a-gif-walk"
+  ],
+  "completed": "2026-11-12T15:48:33.466Z"
 }
