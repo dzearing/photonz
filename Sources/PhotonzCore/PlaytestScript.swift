@@ -814,6 +814,11 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// ones under it (`PanelOpenRoom`), and which are folded is the claim.
     case sectionFolded(String)
     case sectionOpen(String)
+    /// The Library's own pane at the foot of the panel is drawn this many
+    /// points tall or less, and is drawn at all. A video's Library opened by
+    /// hand is the mock's short shelf (`PanelShelfPane.startCap`), and a
+    /// shelf that grows back over the clip's sections fails the walk.
+    case libraryPaneAtMost(Int)
     /// One section is the NEXT one down from another, by their header text.
     /// Where a section sits is the whole of what the panel order does, and it
     /// is the one thing a snapshot argues about badly: a walk could report the
@@ -5332,6 +5337,7 @@ public enum PlaytestStep: Sendable, Equatable {
             case "sectionHeaderInView": .sectionHeaderInView(try f.string("value"))
             case "sectionFolded": .sectionFolded(try f.string("value"))
             case "sectionOpen": .sectionOpen(try f.string("value"))
+            case "libraryPaneAtMost": .libraryPaneAtMost(Int(try f.number("value")))
             case "sectionDirectlyUnder": .sectionDirectlyUnder(try f.string("value"),
                                                                under: try f.string("under"))
             case "layerRowInView": .layerRowInView(try f.string("value"))
@@ -5356,7 +5362,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 }
             case "displayZoom": .displayZoom(Int(try f.number("value")))
             case "cropBox": .cropBox(try f.string("value"))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionFolded, sectionOpen, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, clipRippleLook, askPhase, askSettled, askPicturesSetUp, dialogUp, dialogGone, panelMenuOpen, zoomControl, displayZoom or cropBox")
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionFolded, sectionOpen, libraryPaneAtMost, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, clipRippleLook, askPhase, askSettled, askPicturesSetUp, dialogUp, dialogGone, panelMenuOpen, zoomControl, displayZoom or cropBox")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

@@ -42,6 +42,21 @@ public enum PanelShelfPane {
     /// divider was pulled: a header and a few rows.
     public static let aboveFloor: CGFloat = 160
 
+    /// How tall the body of a video's opened Library is drawn before the
+    /// divider is moved: the video mock's shelf (video.html, `#gLibrary`,
+    /// body capped at 118px), whose scope switch, search and tiles scroll
+    /// inside it. A video's panel is the clip's Properties and Time; a
+    /// Library opened by hand there took 225 of a 410pt column on the
+    /// laptop window and pushed Time off the panel (2026-11-11).
+    public static let videoShelfBody: CGFloat = 118
+
+    /// The tallest the pane starts on a kind of document before the divider
+    /// is moved, nil where it has no cap: on a video, its header (`floor`)
+    /// and the mock's short shelf.
+    public static func startCap(forKind kind: String, floor: CGFloat) -> CGFloat? {
+        kind == WindowModes.videoID ? floor + videoShelfBody : nil
+    }
+
     /// The settings key the divider's height is kept under for one kind of
     /// document (a window mode's id: image, icon, design, video).
     public static func heightKey(forKind kind: String) -> String {
@@ -66,24 +81,27 @@ public enum PanelShelfPane {
 
     /// How tall the pane starts before the divider is moved: its share of
     /// the column, or what the shelf needs at its least up to half of it.
-    public static func startingHeight(column: CGFloat?, fit: CGFloat?) -> CGFloat {
-        guard let column else { return defaultHeight }
-        return max(column * defaultShare, min(fit ?? 0, column * mostDefaultShare))
+    /// Never past `cap` (`startCap(forKind:floor:)`).
+    public static func startingHeight(column: CGFloat?, fit: CGFloat?, cap: CGFloat? = nil) -> CGFloat {
+        guard let column else { return min(defaultHeight, cap ?? defaultHeight) }
+        let start = max(column * defaultShare, min(fit ?? 0, column * mostDefaultShare))
+        return min(start, cap ?? start)
     }
 
     /// The hold to keep: `current` while it was worked out for this column,
     /// else a new one once the column and the shelf's least height have both
     /// been measured, else none. A hold only ever GROWS, and only when the
     /// shelf needs more room at its least than it has.
-    public static func hold(_ current: Hold?, column: CGFloat?, fit: CGFloat?) -> Hold? {
+    public static func hold(_ current: Hold?, column: CGFloat?, fit: CGFloat?,
+                            cap: CGFloat? = nil) -> Hold? {
         if let current, current.holds(column: column) {
             guard let column, let fit else { return current }
-            let wanted = startingHeight(column: column, fit: fit)
+            let wanted = startingHeight(column: column, fit: fit, cap: cap)
             guard wanted > current.height else { return current }
             return Hold(column: column, height: wanted)
         }
         guard let column, let fit else { return nil }
-        return Hold(column: column, height: startingHeight(column: column, fit: fit))
+        return Hold(column: column, height: startingHeight(column: column, fit: fit, cap: cap))
     }
 
     /// The highest the divider may set the pane in a column this tall: all of
@@ -103,11 +121,12 @@ public enum PanelShelfPane {
     ///   - column: the height the pick and the pane share, nil until laid out.
     ///   - floor: the pane's least height, the shelf's header.
     ///   - fit: what the shelf needs drawn at its least, nil when unknown.
+    ///   - cap: the tallest it starts on this kind of document, nil for none.
     public static func height(stored: CGFloat?, held: Hold?, column: CGFloat?,
-                              floor: CGFloat, fit: CGFloat? = nil) -> CGFloat {
+                              floor: CGFloat, fit: CGFloat? = nil, cap: CGFloat? = nil) -> CGFloat {
         let start = stored
             ?? held.flatMap { $0.holds(column: column) ? $0.height : nil }
-            ?? startingHeight(column: column, fit: fit)
+            ?? startingHeight(column: column, fit: fit, cap: cap)
         return min(max(start, floor), maxAllowedHeight(column: column, floor: floor))
     }
 
@@ -139,9 +158,14 @@ public enum PanelShelfPane {
     /// its first row is a row of pictures with no names, and the name is what
     /// a tile says; the sections above scroll in what is left. Only until the
     /// divider is moved: a height the person set is theirs.
-    public static func atLeastTheShelf(_ height: CGFloat, least: CGFloat?, column: CGFloat?) -> CGFloat {
+    ///
+    /// A capped shelf (a video's, `startCap`) is raised no further than its
+    /// cap: its first row scrolls inside it, as the mock's does.
+    public static func atLeastTheShelf(_ height: CGFloat, least: CGFloat?, column: CGFloat?,
+                                       cap: CGFloat? = nil) -> CGFloat {
         guard let least, let column else { return height }
-        return max(height, min(least, column - aboveLeast))
+        let wanted = min(least, cap ?? least)
+        return max(height, min(wanted, column - aboveLeast))
     }
 
     /// What the divider writes down as the chosen height when it is let go

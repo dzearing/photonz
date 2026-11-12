@@ -22952,3 +22952,9 @@ units.
 - Fixed a right click on a linear fade's volume line in the tall lane doing nothing: the press is read at the drawn line's height (`AnimatedLine.drawnY`).
 - Ten walks re-aimed for the taller dock; new `a-sound-lane-is-as-tall-as-the-mock-walk`.
 - Next: `a-sound-at-its-recorded-level-draws-its-volume-l` (the line sits a third down where the mock draws it near the top). Open question: the laptop-size panel loses its Fades row below the fold while music is picked.
+
+## 2026-11-11: A video's Library opened by hand is the mock's short shelf
+
+- `PanelShelfPane.startCap` (PhotonzCore, tests first): on a video the Library's pane starts no taller than its header and the mock's 118pt body (video.html, `#gLibrary`), and is not raised past that to show a tile row whole; its tiles scroll inside it. The divider still sets any height, and the pane still grows into room the pick leaves empty. Wired through `InspectorPanel` (`shelfCap`) everywhere the starting height, the hold and `atLeastTheShelf` are read.
+- On the 1200x720 window with a clip picked it was 224pt of a 405pt column and Time went off the panel; it is now 163pt (mock: 162). Opening it still folds Time to its header by the 2026-10-24 open-room rule: Properties (176) + Time (168) + the Library's folded header (45) already fill that column.
+- New walk check `waitFor libraryPaneAtMost`, new walk `video-library-short-shelf-walk` (real click on the header, Next defaults); it fails with the cap off. Audit `queue/audits/2026-11-11-video-library-short-shelf.json`.

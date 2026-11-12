@@ -5097,6 +5097,20 @@ struct PlaytestScriptTests {
         #expect(open == .sectionOpen("Appearance"))
     }
 
+    @Test func waitForReadsHowTallTheLibrarysPaneIs() {
+        // A video's Library opened by hand is the mock's short shelf
+        // (`PanelShelfPane.startCap`): how tall its pane is drawn is the
+        // claim, so a shelf that grows back fails the walk.
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "libraryPaneAtMost", "value": 164, "timeout": 2 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, let timeout) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .libraryPaneAtMost(164) && timeout == 2)
+    }
+
     @Test func waitForRejectsASectionWithNothingToSitUnder() {
         let json = """
         { "out": "/tmp/x", "steps": [

@@ -1,0 +1,26 @@
+{
+  "feature": "A video's Library opens as a short shelf",
+  "epic": "video-editing",
+  "summary": "On a video, opening the Library by its header now gives it the mock's short shelf (its header and 118pt of scope switch, search and tiles that scroll inside it) instead of nearly half the panel, so the picked clip keeps its Properties whole.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, make the window about 1200 by 720 (a laptop window), pick the clip. Walk: Scripts/playtest/video-library-short-shelf-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Before this change: the Library opened by hand took 224 of the panel's 405 points and Time went off the panel.", "shot": "2026-11-11-video-library-short-shelf-1-before-sc.png" },
+    { "do": "Open a recording on a laptop-sized window and click the clip: Properties and Time are whole, the Library is folded at the foot.", "shot": "2026-11-11-video-library-short-shelf-2-folded-sc.png" },
+    { "do": "Click the LIBRARY header: it opens to a short shelf, 163pt, and its tile scrolls inside it.", "shot": "2026-11-11-video-library-short-shelf-3-opened-sc.png" },
+    { "do": "Compare with the video mock's opened Library (video.html, Library group): header, scope switch, search, the top of a tile row.", "shot": "2026-11-11-video-library-short-shelf-mock.png" },
+    { "do": "Scroll inside the shelf to see the whole tile." },
+    { "do": "Drag the divider over the Library up: it takes the height you give it and keeps it for videos." }
+  ],
+  "evaluate": [
+    "Is a 163pt shelf enough Library to work from while a clip is picked, or would you rather drag it taller each time?",
+    "On the laptop window, opening the Library folds Time to its header (your 2026-10-24 rule: opening a section folds the near side). Is that the right trade, or should Time stay open and the panel scroll?",
+    "With a tile cut across by the shelf's foot, is it clear the shelf scrolls?"
+  ],
+  "rough": [
+    "On the 1200 by 720 window Time does not stay open when the Library opens: Properties (176pt), Time (168pt) and the Library's folded header (45pt) already fill the 405pt column, so the open-room rule folds Time to its header (your call on 2026-10-24: opening a pane may collapse panes on the other side). The task asked for Time whole; that cannot hold with any Library body at that size.",
+    "The shelf's tile is cut across its name at the 118pt cap, as the mock's is; the earlier rule that a shelf always shows its first row of tiles whole no longer holds on a video until the divider is moved.",
+    "The shelf still grows into room the clip's sections leave empty (a short pick), so it is only capped where it would take room from the pick; the mock has empty dock under its Library instead, and the app has no gap above its Library by your 2026-10-18 rule.",
+    "Pictures were taken with the probe in front, a real click on the Library header."
+  ]
+}

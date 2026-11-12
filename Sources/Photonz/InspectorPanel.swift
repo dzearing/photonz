@@ -649,7 +649,8 @@ struct InspectorPanel: View {
                                                                 paneHeight: paneHeight,
                                                                 showsListsGrip: showsListsGrip),
                                             fit: split.shelf.isEmpty ? nil
-                                                : layout.leastHeight(of: split.shelf, asIfFull: true)),
+                                                : layout.leastHeight(of: split.shelf, asIfFull: true),
+                                            cap: shelfCap(split.shelf)),
                     initial: true) { _, hold in
               if hold != shelfHold { shelfHold = hold }
           }
@@ -919,7 +920,15 @@ struct InspectorPanel: View {
         return PanelShelfPane.height(stored: stored > 0 ? CGFloat(stored) : nil,
                                      held: shelfHold, column: column,
                                      floor: listsPaneFloor(split.shelf),
-                                     fit: layout.leastHeight(of: split.shelf, asIfFull: true))
+                                     fit: layout.leastHeight(of: split.shelf, asIfFull: true),
+                                     cap: shelfCap(split.shelf))
+    }
+
+    /// The tallest the Library's pane starts on this kind of document until
+    /// the divider is moved: on a video, the mock's short shelf
+    /// (`PanelShelfPane.startCap`).
+    private func shelfCap(_ shelf: [InspectorSectionID]) -> CGFloat? {
+        PanelShelfPane.startCap(forKind: editorState.windowMode.id, floor: listsPaneFloor(shelf))
     }
 
     /// How tall the Library's pane is drawn: the height chosen, grown into
@@ -944,13 +953,14 @@ struct InspectorPanel: View {
         // first row of tiles whole, until the divider is moved: a colour saved
         // onto an empty Styles shelf gets its whole tile, name and all.
         let least = shelfStored.wrappedValue > 0 ? nil : layout.leastHeight(of: split.shelf)
-        let unheld = PanelShelfPane.atLeastTheShelf(drawn, least: least, column: column)
+        let cap = shelfCap(split.shelf)
+        let unheld = PanelShelfPane.atLeastTheShelf(drawn, least: least, column: column, cap: cap)
         shelfReveal.unheldPaneHeight = unheld
         let held = shelfReveal.heldWhilePointerInside
             ?? (editorState.shelfHoldsStill ? shelfReveal.drawnPaneHeight : nil)
         guard let held else { return unheld }
         return PanelShelfPane.atLeastTheShelf(min(max(held, floor), column ?? held),
-                                              least: least, column: column)
+                                              least: least, column: column, cap: cap)
     }
 
     /// The pointer came into the Library's pane or left it. Coming in holds
@@ -2525,7 +2535,8 @@ struct InspectorPanel: View {
                 // grows into when the pick leaves some.
                 let least = shelfStored.wrappedValue > 0 ? nil : full.leastHeight(of: shelf)
                 let height = PanelShelfPane.atLeastTheShelf(shelfChosen(split, column: shelfAt),
-                                                            least: least, column: shelfAt)
+                                                            least: least, column: shelfAt,
+                                                            cap: shelfCap(shelf))
                 guard let header = budget.headers[section] else { return nil }
                 all.append(PanelOpenRoom.Entry(key: section.rawValue, folded: header + divider,
                                                open: max(height - padding, header + divider),

@@ -19898,6 +19898,11 @@ private final class Run {
                 if case .sectionFolded = condition { return isFolded }
                 return !isFolded
             } ?? false
+        // Read off the Library pane's own live band in the panel.
+        case .libraryPaneAtMost(let most):
+            InspectorLayoutProbe.shared.shelfBand.map {
+                $0.upperBound - $0.lowerBound <= CGFloat(most) + 0.5
+            } ?? false
         // Read off the sections the dock is actually DRAWING, in draw order, so
         // this is the claim a person could check with their eyes: the next
         // header down from Effects says Motion. A section the selection does

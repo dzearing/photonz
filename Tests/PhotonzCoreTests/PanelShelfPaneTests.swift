@@ -113,6 +113,51 @@ struct PanelShelfPaneTests {
         #expect(PanelShelfPane.atLeastTheShelf(179, least: 207, column: nil) == 179)
     }
 
+    // MARK: A video's shelf is a short shelf
+
+    /// video.html, #gLibrary: the opened Library's body is capped at 118px
+    /// and scrolls inside it, so it never splits the column. Opened by hand
+    /// with a clip picked on the 1200 by 720 window, it took 225 of a 410pt
+    /// column and pushed Time off the panel (2026-11-11).
+    @Test("On a video the shelf is capped at its header and the mock's 118pt body")
+    func videoCap() {
+        #expect(PanelShelfPane.startCap(forKind: "video", floor: 45) == 45 + PanelShelfPane.videoShelfBody)
+        #expect(PanelShelfPane.videoShelfBody == 118)
+        #expect(PanelShelfPane.startCap(forKind: "image", floor: 45) == nil)
+        #expect(PanelShelfPane.startCap(forKind: "design", floor: 45) == nil)
+    }
+
+    @Test("A capped shelf starts no taller than its cap, whatever its share or its first row asks")
+    func cappedStart() {
+        let cap: CGFloat = 163
+        #expect(PanelShelfPane.startingHeight(column: 410, fit: 225, cap: cap) == cap)
+        #expect(PanelShelfPane.startingHeight(column: 930, fit: 413, cap: cap) == cap)
+        #expect(PanelShelfPane.startingHeight(column: 300, fit: nil, cap: cap) == 120)
+        #expect(PanelShelfPane.startingHeight(column: nil, fit: nil, cap: cap) == cap)
+        #expect(PanelShelfPane.height(stored: nil, held: nil, column: 410, floor: 45, fit: 225, cap: cap) == cap)
+        let held = PanelShelfPane.hold(nil, column: 410, fit: 225, cap: cap)
+        #expect(held == PanelShelfPane.Hold(column: 410, height: cap))
+        #expect(PanelShelfPane.hold(held, column: 410, fit: 300, cap: cap) == held)
+    }
+
+    @Test("A capped shelf is not raised past its cap to show a tile row whole: its tiles scroll")
+    func cappedFirstRow() {
+        #expect(PanelShelfPane.atLeastTheShelf(163, least: 225, column: 410, cap: 163) == 163)
+        #expect(PanelShelfPane.atLeastTheShelf(120, least: 225, column: 410, cap: 163) == 163)
+        #expect(PanelShelfPane.atLeastTheShelf(120, least: 140, column: 410, cap: 163) == 140)
+    }
+
+    @Test("The divider's height is the person's, cap or none")
+    func dividerBeatsTheCap() {
+        #expect(PanelShelfPane.height(stored: 300, held: nil, column: 700, floor: 45, fit: 225, cap: 163) == 300)
+    }
+
+    @Test("A capped shelf still grows into room the pick leaves empty, never into the pick")
+    func cappedGrowsIntoEmptyRoom() {
+        #expect(PanelShelfPane.drawnHeight(chosen: 163, column: 410, aboveNeeds: 500, foldedHeight: nil) == 163)
+        #expect(PanelShelfPane.drawnHeight(chosen: 163, column: 410, aboveNeeds: 150, foldedHeight: nil) == 260)
+    }
+
     // MARK: The divider
 
     @Test("Pulled up past the room the pick leaves: that is the new choice")

@@ -1,0 +1,31 @@
+{
+  "out": "/tmp/photonz-playtest/video-library-short-shelf-walk",
+  "seed": "A recording on the 1200 by 720 laptop window at Next defaults, no flag set, with its clip picked. A real click on the Library header's face opens the shelf, and it opens as the video mock draws it (video.html, #gLibrary, body capped at 118px): a short shelf at the foot, its header and 118pt of scope switch, search and tiles that scroll inside it, so it never splits the column. Before 2026-11-11 it took 225 of the 397pt column and pushed Time off the panel. Opening it takes its room from the near side (PanelOpenRoom, the user 2026-10-24), so Time folds to its header; Properties stays whole and Time's header stays on screen.",
+  "setup": { "front": true, "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "windowLaptop" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "waitFor", "condition": "sectionFolded", "value": "Library", "timeout": 3 },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Properties", "timeout": 3 },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Time", "timeout": 3 },
+    { "do": "describe", "stage": "1-folded", "note": "the clip picked on the laptop window: Properties and Time whole, the Library folded to its header at the foot" },
+    { "do": "snapshot", "name": "1-folded" },
+
+    { "comment": "A real click on the header's face, left of its scope chip and well clear of its plus.", "do": "windowClick", "at": [990, 414] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "waitFor", "condition": "sectionOpen", "value": "Library", "timeout": 3 },
+    { "comment": "Its header (45pt) and the mock's 118pt body, a point either way.", "do": "waitFor", "condition": "libraryPaneAtMost", "value": 164, "timeout": 3 },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Properties", "timeout": 3 },
+    { "do": "waitFor", "condition": "sectionHeaderInView", "value": "Time", "timeout": 3 },
+    { "do": "expect", "control": "Tutorial Sample.mp4", "present": true },
+    { "do": "describe", "stage": "2-opened", "note": "THE TEST: the Library opened by hand is a short shelf, no taller than the mock's, its tile scrolling inside it; Properties is whole and Time keeps its header on screen" },
+    { "do": "panel", "stage": "2-opened" },
+    { "do": "snapshot", "name": "2-opened" }
+  ]
+}
