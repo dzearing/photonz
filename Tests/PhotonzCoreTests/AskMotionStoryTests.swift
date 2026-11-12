@@ -199,6 +199,22 @@ struct AskMotionWhereTests {
         let moved = AskStep(tool: "set_keys", arguments: try AskMotionTests.args(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":6,"y":-12}},{"seconds":1,"value":{"x":0,"y":0}}]}"#))
         #expect(AskMotionCheck.problems([Self.drawing, moved]).isEmpty)
     }
+
+    /// The user's trash sentence walked on 2026-11-12 (pass sixteen): the
+    /// scrap drawn from x 17 to 21, y 2 to 5, keyed from x 18 y 2, the
+    /// first corner of its own path, 1.8 from its middle. Nothing sent it
+    /// back, so at rest it sat 18 to the right, off the icon.
+    @Test("Keys that start at any point of where the part was drawn go back too")
+    func atItsCorner() throws {
+        let svg = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><path id="body" d="M6 9 L7 20 L17 20 L18 9"/><g id="trash"><path id="crumple" d="M18 2 L21 3 L20 5 L17 4 Z"/></g></svg>"##
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(svg)])
+        let corner = AskStep(tool: "set_keys", arguments: try AskMotionTests.args(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":18,"y":2}},{"seconds":0.9,"value":{"x":12,"y":4}},{"seconds":1.5,"value":{"x":18,"y":2}}]}"#))
+        let said = AskMotionCheck.problems([drawing, corner]).joined(separator: " ")
+        #expect(said.contains("trash's position starts at x 18 y 2, where it was drawn"), "\(said)")
+        // A small move that happens to start inside the part is still a move.
+        let nudge = AskStep(tool: "set_keys", arguments: try AskMotionTests.args(#"{"layer":"$1/trash","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":-6,"y":8}},{"seconds":1,"value":{"x":0,"y":0}}]}"#))
+        #expect(!AskMotionCheck.problems([drawing, nudge]).joined().contains("where it was drawn"))
+    }
 }
 
 /// Keys the model wrote again with replace true are the only keys that play:

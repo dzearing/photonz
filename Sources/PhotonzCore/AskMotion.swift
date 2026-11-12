@@ -2083,7 +2083,11 @@ public enum AskMotionCheck {
             guard step.tool == "set_keys", step.arguments["property"]?.stringValue == MotionProperty.position.rawValue,
                   let own = box(of: name(of: step), in: art), let start = timed(step).first.flatMap({ point($0.value) }) else { return nil }
             let middle = CGPoint(x: own.midX, y: own.midY)
-            guard hypot(middle.x, middle.y) > 4, hypot(start.x - middle.x, start.y - middle.y) <= 1.5 else { return nil }
+            // At its middle, or anywhere on where it was drawn (the user's
+            // trash of 2026-11-12 started at its path's first corner), and
+            // far from x 0 y 0: a place, not a move.
+            let onIt = hypot(start.x - middle.x, start.y - middle.y) <= 1.5 || own.insetBy(dx: -0.5, dy: -0.5).contains(start)
+            guard hypot(middle.x, middle.y) > 4, hypot(start.x, start.y) > 4, onIt else { return nil }
             func said(_ value: CGFloat) -> String { value == value.rounded() ? String(Int(value)) : String(format: "%.1f", value) }
             return "\(name(of: step))'s position starts at x \(said(start.x)) y \(said(start.y)), where it was drawn"
         }
