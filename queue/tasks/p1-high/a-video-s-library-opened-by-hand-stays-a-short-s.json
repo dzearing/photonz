@@ -1,0 +1,27 @@
+{
+  "id": "a-video-s-library-opened-by-hand-stays-a-short-s",
+  "title": "A video's Library opened by hand stays a short shelf at the foot, as the video mock draws it",
+  "goal": "On a video, opening the Library by its header gives it about 40 to 50 per cent of the right panel, which pushes the picked clip's sections into a short scroll on a laptop window. The video mock caps the opened Library at a short shelf so it never splits the column; build it that way.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 3980,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-12T00:25:16.836Z",
+  "updated": "2026-11-12T00:25:16.839Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From on-a-video-captions-and-transitions-sit-where-th (2026-11-11). That task made a NEW video hold its Library open only while the timeline is empty (EditorState.newBlankVideo, isLibraryHeldOpen), so the first thing drawn gets the room; a Library the person opens by hand still takes PanelShelfPane.startingHeight (0.4 of the column, up to 0.5 to show a tile row whole via atLeastTheShelf). Picture of the squeeze from 2026-10-20: queue/audits/2026-10-20-video-library-folded-2-library-opened-sc.png. Code: Sources/PhotonzCore/PanelShelfPane.swift, InspectorPanel.shelfPaneHeight.",
+  "acceptance": [
+    "On a video at Next defaults, with a clip picked on the 1200 by 720 laptop window, opening the Library by its header leaves the clip's Properties and Time whole on screen",
+    "The opened Library on a video is no taller than the mock's shelf (docs/design/mocks/pages/video.html, #gLibrary, body capped at 118px) until the person drags its divider, and its tiles scroll inside it",
+    "Pictures before and after on the laptop window in the audit, beside the mock frame"
+  ],
+  "log": [
+    {
+      "t": "2026-11-12T00:25:16.838Z",
+      "note": "created (manual)"
+    }
+  ]
+}

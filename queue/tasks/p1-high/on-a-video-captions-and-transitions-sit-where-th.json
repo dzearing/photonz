@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T03:26:52.669Z",
-  "updated": "2026-11-11T16:14:02.388Z",
+  "updated": "2026-11-12T00:26:13.995Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-right-panel-shows-only-what-the-picked-thing (2026-10-13). Measured on the laptop window (windowLaptop, sound picked): with Captions and Transitions in the pane at 40 per cent of a ~395pt column, the pick part was 235pt and Fades (244-352) fell under it; sound-fades-in-the-panel-walk step 12 and video-panel-order-walk step 45 failed. Both are forms the pane cannot shorten (not in DockMetrics.scrollingSections). Code: PanelListsPane.listSections (PhotonzCore), InspectorPanel.paneSplit.",
@@ -181,11 +181,55 @@
     {
       "t": "2026-11-11T16:14:02.387Z",
       "note": "seq 100 -> 50"
+    },
+    {
+      "t": "2026-11-11T23:00:58.324Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-11T23:05:31.957Z",
+      "note": "Recorded today (2026-11-11, windowLaptop, Next defaults): no Layers on a video (the timeline is the layer list, as every video mock says). Clip picked: Properties, Time, Appearance, Effects, Audio x4, Captions (129pt open), Transitions (folded), then the Library pane folded at the foot. Sound picked: Properties, Channel, Fades, Gain, Audio Effects, Time, Appearance, Effects, Captions, Transitions, Library. Nothing picked: Time, Captions, Transitions folded, Library folded. Cut picked: Properties (Edit point), Transitions open, Library. Transitions also in the Library catalog's Transitions chip (same tap, drag and right-click). All four named walks pass today; Fades and Appearance were already on screen."
+    },
+    {
+      "t": "2026-11-12T00:25:51.472Z",
+      "note": "walks panel-shows-what-is-picked-video-walk, sound-fades-in-the-panel-walk, video-panel-order-walk -> panel-shows-what-is-picked-video-walk, sound-fades-in-the-panel-walk, video-panel-order-walk, line-thickness-typed-walk, transitions-stay-out-of-the-way-walk"
+    },
+    {
+      "t": "2026-11-12T00:25:51.547Z",
+      "note": "Adversarial review: a Premiere editor finds captions in the Text panel and transitions in the Effects panel, applying them to the selected edit point; Final Cut puts Transitions in a browser and caption styling in the Inspector when a caption is picked. None shows a document's captions under a picked clip. Risk found: hiding Captions under a clip hides the Add Captions button, so checked the other doors: menu bar (Add Captions), the clip's and the sound's right click, the timeline's + Captions; all present. Risk: with no cut picked the tiles leave the panel, so dragging comes from the Library catalog's Transitions kind (same click, drag and right click code, LibraryTransitionTile)."
+    },
+    {
+      "t": "2026-11-12T00:25:51.620Z",
+      "note": "Chose Captions shown with nothing or the captions picked over shown everywhere because it is not a setting of a clip, title, sound or graphic and the captions mock opens its panel on a picked caption; Add Captions stays in the menu bar and right clicks."
+    },
+    {
+      "t": "2026-11-12T00:25:51.693Z",
+      "note": "Chose the Transitions tiles only with a cut picked (absent otherwise, not folded) over keeping a folded header everywhere because the user said on 2026-10-30 it need not be there with nothing selected, video-transitions.html draws the tiles under a picked transition, and the Library catalog (video-library.html) already holds the same tiles for browsing and dragging. Both stay because both mocks draw them; only while a cut is picked with the Library opened on Transitions do they show twice."
+    },
+    {
+      "t": "2026-11-12T00:25:51.766Z",
+      "note": "Chose a HOLD for a new video's Library (open on Media while the timeline is empty, folded once something lands, nothing stored) over the old stored open, because the line-thickness 3-video case was exactly that shelf squeezing Appearance; before, one New Video also left every later video's Library open. New core rule Sources/PhotonzCore/VideoDocumentSections.swift (+tests); app: InspectorPanel.availableSections/videoPick, EditorState.newBlankVideo/isLibraryHeldOpen."
+    },
+    {
+      "t": "2026-11-12T00:25:51.840Z",
+      "note": "Walks updated for the new panel: transitions-stay-out-of-the-way, transitions-group, transitions-where-clips-meet and transition-tile-comes-away (now take tiles from the Library catalog with nothing picked), every-section-header-opens, section-fold-motion, captions-panel-keeps-its-margins and lower-third-sits-low-left (pick the Captions row), panel-shows-what-is-picked-video (expectSections for clip, nothing, cut, title, sound), line-thickness-typed (expectInView Width on the new video). Still red for reasons that are not this change, checked on unchanged panel code: section-fold-motion step 14 (inspectorPanel builds, owned by folding-a-section-that-lets-the-panel-fit-again), transition-tile-comes-away and title-presets-library-shelf pickUpTile (owned by a-walk-that-pulls-a-library-tile-by-hand-sees-it), a-transition-is-picked-at-the-cut step 46 (red in the 2026-11-11 sweep before this)."
+    },
+    {
+      "t": "2026-11-12T00:25:51.914Z",
+      "note": "left rough: with a cut picked on the laptop window the cut's Properties take about half the panel and the tiles show one row before scrolling; not filed, the tiles scroll and the cut is the whole pick."
+    },
+    {
+      "t": "2026-11-12T00:26:13.993Z",
+      "note": "Shipped in 73a9da629 (Next, no flags): on a video Captions shows with nothing or the captions picked, the Transitions tiles only with a cut picked (VideoDocumentSections, core tests first); a new video's Library is held open only while the timeline is empty. Recorded today's order first (task log). Verified: Scripts/test.sh green; panel-shows-what-is-picked-video (expectSections for clip, nothing, cut, title, sound), sound-fades-in-the-panel, video-panel-order, line-thickness-typed (Width in view on the new video) and 8 more updated walks green at defaults with real pictures. UX-PATTERNS shell item 6 rewritten. Audit queue/audits/2026-11-11-video-panel-captions-transitions.json. Follow-up filed: a-video-s-library-opened-by-hand-stays-a-short-s."
     }
   ],
   "walks": [
     "panel-shows-what-is-picked-video-walk",
     "sound-fades-in-the-panel-walk",
-    "video-panel-order-walk"
-  ]
+    "video-panel-order-walk",
+    "line-thickness-typed-walk",
+    "transitions-stay-out-of-the-way-walk"
+  ],
+  "started": "2026-11-11T23:00:58.323Z",
+  "completed": "2026-11-12T00:26:13.994Z"
 }

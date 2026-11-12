@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-11T03:28:42.110Z",
-  "updated": "2026-11-11T16:14:02.711Z",
+  "updated": "2026-11-11T23:31:46.376Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-10 on e34c74ea (person away, screen unlocked): `Scripts/playtest-all.sh --no-build tile-comes-away-walk text-style-comes-away-walk title-presets-library-shelf-walk transition-tile-comes-away-walk` -> all FAILED at pickUpTile, e.g. 'the tile \"Accent\" did not come away: it was pressed at (1127, 255) and pulled to (508, 611) in the window, and nothing asked to start a drag.' Same with setup front: true (the probe active and key), so it is not the front. Every sweep log under queue/sweep (2026-11-01 to 11-08) shows the three Library ones failing the same way. pickUpTile (PlaytestHarness.pickUpTile) posts mouseMoved/down/dragged/up with NSApp.postEvent and watches NSView.beginDraggingSession via a swizzle on NSView (Sources/Photonz/Playtest/PlaytestTilePickUp.swift, unchanged since 2026-09-12). Suspects, not checked: on macOS 27 SwiftUI's draggable begins its session through a subclass override or another API the NSView swizzle never sees, or no longer starts a drag from posted (non-HID) events. dragTile (payload handed over directly) still passes, so drops work; only the pick-up is unproved. transition-tile-comes-away-walk now opens Transitions by its header with the probe in front (Transitions starts folded, ad5e0e11) and fails only at the pick-up.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-11T16:14:02.710Z",
       "note": "seq 3990 -> 100"
+    },
+    {
+      "t": "2026-11-11T23:31:46.375Z",
+      "note": "2026-11-11 (on-a-video-captions-and-transitions-sit-where-th): transition-tile-comes-away-walk now pulls Cross dissolve off the Library catalog's Transitions kind (a video has no Transitions section with nothing picked any more) and fails the same way: pressed at (1535, 386), nothing asked to start a drag. title-presets-library-shelf-walk step 25 fails the same on unchanged panel code, so it is this task's, not the panel change."
     }
   ],
   "walks": [
