@@ -523,7 +523,7 @@ extension Experiments {
                           withHand: handToolEnabled, withBrush: brushEnabled && !inTime)
     }
 
-    /// `next-brush`: the Brush at the end of the drawing family on a picture,
+    /// `next-brush`: the Brush right after Crop on a picture's bar,
     /// on B, painting strokes onto a Paint layer (`docs/design/brushes.md`).
     /// Like the Pen, the model and renderer are never flagged: a document
     /// holding paint draws it either way.

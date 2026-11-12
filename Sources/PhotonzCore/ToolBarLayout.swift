@@ -207,9 +207,11 @@ public struct ToolBarLayout: Hashable, Sendable {
     /// inherits the slot rather than the callout keeping it because the slot is
     /// now the wider thing: six kinds, of which magnify is one.
     ///
-    /// The Brush joins the end of the drawing family like every other tool a
-    /// flag adds. The image mock prints it after Crop; the rule above wins so
-    /// no learned slot moves, and it still sits with the Pen it paints beside.
+    /// The Brush is the other place a flag tool does not join the end: it sits
+    /// right after Crop, where the image mock draws it and where a Photoshop
+    /// user looks for it among the first tools. The mock is the floor, so it
+    /// wins over the rule above here (task
+    /// the-brush-sits-right-after-crop-on-a-picture-s-t, 2026-11-11).
     ///
     /// The Hand is the other exception: it is not a drawing tool, so it is a
     /// family of its own at the very end, where Photoshop keeps it and where
@@ -224,9 +226,11 @@ public struct ToolBarLayout: Hashable, Sendable {
         if withFrame { drawing.append(.tool(.frame)) }
         if withPen { drawing.append(.tool(.pen)) }
         if withComponent { drawing.append(.tool(.component)) }
-        if withBrush { drawing.append(.tool(.brush)) }
+        var first: [Entry] = [.tool(.select), .group(.selection), .tool(.crop)]
+        if withBrush { first.append(.tool(.brush)) }
+        first.append(.tool(.measure))
         var families: [[Entry]] = [
-            [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)],
+            first,
             drawing,
             [.tool(.fill)],
         ]

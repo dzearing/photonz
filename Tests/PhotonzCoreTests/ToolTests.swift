@@ -609,6 +609,24 @@ struct ToolBarLayoutTests {
         #expect(penned[1] == plain[1] + [.tool(.pen)])
     }
 
+    /// The Brush sits right after Crop, where the image mock draws it and where
+    /// a Photoshop user looks for it among the first tools. It is the one flag
+    /// tool that does not join the end of the drawing family.
+    @Test func theBrushSitsRightAfterCrop() {
+        let plain = ToolBarLayout.bar(withFrame: true, withLens: true, withPen: true,
+                                      withComponent: true, withHand: true)
+        let brushed = ToolBarLayout.bar(withFrame: true, withLens: true, withPen: true,
+                                        withComponent: true, withHand: true, withBrush: true)
+        #expect(Array(brushed.entries.prefix(4))
+                == [.tool(.select), .group(.selection), .tool(.crop), .tool(.brush)])
+        #expect(brushed.families[0]
+                == [.tool(.select), .group(.selection), .tool(.crop), .tool(.brush), .tool(.measure)])
+        // Nothing else moves family, and the drawing family no longer holds it.
+        #expect(Array(brushed.families.dropFirst()) == Array(plain.families.dropFirst()))
+        #expect(!brushed.families[1].contains(.tool(.brush)))
+        #expect(brushed.entries.filter { $0 == .tool(.brush) }.count == 1)
+    }
+
     /// The frame tool joins the END of the drawing family, so no tool anybody
     /// already reaches for moves to a new slot when the flag comes on.
     @Test func theFrameToolJoinsTheEndOfTheDrawingFamily() {

@@ -1,0 +1,44 @@
+{
+  "feature": "The Brush sits right after Crop on a picture's tool bar",
+  "epic": "image-paint",
+  "summary": "On a picture the Brush is now the fourth tool, right after Crop, where the image mock draws it and where a Photoshop user looks first. It used to sit near the far end beside the paint bucket.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any picture (a screenshot is fine) in a window about 1280 points wide. Walk: Scripts/playtest/brush-sits-after-crop-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screenshot and look at the tool bar under the picture.",
+      "shot": "2026-11-11-brush-after-crop-1-bar-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Compare it with the image mock's tool bar: Brush is the fourth button in both.",
+      "shot": "2026-11-11-brush-after-crop-side-by-side.png"
+    },
+    {
+      "do": "Click the fourth button (the paintbrush) and paint a stroke on the picture.",
+      "shot": "2026-11-11-brush-after-crop-2-picked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press V, then B: the Brush lights again in the same slot."
+    },
+    {
+      "do": "Narrow the window until tools fold under More: the Brush stays on the bar longer than the drawing tools now."
+    },
+    {
+      "do": "Open a video: there is no Brush on its bar, and B is still the Blade."
+    }
+  ],
+  "evaluate": [
+    "Is the Brush where your hand goes for it, right after Crop?",
+    "Does moving Measure and the drawing tools one slot to the right cost you anything you had learned?",
+    "Should the Brush and Crop sit in their own group with a hairline before them, the way the mock spaces them?"
+  ],
+  "rough": [
+    "The mock puts a gap between the wand and Crop and none after Brush; the shipped bar keeps its hairline after Measure, from the families the tool bar grouping task set (the-tool-bar-groups-tools-the-way-a-pro-editor-d).",
+    "The mock puts Measure near the end, after Shape; the shipped bar keeps it fifth, right after the Brush, as the tool bar grouping task placed it (the-tool-bar-groups-tools-the-way-a-pro-editor-d).",
+    "The mock draws Lasso, Eraser, Heal, Clone stamp, Patch and Dodge/Burn; none of them exist in the app yet. They belong to the selection and retouching epics, both staged later in the objectives (found-selection, image-retouch), and the Brush task a-brush-tool-paints-with-realistic-charcoal-chal kept E, J and S free for them, so no task is open for them now.",
+    "The mock's zoom slider and percentage are not on the bar: zoom is not a tool (your call on 2026-09-29).",
+    "Both shipped pictures show the window behind another app, so the lit Brush reads in its background look."
+  ]
+}

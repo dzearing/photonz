@@ -1,0 +1,114 @@
+{
+  "out": "/tmp/photonz-playtest/brush-sits-after-crop",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "toolBar",
+      "stage": "1-picture-bar",
+      "onlyTools": true,
+      "more": [],
+      "slots": [
+        "Select",
+        "Selection",
+        "Crop",
+        "Brush",
+        "Measure",
+        "Arrow",
+        "Shapes",
+        "Highlight",
+        "Text",
+        "Lens",
+        "Frame",
+        "Pen",
+        "Component insert",
+        "Fill",
+        "Hand"
+      ],
+      "lit": "Select"
+    },
+    {
+      "do": "describe",
+      "stage": "1-picture-bar",
+      "note": "A picture at Next defaults: the bar reads Select, Marquee, Crop, then Brush, the order the image mock draws"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-brush-after-crop"
+    },
+    {
+      "comment": "A pointer click on the fourth slot, where the image mock draws the Brush, picks it up: the proof a hand finds it there.",
+      "do": "windowClick",
+      "at": [
+        362,
+        805
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush",
+      "timeout": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "toolBar",
+      "stage": "2-brush-in-hand",
+      "lit": "Brush"
+    },
+    {
+      "do": "describe",
+      "stage": "2-brush-in-hand",
+      "note": "A click on the fourth slot picks up the Brush: it lights, right after Crop"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-brush-in-hand"
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select",
+      "timeout": 2
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush",
+      "timeout": 2
+    },
+    {
+      "do": "toolBar",
+      "stage": "3-b-picks-the-brush",
+      "lit": "Brush"
+    }
+  ]
+}
