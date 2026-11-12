@@ -6327,7 +6327,7 @@ private final class Run {
                 }
                 let word = editor.captionWordBeingSaid
                 if wanted, word == nil {
-                    throw Failure(description: "the Caption track bar has no word being said at \(editor.documentTimeMS) ms")
+                    throw Failure(description: "no caption word is being said at \(editor.documentTimeMS) ms")
                 }
                 note(number, step.name, "captions: guides \(wanted ? "on" : "off"), badge \(badge.uppercased()), "
                      + "active word \(word ?? "none"), "

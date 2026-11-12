@@ -218,6 +218,7 @@ struct MeasureInspector: View {
             Spacer(minLength: 0)
             Button("Copy Measurement") { editorState.copyMeasurement(id: layer.id) }
                 .controlSize(.small)
+                .playtestControl("Copy Measurement", detail: "Measurement")
                 .panelHelp("Copies this one measurement's spec line as text, ready to paste into a thread")
         }
         .playtestField("Details")

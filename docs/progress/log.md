@@ -22938,3 +22938,10 @@ units.
 - A new video's Library is HELD open on Media while its timeline is empty and folds back when something lands, nothing stored (`EditorState.newBlankVideo`, `isLibraryHeldOpen`), so a drawn line's Appearance and Width are on screen at 1400x900.
 - UX-PATTERNS shell item 6 (Right dock) rewritten for the panel as it is. Ten walks updated; audit `queue/audits/2026-11-11-video-panel-captions-transitions.json`.
 - Next: `a-video-s-library-opened-by-hand-stays-a-short-s` (opened Library on a video capped as video.html draws it).
+
+## 2026-11-11: The panel keeps one main action per section
+
+- The rule from the answered card ("How many buttons may the right hand panel keep?") is now in the Inspector row of the UX-PATTERNS placement contract and is checked by `PanelKeepsOneMainActionTests`: a section keeps its one main action, and every other one-shot verb is on the right-click of the thing it acts on and in the menu bar.
+- Moved out of the panel: Channel's Flatten (now on the volume line's right-click and in Clip > Flatten Level), the Captions section's Timing and Subtitles rows (on the caption right-click under More, and in the menu bar), and the caption track bar's Clear, Reset and readouts.
+- Flatten Level from a right-click now drops the line's pick, so Fades no longer says Segment: Mixed for a flat line.
+- New walk `the-panel-keeps-one-main-action-walk` (a measurement, a clip, a sound, the captions; Next defaults). Audit `queue/audits/2026-11-11-the-panel-shows-what-the-picked-thing-is-and-its.json`.

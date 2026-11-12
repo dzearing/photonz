@@ -3,29 +3,30 @@ import SwiftUI
 
 /// **Caption track**: the bar over the Captions track, as the captions mock
 /// draws its dock's bar (`.tlbar` in `pages/video-captions.html`): what the
-/// track is and how it was written, Clear and Reset, then the word being said
-/// and the playhead over the length.
+/// track is and how it was written.
 ///
-/// The readouts are a view of their own because they follow the playhead: the
-/// rest of the bar, and the track row it sits in, are not drawn again on every
-/// frame of playback.
+/// The mock also draws Clear and Reset on this bar, and the word being said
+/// and the playhead over the length beside them. Those are one-shot verbs and
+/// readouts of the moment, not what the track is, so they are on the Captions
+/// track's right-click and in the menu bar (Clear Captions, Reset Captions),
+/// and the word and the time are where the playhead already says them (the
+/// card "How many buttons may the right hand panel keep?", answered
+/// 2026-10-20: one main action per section, the rest on right-click and the
+/// menu bar).
 struct CaptionTrackBarView: View {
-    @Environment(EditorState.self) private var editorState
-
     static let height: CGFloat = 30
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            bar(mode: true, readouts: true)
-            bar(mode: true, readouts: false)
-            bar(mode: false, readouts: false)
+            bar(mode: true)
+            bar(mode: false)
         }
         .frame(height: Self.height)
         .overlay(alignment: .bottom) { Rectangle().fill(VideoKit.Palette.edgeLo).frame(height: 1) }
         .playtestField(CaptionTrackBar.title)
     }
 
-    private func bar(mode: Bool, readouts: Bool) -> some View {
+    private func bar(mode: Bool) -> some View {
         HStack(spacing: 8) {
             Text(CaptionTrackBar.title.uppercased())
                 .font(.system(size: 10, weight: .semibold))
@@ -40,65 +41,7 @@ struct CaptionTrackBarView: View {
                 .foregroundStyle(VideoKit.Palette.comp)
                 .fixedSize()
             }
-            Rectangle().fill(VideoKit.Palette.line).frame(width: 1, height: 14)
-            Button { editorState.clearCaptions() } label: {
-                Label("Clear", systemImage: "xmark")
-            }
-            .buttonStyle(CaptionBarButtonStyle())
-            .disabled(!editorState.canClearCaptions)
-            .panelHelp("Clear the caption track")
-            .playtestControl("Caption Track Clear")
-            Button { editorState.resetCaptions() } label: {
-                Label("Reset", systemImage: "arrow.uturn.backward")
-            }
-            .buttonStyle(CaptionBarButtonStyle())
-            .disabled(!editorState.canResetCaptions)
-            .panelHelp("Reset the captions' look and place")
-            .playtestControl("Caption Track Reset")
             Spacer(minLength: 8)
-            if readouts { CaptionTrackReadouts() }
-        }
-    }
-}
-
-/// `Active word <w>` and `1.30s / 6.00s`, the mock's two pills.
-private struct CaptionTrackReadouts: View {
-    @Environment(EditorState.self) private var editorState
-    /// Kept behind View: the readouts wait for Edit rather than follow the
-    /// playhead out of sight.
-    @Environment(\.editPiecesAsleep) private var asleep
-
-    var body: some View {
-        let word = asleep ? nil : editorState.captionWordBeingSaid
-        HStack(spacing: 6) {
-            HStack(spacing: 6) {
-                Text(CaptionTrackBar.activeWord).foregroundStyle(VideoKit.Palette.ink)
-                Text(word ?? "·").bold().foregroundStyle(VideoKit.Palette.accent)
-                    .lineLimit(1).truncationMode(.tail)
-                    .frame(maxWidth: 110, alignment: .leading)
-                    .fixedSize()
-            }
-            .modifier(Pill())
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(CaptionTrackBar.activeWord)
-            .accessibilityValue(word ?? "")
-            Text(CaptionTrackBar.time(atMS: asleep ? 0 : editorState.documentTimeMS, ofMS: editorState.documentLengthMS))
-                .foregroundStyle(VideoKit.Palette.ink)
-                .modifier(Pill())
-        }
-        .fixedSize()
-    }
-
-    private struct Pill: ViewModifier {
-        func body(content: Content) -> some View {
-            content
-                .font(.system(size: 10.5, design: .monospaced))
-                .monospacedDigit()
-                .lineLimit(1)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(RoundedRectangle(cornerRadius: 7).fill(VideoKit.Palette.panel2))
-                .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(VideoKit.Palette.edgeLo))
         }
     }
 }

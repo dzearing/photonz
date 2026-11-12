@@ -8,7 +8,8 @@ import SwiftUI
 /// sound came from rides the header beside the title. Mute and Solo are the
 /// switches on the sound's own track, the ones on its header in the timeline,
 /// so the two places can never disagree. Once the level changes over time, how
-/// many points its line on the bar has, with Flatten beside it. The fades have
+/// many points its line on the bar has (Flatten Level is on the line's
+/// right-click and in the Clip menu). The fades have
 /// a section of their own under this one, as the mock draws them
 /// (`SoundFadesInspector`), and Gain sits under those (`SoundGainInspector`),
 /// apart from Volume the way Premiere's Audio Gain is. Detach Audio is a verb,
@@ -85,18 +86,16 @@ struct SoundInspector: View {
         .opacity(muted ? 0.45 : 1)
     }
 
-    /// The level's line on the bar, counted, and the way to take it off.
+    /// The level's line on the bar, counted. Taking the points off is Flatten
+    /// Level, a verb done once, so it is on the line's right-click and in the
+    /// Clip menu rather than a button here (one main action per section,
+    /// UX-PATTERNS Inspector row).
     private var points: some View {
         let count = editorState.soundLevelInHand.points.count
         return VideoKit.FieldRow(label: "Points") {
-            HStack(spacing: 6) {
-                VideoKit.ValueFace(value: "\(count) on the bar")
-                    .panelReadout("\(count) on the bar")
-                Button("Flatten") { editorState.clearSoundLevelPoints() }
-                    .controlSize(.small)
-                    .playtestField("Flatten Level")
-                    .panelHelp("Take every point off the level line.")
-            }
+            VideoKit.ValueFace(value: "\(count) on the bar")
+                .panelReadout("\(count) on the bar")
+                .panelHelp("Right-click the volume line to flatten it.")
         }
     }
 }

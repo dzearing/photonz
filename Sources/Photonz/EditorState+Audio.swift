@@ -283,13 +283,21 @@ extension EditorState {
         layer.clipPieces?.totalLengthMS ?? layer.time?.lengthMS ?? 0
     }
 
-    /// Put the level back to flat, keeping the fader where it is.
+    /// Put the level back to flat, keeping the fader where it is: Flatten
+    /// Level, in the menu bar and on the volume line's right-click.
     func clearSoundLevelPoints() {
-        guard let id = soundLayerInHand?.id, !soundLevelInHand.points.isEmpty else { return }
-        var level = soundLevelInHand
+        guard let id = soundLayerInHand?.id else { return }
+        clearSoundLevelPoints(layerID: id)
+    }
+
+    /// Flatten Level on one sound's line, the one a right click landed on.
+    func clearSoundLevelPoints(layerID id: UUID) {
+        guard var level = document?.layer(id: id)?.soundLevel, !level.points.isEmpty else { return }
         level.clearPoints()
         writeSoundLevel(level, onLayer: id)
-
+        // The points and segments picked on the line are gone with it, so the
+        // Fades section stops speaking for a segment that is not there.
+        if soundLinePick?.layerID == id { clearSoundLinePick() }
     }
 
     // MARK: - Gain and Normalize

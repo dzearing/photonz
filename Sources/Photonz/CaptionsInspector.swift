@@ -15,9 +15,14 @@ import SwiftUI
 /// Once there are some, three parts in the mock's order: how they are written
 /// (the language, and Rewrite), the cue in focus (its in, out, length and
 /// words), and the one look every caption wears (a named style, then font,
-/// size, colour, background, lit word and position). Timing and the subtitle
-/// file are the last two rows. Anything longer than a label is the row's
-/// tooltip.
+/// size, colour, background, lit word and position). Anything longer than a
+/// label is the row's tooltip.
+///
+/// The section's one main action is Add Captions (Rewrite once there are
+/// some, Cancel while it listens). Moving the whole track earlier or later,
+/// exporting a subtitle file and clearing them are verbs done once, so they
+/// are on the Captions track's right-click and in the menu bar, not buttons
+/// here (UX-PATTERNS Inspector row, the card answered 2026-10-20).
 struct CaptionsInspector: View {
     @Environment(EditorState.self) private var editorState
     @State private var languages: [Locale] = []
@@ -58,13 +63,6 @@ struct CaptionsInspector: View {
                 }
                 PanelRowsArrival(after: 4, remembering: "captions word look") {
                     CaptionWordsInspector(part: .wordLook)
-                }
-                Divider().padding(.vertical, 2)
-                PanelRowsArrival(after: 5, remembering: "captions timing") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        timing
-                        file
-                    }
                 }
             }
         }
@@ -225,71 +223,6 @@ struct CaptionsInspector: View {
     static func sizeTitle(_ size: CGFloat?) -> String {
         guard let size else { return "Auto" }
         return "\(Int(size)) px"
-    }
-
-    // MARK: - Timing and the way out
-
-    /// The whole track, earlier or later. One caption out of step is its bar's
-    /// end, dragged on the timeline.
-    private var timing: some View {
-        VideoKit.FieldRow(label: "Timing") {
-            // Never cut short: the words while they fit, the arrows alone
-            // (their words in the tip) in a dock too narrow for them. Until
-            // 2026-09-29 a narrow dock read "Ear..." and "La...".
-            ViewThatFits(in: .horizontal) {
-                timingButtons(words: true)
-                timingButtons(words: false)
-            }
-        }
-    }
-
-    private func timingButtons(words: Bool) -> some View {
-        HStack(spacing: 6) {
-            nudgeButton("Earlier", systemImage: "arrow.left", byMS: -EditorState.captionNudgeMS,
-                        words: words, help: "Every caption a tenth of a second earlier.")
-            nudgeButton("Later", systemImage: "arrow.right", byMS: EditorState.captionNudgeMS,
-                        words: words, help: "Every caption a tenth of a second later.")
-        }
-        .controlSize(.small)
-    }
-
-    private func nudgeButton(_ title: String, systemImage: String, byMS: Int, words: Bool,
-                             help: String) -> some View {
-        Button {
-            editorState.nudgeCaptions(byMS: byMS)
-        } label: {
-            if words {
-                Label(title, systemImage: systemImage).lineLimit(1)
-            } else {
-                Image(systemName: systemImage).accessibilityLabel(title)
-            }
-        }
-        .fixedSize()
-        .disabled(!editorState.canNudgeCaptions)
-        .playtestControl("Captions \(title)", detail: "the Captions section")
-        .panelHelp(help)
-    }
-
-    private var file: some View {
-        VideoKit.FieldRow(label: "Subtitles") {
-            HStack(spacing: 6) {
-                Menu("Export") {
-                    ForEach(CaptionFileFormat.allCases, id: \.self) { format in
-                        Button(format.title + "…") { editorState.exportCaptions(as: format) }
-                    }
-                }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
-                .disabled(!editorState.canExportCaptions)
-                .playtestField("Export Captions")
-                .panelHelp("Save the words as a subtitle file.")
-                Button("Clear") { editorState.clearCaptions() }
-                    .disabled(!editorState.canClearCaptions)
-                    .playtestField("Clear Captions")
-                    .panelHelp("Take every caption off.")
-            }
-            .controlSize(.small)
-        }
     }
 }
 

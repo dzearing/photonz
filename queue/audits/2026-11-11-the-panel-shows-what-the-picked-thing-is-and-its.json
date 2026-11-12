@@ -1,0 +1,29 @@
+{
+  "feature": "The panel keeps one main action per section",
+  "epic": "video-cutting",
+  "summary": "The right hand panel now reads what the picked thing is. A sound's Flatten button, the Captions section's Earlier, Later, Export and Clear, and the Clear, Reset and readouts on the caption track's bar are gone. Each one is on the right-click of the thing it acts on and in the menu bar. Each section keeps its one main action (Normalize, Rewrite, Copy Measurement, Key It).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/the-panel-keeps-one-main-action-walk.json",
+  "switched": {},
+  "try": [
+    { "do": "In a screenshot, press I, measure a distance, press V. The Measurement section keeps Copy Measurement as its one button.", "shot": "2026-11-11-panel-one-main-action-1-a-measurement-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open a recording and click its clip. The panel lists what the clip is, with no one-shot buttons.", "shot": "2026-11-11-panel-one-main-action-2-a-clip-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Add music and type 1.5 into Fades In. Channel reads Points, 2 on the bar, with no Flatten button. Gain keeps Normalize.", "shot": "2026-11-11-panel-one-main-action-3-a-sound-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the music's volume line and choose Flatten Level (also Clip > Flatten Level).", "shot": "2026-11-11-panel-one-main-action-4-the-line-s-right-click-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Check the line is flat and the Points row has gone.", "shot": "2026-11-11-panel-one-main-action-4-flattened-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick the Captions track. The section has Rewrite and the look rows, with no Timing or Subtitles. The bar over the timeline reads CAPTION TRACK and nothing else.", "shot": "2026-11-11-panel-one-main-action-5-the-captions-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click a caption and open More: Timing, Export Subtitles, Reset Captions and Clear Captions are there. The menu bar has Captions Earlier and Later (Option Shift Left and Right), Export Captions, Reset Captions and Clear Captions." }
+  ],
+  "evaluate": [
+    "Does the sound panel feel calmer with Points as a plain count and Flatten Level on the line's right-click?",
+    "With Timing gone from the panel, do you find Captions Earlier and Later (Option Shift arrows) when a recogniser runs late?",
+    "Is the caption track's bar still worth its row now that it only says CAPTION TRACK and how the words were written, or should it go too?",
+    "Is Copy Measurement right as the Measurement section's one button?"
+  ],
+  "rough": [
+    "The captions mock draws Clear, Reset, the word being said and the time on the caption track's bar (video-captions.html .tlbar). They are gone, per the answered card the-panel-shows-what-the-picked-thing-is-and-its-how-many-buttons-may-the-right-h (taken as recommended 2026-10-20).",
+    "The bar now has an empty band to the right of CAPTION TRACK. I left it because the timeline's rows line up under it.",
+    "Flatten Level, Clear Captions, Reset Captions and Export Captions have menu bar rows with no key. Neither Premiere nor Final Cut gives these a key, so I gave them none.",
+    "Normalize keeps its Clean noise checkbox under it. That is a setting of Normalize, not a second verb.",
+    "Flatten Level from the right-click used to leave the right-clicked segment picked, so Fades said Segment: Mixed for a line with no segments. Flatten now drops that pick."
+  ]
+}

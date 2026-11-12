@@ -221,6 +221,13 @@ extension EditorState {
                              enabled: !points.isEmpty, destructive: true) {
             self.deletePickedSoundPoints()
         })
+        // Flatten Level: every point off the line, the fader left where it is.
+        // The panel's Channel counts the points and has no button for it (one
+        // main action per section, UX-PATTERNS Inspector row).
+        rows.append(.separator)
+        rows.append(.command("Flatten Level", enabled: !level.points.isEmpty) {
+            self.clearSoundLevelPoints(layerID: layerID)
+        })
         return rows
     }
 
@@ -238,8 +245,15 @@ extension EditorState {
         }
         // The points it deletes are the ones picked when it runs (see
         // `soundSegmentsForMenu`), which the right click has made this one.
-        return [.command(inHand.count > 1 ? "Delete \(inHand.count) Points" : "Delete Point", destructive: true) {
-            self.deletePickedSoundPoints()
-        }]
+        guard let level = document?.layer(id: layerID)?.soundLevel else { return [] }
+        return [
+            .command(inHand.count > 1 ? "Delete \(inHand.count) Points" : "Delete Point", destructive: true) {
+                self.deletePickedSoundPoints()
+            },
+            .separator,
+            .command("Flatten Level", enabled: !level.points.isEmpty) {
+                self.clearSoundLevelPoints(layerID: layerID)
+            },
+        ]
     }
 }

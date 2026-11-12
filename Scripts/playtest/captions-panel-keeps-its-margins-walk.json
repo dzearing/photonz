@@ -274,23 +274,6 @@
       "name": "3b-the-narrowest-dock-background"
     },
     {
-      "do": "reveal",
-      "control": "Captions Earlier"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.3
-    },
-    {
-      "do": "describe",
-      "stage": "3c-the-narrowest-dock-timing",
-      "note": "Timing's two buttons in the narrowest dock: their whole words, or their arrows alone with the words in the tip, never cut to Ear..."
-    },
-    {
-      "do": "snapshot",
-      "name": "3c-the-narrowest-dock-timing"
-    },
-    {
       "do": "selectRow",
       "row": "Sample Talk"
     },

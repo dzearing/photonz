@@ -44,7 +44,6 @@ struct EveryCommandIsInTheMenuBarTests {
         "Remove Effect",                // Effects: a row's x
         "Apply to Every Cut",           // Transitions: the header's plus
         "Set as Default Transition",    // Transitions: the header's plus
-        "Reset Captions",               // Captions
         "Safe Areas",                   // Captions
     ]
 

@@ -9,7 +9,7 @@
     {
       "do": "describe",
       "stage": "why",
-      "note": "The captions mock draws title-safe and action-safe guides over the picture, an AUTO · EN badge at its top, and a Caption track bar over the Captions track with Clear, Reset, the word being said and the time. Picking the captions opens the panel on the Captions options. Next at its defaults: no flag is set here."
+      "note": "The captions mock draws title-safe and action-safe guides over the picture, an AUTO · EN badge at its top, and a Caption track bar over the Captions track. The bar says what the track is and nothing else: Clear and Reset are on the track's right-click and in the menu bar (one main action per section, the card answered 2026-10-20), so Reset here is the menu bar's Reset Captions. Picking the captions opens the panel on the Captions options. Next at its defaults: no flag is set here."
     },
     { "do": "action", "action": "openSampleTalk" },
     { "do": "action", "action": "captionsWriteQuietly" },
@@ -39,7 +39,7 @@
     { "do": "action", "action": "captionsPositionTop" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "snapshot", "name": "4-styled-and-moved" },
-    { "do": "press", "control": "Caption Track Reset" },
+    { "do": "agentTool", "tool": "run_command", "arguments": "{\"command\": \"reset_captions\"}" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "action", "action": "captionsExpectReset" },
     { "do": "snapshot", "name": "5-reset" }

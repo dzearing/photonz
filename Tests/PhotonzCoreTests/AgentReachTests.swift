@@ -126,13 +126,11 @@ struct AgentReachTests {
         CaptionsInspector.swift › Caption glow | notYet: how captions look (font, size, colours, placement)
         CaptionsInspector.swift › Caption shadow | notYet: how captions look (font, size, colours, placement)
         CaptionsInspector.swift › Caption stroke | notYet: how captions look (font, size, colours, placement)
-        CaptionsInspector.swift › Captions \\(title) | command: add_captions
         CaptionsInspector.swift › Captions language | notYet: the language captions are written in
         CaptionsInspector.swift › Font | notYet: how captions look (font, size, colours, placement)
         CaptionsInspector.swift › Guides | command: caption_safe_areas
         CaptionsInspector.swift › Listening | command: cancel_captions
         CaptionsInspector.swift › Size | notYet: how captions look (font, size, colours, placement)
-        CaptionsInspector.swift › Subtitles | command: export_captions
         CaptionsInspector.swift › Weight | notYet: how captions look (font, size, colours, placement)
         CaptionsInspector.swift › Write Captions | command: add_captions
         CaptionStyleInspector.swift › Animation | notYet: how captions look (font, size, colours, placement)
@@ -407,7 +405,6 @@ struct AgentReachTests {
         SoundInspector.swift › curve: CurveRow(current: editorState.soundLevelInHand.fadeCurve) | notYet: a sound's volume, gain and fade curve
         SoundInspector.swift › Gain | notYet: a sound's volume, gain and fade curve
         SoundInspector.swift › Mute | command: mute_sound
-        SoundInspector.swift › Points | command: flatten_level
         SoundInspector.swift › Segment | notYet: a sound's volume, gain and fade curve
         SoundInspector.swift › Solo | command: solo_sound
         SoundInspector.swift › Volume | notYet: a sound's volume, gain and fade curve

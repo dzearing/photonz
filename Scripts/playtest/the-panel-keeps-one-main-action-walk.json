@@ -1,0 +1,262 @@
+{
+  "out": "/tmp/photonz-playtest/the-panel-keeps-one-main-action-walk",
+  "seed": "At Next defaults, with no switch touched: the right hand panel shows what the picked thing is, and each section keeps at most one main action (the card answered 2026-10-20). A measurement keeps Copy Measurement; a clip's panel has no one-shot buttons; a sound's Channel says how many points its volume line has with no Flatten button beside it, and Flatten Level is on the line's own right-click; the Captions section keeps Add Captions (Rewrite) and has no Timing or Subtitles rows, which are on the Captions track's right-click and in the menu bar; the caption track's bar over the timeline says what the track is, with no Clear, Reset or readouts.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "measureMode",
+      "mode": "distance"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 6
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        300
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        300
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        500,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Copy Measurement",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "1-a-measurement"
+    },
+    {
+      "do": "describe",
+      "stage": "1-a-measurement",
+      "note": "A measurement picked: its section is label and value rows, and its one action, Copy Measurement, at its foot"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-measurement"
+    },
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "action",
+      "action": "captionsWriteQuietly"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.0
+    },
+    {
+      "do": "selectRow",
+      "row": "Sample Talk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "2-a-clip"
+    },
+    {
+      "do": "describe",
+      "stage": "2-a-clip",
+      "note": "The talk's clip picked: the panel reads what the clip is. Its verbs (Detach Audio, Normalize, Add Captions, Freeze Frame) are on its right-click and in the Clip menu"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-a-clip"
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "focus",
+      "field": "Fade in"
+    },
+    {
+      "do": "type",
+      "text": "1.5"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 2
+    },
+    {
+      "do": "expect",
+      "control": "Normalize",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "3-a-sound"
+    },
+    {
+      "do": "describe",
+      "stage": "3-a-sound",
+      "note": "The music picked with a fade in: Channel reads Points, 2 on the bar, with no Flatten button; Gain keeps Normalize, its one main action"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-sound"
+    },
+    {
+      "comment": "THE FIRST TEST: Flatten Level is on the volume line's own right-click.",
+      "do": "rightClick",
+      "on": "Segment Sample Music level 1",
+      "shot": "4-the-line-s-right-click",
+      "choose": "Flatten Level"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 0
+    },
+    {
+      "do": "expect",
+      "menu": "Sound segment curve",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "4-flattened",
+      "note": "Flatten Level chosen on the line's right-click: every point is off the music's volume line and the Points row is gone"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-flattened"
+    },
+    {
+      "do": "selectRow",
+      "row": "Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneLayerPicked"
+    },
+    {
+      "do": "expect",
+      "control": "Captions Earlier",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Caption Track Clear",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Caption Track Reset",
+      "present": false
+    },
+    {
+      "do": "panel",
+      "stage": "5-the-captions"
+    },
+    {
+      "do": "describe",
+      "stage": "5-the-captions",
+      "note": "THE SECOND TEST: the captions picked. The Captions section keeps Rewrite as its one action and ends with the look rows: no Timing, no Subtitles. The caption track's bar over the timeline reads CAPTION TRACK and how the words were written, with no Clear, Reset, word or time"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-the-captions"
+    }
+  ]
+}
