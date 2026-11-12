@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/measure-appearance-simple",
- "seed": "At Next defaults, no switch changed: a picked measurement's Appearance reads Chip, Color, Marker, Size and a closed Advanced, with no Arrow row (markup.md section 8). Large from its right-click menu lights L; under Advanced the Caliper comes from the Color and the chip's parts from the style.",
+ "seed": "At Next defaults, no switch changed: a picked measurement's Appearance reads Chip, Color, Marker, Size and a closed Advanced, with no Arrow row (markup.md section 8). Large from its right-click menu lights L; under Advanced the Caliper comes from the Color and the chip's parts from the style. Nothing sits above Chip: Opacity, Blending and Masked by wait at the end of Advanced.",
  "setup": {
   "forget": [
    "measure",
@@ -93,6 +93,21 @@
    "reads": "Advanced, closed"
   },
   {
+   "do": "expect",
+   "field": "Opacity",
+   "present": false
+  },
+  {
+   "do": "expect",
+   "field": "Blending",
+   "present": false
+  },
+  {
+   "do": "expect",
+   "field": "Masked by",
+   "present": false
+  },
+  {
    "do": "rightClick",
    "choose": "Chip Size > Large",
    "on": "Gap 37"
@@ -137,6 +152,16 @@
    "control": "Origin",
    "in": "Chip Text",
    "reads": "Advanced, Chip Text, from style"
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "field": "Blending",
+   "present": true
   },
   {
    "do": "reveal",

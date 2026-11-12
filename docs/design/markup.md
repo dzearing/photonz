@@ -214,6 +214,14 @@ set to something else; the head follows the line until painted apart. The
 Advanced fold remembers whether it was left open. Chip Size is also on the
 arrow's and the measurement's right-click menu.
 
+Opacity, Blending and Masked by (and Key, where a layer has one) are rows
+every layer has, so they do not lead a mark's Appearance: on a picked arrow or
+measurement they sit at the end of the Advanced fold, after the mark's own
+parts, and the section starts at Arrow (or Chip) as the prototype draws it
+(2026-11-11). Every other kind of layer still leads with Opacity. Photoshop
+keeps a shape's opacity and blending away from its own properties the same
+way.
+
 ## 9. Every mark must
 
 - Read over a light screenshot, a dark one and a busy photo (the specimen page

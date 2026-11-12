@@ -1,0 +1,23 @@
+{
+  "feature": "A picked arrow's Appearance starts with its Arrow row",
+  "epic": "epic-uehjr1",
+  "summary": "Pick an arrow and Appearance now opens on Arrow, Chip, Color, Marker, Size and a closed Advanced, as the approved prototype draws it. Opacity, Blending and Masked by moved to the end of Advanced; a measurement works the same way, and every other layer still leads with Opacity.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/arrow-appearance-simple-walk.json (and measure-appearance-simple-walk.json).",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot, press A and draw an arrow, type a caption and press Command Return.", "shot": "2026-11-11-arrow-appearance-starts-at-arrow-1-sc.png", "shotNote": "The window was behind another app when this was taken, so it shows the window's background look." },
+    { "do": "Read Appearance from the top: it starts at Arrow, with no Opacity above it.", "shot": "2026-11-11-arrow-appearance-starts-at-arrow-vs-proto.png" },
+    { "do": "Click Show beside Advanced and scroll to its end: Opacity, Blending and Masked by are there.", "shot": "2026-11-11-arrow-appearance-starts-at-arrow-2-sc.png", "shotNote": "The window was behind another app when this was taken, so it shows the window's background look." },
+    { "do": "Press I, click a gap to measure it, pick the measurement: Appearance starts at Chip.", "shot": "2026-11-11-arrow-appearance-starts-at-arrow-3-measure-sc.png", "shotNote": "The window was behind another app when this was taken, so it shows the window's background look." },
+    { "do": "Draw a rectangle and pick it: Opacity still leads its Appearance." }
+  ],
+  "evaluate": [
+    "Does the arrow panel now read like the prototype from its first row?",
+    "Is the end of Advanced the right home for Opacity, Blending and Masked by on a mark, or would you rather find opacity somewhere you can reach without opening Advanced?",
+    "Is fading an arrow rare enough that one click on Show is a fair price?"
+  ],
+  "rough": [
+    "Row order now matches the prototype: Arrow, Chip, Color, Marker, Size, Advanced, and the shipped column starts at Arrow.",
+    "Opacity sits at the very end of an open Advanced, below Caption and its label rows, so on a short window it needs a scroll. Chose the end over the top of Advanced because the prototype's Advanced starts with Line and Head, and the shared rows are the least about the arrow itself."
+  ]
+}

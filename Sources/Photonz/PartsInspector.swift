@@ -43,39 +43,16 @@ struct PartsInspector: View {
         // same 10pt rhythm as Text and the video sections beside them.
         VStack(alignment: .leading,
                spacing: Experiments.shared.panelRowsInOneColumnEnabled ? 10 : 16) {
-            // Opacity leads, always. It is the one thing EVERY layer has,
-            // whatever it is made of, so it is the row that never moves.
-            //
-            // It is a label over a track rather than a tick and a name, so it
-            // has no tick to lead with and it does not pretend to: it starts on
-            // the panel's own margin like every other row, and its track runs
-            // the full width. It used to step in by the width of the tick
-            // column to line its label up with the names beside the ticks,
-            // which put the section's content 24pt further in than its own
-            // heading (reported by the user, 2026-09-08).
-            opacity
-                .panelStartProbe(.row, owner: "Opacity")
-            // ...and directly under it, how what shows through is MIXED with
-            // what is under it (`next-blend-mode`). The two are one question
-            // between them, so they are one pair of rows rather than an
-            // Opacity here and a mixing setting somewhere else.
-            if Experiments.shared.blendModeEnabled {
-                BlendModeRow()
-                FixedMixingNote()
-            }
-            // ...and under those two, the other half of the same question:
-            // which of this layer's own pixels are there at all (Key), and what
-            // shape it is allowed to be (Masked by). Compositing is layers with
-            // a rule for how they combine, and these are the last two rules
-            // (`LayerCompositing.swift`).
-            if Experiments.shared.layersCombineEnabled {
-                KeyRows()
-                MaskedByRow()
-            }
+            // Opacity leads, always, for every layer but a mark. An arrow or a
+            // measurement leads with its own choices instead (markup.md
+            // section 8, the prototype the user approved on 2026-10-31), and
+            // these rows every layer has sit at the end of its Advanced fold.
+            let markup = editorState.markupAppearanceKind
+            if markup == nil { sharedLayerRows }
             // An arrow or a measurement, picked on its own kind, gets the
             // simple Appearance markup.md section 8 draws: Arrow, Chip, Color,
             // Marker and Size, with every part folded under Advanced.
-            if let markup = editorState.markupAppearanceKind {
+            if let markup {
                 let column = rows.contains(where: \.hasSwitch)
                 switch markup {
                 case .arrows:
@@ -84,12 +61,14 @@ struct PartsInspector: View {
                     ArrowSizeRow()
                     MarkupAdvancedFold {
                         ArrowAdvancedRows(rows: rows, leadsWithColumn: column)
+                        sharedLayerRows
                     }
                 case .measurements:
                     MeasureChipStyleRow()
                     MeasureSizeRow()
                     MarkupAdvancedFold {
                         MeasureAdvancedRows(rows: rows, leadsWithColumn: column)
+                        sharedLayerRows
                     }
                 }
             } else {
@@ -129,6 +108,42 @@ struct PartsInspector: View {
         .padding(.vertical, 8)
     }
 
+
+    /// The rows every layer has: Opacity, then Blending, then Key and Masked
+    /// by. They lead Appearance for every layer but an arrow or a measurement,
+    /// whose own choices lead instead and which keeps these at the end of its
+    /// Advanced fold (markup.md section 8).
+    @ViewBuilder private var sharedLayerRows: some View {
+        // Opacity leads them. It is the one thing EVERY layer has, whatever
+        // it is made of.
+        //
+        // It is a label over a track rather than a tick and a name, so it
+        // has no tick to lead with and it does not pretend to: it starts on
+        // the panel's own margin like every other row, and its track runs
+        // the full width. It used to step in by the width of the tick
+        // column to line its label up with the names beside the ticks,
+        // which put the section's content 24pt further in than its own
+        // heading (reported by the user, 2026-09-08).
+        opacity
+            .panelStartProbe(.row, owner: "Opacity")
+        // ...and directly under it, how what shows through is MIXED with
+        // what is under it (`next-blend-mode`). The two are one question
+        // between them, so they are one pair of rows rather than an
+        // Opacity here and a mixing setting somewhere else.
+        if Experiments.shared.blendModeEnabled {
+            BlendModeRow()
+            FixedMixingNote()
+        }
+        // ...and under those two, the other half of the same question:
+        // which of this layer's own pixels are there at all (Key), and what
+        // shape it is allowed to be (Masked by). Compositing is layers with
+        // a rule for how they combine, and these are the last two rules
+        // (`LayerCompositing.swift`).
+        if Experiments.shared.layersCombineEnabled {
+            KeyRows()
+            MaskedByRow()
+        }
+    }
 
     /// Every part laid out in full, for a selection that is not all arrows or
     /// all measurements (or with chip styles off).

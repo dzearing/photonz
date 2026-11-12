@@ -75,6 +75,15 @@
    "seconds": 0.3
   },
   {
+   "do": "press",
+   "control": "Advanced",
+   "in": "Advanced"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
    "do": "focus",
    "field": "Opacity"
   },
@@ -85,15 +94,6 @@
   {
    "do": "key",
    "key": "return"
-  },
-  {
-   "do": "wait",
-   "seconds": 0.5
-  },
-  {
-   "do": "press",
-   "control": "Advanced",
-   "in": "Advanced"
   },
   {
    "do": "wait",

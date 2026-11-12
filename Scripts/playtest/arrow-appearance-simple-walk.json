@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/arrow-appearance-simple",
- "seed": "At Next defaults, no switch changed: a picked arrow's Appearance reads Arrow, Chip, Color, Marker, Size and a closed Advanced (markup.md section 8). Large, Small and Medium from the arrow's right-click menu move the chip's words and the line together; L clicked by the pointer does the same. Under Advanced each part says it comes from the Color or the style; a chip part painted by hand shows Reset and keeps its colour through a new Color, and Reset hands it back.",
+ "seed": "At Next defaults, no switch changed: a picked arrow's Appearance reads Arrow, Chip, Color, Marker, Size and a closed Advanced (markup.md section 8). Large, Small and Medium from the arrow's right-click menu move the chip's words and the line together; L clicked by the pointer does the same. Under Advanced each part says it comes from the Color or the style; a chip part painted by hand shows Reset and keeps its colour through a new Color, and Reset hands it back. Nothing sits above Arrow: Opacity, Blending and Masked by are not in Appearance while Advanced is closed, and Opacity and Blending are at the end of Advanced once it is open.",
  "setup": {
   "forget": [
    "shapes",
@@ -90,6 +90,21 @@
    "control": "Advanced",
    "in": "Advanced",
    "reads": "Advanced, closed"
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "present": false
+  },
+  {
+   "do": "expect",
+   "field": "Blending",
+   "present": false
+  },
+  {
+   "do": "expect",
+   "field": "Masked by",
+   "present": false
   },
   {
    "do": "expect",
@@ -245,6 +260,16 @@
    "reads": "Advanced, Chip Text, from style"
   },
   {
+   "do": "expect",
+   "field": "Opacity",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "field": "Blending",
+   "present": true
+  },
+  {
    "do": "reveal",
    "control": "Origin",
    "in": "Chip Text"
@@ -256,6 +281,19 @@
   {
    "do": "snapshot",
    "name": "5-advanced"
+  },
+  {
+   "do": "reveal",
+   "control": "Slider",
+   "in": "Opacity"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "5b-opacity-under-advanced"
   },
   {
    "do": "dragColor",
