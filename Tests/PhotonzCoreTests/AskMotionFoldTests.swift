@@ -514,10 +514,17 @@ struct AskMotionFoldTests {
         let detailed = svg.replacingOccurrences(of: #"<path id="body""#, with: #"<circle id="dot" cx="5" cy="16" r="0.5"/><path id="body""#)
         let busy = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(detailed)])
         #expect(AskMotion.hidden([busy, rise]) == [busy, rise])
-        // In a group of its own, it stays in its group.
+        // An outline in a group of its own: it stays in its own groups and
+        // goes behind that whole group instead (the eval's letter of
+        // 2026-11-12, into an envelope drawn as one group, was left over its
+        // front all the way in).
         let grouped = svg.replacingOccurrences(of: #"<path id="body" d="M3 6 L21 6 L21 18 L3 18 Z"/>"#, with: #"<g id="case"><path id="body" d="M3 6 L21 6 L21 18 L3 18 Z"/></g>"#)
         let apart = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(grouped)])
-        #expect(AskMotion.hidden([apart, rise]) == [apart, rise])
+        let behind = try #require(AskMotion.hidden([apart, rise]).first?.arguments["svg"]?.stringValue)
+        let behindArt = try SVGArtwork.parse(behind, keepingGroups: true).get()
+        #expect(try #require(behind.range(of: #"id="sheet""#)).lowerBound < (try #require(behind.range(of: #"id="case""#))).lowerBound, "\(behind)")
+        #expect(behindArt.parts.first { AskMotion.plain($0.name ?? "") == "sheet" }?.groups == [])
+        #expect(behindArt.parts.first { AskMotion.plain($0.name ?? "") == "body" }?.fill == "#FFFFFF")
     }
 
     @Test("A fold's back face shows from the moment the fold turns edge on as it plays, after its close is slowed, not before")

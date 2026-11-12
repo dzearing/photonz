@@ -156,8 +156,8 @@ public enum AskMotion {
     static let drawRules = """
         - This icon moves. Plan it in this order: add_drawing once, set_timing once, then set_keys once for each \
         value of each part that moves.
-        - Draw the object whole and at rest, as its first moment shows it, and every part the motion needs: \
-        anything that only appears part way through (pieces, marks, waves) is drawn too, where it starts. Never \
+        - Draw the object whole and at rest, as its first moment shows it (a part the story closes is drawn \
+        open, one it opens is drawn shut), and every part the motion needs: anything that only appears part way through (pieces, marks, waves) is drawn too, where it starts. Never \
         opacity="0" in the svg: a key at 0 seconds hides it. What comes out of another part starts hidden inside it: \
         draw it before that part in the svg, as an outline like the rest, with no fill on either. What is thrown, \
         dropped or put into another part is drawn where it is first seen, away from that part and never inside \
@@ -182,7 +182,8 @@ public enum AskMotion {
         Before drawing, design this moving icon in words, under 120 words, no SVG and no numbers for its shape yet: you \
         will draw the object the way you know it. Say: 1) what the eye must see for this to read as that action and \
         not a plain pulse or swap; 2) the parts: which move, everything attached to a moving part that goes with it, \
-        what stays still, the hinge or centre of any turn and which way it turns, and any extra pieces, where each \
+        what stays still, the hinge or centre of any turn and which way it turns, whether each part that opens or \
+        closes starts open or shut, and any extra pieces, where each \
         is first seen (what goes into something is first seen outside it) and where it goes; 3) the beats in the order the request tells them, each with its time in ms, across a lap that ends \
         back at rest.
         """
@@ -517,15 +518,16 @@ public enum AskMotion {
     /// already narrowed to the room (`swingsFitted`): a lid narrowed after
     /// the trash was placed against it stood in the trash's way. What goes
     /// out of sight where something shuts over it goes in past it, once
-    /// every hit is placed (`tuckedIn`).
+    /// every hit is placed (`tuckedIn`). Last, a line that drew itself starts
+    /// over unseen (`startsOver`).
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
         let timed = foldsOpen(foldsLand(tuckedIn(touchesPlaced(landsInTheMiddle(hitStarts(staysTillGone(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(carried(steps))))))))))))))
         let made = fitted(comesClear(hidden(hingesShared(timed))))
         // Hinges again for the room made, if any: lines and corner rounds
         // keep their size on the final grid as the drawing shrinks.
         let grow = viewBoxWidth(made).flatMap { after in viewBoxWidth(timed).map { after / $0 } } ?? 1
-        guard grow > 1.001 else { return keysApart(jumpsUnseen(made)) }
-        return keysApart(jumpsUnseen(fitted(comesClear(hidden(hingesShared(timed, grow: grow))))))
+        guard grow > 1.001 else { return keysApart(jumpsUnseen(startsOver(made))) }
+        return keysApart(jumpsUnseen(startsOver(fitted(comesClear(hidden(hingesShared(timed, grow: grow)))))))
     }
 
     /// The width of the drawing's viewBox, if it has one.
@@ -1611,9 +1613,19 @@ public enum AskMotion {
             let buried = art.parts.indices.contains { at in
                 at < smallest && !holds(art.parts[at], name) && room.intersects(Self.box(of: art.parts[at]))
             }
-            guard !buried, let shifted = svgMoving(name, before: plain(cover), in: svg),
-                  case .success(let after) = SVGArtwork.parse(shifted, keepingGroups: true),
-                  after.parts.filter({ holds($0, name) }).map(\.groups) == own.map({ art.parts[$0].groups }) else { continue }
+            // Just before the outline, or, when that would take it into the
+            // outline's group, before that group (the letter of 2026-11-12
+            // dropped into an envelope drawn as one group and was drawn over
+            // its front all the way in).
+            let groupsBefore = own.map { art.parts[$0].groups }
+            let places = [plain(cover)] + art.parts[smallest].groups.reversed().map(plain).filter { group in !own.contains { holds(art.parts[$0], group) } }
+            let shifted = places.lazy.compactMap { place -> String? in
+                guard let moved = svgMoving(name, before: place, in: svg),
+                      case .success(let after) = SVGArtwork.parse(moved, keepingGroups: true),
+                      after.parts.filter({ holds($0, name) }).map(\.groups) == groupsBefore else { return nil }
+                return moved
+            }.first
+            guard !buried, let shifted else { continue }
             svg = shifted
             moved = true
             filled.insert(plain(cover))

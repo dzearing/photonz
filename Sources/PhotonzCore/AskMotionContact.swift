@@ -139,6 +139,30 @@ extension AskMotion {
             }
         }
 
+        /// Whether all of `name`'s ink lies inside the outline of a closed
+        /// shape `other` draws (a rectangle, a circle, a closed path), as the
+        /// keys have both at `seconds`: it has gone in, not through. On
+        /// 2026-11-12 the eval's letter, keyed down into the envelope and said
+        /// to touch it, was pushed out of the top because the envelope flies
+        /// off later in the lap. Geometry only.
+        func within(_ name: String, closedOf other: String, at seconds: Double) -> Bool {
+            let mine = ink(name, at: seconds).flatMap { $0 }
+            guard !mine.isEmpty else { return false }
+            return art.parts.filter { Self.holds($0, other) }.contains { part in
+                switch part.shape {
+                case .path(let outline) where !outline.closed: return false
+                default: break
+                }
+                let chain = ([part.name].compactMap { $0 } + part.groups.reversed()).compactMap { group in
+                    movers.first { plain($0) == plain(group) }
+                }
+                var points = Self.inkPoints(part)
+                for mover in chain { points = moved(points, by: mover, at: seconds) }
+                let outline = AskMotion.hull(points)
+                return outline.count > 2 && mine.allSatisfy { AskMotion.inside($0, outline) }
+            }
+        }
+
         static func inkPoints(_ part: SVGArtwork.Part) -> [CGPoint] {
             let half = part.stroke == nil ? 0 : part.strokeWidth / 2
             switch part.shape {
@@ -915,7 +939,8 @@ extension AskMotion {
     static func pushedOut(_ part: String, _ other: String, at seconds: Double, in lap: Lap) -> CGVector? {
         guard lap.isMover(other) || !lap.carriers(of: other).isEmpty else { return nil }
         let mine = lap.ink(part, at: seconds), theirs = lap.ink(other, at: seconds)
-        guard !mine.isEmpty, !theirs.isEmpty, inkMeets(mine, theirs, within: -passesThrough) else { return nil }
+        guard !mine.isEmpty, !theirs.isEmpty, inkMeets(mine, theirs, within: -passesThrough),
+              !lap.within(part, closedOf: other, at: seconds) else { return nil }
         func deep(_ way: CGVector, _ share: CGFloat) -> Bool {
             inkMeets(mine.map { hull in hull.map { CGPoint(x: $0.x + way.dx * share, y: $0.y + way.dy * share) } }, theirs, within: -0.05)
         }
