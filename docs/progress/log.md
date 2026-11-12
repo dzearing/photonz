@@ -22977,3 +22977,10 @@ units.
 - Replay of pass fourteen's walk plan now ricochets straight into the can. This pass's walk and the test run drew a scrap nearly as wide as the mouth, where no such rebound exists, so they still slide over the wall.
 - Story run 20261112-095935-ask: total 58.1, 1 of 6 read as asked at 7. Bar not met; task left pending.
 - Next: a thrown-in part drawn at most about half the mouth it goes into, or a wider lid where the room allows.
+
+## 2026-11-12: animated story icon, pass sixteen
+
+- Shipped 86ec35420 (Next), tests first: a part keyed wholly inside a closed outline it touches has gone in and is not pushed out (the envelope's letter rose off the top because the envelope flies off later; `Lap.within`, `AskMotionLetterGoesInTests`); `hidden` puts a part dropping into an outline before that outline's group when going before the outline would pull it into the group; `startsOver` holds a self-drawn line, fades it and undraws it unseen so a looping tick no longer snaps to empty (`AskMotionStartsOverTests`); draw rules and design ask say a part the story closes starts open.
+- Shipped 08488d859: a position key starting anywhere on where the part was drawn (not only its middle) is sent back; the walk's scrap had rested 18 units off the icon.
+- Story run 20261112-105732-ask: total 57.5, 1 of 6 read as asked at 7 (bell 7.0, checkbox 6.9). Checkbox loops 4.7 to 8.1. Bar not met; task left pending.
+- Next: the flap's fold direction (the model draws a shut flap and calls it open), the trash landing on the shut lid, the solid scrap.

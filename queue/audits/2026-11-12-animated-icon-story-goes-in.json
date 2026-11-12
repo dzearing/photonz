@@ -1,0 +1,29 @@
+{
+  "feature": "An animated icon told as a little story: what goes in stays in, a ticked box starts over cleanly",
+  "epic": "icon-svg",
+  "summary": "A letter planned to drop into an envelope now goes in behind its front, instead of being pushed up and off the top. A tick that draws itself now holds, fades and starts over, instead of snapping from ticked to empty. The bar (five of six stories reading as asked) is still not met: one of six (the bell, at 7.0).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-12-story-trash-pass16-playing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return, wait about four minutes, press Space." },
+    { "do": "Watch your sentence's reel from this pass's walk, two laps.", "shot": "2026-11-12-story-trash-pass16-two-laps.gif" },
+    { "do": "Read its frames: thrown in from the right 0.65 s, meets the lid 0.78 s, lid shuts, the scrap ends up on top of the shut lid 1.04 to 1.43 s.", "shot": "2026-11-12-story-trash-pass16-two-laps.png" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-12-story-trash-pass16.svg" },
+    { "do": "Look at the checkbox story's frames: drawn in, bounces, holds, fades at 2.24 s, starts again empty.", "shot": "2026-11-12-story-checkbox-pass16-frames.png" },
+    { "do": "Look at the envelope story's frames: the letter drops in behind the front; the flap folds open, not shut.", "shot": "2026-11-12-story-envelope-pass16-frames.png" }
+  ],
+  "evaluate": [
+    "Does the checkbox's hold and fade at the end of the lap read as starting over, or would you rather the tick un-draw itself?",
+    "In the envelope frames, does the letter read as going in, with its top edge still showing over the rim?",
+    "In the trash reel, does the scrap meeting the lid and the lid shutting read as cause and effect, even though the scrap ends up on top?"
+  ],
+  "rough": [
+    "The trash in your sentence's walk bounces off the lid and then sits on top of the shut lid instead of falling into the can; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "The trash scrap is drawn solid, not in lines like the can; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "The envelope's flap still folds open: the agent draws the flap shut and calls that open, even with the new rule that a part the story closes is drawn open; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "The envelope's fly-off is seen for about one frame before it is gone; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "Story scores this pass, reads as asked: bell 7.0, checkbox 6.9, heart 5.2, envelope 3.2, rocket 6.0, trash 4.0 (run 20261112-105732-ask, total 57.5; last pass 58.1).",
+    "The walk's plan took 282 seconds this time, close to Ask's five minute limit."
+  ]
+}
