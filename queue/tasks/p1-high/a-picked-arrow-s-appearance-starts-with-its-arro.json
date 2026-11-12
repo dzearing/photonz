@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T14:52:46.945Z",
-  "updated": "2026-11-11T16:14:02.647Z",
+  "updated": "2026-11-12T03:53:08.726Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the digest on 2026-11-01 in the runner's own side by side, queue/audits/2026-11-01-markup-appearance-vs-proto.png: the prototype column starts at Arrow; the shipped column starts Opacity, Blending, Masked by, then Arrow. Same in 2026-10-31-five-arrow-styles-6-every-new-style-sc.png. docs/design/markup.md section 8 lists Appearance as Arrow, Chip, Color, Marker, Size, Advanced, with no Opacity, Blending or Masked by. The task that shipped it (arrow-and-measurement-appearance-shows-only-styl, eac717d7) closed with the side by side in its audit but did not mention the difference. Decide where the three shared rows go for a picked arrow or measurement (under Advanced is the obvious place, since markup.md calls everything else there; Photoshop keeps opacity and blending on the Layers panel, not in the shape's properties) and log the choice; a card only if it is a costly call.",
@@ -55,6 +55,33 @@
     {
       "t": "2026-11-11T16:14:02.646Z",
       "note": "seq 140 -> 90"
+    },
+    {
+      "t": "2026-11-12T03:34:53.207Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T03:52:59.853Z",
+      "note": "owns these walks: arrow-appearance-simple-walk, measure-appearance-simple-walk, the-whole-look-carries-over-walk"
+    },
+    {
+      "t": "2026-11-12T03:52:59.930Z",
+      "note": "Chose the END of the Advanced fold for Opacity, Blending, Key and Masked by on a picked arrow or measurement over the top of Advanced or a row under Size, because the acceptance says nothing between Size and Advanced, the prototype's Advanced opens on Line and Head, and Photoshop keeps opacity/blending off a shape's own properties. Written into docs/design/markup.md section 8. Code: PartsInspector.swift, shared rows pulled into sharedLayerRows, shown at the top only when markupAppearanceKind is nil and appended inside MarkupAdvancedFold otherwise. Other layer kinds unchanged (panel-start-margin, panel-shows-what-is-picked, blend-mode-free walks green; rectangle still leads with Opacity)."
+    },
+    {
+      "t": "2026-11-12T03:53:00.006Z",
+      "note": "Walks: arrow-appearance-simple and measure-appearance-simple now claim Opacity, Blending and Masked by absent while Advanced is closed and present once open, plus a picture of them at the end of Advanced; the-whole-look-carries-over opens Advanced before typing the arrow's Opacity. Green: those three plus pick-leaves-settings-alone, panel-start-margin, measurements-named-for-their-mode, panel-shows-what-is-picked(+video), arrow-parts, panel-rows-read-as-one-column, a-size-measurement-is-one-group. Scripts/test.sh green. Looked at the side by side (2026-11-11-arrow-appearance-starts-at-arrow-vs-proto.png): prototype and shipped columns both start at Arrow. Left rough (no task): the shipped labels read 'Arrow  Clean' and the Color row carries a ninth custom swatch, as before this task; they were in the 2026-11-01 audit already."
+    },
+    {
+      "t": "2026-11-12T03:53:08.724Z",
+      "note": "A picked arrow's Appearance reads Arrow, Chip, Color, Marker, Size, Advanced with nothing above Arrow (a measurement the same from Chip); Opacity, Blending, Key and Masked by sit at the end of Advanced, written in markup.md section 8. Other layers unchanged. Verified by arrow/measure-appearance-simple walks (absent while closed, present when open), 10 related walks green, Scripts/test.sh green; audit 2026-11-11-arrow-appearance-starts-at-arrow.json with a new side by side."
     }
-  ]
+  ],
+  "started": "2026-11-12T03:34:53.206Z",
+  "walks": [
+    "arrow-appearance-simple-walk",
+    "measure-appearance-simple-walk",
+    "the-whole-look-carries-over-walk"
+  ],
+  "completed": "2026-11-12T03:53:08.725Z"
 }
