@@ -14,6 +14,14 @@ extension EditorState {
     /// The strokes this document holds.
     var namedSavedStrokes: [SavedStroke] { document?.savedStrokes ?? [] }
 
+    /// What a Style row reads over these layers: their own lines (paths and
+    /// straight lines), or with `borderAt` the edge of each box and oval at
+    /// that place in the Effects list.
+    func savedStrokeSelection(ids: [UUID], borderAt index: Int? = nil) -> SavedStrokeSelection {
+        document?.savedStrokeSelection(layerIDs: ids, borderAt: index)
+            ?? SavedStrokeSelection(members: [], selectionCount: 0)
+    }
+
     /// Save as Style: opens the name field on this row. One field at a time,
     /// wherever it was opened from.
     func beginNamingSavedStroke(rowID: String) {
@@ -48,19 +56,21 @@ extension EditorState {
         return styleID
     }
 
-    /// Gives every picked path a saved stroke, all four values, in ONE step.
-    func useSavedStroke(ids: [UUID], styleID: UUID) {
+    /// Gives every picked line a saved stroke in ONE step: a path all four
+    /// values, a straight line its width and caps, and with `borderAt` the edge
+    /// of a box or an oval its width and side.
+    func useSavedStroke(ids: [UUID], styleID: UUID, borderAt index: Int? = nil) {
         guard savedStrokesEnabled, !ids.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { _ = $0.wearSavedStroke(layerIDs: ids, styleID: styleID) }
+        perform { _ = $0.wearSavedStroke(layerIDs: ids, styleID: styleID, borderAt: index) }
     }
 
-    /// Unlink: the line stays exactly as it is, it just becomes the path's own
-    /// again, in one step. Nothing on the canvas moves.
-    func unlinkSavedStroke(ids: [UUID]) {
+    /// Unlink: the line stays exactly as it is, it just becomes the layer's
+    /// own again, in one step. Nothing on the canvas moves.
+    func unlinkSavedStroke(ids: [UUID], borderAt index: Int? = nil) {
         guard savedStrokesEnabled, !ids.isEmpty else { return }
-        perform(reportingLinkBreaks: false) { $0.unwearSavedStroke(layerIDs: ids) }
+        perform(reportingLinkBreaks: false) { $0.unwearSavedStroke(layerIDs: ids, borderAt: index) }
     }
 
     /// A stroke's Width while its slider is held: every path wearing it moves

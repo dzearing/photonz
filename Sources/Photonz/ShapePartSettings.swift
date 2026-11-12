@@ -80,13 +80,16 @@ struct ShapePartSettings: View {
                 // line and an arrow answer the one of them they HAVE, which is
                 // what their two ends look like.
                 let lineStyle = editorState.pathLineStyleSelection.of(ids)
+                // ...and the saved stroke a path or a straight line can wear
+                // (`SavedStrokes.swift`), which reaches both.
+                let strokes = editorState.savedStrokeSelection(ids: ids)
                 // Nothing at all while the part is switched OFF. A shape with
                 // no outline used to keep a Thickness reading 0 px under a
                 // colour well that painted nothing, which is the dead control
                 // the switch exists to replace: off has to LOOK off, exactly as
                 // a switched-off Fill does (`LayerPartRow.showsSettings`).
                 if row.showsSettings, !thickness.isEmpty, flat {
-                    SavedStrokeRow(rowID: row.id, selection: lineStyle)
+                    SavedStrokeRow(rowID: row.id, selection: strokes)
                     self.thickness(thickness)
                     if selection.members.contains(where: { !$0.content.thicknessFollowsSize }) {
                         SizeOverrideNote {
@@ -96,7 +99,7 @@ struct ShapePartSettings: View {
                     }
                     PathLineStyleSettings(rowID: row.id, selection: lineStyle)
                     ShapeLineEndSettings(rowID: row.id, selection: selection)
-                    SavedStrokeRow(rowID: row.id, selection: lineStyle, atTheFoot: true)
+                    SavedStrokeRow(rowID: row.id, selection: strokes, atTheFoot: true)
                 } else if row.showsSettings, !thickness.isEmpty {
                     OwnedSettings(owner: row.title) {
                         // What the line is painted with first, as the mock's
@@ -105,12 +108,12 @@ struct ShapePartSettings: View {
                         // enough to stay on screen with the Styles shelf open,
                         // which is where saving one leaves you: the mock's one
                         // click is no click at all if it needs a scroll first.
-                        SavedStrokeRow(rowID: row.id, selection: lineStyle)
+                        SavedStrokeRow(rowID: row.id, selection: strokes)
                         PathBrushSettings(rowID: row.id, selection: lineStyle)
                         self.thickness(thickness)
                         PathLineStyleSettings(rowID: row.id, selection: lineStyle)
                         ShapeLineEndSettings(rowID: row.id, selection: selection)
-                        SavedStrokeRow(rowID: row.id, selection: lineStyle, atTheFoot: true)
+                        SavedStrokeRow(rowID: row.id, selection: strokes, atTheFoot: true)
                     }
                 }
             case .captionText where !selection.isEmpty:

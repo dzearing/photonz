@@ -11,16 +11,27 @@ import SwiftUI
 
 // MARK: - The Style row
 
-/// The word Style, then what the picked paths wear or could wear.
+/// The word Style, then what the picked lines wear or could wear.
 ///
 /// With a stroke saved it sits at the top of the line's settings, because it is
 /// the shortest way to set every row under it at once (`atTheFoot`).
+///
+/// It hangs in two places. Under a path's or a straight line's Line row in
+/// Appearance it speaks for their own lines. Under a box's or an oval's Border
+/// in Effects (`borderIndex`) it speaks for that edge, and reads Stroke rather
+/// than Style, because that Border already has a Style row of its own for
+/// saved borders and two rows with one word would be no way to tell them
+/// apart. A box is never saved FROM (its corners are its Corner Radius, not a
+/// stroke's), so there it only shows once a stroke exists.
 struct SavedStrokeRow: View {
     @Environment(EditorState.self) private var editorState
     /// Which part row this hangs under, so a press reaches whatever is picked
     /// at the moment it happens (`PanelReach`).
     let rowID: String
-    let selection: PathLineStyleSelection
+    let selection: SavedStrokeSelection
+    /// The place in the Effects list of the Border this row dresses, or nil
+    /// for the picked layers' own lines.
+    var borderIndex: Int? = nil
     /// Which of its two places this is. With a stroke saved the row is at the
     /// top, as the one click that sets the rows under it. With none saved all
     /// it offers is Save as Style, which comes after the line is tuned, so it
@@ -36,16 +47,31 @@ struct SavedStrokeRow: View {
     private static let buttons = 3
 
     private var isNaming: Bool { editorState.namingSavedStrokeRow == rowID }
-    private var reach: PanelReach { .partPathLine(rowID) }
-    private var targets: [UUID] { editorState.layerIDs(reaching: reach) }
+    private var word: String { borderIndex == nil ? "Style" : "Stroke" }
+
+    /// What a press reaches, asked at the moment of the press.
+    private var targets: [UUID] {
+        guard let borderIndex else { return editorState.layerIDs(reaching: .partSavedStroke(rowID)) }
+        let ids = editorState.layerStyleSelection.borders(at: borderIndex).layerIDs
+        return editorState.savedStrokeSelection(ids: ids, borderAt: borderIndex).layerIDs
+    }
+
+    /// Whether this is the place the row shows: at the top with a stroke
+    /// saved, at the foot with none. An edge cannot be saved from, so on a
+    /// Border it waits until there is a stroke to give it.
+    private var isItsPlace: Bool {
+        let none = editorState.namedSavedStrokes.isEmpty
+        guard borderIndex == nil else { return !none }
+        return atTheFoot == none
+    }
 
     var body: some View {
         if editorState.savedStrokesEnabled, !selection.isEmpty, selection.hasALine,
-           !selection.isAllBrushed, atTheFoot == editorState.namedSavedStrokes.isEmpty {
+           !selection.isAllBrushed, isItsPlace {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
                     HStack(spacing: 4) {
-                        Text("Style").panelRowName()
+                        Text(word).panelRowName()
                         // Beside the word, in the room the name column has
                         // spare: beside the buttons it wrapped onto a second
                         // line, which put it below the fold with the shelf open.
@@ -57,7 +83,7 @@ struct SavedStrokeRow: View {
                 }
                 if isNaming { namingField }
             }
-            .playtestField("Line Style")
+            .playtestField(borderIndex == nil ? "Line Style" : "Border Stroke")
             .onChange(of: isNaming, initial: true) { _, naming in
                 guard naming else { return }
                 draft = editorState.suggestedSavedStrokeName(ids: selection.layerIDs)
@@ -89,7 +115,7 @@ struct SavedStrokeRow: View {
         } else {
             LibraryChipWrap(spacing: 4, rowSpacing: 4) {
                 ForEach(state.document?.savedStrokeChoices(limit: Self.buttons) ?? []) { stroke in
-                    Button { state.useSavedStroke(ids: targets, styleID: stroke.id) } label: {
+                    Button { use(stroke) } label: {
                         Text(stroke.name).lineLimit(1).truncationMode(.middle)
                     }
                     .controlSize(.small)
@@ -120,11 +146,11 @@ struct SavedStrokeRow: View {
                         state.showStylesShelf()
                         state.selectLibraryItem(wearing.id.uuidString)
                     }
-                    Button("Unlink") { state.unlinkSavedStroke(ids: targets) }
+                    Button("Unlink") { unlink() }
                 }
             } else if selection.wearsAnySavedStroke {
                 Section("Using more than one style") {
-                    Button("Unlink") { state.unlinkSavedStroke(ids: targets) }
+                    Button("Unlink") { unlink() }
                 }
             } else if selection.savableStrokeLook != nil {
                 Button("Save as Style") { state.beginNamingSavedStroke(rowID: rowID) }
@@ -133,7 +159,7 @@ struct SavedStrokeRow: View {
             if !strokes.isEmpty {
                 Section("Saved lines") {
                     ForEach(strokes) { stroke in
-                        Button(stroke.name) { state.useSavedStroke(ids: targets, styleID: stroke.id) }
+                        Button(stroke.name) { use(stroke) }
                     }
                 }
             }
@@ -149,7 +175,15 @@ struct SavedStrokeRow: View {
         .fixedSize()
         .panelHelp(wearing.map { "This line uses the style \($0.name)" }
                    ?? "Save this line as a named style, or use one you already saved")
-        .playtestControl("Style", detail: wearing?.name ?? "none")
+        .playtestControl(word, detail: wearing?.name ?? "none")
+    }
+
+    private func use(_ stroke: SavedStroke) {
+        editorState.useSavedStroke(ids: targets, styleID: stroke.id, borderAt: borderIndex)
+    }
+
+    private func unlink() {
+        editorState.unlinkSavedStroke(ids: targets, borderAt: borderIndex)
     }
 
     private var namingField: some View {

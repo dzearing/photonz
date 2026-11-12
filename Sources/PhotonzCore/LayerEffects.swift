@@ -315,6 +315,11 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     /// Whether it paints at all. Off keeps every number on it, exactly as a
     /// shadow's tick does.
     public var isOn: Bool
+    /// The saved stroke this ring wears (`SavedStrokes.swift`), or nil for a
+    /// ring of its own: how a box's or an oval's edge follows a set's weight.
+    /// Its width and side are here as well; this only says where they came
+    /// from.
+    public var savedStrokeID: UUID?
 
     /// What a border looks like the moment it is added: thick enough to see at
     /// a glance without swamping a small shape.
@@ -342,7 +347,7 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case width, colorHex, paint, position, offset, follows, isOn
+        case width, colorHex, paint, position, offset, follows, isOn, savedStrokeID
     }
 
     public init(from decoder: Decoder) throws {
@@ -357,6 +362,7 @@ public struct BorderEffect: Hashable, Codable, Sendable {
         // what it opens as (`BorderFollows.swift`).
         follows = try c.decodeIfPresent(BorderFollows.self, forKey: .follows) ?? .shape
         isOn = try c.decodeIfPresent(Bool.self, forKey: .isOn) ?? true
+        savedStrokeID = try c.decodeIfPresent(UUID.self, forKey: .savedStrokeID)
         // The flat colour is where it has always been; the ramp goes in beside
         // it, and only when there is one.
         if let ramp = try c.decodeIfPresent(Paint.self, forKey: .paint) {
@@ -381,6 +387,7 @@ public struct BorderEffect: Hashable, Codable, Sendable {
         // today opens in an older build drawing exactly what it drew before.
         if follows != .shape { try c.encode(follows, forKey: .follows) }
         try c.encode(isOn, forKey: .isOn)
+        try c.encodeIfPresent(savedStrokeID, forKey: .savedStrokeID)
     }
 
     /// Whether this entry puts anything on the canvas.

@@ -236,6 +236,10 @@ private struct EffectRowView: View {
             // On a label, WHAT the ring goes round comes before everything
             // else: it changes what the rest of the settings even describe.
             BorderFollowsRow(row: row)
+            // A box's or an oval's edge can wear a saved stroke, which sets
+            // the side and the width under it in one click, so it comes
+            // before both (`SavedStrokePanel.swift`).
+            BorderSavedStrokeRow(row: row)
             // Where the ring sits, then how thick it is: which side of the edge
             // you are on changes what a width even means, so it is asked first.
             BorderPositionRow(row: row)
@@ -325,6 +329,20 @@ private struct EffectColorRow: View {
 /// all rather than being there greyed out: a question with one possible answer
 /// is a question in the way.
 ///
+/// The saved stroke a box's or an oval's edge wears, read for the layers this
+/// Border row reaches.
+private struct BorderSavedStrokeRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+
+    var body: some View {
+        let ids = editorState.layerStyleSelection.borders(at: row.index).layerIDs
+        SavedStrokeRow(rowID: "\(row.id).stroke",
+                       selection: editorState.savedStrokeSelection(ids: ids, borderAt: row.index),
+                       borderIndex: row.index)
+    }
+}
+
 /// It sits at the top of the border's settings because it changes what the two
 /// rows under it mean: a line round each letter has no inside and no outside,
 /// so on a label the Position popup goes away with it (`BorderFollows.swift`).

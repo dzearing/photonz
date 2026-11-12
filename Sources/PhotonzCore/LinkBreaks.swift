@@ -320,9 +320,10 @@ extension LinkBreakReport {
         return order.map { LinkBreak(kind: .effectStyle, count: lost[$0] ?? 0, source: names[$0]) }
     }
 
-    /// A line that drifted off its saved stroke. Switching the line off is not
-    /// a break: that is a choice to have no line, and repeating it back is not
-    /// news.
+    /// A line that drifted off its saved stroke: a path's, a straight line's,
+    /// or a box's or an oval's edge. Switching the line off, or taking the edge
+    /// away, is not a break: that is a choice to have no line, and repeating it
+    /// back is not news.
     private static func savedStrokeBreaks(_ before: PhotonzDocument, _ after: PhotonzDocument,
                                           _ edited: [Layer],
                                           _ afterByID: [UUID: Layer]) -> [LinkBreak] {
@@ -331,12 +332,32 @@ extension LinkBreakReport {
                                uniquingKeysWith: { first, _ in first })
         var lost: [UUID: Int] = [:]
         var order: [UUID] = []
-        for layer in edited {
-            guard let id = layer.path?.savedStrokeID, names[id] != nil,
-                  let now = afterByID[layer.id]?.path, now.savedStrokeID != id,
-                  now.strokeWidth > 0 else { continue }
+        func note(_ id: UUID, _ count: Int) {
+            guard count > 0 else { return }
             if lost[id] == nil { order.append(id) }
-            lost[id, default: 0] += 1
+            lost[id, default: 0] += count
+        }
+        for layer in edited {
+            guard let now = afterByID[layer.id] else { continue }
+            let nowWidth = now.path?.strokeWidth ?? now.annotation?.strokeWidth ?? 0
+            if let id = layer.ownSavedStrokeID, names[id] != nil,
+               now.ownSavedStrokeID != id, nowWidth > 0 {
+                note(id, 1)
+            }
+            // The rings by count rather than by place, so a border moved up
+            // the list wearing its name is not read as one that let go, and
+            // only as many as still paint with no name of their own.
+            let before = layer.style.borderEffects.compactMap(\.savedStrokeID)
+            guard !before.isEmpty else { continue }
+            let still = now.style.borderEffects.compactMap(\.savedStrokeID)
+            var unnamed = now.style.borderEffects.count { $0.savedStrokeID == nil && $0.paints }
+            var seen = Set<UUID>()
+            for id in before where names[id] != nil && seen.insert(id).inserted {
+                let dropped = before.count { $0 == id } - still.count { $0 == id }
+                let count = min(max(0, dropped), unnamed)
+                unnamed -= count
+                note(id, count)
+            }
         }
         return order.map { LinkBreak(kind: .savedStroke, count: lost[$0] ?? 0, source: names[$0]) }
     }

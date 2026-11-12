@@ -1,0 +1,29 @@
+{
+  "feature": "A straight line and an oval wear the saved stroke",
+  "epic": "icon-vector",
+  "summary": "A line from the Line tool and the outline of a box or an oval can now take the icon set's saved stroke in one click, and changing the saved stroke's width moves them together with the Pen paths, as one undo step.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. File, New, Image, Icon. Walk: Scripts/playtest/a-line-and-an-oval-wear-the-saved-stroke-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Draw a line with the Pen, set Width to 1.75 and Corners to Round, then click Save as Style and press Return.", "shot": "2026-11-12-line-oval-stroke-1-a-line-of-its-own-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Draw a straight line with the Line tool, pick it, and click Glyph / stroke 1.75 on its Style row under Line.", "shot": "2026-11-12-line-oval-stroke-2-the-line-wears-it-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Draw an oval, add a Border with the plus on Effects, and click Glyph / stroke 1.75 on the Border's Stroke row.", "shot": "2026-11-12-line-oval-stroke-4-the-oval-wears-it-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click empty canvas, click the Glyph / stroke 1.75 tile on the Styles shelf, and type 3 in its Width.", "shot": "2026-11-12-line-oval-stroke-6-the-oval-followed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once: the path, the line and the oval's edge all go back to 1.75.", "shot": "2026-11-12-line-oval-stroke-7-one-undo-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "On an oval's Border, does the word Stroke beside the saved stroke read as the same thing as Style on a path's Line row, or would you rather both said the same word?",
+    "Is it right that an oval takes only the width and the side (Center) from the saved stroke, keeping its own colour?",
+    "Should an oval drawn on an icon that already uses a saved stroke get its Border wearing that stroke straight away, instead of needing the plus and then a click?",
+    "Does a straight line wearing the set's weight look like part of the same glyph as the Pen lines?"
+  ],
+  "rough": [
+    "No mock covers a straight line, a box or an oval wearing a saved stroke, so the rows sit where each one's line is already tuned: a line's Line row in Appearance, an oval's Border in Effects.",
+    "An oval or box drawn on an icon arrives filled with no outline, so it takes two steps before the one click: the plus on Effects, then Border. Left in this task's log as a question for you (evaluate line 3) rather than filed.",
+    "On a Border the row says Stroke, not Style, because that Border already has its own Style row for saved borders and two rows called Style would be impossible to tell apart. Logged as my call.",
+    "A box or an oval cannot be saved FROM, only given a stroke: its corners are its Corner Radius, not a line setting, so a stroke saved from it would have to invent them.",
+    "An arrow still keeps its own line: its weight also sizes its head, so the set's weight would quietly regrow the head.",
+    "A Border that wears a saved border style and is then given a saved stroke lets go of the border style (and the other way round), with the usual note saying which let go.",
+    "The Styles shelf tile lags on how many things use the stroke (picture 4 says 1 use with three wearing it; picture 6 says 3 uses). This predates this change, the original saved-stroke walk shows it too: filed as a-saved-stroke-tile-on-the-styles-shelf-counts-e."
+  ]
+}

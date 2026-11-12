@@ -22989,3 +22989,10 @@ units.
 
 - Task find-out-why-sweeping-with-the-arrow-tool-shows: not icon-specific. With a pen path picked, a bare-canvas press with the arrow tool starts the path-points band (`pathPointSweep`), which `dragReadoutSubject` never read. It now does (CanvasDragReadout.swift). New walk `arrow-sweep-with-a-path-picked-says-its-size-walk`.
 - Next: nothing open from this.
+
+## 2026-11-12: a line and an oval wear the saved stroke
+
+- Task a-straight-line-and-an-oval-in-a-glyph-can-wear (Next), tests first (`SavedStrokeShapesTests`): a Line tool line (`AnnotationContent.savedStrokeID`, width and caps) and a box's or oval's Border (`BorderEffect.savedStrokeID`, width and side) can wear a saved stroke; `setSavedStroke` re-dresses all three kinds in one step, reconcile and link breaks cover them, `savedStrokeSelection(layerIDs:borderAt:)` is the row's reading. Panel: the line's Line row shows the Style row; a Border shows a row called Stroke (it already has a Style row for saved borders). Arrows left out (weight sizes the head); boxes are not saved from.
+- Walk `a-line-and-an-oval-wear-the-saved-stroke-walk` green at Next defaults; `a-glyph-takes-the-saved-stroke-walk` still green.
+- Filed a-saved-stroke-tile-on-the-styles-shelf-counts-e: the shelf tile's use count lags (predates this change).
+- Next: whether a Border added on an icon should start in the icon's saved stroke (asked in the audit).

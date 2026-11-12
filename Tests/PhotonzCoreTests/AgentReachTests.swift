@@ -380,12 +380,12 @@ struct AgentReachTests {
         SavedStrokePanel.swift › controls: Button() | notYet: saved lines (a line saved as a style)
         SavedStrokePanel.swift › Edit \\(wearing.name) in the Library | leftOut: inLibrary
         SavedStrokePanel.swift › menu: Button(stroke.name) | notYet: saved lines (a line saved as a style)
+        SavedStrokePanel.swift › menu: Menu() | notYet: saved lines (a line saved as a style)
         SavedStrokePanel.swift › Remove | notYet: saved lines (a line saved as a style)
         SavedStrokePanel.swift › Save | notYet: saved lines (a line saved as a style)
         SavedStrokePanel.swift › Save as Style | notYet: saved lines (a line saved as a style)
         SavedStrokePanel.swift › Select What Uses This | leftOut: pick
         SavedStrokePanel.swift › Slider | notYet: saved lines (a line saved as a style)
-        SavedStrokePanel.swift › Style | notYet: saved lines (a line saved as a style)
         SavedStrokePanel.swift › Style name | notYet: saved lines (a line saved as a style)
         SavedStrokePanel.swift › Unlink | notYet: saved lines (a line saved as a style)
         ShapePartSettings.swift › Head Size | notYet: an arrow's head size

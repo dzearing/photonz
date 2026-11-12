@@ -326,6 +326,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// curve's shape (`ArrowBend.swift`). Nil is a straight arrow, which is
     /// every arrow drawn before arrows could bend.
     public var bend: ArrowBend?
+    /// Line-only: the saved stroke this line wears (`SavedStrokes.swift`), or
+    /// nil for a line of its own. The width and caps are all here as well:
+    /// this only says where they came from.
+    public var savedStrokeID: UUID?
     /// Rectangle-only: how round each of the four corners is (layer-local
     /// units). Square everywhere = sharp corners. The rasterizer draws a
     /// rounded stroke, so the border follows the corners instead of being
@@ -503,6 +507,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         case chipStyle
         case storedChipMarker = "chipMarker"
         case storedCaptionPartsByHand = "captionPartsByHand"
+        case savedStrokeID
     }
 
     public init(from decoder: Decoder) throws {
@@ -567,6 +572,8 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         storedChipMarker = try c.decodeIfPresent(ChipMarker.self, forKey: .storedChipMarker)
         storedCaptionPartsByHand = try c.decodeIfPresent(Set<CaptionPart>.self,
                                                          forKey: .storedCaptionPartsByHand)
+        // A saved stroke on a line postdates everything above.
+        savedStrokeID = try c.decodeIfPresent(UUID.self, forKey: .savedStrokeID)
         // A label written before it had colours of its own keeps the three it
         // was drawn in: the darkened tone of the arrow's colour, that colour
         // for its edge, white for its words. `captionTextColorHex` is the mark,

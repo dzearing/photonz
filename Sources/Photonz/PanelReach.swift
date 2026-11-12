@@ -38,6 +38,9 @@ enum PanelReach: Hashable, Sendable {
     /// ...the ones that are paths the Pen drew, whose pattern, ends and
     /// corners are all choosable.
     case partPathLine(String)
+    /// ...the ones whose own line can wear a saved stroke: paths, and straight
+    /// lines from the Line tool (`SavedStrokes.swift`).
+    case partSavedStroke(String)
     /// ...the ones that are shapes, which is what the single Ends row over a
     /// line or an arrow reaches.
     case partShapes(String)
@@ -58,6 +61,8 @@ extension EditorState {
             return outlineThicknessSelection.of(partRowReach(rowID: id)).layerIDs
         case .partPathLine(let id):
             return pathLineStyleSelection.of(partRowReach(rowID: id)).layerIDs
+        case .partSavedStroke(let id):
+            return savedStrokeSelection(ids: partRowReach(rowID: id)).layerIDs
         case .partShapes(let id):
             let wanted = Set(partRowReach(rowID: id))
             return shapeSelection.members.map(\.id).filter { wanted.contains($0) }
