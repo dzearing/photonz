@@ -22945,3 +22945,10 @@ units.
 - Moved out of the panel: Channel's Flatten (now on the volume line's right-click and in Clip > Flatten Level), the Captions section's Timing and Subtitles rows (on the caption right-click under More, and in the menu bar), and the caption track bar's Clear, Reset and readouts.
 - Flatten Level from a right-click now drops the line's pick, so Fades no longer says Segment: Mixed for a flat line.
 - New walk `the-panel-keeps-one-main-action-walk` (a measurement, a clip, a sound, the captions; Next defaults). Audit `queue/audits/2026-11-11-the-panel-shows-what-the-picked-thing-is-and-its.json`.
+
+## 2026-11-11 — sound lane at the audio mock's height
+
+- A sound on a track of its own (music on Audio) now stands 84pt (72 in a window 880 wide or less), its header name in a top band; the panel-ground look (`next-sound-on-the-panel-ground`) is on by default in Next and skips a clip's own sound half.
+- Fixed a right click on a linear fade's volume line in the tall lane doing nothing: the press is read at the drawn line's height (`AnimatedLine.drawnY`).
+- Ten walks re-aimed for the taller dock; new `a-sound-lane-is-as-tall-as-the-mock-walk`.
+- Next: `a-sound-at-its-recorded-level-draws-its-volume-l` (the line sits a third down where the mock draws it near the top). Open question: the laptop-size panel loses its Fades row below the fold while music is picked.

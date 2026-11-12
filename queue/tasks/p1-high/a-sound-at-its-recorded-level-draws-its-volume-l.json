@@ -1,0 +1,27 @@
+{
+  "id": "a-sound-at-its-recorded-level-draws-its-volume-l",
+  "title": "A sound at its recorded level draws its volume line near the top of its lane, as the audio mock does",
+  "goal": "In the audio mock a sound playing at its recorded level has its volume line close to the top of its lane, so the line reads as full and the waveform sits under it. In the app the same sound draws its line about a third of the way down, because the top third is kept for turning a sound up past its recorded level. Bring the line to where the mock draws it while still letting a sound be turned up.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 3990,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-12T02:54:40.474Z",
+  "updated": "2026-11-12T02:54:40.477Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found auditing a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa (2026-11-11). Mock: docs/design/mocks/pages/video-audio.html ~462 yOfLevel(v)=90-clamp(v,0,1)*78 (v=1 at 12/100). App: Sources/Photonz/SoundLane.swift y(forGain:) squares the travel against AudioLevel.loudestGain (twice unity), so unity sits at 1-sqrt(.5)=29% of the usable height: 26.9pt down an 84pt lane (measured on the probe: lane 864-948, line at 891). Walks with level-line coordinates: a-sound-s-volume-line-*, a-sound-s-bend-handle-follows-the-hand-walk, a-sound-lane-is-as-tall-as-the-mock-walk, fade-diamonds-and-level-points-look-like-the-mock-walk, a-sound-s-waveform-follows-its-level-walk.",
+  "acceptance": [
+    "A sound at its recorded level draws its volume line within the top fifth of its lane, as video-audio.html places it (yOfLevel: 90 - 78 x level, out of 100)",
+    "A sound can still be turned up past its recorded level by dragging the line or with the panel, and the line shows it",
+    "Dragging the line still lands it under the pointer, and the walks that drag a volume line by point are updated and pass"
+  ],
+  "log": [
+    {
+      "t": "2026-11-12T02:54:40.476Z",
+      "note": "created (manual)"
+    }
+  ]
+}

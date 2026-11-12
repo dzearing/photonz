@@ -5,21 +5,21 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T23:10:38.768Z",
-  "updated": "2026-11-11T16:14:02.520Z",
+  "updated": "2026-11-12T02:56:11.879Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while auditing a-sound-s-waveform-grows-and-shrinks-with-its-fa (2026-10-07). Mock: docs/design/mocks/pages/video-audio.html ~41 `.lane.alane{height:84px}` (~73 72px narrow), ~506-514 the waveform as one SVG path (top edge then bottom edge, fill-opacity .55). App: Sources/Photonz/MotionStripView.swift ~44 soundBarHeight 36, soundLaneHeight 42; Sources/Photonz/SoundLane.swift SoundWaveform draws one rect per column. Heights already come from Waveform.drawnHeights (PhotonzCore), so the shape only changes how they are drawn. Searched: waveform smooth, waveform filled path, sound lane taller, audio lane height, lane is taller (with --all); nothing covered it.",
   "acceptance": [
-    "A sound segment on the timeline is drawn at the mock's lane height (84 points, 72 at the narrow size), and the track header beside it is the same height",
+    "A sound on a track of its own is drawn at the mock's lane height (84 points, 72 at the narrow size), and the track header beside it is the same height with its name at the top. (A recording's own sound is the bottom half of its clip since 2026-11-05 and keeps that height.)",
     "The waveform is one filled shape mirrored about the middle, in the track's colour, as video-audio.html draws it, still following the level and the fades",
     "The level line is drawn in the lane's own colour (cyan on the first sound track, purple on the second), as video-audio.html strokes it",
     "The level line keeps its full range of travel in the taller lane, and a drag on it still lands under the pointer",
     "The sound segment sits on the panel colour with a thin edge in the lane's own colour, so the waveform is the coloured shape, as video-audio.html draws it (the background card, settled on 2026-10-20, when the waiting cards were taken as recommended: panel colour, coloured waveform). Name, waveform and level line stay legible on it in light and dark. A recording's own sound keeps the green family rather than its picture's tint (the tint card, same day: keep sound green, joined by a staple). Folded in from a-sound-clip-on-the-timeline-wears-its-file-name",
-    "Try path at Next defaults: open the talk sample and look at its sound under V1. A walk photographs it beside video-audio.html's lanes; audit written under queue/audits/"
+    "Try path at Next defaults: open the talk sample, add the sample music, and look at it on the Audio track. A walk photographs it beside video-audio.html's lanes; audit written under queue/audits/"
   ],
   "log": [
     {
@@ -181,11 +181,41 @@
     {
       "t": "2026-11-11T16:14:02.519Z",
       "note": "seq 120 -> 70"
+    },
+    {
+      "t": "2026-11-12T01:17:02.104Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T02:55:01.230Z",
+      "note": "walks a-sound-s-waveform-follows-its-level-walk, fade-diamonds-and-level-points-look-like-the-mock-walk -> a-sound-lane-is-as-tall-as-the-mock-walk, a-sound-s-waveform-follows-its-level-walk, fade-diamonds-and-level-points-look-like-the-mock-walk"
+    },
+    {
+      "t": "2026-11-12T02:55:57.932Z",
+      "note": "Adversarial review (2026-11-11): since 2026-11-05 a recording's own sound is the bottom half of its clip (ClipHalves, 56pt, the user's call), so 'the talk's sound under V1' no longer exists as a lane. The 84pt lane now applies to a sound on its own track (music on Audio), which is exactly what video-audio.html draws. Chose: an empty waiting Audio track keeps the kit's 34 slot over 84, because it waits under every recording with sound and 84pt of nothing would take 50pt from the picture each time. Chose: the in-clip sound half keeps its green ground over the panel ground, per the tint card (keep sound green) and the user's 2026-11-05 clip-halves look."
+    },
+    {
+      "t": "2026-11-12T02:55:58.006Z",
+      "note": "Built: TimelineTrackRowModel.restingLaneHeight gives a sound on its own track SoundLaneShape.height (84, 72 at <=880 wide) via EditorState.timelineSoundLaneHeight set from EditorView's window width; the header keeps name and switches in a 34pt top band (mock .tl align-self:flex-start); next-sound-on-the-panel-ground is on by default in Next and skips linked sound halves. Found and fixed: in the tall lane a right click on a linear fade opened the segment menu but its rows did nothing, because SoundLevelLine.rightPressPoint read the press at the true gain's height (sqrt scale) while the segment is drawn straight; 10pt apart in 84pt vs 3pt in 34pt, past the 6pt reach. Now read at AnimatedLine.drawnY(atX:) (PhotonzCore, tested first)."
+    },
+    {
+      "t": "2026-11-12T02:55:58.078Z",
+      "note": "Walks: baseline (my change stashed) showed 10 of 11 sound walks failing were mine (a-transition-is-picked-at-the-cut-walk fails without it too: Fade In reads 0.51s). Re-aimed by measurement: V1 802-858, music lane 864-948, unity line 891 (no title); with a title the dock hits its cap and rows above move 42 not 50. Updated: a-sound-s-volume-line-{plain-clicks,menus-alternate,picks-and-shapes}, a-sound-s-bend-handle-follows-the-hand, picked-in-range-menu-bar, box-scrolls-at-the-edge-by-hand, track-header-lifts-by-pointer, timeline-right-click-menus (reveal steps: tracks now scroll), sound-fades-in-the-panel and panel-shows-what-is-picked-video (reveal Gain section: on the laptop window the Fades row is below the fold). New: a-sound-lane-is-as-tall-as-the-mock-walk. All 57 sound-related walks run green bar the transition one. Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-12T02:55:58.149Z",
+      "note": "left rough: the 72pt narrow lane is unit tested and wired but no walk can resize the window to photograph it; the laptop panel losing the Fades row below the fold is the accepted height card's cost, in the audit's rough for the user to react to."
+    },
+    {
+      "t": "2026-11-12T02:56:11.877Z",
+      "note": "A sound on its own track now has video-audio.html's 84pt lane (72 narrow) on the panel colour with a lane-coloured edge, header name at the top; panel-ground switch on by default in Next; right-click on a fade's line in the tall lane fixed (read at the drawn line). Commit da91a74ad. Verified: Scripts/test.sh exit 0; 57 sound walks re-run, all green except a-transition-is-picked-at-the-cut-walk which fails without this change too; new a-sound-lane-is-as-tall-as-the-mock-walk at defaults. Audit queue/audits/2026-11-11-sound-lane-84.json. Follow-up filed: a-sound-at-its-recorded-level-draws-its-volume-l."
     }
   ],
   "walks": [
+    "a-sound-lane-is-as-tall-as-the-mock-walk",
     "a-sound-s-waveform-follows-its-level-walk",
     "fade-diamonds-and-level-points-look-like-the-mock-walk"
   ],
-  "started": "2026-10-08T01:46:41.836Z"
+  "started": "2026-11-12T01:17:02.103Z",
+  "completed": "2026-11-12T02:56:11.878Z"
 }
