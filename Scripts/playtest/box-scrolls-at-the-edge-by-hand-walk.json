@@ -103,10 +103,7 @@
     400,
     963
    ],
-   "to": [
-    1724,
-    819
-   ],
+   "to": [1724, 777],
    "steps": 12,
    "holdSeconds": 3.0,
    "hold": "1-held-past-the-right-edge"
@@ -142,10 +139,7 @@
   },
   {
    "do": "windowClick",
-   "at": [
-    300,
-    819
-   ]
+   "at": [300, 777]
   },
   {
    "do": "action",
@@ -161,14 +155,8 @@
   },
   {
    "do": "windowDrag",
-   "from": [
-    700,
-    854
-   ],
-   "to": [
-    1716,
-    854
-   ],
+   "from": [700, 812],
+   "to": [1716, 812],
    "steps": 12,
    "holdSeconds": 0.6,
    "hold": "2-clip-held-at-the-right-edge"

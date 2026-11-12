@@ -271,7 +271,11 @@ struct SoundLevelLine: View {
               frameInTracks.insetBy(dx: 0, dy: -2).contains(CGPoint(x: frameInTracks.midX,
                                                                     y: editorState.timelineRightPressY))
         else { return nil }
-        return CGPoint(x: x(atMS: ms), y: y(forGain: shownLevel.gain(atLayerMS: ms)))
+        // At the DRAWN line's height there: a linear fade is drawn straight
+        // while the level it plays bends on the line's scale, and in a tall
+        // lane the two part by more than the line's reach.
+        let x = x(atMS: ms)
+        return CGPoint(x: x, y: animatedLine.drawnY(atX: x) ?? y(forGain: shownLevel.gain(atLayerMS: ms)))
     }
 
     /// The line as the rule sees it, in this view's own points: a dot at

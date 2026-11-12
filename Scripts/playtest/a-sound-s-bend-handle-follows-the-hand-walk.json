@@ -60,30 +60,21 @@
     {
       "comment": "THE FIRST TEST: Command-click on the line adds a point there, holding the line's level.",
       "do": "windowClick",
-      "at": [
-        721,
-        924
-      ],
+      "at": [721, 891],
       "modifiers": [
         "command"
       ]
     },
     {
       "do": "windowClick",
-      "at": [
-        1057,
-        924
-      ],
+      "at": [1057, 891],
       "modifiers": [
         "command"
       ]
     },
     {
       "do": "windowClick",
-      "at": [
-        1393,
-        924
-      ],
+      "at": [1393, 891],
       "modifiers": [
         "command"
       ]
@@ -200,14 +191,8 @@
     {
       "comment": "The bend handle sits at the middle of the picked fade segment, at 0:01.5. A real pointer's drag down toward the bottom of the bar.",
       "do": "windowDrag",
-      "from": [
-        325.7,
-        927
-      ],
-      "to": [
-        325.7,
-        938
-      ],
+      "from": [325.7, 893.3],
+      "to": [325.7, 928.2],
       "steps": 8
     },
     {
@@ -225,7 +210,7 @@
     {
       "do": "describe",
       "stage": "4-bent",
-      "note": "THE TEST: the bend handle dragged down eleven points: the fade's segment now bends low through where it was let go, and the level half way along reads about -22 dB rather than the near-full level of Ease out. Within a decibel, because the drag lands a fraction of a point apart run to run (-22.3, -22.5 and -23.1 on 2026-11-10)"
+      "note": "THE TEST: the bend handle dragged down thirty five points: the fade's segment now bends low through where it was let go, and the level half way along reads about -22 dB rather than the near-full level of Ease out. Within a decibel, because the drag lands a fraction of a point apart run to run (-22.3, -22.5 and -23.1 on 2026-11-10)"
     },
     {
       "do": "expect",

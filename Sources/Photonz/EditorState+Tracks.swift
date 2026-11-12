@@ -104,11 +104,23 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// line needs somewhere to be dragged.
     var carriesSound: Bool { track.kind == .audio || clips.contains(where: \.isSound) }
 
+    /// How tall a lane with a sound on it stands: video-audio.html's 84, 72
+    /// in a narrow window (`EditorState.timelineSoundLaneHeight`).
+    var soundLaneHeight: CGFloat = SoundLaneShape.height
+
     /// How tall the lane stands at the rows' resting zoom: a clip with its
-    /// own sound needs room for both halves, one of pure sound the kit's
-    /// taller lane.
+    /// own sound needs room for both halves (`ClipHalves`, the user's own
+    /// height, 2026-11-05), a sound on a track of its own the audio mock's
+    /// tall lane, so a fade, a quiet stretch and the level line over them all
+    /// have room. An Audio track waiting with nothing on it keeps the kit's
+    /// 34: it is a place to drop a sound, and 84 points of nothing would take
+    /// 50 from the picture on every recording with sound.
+    /// A sound on a track of its own: the audio mock's tall lane.
+    var hasTallSoundLane: Bool { linked.isEmpty && clips.contains(where: \.isSound) }
+
     var restingLaneHeight: CGFloat {
         if !linked.isEmpty { return ClipHalves.restingLaneHeight }
+        if hasTallSoundLane { return soundLaneHeight }
         return carriesSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight
     }
 
@@ -151,6 +163,7 @@ extension EditorState {
         // Read before the memo, so a view drawing these rows is told when an
         // arrow opens or closes a row's parts.
         let open = expandedGroupIDs
+        _ = timelineSoundLaneHeight
         if steady, let memo = timelineTrackRowsMemo, memo.document == document,
            memo.picked == selectedLayerID, memo.open == open { return memo.rows }
         let rows = timelineTrackRows(of: document)
@@ -232,6 +245,7 @@ extension EditorState {
             var row = TimelineTrackRowModel(track: track, clips: clips, inner: inner, isOff: isOff,
                                             linked: linked)
             row.nesting = nesting
+            row.soundLaneHeight = timelineSoundLaneHeight
             row.soundNumber = tracks.soundTrackNumber(of: soundRows.first?.id ?? track.id) ?? 0
             row.soundIsMuted = soundRows.contains(where: \.isMuted)
             row.soundIsOff = row.soundIsMuted || (soloSound && !soundRows.contains(where: \.isSolo))

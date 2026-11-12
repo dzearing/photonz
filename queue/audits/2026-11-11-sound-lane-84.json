@@ -1,0 +1,32 @@
+{
+  "feature": "A sound on its own track gets the audio mock's tall lane, on the panel colour",
+  "epic": "video-audio",
+  "task": "a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa",
+  "summary": "A sound on a track of its own, like music on the Audio track, now has an 84 point lane (72 in a narrow window) instead of 34, so its waveform, fades and volume line have room. It is drawn as the audio mock draws it: the panel colour with a thin edge in the track's colour, the waveform one coloured shape, the track name at the top of its header. A recording's own sound, the bottom half of its clip, is unchanged.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-sound-lane-is-as-tall-as-the-mock-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open the talk sample, then add the sample music from the Audio menu.", "shot": "2026-11-11-sound-lane-84-1-dark-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Switch the Mac to light appearance and look at the music's lane again.", "shot": "2026-11-11-sound-lane-84-2-light-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the music's waveform to pick it, then drag its volume line down about a quarter of the lane.", "shot": "2026-11-11-sound-lane-84-3-level-in-hand-sc.png" },
+    { "do": "Let go and read Volume in the panel.", "shot": "2026-11-11-sound-lane-84-3-turned-down-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the music's volume line on a fade and choose Ease out." },
+    { "do": "Compare the lane with the audio mock's lanes.", "shot": "2026-10-07-sound-waveform-follows-level-mock-lanes.png" }
+  ],
+  "evaluate": [
+    "Is the tall lane worth the 50 points it takes from the picture while a sound sits on its own track?",
+    "Does the panel colour with a purple waveform read better than the green clip it replaces?",
+    "Is the volume line easier to set by hand now that it has three times the travel?",
+    "Should an empty Audio track waiting under a recording stay short, as it does now, or stand as tall as a full one?"
+  ],
+  "rough": [
+    "Chose to keep an empty Audio track at the short 34 point slot and grow it only when a sound lands on it, because 84 points of nothing would take 50 from the picture on every recording with sound. No mock covers an empty Audio track.",
+    "A recording's own sound stays the 28 point green bottom half of its clip, not the 84 point panel-coloured lane: the clip halves are your call on 2026-11-05 and the tint card a-sound-clip-on-the-timeline-wears-its-file-name-which-background-should-a-sound kept a recording's sound green.",
+    "The empty stretch of the Audio track after the clip is the dock's own ground, where the mock draws one card round the whole lane; the card a-sound-clip-on-the-timeline-wears-its-file-name-which-background-should-a-sound settled the clip's ground, and every track in the dock draws its empty stretch the same way.",
+    "At its recorded level the volume line sits about a third of the way down the lane, where the mock draws it near the top: filed as a-sound-at-its-recorded-level-draws-its-volume-l.",
+    "On a laptop-size window, with music on its own track and picked, the panel is 50 points shorter and the first Fades row sits just below its fold until you scroll (picture 2026-11-11-sound-lane-84-laptop-panel-sc.png). That is the height card a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa-how-tall-should-a-sound-s-lane-b's cost landing on the panel as well as the picture.",
+    "With a title, two picture tracks and music, the tracks are taller than the dock's limit and scroll inside it, so the music can sit partly under the bottom edge until you scroll the tracks.",
+    "The 72 point narrow-window lane is wired to the window's width and unit tested, but no walk resizes the window, so it has not been photographed.",
+    "Fixed on the way: a right click on a fade's volume line in the tall lane opened the segment's menu but its curve rows did nothing, because the click was re-read at the true level's height while a linear fade is drawn straight. It is now read at the drawn line's height."
+  ]
+}

@@ -100,6 +100,20 @@ public struct AnimatedLine: Hashable, Sendable {
             .min { $0.distance < $1.distance }?.point ?? point
     }
 
+    /// How high the line is drawn at `x`, along whichever of its segments,
+    /// or the line before or after them, spans it; nil off both ends. Where a
+    /// right click is read: a segment is drawn straight between the corners
+    /// it is given, which is not always where the value it stands for sits.
+    public func drawnY(atX x: CGFloat) -> CGFloat? {
+        for line in segments + [before, after] {
+            for (a, b) in zip(line, line.dropFirst()) where min(a.x, b.x) <= x && x <= max(a.x, b.x) {
+                guard b.x != a.x else { return a.y }
+                return a.y + (b.y - a.y) * (x - a.x) / (b.x - a.x)
+            }
+        }
+        return nil
+    }
+
     /// What a click does to what it landed on.
     public static func action(for hit: AnimatedLineHit?, command: Bool, shift: Bool) -> AnimatedLineAction {
         switch hit {

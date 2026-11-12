@@ -247,6 +247,7 @@
       "lists": [],
       "comment": "A sound picked: its Channel and Fades lead, on screen on the laptop window, with no Captions or Transitions under them."
     },
+    { "comment": "On the laptop window a sound in the audio mock's tall lane leaves the panel short of the Fades rows until it scrolls (a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa).", "do": "reveal", "control": "Gain section" },
     {
       "do": "expectInView",
       "field": "Fade in"

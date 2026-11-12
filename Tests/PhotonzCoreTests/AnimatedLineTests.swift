@@ -128,6 +128,23 @@ struct AnimatedLineTests {
         #expect(pick.isEmpty)
     }
 
+    /// A right click is read at the DRAWN line's height where it landed: a
+    /// linear fade is drawn straight between its dots while the level it
+    /// plays follows a curve on the volume line's scale, and in the audio
+    /// mock's 84 point lane the two part by ten points, more than a line's
+    /// reach, so a press right on the drawn segment read as off the line.
+    @Test func theDrawnLinesHeightIsReadAtAnyPointAlongIt() {
+        let line = Self.line()
+        #expect(line.drawnY(atX: 150) == 35)
+        #expect(line.drawnY(atX: 200) == 20)
+        #expect(line.drawnY(atX: 250) == 35)
+        #expect(line.drawnY(atX: 40) == 50)
+        #expect(line.drawnY(atX: 360) == 50)
+        #expect(line.drawnY(atX: 500) == nil)
+        #expect(line.hit(CGPoint(x: 150, y: line.drawnY(atX: 150) ?? 0)) == .segment(0))
+        #expect(AnimatedLine(dots: [], segments: []).drawnY(atX: 10) == nil)
+    }
+
     // MARK: - A closed key lane
 
     /// A key lane drawn shut is the same kind of line, flat: its diamonds

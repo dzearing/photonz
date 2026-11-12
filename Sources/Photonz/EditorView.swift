@@ -252,6 +252,9 @@ struct EditorView: View {
             if editorState.motionStripMeasuresADocument, editorState.motionStripPhase != .none {
                 TimelineDock(windowHeight: geo.size.height)
                     .modifier(PlayerControlsTuck())
+                    .onChange(of: geo.size.width, initial: true) { _, width in
+                        editorState.timelineSoundLaneHeight = SoundLaneShape.height(windowWidth: width)
+                    }
             } else {
                 switch editorState.motionStripPhase {
                 case .open:

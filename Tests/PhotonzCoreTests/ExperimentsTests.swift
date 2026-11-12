@@ -433,13 +433,13 @@ struct FeatureCatalogTests {
             .isEnabled(FeatureCatalog.measureReadoutSlideFlag))
     }
 
-    @Test func theSoundOnThePanelGroundFlagIsNextOnlyAndOffByDefault() {
+    @Test func theSoundOnThePanelGroundFlagIsNextOnlyAndOnByDefault() {
         // video-audio.html draws a sound on the panel's own ground with a thin
-        // edge in its lane's colour; video.html draws it green. Off (green)
-        // until the user picks between the two mocks (2026-10-07).
+        // edge in its lane's colour; video.html draws it green. The card on
+        // which to build was answered on 2026-10-20: the panel's ground.
         #expect(FeatureCatalog.soundOnThePanelGroundFlag == "next-sound-on-the-panel-ground")
         #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.soundOnThePanelGroundFlag })
-        #expect(!FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.soundOnThePanelGroundFlag))
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.soundOnThePanelGroundFlag))
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.soundOnThePanelGroundFlag })
     }
 

@@ -1903,7 +1903,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: []),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: panelWithTheSlideFlag,

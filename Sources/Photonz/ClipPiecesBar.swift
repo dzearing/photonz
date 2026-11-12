@@ -940,8 +940,12 @@ struct ClipPiecesBar: View {
     /// ground, a breath lighter, with a thin edge in the lane's colour, so the
     /// waveform is the coloured thing in the lane
     /// (`next-sound-on-the-panel-ground`). Off, it wears `video.html`'s green.
+    ///
+    /// A clip's own sound, the bottom half of the clip, keeps the green family
+    /// (the card on its tint, 2026-10-20): it is part of the clip, not a sound
+    /// of its own.
     private var soundOnThePanelGround: Bool {
-        kind == .audio && Experiments.shared.soundOnThePanelGroundEnabled
+        kind == .audio && !isLinkedSound && Experiments.shared.soundOnThePanelGroundEnabled
     }
 
     private func fill(_ piece: ClipPiece?, picked: Bool) -> AnyShapeStyle {

@@ -60,30 +60,21 @@
   {
    "comment": "THE FIRST TEST: Command-click on the line adds a point there, holding the line's level.",
    "do": "windowClick",
-   "at": [
-    721,
-    924
-   ],
+   "at": [721, 891],
    "modifiers": [
     "command"
    ]
   },
   {
    "do": "windowClick",
-   "at": [
-    1057,
-    924
-   ],
+   "at": [1057, 891],
    "modifiers": [
     "command"
    ]
   },
   {
    "do": "windowClick",
-   "at": [
-    1393,
-    924
-   ],
+   "at": [1393, 891],
    "modifiers": [
     "command"
    ]

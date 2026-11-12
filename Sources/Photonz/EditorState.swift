@@ -1740,6 +1740,13 @@ final class EditorState {
     /// every track out again.
     @ObservationIgnored var timelineTrackRowsMemo: (document: PhotonzDocument, picked: UUID?,
                                                      open: Set<UUID>, rows: [TimelineTrackRowModel])?
+    /// How tall a sound's own lane stands in this window: video-audio.html's
+    /// 84, or 72 once the window is 880 wide or narrower
+    /// (`SoundLaneShape.height(windowWidth:)`). The editor sets it from the
+    /// window's width; the rows are worked out again when it changes.
+    var timelineSoundLaneHeight: CGFloat = SoundLaneShape.height {
+        didSet { if oldValue != timelineSoundLaneHeight { timelineTrackRowsMemo = nil } }
+    }
     /// How far the timeline is opened out, and which stretch of the document
     /// is on screen (`EditorState+TimelineZoom`). Not in the document: how you
     /// are looking at a recording is not part of the recording, so it is

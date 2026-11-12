@@ -16,6 +16,7 @@
     { "do": "wait", "seconds": 1.5 },
     { "do": "describe", "stage": "1-music-picked", "note": "The sample music is picked. The panel shows Properties, then Channel with Mute, Solo and Volume, then Fades: In 0.0s and Out 0.0s in two boxes, and Curve reading Linear, with a question mark beside the header and no sentence in the section" },
     { "do": "expectSections", "leading": ["Properties", "Channel", "Fades"] },
+    { "comment": "On the laptop window a sound in the audio mock's tall lane leaves the panel short of the Fades rows until it scrolls (a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa).", "do": "reveal", "control": "Gain section" },
     { "do": "expectInView", "field": "Fade in" },
     { "do": "expect", "field": "Fade in", "reads": "0.0s" },
     { "do": "expect", "field": "Fade out", "reads": "0.0s" },

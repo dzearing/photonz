@@ -80,14 +80,8 @@
     },
     {
       "do": "windowDrag",
-      "from": [
-        40,
-        854
-      ],
-      "to": [
-        40,
-        812
-      ],
+      "from": [40, 812],
+      "to": [40, 770],
       "steps": 20,
       "hold": "1-v1-held-by-the-pointer"
     },

@@ -162,6 +162,12 @@ struct TimelineTrackRow: View {
         rows.height(row.restingLaneHeight)
     }
 
+    /// How tall the header's name and switches stand: the lane, or on a
+    /// sound's tall lane the kit's sound lane at its top.
+    private var headerBand: CGFloat {
+        row.hasTallSoundLane ? min(laneHeight, rows.height(TimelineDock.soundLaneHeight)) : laneHeight
+    }
+
     /// How a clip with its own sound shares this lane.
     private var halves: ClipHalves { ClipHalves(laneHeight: laneHeight) }
 
@@ -227,7 +233,7 @@ struct TimelineTrackRow: View {
                                          isAutomatic: row.isCaptions && layout.showsIcon,
                                          isSelected: isPicked)
                         .padding(.leading, layout.nameX)
-                        .frame(height: laneHeight)
+                        .frame(height: headerBand)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -244,8 +250,12 @@ struct TimelineTrackRow: View {
                 }
             }
         }
-        .frame(width: TimelineDock.gutter, height: laneHeight, alignment: .leading)
+        .frame(width: TimelineDock.gutter, height: headerBand, alignment: .leading)
         .overlay(alignment: .leading) { twist.padding(.leading, layout.twistX ?? indent) }
+        // A sound's tall lane keeps its name and switches in a band at the
+        // top, as video-audio.html's `.tl{align-self:flex-start}` does, and
+        // the header is the lane's height under them.
+        .frame(height: laneHeight, alignment: .top)
         .background { if isHeld { heldFill } }
         .contentShape(Rectangle())
         // Press and move: the whole track lifts and rides the pointer up and
