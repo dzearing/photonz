@@ -16961,3 +16961,8 @@
 {"t":"2026-11-12T09:03:09.707Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T09:03:09.782Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T09:03:15.441Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 14: a swing carries what it hangs from, a part tipping about its middle gets room, a mark over a mover is sent back (fe236ffc8); story bar (5 of 6 at 7) not met, 1 of 6, total 52.4"}
+{"t":"2026-11-12T09:07:13.253Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-12T10:24:15.371Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-12T10:24:15.447Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-12T10:24:15.521Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-12T10:24:15.597Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 15: the hit is met where the trash's own rebound off the lid drops it into the can, a fall keeps its speed, ribs are not walls (909f3b0a6); story bar (5 of 6 at 7) not met, 1 of 6, total 58.1"}

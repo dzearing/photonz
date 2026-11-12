@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-12T09:03:15.440Z",
+  "updated": "2026-11-12T10:24:15.596Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -374,9 +374,29 @@
     {
       "t": "2026-11-12T09:03:15.439Z",
       "note": "Pass 14: a swing carries what it hangs from, a part tipping about its middle gets room, a mark over a mover is sent back (fe236ffc8); story bar (5 of 6 at 7) not met, 1 of 6, total 52.4"
+    },
+    {
+      "t": "2026-11-12T09:07:13.249Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T10:24:15.369Z",
+      "note": "Pass fifteen. Replayed pass fourteen's walk plan (AskMotionBounceSeenTests fixture + LapDump): the trash met the lid's underside on a way in about 25 degrees off the lid, so every bounce that turned a right angle ran into the can's wall; bouncedAway took 'back the way it came', it stopped in mid-air over the right wall at 0.96 s and dropped across it. Shipped 909f3b0a6, test first: aimedHit (when no turned bounce clears the walls, meet the hit where planned or up to a quarter of the drawing along the struck face, wherever the way in makes the mirror turn 60 degrees or more, clear of everything, towards the landing); walls() leaves out a part drawn wholly inside another's outline (the ribs counted as walls, so nothing could ever fall into the can); carriesOn (a fall that carries on past the bounce key runs Linear through it, no mid-air stop). Replay after: thrown in from the right, off the lid at 0.80 s, straight into the mouth. Scripts/test.sh exit 0. Tried and taken out: a 6 degree give of the struck lid at the hit (even 3 degrees grew the frame past the size floor, AskMotionRoomTests 30.2 > 28.6); recomputing the lid's wait after the bounce and keeping the lid's own pace (neither changed the plan: at its own pace the lid still meets the falling trash before 1.05 s)."
+    },
+    {
+      "t": "2026-11-12T10:24:15.445Z",
+      "note": "Walk ask-animates-a-story-walk at Next defaults ok (plan 178 s, Copy SVG loops). Its plan: scrap 6 across (lined, at least 4 across per the lined-part rule) in a mouth 8 across, lid 40 degrees: no rebound both turns 60 degrees and fits, so the older fallback dropped it down the right wall (0.93 to 1.00 s), as before; kept as fixture AskMotionBounceSeenWalkTwo. Story run 20261112-095935-ask (one run, three resumes): total 58.1 (last pass 52.4, best 61.2); reads as asked bell 6.2, checkbox 7.2, heart 5.1, envelope 2.9, rocket 6.8, trash 5.1: 1 of 6 at 7. (The run's WORSE line compares it to the single-motions guard run, not a story run.) Pictures looked at: replay sheets before/after, the walk's two-lap frames from its exported SVG in Chromium, the walk's window capture, the eval trash result.png (slides along the lid 0.8 to 0.9 s, lid dips 1.0 s and lifts 1.1 s, ghost 1.2 s). Audit queue/audits/2026-11-12-animated-icon-story-ricochet.json, reel 2026-11-12-story-trash-pass15-two-laps.gif."
+    },
+    {
+      "t": "2026-11-12T10:24:15.519Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases read as asked at 7; this pass 1 of 6 (checkbox 7.2). Next lever, from both of this pass's trash plans: the scrap is drawn nearly as wide as the can's mouth (the lined-part rule asks at least 4 across, 6 with its line, in a mouth 8 to 10 across), and under a lid open 40 degrees that leaves no rebound that both turns and fits. Either the draw rules ask a thrown-in part to be at most about half the mouth it goes into, or the lid opens wider when the room allows without shrinking the can below its floor. Left rough, no new task (all inside this one): the lid still waits about 0.25 s after the hit."
+    },
+    {
+      "t": "2026-11-12T10:24:15.595Z",
+      "note": "Pass 15: the hit is met where the trash's own rebound off the lid drops it into the can, a fall keeps its speed, ribs are not walls (909f3b0a6); story bar (5 of 6 at 7) not met, 1 of 6, total 58.1"
     }
   ],
-  "started": "2026-11-12T08:05:41.511Z",
+  "started": "2026-11-12T09:07:13.248Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
