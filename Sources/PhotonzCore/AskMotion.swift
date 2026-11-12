@@ -519,7 +519,7 @@ public enum AskMotion {
     /// out of sight where something shuts over it goes in past it, once
     /// every hit is placed (`tuckedIn`).
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
-        let timed = foldsOpen(foldsLand(tuckedIn(touchesPlaced(landsInTheMiddle(hitStarts(staysTillGone(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(steps)))))))))))))
+        let timed = foldsOpen(foldsLand(tuckedIn(touchesPlaced(landsInTheMiddle(hitStarts(staysTillGone(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(carried(steps))))))))))))))
         let made = fitted(comesClear(hidden(hingesShared(timed))))
         // Hinges again for the room made, if any: lines and corner rounds
         // keep their size on the final grid as the drawing shrinks.
@@ -2313,8 +2313,22 @@ public enum AskMotionCheck {
         return boxes.reduce(nil) { $0?.union($1) ?? $1 }
     }
 
-    /// The furthest this step takes `box`, at any of its keys.
-    private static func reach(of step: AskStep, box: CGRect) -> CGRect {
+    /// The part's outline, walked finely, and its line's width: what a turn
+    /// about its own middle really sweeps.
+    static func outline(of part: String, in art: SVGArtwork) -> (points: [CGPoint], stroke: CGFloat)? {
+        let plain = AskMotion.plain(part)
+        let held = art.parts.filter { one in
+            one.name.map { AskMotion.plain($0) == plain } ?? false || one.groups.contains { AskMotion.plain($0) == plain }
+        }
+        guard !held.isEmpty else { return nil }
+        return (held.flatMap { BrushSketch.outline($0.shape).flatMap { $0 } }, held.map(\.strokeWidth).max() ?? 0)
+    }
+
+    /// The furthest this step takes `box`, at any of its keys. With the
+    /// part's `outline`, a turn about its own middle is measured on the lines
+    /// themselves: a ring spinning stays where it is, a half heart tipping
+    /// out swings its lobe past its box.
+    private static func reach(of step: AskStep, box: CGRect, outline: (points: [CGPoint], stroke: CGFloat)? = nil) -> CGRect {
         var far = box
         var pivot = CGPoint(x: box.midX, y: box.midY)
         if let x = step.arguments["pivot"]?["x"]?.doubleValue, let y = step.arguments["pivot"]?["y"]?.doubleValue {
@@ -2338,6 +2352,23 @@ public enum AskMotionCheck {
         // its own middle a part stays where it is: its box's corners swinging
         // out are not the part, and made room shrank a ring for nothing.
         if step.arguments["property"]?.stringValue == MotionProperty.rotation.rawValue,
+           hypot(pivot.x - box.midX, pivot.y - box.midY) < 1, let outline, !outline.points.isEmpty {
+            // The heart of 2026-11-11 (run 20261111-200328): each half
+            // tipped 20 degrees about its middle as it moved out, the room
+            // held the move and not the tip, and both lobes were cut off.
+            let angles = keys.compactMap { $0["value"]?.doubleValue }
+            if let least = angles.min(), let most = angles.max() {
+                for degrees in Array(stride(from: least, through: most, by: 15)) + [most] {
+                    let turn = degrees * .pi / 180
+                    var swept = CGRect.null
+                    for point in outline.points {
+                        let (x, y) = (point.x - pivot.x, point.y - pivot.y)
+                        swept = swept.union(CGRect(x: pivot.x + x * cos(turn) - y * sin(turn), y: pivot.y + x * sin(turn) + y * cos(turn), width: 0, height: 0))
+                    }
+                    far = far.union(swept.insetBy(dx: -outline.stroke / 2, dy: -outline.stroke / 2))
+                }
+            }
+        } else if step.arguments["property"]?.stringValue == MotionProperty.rotation.rawValue,
            hypot(pivot.x - box.midX, pivot.y - box.midY) >= 1 {
             let angles = keys.compactMap { $0["value"]?.doubleValue }
             if let least = angles.min(), let most = angles.max() {
@@ -2376,9 +2407,10 @@ public enum AskMotionCheck {
     static func reach(of keyed: [AskStep], in art: SVGArtwork, only part: String) -> CGRect? {
         let plain = AskMotion.plain(part)
         guard let box = box(of: part, in: art) else { return nil }
+        let lines = outline(of: part, in: art)
         return keyed.filter { step in
             (step.arguments["layer"]?.stringValue).flatMap(AskMotion.partReference).map { AskMotion.plain($0.part) == plain } ?? false
-        }.reduce(box) { $0.union(reach(of: $1, box: box)) }
+        }.reduce(box) { $0.union(reach(of: $1, box: box, outline: lines)) }
     }
 
     /// The furthest `keyed` takes everything it names, on the drawing's grid:
@@ -2394,7 +2426,8 @@ public enum AskMotionCheck {
         for (part, steps) in parts {
             guard let box = box(of: part, in: art) else { continue }
             let moves = steps.filter { $0.arguments["property"]?.stringValue == MotionProperty.position.rawValue }
-            var far = steps.filter { !moves.contains($0) }.reduce(box) { $0.union(reach(of: $1, box: box)) }
+            let lines = outline(of: part, in: art)
+            var far = steps.filter { !moves.contains($0) }.reduce(box) { $0.union(reach(of: $1, box: box, outline: lines)) }
             let inPlace = far
             for step in moves { far = far.union(reach(of: step, box: inPlace)) }
             whole = whole.union(far)
@@ -2427,6 +2460,10 @@ public enum AskMotionCheck {
         }
         if !through.isEmpty {
             said.append("\(through.joined(separator: "; ")): what bounces off a part comes away from it, never through it. Call set_keys again with replace true for its position, the path after the touch going back the way it came or around that part.")
+        }
+        let over = marksOver(planned)
+        if !over.isEmpty {
+            said.append("\(over.joined(separator: "; ")): a mark shown beside a moving part is drawn clear of it, never over it. Call set_keys again with replace true for the mark: its position further out from that part, or its showing at a moment that part is away from it.")
         }
         let into = swingsInto(steps)
         if !into.isEmpty {

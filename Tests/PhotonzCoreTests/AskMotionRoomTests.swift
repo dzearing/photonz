@@ -125,3 +125,57 @@ struct AskMotionRoomTests {
         #expect(box.insetBy(dx: -AskMotionCheck.edgeSlack, dy: -AskMotionCheck.edgeSlack).contains(reach), "\(box) \(reach)")
     }
 }
+
+/// The heart of run 20261111-200328 ("a heart beats twice then breaks"): each
+/// half turned 20 degrees about its own middle as it moved 5 out, and the
+/// judges saw both halves cut off by the frame from 1.28 to 1.70 s. A turn
+/// about a part's middle was taken to need no room (true of a ring, not of a
+/// half heart), so the room held the move and not the turn.
+@Suite("Ask's moving icons: a part turning about its own middle gets room for what it really sweeps")
+struct AskMotionTurnInPlaceRoomTests {
+
+    static let svg = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g id="left-half"><path id="left-outline" d="M12 20 C10 18 4 14 4 9 C4 6 6 4 8.5 4 C10 4 11.5 5 12 7"/></g><g id="right-half"><path id="right-outline" d="M12 20 C14 18 20 14 20 9 C20 6 18 4 15.5 4 C14 4 12.5 5 12 7"/></g></svg>"##
+
+    static func keys(_ json: String) throws -> AskStep {
+        AskStep(tool: "set_keys", arguments: try AgentJSON.parse(Data(json.utf8)))
+    }
+
+    /// The half's outline, walked finely, turned about its box's middle and moved.
+    static func swept(_ path: String, degrees: CGFloat, dx: CGFloat) throws -> CGRect {
+        let art = try SVGArtwork.parse(svg, keepingGroups: true).get()
+        let part = try #require(art.parts.first { $0.name.map(AskMotion.plain) == AskMotion.plain(path) })
+        let rings = BrushSketch.outline(part.shape)
+        let box = SVGArtwork.shapeBounds(part.shape)
+        let turn = degrees * .pi / 180
+        var out = CGRect.null
+        for point in rings.flatMap({ $0 }) {
+            let (x, y) = (point.x - box.midX, point.y - box.midY)
+            out = out.union(CGRect(x: box.midX + x * cos(turn) - y * sin(turn) + dx, y: box.midY + x * sin(turn) + y * cos(turn), width: 0, height: 0))
+        }
+        return out.insetBy(dx: -1, dy: -1)
+    }
+
+    @Test("The heart's halves, turned 20 degrees about their middles and moved 5 apart, stay inside the frame made for them")
+    func halvesStayInTheFrame() throws {
+        let drawing = AskStep(tool: "add_drawing", arguments: ["subject": "heart", "svg": .string(Self.svg)])
+        let steps = [drawing,
+            try Self.keys(#"{"layer":"$1/left-half","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.9,"value":{"x":0,"y":0}},{"seconds":1.4,"value":{"x":-5,"y":0}},{"seconds":3.2,"value":{"x":0,"y":0}}]}"#),
+            try Self.keys(#"{"layer":"$1/right-half","property":"position","keys":[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.9,"value":{"x":0,"y":0}},{"seconds":1.4,"value":{"x":5,"y":0}},{"seconds":3.2,"value":{"x":0,"y":0}}]}"#),
+            try Self.keys(#"{"layer":"$1/left-half","property":"rotation","keys":[{"seconds":0,"value":0},{"seconds":0.9,"value":0},{"seconds":1.4,"value":-20},{"seconds":3.2,"value":0}]}"#),
+            try Self.keys(#"{"layer":"$1/right-half","property":"rotation","keys":[{"seconds":0,"value":0},{"seconds":0.9,"value":0},{"seconds":1.4,"value":20},{"seconds":3.2,"value":0}]}"#)]
+        let box = try AskMotionRoomTests.view(AskMotion.fitted(steps))
+        let left = try Self.swept("left-outline", degrees: -20, dx: -5)
+        let right = try Self.swept("right-outline", degrees: 20, dx: 5)
+        let held = box.insetBy(dx: -AskMotionCheck.edgeSlack, dy: -AskMotionCheck.edgeSlack)
+        #expect(held.contains(left), "left half at its widest \(left) in \(box)")
+        #expect(held.contains(right), "right half at its widest \(right) in \(box)")
+    }
+
+    @Test("A ring spinning about its middle still needs no room: its outline turned stays where it was")
+    func ringNeedsNoRoom() throws {
+        let wide = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2"><circle id="ring" cx="12" cy="12" r="10"/></svg>"##
+        let ring = AskStep(tool: "add_drawing", arguments: ["subject": "thing", "svg": .string(wide)])
+        let turning = try Self.keys(#"{"layer":"$1/ring","property":"rotation","keys":[{"seconds":0,"value":0},{"seconds":1,"value":360}]}"#)
+        #expect(AskMotion.fitted([ring, turning]) == [ring, turning])
+    }
+}
