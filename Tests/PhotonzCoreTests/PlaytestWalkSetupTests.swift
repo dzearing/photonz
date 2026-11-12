@@ -282,6 +282,50 @@ struct PlaytestFrontSetupTests {
     }
 }
 
+/// Every picture a walk takes shows the window in its in-front look, accent
+/// colours and all, though the probe stays behind the person's work. A walk
+/// about the background look itself says so and keeps it.
+@Suite("A walk can photograph the window's background look on purpose")
+struct PlaytestBehindLookSetupTests {
+
+    @Test("it reads a yes")
+    func reads() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "behindLook": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.behindLook == true)
+        #expect(PlaytestSetup(behindLook: true).isEmpty == false)
+    }
+
+    @Test("saying nothing photographs the in-front look")
+    func unsaid() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.behindLook == false)
+        #expect(PlaytestSetup().isEmpty)
+    }
+
+    @Test("it is a yes or a no")
+    func onlyABool() {
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "behindLook": "grey" }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+    }
+
+    @Test("the walks about the background look say so")
+    func behindWalksSaySo() throws {
+        let folder = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("../../Scripts/playtest").standardized
+        for name in ["blue-confirm-buttons-read-behind-walk", "edit-original-done-reads-behind-walk"] {
+            let script = try PlaytestScript.decode(Data(contentsOf: folder.appendingPathComponent("\(name).json")))
+            #expect(script.setup.behindLook, "\(name) photographs the background look and must say behindLook")
+        }
+    }
+}
+
 /// A stopwatch walk times what a person gets: the probe's walk markers, about
 /// half the window's views, come down for the length of each timed click and
 /// go back up before the walk looks for anything again.

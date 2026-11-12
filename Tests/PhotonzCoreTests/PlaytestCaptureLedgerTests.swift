@@ -108,13 +108,15 @@ struct PlaytestCaptureLedgerTests {
             == "none. This app holds no Screen Recording grant, so it may not photograph its own window.")
     }
 
-    // A walk never takes key (2026-09-26), so a picture of the window shows
-    // it as it looks behind another app: the system's blue button goes
-    // white, a picked segment goes grey. Judged as the window in front, that
-    // look files problems a person in front never sees (2026-10-09, Edit
-    // Original's Done "missing" in light mode).
+    // A walk never takes key (2026-09-26), and a window behind another app
+    // draws its background look: the system's blue button goes white, a
+    // picked segment and an on switch go grey. Since 2026-11-12 the harness
+    // lends the photographed window its in-front look (AppKit's key
+    // appearance, which takes neither key nor the front), so a picture shows
+    // the background look only when a walk asks for it (`behindLook`) or the
+    // lend did not take. Those are the ones named.
 
-    @Test("A picture of the window behind another app is named as one")
+    @Test("A picture of the window's background look is named as one")
     func behindIsNamed() {
         var ledger = PlaytestCaptureLedger()
         ledger.photographed("a-front", behind: false)
@@ -123,10 +125,10 @@ struct PlaytestCaptureLedgerTests {
         #expect(ledger.behind == ["b-behind-sc.png"])
         #expect(ledger.report(granted: true)
             == "2 real pictures of the window: a-front-sc.png, b-behind-sc.png; "
-            + "1 shows the window behind another app: b-behind-sc.png")
+            + "1 shows the window's background look: b-behind-sc.png")
     }
 
-    @Test("Pictures of the window in front say nothing more")
+    @Test("Pictures of the window in its in-front look say nothing more")
     func frontSaysNothing() {
         var ledger = PlaytestCaptureLedger()
         ledger.photographed("a", behind: false)
@@ -134,20 +136,28 @@ struct PlaytestCaptureLedgerTests {
         #expect(ledger.report(granted: true) == "1 real picture of the window: a-sc.png")
     }
 
-    @Test("Many behind pictures read as many")
+    @Test("Many background-look pictures read as many")
     func manyBehind() {
         var ledger = PlaytestCaptureLedger()
         ledger.photographed("a", behind: true)
         ledger.photographed("b", behind: true)
         #expect(ledger.report(granted: true)
             == "2 real pictures of the window: a-sc.png, b-sc.png; "
-            + "all 2 show the window behind another app")
+            + "all 2 show the window's background look")
     }
 
-    @Test("The label says what the behind look changes, in plain words")
+    @Test("A window drawn in its in-front look is not the background look, wherever it sits")
+    func lentLookIsFront() {
+        #expect(!PlaytestCaptureLedger.showsBackgroundLook(inFront: false, keyLook: true))
+        #expect(!PlaytestCaptureLedger.showsBackgroundLook(inFront: true, keyLook: false))
+        #expect(!PlaytestCaptureLedger.showsBackgroundLook(inFront: true, keyLook: true))
+        #expect(PlaytestCaptureLedger.showsBackgroundLook(inFront: false, keyLook: false))
+    }
+
+    @Test("The label says what the background look changes, in plain words")
     func behindLabel() {
         let label = PlaytestCaptureLedger.behindLabel
-        #expect(label.contains("behind another app"))
+        #expect(label.contains("background look"))
         #expect(label.contains("in front"))
         #expect(!label.contains("\u{2014}"))
     }

@@ -518,6 +518,10 @@ private final class Run {
         expectNoControl = Set(script.setup.expectNoControl)
         holdsTheFront = script.setup.front
         if holdsTheFront { note(0, "setup", "the probe holds the front for this walk (setup front)") }
+        PlaytestFrontLook.startWalk(keepingTheBackgroundLook: script.setup.behindLook)
+        if script.setup.behindLook {
+            note(0, "setup", "pictures show the window's background look, the way it looks behind another app (setup behindLook)")
+        }
         note(0, "setup", PlaytestSchedulingRole.shared.takeTheFrontAppsRole()
              ? "timed as the app in front: the probe holds the scheduling role macOS gives the app a person "
                + "is using, so a press starts on the cores theirs would (PlaytestSchedulingRole)"
@@ -12448,6 +12452,7 @@ private final class Run {
             host.makeKey()
             await sleep(0.3)
         }
+        await lendTheFrontLookForAPicture(host)
         let camera = PlaytestWindowFilm(crop: crop)
         try await camera.start(scWindow, size: CGSize(width: frame.width * scale, height: frame.height * scale))
         await sleep(0.15)
@@ -12514,7 +12519,7 @@ private final class Run {
         if let sheet = Self.stacked(frames.map(\.image)),
            let data = ImageCodec.encode(sheet, format: .png) {
             try data.write(to: out.appendingPathComponent("\(film.name)-strip-sc.png"))
-            captures.photographed("\(film.name)-strip", behind: Self.windowIsBehind)
+            captures.photographed("\(film.name)-strip", behind: Self.showsBackgroundLook(host))
         }
         // A thumb gone from the rail altogether is the worst frame of all:
         // on 2026-09-29 the whole pane sat on the panel toggle beside View |
@@ -12573,6 +12578,7 @@ private final class Run {
         defer {
             if hidden { host.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
         }
+        await lendTheFrontLookForAPicture(host)
         let camera = PlaytestWindowFilm(crop: crop)
         try await camera.start(scWindow, size: CGSize(width: frame.width * scale, height: frame.height * scale))
         await sleep(0.15)
@@ -12605,7 +12611,7 @@ private final class Run {
         if let sheet = Self.stacked(frames.map(\.image)),
            let data = ImageCodec.encode(sheet, format: .png) {
             try data.write(to: out.appendingPathComponent("\(film.name)-strip-sc.png"))
-            captures.photographed("\(film.name)-strip", behind: Self.windowIsBehind)
+            captures.photographed("\(film.name)-strip", behind: Self.showsBackgroundLook(host))
         }
         let path = reading.centres.compactMap { $0 }.map { String(format: "%.2f", $0) }.joined(separator: " ")
         let summary = String(format: "%d frames over %.0fms; a band of light in %d of them, at most %.0f lighter "
@@ -12730,6 +12736,7 @@ private final class Run {
             let (target, _) = try await reachableTarget(control, in: row)
             _ = await settled(target, named: control, in: row)
         }
+        await lendTheFrontLookForAPicture(host)
         let camera = PlaytestWindowFilm(crop: crop)
         try await camera.start(scWindow, size: CGSize(width: frame.width * scale, height: frame.height * scale))
         await sleep(0.15)
@@ -12780,7 +12787,7 @@ private final class Run {
             write(json: ["frames": readings, "firstMS": cadence.firstMS ?? -1, "lastMS": cadence.lastMS ?? -1,
                          "pictures": cadence.pictures, "longestStillMS": cadence.longestStillMS],
                   to: "\(film.name).json")
-            if !frames.isEmpty { captures.photographed("\(film.name)-0", behind: Self.windowIsBehind) }
+            if !frames.isEmpty { captures.photographed("\(film.name)-0", behind: Self.showsBackgroundLook(host)) }
             return cadence
         }
         if let ceiling = film.longestStillUnderMS, cadence.pictures > 0, cadence.longestStillMS >= ceiling {
@@ -14987,7 +14994,7 @@ private final class Run {
         // The picture is the deliverable, so whether there IS one is answered
         // by the file rather than by the step's good intentions.
         if FileManager.default.fileExists(atPath: shotURL.path) {
-            captures.photographed(shotName, behind: Self.windowIsBehind)
+            captures.photographed(shotName, behind: Self.showsBackgroundLook(host))
             shot = shotURL.lastPathComponent
         } else {
             captureFailed(shotName, outcome)
@@ -15278,7 +15285,7 @@ private final class Run {
         }
         if let shotURL, let askedFor = shot {
             if FileManager.default.fileExists(atPath: shotURL.path) {
-                captures.photographed(askedFor, behind: Self.windowIsBehind)
+                captures.photographed(askedFor, behind: Self.showsBackgroundLook(window))
                 reading.shot = shotURL.lastPathComponent
             } else {
                 captureFailed(askedFor, outcome)
@@ -15690,7 +15697,7 @@ private final class Run {
         }
         if let shotURL, let askedFor = shot {
             if FileManager.default.fileExists(atPath: shotURL.path) {
-                captures.photographed(askedFor, behind: Self.windowIsBehind)
+                captures.photographed(askedFor, behind: Self.showsBackgroundLook(host))
                 reading.shot = shotURL.lastPathComponent
             } else {
                 captureFailed(askedFor, outcome)
@@ -19078,13 +19085,25 @@ private final class Run {
     ///
     /// App-level commands (Capture, New Window, Open) are built live and stay
     /// live, so those shortcuts a walk really can press.
-    /// Whether a picture taken now shows the window behind another app: the
-    /// probe is not the active app, or none of its windows has key. That is
-    /// how a walk leaves it (2026-09-26), and AppKit draws such a window in
-    /// its background look, so the picture is labelled rather than judged as
-    /// the window in front (`PlaytestCaptureLedger.behindLabel`).
-    static var windowIsBehind: Bool {
-        !NSApp.isActive || NSApp.keyWindow == nil
+    /// Whether a picture of `window` taken now shows its background look
+    /// (`PlaytestFrontLook`). Such a picture is labelled rather than judged
+    /// as the window in front (`PlaytestCaptureLedger.behindLabel`).
+    static func showsBackgroundLook(_ window: NSWindow?) -> Bool {
+        PlaytestFrontLook.showsBackgroundLook(window)
+    }
+
+    /// Lends `window` the look it has in front before a picture of it
+    /// (`PlaytestFrontLook`), on the harness's account: the redraw is not a
+    /// pass the app made anybody wait through. The first lend to a window
+    /// redraws it and waits a beat, so an animated control (a switch's knob)
+    /// has finished before the shutter; after that it holds the look.
+    private func lendTheFrontLookForAPicture(_ window: NSWindow) async {
+        MainThreadMeter.shared.setAsidePasses()
+        defer { MainThreadMeter.shared.countPassesAgain() }
+        let began = CACurrentMediaTime()
+        let lent = PlaytestFrontLook.lend(window)
+        MainThreadMeter.shared.exclude(CACurrentMediaTime() - began)
+        if lent { await sleep(0.15) }
     }
 
     /// Whether the app in front is the system's alert agent, which is what
@@ -20862,6 +20881,7 @@ private final class Run {
                 harnessWork { window.display() }
                 await sleep(0.25)
             }
+            await lendTheFrontLookForAPicture(window)
             let image: CGImage
             do {
                 image = try await photograph(window, as: scWindow)
@@ -20876,7 +20896,7 @@ private final class Run {
                 return
             }
             try png.write(to: out.appendingPathComponent("\(name)-sc.png"))
-            captures.photographed(name, behind: Self.windowIsBehind)
+            captures.photographed(name, behind: Self.showsBackgroundLook(window))
             let hung = Self.hungWindows(on: window).count
             note(0, "capture", "\(name)-sc.png \(image.width)x\(image.height)"
                 + (hung > 0 ? " (with \(hung) window\(hung == 1 ? "" : "s") hung on it)" : "")
@@ -20995,6 +21015,7 @@ private final class Run {
     /// dropdown on a video came back as the menu alone while the right click
     /// menu in the same walk came back whole (2026-09-29).
     private func showForMenuPicture(_ window: NSWindow) async -> Bool {
+        await lendTheFrontLookForAPicture(window)
         guard window.alphaValue == 0 else { return false }
         MainThreadMeter.shared.setAsidePasses()
         Self.keepBehindThePerson(window)

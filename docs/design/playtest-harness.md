@@ -255,20 +255,37 @@ rather than a failure when the screen is locked.
 In an audit that label is the step's `shotNote`, and the dashboard prints it
 under the picture.
 
-### Pictures of the window behind another app
+### Pictures of the window in its in-front look
 
-A walk never takes key (2026-09-26), so unless its setup says `"front": true`
-every picture shows the window as it looks behind another app, and AppKit draws
-that look differently: the system's blue button turns grey, or in light mode on
-macOS 26 white words on a white pill, and a picked segment turns grey. On
-2026-10-09 that read as Edit Original's Done "missing" in every light picture.
-So each capture records whether the probe was the active app with a key window
-(`PlaytestHarness.windowIsBehind`), `done.json` lists the ones that were not in
-`behindPictures` beside `behindLabel`, the `Window captures:` line ends with how
-many show the window behind, and `Scripts/playtest.sh` prints the label. Put it
-in the audit step's `shotNote` like the lock label. A picture of the in-front
-look needs `"front": true`, which needs the Mac to itself. A button that must
-stay readable behind uses `.buttonStyle(.activeProminent)`
+A walk never takes key (2026-09-26), and AppKit draws a window behind another
+app in its background look: the system's blue button turns grey (in light mode
+on macOS 26 white words on a white pill), an on switch, a picked segment and
+the traffic lights turn grey. On 2026-10-09 that read as Edit Original's Done
+"missing" in every light picture, and until 2026-11-12 nearly every audit
+picture carried a note apologising for it.
+
+So the harness LENDS each window it photographs the look it has in front
+(`PlaytestFrontLook`): AppKit keeps a window's key look apart from whether it
+is key, and `acquireKeyAppearance` hands over the look alone. The app stays
+inactive, the window stays unkeyed and no become-key notification is posted,
+so the person keeps their keys and their front window (`queue/bin/focus-drill.sh`
+reads clean). Measured on 2026-11-12: a walk's pictures of the editor and of
+Settings matched the same walk run with `"front": true` to the pixel, where
+before the switch track read (77,75,74) against the in-front (56,122,244).
+The window server takes the look back from a window shown a moment before (a
+recording's window, at alpha 0 between pictures), so a window once lent keeps
+it for the rest of the walk: the probe refuses `resignKeyAppearance` for it.
+The one thing the lend cannot reach is a default (Return) button's blue, which
+wants the app itself active.
+
+Every picture, film and menu picture is lent the look before the shutter. A
+walk about the background look itself (a button that must stay readable
+behind) says `"behindLook": true` in its setup, and its pictures keep that
+look. Only those, or a picture whose lend did not take, are listed in
+`done.json`'s `behindPictures` beside `behindLabel`, the `Window captures:`
+line says how many show the window's background look, and
+`Scripts/playtest.sh` prints the label to put in the audit step's `shotNote`.
+A button that must stay readable behind uses `.buttonStyle(.activeProminent)`
 (`ActiveProminentButtonStyle`) rather than `.borderedProminent`.
 
 The lock is NOT an excuse for a missing picture. `PlaytestCaptureLedger` used to
@@ -332,6 +349,7 @@ or fail. The `setup` line is logged as step 0, so the log says what was done.
 | `captures` | picture files, relative to the script or absolute | Each is copied into the capture folder (`~/Pictures/Screenshots`) so History has it, and taken away again at the end. (The Library's Media shelf is the open document's own pictures and is not fed by this: put a picture in with `dropImage`.) A name already taken there fails the walk rather than writing over someone's screenshot. |
 | `expectNoControl` | guide steps, named `"<guide>/<step>"` | Those steps are expected to point at a control that is NOT there, and the usual check turns around for them: the step has to find nothing, or the walk fails saying the declaration is out of date. For the rare walk that exercises the fallback on purpose, like skipping every step of the trim guide so nothing is trimmed and there is no Save button to ring. |
 | `front` | `true` | The probe is the ACTIVE app for the whole walk, as every walk was until 2026-09-26. A walk never brings the probe forward otherwise (the person at the Mac keeps their keys), which leaves the menu bar frozen at launch and makes SwiftUI ignore some clicks and every drag. A walk that proves which menu row a chord reaches, or clicks a cut, a caption or a guide's control, says this. It then needs the Mac to itself (`queue/bin/walk-needs-the-mac.mjs`): it waits for the person to be away and stops if they come back. `windowDrag` and `dragGrip` take the front for their own drag without it. |
+| `behindLook` | `true` | Every picture keeps the window's BACKGROUND look, the way it looks behind another app, instead of the in-front look the harness lends each photographed window (`PlaytestFrontLook`, 2026-11-12). Only for a walk about that look itself (`blue-confirm-buttons-read-behind-walk`, `edit-original-done-reads-behind-walk`); its pictures carry the background-look label. |
 | `flags` | features and whether each is on: `{ "next-measure-modes": false }` | Those features are switched for the length of the run and put back at the end, however it ends. The names are the ones in the Experiments window. |
 | `history` | a count: `500` | History reads a made-up folder of that many captures instead of the person's own Screenshots folder: every third one a recording (the guides' sample), the rest four real screenshot shapes (a whole Retina screen, a window, a region, a toolbar the ratio cap crops), newest first a minute apart. Built once under `/tmp/photonz-playtest/generated-history-<count>` and reused. For a walk about how history copes with a big folder, whose numbers must not depend on whose Mac it ran on (`history-filter-switch-speed-walk`). |
 | `scratch` | files, relative to the script or absolute | Each is copied into an EMPTY FOLDER OF THE WALK'S OWN, made fresh for the run and thrown away at the end. The walk names one as `"scratch/<file name>"` wherever a step takes a file. This is for a walk that WRITES beside the picture it opened — `saveLayers` keeps the layers next to it — so it starts from the same nothing every time and leaves nothing behind. |

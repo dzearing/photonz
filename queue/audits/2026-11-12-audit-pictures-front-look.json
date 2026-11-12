@@ -1,0 +1,27 @@
+{
+  "feature": "Audit pictures show the window as a person sees it in front",
+  "epic": "unmanned-loop",
+  "summary": "Pictures a walk takes now show switches, blue buttons, picked segments and traffic lights in their accent colours, matching a picture of the same window in front, while the probe still never takes your keys or your front window.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. Walks: a short measuring walk (the settings screenshot with the measure tool, then Settings) run three ways: with \"behindLook\" (the old picture), as a plain walk (now), and with \"front\": true (the window really in front). Also a-video-clip-fades-walk for a recording's window.",
+  "switched": {},
+  "try": [
+    { "do": "Compare the three rows: before, now, and the window really in front.", "shot": "2026-11-12-front-look-compare.png" },
+    { "do": "Look at Settings as a walk photographs it now: Open at login's switch is blue and the traffic lights are coloured.", "shot": "2026-11-12-front-look-settings-sc.png" },
+    { "do": "Look at the editor with the measure tool: both Snap pickers show Edges and centers picked in blue.", "shot": "2026-11-12-front-look-editor-sc.png" },
+    { "do": "Compare it with the same walk's old picture, where those segments are grey.", "shot": "2026-11-12-front-look-editor-before-sc.png" },
+    { "do": "Look at a recording's window from a walk: traffic lights and the Opacity slider take the accent colour.", "shot": "2026-11-12-front-look-video-sc.png" },
+    { "do": "Keep typing in another app while a walk runs: your keys and front window stay yours." }
+  ],
+  "evaluate": [
+    "Do the walk pictures now look like the app does when you use it?",
+    "Is there any control still grey in a picture that is coloured when you use the app?",
+    "Is it fine that the View | Edit chip stays grey? It is grey in front too, so that is its real look."
+  ],
+  "rough": [
+    "Measured: the switch track read (77,75,74) before, (56,122,244) now and (56,122,244) in front; the bar's picked Snap segment (52,55,60) before, (31,83,141) now and in front. Whole pictures: 2.17% (editor) and 0.36% (Settings) of pixels differed from in front before, 0.00% now.",
+    "A default button (the one Return presses) cannot be lent its blue: that wants the app itself in front. No such button was found in a walk picture; a walk that needs it can still say \"front\": true.",
+    "The check used Settings' switch, not the Agent row switch the task named, because that row only appears after a real Ask run; it is the same system switch.",
+    "Once a window is photographed it keeps the in-front look for the rest of the walk, so controls that read it (Done buttons) draw as in front from then on. Ten timing and rebuild-counting walks still pass.",
+    "This uses a private AppKit call, only in the probe build; a future macOS could drop it, and then pictures would say they show the background look again rather than fail."
+  ]
+}

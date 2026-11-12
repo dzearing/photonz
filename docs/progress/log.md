@@ -2,6 +2,23 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-11-12: walk pictures show the window's in-front look
+
+Walk pictures now show switches, blue buttons, picked segments and traffic
+lights in their accent colours although the probe still never takes key or the
+front. The harness lends each photographed window AppKit's key look
+(`Sources/Photonz/Playtest/PlaytestFrontLook.swift`, probe only), and holds it
+for the rest of the walk because the window server takes it back from a window
+shown a moment before. Measured against the same walk with `"front": true`: the
+pictures match to the pixel (before, 2.17% of the editor's pixels differed).
+Focus drill clean. A walk about the background look says `"behindLook": true`;
+the two that are about it do. The runner prompt no longer tells runners to note
+the background look under every picture. Audit:
+`queue/audits/2026-11-12-audit-pictures-front-look.json`; walk:
+`pictures-show-the-in-front-look-walk`.
+
+Next: nothing for this. Open: a default (Return) button cannot be lent its blue.
+
 ## 2026-11-07: a glyph takes the set's saved stroke in one click
 
 A path's line can be saved as a style: width, caps, corners and side, the mock's

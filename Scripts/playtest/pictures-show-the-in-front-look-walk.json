@@ -1,0 +1,18 @@
+{
+  "out": "/tmp/photonz-playtest/pictures-show-the-in-front-look-walk",
+  "seed": "A walk's pictures show the window as a person sees it in front, accent colours and all, though the probe never takes the keys or the front. At Next defaults with no flag changed, this walk opens the settings screenshot, picks the measure tool (whose Snap pickers have a picked segment) and photographs the editor, then opens Settings (Open at login is a system switch) and photographs it. Its Window captures line must not say any picture shows the window's background look; until 2026-11-12 every picture did, with switches, picked segments and traffic lights grey. Run with \"front\": true it gives the same pictures to the pixel.",
+  "clock": 90,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "measure" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-editor", "note": "the editor with the measure tool: Edges and centers is picked in blue in the panel's Snap and in the bar's, and the traffic lights are coloured" },
+    { "do": "snapshot", "name": "1-editor" },
+    { "do": "shortcut", "key": ",", "modifiers": ["command"], "menuItem": "Settings…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "2-settings", "note": "Settings: Open at login's switch is the accent blue, not grey" },
+    { "do": "snapshot", "name": "2-settings", "window": "Settings" }
+  ]
+}

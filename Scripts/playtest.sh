@@ -222,11 +222,13 @@ if [[ -f "$OUT/done.json" ]]; then
       console.log("    real. Put this line under any picture of it you ship:");
       if (d.pictureLabel) console.log("    " + d.pictureLabel);
     }
-    // A walk never takes key, so most of its pictures show the window as it
-    // looks behind another app. Say so under them, so nobody judges the
-    // background look of a blue button or a picked control as the real one.
+    // A walk never takes key, but the harness lends each photographed window
+    // its in-front look (PlaytestFrontLook), so a picture shows the
+    // background look only when the walk asked for it (setup behindLook) or
+    // the lend did not take. Say so under those, so nobody judges the grey of
+    // a blue button or a picked control as the real one.
     if (d.behindLabel) {
-      console.log("==> Pictures behind another app: " + d.behindPictures.length + " of them. Put this line");
+      console.log("==> Pictures in the background look: " + d.behindPictures.length + " of them. Put this line");
       console.log("    under any of them you ship (an audit step\x27s \"shotNote\"):");
       console.log("    " + d.behindLabel);
     }

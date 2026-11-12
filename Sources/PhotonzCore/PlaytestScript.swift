@@ -217,6 +217,12 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// takes the person's keys it waits for them to be away and stops when
     /// they come back (`queue/bin/walk-needs-the-mac.mjs`).
     public var front: Bool
+    /// Every picture this walk takes shows the window's BACKGROUND look, the
+    /// way it looks behind another app, instead of the in-front look the
+    /// harness lends it for each photograph (2026-11-12). Only for a walk
+    /// about that look itself, such as a button that must stay readable
+    /// behind; its pictures carry `PlaytestCaptureLedger.behindLabel`.
+    public var behindLook: Bool
     /// A generated capture folder of this many captures, one in three of them
     /// a recording, in place of the person's own Screenshots folder, for the
     /// length of the walk. For a walk about how history copes with a big
@@ -270,7 +276,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
                 flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, timelineRoom: Bool = false,
-                front: Bool = false,
+                front: Bool = false, behindLook: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
                 askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false, askMac: Int? = nil,
                 askSearch: Int? = nil, askReplies: [String] = []) {
@@ -286,6 +292,7 @@ public struct PlaytestSetup: Sendable, Equatable {
         self.timelineOpen = timelineOpen
         self.timelineRoom = timelineRoom
         self.front = front
+        self.behindLook = behindLook
         self.forget = forget
         self.captures = captures
         self.scratch = scratch
@@ -295,7 +302,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
-            && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && history == nil && !timedWithoutMarkers
+            && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && !behindLook && history == nil && !timedWithoutMarkers
             && !askModelMissing && askModelsOnly == nil && !offline && !agentHome && askMac == nil && askSearch == nil && askReplies.isEmpty
     }
 
@@ -306,7 +313,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
+    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
                             "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -394,6 +401,7 @@ public struct PlaytestSetup: Sendable, Equatable {
                   timelineOpen: try Self.yesOrNo(fields["timelineOpen"], field: "timelineOpen"),
                   timelineRoom: try Self.yesOrNo(fields["timelineRoom"], field: "timelineRoom") ?? false,
                   front: try Self.yesOrNo(fields["front"], field: "front") ?? false,
+                  behindLook: try Self.yesOrNo(fields["behindLook"], field: "behindLook") ?? false,
                   history: try Self.count(fields["history"], field: "history"),
                   timedWithoutMarkers: try Self.yesOrNo(fields["timedWithoutMarkers"],
                                                         field: "timedWithoutMarkers") ?? false,

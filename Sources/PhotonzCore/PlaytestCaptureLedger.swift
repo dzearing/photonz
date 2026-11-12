@@ -40,25 +40,39 @@ public struct PlaytestCaptureLedger: Sendable, Equatable {
     public private(set) var refusals: [String] = []
     /// How many steps were skipped for want of a Screen Recording grant.
     public private(set) var ungranted: Int = 0
-    /// The pictures in `written` taken while the window was behind another
-    /// app. A walk never takes key (2026-09-26), so most pictures are these,
-    /// and they show the window's background look: the system's blue button
-    /// turns white or grey, a picked segment turns grey. Judged as the window
-    /// in front, that look files problems a person in front never sees, and
-    /// hides ones they do (2026-10-09: Edit Original's Done read as missing).
+    /// The pictures in `written` that show the window's background look, the
+    /// way AppKit draws a window behind another app: the system's blue button
+    /// turns white or grey, a picked segment and an on switch turn grey.
+    /// Judged as the window in front, that look files problems a person in
+    /// front never sees, and hides ones they do (2026-10-09: Edit Original's
+    /// Done read as missing).
+    ///
+    /// A walk never takes key (2026-09-26), so until 2026-11-12 nearly every
+    /// picture was one of these and nearly every audit apologised for it. The
+    /// harness now lends the photographed window its in-front look for the
+    /// length of the photograph (`PlaytestHarness.lendTheFrontLook`), which
+    /// takes neither key nor the front, so a picture lands here only when the
+    /// walk asked for the background look (`PlaytestSetup.behindLook`) or the
+    /// lend did not take.
     public private(set) var behind: [String] = []
+
+    /// Whether a picture shows the background look: the window was neither in
+    /// front (the probe active with it key) nor drawn with its key look lent.
+    public static func showsBackgroundLook(inFront: Bool, keyLook: Bool) -> Bool {
+        !inFront && !keyLook
+    }
 
     /// The line that goes under any picture in `behind` wherever it is shown,
     /// which in an audit is the step's `shotNote`.
     public static let behindLabel =
-        "Photographed with the window behind another app, the way a walk leaves it. Blue buttons "
-        + "and picked controls show their background look here; with the window in front they "
+        "Photographed in the window's background look, the way it looks behind another app. Blue "
+        + "buttons, switches and picked controls are grey here; with the window in front they "
         + "take the accent colour."
 
     public init() {}
 
     /// Records a picture taken. `name` is the step's name, without the suffix.
-    /// `behind` says the window was behind another app when it was taken.
+    /// `behind` says the picture shows the window's background look.
     public mutating func photographed(_ name: String, behind isBehind: Bool = false) {
         written.append("\(name)-sc.png")
         if isBehind { behind.append("\(name)-sc.png") }
@@ -101,9 +115,9 @@ public struct PlaytestCaptureLedger: Sendable, Equatable {
                     + refusals.joined(separator: ", ")
             }
             if behind.count == written.count, behind.count > 1 {
-                line += "; all \(behind.count) show the window behind another app"
+                line += "; all \(behind.count) show the window's background look"
             } else if !behind.isEmpty {
-                line += "; \(behind.count) \(behind.count == 1 ? "shows" : "show") the window behind another app: "
+                line += "; \(behind.count) \(behind.count == 1 ? "shows" : "show") the window's background look: "
                     + behind.joined(separator: ", ")
             }
             return line

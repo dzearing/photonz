@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/edit-original-done-reads-behind",
   "seed": "Edit Original's Done, photographed with the window behind another app (the way every walk leaves it) in light and then dark: Done is a grey pill with dark words in light and light words in dark, never white on the white title bar. Before 2026-10-09 the system's blue button vanished there in light mode.",
-  "setup": {
+  "setup": { "behindLook": true,
     "forget": [
       "all"
     ]
