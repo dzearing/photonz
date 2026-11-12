@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T16:51:56.290Z",
-  "updated": "2026-11-07T16:51:56.293Z",
+  "updated": "2026-11-12T12:45:28.856Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-07. Command: Scripts/playtest.sh queue/evidence/2026-11-07-arrow-sweep-pill-walk.json --no-build. Output: [52 drag] FAILED: nothing on the canvas is saying what this drag is doing, and the walk expects \"6 × 3\". The mid-drag picture shows the dashed band with no pill. Cause unknown: not compared against a build without typing-1-75-into-width-on-an-icon-picture-gives, whose change touches only the words of a pill that exists, not whether one shows (dragReadoutSubject is unchanged). drag-readout-walk passes, but it sweeps with rectSelect, not the arrow tool.",
@@ -21,7 +21,39 @@
     {
       "t": "2026-11-07T16:51:56.292Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-12T12:23:16.900Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T12:45:22.604Z",
+      "note": "Tried the same sweep five ways (walks in /tmp, same drag as the evidence walk). Ordinary picture, rectangle picked: pill reads \"203 × 131\". Icon, nothing picked: pill reads \"6 × 3\". Icon, rectangle picked: pill reads \"6 × 3\". Icon, pen path picked: NO pill. Ordinary picture, pen path picked: NO pill. So it is not about icons at all: it is a pen path being picked."
+    },
+    {
+      "t": "2026-11-12T12:45:22.604Z",
+      "note": "Cause: with a path picked and its points showing, a press on bare canvas with the arrow tool starts a band over the path's POINTS (pathPointSweep, CanvasPathEdit.beginPathPointSweep), not the layer band (marquee). It is drawn the same way, but dragReadoutSubject (CanvasDragReadout.swift) had no branch for it, so nothing was said."
+    },
+    {
+      "t": "2026-11-12T12:45:22.604Z",
+      "note": "Fix: dragReadoutSubject now reads the points band too, as a sweep, once it has travelled far enough to be a band (same gate as the layer band), reading the drawn box. Icon picture reads in units (6 × 3), ordinary picture in points (203 × 131)."
+    },
+    {
+      "t": "2026-11-12T12:45:22.604Z",
+      "note": "Verified: new walk arrow-sweep-with-a-path-picked-says-its-size-walk ok at Next defaults; the evidence walk queue/evidence/2026-11-07-arrow-sweep-pill-walk.json now ok; 13 walks that read the pill or sweep path points all ok; Scripts/test.sh exit 0 (14,579 + 111 + 179 + 24 tests)."
+    },
+    {
+      "t": "2026-11-12T12:45:22.675Z",
+      "note": "walks none -> arrow-sweep-with-a-path-picked-says-its-size-walk"
+    },
+    {
+      "t": "2026-11-12T12:45:28.854Z",
+      "note": "Not icon-specific: any picture with a pen path picked swept a points band the size pill did not know about. The pill now reads that band too (6 × 3 in icon units, points elsewhere). Verified by a new walk at Next defaults, the original evidence walk, 13 related walks and Scripts/test.sh green."
     }
   ],
-  "walks": []
+  "walks": [
+    "arrow-sweep-with-a-path-picked-says-its-size-walk"
+  ],
+  "started": "2026-11-12T12:23:16.899Z",
+  "completed": "2026-11-12T12:45:28.855Z"
 }

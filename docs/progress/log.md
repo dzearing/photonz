@@ -22984,3 +22984,8 @@ units.
 - Shipped 08488d859: a position key starting anywhere on where the part was drawn (not only its middle) is sent back; the walk's scrap had rested 18 units off the icon.
 - Story run 20261112-105732-ask: total 57.5, 1 of 6 read as asked at 7 (bell 7.0, checkbox 6.9). Checkbox loops 4.7 to 8.1. Bar not met; task left pending.
 - Next: the flap's fold direction (the model draws a shut flap and calls it open), the trash landing on the shut lid, the solid scrap.
+
+## 2026-11-12 — arrow sweep with a path picked says its size
+
+- Task find-out-why-sweeping-with-the-arrow-tool-shows: not icon-specific. With a pen path picked, a bare-canvas press with the arrow tool starts the path-points band (`pathPointSweep`), which `dragReadoutSubject` never read. It now does (CanvasDragReadout.swift). New walk `arrow-sweep-with-a-path-picked-says-its-size-walk`.
+- Next: nothing open from this.
