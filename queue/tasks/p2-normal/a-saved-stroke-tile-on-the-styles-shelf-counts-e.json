@@ -1,0 +1,30 @@
+{
+  "id": "a-saved-stroke-tile-on-the-styles-shelf-counts-e",
+  "title": "A saved stroke tile on the Styles shelf counts every line wearing it as soon as one takes it",
+  "goal": "The tile for a saved line on the Library Styles shelf says how many things use it, but it lags: with two or three lines wearing it the tile still says 1 use until something else makes the shelf redraw. The count should be right the moment a line takes the style.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 85,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-12T14:33:58.303Z",
+  "updated": "2026-11-12T14:33:58.306Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-12. Command: Scripts/playtest.sh Scripts/playtest/a-glyph-takes-the-saved-stroke-walk.json --no-build. Its picture 4-next-line-matches-sc.png (two paths wear Glyph / stroke 1.75) shows the tile reading 1 use; crop at /tmp/crop-4-next-line-matches-sc.png. Same in a-line-and-an-oval-wear-the-saved-stroke-walk picture 4 (path, line and oval wear it, tile says 1 use); by picture 6, after the shelf tile was picked and the width changed, it reads 3 uses. PhotonzDocument.savedStrokeUsageCount is right (SavedStrokeShapesTests.usesUnlinkAndRemoveReachLinesAndEdges), so the stale part is the shelf view: LibraryPanel.visibleSavedStrokes reads editorState.savedStrokeEntries, so suspect the Library pane is skipped by a cached or equatable body that does not key on the use counts. Check whether colour, text and effect style tiles lag the same way.",
+  "acceptance": [
+    "After a second path takes a saved stroke, its shelf tile reads 2 uses without any other click",
+    "After a line and an oval take it too, the tile reads 4 uses straight away",
+    "A walk photographs the tile at each step and checks the words on it"
+  ],
+  "log": [
+    {
+      "t": "2026-11-12T14:33:58.305Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "a-glyph-takes-the-saved-stroke-walk"
+  ]
+}

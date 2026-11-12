@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T20:50:43.260Z",
-  "updated": "2026-11-08T17:12:58.556Z",
+  "updated": "2026-11-12T14:34:45.086Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Saved strokes live on PathContent (Sources/PhotonzCore/SavedStrokes.swift). A box and an oval wear their edge as a Border effect (OutlineRetirement.swift) and a line is AnnotationContent, so each needs its own binding. Not a bug in what shipped: the task asks for paths.",
@@ -25,6 +25,44 @@
     {
       "t": "2026-11-08T17:12:58.555Z",
       "note": "seq 48.75 -> 70"
+    },
+    {
+      "t": "2026-11-12T13:55:25.186Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T13:58:38.073Z",
+      "note": "Adversarial review before building: a Photoshop/Figma user expects a line style to dress any stroke, so a glyph mixing Pen paths, a Line tool line and an outlined circle must follow one weight change. The mock (icon-draw-wt Stroke section) only draws the path case; no mock covers a line or a box, so the row goes where each one's line is already tuned: a line's Line row in Appearance (same row a path uses) and a box or oval's Border in Effects (the edge lives there since OutlineRetirement). What a box cannot honour: caps (no ends) and corners (its ring's corners come from Corner Radius), so a box wears width and side; a line wears width and caps (straight, no corners, always centred). Chose: a line can be saved from (corners read round, side centre, what a straight line draws), a box cannot (its corners are not a stroke value), so the box's Style row only offers strokes that exist. Risk: a border can also wear a saved effect style; whichever was applied last wins and the other lets go with the usual link-break notice."
+    },
+    {
+      "t": "2026-11-12T14:34:16.771Z",
+      "note": "owns these walks: a-line-and-an-oval-wear-the-saved-stroke-walk, a-glyph-takes-the-saved-stroke-walk"
+    },
+    {
+      "t": "2026-11-12T14:34:28.024Z",
+      "note": "Chose the word Stroke for the saved-stroke row on a Border over Style, because that Border already carries a Style row for saved borders and two rows called Style could not be told apart. Pictures in the audit."
+    },
+    {
+      "t": "2026-11-12T14:34:28.099Z",
+      "note": "Chose to leave arrows out (their weight sizes the head) and to make boxes and ovals wear-only (their ring's corners are the Corner Radius, not a stroke value)."
+    },
+    {
+      "t": "2026-11-12T14:34:28.174Z",
+      "note": "Looked at pictures 1, 2, 4, 6 and 7 of a-line-and-an-oval-wear-the-saved-stroke-walk: the line's Style row reads Glyph / stroke 1.75 under its colour; the oval's Border shows Stroke Glyph / stroke 1.75 with Position Center; at width 3 the path, the line and the oval's ring are the same weight; after one undo all read 1.75. Found the shelf tile's use count lagging (1 use with 3 wearers); the original walk shows it too, so it predates this change: filed a-saved-stroke-tile-on-the-styles-shelf-counts-e."
+    },
+    {
+      "t": "2026-11-12T14:34:28.258Z",
+      "note": "left rough: an oval or box drawn on an icon arrives with no outline, so it needs the Effects plus before the one click. Asked in the audit's evaluate rather than filed: whether a Border added on an icon should start in the icon's saved stroke the way a Pen outline does is a taste call for the user."
+    },
+    {
+      "t": "2026-11-12T14:34:45.084Z",
+      "note": "A Line tool line and an outlined box or oval on an icon take the saved stroke in one click (line: Style row under Line; box/oval: Stroke row on its Border), and the saved stroke's width moves them with the paths in one undo step. Core in SavedStrokes.swift with SavedStrokeShapesTests; Scripts/test.sh green; new walk a-line-and-an-oval-wear-the-saved-stroke-walk green at Next defaults with real captures; commit ed5406456. Audit queue/audits/2026-11-12-a-straight-line-and-an-oval-in-a-glyph-can-wear.json."
     }
-  ]
+  ],
+  "started": "2026-11-12T13:55:25.185Z",
+  "walks": [
+    "a-line-and-an-oval-wear-the-saved-stroke-walk",
+    "a-glyph-takes-the-saved-stroke-walk"
+  ],
+  "completed": "2026-11-12T14:34:45.085Z"
 }
