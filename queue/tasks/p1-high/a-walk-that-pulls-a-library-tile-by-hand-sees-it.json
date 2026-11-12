@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-11T03:28:42.110Z",
-  "updated": "2026-11-12T03:32:49.772Z",
+  "updated": "2026-11-12T05:02:40.125Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-10 on e34c74ea (person away, screen unlocked): `Scripts/playtest-all.sh --no-build tile-comes-away-walk text-style-comes-away-walk title-presets-library-shelf-walk transition-tile-comes-away-walk` -> all FAILED at pickUpTile, e.g. 'the tile \"Accent\" did not come away: it was pressed at (1127, 255) and pulled to (508, 611) in the window, and nothing asked to start a drag.' Same with setup front: true (the probe active and key), so it is not the front. Every sweep log under queue/sweep (2026-11-01 to 11-08) shows the three Library ones failing the same way. pickUpTile (PlaytestHarness.pickUpTile) posts mouseMoved/down/dragged/up with NSApp.postEvent and watches NSView.beginDraggingSession via a swizzle on NSView (Sources/Photonz/Playtest/PlaytestTilePickUp.swift, unchanged since 2026-09-12). Suspects, not checked: on macOS 27 SwiftUI's draggable begins its session through a subclass override or another API the NSView swizzle never sees, or no longer starts a drag from posted (non-HID) events. dragTile (payload handed over directly) still passes, so drops work; only the pick-up is unproved. transition-tile-comes-away-walk now opens Transitions by its header with the probe in front (Transitions starts folded, ad5e0e11) and fails only at the pick-up.",
@@ -42,6 +42,26 @@
     {
       "t": "2026-11-12T03:32:49.771Z",
       "note": "rotating check 2026-11-12T03:32:49Z, 31 walks run from 586 onward in the rotation: transition-tile-comes-away-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-11-12T03:53:41.679Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T05:02:36.857Z",
+      "note": "Found: the trigger was the macOS 27.0.1 update installed 2026-10-25 23:18 (softwareupdate --history), between the last pass (rotating check 2026-10-24) and the first failure (sweep 2026-10-26). No app change in that window touched gestures or drags. Traced in the probe: the press and the first pull reach sendEvent, SwiftUI's DragLiftGestureRecognizer goes to began, and from then AppKit routes the pulls to that recogniser, which calls the private -[NSView beginDraggingSessionWithItems:gesture:source:] (macOS 27, in no SDK header). The harness only watched beginDraggingSessionWithItems:event:source:, so it never saw the ask."
+    },
+    {
+      "t": "2026-11-12T05:02:36.933Z",
+      "note": "Answer to 'is a person's drag broken': no. On macOS 27 SwiftUI asks AppKit to start a drag session for each tile with the tile's own payload (Accent: com.photonz.paint + colour + text; Heading: com.photonz.text-style; Film Super: com.photonz.title-preset; Cross dissolve: com.photonz.transition). That is the call where AppKit takes over for a hand; drops are already proved by the dragTile walks. What no walk can prove is AppKit then running the session under a real mouse, which needs a real HID button."
+    },
+    {
+      "t": "2026-11-12T05:02:37.009Z",
+      "note": "Fix (probe only): PlaytestTilePickUp.swift watches every drag door: NSView event (<=26), NSView gesture (27), NSWindow event. Verified: Scripts/playtest-all.sh --no-build on the four walks, 4 passed 0 failed, twice in a row. Scripts/test.sh green. No audit: harness-only change with nothing for a person to try. Left as is: the ONE PICK UP PER RUN note in that file was written for the macOS 26 path and may no longer hold on 27 (the lift recogniser ended cleanly 1->2->3); not tested, not filed, nothing a person sees."
+    },
+    {
+      "t": "2026-11-12T05:02:40.123Z",
+      "note": "A person's tile drag was never broken: from macOS 27.0.1 (installed 2026-10-25) SwiftUI starts a tile's drag through AppKit's new gesture-based call, which the walk harness did not watch. PlaytestTilePickUp now watches every drag door (be6e82181). The four pick-up walks pass twice in a row, each tile coming away with its own payload; Scripts/test.sh green."
     }
   ],
   "walks": [
@@ -49,5 +69,7 @@
     "text-style-comes-away-walk",
     "title-presets-library-shelf-walk",
     "transition-tile-comes-away-walk"
-  ]
+  ],
+  "started": "2026-11-12T03:53:41.678Z",
+  "completed": "2026-11-12T05:02:40.124Z"
 }

@@ -1,0 +1,27 @@
+{
+  "id": "the-app-crashed-in-run-pickuptile",
+  "title": "The app crashed in Run.pickUpTile",
+  "goal": "Crash watch caught a crash in the loop's probe app at 2026-11-11 20:22:47.00 -0800: EXC_BREAKPOINT (SIGTRAP) in Run.pickUpTile(_:to:number:) < Run.perform(_:number:) < Run.start(). Read the report, reproduce it, fix the cause, and add a test that would have caught it.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 4000,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-12T05:02:56.684Z",
+  "updated": "2026-11-12T05:02:56.687Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-11-202247.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nRun.pickUpTile(_:to:number:) (PlaytestHarness.swift:16236)\nRun.perform(_:number:) (PlaytestHarness.swift:3094)\nRun.start() (PlaytestHarness.swift:544)\nclosure #1 in static PlaytestHarness.startIfRequested(coordinator:) (PlaytestHarness.swift:138)",
+  "acceptance": [
+    "Reproduced (or the exact conditions shown from the report) before the fix",
+    "The cause fixed in Photonz code, with a test or walk that fails before and passes after",
+    "crash-watch shows no new report with this signature for a week of walks"
+  ],
+  "log": [
+    {
+      "t": "2026-11-12T05:02:56.686Z",
+      "note": "created (crash-watch)"
+    }
+  ]
+}
