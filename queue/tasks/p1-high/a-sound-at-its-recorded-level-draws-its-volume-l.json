@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 3990,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-12T02:54:40.474Z",
-  "updated": "2026-11-12T02:54:40.477Z",
+  "updated": "2026-11-12T06:35:52.112Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found auditing a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa (2026-11-11). Mock: docs/design/mocks/pages/video-audio.html ~462 yOfLevel(v)=90-clamp(v,0,1)*78 (v=1 at 12/100). App: Sources/Photonz/SoundLane.swift y(forGain:) squares the travel against AudioLevel.loudestGain (twice unity), so unity sits at 1-sqrt(.5)=29% of the usable height: 26.9pt down an 84pt lane (measured on the probe: lane 864-948, line at 891). Walks with level-line coordinates: a-sound-s-volume-line-*, a-sound-s-bend-handle-follows-the-hand-walk, a-sound-lane-is-as-tall-as-the-mock-walk, fade-diamonds-and-level-points-look-like-the-mock-walk, a-sound-s-waveform-follows-its-level-walk.",
@@ -22,6 +22,41 @@
     {
       "t": "2026-11-12T02:54:40.476Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-12T06:07:16.189Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T06:35:14.131Z",
+      "note": "owns these walks: a-sound-lane-is-as-tall-as-the-mock-walk, a-sound-s-bend-handle-follows-the-hand-walk, a-sound-s-volume-line-plain-clicks-walk, a-sound-s-volume-line-picks-and-shapes-walk, a-sound-s-volume-line-menus-alternate-walk, fade-diamonds-and-level-points-look-like-the-mock-walk, a-sound-s-waveform-follows-its-level-walk"
+    },
+    {
+      "t": "2026-11-12T06:35:36.183Z",
+      "note": "Adversarial review before: a Final Cut editor expects the 0 dB line near the top of an audio clip with a thin band above for boost, which is what the mock's yOfLevel gives; the cost is a thin boost strip (4.5 pt for +6 dB), with the panel slider as the fine control. Chose the mock's straight line below the recorded level over keeping the old fader curve because the mock is the floor."
+    },
+    {
+      "t": "2026-11-12T06:35:36.259Z",
+      "note": "Built: SoundLaneShape.levelY/gain(atLevelY:) in PhotonzCore (tests SoundLevelLineHeightTests, written first), SoundLane.swift reads them. Measured on the probe: lane 864-948, line at 874 (10 pt = 12 of 100). Walks updated for the new height (891 -> 874, bend handle and lane drags) and the lane walk now also turns the sound up by dragging (+4.5 dB) and by the slider (+5 dB). 18 walks run, all green; Scripts/test.sh green. Looked at 1-dark, 3-turned-down, 4-turned-up, 5-panel-up and the side-by-side: line at the top of the waveform at 0 dB, lower and smaller waveform turned down, higher when turned up."
+    },
+    {
+      "t": "2026-11-12T06:35:36.334Z",
+      "note": "left rough: the boost strip is thin (about 1.3 dB per point when dragging up); in the audit's rough list, not filed since the slider covers fine boosts and nobody has hit it yet."
+    },
+    {
+      "t": "2026-11-12T06:35:52.110Z",
+      "note": "The volume line now sits where video-audio.html's yOfLevel puts it: recorded level 12 of 100 down the lane (10 pt of 84, measured on the probe), silence at 90, with the strip above for turning up to +6 dB. Change is in PhotonzCore SoundLaneShape.levelY/gain(atLevelY:), with tests written first, and SoundLane.swift uses it. The lane walk turns the sound down (-3 dB), up by drag (+4.5 dB) and up by the slider (+5 dB). 18 walks green, Scripts/test.sh green. Audit: queue/audits/2026-11-11-sound-volume-line-at-the-top.json"
     }
-  ]
+  ],
+  "started": "2026-11-12T06:07:16.188Z",
+  "walks": [
+    "a-sound-lane-is-as-tall-as-the-mock-walk",
+    "a-sound-s-bend-handle-follows-the-hand-walk",
+    "a-sound-s-volume-line-plain-clicks-walk",
+    "a-sound-s-volume-line-picks-and-shapes-walk",
+    "a-sound-s-volume-line-menus-alternate-walk",
+    "fade-diamonds-and-level-points-look-like-the-mock-walk",
+    "a-sound-s-waveform-follows-its-level-walk"
+  ],
+  "completed": "2026-11-12T06:35:52.111Z"
 }
