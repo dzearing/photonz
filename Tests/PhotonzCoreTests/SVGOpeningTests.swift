@@ -321,6 +321,76 @@ struct SVGOpeningTests {
         #expect(try SVGOpening.read(data, named: "x").get().layers.count == 1)
     }
 
+    // MARK: See-through paint, as the file means it
+
+    static func part(_ svg: String) throws -> SVGArtwork.Part {
+        let parts = try SVGArtwork.parse(svg, keepingGroups: true).get().parts
+        try #require(parts.count == 1)
+        return parts[0]
+    }
+
+    @Test("A line's own see-through amount stays on the line when the shape also has a fill")
+    func lineOpacityBesideAFill() throws {
+        let ring = try Self.part(##"<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="12" fill="#34C759" stroke="#000" stroke-width="6" stroke-opacity="0.4"/></svg>"##)
+        #expect(ring.opacity == 1)
+        #expect(ring.fill == "#34C759")
+        #expect(ring.stroke == "#00000066")
+        let both = try Self.part(##"<svg viewBox="0 0 40 40"><rect x="4" y="4" width="30" height="30" fill="red" fill-opacity=".5" stroke="blue" stroke-width="4" opacity=".8"/></svg>"##)
+        #expect(abs(both.opacity - 0.8) < 1e-9)
+        #expect(both.fill == "#FF000080")
+        #expect(both.stroke == "#0000FF")
+        // A shape with only a fill keeps its amount on the layer, where a person tunes it.
+        let plain = try Self.part(##"<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#000" fill-opacity="0.3"/></svg>"##)
+        #expect(abs(plain.opacity - 0.3) < 1e-9)
+        #expect(plain.fill == "#000000")
+    }
+
+    @Test("A colour written with its own see-through amount keeps it")
+    func colourAlpha() throws {
+        let rgba = try Self.part(##"<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="rgba(255,59,48,0.5)"/></svg>"##)
+        #expect(rgba.fill == "#FF3B30")
+        #expect(abs(rgba.opacity - 0.5) < 1e-9)
+        let percent = try Self.part(##"<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="rgb(0 0 0 / 25%)" fill-opacity="0.8"/></svg>"##)
+        #expect(abs(percent.opacity - 0.2) < 1e-9)
+        let hex = try Self.part(##"<svg viewBox="0 0 40 40"><path d="M2 2h30v30z" fill="none" stroke="#0A84FF80" stroke-width="2"/></svg>"##)
+        #expect(hex.stroke == "#0A84FF")
+        #expect(abs(hex.opacity - 128.0 / 255) < 1e-9)
+        let short = try Self.part(##"<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#f008"/></svg>"##)
+        #expect(abs(short.opacity - 136.0 / 255) < 1e-9)
+        let solid = try Self.part(##"<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="rgb(10,20,30)"/></svg>"##)
+        #expect(solid.opacity == 1)
+    }
+
+    @Test("A see-through group of shapes opens as a group at that amount, so where they overlap the lower one does not show")
+    func seeThroughGroup() throws {
+        let opening = try Self.read(##"<svg width="40" height="40" viewBox="0 0 40 40"><g opacity="0.3"><rect x="4" y="4" width="22" height="22" fill="#000"/><rect x="14" y="14" width="22" height="22" fill="#0A84FF"/></g></svg>"##)
+        try #require(opening.layers.count == 1)
+        let group = try #require(opening.layers[0].group)
+        #expect(abs(opening.layers[0].style.opacity - 0.3) < 1e-9)
+        #expect(group.children.count == 2)
+        #expect(group.children.allSatisfy { $0.style.opacity == 1 })
+        // Where it lands on the canvas is where its shapes are.
+        let box = opening.layers[0].frame.origin
+        #expect(Self.near(box.x + group.children[0].frame.minX, 4 * 512 / 40, 1))
+    }
+
+    @Test("A see-through group around one shape just fades that shape, with no group to open")
+    func seeThroughGroupOfOne() throws {
+        let opening = try Self.read(##"<svg width="40" height="40" viewBox="0 0 40 40"><g opacity="0.3"><g opacity="0.5"><path d="M4 4H36V36H4Z" fill="#000"/></g></g></svg>"##)
+        try #require(opening.layers.count == 1)
+        #expect(opening.layers[0].group == nil)
+        #expect(abs(opening.layers[0].style.opacity - 0.15) < 1e-9)
+    }
+
+    @Test("Two see-through groups side by side stay two groups")
+    func twoSeeThroughGroups() throws {
+        let opening = try Self.read(##"<svg width="40" height="40" viewBox="0 0 40 40"><g opacity="0.3"><rect x="0" y="0" width="10" height="10"/><rect x="5" y="5" width="10" height="10"/></g><g opacity="0.6"><rect x="20" y="20" width="10" height="10"/><rect x="25" y="25" width="10" height="10"/></g></svg>"##)
+        try #require(opening.layers.count == 2)
+        #expect(opening.layers.map { ($0.style.opacity * 10).rounded() / 10 } == [0.3, 0.6])
+        #expect(opening.layers.allSatisfy { $0.group?.children.count == 2 })
+        #expect(Set(opening.layers.map(\.name)).count == 2)
+    }
+
     // MARK: The canvas alone
 
     @Test("The size a drawing asks for is known even for a file that can only come in as a picture")

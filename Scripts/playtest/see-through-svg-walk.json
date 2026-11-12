@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/see-through-svg",
+  "seed": "A see-through drawing opens the shade macOS and a browser draw it: a 30 percent square, a faded group of two overlapping squares (the lower one does not show where they meet), a 40 percent line around a solid fill, and colours written with their own see-through amount. No switches: this is Next as it comes.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/svg/See-through box 30.svg", "width": 1100, "height": 800 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "1-box", "note": "black at 30 percent over the white canvas: 178 grey, as macOS and a browser draw the file" },
+    { "do": "snapshot", "name": "1-box" },
+    { "do": "open", "file": "fixtures/svg/See-through group.svg", "width": 1100, "height": 800 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectLayers", "count": 4 },
+    { "do": "describe", "stage": "2-group", "note": "a group at 30 percent: where the blue square covers the black one it is plain pale blue, the black does not show through" },
+    { "do": "snapshot", "name": "2-group" },
+    { "do": "open", "file": "fixtures/svg/See-through line.svg", "width": 1100, "height": 800 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-line", "note": "a 40 percent black line around a solid green circle: grey outside, dark green over the fill, never solid black" },
+    { "do": "snapshot", "name": "3-line" },
+    { "do": "open", "file": "fixtures/svg/See-through colours.svg", "width": 1100, "height": 800 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-colours", "note": "rgba red at 50 percent is pink, not solid red; the purple at 45 percent covers it lower down" },
+    { "do": "snapshot", "name": "4-colours" }
+  ]
+}

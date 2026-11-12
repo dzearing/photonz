@@ -54,6 +54,9 @@ public struct SVGArtwork: Hashable, Sendable {
         /// The named groups it sits in, outermost first: only read when the
         /// drawing is parsed keeping its groups.
         public var groups: [String] = []
+        /// How see-through each of `groups` is, one to one; empty when every
+        /// one is solid. Only a drawing read fading its groups has any.
+        public var groupOpacities: [Double] = []
         /// How its lines end and turn; nil where the SVG does not say.
         public var lineEnd: PathLineEnd?
         public var lineCorner: PathLineCorner?
@@ -98,7 +101,13 @@ public struct SVGArtwork: Hashable, Sendable {
 
     /// `parse`, with a file that holds no shapes coming back holding none, so
     /// what else it holds can still be asked (`leftOut`).
-    static func read(_ text: String, keepingGroups: Bool) -> Result<SVGArtwork, SVGArtworkError> {
+    ///
+    /// `fadingGroups` keeps a see-through `<g>` around two or more shapes as a
+    /// group at that amount, as a browser draws it: the shapes are put
+    /// together first and faded as one, so where they overlap the lower one
+    /// does not show through. Faded one by one, a group of two squares at 30
+    /// percent showed the black square through the blue one where they met.
+    static func read(_ text: String, keepingGroups: Bool, fadingGroups: Bool = false) -> Result<SVGArtwork, SVGArtworkError> {
         guard let start = text.range(of: "<svg") else {
             return .failure(SVGArtworkError("That is not an SVG: it has no <svg> element."))
         }
@@ -108,6 +117,7 @@ public struct SVGArtwork: Hashable, Sendable {
         }
         var reader = SVGReader(root: root)
         reader.keepsGroups = keepingGroups
+        reader.fadesGroups = fadingGroups
         reader.read()
         var artwork = SVGArtwork(viewBox: reader.viewBox, parts: reader.parts)
         artwork.ownSize = reader.ownSize
@@ -264,7 +274,7 @@ public struct SVGArtwork: Hashable, Sendable {
     public func group(named name: String, fitting box: CGRect) -> Layer {
         let parts = layers(named: name, fitting: box)
         if self.parts.contains(where: { !$0.groups.isEmpty }) {
-            return Self.nest(name: name, Array(zip(parts, self.parts.map(\.groups))), depth: 0)
+            return Self.nest(name: name, Self.items(parts, self.parts), depth: 0)
                 ?? Layer(name: name, content: .group(GroupContent(children: [])), frame: CGRect(origin: box.origin, size: .zero))
         }
         let union = parts.reduce(CGRect.null) { $0.union($1.localBounds) }
@@ -278,10 +288,16 @@ public struct SVGArtwork: Hashable, Sendable {
                      frame: CGRect(origin: origin, size: .zero))
     }
 
+    /// Each layer with the groups its part sits in and how see-through each is.
+    private static func items(_ layers: [Layer], _ parts: [Part]) -> [(Layer, [String], [Double])] {
+        zip(layers, parts).map { ($0, $1.groups, $1.groupOpacities) }
+    }
+
     /// Layers (in canvas points) with the groups they sit in, made into a
-    /// group named `name` holding a group for each run of parts that share
-    /// their next group, bottom first.
-    private static func nest(name: String, _ items: [(Layer, [String])], depth: Int) -> Layer? {
+    /// group named `name` at `opacity` holding a group for each run of parts
+    /// that share their next group, bottom first.
+    private static func nest(name: String, _ items: [(Layer, [String], [Double])], depth: Int,
+                             opacity: Double = 1) -> Layer? {
         var children: [Layer] = []
         var index = 0
         while index < items.count {
@@ -292,13 +308,14 @@ public struct SVGArtwork: Hashable, Sendable {
                 continue
             }
             let inner = groups[depth]
-            var run: [(Layer, [String])] = []
+            var run: [(Layer, [String], [Double])] = []
             while index < items.count, depth < items[index].1.count, items[index].1[depth] == inner,
                   items[index].1.prefix(depth) == groups.prefix(depth) {
                 run.append(items[index])
                 index += 1
             }
-            if let group = nest(name: inner, run, depth: depth + 1) { children.append(group) }
+            let faded = run.first.map { depth < $0.2.count ? $0.2[depth] : 1 } ?? 1
+            if let group = nest(name: inner, run, depth: depth + 1, opacity: faded) { children.append(group) }
         }
         let union = children.reduce(CGRect.null) { $0.union(Self.canvasBox(of: $1)) }
         guard !union.isNull else { return nil }
@@ -307,7 +324,9 @@ public struct SVGArtwork: Hashable, Sendable {
             moved.frame = child.frame.offsetBy(dx: -union.minX, dy: -union.minY)
             return moved
         }
-        return Layer(name: name, content: .group(GroupContent(children: placed)), frame: CGRect(origin: union.origin, size: .zero))
+        var group = Layer(name: name, content: .group(GroupContent(children: placed)), frame: CGRect(origin: union.origin, size: .zero))
+        if opacity < 1 { group.style.opacity = max(0, opacity) }
+        return group
     }
 
     /// Where a layer built here sits on the canvas: a group's box is what it holds.
@@ -382,7 +401,7 @@ public struct SVGArtwork: Hashable, Sendable {
     /// gathered into those groups and every layer left where it stands.
     func nested(_ drawn: [Layer], named name: String) -> [Layer] {
         guard parts.contains(where: { !$0.groups.isEmpty }),
-              let top = Self.nest(name: name, Array(zip(drawn, parts.map(\.groups))), depth: 0) else { return drawn }
+              let top = Self.nest(name: name, Self.items(drawn, parts), depth: 0) else { return drawn }
         return top.children.map { child in
             var moved = child
             moved.frame = child.frame.offsetBy(dx: top.frame.minX, dy: top.frame.minY)
@@ -455,6 +474,9 @@ private struct SVGReader {
     /// Gradient ids to the paint they are.
     var paints: [String: Paint] = [:]
     var keepsGroups = false
+    var fadesGroups = false
+    /// How many see-through groups with no id have been named so far.
+    private var fadedGroupCount = 0
     /// How many unnamed parts each group name has handed out.
     private var groupCounts: [String: Int] = [:]
     private var groupTotals: [String: Int] = [:]
@@ -468,11 +490,16 @@ private struct SVGReader {
         var opacity: Double = 1
         var fillOpacity: Double = 1
         var strokeOpacity: Double = 1
+        /// The see-through amount the fill's and the line's own colours were
+        /// written with (`rgba()`, `#RRGGBBAA`), on top of `fill-opacity`.
+        var fillAlpha: Double = 1
+        var strokeAlpha: Double = 1
         var evenOdd = false
         var transform = CGAffineTransform.identity
         var groupName: String?
         var fillPaint: Paint?
         var groups: [String] = []
+        var groupOpacities: [Double] = []
         var lineEnd: PathLineEnd?
         var lineCorner: PathLineCorner?
         /// Inside the outermost `svg`, where another one is a drawing placed
@@ -673,16 +700,21 @@ private struct SVGReader {
         }
         if let fill = value("fill") {
             state.fill = paint(fill)
+            state.fillAlpha = SVGColor.alpha(fill)
             state.fillPaint = gradient(fill)
             if Self.isReference(fill), state.fillPaint == nil { leftOut.insert("paint") }
         }
         if let stroke = value("stroke") {
             state.stroke = paint(stroke)
+            state.strokeAlpha = SVGColor.alpha(stroke)
             // A line paints with one colour, so a gradient on one is lost too.
             if Self.isReference(stroke) { leftOut.insert("paint") }
         }
         if let width = value("stroke-width").flatMap(SVGNumbers.length) { state.strokeWidth = width }
-        if let o = value("opacity").flatMap(SVGNumbers.length) { state.opacity *= o }
+        var fadedAsOne: Double?
+        if let o = value("opacity").flatMap(SVGNumbers.length) {
+            if fadesGroups, node.name == "g", o < 1, Self.drawsTwoOrMore(node) { fadedAsOne = o } else { state.opacity *= o }
+        }
         if let o = value("fill-opacity").flatMap(SVGNumbers.length) { state.fillOpacity = o }
         if let o = value("stroke-opacity").flatMap(SVGNumbers.length) { state.strokeOpacity = o }
         if let rule = value("fill-rule") { state.evenOdd = rule == "evenodd" }
@@ -700,7 +732,16 @@ private struct SVGReader {
         case "svg", "g", "a", "switch":
             if node.name == "g", let id {
                 state.groupName = id
-                if keepsGroups { state.groups.append(id) }
+                if keepsGroups {
+                    state.groups.append(id)
+                    state.groupOpacities.append(fadedAsOne ?? 1)
+                    fadedAsOne = nil
+                }
+            }
+            if let fadedAsOne {
+                fadedGroupCount += 1
+                state.groups.append(id ?? "Group \(fadedGroupCount)")
+                state.groupOpacities.append(fadedAsOne)
             }
             for child in node.children { walk(child, state) }
         case "path", "circle", "ellipse", "rect", "line", "polyline", "polygon":
@@ -708,6 +749,19 @@ private struct SVGReader {
         default:
             return
         }
+    }
+
+    /// Whether a group holds more than one drawn thing, the only case where
+    /// fading it as one differs from fading each.
+    private static func drawsTwoOrMore(_ node: SVGTree) -> Bool {
+        var count = 0
+        func visit(_ node: SVGTree) {
+            guard count < 2, !skipped.contains(node.name) else { return }
+            if drawn.contains(node.name) { count += 1; return }
+            node.children.forEach(visit)
+        }
+        node.children.forEach(visit)
+        return count >= 2
     }
 
     private static func isReference(_ paint: String) -> Bool {
@@ -802,17 +856,32 @@ private struct SVGReader {
             return
         }
         // A line has no inside, whatever fill it inherits.
-        let fill = node.name == "line" ? nil : state.fill
-        let stroke = state.stroke
+        var fill = node.name == "line" ? nil : state.fill
+        var stroke = state.stroke
         let strokeWidth = state.strokeWidth * sqrt(abs(t.a * t.d - t.b * t.c))
         guard fill != nil || (stroke != nil && strokeWidth > 0) else { return }
-        let opacity = state.opacity * (fill != nil ? state.fillOpacity : state.strokeOpacity)
+        let fillAmount = state.fillOpacity * state.fillAlpha
+        let strokeAmount = state.strokeOpacity * state.strokeAlpha
+        let opacity: Double
+        if fill != nil, stroke != nil, strokeWidth > 0, fillAmount < 1 || strokeAmount < 1,
+           node.name == "line" || state.fillPaint == nil {
+            // Fill and line each keep their own amount in their colour, as a
+            // browser draws them: on the layer, a 40 percent line beside a
+            // solid fill came out solid.
+            opacity = state.opacity
+            fill = fill.map { SVGColor.hex($0, alpha: fillAmount) }
+            stroke = stroke.map { SVGColor.hex($0, alpha: strokeAmount) }
+        } else {
+            // One paint, one amount: on the layer, where a person tunes it.
+            opacity = state.opacity * (fill != nil ? fillAmount : strokeAmount)
+        }
         let before = parts.count
         defer {
             let paint = node.name == "line" ? nil : state.fillPaint
             for index in before..<parts.count {
                 if parts[index].fill != nil { parts[index].fillPaint = paint }
                 parts[index].groups = state.groups
+                parts[index].groupOpacities = state.groupOpacities.contains { $0 < 1 } ? state.groupOpacities : []
                 parts[index].lineEnd = state.lineEnd
                 parts[index].lineCorner = state.lineCorner
             }
@@ -1321,16 +1390,54 @@ enum SVGColor {
             }
         }
         if word.hasPrefix("rgb") {
-            let values = SVGNumbers.list(String(word.drop { $0 != "(" }.dropFirst()).replacing("%", with: " "))
+            let values = functionValues(word)
             guard values.count >= 3 else { return nil }
-            let percent = word.contains("%")
             let channels = values.prefix(3).map { value -> Int in
-                let v = percent ? value * 2.55 : value
+                let v = value.percent ? value.number * 2.55 : value.number
                 return Int(min(255, max(0, v.rounded())))
             }
             return String(format: "#%02X%02X%02X", channels[0], channels[1], channels[2])
         }
         return named[word]
+    }
+
+    /// How see-through the colour was written: the fourth number of
+    /// `rgba()`, the last digits of `#RGBA` or `#RRGGBBAA`; 1 for anything else.
+    static func alpha(_ text: String) -> Double {
+        let word = text.trimmingCharacters(in: .whitespaces).lowercased()
+        if word.hasPrefix("#") {
+            let digits = String(word.dropFirst())
+            guard digits.allSatisfy(\.isHexDigit) else { return 1 }
+            switch digits.count {
+            case 4: let d = String(digits.suffix(1)); return Double(UInt8(d + d, radix: 16) ?? 255) / 255
+            case 8: return Double(UInt8(String(digits.suffix(2)), radix: 16) ?? 255) / 255
+            default: return 1
+            }
+        }
+        if word.hasPrefix("rgb") {
+            let values = functionValues(word)
+            guard values.count >= 4 else { return 1 }
+            let a = values[3].percent ? values[3].number / 100 : values[3].number
+            return Double(min(max(a, 0), 1))
+        }
+        return 1
+    }
+
+    /// `#RRGGBB` at `alpha`: as it is when solid, `#RRGGBBAA` when not.
+    static func hex(_ colour: String, alpha: Double) -> String {
+        guard alpha < 0.999 else { return colour }
+        return colour + String(format: "%02X", Int((min(max(alpha, 0), 1) * 255).rounded()))
+    }
+
+    /// The numbers inside `rgb(...)`, commas, spaces and a slash all
+    /// separating them, each saying whether it was a percentage.
+    private static func functionValues(_ word: String) -> [(number: CGFloat, percent: Bool)] {
+        let inside = word.drop { $0 != "(" }.dropFirst().prefix { $0 != ")" }
+        return inside.split(whereSeparator: { $0 == "," || $0 == " " || $0 == "/" }).compactMap { token in
+            let percent = token.hasSuffix("%")
+            guard let number = SVGNumbers.length(String(percent ? token.dropLast() : token)) else { return nil }
+            return (number, percent)
+        }
     }
 
     static let named: [String: String] = [

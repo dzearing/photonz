@@ -1,0 +1,25 @@
+{
+  "feature": "A see-through drawing opens the shade macOS draws it",
+  "epic": "icon-svg",
+  "summary": "A file with see-through parts now opens on the canvas the shade macOS and a browser draw it: a line's own see-through amount, colours written see-through (rgba), and a faded group of overlapping shapes all come in right. A 30 percent shape was already right at Next defaults and still is.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. The four files are in Scripts/playtest/fixtures/svg (See-through ...svg); Scripts/playtest/see-through-svg-walk.json opens them.",
+  "switched": {},
+  "try": [
+    { "do": "File > Open 'See-through box 30.svg'. The square is mid grey (178), the grey macOS Preview shows.", "shot": "2026-11-12-see-through-1-box-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open 'See-through group.svg'. Where the blue square covers the grey one it is plain pale blue; before, the grey showed through (left: before, right: now).", "shot": "2026-11-12-see-through-2-group-before-after-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at Layers: the two squares sit in Group 1, and Group 1's Opacity is 30%. Each square inside is at 100%.", "shot": "2026-11-12-see-through-2-group-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open 'See-through line.svg'. The ring is grey outside the green and dark green over it; before, it was solid black (left: before, right: now).", "shot": "2026-11-12-see-through-3-line-before-after-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open 'See-through colours.svg'. The top band is pink, not solid red (left: before, right: now).", "shot": "2026-11-12-see-through-4-colours-before-after-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open each file in Preview beside Photonz and compare the shades." }
+  ],
+  "evaluate": [
+    "Does every see-through file you open look the same in Photonz as in Preview or a browser?",
+    "Is 'Group 1' a fair name for a faded group the file left unnamed, or would you rather see the file's name on it?",
+    "With a line that has its own see-through amount, the line's own colour carries it rather than the layer's Opacity. Is that where you would look to change it?"
+  ],
+  "rough": [
+    "No mock covers this; the yardstick is macOS's own drawing of each file, read pixel for pixel away from edges (every case within 1 level of 255).",
+    "Ask's own drawings still fade a see-through group shape by shape: only File > Open keeps such a group whole, so nothing Ask builds or animates by group name changes.",
+    "The ONNX Runtime logo (from Camtasia) still averages 7 levels off macOS at its 217 by 74 size, all of it on shape edges: its shades match and it sits about half a pixel left of macOS's drawing. That is placement, not see-through paint."
+  ]
+}

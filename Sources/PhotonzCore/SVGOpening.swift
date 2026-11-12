@@ -108,7 +108,7 @@ public struct SVGOpening: Sendable {
     /// them here. `name` is what parts with no id of their own are called.
     public static func read(_ data: Data, named name: String) -> Result<SVGOpening, SVGArtworkError> {
         if data.starts(with: [0x1F, 0x8B]) { return .failure(SVGArtworkError(compressedMessage)) }
-        switch SVGArtwork.read(text(of: data), keepingGroups: true) {
+        switch SVGArtwork.read(text(of: data), keepingGroups: true, fadingGroups: true) {
         case .success(let artwork):
             guard !artwork.parts.isEmpty || !artwork.leftOut.isEmpty else {
                 return .failure(SVGArtworkError(nothingDrawnMessage))
