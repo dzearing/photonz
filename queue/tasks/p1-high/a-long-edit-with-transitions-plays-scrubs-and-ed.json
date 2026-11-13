@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-13T14:18:35.426Z",
+  "updated": "2026-11-13T16:55:44.659Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -82,9 +82,29 @@
     {
       "t": "2026-11-13T14:18:35.425Z",
       "note": "triage 2026-11-13: added an acceptance line asking for the playhead-watching rule to be written down once found. Recurring pattern across this task, the speed walk and the open-time bug: derived data rebuilt on every query and views that watch the playhead every tick."
+    },
+    {
+      "t": "2026-11-13T14:20:27.853Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-13T16:55:44.433Z",
+      "note": "Pass 2 found the per-tick SwiftUI cost: every SwiftUI pass over the window costs about as much again as the timeline's tracks have views, whatever starts it (20 s play: 500/606 shipped, 605/606 with only the tracks hidden; no clip/track/row body runs per tick). So fewer passes per frame: (5) panel Time section + cut facts watch PanelPlayhead not the playhead (EditorState+PanelPlayhead.swift), 495 -> 576; (6) canvas reads the playhead unwatched via a closure; (7) playing/scrubbed frames go straight onto the canvas layer (EditorState.showPlayingPicture / CanvasNSView.showPlayingPicture), 576 -> 603. Also refreshCrispTile no longer writes nil over nil. Commit 6b216a785; rule written in docs/design/video.md 8f (acceptance line 7). Short-walk baseline rewritten: dropped 379 -> 6-10 a minute, transitions 0-1 dropped, scrub 7/21 (was 8/19), edits trim 85 blade 225 undo 127 ms."
+    },
+    {
+      "t": "2026-11-13T16:55:44.507Z",
+      "note": "Reached vs bar after pass 2 (6 min edit): playback 6-10 of 1818 frames dropped a minute (bar: none), worst gap 105-130 ms; scrub 6-8 display frames behind median, 20-21 worst (bar: 1), barely moved, so its time is in reading frames, not SwiftUI; edits while playing 80-230 ms (bar: 16), each edit rebuilds the whole timeline. Next: (a) the frame fast path steps aside when something is picked, so play with a clip picked still makes a SwiftUI pass per frame; (b) profile the scrub: decode latency per seek; (c) edits: an edit rebuilds every track row, so make rows depend on their own clips only. Tools that worked: per-body counters inserted temporarily, A/B hiding of regions behind a file flag, and an lldb auto-continue breakpoint on ObservationRegistrar.withMutation to list per-tick observed writes. The xctrace SwiftUI template on a launched probe produced an 8 GB trace that never finished saving: do not use it."
+    },
+    {
+      "t": "2026-11-13T16:55:44.580Z",
+      "note": "Walks run: speed-walk (passes vs new baseline), scrub-never-blacks-out-walk ok, 13 of 14 around the panel Time section, held frames, speed stops, fades, the menu bar while playing and an-editing-session-walk ok. a-transition-is-picked-at-the-cut-walk fails at step 46 (Fade In reads 0.51s not 0.5s) on main 1f7ec3fbf without this change too; folded into walks-that-fail-in-the-full-sweep-27. Left rough, not filed: nothing beyond what stays in this task."
+    },
+    {
+      "t": "2026-11-13T16:55:44.658Z",
+      "note": "Pass 2 landed 6b216a785: playback on the 6 min edit 379 -> 6-10 dropped frames a minute. Bars not yet reached: scrub (6-8 frames behind, bar 1), edits while playing (80-230 ms, bar 16), and a few dropped frames a minute (bar 0). Stays open for those."
     }
   ],
-  "started": "2026-11-13T10:57:37.033Z",
+  "started": "2026-11-13T14:20:27.852Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
