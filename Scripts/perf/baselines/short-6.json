@@ -1,0 +1,115 @@
+{
+  "bodiesPerFrame" : {
+
+  },
+  "composites" : {
+    "askedToShownMedianMS" : 332.2975,
+    "askedToShownWorstMS" : 4510.0645,
+    "drawMedianMS" : 7.067625,
+    "drawWorstMS" : 10.201416,
+    "pictures" : 12
+  },
+  "date" : "2026-11-13T07:07:33Z",
+  "edits" : [
+    {
+      "callMS" : 70.40379173122346,
+      "did" : "half a second off the end of Take 2",
+      "edit" : "trim",
+      "longestPassMS" : 4897.127083269879
+    },
+    {
+      "callMS" : 330.3436250425875,
+      "did" : "Take 1 cut at 0:24.7",
+      "edit" : "blade",
+      "longestPassMS" : 1329.7679582610726
+    },
+    {
+      "callMS" : 65.72241662070155,
+      "did" : "the last edit taken back",
+      "edit" : "undo",
+      "longestPassMS" : 3599.2056250106543
+    }
+  ],
+  "form" : "short",
+  "frameStepMS" : 33,
+  "head" : "f12423c41+changes (worst of 2)",
+  "machine" : "Mac16,5, 16 cores, 64GB",
+  "minutes" : 6,
+  "plays" : [
+    {
+      "dropped" : 1851,
+      "framesDue" : 1857,
+      "framesShown" : 5,
+      "label" : "whole",
+      "seconds" : 61.289732250152156,
+      "worstGapMS" : 16654.73754168488
+    },
+    {
+      "dropped" : 12,
+      "framesDue" : 12,
+      "framesShown" : 0,
+      "label" : "cross dissolve at 0:21.6",
+      "seconds" : 0.4,
+      "worstGapMS" : 16654.73754168488
+    },
+    {
+      "dropped" : 12,
+      "framesDue" : 12,
+      "framesShown" : 0,
+      "label" : "push at 0:28.0",
+      "seconds" : 0.4,
+      "worstGapMS" : 16654.73754168488
+    },
+    {
+      "dropped" : 12,
+      "framesDue" : 12,
+      "framesShown" : 0,
+      "label" : "cross dissolve at 0:39.0",
+      "seconds" : 0.4,
+      "worstGapMS" : 8765.002416679636
+    },
+    {
+      "dropped" : 12,
+      "framesDue" : 12,
+      "framesShown" : 0,
+      "label" : "cross dissolve at 0:50.1",
+      "seconds" : 0.4,
+      "worstGapMS" : 12805.02958339639
+    },
+    {
+      "dropped" : 24,
+      "framesDue" : 24,
+      "framesShown" : 0,
+      "label" : "cube at 0:59.8",
+      "seconds" : 0.8,
+      "worstGapMS" : 12591.15295833908
+    },
+    {
+      "dropped" : 12,
+      "framesDue" : 12,
+      "framesShown" : 0,
+      "label" : "cross dissolve at 1:08.5",
+      "seconds" : 0.4,
+      "worstGapMS" : 12591.15295833908
+    }
+  ],
+  "scrubs" : [
+    {
+      "frames" : 240,
+      "lagMedianFrames" : 160,
+      "lagWorstFrames" : 231,
+      "movesMade" : 8,
+      "seconds" : 5.827686166856438,
+      "speed" : "medium",
+      "worstFrameMS" : 1468.258291715756
+    }
+  ],
+  "sound" : {
+    "looks" : 7,
+    "piecesLeftOut" : 0,
+    "silentLooks" : 0
+  },
+  "timeline" : [
+
+  ]
+}

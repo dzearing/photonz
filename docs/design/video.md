@@ -722,6 +722,47 @@ on its two clips alone, because at an hour long `land` cost about 40 ms a clip
 and `setTransition` about 100 ms a cut: the track layout is worked out again
 on every call. That cost is the app's too, and is the speed tasks' to remove.
 
+## 8e. The speed walk: how a speed fix is judged
+
+`speed` steps (`Sources/Photonz/Playtest/PlaytestSpeedWalk.swift`, counted by
+`SpeedWalk` in PhotonzCore) use the reference edit the way a person does and
+write every number into one `speed.json`:
+
+- **play**: frames due on the app's 33 ms clock against the different moments
+  the canvas actually showed, dropped frames, the worst wait between two new
+  pictures, the same for each transition (a stall over a cut is charged to the
+  cut, even with no look inside it), what the sound engine left out, and how
+  long the renderer took to draw each picture it was asked for.
+- **scrub**: the playhead dragged end to end in 5 s, 2 s and a third of a
+  second. The hand moves by the clock, as a person's does, so a stall shows as
+  the picture trailing the hand, in display refreshes.
+- **edits**: trim, move, blade, undo, a transition and a title's words, each
+  made just ahead of the playhead while it plays, with the longest main thread
+  pass from the edit to 1.5 s after.
+- **idleBuilds**: view bodies built per new picture while it plays untouched
+  (`ViewBuildMeter`).
+- **timeline**: refresh times zooming in and out and scrolling end to end.
+- **memory**: footprint and resident once a second for ten minutes of play,
+  the hand taking the playhead elsewhere every half minute.
+- **export**: wall time at the export sheet's defaults (MP4, Standard, Full).
+- **compare**: the run against a baseline file; fails on any number worse by
+  more than a margin (50% by default, 100% in the short walk) plus a floor in
+  its own unit (`SpeedCompare.slack`). A transition's own worst gap is shown
+  but not judged: the whole run's worst gap already bounds it, and which cut a
+  multi-second stall lands on is chance.
+
+Every measure is capped in time, so an app that cannot keep up still ends the
+walk with a number rather than a timeout. The short form,
+`Scripts/playtest/speed-walk.json`, is in the walk set: a minute of play across
+six transitions, one medium scrub, a trim, a blade and an undo, judged against
+`Scripts/perf/baselines/short-6.json`. A speed fix that makes it faster writes
+a new baseline with `Scripts/perf/speed-walk.sh --baseline`: three short runs,
+the worst of them number by number (`SpeedRun.envelope`), because while stalls
+last seconds one run differs from the next by half again (the whole run's
+worst gap read 17 to 28 s across four runs of one build on 2026-11-12). The long form (`Scripts/perf/speed-walk.sh --long 6 20 60`, walks in
+`Scripts/perf/walks/`) is a command and never in a sweep;
+`Scripts/perf/compare.sh before.json after.json` sets two runs side by side.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

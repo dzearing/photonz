@@ -1,0 +1,35 @@
+{
+  "out": "/tmp/photonz-playtest/speed-long-6-rest",
+  "clock": 900,
+  "seed": "Long form of the speed walk, part two, on the 6 minute reference edit: the playhead dragged end to end slow, medium and fling; trim, move, blade, undo, a transition and a title's words changed while it plays; the view bodies a playing frame builds with nothing edited; and the timeline zoomed and scrolled end to end. Run by Scripts/perf/speed-walk.sh --long.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 6
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "speed",
+      "measure": "scrub",
+      "form": "long"
+    },
+    {
+      "do": "speed",
+      "measure": "idleBuilds",
+      "seconds": 3
+    },
+    {
+      "do": "speed",
+      "measure": "edits"
+    },
+    {
+      "do": "speed",
+      "measure": "timeline"
+    }
+  ]
+}

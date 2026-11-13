@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/speed-walk",
+  "clock": 300,
+  "seed": "The short form of the speed walk, exactly as a person running Next gets it with no flag touched: the 6 minute reference edit opens, plays a minute at 1x across its transitions (frames due against frames shown, the worst gap between two new pictures, the same per transition, and what the sound engine left out), the playhead is dragged end to end at a medium speed (how many display frames the picture trails the hand), and a trim, a blade and an undo are made while it plays (the longest main thread pass each causes). Every number goes into speed.json and the run fails on any number worse than the baseline in Scripts/perf/baselines/short-6.json by more than its margin (100 per cent while stalls last seconds and one run differs from the next by half again; the baseline is the worst of three runs) plus a small floor. The long form, on the 6, 20 and 60 minute edits, is Scripts/perf/speed-walk.sh --long and never runs in the walk set.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 6
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 360000
+    },
+    {
+      "do": "speed",
+      "measure": "play",
+      "fromMS": 15000,
+      "seconds": 60,
+      "form": "short"
+    },
+    {
+      "do": "speed",
+      "measure": "scrub",
+      "speeds": [
+        "medium"
+      ]
+    },
+    {
+      "do": "speed",
+      "measure": "edits",
+      "edits": [
+        "trim",
+        "blade",
+        "undo"
+      ]
+    },
+    {
+      "do": "speed",
+      "measure": "compare",
+      "baseline": "../perf/baselines/short-6.json",
+      "marginPercent": 100
+    },
+    {
+      "do": "snapshot",
+      "name": "1-after-the-edits"
+    }
+  ]
+}

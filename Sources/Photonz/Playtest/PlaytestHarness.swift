@@ -225,6 +225,8 @@ private final class Run {
 
     /// The editor the last `open` produced; every later step targets it.
     private var editor: EditorState?
+    /// The speed walk's run so far (`speed` steps, `PlaytestSpeedWalk.swift`).
+    private var speedProbe: SpeedWalkProbe?
     /// A colour row remembered exactly as the row on screen holds it, so a walk
     /// can paint through it after picking something else. See
     /// `PlaytestAction.holdColorRow`.
@@ -3331,6 +3333,19 @@ private final class Run {
 
         case .memory(let check):
             note(number, step.name, try await checkMemory(check))
+
+        case .speed(let measure):
+            let editor = try requireEditor()
+            let probe = speedProbe ?? SpeedWalkProbe(out: out, scriptURL: scriptURL)
+            speedProbe = probe
+            do {
+                note(number, step.name, try await probe.measure(measure, editor: editor))
+            } catch let failure as SpeedWalkProbe.Failure {
+                // A measure has played, scrubbed or edited by the time it
+                // fails, so it is never tried again with the dock built out:
+                // a second go would make its edits twice.
+                throw FailedAfterActing(description: failure.description)
+            }
 
         case .expectShows(let drawing):
             note(number, step.name, try checkShows(drawing), state: describe())

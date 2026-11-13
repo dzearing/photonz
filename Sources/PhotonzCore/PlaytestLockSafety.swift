@@ -166,6 +166,9 @@ public enum PlaytestLockSafety {
         // Added 2026-10-23 by reading: it asks the kernel for the app's own
         // footprint and counts the editors alive, and no name.
         "memory",
+        // Added 2026-11-12 by reading: the speed walk drives the editor's own
+        // playhead, timeline and document and reads its own state, and no name.
+        "speed",
         "expectEdited", "expectIconPreviews", "expectPath", "expectPicked", "expectRecording",
         "expectStoredRecording",
         // Watched on 2026-09-20, forced under a lock: it asks the editor for

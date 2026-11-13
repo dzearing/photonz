@@ -1,0 +1,24 @@
+{
+  "out": "/tmp/photonz-playtest/speed-long-6-play",
+  "clock": 600,
+  "seed": "Long form of the speed walk, part one: the 6 minute reference edit played whole at 1x at Next defaults, frames due against frames shown, for the whole and for each transition, and what the sound engine left out. Run by Scripts/perf/speed-walk.sh --long, never in the walk set.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 6
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "speed",
+      "measure": "play",
+      "fromMS": 0,
+      "seconds": 362,
+      "form": "long"
+    }
+  ]
+}

@@ -3910,6 +3910,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// share of an earlier reading, or a series that must not keep climbing
     /// (`MemoryBudget`). Needs no window, so it runs after every one closed.
     case memory(PlaytestMemoryCheck)
+    /// One measure of the speed walk on the reference edit (`SpeedWalk`):
+    /// playing, scrubbing, editing while it plays, the view bodies a frame
+    /// builds, the timeline scrolled and zoomed, memory over a long session,
+    /// an export, or the run so far against a baseline. Each writes what it
+    /// measured into the walk's `speed.json`. Needs no name, so it runs on a
+    /// locked Mac.
+    case speed(PlaytestSpeedMeasure)
     /// Which drawing every picked copy of a component is showing, by the name
     /// its own menu gives that drawing ("Secondary · Large").
     ///
@@ -4864,7 +4871,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectNamesClearOfWords", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectPlaceTag", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectOpenRefused", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectTitleBarClear", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
-        "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
+        "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "speed", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
     ].sorted()
 
     /// True for a wait that bounds the longest pass (`longestUnderMS`): it is
@@ -5044,6 +5051,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectListStill: "expectListStill"
         case .expectEdited: "expectEdited"
         case .memory: "memory"
+        case .speed: "speed"
         case .expectShows: "expectShows"
         case .expectPreview: "expectPreview"
         case .scrollPanel: "scrollPanel"
@@ -6863,6 +6871,18 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectPreview(on: on, at: at, shows: shows, note: note, unchanged: unchanged)
         case "expectEdited":
             self = .expectEdited(try f.optionalFlag("edited") ?? f.optionalFlag("is") ?? true)
+        case "speed":
+            let measure = PlaytestSpeedMeasure(
+                measure: try f.string("measure"),
+                seconds: try f.optionalNumber("seconds"),
+                fromMS: try f.optionalNumber("fromMS").map { Int($0) },
+                speeds: try f.optionalStrings("speeds"),
+                edits: try f.optionalStrings("edits"),
+                form: try f.optionalString("form"),
+                baseline: try f.optionalString("baseline"),
+                marginPercent: try f.optionalNumber("marginPercent"))
+            if let problem = measure.problem { throw f.invalid(problem.field, problem.reason) }
+            self = .speed(measure)
         case "memory":
             var check = PlaytestMemoryCheck(mark: try f.optionalString("mark"), underMB: try f.optionalNumber("underMB"),
                                             editorsAtMost: try f.optionalNumber("editorsAtMost").map { Int($0) },

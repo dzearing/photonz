@@ -1,0 +1,22 @@
+{
+  "out": "/tmp/photonz-playtest/speed-long-6-export",
+  "clock": 5400,
+  "seed": "Long form of the speed walk, part three: the 6 minute reference edit exported at the export sheet's defaults (MP4, Standard, Full, the whole video), timed from the call to the file being written. On 2026-11-12 it wrote about a third of a megabyte a second and took longer than 25 minutes, so it has a walk and a clock of its own. Run by Scripts/perf/speed-walk.sh --long.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 6
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "speed",
+      "measure": "export",
+      "form": "long"
+    }
+  ]
+}

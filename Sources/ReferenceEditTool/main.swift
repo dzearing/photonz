@@ -19,6 +19,70 @@ import PhotonzRender
 import CoreText
 
 var arguments = Array(CommandLine.arguments.dropFirst())
+
+// `envelope <out.json> <run.json>...`: the worst of several speed walk runs,
+// number by number, as one baseline (`SpeedRun.envelope`), for
+// `Scripts/perf/speed-walk.sh --baseline`.
+if arguments.first == "envelope", arguments.count >= 3 {
+    let runs = arguments.dropFirst(2).compactMap { file in
+        try? JSONDecoder().decode(SpeedRun.self, from: Data(contentsOf: URL(fileURLWithPath: file)))
+    }
+    guard runs.count == arguments.count - 2, var both = SpeedRun.envelope(of: runs) else {
+        FileHandle.standardError.write(Data("every run must read as a speed walk run\n".utf8))
+        exit(2)
+    }
+    both.head = Set(runs.map(\.head)).sorted().joined(separator: ",") + " (worst of \(runs.count))"
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    do {
+        try encoder.encode(both).write(to: URL(fileURLWithPath: arguments[1]))
+    } catch {
+        FileHandle.standardError.write(Data("could not write \(arguments[1]): \(error)\n".utf8))
+        exit(1)
+    }
+    print("==> \(arguments[1]): the worst of \(runs.count) runs")
+    exit(0)
+}
+
+// `compare <before.json> <after.json> [--margin <percent>]`: two speed walk
+// runs side by side (`SpeedCompare`), for `Scripts/perf/compare.sh`.
+if arguments.first == "compare" {
+    let rest = Array(arguments.dropFirst())
+    var files: [String] = []
+    var margin: Double?
+    var index = 0
+    while index < rest.count {
+        if rest[index] == "--margin", index + 1 < rest.count {
+            margin = Double(rest[index + 1])
+            index += 2
+        } else {
+            files.append(rest[index])
+            index += 1
+        }
+    }
+    guard files.count == 2 else {
+        FileHandle.standardError.write(Data("usage: ReferenceEditTool compare <before.json> <after.json> [--margin <percent>]\n".utf8))
+        exit(2)
+    }
+    var runs: [SpeedRun] = []
+    for file in files {
+        do {
+            runs.append(try JSONDecoder().decode(SpeedRun.self, from: Data(contentsOf: URL(fileURLWithPath: file))))
+        } catch {
+            FileHandle.standardError.write(Data("\(file) does not read as a speed walk run: \(error)\n".utf8))
+            exit(2)
+        }
+    }
+    print("before: \(files[0])\nafter:  \(files[1])\n")
+    print(SpeedCompare.table(runs[0], runs[1], names: ("before", "after")))
+    if let margin {
+        let worse = SpeedCompare.regressions(baseline: runs[0], run: runs[1], marginPercent: margin)
+        print(worse.isEmpty ? "\nNothing worse than before by more than \(Int(margin))% and its floor."
+              : "\nWorse than before by more than \(Int(margin))% and its floor:\n  " + worse.joined(separator: "\n  "))
+        exit(worse.isEmpty ? 0 : 1)
+    }
+    exit(0)
+}
 var folder = ReferenceFootage.defaultFolder
 var seed = ReferenceEdit.defaultSeed
 var minutes: Int?

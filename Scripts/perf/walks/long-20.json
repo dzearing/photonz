@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/speed-long-20",
+  "clock": 900,
+  "seed": "Long form of the speed walk on the 20 minute reference edit: a minute played at 1x across its transitions, the playhead dragged end to end slow, medium and fling, the edits made while it plays, the bodies a frame builds, and the timeline zoomed and scrolled. Run by Scripts/perf/speed-walk.sh --long.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 20
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "speed",
+      "measure": "play",
+      "fromMS": 15000,
+      "seconds": 60,
+      "form": "long"
+    },
+    {
+      "do": "speed",
+      "measure": "scrub"
+    },
+    {
+      "do": "speed",
+      "measure": "idleBuilds",
+      "seconds": 3
+    },
+    {
+      "do": "speed",
+      "measure": "edits"
+    },
+    {
+      "do": "speed",
+      "measure": "timeline"
+    }
+  ]
+}
