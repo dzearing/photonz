@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-13T16:55:44.659Z",
+  "updated": "2026-11-13T19:11:12.193Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -102,9 +102,37 @@
     {
       "t": "2026-11-13T16:55:44.658Z",
       "note": "Pass 2 landed 6b216a785: playback on the 6 min edit 379 -> 6-10 dropped frames a minute. Bars not yet reached: scrub (6-8 frames behind, bar 1), edits while playing (80-230 ms, bar 16), and a few dropped frames a minute (bar 0). Stays open for those."
+    },
+    {
+      "t": "2026-11-13T17:08:34.478Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-13T18:51:25.699Z",
+      "note": "Pass 3, scrub: with nothing in the window watching the playhead a medium scrub was answered at 242 of 240 refreshes (today 73-82). Bisect: the timeline line + time scroller mark alone cost ~85 looks, the transport time + scrub bar ~120; a held-frame badge nothing. SwiftUI views in hosts of their own did NOT help (61, then 94-108): a host that draws again is laid out again and pulls the window's host into the layout pass (lldb: AppKitWindowHostingView.layout once per move). Fix: VideoKit.LayerIsland draws those four with Core Animation layers it moves itself, watching its value outside SwiftUI; plus the panel's playhead answers wait for the hand to hold still 30 ms (catchUpPanelPlayhead) since a quick scrub crosses a clip on nearly every move. Result 232-241 looks, lag median 2 / worst 4-5 frames (was 8/21). 23 walks around the ruler, scrub bar, ranges, menus, panel Time section ok."
+    },
+    {
+      "t": "2026-11-13T19:11:11.898Z",
+      "note": "Landed 142d6420d: VideoKit.LayerIsland (Core Animation layers that watch the playhead outside SwiftUI) for the timeline playhead line, time scroller mark, scrub bar fill+knob and transport time; panel playhead answers wait while a hand scrubs (catchUpPanelPlayhead at settle/let go). Short walk baseline rewritten (worst of 3): play 10 -> 4 dropped a minute, transitions all 0, scrub medium 8/21 -> 2/4 display frames behind. Rule rewritten in docs/design/video.md 8f rule 1. test.sh green (14,672 + split runs); 23 walks ok."
+    },
+    {
+      "t": "2026-11-13T19:11:11.972Z",
+      "note": "Chose waiting for the hand to hold still 30 ms before the panel's Time section follows the clip under a scrubbing playhead, over following every clip crossed, because following each one cost a fast scrub two thirds of its refreshes; Premiere's panels follow live, so the user may want it back if it reads laggy."
+    },
+    {
+      "t": "2026-11-13T19:11:12.045Z",
+      "note": "Left rough, not filed: while the scrub bar follows the playhead its VoiceOver value (percent) is gone (label Scrub kept); the knob's hover lift now animates with Core Animation (same 0.12 s ease). Tools: an A/B file flag on the playhead's access() was decisive; an lldb breakpoint on '@objc NSHostingView.layout' printing the className of x0 shows which hosts lay out per move."
+    },
+    {
+      "t": "2026-11-13T19:11:12.118Z",
+      "note": "Next pass, still this task's: (1) edits while playing 87/223/119 ms vs 16: profile is ~80% AttributeGraph update/propagate_dirty after the document write, bodies tiny, so every view reading editorState.document is dirtied; rows need their own per-clip inputs. (2) scrub 2/4 frames vs 1: picture drawing ~10 ms vs 8.3 ms refresh. (3) play still drops ~4 a minute; play with a clip picked bypasses the frame fast path."
+    },
+    {
+      "t": "2026-11-13T19:11:12.192Z",
+      "note": "Pass 3 landed 142d6420d: scrub on the 6 min edit now 2/4 display frames behind (was 8/21) at the display's pace, play 4 dropped a minute. Bars not yet reached: edits while playing (87-223 ms, bar 16), scrub (2 frames, bar 1), a few dropped frames a minute (bar 0)."
     }
   ],
-  "started": "2026-11-13T14:20:27.852Z",
+  "started": "2026-11-13T17:08:34.477Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"

@@ -17190,3 +17190,11 @@
 {"t":"2026-11-13T16:55:44.509Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-13T16:55:44.582Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-13T16:55:44.660Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 2 landed 6b216a785: playback on the 6 min edit 379 -> 6-10 dropped frames a minute. Bars not yet reached: scrub (6-8 frames behind, bar 1), edits while playing (80-230 ms, bar 16), and a few dropped frames a minute (bar 0). Stays open for those."}
+{"t":"2026-11-13T17:08:34.296Z","ev":"slice_pass","walks":31,"passed":31,"failed":0,"seconds":582,"of":1159,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-13T17:08:34.483Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-13T18:51:25.701Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-13T19:11:11.900Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-13T19:11:11.974Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-13T19:11:12.047Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-13T19:11:12.120Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-13T19:11:12.194Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 3 landed 142d6420d: scrub on the 6 min edit now 2/4 display frames behind (was 8/21) at the display's pace, play 4 dropped a minute. Bars not yet reached: edits while playing (87-223 ms, bar 16), scrub (2 frames, bar 1), a few dropped frames a minute (bar 0)."}
