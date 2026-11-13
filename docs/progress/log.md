@@ -23013,3 +23013,11 @@ units.
 - Walk `a-line-and-an-oval-wear-the-saved-stroke-walk` green at Next defaults; `a-glyph-takes-the-saved-stroke-walk` still green.
 - Filed a-saved-stroke-tile-on-the-styles-shelf-counts-e: the shelf tile's use count lags (predates this change).
 - Next: whether a Border added on an icon should start in the icon's saved stroke (asked in the audit).
+
+## 2026-11-12 — Ask ends a request inside its five minutes
+
+- Task find-out-why-ask-sometimes-waits-five-minutes-fo: the "stalls at asking the model" were never a quiet model. Matching every eval stall since 2026-10-23 to the model server's log showed it answering the whole 300 s (7 to 24 planning turns, or a Mac slowed six times); the trace looked stopped because the walk read it at the Send press.
+- `AskRequestTime` (tests first): no planning round after 240 s, a round still going cut at 270 s, then the steps planned land with a left-out line, or "took too long" with nothing changed. No drawing look or redraw past 240 s; a redraw out of time keeps the closest try.
+- `AskModelWatch`: a server silent for 90 s is given up ("Ask's model went quiet. Try again."), nothing changes, the server is stopped. 90 s measured against 26,849 server tasks (worst working gap 37 s). Reproduced with kill -STOP on the probe's server.
+- Walk setup `askSeconds` and `ask-ends-inside-its-time-walk`. Held-out run 20261112-233938: 0 of 53 cases hit the limit, total 59.9.
+- Next: whether landing part of a long plan beats waiting (asked in the audit).
