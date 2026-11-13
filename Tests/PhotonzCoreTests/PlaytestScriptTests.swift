@@ -4117,9 +4117,64 @@ struct PlaytestScriptTests {
         #expect(once == -1)
         #expect(twice == -2)
         #expect(seconds == 2)
-        for rate in ["0", "-3", "0.5", "16"] {
+        for rate in ["0", "-3", "0.3", "16"] {
             #expect(throws: (any Error).self) {
                 try decode(#"{ "steps": [ { "do": "expectPlaybackNeverBlank", "name": "x", "rate": \#(rate) } ] }"#)
+            }
+        }
+    }
+
+    // The transport's speed menu plays at 0.25x, 0.5x and 1.5x too, and a
+    // walk has to be able to watch each (`PlaybackSpeed`).
+    @Test("An expectPlaybackNeverBlank step plays at any speed on the transport's menu")
+    func expectPlaybackNeverBlankPlaysAtMenuSpeeds() throws {
+        for rate in PlaybackSpeed.choices + [-0.5] {
+            let script = try decode(#"{ "steps": [ { "do": "expectPlaybackNeverBlank", "name": "x", "rate": \#(rate) } ] }"#)
+            guard case .expectPlaybackNeverBlank(_, _, _, let read) = script.steps[0] else {
+                Issue.record("expectPlaybackNeverBlank"); return
+            }
+            #expect(read == rate)
+        }
+    }
+
+    @Test("An expectTimeline step can claim what the speed control reads and whether sound is playing")
+    func expectTimelineSpeedAndSound() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectTimeline", "speed": "0.5x", "sound": true },
+                     { "do": "expectTimeline", "speed": "8x", "sound": false } ] }
+        """)
+        guard case .expectTimeline(let slow) = script.steps[0],
+              case .expectTimeline(let fast) = script.steps[1] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(slow.speed == "0.5x")
+        #expect(slow.sound == true)
+        #expect(fast.speed == "8x")
+        #expect(fast.sound == false)
+        #expect(slow.claimsSomething)
+    }
+
+    @Test("An expectSoundPitch step names the pitch it listens for, two percent either side by default")
+    func expectSoundPitchParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectSoundPitch", "hz": 440 },
+                     { "do": "expectSoundPitch", "hz": 220, "withinPercent": 5, "seconds": 1 } ] }
+        """)
+        guard case .expectSoundPitch(let hz, let within, let seconds) = script.steps[0],
+              case .expectSoundPitch(let low, let wider, let longer) = script.steps[1] else {
+            Issue.record("expectSoundPitch"); return
+        }
+        #expect(hz == 440)
+        #expect(within == 2)
+        #expect(seconds == 0.5)
+        #expect(low == 220)
+        #expect(wider == 5)
+        #expect(longer == 1)
+        #expect(script.steps[0].name == "expectSoundPitch")
+        #expect(PlaytestStep.names.contains("expectSoundPitch"))
+        for bad in [#""hz": 0"#, #""hz": 440, "seconds": 0"#, #""hz": 440, "withinPercent": -1"#] {
+            #expect(throws: (any Error).self) {
+                try decode(#"{ "steps": [ { "do": "expectSoundPitch", \#(bad) } ] }"#)
             }
         }
     }

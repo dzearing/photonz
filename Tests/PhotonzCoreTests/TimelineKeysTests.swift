@@ -68,6 +68,25 @@ struct TimelineKeysTests {
         #expect(command(.letter("l"), repeating: true) == nil)
     }
 
+    @Test("⇧. and ⇧, step the playing speed up and down wherever the keyboard is, and never start an edit")
+    func speedKeys() {
+        for focused in [true, false] {
+            // What the keyboard sends for ⇧. on most layouts is ">", with
+            // Shift held; a layout that sends "." with Shift is the same ask.
+            #expect(command(.letter(">"), .shift, focused: focused) == .playFaster)
+            #expect(command(.letter("<"), .shift, focused: focused) == .playSlower)
+            #expect(command(.letter("."), .shift, focused: focused) == .playFaster)
+            #expect(command(.letter(","), .shift, focused: focused) == .playSlower)
+        }
+        // Plain . and , are left alone.
+        #expect(command(.letter(".")) == nil)
+        #expect(command(.letter(",")) == nil)
+        // A held key steps once per press, not thirty times a second.
+        #expect(command(.letter(">"), .shift, repeating: true) == nil)
+        #expect(TimelineKeyCommand.playFaster.startsAnEdit == false)
+        #expect(TimelineKeyCommand.playSlower.startsAnEdit == false)
+    }
+
     @Test("Shift-K and Option-K are not Stop: they step between keys")
     func kChordsAreNotStop() {
         #expect(command(.letter("k"), .shift) == nil)

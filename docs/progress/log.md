@@ -23058,3 +23058,12 @@ units.
 - Fewer passes per frame (6b216a785): the panel's Time section watches `PanelPlayhead` instead of the playhead; the canvas reads the playhead unwatched; playing and scrubbed frames go straight onto the canvas layer (`showPlayingPicture`); no more nil-over-nil crisp tile writes. Short speed walk: 379 -> 6 to 10 dropped frames a minute; transitions 0 to 1 dropped each.
 - The rule for which views may watch the playhead is in `docs/design/video.md` §8f.
 - Still open on the task: scrub 6 to 8 display frames behind (bar 1), edits while playing 80 to 230 ms (bar 16), and the fast path steps aside while something is picked.
+
+## 2026-11-13 (go loop, playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2)
+
+- A speed menu beside play on the transport (`PlaybackSpeedMenu` in `TimelineDock.swift`, model `PlaybackSpeed` in PhotonzCore): 0.25x to 8x, the window's own (`EditorState.chosenPlaybackSpeed`), never saved or exported. Space, Play and Play In to Out play at it; J/K/L keep Premiere's 1/2/4/8 ladder and show in the same control.
+- Sound keeps its pitch from 0.25x to 2x: all voices gather in one mixer and go through one `AVAudioUnitTimePitch` (`DocumentAudioEngine`). A time pitch unit has ONE input, so connecting voices straight to it crashed the probe. Silent above 2x and backwards.
+- ⇧. and ⇧, step the speed (`TimelineKeyCommand.playFaster/playSlower`), plus Sequence > Play Faster / Play Slower (`play_faster`, `play_slower` commands).
+- Walk tools: `expectSoundPitch` (taps the engine's output, `TonePitch` reads it), `expectTimeline` `speed`/`sound`, and `expectPlaybackNeverBlank` takes the menu's speeds and fails past 2 percent off pace. Fixture `Scripts/playtest/fixtures/A 440 Hz tone 12s.m4a`. Measured: 440.1 Hz at 1x, 440.3 at 0.5x, 439.6 at 1.5x; pace within 0.6 percent at every speed.
+- 8x forwards now keeps up on the Retina talk (was up to 7 frames behind): forward passes reach and fall back 3x further and keep every third frame at 8x (`MoviePlayPass.reach/fallenBehind/keeps`), and fast forwards above 2x pre-roll for the first frame (`readyToPlayForward`). 4x on the reference edit went from 15 frames behind at its first look to on time at every look.
+- Open: 8x on the six minute reference edit falls up to 185 frames behind (pass restart thrash at cuts and on a slow decode); the task stays pending for it.

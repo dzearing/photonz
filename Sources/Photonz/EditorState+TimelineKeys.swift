@@ -87,6 +87,10 @@ extension EditorState {
             return playInToOut()
         case .shuttle(let key):
             shuttle(key)
+        case .playFaster:
+            stepPlaybackSpeed(faster: true)
+        case .playSlower:
+            stepPlaybackSpeed(faster: false)
         case .stepFrames(let frames):
             stepDocument(byFrames: frames)
         case .nudgeClips(let frames):
@@ -224,13 +228,44 @@ extension EditorState {
         if !isDocumentPlaying { timelineShuttle.stopped() }
     }
 
-    /// What the transport reads while a shuttle is running: `2x`, `-1x`.
-    /// Nil at normal speed, which needs no saying.
-    var shuttleReading: String? {
-        guard isDocumentPlaying, documentPlaybackRate != 1 else { return nil }
-        let speed = abs(documentPlaybackRate)
-        let number = speed == speed.rounded() ? "\(Int(speed))" : String(format: "%.1f", speed)
-        return (documentPlaybackRate < 0 ? "-" : "") + number + "x"
+    // MARK: The speed menu
+
+    /// What the transport's speed control shows: the speed it is playing at
+    /// while it plays (a shuttle's `4x`, `-2x` backwards), and the chosen speed
+    /// it will play at while it is stopped.
+    var playbackSpeedReading: String {
+        PlaybackSpeed.label(isDocumentPlaying ? documentPlaybackRate : chosenPlaybackSpeed)
+    }
+
+    /// Whether what the control shows plays without sound: faster than double,
+    /// or backwards.
+    var playbackSpeedIsSilent: Bool {
+        isDocumentPlaying ? !PlaybackSpeed.playsSound(atRate: documentPlaybackRate)
+            : !PlaybackSpeed.playsSound(atRate: chosenPlaybackSpeed)
+    }
+
+    /// A pick from the speed menu. Playing, it takes over at once, keeping the
+    /// way it was going; stopped, it is what Space and Play play at next. The
+    /// window's, never the document's, so an export never sees it.
+    func setPlaybackSpeed(_ speed: Double) {
+        guard speed > 0 else { return }
+        chosenPlaybackSpeed = speed
+        guard isDocumentPlaying else { return }
+        playDocument(rate: documentPlaybackRate < 0 ? -speed : speed)
+    }
+
+    /// The speed ⇧. and ⇧, step from: the one it is playing at, or the chosen
+    /// one while stopped.
+    var playbackSpeedNow: Double {
+        isDocumentPlaying ? abs(documentPlaybackRate) : chosenPlaybackSpeed
+    }
+
+    /// ⇧. and ⇧,: one step up or down the menu, from the speed it is playing
+    /// at, a shuttle's included, or from the chosen one while stopped.
+    func stepPlaybackSpeed(faster: Bool) {
+        guard documentHasTime else { return }
+        let from = playbackSpeedNow
+        setPlaybackSpeed(faster ? PlaybackSpeed.faster(than: from) : PlaybackSpeed.slower(than: from))
     }
 
     // MARK: Edit points

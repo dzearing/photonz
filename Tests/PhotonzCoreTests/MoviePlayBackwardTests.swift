@@ -73,6 +73,29 @@ struct MoviePlayBackwardTests {
         #expect(document.readyToPlayBackward(atTimeMS: 0, inHand: MovieFramesInHand()))
     }
 
+    // On the six minute reference edit, 4x forwards from rest held a frame 15
+    // behind at its first look, half a second in, while the pass decoded from
+    // the key frame before the playhead; every look after kept up
+    // (2026-11-13). Above 2x the sound is silent, so the clock waits for the
+    // first frame the way it does backwards.
+    @Test("Playing fast forwards is ready once the first frame it keeps at or after the playhead is in hand")
+    func readyForwards() {
+        let document = PhotonzDocument.recording(movie, name: "Take 1")
+        let at = 91 * MovieRef.frameStepMS
+        var hand = MovieFramesInHand()
+        hand.insert(movie: movie.id, frameIndex: 90)
+        #expect(!document.readyToPlayForward(atTimeMS: at, inHand: hand, speed: 4))
+        hand.insert(movie: movie.id, frameIndex: 91)
+        #expect(document.readyToPlayForward(atTimeMS: at, inHand: hand, speed: 4))
+        // At 8x only every third frame is kept: 93 is the one it waits for.
+        #expect(!document.readyToPlayForward(atTimeMS: at, inHand: hand, speed: 8))
+        hand.insert(movie: movie.id, frameIndex: 93)
+        #expect(document.readyToPlayForward(atTimeMS: at, inHand: hand, speed: 8))
+        // A document with no recording in it has nothing to wait for.
+        #expect(PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
+            .readyToPlayForward(atTimeMS: at, inHand: MovieFramesInHand(), speed: 4))
+    }
+
     // Played backwards across a cut, the playhead jumps to the frame before
     // the cut, and a block opened only on arrival left the picture 22 frames
     // behind there, while the stretch playing read on past the cut into

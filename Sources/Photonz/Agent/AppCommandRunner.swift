@@ -92,6 +92,8 @@ extension EditorState {
         case .playBackward: shuttle(.reverse)
         case .stop: shuttle(.stop)
         case .playForward: shuttle(.forward)
+        case .playFaster: stepPlaybackSpeed(faster: true)
+        case .playSlower: stepPlaybackSpeed(faster: false)
         case .goToPreviousEdit: goToEditPoint(forward: false)
         case .goToNextEdit: goToEditPoint(forward: true)
         // Sequence: marks and markers
@@ -439,6 +441,8 @@ extension EditorState {
         switch call.id {
         case .playPause: return timed || isKeyedPicture
         case .playBackward, .playForward: return timed
+        case .playFaster: return timed && PlaybackSpeed.faster(than: playbackSpeedNow) != playbackSpeedNow
+        case .playSlower: return timed && PlaybackSpeed.slower(than: playbackSpeedNow) != playbackSpeedNow
         case .playInToOut: return canPlayInToOut
         case .stop: return isDocumentPlaying
         case .goToPreviousEdit: return canGoToEditPoint(forward: false)

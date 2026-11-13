@@ -242,14 +242,16 @@ extension EditorState {
         return true
     }
 
-    /// Sound plays with the picture only at normal speed forwards. A shuttle
-    /// at double speed, or backwards, runs silent rather than garbled.
-    var playsSoundAtRate: Bool { documentPlaybackRate == 1 }
+    /// Sound plays with the picture forwards up to double speed, its pitch
+    /// held off normal speed (`PlaybackSpeed`). Faster, or backwards, it runs
+    /// silent rather than garbled.
+    var playsSoundAtRate: Bool { PlaybackSpeed.playsSound(atRate: documentPlaybackRate) }
 
-    /// Play, at normal speed unless a shuttle asks for another
-    /// (`EditorState+TimelineKeys`). Asked again while it plays, it changes
-    /// speed where it is rather than starting over.
-    func playDocument(rate: Double = 1) {
+    /// Play, at the window's chosen speed (the transport's speed menu) unless
+    /// a shuttle asks for another (`EditorState+TimelineKeys`). Asked again
+    /// while it plays, it changes speed where it is rather than starting over.
+    func playDocument(rate asked: Double? = nil) {
+        let rate = asked ?? chosenPlaybackSpeed
         guard documentHasTime, rate != 0 else { return }
         titlePartReplaying = nil
         // Play is another operation: the transform bar goes (scrubbing keeps
@@ -322,6 +324,9 @@ extension EditorState {
             // block decodes from the key frame before it, and a playhead that
             // ran on meanwhile leaves the picture stuck (`MoviePlayBackward`).
             if rate < 0 { await self?.preRollBackward() }
+            // ...and forwards faster than double, which is silent, it waits
+            // for its first frame the same way (`readyToPlayForward`).
+            if rate > PlaybackSpeed.fastestWithSound { await self?.preRollForward() }
             // Ticks on its own beat, not a frame after each tick's work
             // (`PlayClockPace`).
             let beat = ContinuousClock.now
@@ -385,6 +390,24 @@ extension EditorState {
         documentPlaybackStartedAtMS = documentTimeMS
     }
 
+    /// Hold a clock about to play forwards faster than double where it is
+    /// until the first frame it shows is in hand, at most
+    /// `MoviePlayBackward.preRollMS`, then start it from there. Silent at those
+    /// speeds, so nothing is put out of step with the sound.
+    private func preRollForward() async {
+        let deadline = Date().addingTimeInterval(Double(MoviePlayBackward.preRollMS) / 1000)
+        documentMomentChanged()
+        while !Task.isCancelled, isDocumentPlaying, Date() < deadline,
+              let document = shownDocument,
+              !document.readyToPlayForward(atTimeMS: documentTimeMS, inHand: movieFrames.inHand,
+                                           speed: abs(documentPlaybackRate)) {
+            try? await Task.sleep(for: .milliseconds(4))
+        }
+        guard !Task.isCancelled else { return }
+        documentPlaybackStartedAt = Date()
+        documentPlaybackStartedAtMS = documentTimeMS
+    }
+
     // MARK: Drawing the moment
 
     /// The playhead moved, so the picture has to. Asks for whatever frames this
@@ -437,7 +460,9 @@ extension EditorState {
             } ?? []
             movieFrames.fetch(wanted, size: movieDecodeSize(in: document),
                               handMoving: handMoving, backward: playheadTravel == .backward,
-                              playing: playing, playingBackward: playingBackward, backPlaces: backPlaces)
+                              playing: playing,
+                              playingSpeed: isDocumentPlaying ? abs(documentPlaybackRate) : 1,
+                              playingBackward: playingBackward, backPlaces: backPlaces)
         }
         submit(document)
     }

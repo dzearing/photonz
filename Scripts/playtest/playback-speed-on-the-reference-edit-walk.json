@@ -1,0 +1,16 @@
+{
+  "out": "/tmp/photonz-playtest/playback-speed-on-the-reference-edit-walk",
+  "seed": "The six minute reference edit the video speed work measures against (four Retina recordings cut on V1 over a moving background, b-roll, titles, 37 cuts with transitions, zooms, sound) plays at the transport's fast speeds without the picture falling behind: at 4x and 8x it skips frames to keep up, and the playhead keeps the wall clock's pace to within two percent; at 0.5x every look shows the frame under the playhead.",
+  "setup": {
+    "forget": ["all"],
+    "referenceEdit": 6
+  },
+  "steps": [
+    { "do": "wait", "seconds": 2 },
+    { "do": "expectTimeline", "lengthMS": 360000, "speed": "1x" },
+    { "do": "expectPlaybackNeverBlank", "name": "half", "seconds": 2, "moments": 24, "rate": 0.5 },
+    { "do": "expectPlaybackNeverBlank", "name": "four", "seconds": 3, "moments": 24, "rate": 4 },
+    { "do": "expectPlaybackNeverBlank", "name": "eight", "seconds": 3, "moments": 24, "rate": 8 },
+    { "do": "snapshot", "name": "1-after-the-fast-speeds" }
+  ]
+}

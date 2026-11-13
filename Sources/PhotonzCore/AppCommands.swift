@@ -18,6 +18,8 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case playBackward = "play_backward"
     case stop = "stop"
     case playForward = "play_forward"
+    case playFaster = "play_faster"
+    case playSlower = "play_slower"
     case goToPreviousEdit = "go_to_previous_edit"
     case goToNextEdit = "go_to_next_edit"
     // Sequence: marks and markers
@@ -516,6 +518,8 @@ public enum AppCommandTable {
             make(.playBackward, "Play Backward", seq, .timeline, needs: aVideo),
             make(.stop, "Stop", seq, .timeline, needs: "the video playing"),
             make(.playForward, "Play Forward", seq, .timeline, needs: aVideo),
+            make(.playFaster, "Play Faster", seq, .timeline, needs: aVideo),
+            make(.playSlower, "Play Slower", seq, .timeline, needs: aVideo),
             make(.goToPreviousEdit, "Go to Previous Edit", seq, .timeline, needs: "an edit before the playhead"),
             make(.goToNextEdit, "Go to Next Edit", seq, .timeline, needs: "an edit after the playhead"),
             make(.addMarker, "Add Marker", seq, .timeline, needs: aVideo, picks: .playhead),

@@ -291,6 +291,10 @@ public enum PlaytestLockSafety {
         // Added 2026-10-12, watched only unlocked: it reads where the editor
         // draws a timeline row's bar, never a name off the screen.
         "expectRowSpan",
+        // Added 2026-11-13 by reading: it listens to the sound engine's own
+        // output and reads the transport's speed off the editor, never a
+        // name off the screen.
+        "expectSoundPitch",
         // Added 2026-10-11 by reading, NOT yet watched under a lock: the same
         // press and drag as dragTracks, held at an edge while the timeline
         // scrolls, reading only the editor. box-scrolls-at-the-edge-walk is

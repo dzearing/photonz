@@ -638,7 +638,8 @@ extension EditorState {
         loadSoundShapes()
         audioPlayer.setOutputGain(playerVolume.outputGain)
         cleanedSoundsHeard = SoundLibrary.shared.cleanedArrivals
-        audioPlayer.play(audioMix, fromMS: documentTimeMS)
+        audioPlayer.play(audioMix, fromMS: documentTimeMS,
+                         speed: isDocumentPlaying ? documentPlaybackRate : PlaybackSpeed.normal)
     }
 
     /// The speaker on the transport: the sound off, or back on at the level it

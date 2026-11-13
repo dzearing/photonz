@@ -814,6 +814,17 @@ struct EditorCommands: Commands {
             .disabled(!(editor?.canRun(.stop) ?? false))
         Button("Play Forward") { editor?.run(.playForward) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("l", modifiers: []) : nil)
+        // The transport's speed menu a step at a time (`PlaybackSpeed`). The
+        // press itself is taken by the timeline's key router wherever the
+        // keyboard is, but never from a field being typed in; the rows print
+        // the keys only while the timeline has the keyboard, as J/K/L do, so
+        // a > typed into a field is never read as Play Faster.
+        Button("Play Faster") { editor?.run(.playFaster) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut(".", modifiers: [.shift]) : nil)
+            .disabled(!(editor?.canRun(.playFaster) ?? false))
+        Button("Play Slower") { editor?.run(.playSlower) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut(",", modifiers: [.shift]) : nil)
+            .disabled(!(editor?.canRun(.playSlower) ?? false))
     }
 
     @ViewBuilder private var editPointRows: some View {

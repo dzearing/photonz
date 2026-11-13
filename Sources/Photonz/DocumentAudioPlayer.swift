@@ -69,7 +69,11 @@ final class DocumentAudioPlayer {
     /// Everything still to come is scheduled against one engine start, so all
     /// of it stays in step with everything else however long a decode takes:
     /// the engine's own clock is what the pieces are hung on, not a timer.
-    func play(_ mix: [AudioMixSegment], fromMS: Int) {
+    ///
+    /// `speed` is the transport's (`PlaybackSpeed`): off normal the whole mix
+    /// goes through one time stretch that keeps its pitch, the way QuickTime's
+    /// half speed sounds slow rather than low.
+    func play(_ mix: [AudioMixSegment], fromMS: Int, speed: Double = PlaybackSpeed.normal) {
         let live = mix.filter { $0.endMS > fromMS && $0.isAudible }
             .sorted { $0.startMS < $1.startMS }
         droppedSegments = max(0, live.count - Self.segmentBudget)
@@ -77,8 +81,23 @@ final class DocumentAudioPlayer {
             guard let url = SoundLibrary.shared.url(for: segment.sound) else { return nil }
             return DocumentAudioEngine.Piece(segment: segment, url: url)
         }
-        engine.run { $0.play(pieces, fromMS: fromMS) }
+        let stretch = Float(PlaybackSpeed.holdsPitch(atRate: speed) ? speed : PlaybackSpeed.normal)
+        engine.run { $0.play(pieces, fromMS: fromMS, speed: stretch) }
         follow(mix, atMS: fromMS)
+    }
+
+    /// The speed the engine's time stretch is running at: 1 when the mix goes
+    /// straight out. Read off the engine, for a walk.
+    var speed: Double { engine.read { Double($0.speed) } }
+
+    /// The pitch of what the engine is putting out right now, listened to for
+    /// `seconds` at the end of the chain (after the time stretch and the
+    /// speaker's level): what a walk reads to say a test tone kept its pitch
+    /// at half speed (`TonePitch`). Nil when nothing is playing.
+    func listenForPitch(seconds: Double) async -> Double? {
+        let heard = await engine.listen(seconds: seconds)
+        guard let heard else { return nil }
+        return TonePitch.hertz(of: heard.samples, sampleRate: heard.sampleRate)
     }
 
     /// Keep each layer's level where the plan says it is at this moment.
@@ -141,6 +160,16 @@ final class DocumentAudioEngine: @unchecked Sendable {
     private var mixers: [Voice: AVAudioMixerNode] = [:]
     private var playing: [(node: AVAudioPlayerNode, extra: [AVAudioNode])] = []
     private var running = false
+    /// Between the voices and the output while the transport plays off normal
+    /// speed: the voices gather in `gather` and that goes through `stretch`,
+    /// which stretches time and keeps the pitch (`PlaybackSpeed`). A time
+    /// pitch unit has ONE input: two voices connected straight to it left the
+    /// first cut off, and its player crashed on play (2026-11-13). Nil at
+    /// normal speed, when the voices go straight out.
+    private var stretch: AVAudioUnitTimePitch?
+    private var gather: AVAudioMixerNode?
+    /// The rate `stretch` runs at, 1 without one.
+    private(set) var speed: Float = 1
 
     init() {
         // Build the engine and its output now rather than at the first press:
@@ -176,9 +205,27 @@ final class DocumentAudioEngine: @unchecked Sendable {
         engine.mainMixerNode.outputVolume = gain
     }
 
-    func play(_ pieces: [Piece], fromMS: Int) {
+    func play(_ pieces: [Piece], fromMS: Int, speed: Float = 1) {
         stop()
         guard !pieces.isEmpty else { return }
+        if speed != 1 {
+            // Every voice through one stretch, so everything slows together.
+            // The player nodes upstream run on the document's clock, which
+            // the stretch turns into the speaker's: a piece scheduled a
+            // second of the document from now is heard half a second from
+            // now at 2x, exactly where the picture is.
+            let made = AVAudioUnitTimePitch()
+            made.rate = speed
+            made.pitch = 0
+            let voices = AVAudioMixerNode()
+            engine.attach(made)
+            engine.attach(voices)
+            engine.connect(voices, to: made, format: nil)
+            engine.connect(made, to: engine.mainMixerNode, format: nil)
+            stretch = made
+            gather = voices
+        }
+        self.speed = speed
 
         var files: [URL: AVAudioFile] = [:]
         var attached: [(node: AVAudioPlayerNode, extra: [AVAudioNode], segment: AudioMixSegment,
@@ -255,8 +302,36 @@ final class DocumentAudioEngine: @unchecked Sendable {
         playing = []
         for (_, mixer) in mixers { engine.detach(mixer) }
         mixers = [:]
+        if let stretch { engine.detach(stretch) }
+        if let gather { engine.detach(gather) }
+        stretch = nil
+        gather = nil
+        speed = 1
         if running { engine.stop() }
         running = false
+    }
+
+    /// What the output puts out for `seconds`, the first channel of it, from
+    /// a tap on the main mixer. Waits off the queue, so playing carries on.
+    func listen(seconds: Double) async -> (samples: [Float], sampleRate: Double)? {
+        let heard = HeardSamples()
+        // Installed and taken off on the queue, like everything else that
+        // touches the engine.
+        let sampleRate: Double = read { engine in
+            guard engine.running else { return 0 }
+            let mixer = engine.engine.mainMixerNode
+            let format = mixer.outputFormat(forBus: 0)
+            mixer.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, _ in
+                guard let channel = buffer.floatChannelData?[0] else { return }
+                heard.append(UnsafeBufferPointer(start: channel, count: Int(buffer.frameLength)))
+            }
+            return format.sampleRate
+        }
+        guard sampleRate > 0 else { return nil }
+        try? await Task.sleep(for: .seconds(seconds))
+        read { $0.engine.mainMixerNode.removeTap(onBus: 0) }
+        let samples = heard.samples
+        return samples.isEmpty ? nil : (samples, sampleRate)
     }
 
     // MARK: - The pieces of it
@@ -265,7 +340,7 @@ final class DocumentAudioEngine: @unchecked Sendable {
         if let known = mixers[voice] { return known }
         let mixer = AVAudioMixerNode()
         engine.attach(mixer)
-        engine.connect(mixer, to: engine.mainMixerNode, format: nil)
+        engine.connect(mixer, to: gather ?? engine.mainMixerNode, format: nil)
         mixers[voice] = mixer
         return mixer
     }
@@ -299,5 +374,24 @@ final class DocumentAudioEngine: @unchecked Sendable {
     private func detach(_ node: AVAudioPlayerNode, extra: [AVAudioNode]) {
         engine.detach(node)
         for one in extra { engine.detach(one) }
+    }
+}
+
+/// Samples a tap hands over on the audio thread, read once listening stops.
+/// `@unchecked Sendable` because the one lock guards everything in it.
+private final class HeardSamples: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: [Float] = []
+
+    func append(_ more: UnsafeBufferPointer<Float>) {
+        lock.lock()
+        stored.append(contentsOf: more)
+        lock.unlock()
+    }
+
+    var samples: [Float] {
+        lock.lock()
+        defer { lock.unlock() }
+        return stored
     }
 }

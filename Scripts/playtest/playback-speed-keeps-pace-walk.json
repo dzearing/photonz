@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/playback-speed-keeps-pace-walk",
+  "seed": "Every speed on the transport's menu plays at its speed: on the five minute Retina talk the playhead goes 0.25x, 0.5x, 1x, 1.5x, 2x, 4x and 8x the wall clock to within two percent, every look at 0.25x and 0.5x shows the very frame under the playhead (no frame skipped), and 4x and 8x skip frames to keep up without the picture falling behind.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openLongRetinaTalk" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPlaybackNeverBlank", "name": "quarter", "seconds": 2, "moments": 24, "rate": 0.25 },
+    { "do": "expectPlaybackNeverBlank", "name": "half", "seconds": 2, "moments": 24, "rate": 0.5 },
+    { "do": "expectPlaybackNeverBlank", "name": "normal", "seconds": 2, "moments": 24, "rate": 1 },
+    { "do": "expectPlaybackNeverBlank", "name": "one-and-a-half", "seconds": 2, "moments": 24, "rate": 1.5 },
+    { "do": "expectPlaybackNeverBlank", "name": "double", "seconds": 2, "moments": 24, "rate": 2 },
+    { "do": "expectPlaybackNeverBlank", "name": "four", "seconds": 2, "moments": 24, "rate": 4 },
+    { "do": "expectPlaybackNeverBlank", "name": "eight", "seconds": 2, "moments": 24, "rate": 8 },
+    { "do": "snapshot", "name": "1-after-every-speed" }
+  ]
+}

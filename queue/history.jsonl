@@ -17198,3 +17198,10 @@
 {"t":"2026-11-13T19:11:12.047Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-13T19:11:12.120Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-13T19:11:12.194Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 3 landed 142d6420d: scrub on the 6 min edit now 2/4 display frames behind (was 8/21) at the display's pace, play 4 dropped a minute. Bars not yet reached: edits while playing (87-223 ms, bar 16), scrub (2 frames, bar 1), a few dropped frames a minute (bar 0)."}
+{"t":"2026-11-13T19:14:58.572Z","ev":"task_started","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2","title":"Playback speed you can pick: 0.25x, 0.5x, 1x, 1.5x, 2x, 4x and 8x","priority":"p1-high"}
+{"t":"2026-11-13T19:15:24.768Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
+{"t":"2026-11-13T20:33:55.507Z","ev":"task_created","id":"a-picked-sound-clip-draws-no-size-badge-or-handl","priority":"p2-normal","title":"A picked sound clip draws no size badge or handles on the picture"}
+{"t":"2026-11-13T20:34:32.438Z","ev":"task_walks","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2","walks":["playback-speed-walk","playback-speed-keeps-pace-walk","playback-speed-on-the-reference-edit-walk"]}
+{"t":"2026-11-13T20:34:32.512Z","ev":"task_note","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2"}
+{"t":"2026-11-13T20:34:32.589Z","ev":"task_note","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2"}
+{"t":"2026-11-13T20:34:32.677Z","ev":"task_note","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2"}

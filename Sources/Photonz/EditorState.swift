@@ -1935,6 +1935,11 @@ final class EditorState {
     /// button, anything on J and L's ladder for a shuttle, negative backwards
     /// (`EditorState+TimelineKeys`).
     var documentPlaybackRate: Double = 1
+    /// The speed Space and the Play button play at, picked from the
+    /// transport's speed menu or stepped with ⇧. and ⇧, (`PlaybackSpeed`).
+    /// The window's own: 1x in every new one, never saved into the document,
+    /// never seen by an export.
+    var chosenPlaybackSpeed: Double = PlaybackSpeed.normal
     /// J, K and L's ladder, and whether K is down right now.
     @ObservationIgnored var timelineShuttle = TimelineShuttle()
     @ObservationIgnored var isShuttleKHeld = false

@@ -4452,7 +4452,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `rate` is the shuttle's: 1 plays from the start the way Space does, a
     /// faster one the way L L does, and a negative one from the end the way
     /// End then J does (`playing-backwards-with-j-keeps-up-on-a-full-scre`).
+    /// Any speed on the transport's menu plays too (`PlaybackSpeed`), and the
+    /// step says how fast the playhead really went against the wall clock,
+    /// failing past two percent off the rate.
     case expectPlaybackNeverBlank(name: String, seconds: Double, moments: Int, rate: Double)
+    /// Listen to what the sound engine puts out for `seconds` while it plays
+    /// and read its pitch (`TonePitch`): a test tone at `hz`, within
+    /// `withinPercent` either side. How a walk says a sound at half speed
+    /// kept its pitch rather than dropping an octave (`PlaybackSpeed`).
+    case expectSoundPitch(hz: Double, withinPercent: Double, seconds: Double)
     /// Plays the document from wherever the playhead is, the way Space does,
     /// and at `moments` looks over `seconds` reads what one layer (by its name
     /// or its words) is doing in the picture the canvas was handed: whether it
@@ -4868,7 +4876,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectNamesClearOfWords", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectPlaceTag", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectOpenRefused", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectTitleBarClear", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectNamesClearOfWords", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectPlaceTag", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectOpenRefused", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectSoundPitch", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectTitleBarClear", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "speed", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -5028,6 +5036,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectTracks: "expectTracks"
         case .expectTimeline: "expectTimeline"
         case .expectPlaybackNeverBlank: "expectPlaybackNeverBlank"
+        case .expectSoundPitch: "expectSoundPitch"
         case .expectPlaybackShows: "expectPlaybackShows"
         case .expectScrubSmooth: "expectScrubSmooth"
         case .filmThumb: "filmThumb"
@@ -6645,7 +6654,9 @@ public enum PlaytestStep: Sendable, Equatable {
                 trackColumn: try f.optionalNumber("trackColumn"),
                 markerAtMS: try f.optionalNumber("markerAtMS").map { Int($0) },
                 fullScreen: fields["fullScreen"] as? Bool,
-                controlsTucked: fields["controlsTucked"] as? Bool)
+                controlsTucked: fields["controlsTucked"] as? Bool,
+                speed: try f.optionalString("speed"),
+                sound: fields["sound"] as? Bool)
             if let height = claim.dockHeight, height <= 0 {
                 throw f.invalid("dockHeight", "the timeline dock stands some points tall, not \(height)")
             }
@@ -6664,7 +6675,7 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
                     + "\"open\", \"mode\", \"tool\", \"timelineTool\", \"tracks\", "
                     + "\"volumePercent\", \"muted\", \"outputGain\", \"zoomScale\", \"rowScale\", \"dockHeight\", \"trackColumn\", \"arrived\", "
-                    + "\"fullScreen\" or \"controlsTucked\"")
+                    + "\"fullScreen\", \"controlsTucked\", \"speed\" or \"sound\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -6679,13 +6690,28 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "at least twice, not \(moments)")
             }
             let rate = try f.optionalNumber("rate") ?? 1
-            guard TimelineShuttle.ladder.contains(abs(rate)) else {
+            guard TimelineShuttle.ladder.contains(abs(rate)) || PlaybackSpeed.isChoice(abs(rate)) else {
                 throw f.invalid("rate", "a playback is played at a rate J or L can reach, "
-                    + "\(TimelineShuttle.ladder.map { "\(Int($0))" }.joined(separator: ", ")) "
+                    + "\(TimelineShuttle.ladder.map { "\(Int($0))" }.joined(separator: ", ")), "
+                    + "or one on the speed menu, "
+                    + "\(PlaybackSpeed.choices.map(PlaybackSpeed.label).joined(separator: ", ")), "
                     + "or the same backwards, not \(rate)")
             }
             self = .expectPlaybackNeverBlank(name: try f.string("name"), seconds: seconds,
                                              moments: Int(moments), rate: rate)
+        case "expectSoundPitch":
+            let hz = try f.number("hz")
+            let within = try f.optionalNumber("withinPercent") ?? 2
+            let seconds = try f.optionalNumber("seconds") ?? 0.5
+            guard hz > 0 else { throw f.invalid("hz", "a tone has a pitch above nought, not \(hz)") }
+            guard within > 0 else {
+                throw f.invalid("withinPercent", "a pitch is read within some percent of itself, not \(within)")
+            }
+            guard seconds > 0, seconds <= 5 else {
+                throw f.invalid("seconds", "the sound is listened to for more than nothing and at most 5 seconds, "
+                    + "not \(seconds)")
+            }
+            self = .expectSoundPitch(hz: hz, withinPercent: within, seconds: seconds)
         case "expectPlaybackShows":
             let seconds = try f.optionalNumber("seconds") ?? 3
             let moments = try f.optionalNumber("moments") ?? 20
@@ -7263,6 +7289,12 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     /// The player's transport is tucked away, as it is while a video plays
     /// full screen with the pointer still (`PlayerFullScreen`).
     public var controlsTucked: Bool?
+    /// What the transport's speed control reads: "1x", "0.5x", a shuttle's
+    /// "4x" while it runs (`PlaybackSpeed`).
+    public var speed: String?
+    /// The sound engine is playing something (true) or silent (false), read
+    /// off the engine itself.
+    public var sound: Bool?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
@@ -7273,7 +7305,10 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
                 mode: ViewEditMode? = nil, volumePercent: Int? = nil, muted: Bool? = nil,
                 outputGain: Double? = nil, zoomScale: Double? = nil, rowScale: Double? = nil,
                 dockHeight: Double? = nil, arrived: Bool? = nil, trackColumn: Double? = nil,
-                markerAtMS: Int? = nil, fullScreen: Bool? = nil, controlsTucked: Bool? = nil) {
+                markerAtMS: Int? = nil, fullScreen: Bool? = nil, controlsTucked: Bool? = nil,
+                speed: String? = nil, sound: Bool? = nil) {
+        self.speed = speed
+        self.sound = sound
         self.fullScreen = fullScreen
         self.controlsTucked = controlsTucked
         self.markerAtMS = markerAtMS
@@ -7313,6 +7348,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
             || volumePercent != nil || muted != nil || outputGain != nil
             || zoomScale != nil || rowScale != nil || dockHeight != nil || arrived != nil
             || trackColumn != nil || fullScreen != nil || controlsTucked != nil
+            || speed != nil || sound != nil
     }
 }
 

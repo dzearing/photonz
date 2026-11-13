@@ -529,6 +529,11 @@ final class MovieFrameFetcher {
         }
     }
     private var playPasses: [UUID: [PlayPass]] = [:]
+    /// Every how many frames the passes in `playPasses` keep
+    /// (`MoviePlayBackward.stride`). A pass keeps what it was opened to keep,
+    /// so a change of speed that changes this starts them all over: a pass
+    /// thinned for 8x left running at 1x would show every third frame.
+    private var playPassStride = 1
 
     /// A block of frames being read behind a playhead playing backwards, in
     /// one pass, at the size the canvas shows it (`MoviePlayBackward`).
@@ -632,10 +637,16 @@ final class MovieFrameFetcher {
     /// `MoviePlayBackward`). Any other call stops those blocks.
     func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize,
                handMoving: Bool = false, backward: Bool = false, playing: MoviePlayPoints? = nil,
+               playingSpeed: Double = 1,
                playingBackward: Double? = nil, backPlaces: [MovieBackPlace] = []) {
         if !handMoving { stopSweeps() }
         let playsAhead = playing != nil && !handMoving && !backward
         if !playsAhead { stopPlayPasses() }
+        let stride = MoviePlayBackward.stride(speed: playingSpeed)
+        if playsAhead, stride != playPassStride {
+            stopPlayPasses()
+            playPassStride = stride
+        }
         let playsBack = playingBackward != nil && !handMoving
         if !playsBack { stopBackBlocks() }
         backSpeed = playsBack ? playingBackward : nil
@@ -656,7 +667,7 @@ final class MovieFrameFetcher {
                           size: MovieSweep.roughSize(for: width))
                 }
                 if playsAhead, let playing, !unsweepable.contains(request.movie.id) {
-                    play(request.movie, url: url, points: playing, size: width)
+                    play(request.movie, url: url, points: playing, speed: playingSpeed, size: width)
                 }
                 if playsBack, let speed = playingBackward, !unsweepable.contains(request.movie.id) {
                     let places = backPlaces.filter { $0.movie.id == request.movie.id }
@@ -676,6 +687,11 @@ final class MovieFrameFetcher {
                !MoviePlayBackward.keeps(frame: request.movie.frameIndex(atSourceMS: request.sourceMS), speed: speed) {
                 continue
             }
+            // ...forwards too (`MoviePlayPass.keeps`).
+            if playsAhead,
+               !MoviePlayPass.keeps(frame: request.movie.frameIndex(atSourceMS: request.sourceMS), speed: playingSpeed) {
+                continue
+            }
             if handMoving, has(request.ref) { continue }
             wanted.append(Read(request: request, size: width, url: url))
         }
@@ -685,7 +701,7 @@ final class MovieFrameFetcher {
             for request in playing.coming where focused.insert(request.movie.id).inserted {
                 guard !unsweepable.contains(request.movie.id),
                       let url = MovieLibrary.shared.url(for: request.movie) else { continue }
-                play(request.movie, url: url, points: playing, size: size(request))
+                play(request.movie, url: url, points: playing, speed: playingSpeed, size: size(request))
             }
         }
         // Played backwards, so is one only across a cut behind.
@@ -763,7 +779,7 @@ final class MovieFrameFetcher {
     /// each frame it shows, told where the playhead is now, and one opened a
     /// few frames into each stretch about to come on (`MoviePlayPass.plan`).
     /// Passes nobody needs any more stop.
-    private func play(_ movie: MovieRef, url: URL, points: MoviePlayPoints, size: CGSize) {
+    private func play(_ movie: MovieRef, url: URL, points: MoviePlayPoints, speed: Double, size: CGSize) {
         let width = Int(size.width.rounded())
         func frames(_ requests: [MovieFrameRequest]) -> [Int] {
             requests.filter { $0.movie.id == movie.id }.map { movie.frameIndex(atSourceMS: $0.sourceMS) }
@@ -777,7 +793,8 @@ final class MovieFrameFetcher {
             return false
         }
         let plan = MoviePlayPass.plan(now: now, coming: next, passes: passes.map(\.running),
-                                      inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) })
+                                      inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) },
+                                      speed: speed)
         var kept: [PlayPass] = []
         for (index, pass) in passes.enumerated() {
             if let aim = plan.aim[index] {
@@ -788,13 +805,13 @@ final class MovieFrameFetcher {
             }
         }
         playPasses[movie.id] = kept
-        for aim in plan.open { open(movie, url: url, aim: aim, size: size) }
+        for aim in plan.open { open(movie, url: url, aim: aim, speed: speed, size: size) }
         keepInsideBudget()
     }
 
     /// Start a pass over `movie` from `aim`'s frame, reading as far ahead of
     /// it as the aim says and waiting there.
-    private func open(_ movie: MovieRef, url: URL, aim: MoviePlayPass.Aim, size: CGSize) {
+    private func open(_ movie: MovieRef, url: URL, aim: MoviePlayPass.Aim, speed: Double, size: CGSize) {
         let width = Int(size.width.rounded())
         let frames = MoviePlayPass.window(from: aim.playhead, movie: movie)
         let token = UUID()
@@ -813,9 +830,20 @@ final class MovieFrameFetcher {
                 stopPlayPasses(of: movie.id)
             }
         }
+        // A pass opened at 8x keeps every third frame for as long as it runs;
+        // a change of speed opens passes afresh only where the playhead
+        // leaves this one behind, and the frames it skips are then read on
+        // their own (`MoviePlayPass.keeps`).
+        let thins = MoviePlayBackward.stride(speed: speed) > 1
+        let keeps: (@Sendable (Int) -> Bool)?
+        if thins {
+            keeps = { frame in MoviePlayPass.keeps(frame: frame, speed: speed) }
+        } else {
+            keeps = nil
+        }
         let task = Task.detached(priority: .userInitiated) {
             let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size,
-                                                 waitsAt: { mark.passed($0) }) { index, image in
+                                                 waitsAt: { mark.passed($0) }, keeps: keeps) { index, image in
                 Task { @MainActor in file(index, image) }
             }
             if !Task.isCancelled { await finished(swept) }

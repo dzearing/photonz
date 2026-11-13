@@ -1548,6 +1548,39 @@ private struct TimelineToggleButton: View {
     }
 }
 
+/// The transport's speed menu, beside play: the seven speeds QuickTime and
+/// the web players offer, 1x in every new window (`PlaybackSpeed`). It shows
+/// the speed it is playing at, a J/K/L shuttle's included, and the one Space
+/// will play at while stopped; a speaker struck through says that speed plays
+/// without sound.
+private struct PlaybackSpeedMenu: View {
+    @Environment(EditorState.self) private var editorState
+
+    static let silentImage = NSImage(systemSymbolName: "speaker.slash.fill", accessibilityDescription: "Silent")
+
+    var body: some View {
+        let chosen = editorState.chosenPlaybackSpeed
+        let shuttling = editorState.isDocumentPlaying && editorState.documentPlaybackRate != chosen
+        let row = { (speed: Double) in
+            VideoKit.Choice.item(PlaybackSpeed.label(speed), isOn: !shuttling && speed == chosen) {
+                editorState.setPlaybackSpeed(speed)
+            }
+        }
+        // The speeds that play silent sit under their own heading.
+        let choices = PlaybackSpeed.choices.filter { PlaybackSpeed.playsSound(atRate: $0) }.map(row)
+            + [.divider, .heading("Without Sound")]
+            + PlaybackSpeed.choices.filter { !PlaybackSpeed.playsSound(atRate: $0) }.map(row)
+        return VideoKit.Dropdown(label: "Playback Speed", value: editorState.playbackSpeedReading,
+                                 help: "Playback speed (⇧. faster, ⇧, slower)",
+                                 leadImage: editorState.playbackSpeedIsSilent ? Self.silentImage : nil,
+                                 choices: choices)
+            .fixedSize()
+            .playtestControl("Playback Speed", detail: "Transport")
+            .panelReadout("speed \(editorState.playbackSpeedReading)"
+                          + (editorState.playbackSpeedIsSilent ? ", silent" : ""))
+    }
+}
+
 /// The dock's transport (`.transport`): the timecode, play, the scrubber and
 /// the volume. A view of its own because it reads the playhead every frame:
 /// read by the dock, that rebuilt every track under it.
@@ -1555,12 +1588,11 @@ private struct TimelineTransport: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        let shuttle = editorState.shuttleReading.map { "  \($0)" } ?? ""
         // The time is read in an island of its own on every frame; the bar
         // only knows how wide it can be (`VideoKit.Island`).
-        VideoKit.TransportBar(current: VideoKit.Timecode.shape(of: editorState.documentLengthTimecode) + shuttle,
+        VideoKit.TransportBar(current: VideoKit.Timecode.shape(of: editorState.documentLengthTimecode),
                               duration: editorState.documentLengthTimecode,
-                              liveCurrent: { [editorState] in editorState.documentTimecode + shuttle }) {
+                              liveCurrent: { [editorState] in editorState.documentTimecode }) {
             // QuickTime's speaker and slider. How loud YOU are listening,
             // not the document's own levels, which are the clips' Volume in
             // the panel. There is no mix meter: the user found it did
@@ -1595,6 +1627,7 @@ private struct TimelineTransport: View {
             }
             .panelHelp("Go to the end (End)")
             .playtestControl("Go to End", detail: "Transport")
+            PlaybackSpeedMenu()
         } scrubber: {
             TransportScrubber { fraction, phase in
                 scrub(toDocumentFraction: fraction, phase: phase)

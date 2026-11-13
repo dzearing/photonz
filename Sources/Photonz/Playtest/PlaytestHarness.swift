@@ -4103,6 +4103,10 @@ private final class Run {
         case .expectTimeline(let claim):
             note(number, step.name, try checkTimeline(claim), state: describe())
 
+        case .expectSoundPitch(let hz, let within, let seconds):
+            note(number, step.name, try await checkSoundPitch(hz: hz, withinPercent: within, seconds: seconds),
+                 state: describe())
+
         case .expectPlaybackNeverBlank(let name, let seconds, let moments, let rate):
             note(number, step.name,
                  try await checkPlaybackNeverBlank(name: name, seconds: seconds, moments: moments, rate: rate),
@@ -12121,6 +12125,31 @@ private final class Run {
         return "the pill says \"\(reading)\", carrying \"\(says)\" as claimed" + about
     }
 
+    /// Listens to what the sound engine puts out while the document plays and
+    /// reads the pitch of the tone in it (`expectSoundPitch`).
+    private func checkSoundPitch(hz: Double, withinPercent: Double, seconds: Double) async throws -> String {
+        let editor = try requireEditor()
+        guard editor.isDocumentPlaying else {
+            throw Failure(description: "expectSoundPitch listens while it plays, and nothing is playing")
+        }
+        guard editor.audioPlayer.isPlaying else {
+            throw Failure(description: "nothing is coming out of the sound engine at "
+                + PlaybackSpeed.label(editor.documentPlaybackRate))
+        }
+        guard let heard = await editor.audioPlayer.listenForPitch(seconds: seconds) else {
+            throw Failure(description: "listened for \(seconds)s at \(PlaybackSpeed.label(editor.documentPlaybackRate)) "
+                + "and heard no steady tone")
+        }
+        let off = abs(heard - hz) / hz * 100
+        let reading = String(format: "heard a tone at %.1f Hz playing at %@, %.2f%% from %.1f Hz "
+            + "(the engine stretching time to %.2fx)",
+            heard, PlaybackSpeed.label(editor.documentPlaybackRate), off, hz, editor.audioPlayer.speed)
+        guard off <= withinPercent else {
+            throw Failure(description: reading + String(format: ", more than %.1f%% off", withinPercent))
+        }
+        return reading
+    }
+
     /// Plays the document from the start and looks at the picture the canvas
     /// was handed `moments` times along the way (`expectPlaybackNeverBlank`).
     /// At a negative `rate` it plays from the end backwards, End then J.
@@ -12149,6 +12178,10 @@ private final class Run {
         await sleep(0.3)
         editor.playDocument(rate: rate)
         let started = Date()
+        // How far the playhead really went against the wall clock, from the
+        // first look to the last (`PlaybackSpeed`).
+        var firstSeen: (at: Date, ms: Int)?
+        var lastSeen: (at: Date, ms: Int)?
         var looks: [CGImage] = []
         var empty: [Int] = []
         var gaps = 0
@@ -12163,6 +12196,10 @@ private final class Run {
             let wait = due - Date().timeIntervalSince(started)
             if wait > 0 { await sleep(wait) }
             let playhead = editor.documentTimeMS
+            if editor.isDocumentPlaying {
+                if firstSeen == nil { firstSeen = (Date(), playhead) }
+                lastSeen = (Date(), playhead)
+            }
             let on = clips.filter { $0.movieFrameSourceMS(atTimeMS: playhead) != nil }
             // The stand-in the canvas draws for a frame still being read is
             // the nearest on the side it came from, which played backwards is
@@ -12231,9 +12268,22 @@ private final class Run {
         if let behind = PlaybackKeepsUp.problem(lateLooks: late, framesBehind: worstLag, looks: moments) {
             throw Failure(description: "the picture did not keep up while it played: \(behind)\(worstLook); \(lateness)")
         }
+        // The playhead goes at the rate asked, to within two percent of it,
+        // measured over at least half a second of the wall clock.
+        var pace = ""
+        if let first = firstSeen, let last = lastSeen, last.at.timeIntervalSince(first.at) >= 0.5 {
+            let measured = Double(last.ms - first.ms) / 1000 / last.at.timeIntervalSince(first.at)
+            pace = String(format: "; the playhead went %.3fx the wall clock over %.2fs",
+                          measured, last.at.timeIntervalSince(first.at))
+            guard abs(measured - rate) <= 0.02 * abs(rate) else {
+                throw Failure(description: "the playhead did not go at \(PlaybackSpeed.label(rate))"
+                    + pace + ", more than 2 percent off")
+            }
+        }
         let sizes = Set(clips.compactMap(\.movie).map { "\(Int($0.pixelSize.width))x\(Int($0.pixelSize.height))" })
-        let gapNote = gaps == 0 ? "" : "; \(gaps) look(s) fell in a gap with no clip on, which is black by design"
-        let how = rate == 1 ? "" : " at \(rate < 0 ? "-" : "")\(Int(abs(rate)))x" + (rate < 0 ? " from the end" : "")
+        let gapNote = (gaps == 0 ? "" : "; \(gaps) look(s) fell in a gap with no clip on, which is black by design")
+            + pace
+        let how = rate == 1 ? "" : " at \(PlaybackSpeed.label(rate))" + (rate < 0 ? " from the end" : "")
         return "played \(seconds)s\(how) (\(sizes.sorted().joined(separator: ", "))), "
             + "looked \(moments) times (\(name)-1.png to \(name)-\(looks.count).png), "
             + "the clip on screen was drawn in every one (\(seen.sorted().joined(separator: ", "))); "
@@ -17532,6 +17582,10 @@ private final class Run {
             + ", volume \(editor.playerVolume.percent)%"
             + (editor.playerVolume.isMuted ? " muted" : "")
             + ", engine out " + String(format: "%.3f", editor.audioPlayer.outputGain)
+            + ", speed control \(editor.playbackSpeedReading)"
+            + (editor.audioPlayer.isPlaying
+                ? ", sound playing" + String(format: " stretched to %.2fx", editor.audioPlayer.speed)
+                : ", no sound playing")
             + (editor.isWindowFullScreen ? ", full screen" : "")
             + (editor.arePlayerControlsTuckedAway ? ", transport tucked away" : "")
         var wrong: [String] = []
@@ -17582,6 +17636,12 @@ private final class Run {
                 wrong.append("the window " + (window ? "fills" : "does not fill")
                     + " the screen but the editor thinks it " + (window ? "does not" : "does"))
             }
+        }
+        if let want = claim.speed, want != editor.playbackSpeedReading {
+            wrong.append("the speed control reads \(editor.playbackSpeedReading), not \(want)")
+        }
+        if let want = claim.sound, want != editor.audioPlayer.isPlaying {
+            wrong.append(editor.audioPlayer.isPlaying ? "the sound is playing" : "no sound is playing")
         }
         if let want = claim.controlsTucked, want != editor.arePlayerControlsTuckedAway {
             wrong.append(editor.arePlayerControlsTuckedAway ? "the transport is tucked away" : "the transport is showing")

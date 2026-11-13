@@ -1,0 +1,31 @@
+{
+  "feature": "Playback speed you can pick",
+  "epic": "video-editing",
+  "summary": "A speed menu sits beside play on a video's transport: 0.25x, 0.5x, 1x, 1.5x, 2x, 4x and 8x. Sound keeps its pitch up to 2x and goes quiet above it, Shift-period and Shift-comma step the speed, and J/K/L show their speed in the same control.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording and look right of the Go to End button: the speed control reads 1x.", "shot": "2026-11-13-playback-speed-1.png" },
+    { "do": "Click the speed control and pick 0.5x, then press Space. It plays at half speed and voices sound slower, not lower.", "shot": "2026-11-13-playback-speed-2.png" },
+    { "do": "While it plays, pick 1.5x from the same menu. It changes speed where it is." },
+    { "do": "Pick 4x. The sound goes quiet and the control shows a struck-through speaker. Press Space to stop.", "shot": "2026-11-13-playback-speed-3.png" },
+    { "do": "Press Shift-comma a few times, then Shift-period. The speed steps down and up the menu." },
+    { "do": "Click the timeline, press Home, then L three times. The control reads 4x while it runs; K stops it and the control goes back to your chosen speed.", "shot": "2026-11-13-playback-speed-4.png" },
+    { "do": "Open Sequence in the menu bar: Play Faster and Play Slower sit under Play Forward." }
+  ],
+  "evaluate": [
+    "Is beside the play buttons where you expect a speed control, or would you look for it at the far right like YouTube's?",
+    "Does half speed sound right to you: slower, with voices at their own pitch?",
+    "Is the struck-through speaker on 4x and 8x enough to tell you why the sound went quiet?",
+    "Should picking a speed while stopped also start playing, or is waiting for Space right?",
+    "Do Shift-period and Shift-comma feel natural, or would you rather have a different key?"
+  ],
+  "rough": [
+    "8x on the six minute reference edit does not keep up yet: at 8x the picture falls up to 185 frames behind (4x keeps up at every look, and so does 8x on the five minute Retina talk). This task stays open for it.",
+    "Starting 2x from rest on the five minute Retina talk once held a frame 4 behind at the first look, in 1 of 3 runs; every later look kept up. The same start at 4x and 8x now waits up to half a second for its first frame, which is silent; at 2x and below it does not wait, because the sound has already started.",
+    "No mock draws a speed control. It sits in the transport because the placement contract gives that row play controls (UX-PATTERNS placement contract, Transport row).",
+    "Shift-period and Shift-comma are a web player's keys: neither Premiere nor Final Cut gives a key to a speed menu, and Final Cut's own Shift-comma and Shift-period nudge, which Premiere does with Command-Shift-arrows here (UX-PATTERNS §7).",
+    "The checklist said J L L shows 4x; with Premiere's ladder J then L restarts at 1x forwards, so the walk checks L L L, which is the press that reaches 4x.",
+    "The speed is the window's own: every new window starts at 1x, it is not saved into the document, and Export never sees it."
+  ]
+}

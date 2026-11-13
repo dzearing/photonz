@@ -1,0 +1,26 @@
+{
+  "id": "a-picked-sound-clip-draws-no-size-badge-or-handl",
+  "title": "A picked sound clip draws no size badge or handles on the picture",
+  "goal": "When a sound clip (music, a tone, a voice) is picked in a video, the picture shows a blue \"0 × 0\" size badge and a handle at its top left corner, as if the sound were a box with no size. A sound has nothing on the picture, so nothing should be drawn there for it.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 4100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T20:33:55.503Z",
+  "updated": "2026-11-13T20:33:55.506Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-11-13 by the playback-speed runner: Scripts/playtest.sh Scripts/playtest/playback-speed-walk.json drops fixtures/A 440 Hz tone 12s.m4a onto the sample recording; it lands picked, and every window capture after (queue/audits/2026-11-13-picked-sound-shows-0x0-badge.png, top left of the picture at about (400,115) in the 2541-wide view) shows a blue 0 × 0 pill and a handle above the picture. Not chased further.",
+  "acceptance": [
+    "With only a sound clip picked, the canvas shows no size badge, no handles and no outline",
+    "A walk picks a sound clip and checks the canvas carries no readout for it, at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T20:33:55.505Z",
+      "note": "created (manual)"
+    }
+  ]
+}

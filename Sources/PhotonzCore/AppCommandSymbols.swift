@@ -15,6 +15,8 @@ extension AppCommandID {
         case .playBackward: "backward.fill"
         case .stop: "stop.fill"
         case .playForward: "forward.fill"
+        case .playFaster: "hare"
+        case .playSlower: "tortoise"
         case .goToPreviousEdit: "backward.end.fill"
         case .goToNextEdit: "forward.end.fill"
         // Sequence: marks and markers

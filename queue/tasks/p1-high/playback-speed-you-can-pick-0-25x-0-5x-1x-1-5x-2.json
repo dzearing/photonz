@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.242Z",
-  "updated": "2026-11-13T14:15:33.400Z",
+  "updated": "2026-11-13T20:34:32.676Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-12 (intake): 'Also another feature, I'd like playback to allow for speed control. .25x .5x 1 1.5 2 4 8x something like that?' Today: Sources/PhotonzCore/TimelineKeys.swift TimelineShuttle.ladder = [1, 2, 4, 8] (Premiere's J/K/L), no visible control, no slow speeds. Grown-up tools: Final Cut has no speed menu but plays slow and fast with J/K/L; Premiere likewise; QuickTime and YouTube show a speed menu with 0.25x to 2x, which is the pattern asked for.",
@@ -34,6 +34,32 @@
     {
       "t": "2026-11-13T14:15:33.399Z",
       "note": "seq 9e-10 -> 20"
+    },
+    {
+      "t": "2026-11-13T19:14:58.567Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-13T20:34:32.436Z",
+      "note": "owns these walks: playback-speed-walk, playback-speed-keeps-pace-walk, playback-speed-on-the-reference-edit-walk"
+    },
+    {
+      "t": "2026-11-13T20:34:32.510Z",
+      "note": "Built: speed menu beside play (0.25x to 8x, per window, 1x default, never saved or exported), pitch kept 0.25x to 2x through one AVAudioUnitTimePitch, silent above 2x with a struck-through speaker on the control, Shift-period / Shift-comma and Sequence > Play Faster / Play Slower, J/K/L ladder unchanged and shown in the control. Chose: picking a speed while stopped does not start playing (QuickTime and YouTube do the same); picking while playing changes speed in place, keeping the direction. Chose L L L over the checklist's J L L for the 4x check: with Premiere's ladder J then L restarts at 1x forwards."
+    },
+    {
+      "t": "2026-11-13T20:34:32.587Z",
+      "note": "Measured (walks playback-speed-walk, playback-speed-keeps-pace-walk, playback-speed-on-the-reference-edit-walk): tone 440.1 Hz at 1x, 440.3 at 0.5x, 439.6 at 1.5x; playhead pace on the 5 min Retina talk 0.249/0.500/1.000/1.496/1.995/4.062/7.994x; every look at 0.25x and 0.5x shows the frame under the playhead; 4x and 8x within 3 frames there. On the reference edit 0.5x and 4x pass. NOT REACHED: 8x on the 6 min reference edit falls up to 185 frames behind (looks 4 to 24); the forward pass restarts from its key frame faster than it can deliver (fallenBehind is 12 grid frames at 8x, about 50 ms of the clock). Next step: at speeds above 2x, open the restarted pass ahead of the playhead by the decode start-up (about 0.4 s of the clock) and let serves() accept a pass the playhead has not reached yet. Task left pending for this; the walk playback-speed-on-the-reference-edit-walk is this task's and fails at its 8x step until then."
+    },
+    {
+      "t": "2026-11-13T20:34:32.675Z",
+      "note": "Left rough, not filed: 2x from rest on the Retina talk held one look 4 frames behind at 0.14 s in 1 of 3 runs (start-up decode; 2x has sound, so it does not pre-roll). Filed separately: a-picked-sound-clip-draws-no-size-badge-or-handl (a 0 x 0 badge on the canvas for a picked sound, seen in this walk's pictures). Folded CI red (TextRevealUnclippedTests, run 43467774822) into find-out-why-the-legibility-check-once-read-the. Shared code note: the speed menu lives in the shared TimelineDock, reached only through the document timeline that Next opens recordings into."
     }
+  ],
+  "started": "2026-11-13T19:14:58.566Z",
+  "walks": [
+    "playback-speed-walk",
+    "playback-speed-keeps-pace-walk",
+    "playback-speed-on-the-reference-edit-walk"
   ]
 }

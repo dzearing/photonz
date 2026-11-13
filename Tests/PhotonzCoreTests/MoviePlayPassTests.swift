@@ -249,6 +249,33 @@ struct MoviePlayPassPlanTests {
     private typealias Pass = MoviePlayPass.Running
     private let last = 239
 
+    // At 8x forwards the playhead moves about four grid frames a refresh, so a
+    // pass eight ahead and dropped four behind was started over from its key
+    // frame again and again, and on the five minute Retina talk the picture
+    // held one up to 7 frames behind at 11 of 24 looks (2026-11-13). It reads
+    // and keeps what playing backwards at 8x does: every third frame, three
+    // times as far ahead, dropped three times as far behind.
+    @Test("At 8x forwards a pass reaches three times as far, keeps every third frame and is let fall further behind")
+    func eightTimesForwards() {
+        #expect(MoviePlayPass.reach(speed: 1) == MoviePlayPass.aheadFrames)
+        #expect(MoviePlayPass.reach(speed: 4) == MoviePlayPass.aheadFrames)
+        #expect(MoviePlayPass.reach(speed: 8) == MoviePlayPass.aheadFrames * 3)
+        #expect(MoviePlayPass.fallenBehind(speed: 1) == MoviePlayPass.fallenBehindFrames)
+        #expect(MoviePlayPass.fallenBehind(speed: 8) == MoviePlayPass.fallenBehindFrames * 3)
+        #expect(MoviePlayPass.keeps(frame: 31, speed: 4))
+        #expect(MoviePlayPass.keeps(frame: 30, speed: 8))
+        #expect(!MoviePlayPass.keeps(frame: 31, speed: 8))
+        // Ten behind serves at 8x and not at 1x.
+        #expect(MoviePlayPass.serves(running: 20...last, reached: 40, playhead: 50, inHand: { _ in true }, speed: 8))
+        #expect(!MoviePlayPass.serves(running: 20...last, reached: 40, playhead: 50, inHand: { _ in true }))
+        let plan = MoviePlayPass.plan(now: [50], coming: [],
+                                      passes: [Pass(running: 20...last, reached: 40, playhead: 46,
+                                                    reach: MoviePlayPass.reach(speed: 8))],
+                                      inHand: { _ in true }, speed: 8)
+        #expect(plan.aim == [0: .init(playhead: 50, reach: MoviePlayPass.reach(speed: 8))])
+        #expect(plan.open.isEmpty)
+    }
+
     @Test("A pass keeping up with the playhead is aimed at it")
     func keeps() {
         let plan = MoviePlayPass.plan(now: [30], coming: [],

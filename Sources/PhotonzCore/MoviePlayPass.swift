@@ -80,9 +80,9 @@ public enum MoviePlayPass {
     /// than `fallenBehindFrames` behind, nor when the playhead went back over
     /// ground the pass already read and the window has let that frame go.
     public static func serves(running: ClosedRange<Int>, reached: Int, playhead: Int,
-                              inHand: (Int) -> Bool) -> Bool {
+                              inHand: (Int) -> Bool, speed: Double = 1) -> Bool {
         guard running.contains(playhead) else { return false }
-        if reached < playhead - fallenBehindFrames { return false }
+        if reached < playhead - fallenBehind(speed: speed) { return false }
         if playhead < reached, !inHand(playhead) { return false }
         return true
     }
@@ -94,6 +94,32 @@ public enum MoviePlayPass {
     public static func covers(frame: Int, running: ClosedRange<Int>, reached: Int, playhead: Int,
                               reach: Int = aheadFrames) -> Bool {
         running.contains(frame) && frame >= reached && frame <= max(reached, playhead + reach)
+    }
+
+    // MARK: Fast forwards
+
+    /// How many grid frames ahead of the playhead a pass reads at this speed:
+    /// `aheadFrames`, and three times that at 8x, where only every third frame
+    /// is kept (`MoviePlayBackward.stride`). At 8x the playhead moves about
+    /// four grid frames a refresh, and eight ahead was two refreshes.
+    public static func reach(speed: Double) -> Int {
+        aheadFrames * MoviePlayBackward.stride(speed: speed)
+    }
+
+    /// How far a pass may be behind the playhead at this speed before it is
+    /// started over: `fallenBehindFrames`, three times that at 8x. Four
+    /// behind at 8x is one refresh, and starting over from the key frame
+    /// every refresh or two is what kept the picture seven frames behind
+    /// (2026-11-13).
+    public static func fallenBehind(speed: Double) -> Int {
+        fallenBehindFrames * MoviePlayBackward.stride(speed: speed)
+    }
+
+    /// Whether a pass at this speed turns `frame` into a picture. A pass
+    /// still decodes every frame (a file is read forwards from a key frame);
+    /// converting is the expensive part, and the clock shows one in eight.
+    public static func keeps(frame: Int, speed: Double) -> Bool {
+        MoviePlayBackward.keeps(frame: frame, speed: speed)
     }
 
     // MARK: More than one pass in a recording
@@ -138,15 +164,15 @@ public enum MoviePlayPass {
     /// runs between parts of it), then one for each stretch `coming`, unless a
     /// pass kept already reaches it, up to `passesPerRecording`.
     public static func plan(now: [Int], coming: [Int], passes: [Running],
-                            inHand: (Int) -> Bool) -> Plan {
+                            inHand: (Int) -> Bool, speed: Double = 1) -> Plan {
         var plan = Plan()
         for frame in unique(now) {
             let serving = passes.indices.filter {
                 plan.aim[$0] == nil
                     && serves(running: passes[$0].running, reached: passes[$0].reached,
-                              playhead: frame, inHand: inHand)
+                              playhead: frame, inHand: inHand, speed: speed)
             }
-            let aim = Aim(playhead: frame, reach: aheadFrames)
+            let aim = Aim(playhead: frame, reach: reach(speed: speed))
             if let best = serving.min(by: { abs(passes[$0].reached - frame) < abs(passes[$1].reached - frame) }) {
                 plan.aim[best] = aim
             } else {
@@ -472,6 +498,22 @@ extension PhotonzDocument {
         return movieFrames(atTimeMS: behind).allSatisfy {
             let frame = $0.movie.frameIndex(atSourceMS: $0.sourceMS)
             return inHand.contains(movie: $0.movie.id, frameIndex: frame - frame % stride)
+        }
+    }
+
+    /// Whether a playhead at `ms` about to play forwards at `speed` has the
+    /// first frame it will show in hand: for every recording on at `ms`, the
+    /// first frame kept at that speed at or after the one under the playhead
+    /// (`MoviePlayPass.keeps`). Only waited for above double speed, which is
+    /// silent: the first decode from a key frame took half a second on the
+    /// reference edit, and at 4x the playhead ran 15 frames past it meanwhile
+    /// (2026-11-13).
+    public func readyToPlayForward(atTimeMS ms: Int, inHand: MovieFramesInHand, speed: Double) -> Bool {
+        let stride = MoviePlayBackward.stride(speed: speed)
+        return movieFrames(atTimeMS: ms).allSatisfy {
+            let frame = $0.movie.frameIndex(atSourceMS: $0.sourceMS)
+            let kept = frame + (stride - frame % stride) % stride
+            return inHand.contains(movie: $0.movie.id, frameIndex: kept)
         }
     }
 }

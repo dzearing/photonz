@@ -85,6 +85,9 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     /// Premiere's Play In to Out: from the In, stopping at the Out.
     case playInToOut
     case shuttle(ShuttleKey)
+    /// ⇧. and ⇧,: the speed it plays at, one step up or down the transport's
+    /// speed menu (`PlaybackSpeed`).
+    case playFaster, playSlower
     case stepFrames(Int)
     /// Premiere's Nudge Clip Selection, ⌘← and ⌘→: the picked clips this
     /// many frames later, or earlier when negative (`ClipNudge.swift`).
@@ -189,6 +192,15 @@ public enum TimelineKeys {
         case (.letter(ViewEditMode.view.commandKey), [.command]): return .showMode(.view)
         case (.letter(ViewEditMode.edit.commandKey), [.command]): return .showMode(.edit)
         case (.letter(ViewEditMode.toggleKey), []) where !press.isRepeat: return .toggleViewEdit
+        // A web player's keys for its speed menu (YouTube's ⇧. and ⇧,):
+        // neither Premiere nor Final Cut gives a key to a speed menu, and
+        // nothing else here wants a shifted . or ,. Final Cut's own ⇧, and ⇧.
+        // nudge ten frames, which Premiere does with ⌘⇧← and ⌘⇧→ here
+        // (UX-PATTERNS §7). Once per press: a held key does not race to 8x.
+        case (.letter(">"), [.shift]), (.letter("."), [.shift]):
+            return press.isRepeat ? nil : .playFaster
+        case (.letter("<"), [.shift]), (.letter(","), [.shift]):
+            return press.isRepeat ? nil : .playSlower
         default: break
         }
         guard timelineFocused else { return nil }
