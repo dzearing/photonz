@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:40.003Z",
-  "updated": "2026-11-13T10:42:05.342Z",
+  "updated": "2026-11-13T13:35:13.042Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -35,6 +35,10 @@
     {
       "t": "2026-11-13T10:42:05.341Z",
       "note": "Speed walk baseline (2026-11-13, probe, Next defaults, Scripts/perf/baselines/long-60.json): 801 s of playing and scrubbing the 60 minute edit, memory read once a second off the main thread: footprint 998 MB at the start, 1131 MB at the end, peak 1426 MB; resident peak 1728 MB. It steps up at each scrub to a new place and does not come back down (curve: queue/audits/2026-11-13-speed-walk-memory-60.png). Re-measure with Scripts/perf/speed-walk.sh --long 60 (part two, Scripts/perf/walks/long-60-memory.json); Scripts/perf/memory-chart.py draws the curve. The short walk does not record memory yet."
+    },
+    {
+      "t": "2026-11-13T13:35:13.041Z",
+      "note": "From a-long-edit-with-transitions-plays-scrubs-and-ed (2026-11-13, 0582a551c): with the main thread no longer stalled the 60 min edit really plays and scrubs, and memory over 600 s of play and scrub went UP: footprint 1857 -> 1701 MB, peak 2873 MB, resident peak 3124 MB (was 998 -> 1131 MB, peak 1426, resident 1728 on 2026-11-12, when it showed 0 frames). Movie reads (MovieSweeper) now each run on a thread of their own; a scrub starts one per stretch and cancels the last between samples, so several readers can be alive at once. Results: ~/Library/Caches/Photonz Reference Edit/speed-results/2026-11-13-0521-0582a551c-long-60.json"
     }
   ]
 }

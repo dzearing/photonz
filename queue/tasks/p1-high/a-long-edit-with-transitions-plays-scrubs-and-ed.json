@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-13T07:01:51.412Z",
+  "updated": "2026-11-13T14:11:50.297Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -45,6 +45,39 @@
     {
       "t": "2026-11-13T07:01:51.411Z",
       "note": "From the speed walk (a-speed-walk-measures-the-long-reference-edit-th, 2026-11-12): the ranked list for this slice. Main thread 100% busy while the 6 minute edit plays; about 95% of it is edit point and track arithmetic that rebuilds PhotonzDocument.trackLayout() on every query: MoviePlayLookahead.points per tick (68%), editPointCut/editPointMoments elsewhere (15%), withEditPointTransitionsDrawn per picture (9%), editPointSoundCrossings (4%), isCutLocked in the timeline (3%); 44% of leaf time is copying Layers. Decoding and compositing are not it (7 to 54 ms a picture, off the main thread, but only ~10 pictures asked for a minute). Result: 5 of ~1850 frames shown in a minute of play, worst gap 17 to 28 s. Judge the fix with Scripts/perf/speed-walk.sh (short) and --long; write the new baseline into Scripts/perf/baselines/short-6.json when it gets faster. Also seen: a blade (B) while playing stops playback (splitClipAtPlayhead calls pauseDocument); Premiere's Add Edit and Final Cut's Blade keep playing."
+    },
+    {
+      "t": "2026-11-13T10:57:37.034Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-13T11:47:51.641Z",
+      "note": "Fix 1: the document keeps its track layout, edit points and edit-point transitions until its layers/tracks/duration change (Sources/PhotonzCore/DocumentDerived.swift, didSets in Document.swift). Unit: one playing tick on the 6 min edit 2,100 ms -> 2.6 ms (debug, PlayTickPerfTests). Short speed walk: 4/1857 -> 934/1819 frames shown, worst gap 17.9 s -> 183 ms, scrub lag median 160 -> 20 refreshes, trim 5.7 s -> 90 ms, blade 1.4 s -> 169 ms, undo 4.0 s -> 110 ms. Next: Time Profiler shows the main thread still ~87% SwiftUI updates, mostly every edit point's view rebuilding its right-click menu each tick (rows read the playhead); and the clock sleeps 33 ms AFTER each tick's work."
+    },
+    {
+      "t": "2026-11-13T14:11:50.009Z",
+      "note": "owns these walks: speed-walk, scrub-never-blacks-out-walk"
+    },
+    {
+      "t": "2026-11-13T14:11:50.081Z",
+      "note": "Landed (c771adfbb, 0582a551c, 8f1d0bc46): (1) the document keeps its track layout, edit points and edit-point transitions (DocumentDerived.swift); (2) timeline right-click menus read the playhead unwatched and rebuild on each right click (EditorState.timelineMenuRows); (3) the playing clock keeps its own 33 ms beat (PlayClockPace); (4) a scrub could hang the whole app once (1) made it fast: blocking movie reads filled Swift's cooperative pool; now at most half the cores' worth read at once (MovieSweeper.gate). Drawn output proven unchanged (digest of 362 moments + frame requests + mix identical before/after). Short walk baseline rewritten (worst of 3), margin tightened 100% -> 50%. Audit: queue/audits/2026-11-13-a-long-edit-with-transitions-plays-scrubs-and-ed.json."
+    },
+    {
+      "t": "2026-11-13T14:11:50.153Z",
+      "note": "Reached vs bar on the 6 min edit: playback 1440-1551 of ~1819 frames in a minute (bar: none dropped), worst gap 118-128 ms; scrub 8 / 19 display frames behind (bar: 1); edits while playing trim 90, blade 203, undo 119 ms (bar: 16). 20 and 60 min measured (in the audit). Left: Time Profiler says ~86% of the main thread playing is SwiftUI graph work after each playhead move (ObservationGraphMutation ~15%, AccessibilityViewGraph 8-12%, few bodies rebuilt): find what high in the window is dirtied per tick. Judge with Scripts/perf/speed-walk.sh; profile with xctrace + Scripts/perf/rank-trace.py. Gotcha: attaching Time Profiler to the short walk can push it past its 300 s clock."
+    },
+    {
+      "t": "2026-11-13T14:11:50.224Z",
+      "note": "Left rough, not filed: B (blade) while playing still stops playback where Premiere's Add Edit keeps playing; a behaviour change, already asked of the user in the speed walk audit's evaluate list. Roll Edit's title in a cut's right-click menu now names the playhead as it was at the right click rather than live. Memory regression on the 60 min edit folded into memory-stays-bounded-while-an-hour-long-edit-pla; SwiftUI per-tick cost folded into the-timeline-of-an-hour-long-edit-scrolls-zooms."
+    },
+    {
+      "t": "2026-11-13T14:11:50.296Z",
+      "note": "Four fixes landed: playback 4 -> ~1450 of 1819 frames a minute, worst gap 17.9 s -> 125 ms, scrub lag 160 -> 8 frames, edits 1.4-5.7 s -> 90-203 ms on the 6 min edit. Bars (no dropped frames, scrub within 1 frame, edits <=16 ms) not yet reached: the remaining cost is SwiftUI graph work per playhead move."
     }
+  ],
+  "started": "2026-11-13T10:57:37.033Z",
+  "walks": [
+    "speed-walk",
+    "scrub-never-blacks-out-walk"
   ]
 }

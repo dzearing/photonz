@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-13T08:28:07.347Z",
+  "updated": "2026-11-13T13:22:13.012Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -35,6 +35,10 @@
     {
       "t": "2026-11-13T08:28:07.346Z",
       "note": "Speed walk baseline (2026-11-12) on the 6 minute edit, before any change: zooming the timeline in and out ran at a median 477 ms a frame (42 frames in 20 s, every one late against 8.3 ms), scrolling end to end 392 ms a frame (p95 490 ms); playing untouched, the dock's body (inspectorPanel) built once per new picture and the Time section every other one. The 60 minute numbers are in this task's audit (queue/audits/2026-11-13-speed-walk.json). The cost under them is the same trackLayout() rebuilt per query (isCutLocked -> isClipOnLockedTrack in the timeline). Measure with Scripts/perf/speed-walk.sh --long 60 (timeline step)."
+    },
+    {
+      "t": "2026-11-13T13:22:13.011Z",
+      "note": "From a-long-edit-with-transitions-plays-scrubs-and-ed (2026-11-13): the document now keeps its track layout and edit points (DocumentDerived.swift), and timeline right-click menus no longer rebuild every tick (EditorState.timelineMenuRows). 20 min edit after: zoom 489 ms a frame (was 2515), scroll 207 ms (was 2003), edits 212-428 ms (were 2.8-29.8 s). Time Profiler playing the 6 min edit: ~86% of the main thread is SwiftUI graph work after each playhead move (ObservationGraphMutation ~15%, AccessibilityViewGraph 8-12%), few bodies rebuilt (ViewBodyAccessor ~4%): something high in the window is dirtied each tick and SwiftUI re-checks everything under it."
     }
   ]
 }
