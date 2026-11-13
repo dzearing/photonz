@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 2e-10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:14.236Z",
-  "updated": "2026-11-13T05:48:49.039Z",
+  "updated": "2026-11-13T10:42:58.150Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one"
   ],
@@ -37,6 +37,39 @@
     {
       "t": "2026-11-13T05:48:49.038Z",
       "note": "The reference edit is in: Scripts/perf/reference-edit.sh 6|20|60, or a walk's setup {\"referenceEdit\": 6}; Scripts/playtest/reference-edit-opens-walk.json is the template. First readings 2026-11-12 (probe, Next defaults): 6 min edit, Space then a 3 s wait: main thread busy 4.3 to 8.6 s of the 3 s, single passes up to 4.3 s, the first about 0.3 s into the edit (over the opening title); playhead reached 4.7 s in one run and 0.37 s in another; a window picture taken while playing took 11 s. expectPlaybackNeverBlank over 8 s at 1x: the picture fell behind at 16 of 16 looks, up to 124 frames. 20 min: one 25.6 s pass during 3 s of play. ReferenceEdit.sheetMoments gives mid-transition moments to pin per-cut numbers to."
+    },
+    {
+      "t": "2026-11-13T05:54:55.127Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-13T07:01:51.201Z",
+      "note": "Adversarial review before building: (1) count what a person SEES, the pictures that reach the canvas (shownMomentMS), not decoded frames in hand: expectPlaybackNeverBlank judged lateness by frames in hand, so it read 'up to 124 frames behind' where the canvas actually sat on one picture for 17 to 28 s. (2) A hand does not wait for the app: the scrub hand moves by the clock, so a stall shows as the picture trailing the hand (first version moved the hand only when the app was free and read 0 lag across 1.5 s stalls; fixed with a test). (3) With the main thread this busy any per-refresh loop is unbounded (the first scrub step ran past a 300 s walk clock on 12 of 240 moves), so every measure is capped in time and records how far it got."
+    },
+    {
+      "t": "2026-11-13T07:01:51.271Z",
+      "note": "Reproduced the freeze independently of the new meter: filmWindow on Space (real screen captures, 369 frames over 7 s) shows 4 distinct pictures, the first change 4.6 s after the key; the playhead line and the time readout do not move either, so the whole window is frozen, not only the canvas (/tmp/speed-diag/film-play)."
+    },
+    {
+      "t": "2026-11-13T07:01:51.341Z",
+      "note": "Where the time goes (sample + Time Profiler on the probe, 6 minute edit, Next defaults): the main thread is 100% busy while it plays. Playing across transitions: look-ahead (MoviePlayLookahead.points -> movieFrames -> editPointFrameRequests -> editPointMoments/editPointCut) 68%, other edit point arithmetic 15%, preparing each picture's transitions (withEditPointTransitionsDrawn) 9%, sound crossings 4%, the timeline's lock checks (isCutLocked -> isClipOnLockedTrack) 3%, SwiftUI updates about 1%. Every one of them bottoms out in PhotonzDocument.trackLayout() rebuilt from scratch per query (track(id:), trackID(ofClip:), clipIDs(onTrack:), timelineTracks, editPoints(onTrack:)); 44% of main thread leaf time is memmove/copying Layers and DocumentTracks. Blade while playing: preparing transitions 48%, look-ahead 36%. Decoding and compositing are not the cost: the renderer drew each picture in 7 to 54 ms, but was asked for only 10 to 12 pictures in a minute of play."
+    },
+    {
+      "t": "2026-11-13T07:01:51.481Z",
+      "note": "owns these walks: speed-walk"
+    },
+    {
+      "t": "2026-11-13T10:42:05.419Z",
+      "note": "Measuring fixes found by running it on the long edits: the play stretch counts its start and end as looks (the 60 minute edit gave one look a minute and read 0 of 0); a transition crossed during a stall with no new picture is charged the whole wait; memory is read on a timer off the main thread (the main thread let 2 readings through in 10 minutes); one refused edit no longer stops the others; the blade parks on the next recording when the playhead is over a title. long-60.json's per-transition gaps were written before the stall fix and were set to the whole stretch's gap (the fixed rule on the same data). Left rough, not filed: the short walk does not read memory (the memory task's own acceptance asks for it); frames due count the 33 ms clock, not the recordings' 60 fps (in the audit)."
+    },
+    {
+      "t": "2026-11-13T10:42:58.148Z",
+      "note": "Speed walk shipped: a probe-only 'speed' walk step (Sources/Photonz/Playtest/PlaytestSpeedWalk.swift, counted by SpeedWalk in PhotonzCore with 16 tests) that plays the reference edit (frames due against frames shown, whole and per transition, sound left out), scrubs at three speeds with a hand that moves by the clock, makes trim/move/blade/undo/transition/title edits while playing, counts view bodies per frame, times timeline zoom and scroll, reads memory once a second, times export, and compares against a baseline. Short form Scripts/playtest/speed-walk.json in the walk set (~90 s, judged against Scripts/perf/baselines/short-6.json, 100% margin while stalls last seconds); long form Scripts/perf/speed-walk.sh --long 6 20 60, compare.sh, --baseline, rank-trace.py, memory-chart.py. Baselines for 6/20/60 in Scripts/perf/baselines and the audit (queue/audits/2026-11-13-speed-walk.json); Time Profiler traces under ~/Library/Caches/Photonz Reference Edit/traces. Where the time goes: the main thread is 100% busy, ~95% of it edit point arithmetic rebuilding trackLayout() per query; the renderer is starved, not slow. Verified: Scripts/test.sh green (14,662 + 1,399 + ...), speed-walk passes at Next defaults with a real window capture, the freeze confirmed independently by a filmed window. Commits 8a8007211, 4a4ca7c96."
     }
-  ]
+  ],
+  "started": "2026-11-13T05:54:55.126Z",
+  "walks": [
+    "speed-walk"
+  ],
+  "completed": "2026-11-13T10:42:58.149Z"
 }

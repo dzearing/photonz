@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.881Z",
-  "updated": "2026-11-13T04:57:54.935Z",
+  "updated": "2026-11-13T08:28:07.268Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -31,6 +31,10 @@
     {
       "t": "2026-11-13T04:57:54.934Z",
       "note": "seq 19.375 -> 13"
+    },
+    {
+      "t": "2026-11-13T08:28:07.267Z",
+      "note": "Speed walk baseline (2026-11-12, HEAD f12423c41 + the speed walk, probe, Next defaults): the 6 minute reference edit exported at the sheet's defaults (MP4, Standard, Full, whole video) took 1984 s, 5.5x the edit's length, 669 MB, route drawn. Measure it again with Scripts/perf/speed-walk.sh --long 6 (part three, Scripts/perf/walks/long-6-export.json, its own 90 minute clock); compare with Scripts/perf/compare.sh Scripts/perf/baselines/long-6.json <new>."
     }
   ]
 }

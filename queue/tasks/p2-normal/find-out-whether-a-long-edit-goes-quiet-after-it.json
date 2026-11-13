@@ -1,0 +1,27 @@
+{
+  "id": "find-out-whether-a-long-edit-goes-quiet-after-it",
+  "title": "Find out whether a long edit goes quiet after its first 48 pieces of sound",
+  "goal": "Playing the 20 minute reference edit, the sound engine said it left out 95 pieces of sound because more were alive than it schedules at once. If nothing schedules them later, a person playing a long edit from the start hears the sound stop part way through while the picture goes on. Find out whether that is what happens, and if it is, make every piece play when its time comes.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 137.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T08:28:07.437Z",
+  "updated": "2026-11-13T08:28:07.440Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen by the speed walk (task a-speed-walk-measures-the-long-reference-edit-th), 2026-11-13 00:14: Scripts/perf/speed-walk.sh --long 20 printed for the play step: \"sound: 95 piece(s) left out, silent at 0 of 2 one-second looks\" (DocumentAudioPlayer.droppedSegments). The 6 minute edit reads 0 left out. Code read, not yet heard: DocumentAudioPlayer.play keeps live.prefix(segmentBudget = 48) sorted by start and nothing reschedules later pieces (followAudio -> follow only sets levels). The silent-look count is not evidence either way: the main thread let the walk look only twice in a minute. Unconfirmed by ear, hence p2.",
+  "acceptance": [
+    "Play the 20 minute reference edit from the start at Next defaults and say, with a measurement of what the engine has scheduled at each minute, whether any clip's sound or the music is missing after the first few minutes",
+    "If sound goes missing, every piece of sound in the 20 and 60 minute edits plays at its moment, measured the same way",
+    "The speed walk's sound numbers (pieces left out, silent looks) read zero on the 20 minute edit"
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T08:28:07.439Z",
+      "note": "created (manual)"
+    }
+  ]
+}

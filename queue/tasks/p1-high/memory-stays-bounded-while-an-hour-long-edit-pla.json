@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:40.003Z",
-  "updated": "2026-11-13T04:57:55.010Z",
+  "updated": "2026-11-13T10:42:05.342Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -31,6 +31,10 @@
     {
       "t": "2026-11-13T04:57:55.009Z",
       "note": "seq 19.6875 -> 14"
+    },
+    {
+      "t": "2026-11-13T10:42:05.341Z",
+      "note": "Speed walk baseline (2026-11-13, probe, Next defaults, Scripts/perf/baselines/long-60.json): 801 s of playing and scrubbing the 60 minute edit, memory read once a second off the main thread: footprint 998 MB at the start, 1131 MB at the end, peak 1426 MB; resident peak 1728 MB. It steps up at each scrub to a new place and does not come back down (curve: queue/audits/2026-11-13-speed-walk-memory-60.png). Re-measure with Scripts/perf/speed-walk.sh --long 60 (part two, Scripts/perf/walks/long-60-memory.json); Scripts/perf/memory-chart.py draws the curve. The short walk does not record memory yet."
     }
   ]
 }
