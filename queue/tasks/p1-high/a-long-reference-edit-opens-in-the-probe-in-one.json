@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 1e-10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:56:57.804Z",
-  "updated": "2026-11-13T05:53:36.683Z",
+  "updated": "2026-11-13T05:53:41.707Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split from the user's task a-long-edit-with-transitions-plays-scrubs-and-ed (2026-11-12 intake: 'With a moderately complex 6minute video with transitions, perf tanked'), its first acceptance line, by the manager pass of 2026-11-12. Precedent for a generated, kept recording: Sources/Photonz/Playtest/PlaytestLongTalk.swift (five minute talk written once per machine, each walk opens a fresh copy). Test fixtures have no long Retina recording, and video files are not committed (find . -name '*.mov' finds only audit reels). Use the shared transition and title catalogues so the edit exercises real presets (dissolve, push, a 3D one such as cube or flip), not special-case code. The next slice, the speed walk that measures this edit, depends on this task.",
@@ -57,10 +57,15 @@
     {
       "t": "2026-11-13T05:53:36.682Z",
       "note": "Left rough (no task): the recordings are drawn shapes and nonsense words rather than real apps; the contact sheet comes from the renderer, not a window photograph; the walk does not claim how far the playhead gets, since today that is erratic (4.7 s and 0.37 s after a 3 s wait). Pictures looked at: the contact sheet (opening title, two mid-dissolves, mid-push, mid-cube, mid-flip, plain stretches, chapter card, b-roll, zoom, end card: all as intended) and both window pictures."
+    },
+    {
+      "t": "2026-11-13T05:53:41.705Z",
+      "note": "The reference edit ships: ReferenceEdit (PhotonzCore, seeded, tested: 6 min holds 4 picture tracks, 37 cuts with 26 dissolves, 3 push, 3 cube, 3 flip, 4 titles, 13 zooms, moving background, sound and music; 20 and 60 min carry on with fresh cuts, 524 clips in the hour), ReferenceFootage (PhotonzMedia, four 3456x2234 60 fps recordings with sound plus music, written once per Mac), Scripts/perf/reference-edit.sh 6|20|60 and walk setup referenceEdit. Verified by ReferenceEditTests, ReferenceFootageTests, a green Scripts/test.sh and reference-edit-opens-walk at Next defaults (opens, Space plays and stops). Audit with contact sheet and window pictures. The 60 minute edit opens but freezes the app ~140 s: filed an-hour-long-edit-opens-in-a-few-seconds-not-two."
     }
   ],
   "started": "2026-11-13T04:58:55.107Z",
   "walks": [
     "reference-edit-opens-walk"
-  ]
+  ],
+  "completed": "2026-11-13T05:53:41.706Z"
 }
