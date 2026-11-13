@@ -695,6 +695,33 @@ correctly. The strip now carries the shift down the tree, the same inheritance
   video is in every frame, and changing what a mark drawn on a film means is a
   question for the user, not a side effect of this task.
 
+## 8d. The reference edit: what every speed fix measures
+
+A speed fix needs the same long, busy edit before and after, so its numbers
+mean something (objective `video-perf`). `ReferenceEdit` (PhotonzCore) lays
+it out from a seed, with the model's own operations and the shared title and
+transition catalogues: four screen recordings at 3456 x 2234 cut onto V1,
+inset over a liquid-gradient background track, picture-in-picture b-roll on
+V2, titles on the Title track (an opening page on a moving background, a name
+card and a chapter card every six minutes, an end card), dissolves at most
+cuts with a push, a cube and a flip in every twelve, a zoom on every third
+clip, each clip's own sound and music under the whole edit. The same seed
+gives the same document, ids and all. It comes at 6, 20 and 60 minutes; the
+long ones are the recipe carried on with fresh cuts, about 37 cuts every six
+minutes, 524 clips in the hour.
+
+`ReferenceFootage` (PhotonzMedia) draws and encodes the recordings once per
+Mac (60 fps H.264, a voice-like sound, two minutes of music), into a folder
+named for `ReferenceEdit.recipeVersion`, so changing what they look like means
+bumping it. `Scripts/perf/reference-edit.sh 6|20|60` writes the project and
+opens it in the probe; a walk says `"setup": { "referenceEdit": 6 }`;
+`ReferenceEditTool --sheet` draws twelve moments of it through the renderer.
+
+The builder places clips straight onto their tracks and fits each transition
+on its two clips alone, because at an hour long `land` cost about 40 ms a clip
+and `setTransition` about 100 ms a cut: the track layout is worked out again
+on every call. That cost is the app's too, and is the speed tasks' to remove.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

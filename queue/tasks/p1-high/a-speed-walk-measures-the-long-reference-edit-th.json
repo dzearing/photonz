@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:14.236Z",
-  "updated": "2026-11-13T04:57:54.786Z",
+  "updated": "2026-11-13T05:48:49.039Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one"
   ],
@@ -33,6 +33,10 @@
     {
       "t": "2026-11-13T04:57:54.785Z",
       "note": "seq 17.5 -> 2e-10"
+    },
+    {
+      "t": "2026-11-13T05:48:49.038Z",
+      "note": "The reference edit is in: Scripts/perf/reference-edit.sh 6|20|60, or a walk's setup {\"referenceEdit\": 6}; Scripts/playtest/reference-edit-opens-walk.json is the template. First readings 2026-11-12 (probe, Next defaults): 6 min edit, Space then a 3 s wait: main thread busy 4.3 to 8.6 s of the 3 s, single passes up to 4.3 s, the first about 0.3 s into the edit (over the opening title); playhead reached 4.7 s in one run and 0.37 s in another; a window picture taken while playing took 11 s. expectPlaybackNeverBlank over 8 s at 1x: the picture fell behind at 16 of 16 looks, up to 124 frames. 20 min: one 25.6 s pass during 3 s of play. ReferenceEdit.sheetMoments gives mid-transition moments to pin per-cut numbers to."
     }
   ]
 }

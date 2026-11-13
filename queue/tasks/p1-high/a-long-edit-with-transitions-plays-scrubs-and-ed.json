@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-13T04:57:55.235Z",
+  "updated": "2026-11-13T05:48:49.115Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -37,6 +37,10 @@
     {
       "t": "2026-11-13T04:57:55.234Z",
       "note": "manager pass 2026-11-12: split so each runner sitting finishes. The reference edit (first acceptance line) is a-long-reference-edit-opens-in-the-probe-in-one; the speed walk, baseline and ranked profile (second and third lines) are a-speed-walk-measures-the-long-reference-edit-th. Both are deps of this task, so it starts from their baseline and ranked list and does the fixes (lines four to six). The timeline at hundreds of clips, export time and memory each have their own task under video-perf."
+    },
+    {
+      "t": "2026-11-13T05:48:49.114Z",
+      "note": "Acceptance line 1 (the reference edit generator) is done by a-long-reference-edit-opens-in-the-probe-in-one: Sources/PhotonzCore/ReferenceEdit.swift (layout, seeded), Sources/PhotonzMedia/ReferenceFootage.swift (Retina 60 fps recordings, voice, music, kept per machine), Scripts/perf/reference-edit.sh 6|20|60, walk setup referenceEdit. Reproduced the complaint on it: at 1x the picture fell up to 124 frames behind the playhead and the main thread froze for up to 4.3 s per pass on the 6 minute edit. Model costs seen while building it at 60 minutes: PhotonzDocument.land ~40 ms per clip and setTransition(at: .edit) ~100 ms per cut, because track layout and edit points are recomputed per call. Opening long edits filed as an-hour-long-edit-opens-in-a-few-seconds-not-two."
     }
   ]
 }

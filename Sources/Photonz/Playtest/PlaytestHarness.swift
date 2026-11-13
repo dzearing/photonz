@@ -532,6 +532,15 @@ private final class Run {
             note(0, "setup", "every timed press and action is timed with the walk's markers taken down, "
                  + "so its number is what a person's click costs (setup timedWithoutMarkers)")
         }
+        // The reference edit, written fresh and open before step one.
+        if let minutes = script.setup.referenceEdit {
+            do {
+                note(0, "setup", try await openReferenceEdit(minutes: minutes))
+            } catch {
+                finish(status: "failed", steps: 0, error: "setup: the reference edit: \(error)")
+                return
+            }
+        }
         var completed = 0
         for (index, step) in script.steps.enumerated() {
             let number = index + 1
@@ -16980,6 +16989,23 @@ private final class Run {
     /// The editor windows standing, shown or not yet closed.
     private func coordinatorWindowCount() -> Int {
         NSApp.windows.count { !($0 is NSPanel) && $0.styleMask.contains(.titled) && $0.isVisible }
+    }
+
+    /// Writes the reference edit `minutes` long (`ReferenceEdit`), its
+    /// recordings first if this Mac has never had them, and opens it the way
+    /// a person opens a project. What it says goes in the walk's log.
+    private func openReferenceEdit(minutes: Int) async throws -> String {
+        let started = Date()
+        let project = try await ReferenceFootage.project(minutes: minutes, in: ReferenceFootage.defaultFolder)
+        try PackageIO.write(project.document, store: ImageStore(), media: project.media, to: project.url)
+        try await open(project.url, size: nil, number: 0)
+        let census = ReferenceEdit.census(of: project.document)
+        let transitions = census.transitions.sorted { $0.key.rawValue < $1.key.rawValue }
+            .map { "\($0.value) \($0.key.title.lowercased())" }.joined(separator: ", ")
+        return "opened the \(minutes) minute reference edit: \(census.pictureTracks) picture tracks, "
+            + "\(census.clips) clips, \(census.cuts) cuts (\(transitions)), \(census.titles) titles, "
+            + "\(census.zooms) zooms; written in \(Int(Date().timeIntervalSince(started)))s "
+            + "(\(project.url.path))"
     }
 
     private func open(_ url: URL, size: CGSize?, number: Int) async throws {

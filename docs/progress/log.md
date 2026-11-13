@@ -23028,3 +23028,10 @@ units.
 - Found while measuring: Ask added `document` to every look, and list_history takes none, so it was refused every time (`AskLook.request(document:)` now passes it only to tools that take one).
 - Eval: dissolve case 8.5 -> 87.4 / 83.1; History case 7.5 -> 75.8 / 67.9 / 75.8 (the judge marks the eval's History recording down as a repeat of the same footage; rules 10 every time). Held-out 59.8 against 59.9 (20261113-022038-ask-held-out). Walk `ask-puts-the-latest-recording-on-the-timeline-walk` green with a real capture.
 - The three-clip video case no longer starts (its setup cannot find the open video over the bridge): folded into the-ask-scoring-run-refuses-to-score-when-the-mo.
+
+## 2026-11-12 (late) — the reference edit
+
+- `ReferenceEdit` (PhotonzCore): a seeded 6/20/60 minute edit of Retina screen recordings, 4 picture tracks, ~37 cuts every six minutes (dissolves, push, cube, flip), titles, zooms, moving background, sound and music; census and shortfall list against the video-perf objective.
+- `ReferenceFootage` (PhotonzMedia): writes the four 3456x2234 60 fps recordings and the music once per Mac; `ReferenceEditTool` + `Scripts/perf/reference-edit.sh 6|20|60` open it in the probe; walk setup `"referenceEdit": 6`; `reference-edit-opens-walk`.
+- Measured on it: playback falls up to 124 frames behind with main-thread passes up to 4.3 s (6 min); opening freezes 14 s (20 min) and ~140 s (60 min), filed `an-hour-long-edit-opens-in-a-few-seconds-not-two`.
+- Next: the speed walk (`a-speed-walk-measures-the-long-reference-edit-th`) on this edit.

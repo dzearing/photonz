@@ -276,6 +276,11 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// (the last again once they run out), so a walk reaches a plan no model
     /// can be counted on to write. Empty means the real model.
     public var askReplies: [String]
+    /// The walk starts with the reference edit open (`ReferenceEdit`), this
+    /// many minutes long: written fresh, its recordings made first if this
+    /// Mac has none, and opened as a person opens a project. The edit every
+    /// video speed walk measures against. Nil opens nothing.
+    public var referenceEdit: Int?
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
@@ -283,7 +288,9 @@ public struct PlaytestSetup: Sendable, Equatable {
                 front: Bool = false, behindLook: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
                 askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false, askMac: Int? = nil,
-                askSearch: Int? = nil, askReplies: [String] = [], askSeconds: Int? = nil) {
+                askSearch: Int? = nil, askReplies: [String] = [], askSeconds: Int? = nil,
+                referenceEdit: Int? = nil) {
+        self.referenceEdit = referenceEdit
         self.askReplies = askReplies
         self.askMac = askMac
         self.askSeconds = askSeconds
@@ -309,7 +316,7 @@ public struct PlaytestSetup: Sendable, Equatable {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
             && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && !behindLook && history == nil && !timedWithoutMarkers
             && !askModelMissing && askModelsOnly == nil && !offline && !agentHome && askMac == nil && askSearch == nil && askReplies.isEmpty
-            && askSeconds == nil
+            && askSeconds == nil && referenceEdit == nil
     }
 
     /// The kind of each capture in a generated history, newest first: every
@@ -319,7 +326,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "askSeconds", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
+    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "askSeconds", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "referenceEdit", "scratch",
                             "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -399,6 +406,16 @@ public struct PlaytestSetup: Sendable, Equatable {
             }
             search = number.intValue
         }
+        var reference: Int?
+        if let raw = fields["referenceEdit"], !(raw is NSNull) {
+            guard let number = raw as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+                  Double(number.intValue) == number.doubleValue, ReferenceEdit.lengths.contains(number.intValue) else {
+                throw PlaytestScriptError.invalidSetup(
+                    field: "referenceEdit", reason: "is how many minutes long the reference edit is: one of "
+                        + ReferenceEdit.lengths.map(String.init).joined(separator: ", "))
+            }
+            reference = number.intValue
+        }
         var replies: [String] = []
         if let raw = fields["askReplies"], !(raw is NSNull) {
             guard let list = raw as? [Any], list.allSatisfy({ $0 is [String: Any] }),
@@ -427,7 +444,8 @@ public struct PlaytestSetup: Sendable, Equatable {
                   askMac: mac,
                   askSearch: search,
                   askReplies: replies,
-                  askSeconds: seconds)
+                  askSeconds: seconds,
+                  referenceEdit: reference)
     }
 
     private static func count(_ raw: Any?, field: String) throws -> Int? {

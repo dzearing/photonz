@@ -17071,3 +17071,15 @@
 {"t":"2026-11-13T04:57:55.236Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-13T04:57:55.311Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-11-13T04:58:39.157Z","ev":"manager","filed":5,"readyBefore":65,"readyAfter":64,"report":"queue/manager/2026-11-12-2058.md"}
+{"t":"2026-11-13T04:58:55.042Z","ev":"manager_pass","exit":0,"ready":64}
+{"t":"2026-11-13T04:58:55.113Z","ev":"task_started","id":"a-long-reference-edit-opens-in-the-probe-in-one","title":"A long reference edit opens in the probe in one step, at 6, 20 and 60 minutes","priority":"p1-high"}
+{"t":"2026-11-13T05:48:39.932Z","ev":"task_created","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","priority":"p1-high","title":"An hour-long edit opens in a few seconds, not two minutes of a frozen app"}
+{"t":"2026-11-13T05:48:49.040Z","ev":"task_note","id":"a-speed-walk-measures-the-long-reference-edit-th"}
+{"t":"2026-11-13T05:48:49.116Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-13T05:48:49.192Z","ev":"task_walks","id":"a-long-reference-edit-opens-in-the-probe-in-one","walks":["reference-edit-opens-walk"]}
+{"t":"2026-11-13T05:49:07.559Z","ev":"task_created","id":"find-out-why-the-legibility-check-once-read-the","priority":"p2-normal","title":"Find out why the legibility check once read the dark lower-third caption preview as unreadable"}
+{"t":"2026-11-13T05:53:36.392Z","ev":"task_note","id":"a-long-reference-edit-opens-in-the-probe-in-one"}
+{"t":"2026-11-13T05:53:36.465Z","ev":"task_note","id":"a-long-reference-edit-opens-in-the-probe-in-one"}
+{"t":"2026-11-13T05:53:36.538Z","ev":"task_note","id":"a-long-reference-edit-opens-in-the-probe-in-one"}
+{"t":"2026-11-13T05:53:36.610Z","ev":"task_note","id":"a-long-reference-edit-opens-in-the-probe-in-one"}
+{"t":"2026-11-13T05:53:36.684Z","ev":"task_note","id":"a-long-reference-edit-opens-in-the-probe-in-one"}

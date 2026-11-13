@@ -81,6 +81,14 @@ let package = Package(
             dependencies: ["PhotonzCore", "PhotonzRender"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
+        // Dev tool: writes the reference edit every video speed fix measures
+        // against (`ReferenceEdit`), its recordings first, as a project the app
+        // opens. Run by `Scripts/perf/reference-edit.sh 6|20|60`.
+        .executableTarget(
+            name: "ReferenceEditTool",
+            dependencies: ["PhotonzCore", "PhotonzRender", "PhotonzMedia"],
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
         // Every target lists EVERY module of ours it imports, not just the one
         // that brings the rest along. The build decides whether a target is up
         // to date by looking only at the modules it lists, so a test target

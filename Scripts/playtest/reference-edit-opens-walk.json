@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/reference-edit-opens-walk",
+  "seed": "The reference edit every video speed fix measures against opens in one step and plays, exactly as a person running Next gets it with no flag touched: setup writes the 6 minute edit (four Retina screen recordings cut onto V1 over a moving background, b-roll on V2, titles, 37 cuts with dissolves, pushes, cubes and flips, zooms, each clip's sound and music) and opens it as a project; the timeline holds its six minutes, the window is photographed with the timeline in it, and Space plays it: three seconds later it is still playing, and Space stops it. How far the playhead gets is not claimed: on 2026-11-12 it reached 4.7 s in one run and 0.37 s in the next, which is the speed tasks' to fix. Whether the picture keeps pace while it plays is the speed walk's question, not this one's (on 2026-11-12 it fell up to 124 frames behind). On 2026-11-12 a picture taken WHILE it played took eleven seconds, the main thread busy 8.6 s of a 3 s wait, so the pictures are taken stopped.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 6
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 360000,
+      "playheadMS": 0
+    },
+    {
+      "do": "snapshot",
+      "name": "1-opened"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 3,
+      "onTheClock": true
+    },
+    {
+      "do": "expectTimeline",
+      "rate": 1
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTimeline",
+      "rate": 0
+    },
+    {
+      "do": "snapshot",
+      "name": "2-stopped"
+    }
+  ]
+}

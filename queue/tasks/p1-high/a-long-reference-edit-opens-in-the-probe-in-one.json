@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 1e-10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:56:57.804Z",
-  "updated": "2026-11-13T04:57:54.708Z",
+  "updated": "2026-11-13T05:53:36.683Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split from the user's task a-long-edit-with-transitions-plays-scrubs-and-ed (2026-11-12 intake: 'With a moderately complex 6minute video with transitions, perf tanked'), its first acceptance line, by the manager pass of 2026-11-12. Precedent for a generated, kept recording: Sources/Photonz/Playtest/PlaytestLongTalk.swift (five minute talk written once per machine, each walk opens a fresh copy). Test fixtures have no long Retina recording, and video files are not committed (find . -name '*.mov' finds only audit reels). Use the shared transition and title catalogues so the edit exercises real presets (dissolve, push, a 3D one such as cube or flip), not special-case code. The next slice, the speed walk that measures this edit, depends on this task.",
@@ -29,6 +29,38 @@
     {
       "t": "2026-11-13T04:57:54.707Z",
       "note": "seq 15 -> 1e-10"
+    },
+    {
+      "t": "2026-11-13T04:58:55.108Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-13T05:48:49.190Z",
+      "note": "owns these walks: reference-edit-opens-walk"
+    },
+    {
+      "t": "2026-11-13T05:53:36.390Z",
+      "note": "Review before building: no mock covers a measuring tool; what the objective asks for (3+ tracks, 30+ cuts, dissolves and 3D, titles, zooms, moving background, Retina recordings) all exists in the model, so nothing needed filing as a prerequisite. The 'moving picture background behind the recording' is a full-frame live-paint (liquid gradient) rectangle on its own Background track, with the recording inset, rounded and shadowed over it, the screen-recording look."
+    },
+    {
+      "t": "2026-11-13T05:53:36.463Z",
+      "note": "Chose H.264 at 60 fps over HEVC because the Mac's own screen recorder writes H.264 and the hardware encoder keeps 3456x2234 at 60 (all four recordings verified: 3456x2234, 60.0 fps, 60.0 s, avc1, one audio track). Chose a synthesized voice-like buzz over the say voice because PhotonzMedia has no app dependencies and it is deterministic. Chose ~/Library/Caches/Photonz Reference Edit (or PHOTONZ_REFERENCE_EDIT_DIR) as the known folder: everything there can be made again."
+    },
+    {
+      "t": "2026-11-13T05:53:36.536Z",
+      "note": "Chose to have the builder place clips straight on their tracks and fit each transition on its two clips alone, over PhotonzDocument.land and setTransition per clip: at 60 minutes those cost ~40 ms per clip and ~100 ms per cut (92 s to build the hour, now 0.6 s). A test checks the census against the model's own transitionCuts() so the shortcut cannot drift."
+    },
+    {
+      "t": "2026-11-13T05:53:36.608Z",
+      "note": "Verified: ReferenceEditTests (10) and ReferenceFootageTests (4) pass; full Scripts/test.sh green. reference-edit-opens-walk ok at Next defaults with no flags (opens, 6:00 long, Space plays at rate 1, Space stops; 2 real pictures). 20 minute variant walk ok; 60 minute variant opened but the app froze ~140 s and the walk ran out of time: filed an-hour-long-edit-opens-in-a-few-seconds-not-two. Playback lag and freezes logged on a-speed-walk-measures-the-long-reference-edit-th and a-long-edit-with-transitions-plays-scrubs-and-ed. Main's red CI was a one-off legibility read (next run green on the same app code): filed find-out-why-the-legibility-check-once-read-the at p2."
+    },
+    {
+      "t": "2026-11-13T05:53:36.682Z",
+      "note": "Left rough (no task): the recordings are drawn shapes and nonsense words rather than real apps; the contact sheet comes from the renderer, not a window photograph; the walk does not claim how far the playhead gets, since today that is erratic (4.7 s and 0.37 s after a 3 s wait). Pictures looked at: the contact sheet (opening title, two mid-dissolves, mid-push, mid-cube, mid-flip, plain stretches, chapter card, b-roll, zoom, end card: all as intended) and both window pictures."
     }
+  ],
+  "started": "2026-11-13T04:58:55.107Z",
+  "walks": [
+    "reference-edit-opens-walk"
   ]
 }
