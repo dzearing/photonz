@@ -518,10 +518,11 @@ public enum AskMotion {
     /// already narrowed to the room (`swingsFitted`): a lid narrowed after
     /// the trash was placed against it stood in the trash's way. What goes
     /// out of sight where something shuts over it goes in past it, once
-    /// every hit is placed (`tuckedIn`). Last, a line that drew itself starts
+    /// every hit is placed (`tuckedIn`), and is in before it shuts
+    /// (`inBeforeShut`). Last, a line that drew itself starts
     /// over unseen (`startsOver`).
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
-        let timed = foldsOpen(foldsLand(tuckedIn(touchesPlaced(landsInTheMiddle(hitStarts(staysTillGone(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(carried(steps))))))))))))))
+        let timed = foldsOpen(foldsLand(inBeforeShut(tuckedIn(touchesPlaced(landsInTheMiddle(hitStarts(staysTillGone(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(carried(steps)))))))))))))))
         let made = fitted(comesClear(hidden(hingesShared(timed))))
         // Hinges again for the room made, if any: lines and corner rounds
         // keep their size on the final grid as the drawing shrinks.

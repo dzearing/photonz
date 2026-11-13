@@ -204,6 +204,13 @@ extension AskMotion {
                     moment = next
                 }
                 guard far >= AskMotionCheck.longJourney else { continue }
+                // Going home: it arrived as the fade began and turns back
+                // for where the lap starts, getting there at the lap's end.
+                // That trip is the next lap's, unseen (`staysTillGone` holds
+                // it where it landed until it is gone). On 2026-11-12 it was
+                // read as a journey to be seen: the fade moved to its end and
+                // the trash rose out of the can over the shut lid.
+                if goesHome(moves, fadeFrom: from.seconds) { continue }
                 // Where it arrives: a key of its journey at the very moment
                 // it is gone (pass twelve's walk: gone at 1.1 s in the can,
                 // then back to the start unseen by the lap's end), else the
@@ -244,6 +251,25 @@ extension AskMotion {
             })
             return AskStep(tool: step.tool, arguments: .object(object))
         }
+    }
+
+    /// Whether the position keys `moves` arrive somewhere as a fade starting
+    /// at `fadeFrom` begins, and then turn back (more than a right angle) on
+    /// one leg to the lap's last key, which is where the lap's first key
+    /// has it: the way home for the next lap.
+    static func goesHome(_ moves: [(seconds: Double, value: AgentJSON, curve: String?)], fadeFrom: Double) -> Bool {
+        func point(_ value: AgentJSON) -> CGPoint? {
+            guard let x = value["x"]?.doubleValue, let y = value["y"]?.doubleValue else { return nil }
+            return CGPoint(x: x, y: y)
+        }
+        let near = Double(PropertyKeys.nearMS) / 1000
+        guard moves.count >= 3, let first = moves.first, let last = moves.last, first.value == last.value,
+              let k = moves.indices.last(where: { $0 > 0 && $0 + 1 < moves.count && abs(moves[$0].seconds - fadeFrom) <= near }),
+              k + 2 == moves.count,
+              let before = point(moves[k - 1].value), let here = point(moves[k].value), let next = point(last.value) else { return false }
+        let came = CGVector(dx: here.x - before.x, dy: here.y - before.y), goes = CGVector(dx: next.x - here.x, dy: next.y - here.y)
+        let lengths = hypot(came.dx, came.dy) * hypot(goes.dx, goes.dy)
+        return lengths > 1e-6 && (came.dx * goes.dx + came.dy * goes.dy) / lengths < 0
     }
 
     // MARK: Gone where it landed
