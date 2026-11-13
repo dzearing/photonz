@@ -23043,3 +23043,11 @@ units.
 - Baseline at HEAD (6 min): 35 of 10,906 frames shown playing it whole, worst gap 20 s; scrub 90 to 160 refreshes behind the hand; edits while playing 1 to 5 s on the main thread; timeline ~2 fps; export 1,984 s. 20 min: 1 picture in 134 s of play, edits up to 30 s, timeline 0.4 fps, 95 pieces of sound left out (filed p2 find-out-whether-a-long-edit-goes-quiet-after-it). 60 min and memory: in the audit.
 - Where the time goes: main thread 100% busy; ~95% edit point arithmetic rebuilding `PhotonzDocument.trackLayout()` per query (look-ahead 68%, other edit point work 15%, per-picture transitions 9%, sound crossings 4%, timeline lock checks 3%); 44% of leaf time copying Layers. Renderer 7 to 54 ms a picture but asked ~10 times a minute. Ranked list folded into a-long-edit-with-transitions-plays-scrubs-and-ed (next slice).
 - Found: blade and adding a transition stop playback (Premiere keeps playing) — noted on the next slice.
+
+## 2026-11-13 — the long edit plays (first speed slice)
+
+- `DocumentDerived` (PhotonzCore): a document keeps its track layout, each track's edit points, which layer is on which track and its edit-point transitions, thrown away on any write to `layers`, `tracks` or the duration (didSets in `Document.swift`); never compared, hashed or saved. One playing tick on the 6 min edit: ~2,100 ms -> 2.6 ms (debug, `PlayTickPerfTests`). Drawn output identical before/after (digest of 362 moments).
+- Timeline right-click menus (edit point, clip, cut) build their rows with the playhead read unwatched, rebuilt on each right click (`EditorState.timelineMenuRows`); the playing clock ticks on its own beat (`PlayClockPace`).
+- Found and fixed a hang the speedup exposed: blocking AVAssetReader reads (`MovieSweeper`) filled Swift's cooperative pool during a scrub and nothing async ran again. Now gated to half the cores (`MovieSweeper.gate`); a thread-per-read version cost scrub smoothness (scrub-never-blacks-out 3/5).
+- 6 min short walk: 4 -> ~1450 of 1819 frames a minute, worst gap 17.9 s -> 125 ms, scrub lag 160 -> 8, edits 1.4-5.7 s -> 90-203 ms. 20 and 60 min in the audit; 60 min memory peak went up (1.4 -> 2.9 GB) now that it plays, folded into the memory task.
+- Next: the remaining main-thread cost is SwiftUI graph work after each playhead move (~86%); the task stays open (pending) for it.

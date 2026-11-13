@@ -1,0 +1,55 @@
+{
+  "feature": "A long edit with transitions plays, scrubs and edits without freezing",
+  "epic": "video-perf",
+  "task": "a-long-edit-with-transitions-plays-scrubs-and-ed",
+  "summary": "The 6 minute reference edit now plays: in a minute at 1x it shows about 1,450 of 1,819 frames instead of 4, the longest wait between two pictures is about an eighth of a second instead of 18 seconds, and an edit while it plays holds the app for a tenth to a fifth of a second instead of up to six seconds. A scrub can no longer freeze the whole app. It is not yet every frame, and an edit is not yet inside one frame: that is still this task's.",
+  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The numbers come from Scripts/perf/speed-walk.sh on the reference edit (Scripts/perf/reference-edit.sh 6).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Run Scripts/perf/reference-edit.sh 6 and press Space.",
+      "shot": "2026-11-13-long-edit-plays-after-the-edits-sc.png"
+    },
+    {
+      "do": "Watch it play across the dissolves, the push and the cube for a minute."
+    },
+    {
+      "do": "Drag the playhead across the whole ruler at an ordinary speed and let go."
+    },
+    {
+      "do": "While it plays, trim the end of a clip ahead of the playhead, press B, then Command-Z."
+    },
+    {
+      "do": "Right-click a cut on V1 while it plays and look at Roll Edit's time."
+    },
+    {
+      "do": "Run Scripts/perf/speed-walk.sh and compare it with Scripts/perf/baselines/short-6.json using Scripts/perf/compare.sh."
+    }
+  ],
+  "evaluate": [
+    "Does playback on the 6 minute edit now feel like video, or do you still see it skip?",
+    "Does the picture keep up with your hand when you drag the playhead?",
+    "Is a pause of a tenth to a fifth of a second when you trim, blade or undo while it plays noticeable to you?",
+    "Does Roll Edit in a cut's right-click menu name the playhead's time as it was when you right-clicked?"
+  ],
+  "measured": [
+    "Before (2026-11-12 baseline, short walk, worst of 3): 4 of 1857 frames shown in a minute of play, worst gap 17.9 s; scrub 160 / 231 display frames behind (middle / worst); longest main thread pass after a trim 5.7 s, blade 1.4 s, undo 4.0 s.",
+    "After fix 1, the document keeping its track layout (c771adfbb, one run): 934 of 1819 frames, worst gap 183 ms; scrub 20 / 52 behind; trim 90 ms, blade 169 ms, undo 110 ms. One playing tick on the 6 minute edit, unit timed in a debug build: about 2,100 ms before, 2.6 ms after.",
+    "After fixes 2 and 3, timeline menus no longer rebuilt every tick and the clock on its own beat (one run): 1529 of 1818 frames, worst gap 118 ms.",
+    "After fix 4, at most half the cores' worth of movie reads at once (new baseline, worst of 3, 0582a551c): 1440 of 1819 frames, worst gap 125 ms, every transition still drops 3 to 5 of its 12 frames; scrub 8 / 19 behind; trim 90 ms, blade 203 ms, undo 119 ms; each picture drawn in 10 ms (median), 19 ms worst.",
+    "20 minute edit (long form, 0582a551c), against 2026-11-12: 402 of 1822 frames shown (was 1 of 4071), worst gap 359 ms (was 134 s); scrub 22 / 41 behind at medium speed (was 344 / 631); edits trim 234 ms, move 232 ms, blade 428 ms, undo 373 ms, transition 350 ms, title 212 ms (were 2.8 to 29.8 s); timeline zoom 489 ms a frame (was 2,515), scroll 207 ms (was 2,003); 95 pieces of sound left out, as before. The whole walk took under 3 minutes instead of about 15.",
+    "60 minute edit (long form, 0582a551c), against 2026-11-12: 144 of 1828 frames shown in a minute (was 0 of 8332), worst gap 902 ms (was 275 s); scrub 66 / 95 behind at medium speed (was 9446); edits trim 825 ms, move 767 ms, blade 940 ms, undo 908 ms, transition 905 ms, title 649 ms (were 29 to 82 s); timeline zoom 1221 ms a frame (was 22,894), scroll 893 ms (was 22,584); 382 pieces of sound left out, as before.",
+    "60 minute edit, memory over 600 s of play and scrub: footprint 1857 to 1701 MB, peak 2873 MB, resident peak 3124 MB, against 998 to 1131 MB, peak 1426 MB the day before, when it showed no frames at all.",
+    "Where the main thread goes now, playing the 6 minute edit (Time Profiler, 15 s): about 86% SwiftUI's own graph work (marking and re-checking views after each playhead move; 15% of it observation changes, 8 to 12% the accessibility graph), 5% Core Animation, 1% the audio plan; the edit point arithmetic that was 95% is now under 0.2%.",
+    "Nothing drawn changed: the drawn picture at 362 moments of the 6 minute edit, every frame request and the sound mix hash the same before and after (003e558c...). A full export was not run (33 minutes before this work)."
+  ],
+  "rough": [
+    "1x playback still drops frames: about a fifth of them on the 6 minute edit, more on the 20. The main thread is now spent in SwiftUI re-checking the window after every playhead move, not in the app's own arithmetic. That is the next slice of this task, and it stays open.",
+    "An edit while playing still holds the main thread 90 to 200 ms on the 6 minute edit, against the bar of 16 ms. Still this task's; on the hour-long edit it is the-timeline-of-an-hour-long-edit-scrolls-zooms.",
+    "Memory on the hour-long edit went up, peak 2.9 GB against 1.4 GB, now that it really plays and scrubs; folded into memory-stays-bounded-while-an-hour-long-edit-pla.",
+    "Scrubbing trails the hand by 8 display frames in the middle against a bar of one.",
+    "B while playing still stops playback; Premiere's Add Edit keeps playing. Left as it was: it is a behaviour change, not a speed one.",
+    "The scrub hang was first fixed by reading each movie pass on a thread of its own, but scrub-never-blacks-out-walk then trailed by two display frames in 2 of 5 runs. Shipped instead: passes stay where they were and at most half the cores' worth read at once; 6 of 6 runs clean, and no hang in 7 scrubs across the speed walk and a play-then-scrub walk.",
+    "No mock covers this: it is speed, not a surface."
+  ]
+}
