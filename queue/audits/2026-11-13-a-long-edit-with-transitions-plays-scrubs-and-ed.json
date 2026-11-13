@@ -1,17 +1,20 @@
 {
-  "feature": "A long edit with transitions plays, scrubs and edits without freezing",
+  "feature": "A long edit with transitions plays at full rate, scrubs and edits without freezing",
   "epic": "video-perf",
   "task": "a-long-edit-with-transitions-plays-scrubs-and-ed",
-  "summary": "The 6 minute reference edit now plays: in a minute at 1x it shows about 1,450 of 1,819 frames instead of 4, the longest wait between two pictures is about an eighth of a second instead of 18 seconds, and an edit while it plays holds the app for a tenth to a fifth of a second instead of up to six seconds. A scrub can no longer freeze the whole app. It is not yet every frame, and an edit is not yet inside one frame: that is still this task's.",
+  "summary": "The 6 minute reference edit now plays at full rate: a minute at 1x drops 6 to 10 of about 1,820 frames instead of about 380, and every dissolve, push and cube plays with none or one dropped. Scrubbing still trails the hand by about 7 display frames, and an edit while it plays still holds the app 80 to 230 ms; those are still this task's.",
   "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The numbers come from Scripts/perf/speed-walk.sh on the reference edit (Scripts/perf/reference-edit.sh 6).",
   "switched": {},
   "try": [
     {
       "do": "Run Scripts/perf/reference-edit.sh 6 and press Space.",
-      "shot": "2026-11-13-long-edit-plays-after-the-edits-sc.png"
+      "shot": "2026-11-13-long-edit-plays-full-rate-sc.png"
     },
     {
       "do": "Watch it play across the dissolves, the push and the cube for a minute."
+    },
+    {
+      "do": "With nothing picked, watch the panel's Time section while it plays across clips: Speed and the fades should change only as the playhead crosses into the next clip."
     },
     {
       "do": "Drag the playhead across the whole ruler at an ordinary speed and let go."
@@ -27,6 +30,7 @@
     }
   ],
   "evaluate": [
+    "Does a minute of playback on the 6 minute edit now look smooth to you, across the transitions too?",
     "Does playback on the 6 minute edit now feel like video, or do you still see it skip?",
     "Does the picture keep up with your hand when you drag the playhead?",
     "Is a pause of a tenth to a fifth of a second when you trim, blade or undo while it plays noticeable to you?",
@@ -41,15 +45,20 @@
     "60 minute edit (long form, 0582a551c), against 2026-11-12: 144 of 1828 frames shown in a minute (was 0 of 8332), worst gap 902 ms (was 275 s); scrub 66 / 95 behind at medium speed (was 9446); edits trim 825 ms, move 767 ms, blade 940 ms, undo 908 ms, transition 905 ms, title 649 ms (were 29 to 82 s); timeline zoom 1221 ms a frame (was 22,894), scroll 893 ms (was 22,584); 382 pieces of sound left out, as before.",
     "60 minute edit, memory over 600 s of play and scrub: footprint 1857 to 1701 MB, peak 2873 MB, resident peak 3124 MB, against 998 to 1131 MB, peak 1426 MB the day before, when it showed no frames at all.",
     "Where the main thread goes now, playing the 6 minute edit (Time Profiler, 15 s): about 86% SwiftUI's own graph work (marking and re-checking views after each playhead move; 15% of it observation changes, 8 to 12% the accessibility graph), 5% Core Animation, 1% the audio plan; the edit point arithmetic that was 95% is now under 0.2%.",
-    "Nothing drawn changed: the drawn picture at 362 moments of the 6 minute edit, every frame request and the sound mix hash the same before and after (003e558c...). A full export was not run (33 minutes before this work)."
+    "Nothing drawn changed: the drawn picture at 362 moments of the 6 minute edit, every frame request and the sound mix hash the same before and after (003e558c...). A full export was not run (33 minutes before this work).",
+    "Pass 2, how it was found (20 s of play, 2026-11-13): 500 of 606 frames as shipped; 575 with the panel hidden; 605 with only the timeline's tracks hidden. Counting view bodies while playing showed only six ran per tick (transport, scrubber, playhead line, time scroller, and the panel's Time section and its watcher) and no clip, track or row body at all. So the cost was SwiftUI walking a big window once per pass, not the bodies: every pass, whatever started it, cost about as much again as the tracks have views. A debugger on the probe showed the pass triggers per tick: the playhead, the canvas picture (renderedImage, shownMomentMS) and crisp-tile writes of nil over nil.",
+    "Fix 5, the panel's Time section and cut facts watch the clip, piece, cut and stop under the playhead instead of the playhead (PanelPlayhead): 20 s of play ~495 -> 576-577 of 606.",
+    "Fixes 6 and 7, the canvas asks for the playhead instead of being rebuilt with it, and a playing or scrubbed frame goes straight onto the canvas layer without a SwiftUI pass (EditorState.showPlayingPicture): 20 s of play 576 -> 602-603 of 606.",
+    "New baseline, short speed walk, three runs (6b216a785): a minute of play dropped 10, 8 and 6 of 1818 frames (was 379, worst of 3), worst gap 119, 130, 105 ms (was 125); transitions 0 or 1 dropped each (were 4 to 6); scrub medium 7/21, 6/20, 8/21 display frames behind, middle/worst (was 8/19); edits trim 84, 81, 85 ms, blade 225, 145, 216 ms, undo 118, 127, 117 ms (were 90, 203, 119).",
+    "Nothing drawn changed: the renderer is untouched, only how a finished picture reaches the canvas layer. scrub-never-blacks-out-walk passes (every display frame drawn, rectangle inside its outline) and 13 of 14 walks around the panel's Time section, held frames, speed stops, fades, the menu bar while playing and an-editing-session-walk pass; the 14th fails the same way on main without this change."
   ],
   "rough": [
-    "1x playback still drops frames: about a fifth of them on the 6 minute edit, more on the 20. The main thread is now spent in SwiftUI re-checking the window after every playhead move, not in the app's own arithmetic. That is the next slice of this task, and it stays open.",
-    "An edit while playing still holds the main thread 90 to 200 ms on the 6 minute edit, against the bar of 16 ms. Still this task's; on the hour-long edit it is the-timeline-of-an-hour-long-edit-scrolls-zooms.",
+    "Scrubbing still trails the hand by 6 to 8 display frames in the middle, 20 at worst, against a bar of one. The frame direct path did not move it much, so the time is in reading the frames, not in SwiftUI. Still this task's.",
+    "An edit while playing still holds the main thread 80 to 230 ms against a bar of 16. An edit changes the document, so the whole timeline is built again; on the hour-long edit that is the-timeline-of-an-hour-long-edit-scrolls-zooms. Still this task's on the 6 minute edit.",
+    "The fast path for frames steps aside whenever something is picked: playing with a clip picked goes the old way (one SwiftUI pass per frame, about 25 more dropped frames a minute by the 20 s measure). Still this task's.",
     "Memory on the hour-long edit went up, peak 2.9 GB against 1.4 GB, now that it really plays and scrubs; folded into memory-stays-bounded-while-an-hour-long-edit-pla.",
-    "Scrubbing trails the hand by 8 display frames in the middle against a bar of one.",
-    "B while playing still stops playback; Premiere's Add Edit keeps playing. Left as it was: it is a behaviour change, not a speed one.",
-    "The scrub hang was first fixed by reading each movie pass on a thread of its own, but scrub-never-blacks-out-walk then trailed by two display frames in 2 of 5 runs. Shipped instead: passes stay where they were and at most half the cores' worth read at once; 6 of 6 runs clean, and no hang in 7 scrubs across the speed walk and a play-then-scrub walk.",
+    "B while playing still stops playback; Premiere's Add Edit keeps playing. Left as it was: a behaviour change, not a speed one.",
+    "The 20 and 60 minute edits were not measured again in this pass; their numbers above are from 0582a551c.",
     "No mock covers this: it is speed, not a surface."
   ]
 }

@@ -23051,3 +23051,10 @@ units.
 - Found and fixed a hang the speedup exposed: blocking AVAssetReader reads (`MovieSweeper`) filled Swift's cooperative pool during a scrub and nothing async ran again. Now gated to half the cores (`MovieSweeper.gate`); a thread-per-read version cost scrub smoothness (scrub-never-blacks-out 3/5).
 - 6 min short walk: 4 -> ~1450 of 1819 frames a minute, worst gap 17.9 s -> 125 ms, scrub lag 160 -> 8, edits 1.4-5.7 s -> 90-203 ms. 20 and 60 min in the audit; 60 min memory peak went up (1.4 -> 2.9 GB) now that it plays, folded into the memory task.
 - Next: the remaining main-thread cost is SwiftUI graph work after each playhead move (~86%); the task stays open (pending) for it.
+
+## 2026-11-13 (go loop, a-long-edit-with-transitions-plays-scrubs-and-ed, pass 2)
+
+- Found the per-tick SwiftUI cost while the 6 minute reference edit plays: every SwiftUI pass over the window costs about as much again as the timeline's tracks have views, whatever starts it. Hiding the tracks alone took 20 s of play from 500 to 605 of 606 frames, while no clip, track or row body ran per tick.
+- Fewer passes per frame (6b216a785): the panel's Time section watches `PanelPlayhead` instead of the playhead; the canvas reads the playhead unwatched; playing and scrubbed frames go straight onto the canvas layer (`showPlayingPicture`); no more nil-over-nil crisp tile writes. Short speed walk: 379 -> 6 to 10 dropped frames a minute; transitions 0 to 1 dropped each.
+- The rule for which views may watch the playhead is in `docs/design/video.md` §8f.
+- Still open on the task: scrub 6 to 8 display frames behind (bar 1), edits while playing 80 to 230 ms (bar 16), and the fast path steps aside while something is picked.
