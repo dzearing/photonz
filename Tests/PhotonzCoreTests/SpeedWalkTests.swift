@@ -55,6 +55,26 @@ struct SpeedWalkTests {
         #expect(tally.worstGapMS == 1000)
     }
 
+    @Test("A minute with only its start and its end looked at still counts the whole minute")
+    func onlyTheEnds() {
+        // An hour-long edit: one tick of the clock held the main thread over
+        // a minute, so the walk looked only when Space went down and when the
+        // stretch ended, and the picture had not changed.
+        let samples = [SpeedWalk.PlaySample(wallMS: 0, playheadMS: 15_000, shownMS: 15_000),
+                       SpeedWalk.PlaySample(wallMS: 80_000, playheadMS: 38_100, shownMS: 15_000)]
+        let tally = SpeedWalk.tally(samples, frameStepMS: 33)
+        #expect(tally.framesDue == 2424)
+        #expect(tally.framesShown == 0)
+        #expect(tally.worstGapMS == 80_000)
+        // A transition the playhead crossed meanwhile is charged the wait.
+        let cut = SpeedWalk.tally(samples, over: SpeedWalk.Span(label: "cut", range: 16_000..<16_400), frameStepMS: 33)
+        #expect(cut.worstGapMS == 80_000)
+        #expect(cut.dropped == 12)
+        // One the playhead never reached is not.
+        let later = SpeedWalk.tally(samples, over: SpeedWalk.Span(label: "later", range: 50_000..<50_400), frameStepMS: 33)
+        #expect(later.worstGapMS == 0)
+    }
+
     @Test("A stall over a transition is charged to that transition, even with no look inside it")
     func stallChargedToTheCut() {
         var samples = Self.smooth(seconds: 1).filter { $0.wallMS < 900 }
@@ -181,6 +201,18 @@ struct SpeedWalkTests {
         #expect(SpeedCompare.regressions(baseline: both, run: a, marginPercent: 0).isEmpty)
         #expect(SpeedCompare.regressions(baseline: both, run: b, marginPercent: 0).isEmpty)
         #expect(SpeedRun.envelope(of: []) == nil)
+    }
+
+    @Test("An edit that found nothing to act on is written down but never judged")
+    func unmadeEditNotJudged() {
+        var base = Self.run(dropped: 100, gap: 400, peak: 1000)
+        base.edits = [SpeedWalk.EditTally(edit: "blade", did: "not made: nothing to cut", callMS: 0,
+                                          longestPassMS: 0, made: false)]
+        var run = base
+        run.edits = [SpeedWalk.EditTally(edit: "blade", did: "cut", callMS: 300, longestPassMS: 9000)]
+        #expect(!base.metrics.contains { $0.key == "edit blade: longest pass" })
+        #expect(SpeedCompare.regressions(baseline: base, run: run, marginPercent: 0).isEmpty)
+        #expect(run.edits[0].made == nil)
     }
 
     @Test("A number near nothing is not failed for a frame of noise")

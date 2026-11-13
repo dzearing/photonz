@@ -1,0 +1,29 @@
+{
+  "out": "/tmp/photonz-playtest/speed-long-60-memory",
+  "clock": 3600,
+  "seed": "Long form of the speed walk on the 60 minute reference edit, part two: a minute played at 1x across its transitions, then ten minutes of playing with a hand taking the playhead somewhere else every half minute, memory read once a second on a timer of its own (the main thread let a reading through once every five minutes on 2026-11-13). Run by Scripts/perf/speed-walk.sh --long.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 60
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "speed",
+      "measure": "play",
+      "fromMS": 15000,
+      "seconds": 60,
+      "form": "long"
+    },
+    {
+      "do": "speed",
+      "measure": "memory",
+      "seconds": 600
+    }
+  ]
+}

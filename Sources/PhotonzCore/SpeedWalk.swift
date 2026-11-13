@@ -145,6 +145,15 @@ public enum SpeedWalk {
                 worst = max(worst, arrival.wallMS - before.wallMS)
             }
         }
+        // And from the last new picture to the end of the stretch, which on
+        // an hour-long edit was the whole stretch: no new picture at all.
+        if let lastArrival = came.last, let end = samples.last {
+            let lo = min(lastArrival.playheadMS, end.playheadMS)
+            let hi = max(lastArrival.playheadMS, end.playheadMS)
+            if lo < span.range.upperBound, hi >= span.range.lowerBound {
+                worst = max(worst, end.wallMS - lastArrival.wallMS)
+            }
+        }
         return PlayTally(label: span.label, seconds: Double(length) / 1000, framesDue: due,
                          framesShown: min(shown, due), dropped: max(0, due - shown), worstGapMS: worst)
     }
@@ -300,12 +309,16 @@ public enum SpeedWalk {
         /// The longest main thread pass from the edit to a second and a half
         /// after it, playing all the while.
         public var longestPassMS: Double
+        /// False when the edit found nothing to act on and was not made; nil
+        /// (made) in files written before this was recorded.
+        public var made: Bool?
 
-        public init(edit: String, did: String, callMS: Double, longestPassMS: Double) {
+        public init(edit: String, did: String, callMS: Double, longestPassMS: Double, made: Bool? = nil) {
             self.edit = edit
             self.did = did
             self.callMS = callMS
             self.longestPassMS = longestPassMS
+            self.made = made == false ? false : nil
         }
     }
 
@@ -317,13 +330,18 @@ public enum SpeedWalk {
         public var footprintMB: [Double]
         /// The same seconds, resident.
         public var residentMB: [Double]
+        /// When each reading was taken, in seconds from the start: one a
+        /// second when the main thread lets the walk look, further apart
+        /// when it does not.
+        public var atSeconds: [Double]?
         public var peakFootprintMB: Double
         public var peakResidentMB: Double
 
-        public init(during: String, footprintMB: [Double], residentMB: [Double]) {
+        public init(during: String, footprintMB: [Double], residentMB: [Double], atSeconds: [Double]? = nil) {
             self.during = during
             self.footprintMB = footprintMB
             self.residentMB = residentMB
+            self.atSeconds = atSeconds
             peakFootprintMB = footprintMB.max() ?? 0
             peakResidentMB = residentMB.max() ?? 0
         }
@@ -442,7 +460,7 @@ public struct SpeedRun: Codable, Equatable, Sendable {
             out.append(Metric(key: "scrub \(scrub.speed): lag worst", value: Double(scrub.lagWorstFrames), unit: .frames))
             out.append(Metric(key: "scrub \(scrub.speed): time", value: scrub.seconds, unit: .seconds))
         }
-        for edit in edits {
+        for edit in edits where edit.made != false {
             out.append(Metric(key: "edit \(edit.edit): longest pass", value: edit.longestPassMS, unit: .ms))
         }
         for (view, count) in bodiesPerFrame.sorted(by: { $0.key < $1.key }) {
@@ -501,6 +519,7 @@ extension SpeedRun {
                 if let i = out.edits.firstIndex(where: { $0.edit == edit.edit }) {
                     out.edits[i].longestPassMS = max(out.edits[i].longestPassMS, edit.longestPassMS)
                     out.edits[i].callMS = max(out.edits[i].callMS, edit.callMS)
+                    if edit.made != false { out.edits[i].made = nil }
                 } else {
                     out.edits.append(edit)
                 }

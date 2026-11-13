@@ -72,7 +72,13 @@ final class SpeedWalkProbe {
         let picturesBefore = editor.canvasFrameCount
         editor.playDocument(rate: 1)
         let start = CACurrentMediaTime()
-        var samples: [SpeedWalk.PlaySample] = []
+        // The moment Space went down is a look too, and so is the moment the
+        // stretch ends: on an hour-long edit one tick of the clock held the
+        // main thread for over a minute, and a run of one look read as no
+        // time at all (2026-11-13).
+        var samples: [SpeedWalk.PlaySample] = [
+            SpeedWalk.PlaySample(wallMS: 0, playheadMS: editor.documentTimeMS, shownMS: editor.shownMomentMS),
+        ]
         var looks = 0, silent = 0
         var nextSoundLook = 1.0
         while CACurrentMediaTime() - start < seconds, editor.isDocumentPlaying {
@@ -86,6 +92,8 @@ final class SpeedWalkProbe {
                 nextSoundLook += 1
             }
         }
+        samples.append(SpeedWalk.PlaySample(wallMS: (CACurrentMediaTime() - start) * 1000,
+                                            playheadMS: editor.documentTimeMS, shownMS: editor.shownMomentMS))
         let leftOut = editor.audioPlayer.droppedSegments
         let reachedMS = editor.documentTimeMS
         editor.pauseDocument()
@@ -207,7 +215,18 @@ final class SpeedWalkProbe {
             if !editor.isDocumentPlaying { editor.playDocument(rate: 1) }
             MainThreadMeter.shared.reset()
             let began = CACurrentMediaTime()
-            let did = try perform(edit, on: editor)
+            let did: String
+            do {
+                did = try perform(edit, on: editor)
+            } catch let refused as Failure {
+                // One edit that finds nothing to act on does not cost the
+                // others their numbers: it is written down as not made.
+                run.edits.removeAll { $0.edit == edit }
+                run.edits.append(SpeedWalk.EditTally(edit: edit, did: "not made: \(refused.description)",
+                                                     callMS: 0, longestPassMS: 0, made: false))
+                lines.append("\(edit) not made: \(refused.description)")
+                continue
+            }
             let call = (CACurrentMediaTime() - began) * 1000
             try? await Task.sleep(for: .seconds(1.5))
             let longest = max(MainThreadMeter.shared.longestMS, call)
@@ -264,11 +283,18 @@ final class SpeedWalkProbe {
             }
             throw Failure(description: "no clip ahead of the playhead had room to move")
         case "blade":
-            let under = (main + byTrack.flatMap { $0 }).first {
+            var under = (main + byTrack.flatMap { $0 }).first {
                 ($0.time?.inMS ?? 0) + 100 < playhead && playhead < ($0.time?.outMS ?? 0) - 100
             }
+            // Over a title page or a gap there is nothing to cut: a person
+            // parks on the next recording and plays on from there.
+            if under == nil, let next = main.first(where: { ($0.time?.inMS ?? 0) > playhead }), let time = next.time {
+                editor.moveDocumentPlayhead(toMS: time.inMS + time.lengthMS / 2)
+                editor.playDocument(rate: 1)
+                under = next
+            }
             guard let clip = under else {
-                throw Failure(description: "no recording under the playhead at \(SpeedWalk.clock(playhead)) to cut")
+                throw Failure(description: "no recording under or after the playhead at \(SpeedWalk.clock(playhead)) to cut")
             }
             editor.selectLayer(clip.id)
             guard editor.canSplitClipAtPlayhead else { throw Failure(description: "\(clip.name) cannot be cut there") }
@@ -392,18 +418,21 @@ final class SpeedWalkProbe {
         defer { frames.invalidate() }
         let length = editor.documentLengthMS
         var generator = SystemRandomNumberGenerator()
-        var footprint: [Double] = [], resident: [Double] = []
         editor.pauseDocument()
         editor.scrubDocument(toMS: 0)
         await settle(editor, frames: frames)
+        // Read on a timer of its own, off the main thread: reading the
+        // footprint needs nothing of the app, and on the hour-long edit the
+        // main thread let a reading through once every five minutes
+        // (2026-11-13).
+        let readings = MemoryReadings()
+        readings.start()
+        defer { readings.stop() }
         editor.playDocument(rate: 1)
         let start = CACurrentMediaTime()
         var nextScrub = 25.0
         while CACurrentMediaTime() - start < seconds {
             try? await Task.sleep(for: .seconds(1))
-            let reading = Self.memoryReading()
-            footprint.append(reading.footprint)
-            resident.append(reading.resident)
             // Every half minute a hand takes the playhead somewhere else
             // across two seconds, and it plays on from there.
             if CACurrentMediaTime() - start >= nextScrub {
@@ -423,16 +452,52 @@ final class SpeedWalkProbe {
             if !editor.isDocumentPlaying { editor.playDocument(rate: 1) }
         }
         editor.pauseDocument()
+        readings.stop()
+        let taken = readings.taken
         let minutes = run.minutes.map { "the \($0) minute edit" } ?? "the edit"
         let tally = SpeedWalk.MemoryTally(during: "playing and scrubbing \(minutes) for \(Int(seconds))s",
-                                          footprintMB: footprint, residentMB: resident)
+                                          footprintMB: taken.map(\.footprint), residentMB: taken.map(\.resident),
+                                          atSeconds: taken.map(\.at))
         run.memory = tally
-        return String(format: "%@: footprint from %.0fMB to %.0fMB, peak %.0fMB; resident peak %.0fMB",
-                      tally.during, footprint.first ?? 0, footprint.last ?? 0, tally.peakFootprintMB,
-                      tally.peakResidentMB)
+        return String(format: "%@: %d readings, footprint from %.0fMB to %.0fMB, peak %.0fMB; resident peak %.0fMB",
+                      tally.during, taken.count, taken.first?.footprint ?? 0, taken.last?.footprint ?? 0,
+                      tally.peakFootprintMB, tally.peakResidentMB)
     }
 
-    private static func memoryReading() -> (footprint: Double, resident: Double) {
+    /// Memory read once a second on a queue of its own.
+    private final class MemoryReadings: @unchecked Sendable {
+        struct Reading { let at: Double; let footprint: Double; let resident: Double }
+        private let lock = NSLock()
+        private var kept: [Reading] = []
+        private var timer: DispatchSourceTimer?
+        private let began = CACurrentMediaTime()
+
+        var taken: [Reading] { lock.withLock { kept } }
+
+        func start() {
+            let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
+            timer.schedule(deadline: .now() + 1, repeating: 1)
+            timer.setEventHandler { [weak self] in
+                guard let self else { return }
+                let reading = SpeedWalkProbe.memoryReading()
+                let now = CACurrentMediaTime() - self.began
+                self.lock.withLock {
+                    self.kept.append(Reading(at: now, footprint: reading.footprint, resident: reading.resident))
+                }
+            }
+            timer.resume()
+            lock.withLock { self.timer = timer }
+        }
+
+        func stop() {
+            lock.withLock {
+                timer?.cancel()
+                timer = nil
+            }
+        }
+    }
+
+    nonisolated static func memoryReading() -> (footprint: Double, resident: Double) {
         var info = task_vm_info_data_t()
         var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
         let result = withUnsafeMutablePointer(to: &info) {

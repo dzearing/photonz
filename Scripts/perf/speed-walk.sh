@@ -20,10 +20,15 @@
 # margin. The long form (Scripts/perf/walks/) plays the 6 minute edit whole,
 # scrubs at three speeds, makes six edits while it plays, zooms and scrolls
 # the timeline, exports, and on the 60 minute edit plays and scrubs for ten
-# minutes reading memory each second: about 12 minutes plus an export of more
-# than 25 minutes for the 6 minute edit, and 6 and 20 minutes for the
-# 20 and 60 minute ones. It is never part of the walk set or the rotating
-# check.
+# minutes reading memory each second. On 2026-11-12 that took about 12
+# minutes plus a 33 minute export for the 6 minute edit, 15 minutes for the
+# 20 and well over an hour for the 60, because every look waits for a main
+# thread that is busy for seconds (a minute and more at an hour long); each
+# walk's clock allows for it. It is never part of the walk set or the rotating
+# check: run it when you are away from the Mac.
+#
+# Baselines for today's build: Scripts/perf/baselines/long-6.json, long-20.json
+# and long-60.json.
 #
 # Each run writes one results file under $PHOTONZ_SPEED_RESULTS (default
 # ~/Library/Caches/Photonz Reference Edit/speed-results), named by date,
@@ -118,6 +123,7 @@ for minutes in "${LENGTHS[@]}"; do
   parts=()
   case "$minutes" in
     6) scripts=(Scripts/perf/walks/long-6-play.json Scripts/perf/walks/long-6-rest.json Scripts/perf/walks/long-6-export.json) ;;
+    60) scripts=(Scripts/perf/walks/long-60.json Scripts/perf/walks/long-60-memory.json) ;;
     *) scripts=("Scripts/perf/walks/long-$minutes.json") ;;
   esac
   for script in "${scripts[@]}"; do

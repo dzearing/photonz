@@ -1,0 +1,225 @@
+{
+  "bodiesPerFrame": {
+    "timeSection": 1
+  },
+  "composites": {
+    "askedToShownMedianMS": 9.527125,
+    "askedToShownWorstMS": 10.267125,
+    "drawMedianMS": 9.521416,
+    "drawWorstMS": 10.172875,
+    "pictures": 4
+  },
+  "date": "2026-11-13T08:27:44Z",
+  "edits": [
+    {
+      "callMS": 419.493708293885,
+      "did": "half a second off the end of Take 2",
+      "edit": "trim",
+      "longestPassMS": 29667.32562496327
+    },
+    {
+      "callMS": 420.7173748873174,
+      "did": "B-roll 2 later by half a second",
+      "edit": "move",
+      "longestPassMS": 29790.786791592836
+    },
+    {
+      "callMS": 2060.0340000819415,
+      "did": "Take 4 cut at 1:18.3",
+      "edit": "blade",
+      "longestPassMS": 8853.159708436579
+    },
+    {
+      "callMS": 422.2390416543931,
+      "did": "the last edit taken back",
+      "edit": "undo",
+      "longestPassMS": 3675.164583371952
+    },
+    {
+      "callMS": 2321.0471249185503,
+      "did": "cross dissolve at 1:36.6",
+      "edit": "transition",
+      "longestPassMS": 5325.141291599721
+    },
+    {
+      "callMS": 415.7428334001452,
+      "did": "the words of Title Page",
+      "edit": "title",
+      "longestPassMS": 2837.8254999406636
+    }
+  ],
+  "form": "long",
+  "frameStepMS": 33,
+  "head": "8a8007211+changes",
+  "machine": "Mac16,5, 16 cores, 64GB",
+  "minutes": 20,
+  "plays": [
+    {
+      "dropped": 4070,
+      "framesDue": 4071,
+      "framesShown": 1,
+      "label": "whole",
+      "seconds": 134.34300391655415,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "cross dissolve at 0:17.4",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "push at 0:28.5",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "cross dissolve at 0:38.2",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "cross dissolve at 0:46.9",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 24,
+      "framesDue": 24,
+      "framesShown": 0,
+      "label": "cube at 0:54.4",
+      "seconds": 0.8,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "cross dissolve at 1:00.8",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "cross dissolve at 1:08.9",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 24,
+      "framesDue": 24,
+      "framesShown": 0,
+      "label": "flip at 1:18.2",
+      "seconds": 0.8,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "cross dissolve at 1:30.3",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "cross dissolve at 1:48.4",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "cross dissolve at 1:54.4",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    },
+    {
+      "dropped": 12,
+      "framesDue": 12,
+      "framesShown": 0,
+      "label": "cross dissolve at 2:01.8",
+      "seconds": 0.4,
+      "worstGapMS": 134343.00391655415
+    }
+  ],
+  "scrubs": [
+    {
+      "frames": 600,
+      "lagMedianFrames": 442,
+      "lagWorstFrames": 915,
+      "movesMade": 5,
+      "seconds": 17.910935166757554,
+      "speed": "slow",
+      "worstFrameMS": 7334.381874883547
+    },
+    {
+      "frames": 240,
+      "lagMedianFrames": 344,
+      "lagWorstFrames": 631,
+      "movesMade": 3,
+      "seconds": 10.180688333464786,
+      "speed": "medium",
+      "worstFrameMS": 5257.748916512355
+    },
+    {
+      "frames": 40,
+      "lagMedianFrames": 433,
+      "lagWorstFrames": 433,
+      "movesMade": 2,
+      "seconds": 10.724340833257884,
+      "speed": "fling",
+      "worstFrameMS": 5647.362791700289
+    }
+  ],
+  "sound": {
+    "looks": 2,
+    "piecesLeftOut": 95,
+    "silentLooks": 0
+  },
+  "timeline": [
+    {
+      "frames": 8,
+      "label": "zoom in",
+      "late": 8,
+      "medianMS": 2514.7060833405703,
+      "p95MS": 2539.7488332819194,
+      "refreshMS": 8.333333333333336,
+      "worstMS": 2539.7488332819194
+    },
+    {
+      "frames": 8,
+      "label": "zoom out",
+      "late": 8,
+      "medianMS": 2475.135500077158,
+      "p95MS": 2490.4414999764413,
+      "refreshMS": 8.333333333333336,
+      "worstMS": 2490.4414999764413
+    },
+    {
+      "frames": 10,
+      "label": "scroll",
+      "late": 10,
+      "medianMS": 2003.0532500240952,
+      "p95MS": 2446.7134582810104,
+      "refreshMS": 8.333333333333336,
+      "worstMS": 2446.7134582810104
+    }
+  ]
+}

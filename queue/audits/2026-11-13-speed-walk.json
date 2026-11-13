@@ -1,0 +1,73 @@
+{
+  "feature": "The speed walk: how slow the long reference edit is, measured the way a person uses it",
+  "epic": "video-perf",
+  "task": "a-speed-walk-measures-the-long-reference-edit-th",
+  "summary": "A walk now plays, scrubs, edits, scrolls and exports the 6, 20 and 60 minute reference edits and writes every number into one results file, and a two minute short form in the walk set fails when a change makes it slower. Today's numbers: the 6 minute edit shows 35 of 10,906 frames when played whole, because the main thread is busy the whole time working out the timeline's tracks again for every frame it looks ahead to.",
+  "setup": "Photonz Probe (built by Scripts/probe-app.sh), release Next, no flag changed from its default. The commands run from the repo in Terminal.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Run Scripts/perf/reference-edit.sh 6, then press Space in the probe and watch the playhead and the picture for ten seconds.",
+      "shot": "2026-11-12-speed-walk-frozen-while-playing-sc.png"
+    },
+    {
+      "do": "Run Scripts/perf/speed-walk.sh (about two minutes) and read the path of the results file it prints.",
+      "shot": "2026-11-13-speed-walk-after-the-edits-sc.png"
+    },
+    {
+      "do": "Run Scripts/perf/compare.sh Scripts/perf/baselines/short-6.json <that file> --margin 100 to see the run beside today's baseline."
+    },
+    {
+      "do": "Open Scripts/perf/baselines/long-6.json and look at the per-transition lines under plays: every transition shows which cut a dropped frame happened at."
+    },
+    {
+      "do": "Run python3 Scripts/perf/rank-trace.py on ~/Library/Caches/Photonz Reference Edit/traces/play-across-transitions.trace to see the ranked list of where the time goes."
+    },
+    {
+      "do": "Look at the memory curve of the hour-long edit.",
+      "shot": "2026-11-13-speed-walk-memory-60.png"
+    }
+  ],
+  "evaluate": [
+    "Does the walk's picture of playback (frames shown against frames due, and the longest wait between two pictures) match what you see when you press Space on the 6 minute edit?",
+    "Is the ranked list (the timeline's track arithmetic first, by a long way) the place you want the next speed slice to start?",
+    "Is a two minute short walk on every rotating check worth it, when for now it only fails on a change that more than doubles a number?",
+    "Should a blade or a new transition keep the video playing, as Premiere's Add Edit does, instead of stopping it?"
+  ],
+  "measured": [
+    "6 min, playing at 1x: 35 of 10906 frames shown over 360 s of play, worst wait between two pictures 20.0 s; 35 of 35 transitions crossed dropped frames; sound: 0 pieces left out; the renderer drew each picture in 7 ms (median), 35 ms worst, and was asked for 82",
+    "6 min, scrubbing end to end: slow 107 / 197 refreshes behind (middle / worst), 6.9 s for a 5.0 s drag; medium 90 / 143 refreshes behind (middle / worst), 3.2 s for a 2.0 s drag; fling 106 / 126 refreshes behind (middle / worst), 1.7 s for a 0.3 s drag",
+    "6 min, longest main thread pass of an edit made while playing: trim 4.9 s, move 4.6 s, blade 1.4 s, undo 3.2 s, transition 1.0 s, title 4.0 s",
+    "6 min, view bodies per new picture while playing untouched: inspectorPanel 1, timeSection 0.5",
+    "6 min, timeline: zoom in 478 ms a frame (p95 498), zoom out 476 ms a frame (p95 529), scroll 392 ms a frame (p95 490)",
+    "6 min, export at the sheet's defaults (MP4, Standard, Full): 1984 s, 669 MB",
+    "20 min, playing at 1x: 1 of 4071 frames shown over 134 s of play, worst wait between two pictures 134.3 s; 12 of 12 transitions crossed dropped frames; sound: 95 pieces left out; the renderer drew each picture in 10 ms (median), 10 ms worst, and was asked for 4",
+    "20 min, scrubbing end to end: slow 442 / 915 refreshes behind (middle / worst), 17.9 s for a 5.0 s drag; medium 344 / 631 refreshes behind (middle / worst), 10.2 s for a 2.0 s drag; fling 433 / 433 refreshes behind (middle / worst), 10.7 s for a 0.3 s drag",
+    "20 min, longest main thread pass of an edit made while playing: trim 29.7 s, move 29.8 s, blade 8.9 s, undo 3.7 s, transition 5.3 s, title 2.8 s",
+    "20 min, view bodies per new picture while playing untouched: timeSection 1",
+    "20 min, timeline: zoom in 2515 ms a frame (p95 2540), zoom out 2475 ms a frame (p95 2490), scroll 2003 ms a frame (p95 2447)",
+    "60 min, playing at 1x: 0 of 8332 frames shown over 275 s of play, worst wait between two pictures 275.0 s; 3 of 3 transitions crossed dropped frames; sound: 382 pieces left out; the renderer drew each picture in 14 ms (median), 14 ms worst, and was asked for 2",
+    "60 min, scrubbing end to end: slow 9498 / 9498 refreshes behind (middle / worst), 79.1 s for a 5.0 s drag; medium 9446 / 9446 refreshes behind (middle / worst), 78.7 s for a 2.0 s drag; fling 5004 / 5004 refreshes behind (middle / worst), 78.6 s for a 0.3 s drag",
+    "60 min, longest main thread pass of an edit made while playing: trim 59.1 s, move 59.3 s, blade 82.3 s, undo 36.4 s, transition 53.3 s, title 29.1 s",
+    "60 min, view bodies per new picture while playing untouched: timeSection 1",
+    "60 min, timeline: zoom in 22894 ms a frame (p95 22894), zoom out 22678 ms a frame (p95 22678), scroll 22584 ms a frame (p95 22584)",
+    "60 min, memory over 801 s of play and scrub: footprint 998 MB to 1131 MB, peak 1426 MB; resident peak 1728 MB (801 readings)",
+    "Short walk baseline (Scripts/perf/baselines/short-6.json, worst of three runs): 4 of 1857 frames shown over 61 s of play, worst wait between two pictures 17.9 s; 6 of 6 transitions crossed dropped frames; medium 160 / 231 refreshes behind (middle / worst), 5.8 s for a 2.0 s drag; edits trim 5.7 s, blade 1.4 s, undo 4.0 s",
+    "Where the time goes, playing across transitions on the 6 minute edit (Time Profiler, 15 s, main thread 100% busy): looking ahead for the frames to come (MoviePlayLookahead) 68%, other edit point arithmetic 15%, preparing each picture's transitions 9%, sound crossings at cuts 4%, the timeline's lock checks 3%, SwiftUI updates about 1%, Core Animation 0.2%. Every one of these rebuilds the document's track layout from scratch on each question it asks; 44% of the main thread's time is spent copying layers and tracks (memory churn).",
+    "Where the time goes, one blade while playing: preparing each picture's transitions 48%, looking ahead 36%, other edit point arithmetic 8%, sound crossings 5%, lock checks 2%, SwiftUI under 1%.",
+    "Decoding and compositing are not the cost: decoding never shows on the main thread, and the renderer draws each picture in 7 to 54 ms off it. It is starved: asked for about 10 pictures a minute.",
+    "Waveform and thumbnail drawing do not show in either trace.",
+    "Traces: ~/Library/Caches/Photonz Reference Edit/traces/play-across-transitions.trace and blade-while-playing.trace; a sample of the main thread beside them (play-sample.txt)."
+  ],
+  "rough": [
+    "On the hour-long edit a minute of play took 275 seconds of wall time and the playhead itself moved only 23 seconds: one tick of the playback clock holds the main thread for minutes. Its transitions' gaps in long-60.json were written before the walk charged a stall with no new picture to the cuts it crossed; they were set to the whole stretch's gap by the fixed rule, the same data.",
+    "The 20 and 60 minute edits are so slow that most measures there are a handful of looks: on the hour-long edit one scrub move took 79 seconds and the timeline drew one frame every 23 seconds. Their numbers are what the walk could take, and the long form needs well over an hour today.",
+    "The short walk fails only on a change that more than doubles a number (plus a floor): with stalls of many seconds, one run's worst gap differs from the next by half again (17 to 28 s over four runs). Tighten the margin once playback is fixed.",
+    "Frames due are counted on the app's own 33 ms clock (30 a second), while the recordings are 60 frames a second: a fix that plays every frame of the clock still shows half of each recording's frames.",
+    "No Metal System Trace: the GPU is not in question (each picture draws in 7 to 54 ms).",
+    "A blade (B) and adding a transition stop the video playing; Premiere's Add Edit and Final Cut's Blade keep playing. Noted on the next speed task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "On the 20 minute edit the sound engine left out 95 pieces of sound; whether that is heard as silence is filed to find out (find-out-whether-a-long-edit-goes-quiet-after-it).",
+    "Export at the sheet's defaults took 33 minutes for 6 minutes of video; folded into exporting-the-six-minute-reference-edit-takes-no.",
+    "Playing untouched, the dock's whole body rebuilds once per new picture; folded into the-timeline-of-an-hour-long-edit-scrolls-zooms."
+  ]
+}

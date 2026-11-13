@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/speed-long-60",
-  "clock": 1800,
-  "seed": "Long form of the speed walk on the 60 minute reference edit: the playhead dragged end to end slow, medium and fling, the timeline zoomed and scrolled end to end, a minute played across its transitions, the edits made while it plays, and then ten minutes of playing with a hand taking the playhead somewhere else every half minute while memory is read once a second. Opening it alone took about 140 seconds on 2026-11-12. Run by Scripts/perf/speed-walk.sh --long.",
+  "clock": 7200,
+  "seed": "Long form of the speed walk on the 60 minute reference edit, part one: the playhead dragged end to end slow, medium and fling, the timeline zoomed and scrolled end to end, the bodies a frame builds, and the edits made while it plays. Opening it alone took 146 seconds on 2026-11-13, one scrub move 79 seconds, so the walk's clock is two hours. Run by Scripts/perf/speed-walk.sh --long.",
   "setup": {
     "forget": [
       "all"
@@ -24,23 +24,12 @@
     },
     {
       "do": "speed",
-      "measure": "play",
-      "fromMS": 15000,
-      "seconds": 60
-    },
-    {
-      "do": "speed",
       "measure": "idleBuilds",
       "seconds": 3
     },
     {
       "do": "speed",
       "measure": "edits"
-    },
-    {
-      "do": "speed",
-      "measure": "memory",
-      "seconds": 600
     }
   ]
 }
