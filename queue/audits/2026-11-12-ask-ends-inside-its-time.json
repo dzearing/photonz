@@ -1,0 +1,27 @@
+{
+  "feature": "Ask ends a request inside five minutes, and gives up on a model gone quiet",
+  "epic": "agent-ask",
+  "summary": "Ask no longer plans past five minutes: it lands what it planned in time and says what it left out, or says it took too long. If its model stops reading and writing for a minute and a half, Ask says so and changes nothing, instead of spinning for ten minutes.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. The pictures come from the probe with the real built-in model: the first from ask-ends-inside-its-time-walk (a request given 60 seconds instead of five minutes), the second from the same request with the model's server frozen by hand part way (kill -STOP).",
+  "switched": {},
+  "try": [
+    { "do": "Open a blank picture, press Command K and ask: Make a pricing section on brand." },
+    { "do": "Watch the Agent row: it plans turn after turn, as before.", "shot": "2026-11-12-ask-ends-in-time-1.png" },
+    { "do": "If it is still planning near four minutes, it stops starting new turns; by four and a half it lands what it has, and the row says where it stopped." },
+    { "do": "To see the quiet case, freeze the model while it works: in Terminal, kill -STOP $(pgrep -x llama-server). Wait about a minute and a half.", "shot": "2026-11-12-ask-ends-in-time-2-quiet.png" },
+    { "do": "Read the line under Agent: Ask's model went quiet. Try again. The canvas is as it was." },
+    { "do": "Ask again: the model starts fresh." }
+  ],
+  "evaluate": [
+    "Is landing the part it planned, with the row saying where it stopped, better than waiting longer for the whole thing?",
+    "Is four and a half minutes the right point to stop, or should Ask stop sooner on a request a person is watching?",
+    "Does 'Ask's model went quiet. Try again.' tell you enough, or would you want it to say it restarted the model?"
+  ],
+  "rough": [
+    "The cause was not the model going quiet: every recorded stall was the model answering for the whole five minutes, seven to twenty four turns of planning. The deadline is the fix for that; the quiet guard is a safety net that has never been needed on record.",
+    "No mock covers how Ask ends a request that runs long.",
+    "A request that is cut lands only the steps planned before the cut, so a long section can come out as a heading and a subtitle. Whether that beats waiting is the first question above.",
+    "If the deadline falls while the model is still loading into memory, the cut waits for the load to finish (it has its own four minute bound). Stop behaves the same today. Not seen in any stall on record.",
+    "Other model calls after planning (checking a drawing, planning its details) are not watched for quiet; they are skipped past the four minute mark instead."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T02:00:56.194Z",
-  "updated": "2026-11-11T16:14:29.174Z",
+  "updated": "2026-11-13T01:34:13.868Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-20 in the held-out baseline (.ask-eval/held-out-runs/20261021-010309-ask-held-out): pose-cat-yawning (18:19-18:24), pose-person-waving (18:25-18:30) and scene-squirrel-acorn-stump (18:39-18:44) each ended with the walk step '[8 waitFor] FAILED: askPhase(\"ran|stopped\") did not happen within 300.0s' and Ask's trace stopping at '0.0s asking the model' (ask.trace in ask-walk/log.json). Other cases in between answered in about 8 s. curl -s localhost:11434/api/ps afterwards listed qwen3:30b plus a second model loaded, so contention for Ollama is one suspect; not reproduced on demand. AskLocalModel.swift sets timeoutInterval 300 and resource timeout 600 on the chat call. Not filed p1 because not reproduced; the eval counts these as nothing made.",
@@ -82,6 +82,47 @@
     {
       "t": "2026-11-11T16:14:29.173Z",
       "note": "seq 110 -> 120"
+    },
+    {
+      "t": "2026-11-12T22:56:18.890Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-12T23:39:35.855Z",
+      "note": "Cause named: the model was answering throughout. For all 18 eval stalls I could match to a server log (2026-10-23 to 11-09) the server worked the whole 300 s: 7 to 24 planning turns (pricing 2026-11-04 04:38Z: 10 tasks, longest gap 7.7 s), or the Mac slowed to a sixth of its speed (heart 2026-11-08 18:10Z: 5 t/s writing vs 33). The trace 'stopped at asking the model' was read by the walk at the Send press (3 s in); since 282341071 (2026-11-10) a timed-out wait records the whole trace. Commands: python3 /tmp/stallcheck/match.py over every done.json with 'did not happen within' in .ask-eval/runs (climb only), matched to ~/Library/Caches/Photonz/ask-walk-server/log and the probe's ask-model log."
+    },
+    {
+      "t": "2026-11-12T23:39:35.931Z",
+      "note": "Measured the quiet time: across 26,849 server tasks in every server log on this Mac, a working server logged progress at most 37 s apart (contention), 14.2 s at the 99.9th percentile. Chose 90 s. Chose a request deadline (no round after 240 s, cut at 270 s, offer what was planned) over raising the eval limit because a person should not wait past five minutes either and AskMotionLook already holds the request to five minutes."
+    },
+    {
+      "t": "2026-11-12T23:39:36.006Z",
+      "note": "Verified on the probe with the real model: ask-ends-inside-its-time-walk (askSeconds 60) cut the round at 54.6 s and landed the 2 texts planned, row 'Stopped after Pricing Subtitle'. Reproduced a frozen server by kill -STOP on the probe's llama-server mid-request: Ask said 'Ask's model went quiet. Try again.' at 117.7 s (90 s after its last news), changed nothing, server stopped. Committed ab842bf49. Now running the held-out set on it in resumed chunks for acceptance 3."
+    },
+    {
+      "t": "2026-11-12T23:39:36.081Z",
+      "note": "owns these walks: ask-ends-inside-its-time-walk"
+    },
+    {
+      "t": "2026-11-13T01:34:06.436Z",
+      "note": "Held-out run on ab842bf49 (20261112-233938-ask-held-out, whole set, resumed in 4-minute chunks): 0 of 53 cases hit the time limit and 0 ran past 300 s (counted with grep -l and the done.json seconds, no case opened); the 14 runs before it had 0 to 5 each. Total 59.9 against 58.5 for the run before (inside the 3.2 sd band named on find-out-why-ask-s-held-out-drawing-and-video-sc). Climb 57.5 is from 20261112-105732, not rerun on this commit."
+    },
+    {
+      "t": "2026-11-13T01:34:06.523Z",
+      "note": "left rough: PieceCopyWriterTests 'A cut recording comes out stored one way' failed once in a full Scripts/test.sh run (encoder notCopyable while the Mac was busy with the eval's model), passed alone and in the next full run; same class as the done task the-full-test-suite-stays-green-on-a-busy-mac-wh. Seen once, so logged rather than filed."
+    },
+    {
+      "t": "2026-11-13T01:34:06.597Z",
+      "note": "left rough (audit): a deadline that falls during model load waits for the load (own 240 s bound), as Stop does; post-plan model calls (drawing look, drawing plans) are skipped past 240 s rather than watched for quiet. Neither seen in any stall on record, so not filed."
+    },
+    {
+      "t": "2026-11-13T01:34:13.866Z",
+      "note": "Cause named: the model never went quiet; in all 18 matched stalls its server log shows it answering for the whole 300 s (7 to 24 planning turns, or a Mac slowed 6x), and the trace only looked stopped because the walk read it 3 s in. Shipped in ab842bf49: Ask plans inside five minutes (no round after 240 s, cut at 270 s, lands what it planned with a left-out line or says it took too long) and gives up on a server silent for 90 s (measured: a working server never went over 37 s) with 'Ask's model went quiet. Try again.', changing nothing. Verified: unit tests and full Scripts/test.sh green; ask-ends-inside-its-time-walk on the real model cut at 54.6 s and landed 2 steps; a frozen server (kill -STOP) gave up at 90 s with nothing changed; held-out run 20261112-233938 had 0 of 53 cases hit the limit (total 59.9 vs 58.5). Audit queue/audits/2026-11-12-ask-ends-inside-its-time.json."
     }
-  ]
+  ],
+  "started": "2026-11-12T22:56:18.889Z",
+  "walks": [
+    "ask-ends-inside-its-time-walk"
+  ],
+  "completed": "2026-11-13T01:34:13.867Z"
 }
