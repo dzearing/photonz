@@ -41,6 +41,7 @@ public enum AskChangeWords {
         case "apply_style": Kind(verb: "Restyled", one: "a layer", many: "layers")
         case "set_layout": Kind(verb: "Laid out", one: "a group", many: "groups")
         case "run_command": Kind(verb: "Ran", one: "a command", many: "commands")
+        case "add_clip": Kind(verb: "Added", one: "a clip", many: "clips")
         case "cut": Kind(verb: "Made", one: "a cut", many: "cuts")
         case "trim": Kind(verb: "Trimmed", one: "a clip", many: "clips")
         case "move_clip": Kind(verb: "Moved", one: "a clip", many: "clips")

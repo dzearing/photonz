@@ -14,7 +14,7 @@ public enum AskTools {
     /// Read-only: run while planning, their answers go back to the model.
     public static let looking: [String] = [
         "read_document", "find_elements", "find_measurements", "find_misalignments", "list_components", "list_styles", "list_titles",
-        "recommended_zooms", "list_commands",
+        "recommended_zooms", "list_commands", "list_history",
     ]
 
     /// Edits: written into the plan, run once it is complete. Nothing here opens a
@@ -24,7 +24,7 @@ public enum AskTools {
         "add_drawing", "add_photo", "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "mark_measurements", "mark_misalignments",
         "place_component", "add_component",
         "add_style", "apply_style", "set_layout", "run_command",
-        "add_title", "cut", "trim", "move_clip", "set_transition", "apply_zooms",
+        "add_title", "add_clip", "cut", "trim", "move_clip", "set_transition", "apply_zooms",
         "change_part",
     ]
 
@@ -81,7 +81,16 @@ public enum AskTools {
     /// of reading on every request (`docs/design/ask.md`, "Fitting the window").
     public static let videoOnly: Set<String> = [
         "add_title", "list_titles", "cut", "trim", "move_clip", "set_transition", "apply_zooms", "recommended_zooms",
+        "add_clip", "list_history",
     ]
+
+    /// Offered only on a video, and only to a model that sees: frames of the
+    /// video, so a moment named by what happens in it ("where the copying
+    /// starts") is found by looking, the way the agent skill finds it. The
+    /// sheet's picture goes to the model after the tool's words
+    /// (`AskConversation.showPictures`).
+    public static let seeingLooking = ["contact_sheet"]
+    public static let seeingModelTools: [AgentJSON] = seeingLooking.compactMap(modelTool)
 
     /// The tools for a request on a picture or on a video.
     public static func modelTools(painting: Bool, video: Bool) -> [AgentJSON] {
@@ -404,6 +413,17 @@ public struct AskPlan: Hashable, Sendable {
 public struct AskLook: Hashable, Sendable {
     public let tool: String
     public let arguments: AgentJSON
+
+    /// The look as the app runs it, on the asking document when the tool
+    /// takes one: list_history takes none, and a document handed to it
+    /// anyway was refused every time, so the model never saw History.
+    public func request(document: String) -> Result<AgentRequest, AgentToolError> {
+        var object = arguments.objectValue ?? [:]
+        if AgentTools.tool(named: tool)?.inputSchema["properties"]?["document"] != nil {
+            object["document"] = .string(document)
+        }
+        return AgentTools.request(tool: tool, arguments: .object(object))
+    }
 }
 
 /// The talk with the model while it plans: the messages so far and the plan
@@ -471,6 +491,17 @@ public struct AskConversation: Sendable {
     public static let replyRoom = AskServerChat.mostTokensATurn
     /// What a tool answer becomes when the plan has outgrown the window.
     public static let shortenedAnswer = "(An earlier answer, left out to make room. Ask again if you need it.)"
+    /// The words beside a sheet of frames the model looked at, and what they
+    /// become when the plan has outgrown the window and the picture goes.
+    public static let sheetShown = "The frames you asked for, each labelled with its time."
+    public static let sheetLeftOut = "(Frames looked at earlier, left out to make room. Look again if you need them.)"
+    /// The most sheets of frames one request looks at, and how big each may
+    /// be: twelve frames 320 wide are about 900 tokens of a 32K window, and a
+    /// screen recording's words still read at that size (the agent skill
+    /// found "Ready" turn to "Copying" in frames 200 to 240 wide, 2026-10-21).
+    public static let mostSheets = 3
+    public static let mostSheetFrames = 12
+    public static let sheetCellWidth = 320
 
     /// The window this talk is sent with.
     public let window: Int
@@ -529,6 +560,13 @@ public struct AskConversation: Sendable {
     /// The document has a timeline, or does not say: the video tools are
     /// offered. A picture is not shown them (`AskTools.videoOnly`).
     private let video: Bool
+    /// A video, with a model that sees: it may look at the video's frames
+    /// (`AskTools.seeingLooking`).
+    private let seesFrames: Bool
+    /// Sheets of frames handed back to be looked at so far.
+    private var sheetsAsked = 0
+    /// Sheets answered and not yet shown to the model (`showPictures`).
+    private var heldPictures: [Data] = []
     /// The parts' names of each layer the document says in short, by id.
     private let namesInShort: [String: [String]]
     /// The web page the request names, as app code read it, or nil. While it
@@ -553,7 +591,7 @@ public struct AskConversation: Sendable {
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
                 window: Int = AskConversation.contextWindow, web: AskWebPage? = nil,
                 lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil, iconBreak: AskIconBreak.Answer? = nil,
-                blankIcon: Bool = false, toldMotion: Bool = false) {
+                blankIcon: Bool = false, toldMotion: Bool = false, sees: Bool = false) {
         self.request = request
         self.placeable = Self.placeable(in: library)
         self.web = web
@@ -577,6 +615,7 @@ public struct AskConversation: Sendable {
         self.brushes = brushes
         let parsed = try? AgentJSON.parse(Data(documentRead.utf8))
         video = parsed?["kind"]?.stringValue != "picture"
+        seesFrames = sees && video && web == nil && !drawsMotion
         keysMotion = web == nil && (drawsMotion || AskTools.asksForMotion(request) || parsed?["lap"] != nil)
         let size = parsed?["canvas"]
         canvasWidth = size?["width"]?.doubleValue ?? 0
@@ -587,7 +626,8 @@ public struct AskConversation: Sendable {
         namesInShort = AskDocumentDigest.namesInShort(described)
         var instructions = web.map { Self.webInstructions(documentRead: described, page: $0) }
             ?? Self.instructions(documentRead: described, paints: paints && !icon, painting: painting, video: video,
-                                 icon: icon, iconLook: AskIcon.documentLook(documentRead), drawsMotion: drawsMotion)
+                                 icon: icon, iconLook: AskIcon.documentLook(documentRead), drawsMotion: drawsMotion,
+                                 seesFrames: seesFrames)
         standing = instructions.range(of: Self.documentMarker, options: .backwards).map { String(instructions[..<$0.upperBound]) }
         if web == nil, AskDocumentDigest.saysInShort(described) { instructions += "\n\(Self.inShortRules)" }
         if holdsIcon, !icon { instructions += "\n\(AskIcon.tweakRules)" }
@@ -701,7 +741,8 @@ public struct AskConversation: Sendable {
 
     /// About how many tokens `messages` and the tools take.
     public func estimatedTokens(of messages: [AgentJSON]) -> Int {
-        (web == nil ? Self.toolTokens(painting: painting, video: video) : Self.webToolTokens) + messages.reduce(0) { $0 + AskTokens.estimate(message: $1) }
+        (web == nil ? Self.toolTokens(painting: painting, video: video) + (seesFrames ? Self.seeingToolTokens : 0) : Self.webToolTokens)
+            + messages.reduce(0) { $0 + AskTokens.estimate(message: $1) }
     }
 
     /// About how many tokens the talk so far takes, before any fitting.
@@ -721,6 +762,7 @@ public struct AskConversation: Sendable {
     }
     static func toolTokens(painting: Bool, video: Bool) -> Int { toolTokensTable[painting ? 1 : 0][video ? 1 : 0] }
     static let webToolTokens = templated(AskTools.webModelTools)
+    static let seeingToolTokens = templated(AskTools.seeingModelTools)
 
     /// The tools the model is shown: while a web page is in play, only the
     /// ones that make new layers (`AskWeb`).
@@ -731,6 +773,7 @@ public struct AskConversation: Sendable {
         if drawsMotion { return AskMotion.modelTools }
         let all = AskTools.modelTools(painting: painting, video: video) + (holdsIcon ? AskTools.iconModelTools : [])
             + (keysMotion ? (video ? AskTools.keyModelTools : AskTools.pictureKeyModelTools) : [])
+            + (seesFrames ? AskTools.seeingModelTools : [])
         guard lookedUp != nil else { return all }
         let allowed = Set(AskLookup.looking + AskLookup.doing)
         return all.filter { allowed.contains($0["function"]?["name"]?.stringValue ?? "") }
@@ -738,7 +781,7 @@ public struct AskConversation: Sendable {
     var lookingTools: [String] {
         guard web == nil else { return AskWeb.looking }
         if drawsMotion { return [] }
-        let all = AskTools.looking(painting: painting, video: video)
+        let all = AskTools.looking(painting: painting, video: video) + (seesFrames ? AskTools.seeingLooking : [])
         return lookedUp == nil ? all : all.filter(AskLookup.looking.contains)
     }
     var doingTools: [String] {
@@ -786,13 +829,19 @@ public struct AskConversation: Sendable {
         var total = estimatedTokens(of: messages)
         guard total > budget else { return messages }
         var fitted = messages
-        let answers = fitted.indices.filter { fitted[$0]["role"]?.stringValue == "tool" }
+        // A tool's answer, or a sheet of frames shown after one.
+        let answers = fitted.indices.filter { fitted[$0]["role"]?.stringValue == "tool" || Self.isSheet(fitted[$0]) }
         // Oldest first: the newest goes only when nothing else is left.
         for index in answers {
             guard total > budget else { break }
             guard var message = fitted[index].objectValue else { continue }
             let before = AskTokens.estimate(message: fitted[index])
-            message["content"] = .string(Self.shortenedAnswer)
+            if Self.isSheet(fitted[index]) {
+                message["content"] = .string(Self.sheetLeftOut)
+                message["images"] = nil
+            } else {
+                message["content"] = .string(Self.shortenedAnswer)
+            }
             fitted[index] = .object(message)
             total -= before - AskTokens.estimate(message: fitted[index])
         }
@@ -857,7 +906,13 @@ public struct AskConversation: Sendable {
         for (name, said) in calls {
             let arguments = name == "add_text" || name == "add_component" ? Self.withoutEntities(said)
                 : name == "set_keys" ? AskMotion.tidied(said) : said
-            if lookingTools.contains(name) {
+            if lookingTools.contains(name), AskTools.seeingLooking.contains(name) {
+                if let held = sheet(arguments) {
+                    looks.append(AskLook(tool: name, arguments: held))
+                } else {
+                    tell(name, "Not looked at: \(Self.mostSheets) sheets is the most one request looks at. Plan with what you have seen.")
+                }
+            } else if lookingTools.contains(name) {
                 looks.append(AskLook(tool: name, arguments: arguments))
             } else if let web, name == AskWeb.pageTool {
                 switch pageStep(arguments, page: web) {
@@ -1442,7 +1497,16 @@ public struct AskConversation: Sendable {
     }
 
     /// The answer to a look, handed back to the model.
-    public mutating func answer(_ look: AskLook, with text: String) {
+    /// `picture` is a sheet of frames the look drew, held to be shown to the
+    /// model once every look of the turn is answered (`showPictures`): a
+    /// message of the person's between two of a turn's answers would split
+    /// them from the calls they answer.
+    public mutating func answer(_ look: AskLook, with text: String, picture: Data? = nil) {
+        if let picture, seesFrames {
+            heldPictures.append(picture)
+            tell(look.tool, String(text.prefix(Self.longestLookAnswer)) + " The frames are in the next message.")
+            return
+        }
         if look.tool == "list_components" { learnNames(text) }
         var readable = look.tool == "find_elements" && canvasWidth > 0
             ? AskElements.sorted(text, canvasWidth: canvasWidth) : text
@@ -1454,6 +1518,31 @@ public struct AskConversation: Sendable {
     }
 
     static let longestLookAnswer = 16000
+
+    /// Shows the model the sheets this turn's looks drew, in one message
+    /// after their answers. Nothing when none is held.
+    public mutating func showPictures() {
+        guard !heldPictures.isEmpty else { return }
+        messages.append(["role": "user", "content": .string(Self.sheetShown),
+                         "images": .array(heldPictures.map { .string($0.base64EncodedString()) })])
+        heldPictures = []
+    }
+
+    private static func isSheet(_ message: AgentJSON) -> Bool {
+        message["role"]?.stringValue == "user"
+            && [sheetShown, sheetLeftOut].contains(message["content"]?.stringValue ?? "")
+    }
+
+    /// A sheet asked for, held to the size the window takes, or nil once a
+    /// request has looked at as many as it may.
+    private mutating func sheet(_ arguments: AgentJSON) -> AgentJSON? {
+        guard sheetsAsked < Self.mostSheets else { return nil }
+        sheetsAsked += 1
+        var object = arguments.objectValue ?? [:]
+        if let count = object["count"]?.intValue { object["count"] = .number(Double(min(count, Self.mostSheetFrames))) }
+        object["cellWidth"] = .number(Double(min(object["cellWidth"]?.intValue ?? Self.sheetCellWidth, Self.sheetCellWidth)))
+        return .object(object)
+    }
     public static let noPlanSentence = "I couldn't make a plan for that."
     private var nudged = false
     /// The calls this turn that were refused, as sent.
@@ -1591,7 +1680,8 @@ public struct AskConversation: Sendable {
 
     /// What the model is told before the person's request.
     static func instructions(documentRead: String, paints: Bool = false, painting: Bool = false, video: Bool = true,
-                             icon: Bool = false, iconLook: String? = nil, drawsMotion: Bool = false) -> String {
+                             icon: Bool = false, iconLook: String? = nil, drawsMotion: Bool = false,
+                             seesFrames: Bool = false) -> String {
         var iconRules = Self.iconRules + (iconLook.map { "\n- " + $0 } ?? "")
         if drawsMotion { iconRules = iconRules.replacingOccurrences(of: Self.iconActionRule, with: "") + "\n\(AskMotion.drawRules)" }
         let drawingRules = icon ? iconRules : painting ? Self.brushRules : paints ? Self.paintingRules : Self.drawingRules
@@ -1600,7 +1690,7 @@ public struct AskConversation: Sendable {
         return """
         You are Ask, the helper inside Photonz, a Mac picture and video editor. The person typed \
         a request about the document in front of them. Turn it into a plan of tool calls on that document.
-        - Looking tools (\(AskTools.looking(painting: painting, video: video).joined(separator: ", "))) answer right away. Use them when you need facts.
+        - Looking tools (\((AskTools.looking(painting: painting, video: video) + (seesFrames ? AskTools.seeingLooking : [])).joined(separator: ", "))) answer right away. Use them when you need facts.
         - Editing tools are NOT run now. Each call is written into a plan that runs when you finish, and is \
         answered "Planned as step N". Call them in the order they should run, with every argument filled \
         in. To name the layer, clip or title a planned step makes, write "$N" where its id goes.
@@ -1628,7 +1718,7 @@ public struct AskConversation: Sendable {
         An empty canvas is a place to build, not a reason to refuse.
         \(Self.componentRules)
         - On a video, times are seconds on the video's clock. add_title with clip puts a title page in \
-        front of that clip.
+        front of that clip.\(video ? "\n" + Self.timelineRules(seesFrames: seesFrames) : "")
         - Plan only what was asked. When the plan is complete, answer with one short sentence saying \
         what it will do, and call no more tools.
         - If the request cannot be done with these tools, call no editing tools and answer with one \
@@ -1636,6 +1726,24 @@ public struct AskConversation: Sendable {
         \(pickedRule)The document now (read_document):
         \(documentRead)
         """
+    }
+
+    /// What a video's request reaches beyond its own clips: History's
+    /// recordings, and, for a model that sees, its frames. How to use a tool,
+    /// never what any request should come out as.
+    static func timelineRules(seesFrames: Bool) -> String {
+        let history = """
+            - list_history lists the screenshots and recordings in History, newest first. add_clip with \
+            a recording's historyIndex puts it on the timeline, straight after the last clip when seconds is left out. \
+            Only a recording (kind video) can be a clip.
+            """
+        guard seesFrames else { return history }
+        return history + """
+
+            - To find a moment by what happens in it (something starting, appearing, changing or ending), \
+            look with contact_sheet over the stretch it is in, then over a narrower stretch around it, and use the \
+            time printed on the first frame that shows it.
+            """
     }
 
     /// How to make components, a kit or a design system. Which kinds a kit

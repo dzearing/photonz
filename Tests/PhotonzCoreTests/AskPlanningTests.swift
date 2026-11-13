@@ -34,9 +34,10 @@ struct AskPlanningTests {
 
     @Test("Nothing Ask offers opens a window, writes a file, or steps the history")
     func noToolLeavesTheDocument() {
-        let offered = Set(AskTools.looking + AskTools.doing)
+        // list_history only reads History, for add_clip's historyIndex.
+        let offered = Set(AskTools.looking + AskTools.doing + AskTools.seeingLooking)
         for name in ["new_picture", "new_video", "open_document", "export", "export_video", "undo", "redo",
-                     "list_documents", "list_history"] {
+                     "list_documents"] {
             #expect(!offered.contains(name), "\(name) should not be offered to Ask")
         }
     }

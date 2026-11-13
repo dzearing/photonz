@@ -1157,7 +1157,8 @@ final class AskSession {
                                brushes: brushes,
                                memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1,
                                window: AskLocalModel.window, web: web?.page, lookedUp: lookedUp, iconDesign: iconDesign,
-                               iconBreak: iconBreak, blankIcon: blankIcon, toldMotion: toldMotion)
+                               iconBreak: iconBreak, blankIcon: blankIcon, toldMotion: toldMotion,
+                               sees: editor.documentHasTime ? await AskLocalModel.sees(model) : false)
     }
 
     /// The longest side of the canvas picture the planning model is shown:
@@ -1331,17 +1332,23 @@ final class AskSession {
                 for look in looks {
                     say(.lookingUp(tool: look.tool))
                     note("look \(look.tool) \(look.arguments.encodedString().prefix(120))")
-                    var arguments = look.arguments.objectValue ?? [:]
-                    arguments["document"] = .string(document)
                     let answer: String
-                    switch AgentTools.request(tool: look.tool, arguments: .object(arguments)) {
+                    var picture: Data?
+                    switch look.request(document: document) {
                     case .success(let request):
-                        let said = Self.text(of: await AgentWork.run(request))
+                        let ran = await AgentWork.run(request)
+                        let said = Self.text(of: ran)
                         answer = look.tool == "list_components" ? AskTools.withoutStarters(said) : said
+                        // A sheet of frames, for a model that sees (`AskTools.seeingLooking`).
+                        if !ran.isError {
+                            picture = ran.content.lazy.compactMap { if case .png(let png) = $0 { png } else { nil } }.first
+                        }
                     case .failure(let refused): answer = refused.message
                     }
-                    talk.answer(look, with: answer)
+                    if let picture { note("look \(look.tool): picture, \(picture.count / 1024) KB") }
+                    talk.answer(look, with: answer, picture: picture)
                 }
+                talk.showPictures()
             }
         }
         // Out of turns with steps written: offer what it has.
