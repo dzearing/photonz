@@ -5,13 +5,35 @@
   "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording.",
   "switched": {},
   "try": [
-    { "do": "Open a recording and look right of the Go to End button: the speed control reads 1x.", "shot": "2026-11-13-playback-speed-1.png" },
-    { "do": "Click the speed control and pick 0.5x, then press Space. It plays at half speed and voices sound slower, not lower.", "shot": "2026-11-13-playback-speed-2.png" },
-    { "do": "While it plays, pick 1.5x from the same menu. It changes speed where it is." },
-    { "do": "Pick 4x. The sound goes quiet and the control shows a struck-through speaker. Press Space to stop.", "shot": "2026-11-13-playback-speed-3.png" },
-    { "do": "Press Shift-comma a few times, then Shift-period. The speed steps down and up the menu." },
-    { "do": "Click the timeline, press Home, then L three times. The control reads 4x while it runs; K stops it and the control goes back to your chosen speed.", "shot": "2026-11-13-playback-speed-4.png" },
-    { "do": "Open Sequence in the menu bar: Play Faster and Play Slower sit under Play Forward." }
+    {
+      "do": "Open a recording and look right of the Go to End button: the speed control reads 1x.",
+      "shot": "2026-11-13-playback-speed-1.png"
+    },
+    {
+      "do": "Click the speed control and pick 0.5x, then press Space. It plays at half speed and voices sound slower, not lower.",
+      "shot": "2026-11-13-playback-speed-2.png"
+    },
+    {
+      "do": "While it plays, pick 1.5x from the same menu. It changes speed where it is."
+    },
+    {
+      "do": "Pick 4x. The sound goes quiet and the control shows a struck-through speaker. Press Space to stop.",
+      "shot": "2026-11-13-playback-speed-3.png"
+    },
+    {
+      "do": "Press Shift-comma a few times, then Shift-period. The speed steps down and up the menu."
+    },
+    {
+      "do": "Click the timeline, press Home, then L three times. The control reads 4x while it runs; K stops it and the control goes back to your chosen speed.",
+      "shot": "2026-11-13-playback-speed-4.png"
+    },
+    {
+      "do": "Open a long edit with cuts, pick 8x and press Space. The picture moves with the playhead through the cuts rather than sticking.",
+      "shot": "2026-11-13-playback-speed-5.png"
+    },
+    {
+      "do": "Open Sequence in the menu bar: Play Faster and Play Slower sit under Play Forward."
+    }
   ],
   "evaluate": [
     "Is beside the play buttons where you expect a speed control, or would you look for it at the far right like YouTube's?",
@@ -21,7 +43,9 @@
     "Do Shift-period and Shift-comma feel natural, or would you rather have a different key?"
   ],
   "rough": [
-    "8x on the six minute reference edit does not keep up yet: at 8x the picture falls up to 185 frames behind (4x keeps up at every look, and so does 8x on the five minute Retina talk). This task stays open for it.",
+    "8x now keeps up on the six minute reference edit: every look within 3 frames of the playhead at 8x and at 4x, in 6 runs of 6 on the finished code. Above 2x the picture is read by decoding only the frames other frames depend on, about half of a screen recording's, so a skipped frame shows the one 17ms of the recording before it.",
+    "Above 2x a zoom in the edit no longer restarts the picture at each new size: frames read at the earlier size keep showing until the playhead stops, so a zoom at 4x or 8x can look a little soft. Chose that over sharpness because at 8x a one second zoom is an eighth of a second on screen and restarting at every size stuck the picture up to 177 frames behind.",
+    "Above 2x, when the picture does fall behind (a machine busy with something else), it starts reading again a little ahead of the playhead and holds the last picture for about a tenth of a second rather than chasing it.",
     "Starting 2x from rest on the five minute Retina talk once held a frame 4 behind at the first look, in 1 of 3 runs; every later look kept up. The same start at 4x and 8x now waits up to half a second for its first frame, which is silent; at 2x and below it does not wait, because the sound has already started.",
     "No mock draws a speed control. It sits in the transport because the placement contract gives that row play controls (UX-PATTERNS placement contract, Transport row).",
     "Shift-period and Shift-comma are a web player's keys: neither Premiere nor Final Cut gives a key to a speed menu, and Final Cut's own Shift-comma and Shift-period nudge, which Premiere does with Command-Shift-arrows here (UX-PATTERNS §7).",

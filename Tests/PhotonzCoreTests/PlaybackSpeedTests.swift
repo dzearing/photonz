@@ -102,9 +102,65 @@ struct TonePitchTests {
         #expect(abs(read - 440) / 440 < 0.01)
     }
 
+    // Sound with its pitch held at 1.5x is spliced from overlapping pieces,
+    // and in 2 of 5 runs of the speed walk the 440 Hz tone read 220.1 Hz
+    // (2026-11-13): the peak two cycles along came out more than a tenth
+    // taller than the one a cycle along. A tone a cycle along is a peak a
+    // tone has; a sound only twice as long a period has a trough there.
+    @Test("A tone whose every other cycle is quieter still reads at its own pitch, not an octave down")
+    func unevenCycles() throws {
+        let rate = 44_100.0, hz = 440.0
+        let uneven: [Float] = (0..<Int(rate * 0.25)).map { index in
+            let cycle = Int(Double(index) * hz / rate)
+            let loudness = cycle % 2 == 0 ? 0.7 : 0.35
+            return Float(loudness * sin(2 * .pi * hz * Double(index) / rate + 0.3))
+        }
+        let read = try #require(TonePitch.hertz(of: uneven, sampleRate: rate))
+        #expect(abs(read - hz) / hz < 0.01)
+        // ...while a real 220 Hz tone still reads 220.
+        let low = try #require(TonePitch.hertz(of: tone(220), sampleRate: rate))
+        #expect(abs(low - 220) / 220 < 0.005)
+    }
+
     @Test("Silence has no pitch")
     func silence() {
         #expect(TonePitch.hertz(of: [Float](repeating: 0, count: 8000), sampleRate: 44_100) == nil)
         #expect(TonePitch.hertz(of: [], sampleRate: 44_100) == nil)
+    }
+}
+
+// A walk reads the playhead at its looks, and the playhead moves once a
+// frame's step (`PlayClockPace`): a look can find it up to 33ms of the clock
+// stale. Over the two seconds a walk plays at 0.5x that alone reads 0.514x
+// on a clock going at exactly 0.5x (2026-11-13), so the two percent is
+// measured on top of what one tick can hide.
+@Suite("Whether a playhead went at the speed asked")
+struct PlaybackPaceTests {
+
+    @Test("Within two percent, plus the one tick a look can find the playhead stale by")
+    func toleratesOneTick() {
+        #expect(PlaybackSpeed.wentAtSpeed(measured: 0.514, rate: 0.5, overSeconds: 1.92))
+        #expect(PlaybackSpeed.wentAtSpeed(measured: 7.92, rate: 8, overSeconds: 2.87))
+        #expect(!PlaybackSpeed.wentAtSpeed(measured: 0.53, rate: 0.5, overSeconds: 1.92))
+        #expect(!PlaybackSpeed.wentAtSpeed(measured: 7.6, rate: 8, overSeconds: 2.87))
+        #expect(!PlaybackSpeed.wentAtSpeed(measured: 1.05, rate: 1, overSeconds: 10))
+        #expect(PlaybackSpeed.wentAtSpeed(measured: -2.02, rate: -2, overSeconds: 3))
+    }
+
+    // The first look after opening the six minute reference edit found the
+    // playhead 40ms stale (the main thread busy with the first frames), and
+    // first-to-last read 0.520x on a clock going at 0.5x (2026-11-13). A line
+    // through every look is not thrown by one.
+    @Test("The pace is the line through every look, so one stale look does not throw it")
+    func paceThroughEveryLook() throws {
+        var looks: [(seconds: Double, ms: Double)] = (0..<24).map { look in
+            let seconds = 0.08 * Double(look + 1)
+            return (seconds, 500 * seconds - Double(look % 2) * 8)
+        }
+        looks[0].ms -= 20
+        let rate = try #require(PlaybackSpeed.pace(of: looks))
+        #expect(abs(rate - 0.5) < 0.006)
+        #expect(PlaybackSpeed.pace(of: [(0, 0)]) == nil)
+        #expect(PlaybackSpeed.pace(of: [(1, 0), (1, 10)]) == nil)
     }
 }

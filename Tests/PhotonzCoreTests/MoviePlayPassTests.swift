@@ -276,6 +276,131 @@ struct MoviePlayPassPlanTests {
         #expect(plan.open.isEmpty)
     }
 
+    // At 8x only every third frame is kept, so the frame under the playhead
+    // is in hand two times in three only as the kept one before it. Asking
+    // for the playhead's own frame called a pass that was ahead of the
+    // playhead lost and started it over from its key frame, about every
+    // other refresh on the six minute reference edit (traced 2026-11-13).
+    @Test("At 8x a pass ahead of the playhead serves it when the kept frame it shows is in hand")
+    func eightTimesServesOnTheKeptFrame() {
+        let kept: (Int) -> Bool = { $0 % 3 == 0 }
+        #expect(MoviePlayPass.serves(running: 1184...last + 2000, reached: 1200, playhead: 1193,
+                                     inHand: kept, speed: 8))
+        #expect(MoviePlayPass.serves(running: 1184...last + 2000, reached: 1218, playhead: 1217,
+                                     inHand: kept, speed: 8))
+        // A kept frame the pass read a moment ago may still be on its way to
+        // the window: 1368 read, the pass at 1370, the playhead on 1369.
+        #expect(MoviePlayPass.serves(running: 1184...last + 2000, reached: 1370, playhead: 1369,
+                                     inHand: { $0 % 3 == 0 && $0 < 1368 }, speed: 8))
+        // ...but one well behind what it read and let go starts it over.
+        #expect(!MoviePlayPass.serves(running: 1184...last + 2000, reached: 1260, playhead: 1217,
+                                      inHand: { $0 != 1215 && $0 % 3 == 0 }, speed: 8))
+    }
+
+    // A pass started over where the playhead is decodes from the key frame
+    // before it, which took 25 to 90ms on the reference edit: 6 to 22 grid
+    // frames at 8x. Opened under the playhead it was already behind when its
+    // first frame came, was started over again, and the picture stuck up to
+    // 177 frames behind (2026-11-13). Above double speed, which is silent,
+    // the new pass opens that far ahead and serves the playhead on its way.
+    @Test("Above 2x a pass that fell behind is started over ahead of the playhead, and serves it on the way")
+    func fastRestartOpensAhead() {
+        #expect(MoviePlayPass.startLead(speed: 1) == 0)
+        #expect(MoviePlayPass.startLead(speed: 2) == 0)
+        let four = MoviePlayPass.startLead(speed: 4), eight = MoviePlayPass.startLead(speed: 8)
+        #expect(four >= 18 && four < eight)
+        #expect(eight >= 36 && eight % 3 == 0)
+        let behind = Pass(running: 1184...2000, reached: 1233, playhead: 1240, reach: MoviePlayPass.reach(speed: 8))
+        let plan = MoviePlayPass.plan(now: [1249], coming: [], passes: [behind],
+                                      inHand: { _ in true }, speed: 8)
+        #expect(plan.aim.isEmpty)
+        #expect(plan.open == [.init(playhead: 1249 + eight, reach: MoviePlayPass.reach(speed: 8))])
+        // The next tick, before the new pass has its first frame, keeps it
+        // and aims it at its own start, so it reads rather than waits.
+        let opened = Pass(running: (1249 + eight)...2000, reached: 1249 + eight,
+                          playhead: 1249 + eight, reach: MoviePlayPass.reach(speed: 8))
+        let next = MoviePlayPass.plan(now: [1265], coming: [], passes: [opened],
+                                      inHand: { _ in false }, speed: 8)
+        #expect(next.open.isEmpty)
+        #expect(next.aim == [0: .init(playhead: 1249 + eight, reach: MoviePlayPass.reach(speed: 8))])
+        // Once the playhead is in it, it is aimed at the playhead again.
+        let caught = MoviePlayPass.plan(now: [1300], coming: [],
+                                        passes: [Pass(running: (1249 + eight)...2000, reached: 1310,
+                                                      playhead: 1249 + eight, reach: 24)],
+                                        inHand: { _ in true }, speed: 8)
+        #expect(caught.aim == [0: .init(playhead: 1300, reach: MoviePlayPass.reach(speed: 8))])
+        // At 2x and below, with sound, a pass still starts where the playhead is.
+        let slow = MoviePlayPass.plan(now: [100], coming: [],
+                                      passes: [Pass(running: 20...last, reached: 40, playhead: 90, reach: 8)],
+                                      inHand: { _ in true }, speed: 2)
+        #expect(slow.open == [.init(playhead: 100, reach: MoviePlayPass.reach(speed: 2))])
+    }
+
+    @Test("A pass opened for the playhead with nothing reading there yet starts under it, at any speed")
+    func firstPassStartsUnderThePlayhead() {
+        let plan = MoviePlayPass.plan(now: [100], coming: [], passes: [], inHand: { _ in false }, speed: 8)
+        #expect(plan.open == [.init(playhead: 100, reach: MoviePlayPass.reach(speed: 8))])
+    }
+
+    // The far side of a cut was opened a second and a half of the edit
+    // ahead, which at 8x is under 0.2s of the clock, and read four frames in:
+    // at 8x that is one kept frame (2026-11-13).
+    @Test("Faster than 1x a cut coming up is looked for as far ahead in the clock, and primed by the stride")
+    func comingScalesWithSpeed() {
+        #expect(MoviePlayPass.comingLead(speed: 1) == MoviePlayPass.comingLeadMS)
+        #expect(MoviePlayPass.comingLead(speed: 0.25) == MoviePlayPass.comingLeadMS)
+        #expect(MoviePlayPass.comingLead(speed: 8) == MoviePlayPass.comingLeadMS * 8)
+        let plan = MoviePlayPass.plan(now: [30], coming: [150], passes: [], inHand: { _ in false }, speed: 8)
+        #expect(plan.open.last == .init(playhead: 150, reach: MoviePlayPass.primeFrames * 3))
+    }
+
+    // The far side of a cut primed at 8x reads past its first frame without
+    // keeping it (287 is not a third), so asking whether that frame was in
+    // hand called the pass useless, and it was stopped and opened again on
+    // every tick until the playhead got there (traced 2026-11-13).
+    @Test("At 8x a primed pass on the far side of a cut is kept while it waits")
+    func eightTimesPrimedPassIsKept() {
+        let primed = Pass(running: 287...2000, reached: 300, playhead: 287, reach: MoviePlayPass.prime(speed: 8))
+        let plan = MoviePlayPass.plan(now: [1200], coming: [287],
+                                      passes: [Pass(running: 1100...2000, reached: 1210, playhead: 1200, reach: 24), primed],
+                                      inHand: { $0 % 3 == 0 }, speed: 8)
+        #expect(plan.open.isEmpty)
+        #expect(plan.aim[1] == .init(playhead: 287, reach: MoviePlayPass.prime(speed: 8)))
+        // ...and while its first frame, not a kept one, is the only one read.
+        let started = Pass(running: 542...2000, reached: 543, playhead: 542, reach: MoviePlayPass.prime(speed: 8))
+        let next = MoviePlayPass.plan(now: [1200], coming: [542],
+                                      passes: [Pass(running: 1100...2000, reached: 1210, playhead: 1200, reach: 24), started],
+                                      inHand: { $0 % 3 == 0 && $0 < 542 || $0 > 1000 }, speed: 8)
+        #expect(next.open.isEmpty)
+    }
+
+    // Between the playhead and a pass started over ahead of it, nothing is
+    // read on its own: each of those reads decodes from its key frame on the
+    // lanes the new pass needs, and its first frame came 200 to 290ms late
+    // with them (traced 2026-11-13). The picture holds the last frame in
+    // hand for the start-up instead.
+    @Test("Above 2x the frames a pass started over ahead skips are not read on their own")
+    func fastRestartGapIsCovered() {
+        let lead = MoviePlayPass.startLead(speed: 8)
+        let start = 1300
+        #expect(MoviePlayPass.covers(frame: start - 3, running: start...2000, reached: start,
+                                     playhead: start - 20, reach: 24, speed: 8))
+        #expect(!MoviePlayPass.covers(frame: start - lead - 3, running: start...2000, reached: start,
+                                      playhead: start - lead - 3, reach: 24, speed: 8))
+        #expect(!MoviePlayPass.covers(frame: start - 3, running: start...2000, reached: start,
+                                      playhead: start - 20, reach: 8, speed: 1))
+    }
+
+    @Test("Above 2x a pass or frame read at another size still serves; at 2x and below it does not")
+    func anySizeAtSpeed() {
+        #expect(!MoviePlayPass.anySizeServes(speed: 1))
+        #expect(!MoviePlayPass.anySizeServes(speed: 2))
+        #expect(MoviePlayPass.anySizeServes(speed: 4))
+        #expect(MoviePlayPass.anySizeServes(speed: 8))
+        #expect(!MoviePlayPass.skipsUnreferenced(speed: 2))
+        #expect(MoviePlayPass.skipsUnreferenced(speed: 4))
+    }
+
     @Test("A pass keeping up with the playhead is aimed at it")
     func keeps() {
         let plan = MoviePlayPass.plan(now: [30], coming: [],

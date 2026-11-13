@@ -79,11 +79,25 @@ public enum MoviePlayPass {
     /// Not when the playhead is outside it, nor when the pass has fallen more
     /// than `fallenBehindFrames` behind, nor when the playhead went back over
     /// ground the pass already read and the window has let that frame go.
+    ///
+    /// Above double speed a pass started over opens ahead of the playhead
+    /// (`startLead`), so it serves a playhead that has not reached it yet
+    /// by that much. At a speed that keeps only some frames, what the window
+    /// has to hold is the kept frame the playhead shows, not its own.
     public static func serves(running: ClosedRange<Int>, reached: Int, playhead: Int,
                               inHand: (Int) -> Bool, speed: Double = 1) -> Bool {
-        guard running.contains(playhead) else { return false }
+        guard running.contains(playhead)
+            || (playhead < running.lowerBound && playhead >= running.lowerBound - startLead(speed: speed))
+        else { return false }
         if reached < playhead - fallenBehind(speed: speed) { return false }
-        if playhead < reached, !inHand(playhead) { return false }
+        let stride = MoviePlayBackward.stride(speed: speed)
+        let shown = playhead - playhead % stride
+        // The last few frames a pass read may still be on their way to the
+        // window: a pass reads off the main actor and files on it. At 8x the
+        // playhead is that close behind a pass keeping up, and asking for
+        // those started passes over that were a frame ahead (2026-11-13).
+        let inFlight = fallenBehindFrames * stride
+        if shown < reached - inFlight, shown >= running.lowerBound, !inHand(shown) { return false }
         return true
     }
 
@@ -91,9 +105,17 @@ public enum MoviePlayPass {
     /// reads it on its own: inside the pass, not yet gone by, and no further
     /// past the playhead than the pass will go. A frame further than that is
     /// across a cut and is read on its own.
+    ///
+    /// Above double speed a pass started over ahead of the playhead also
+    /// covers the frames it skips to get there (`startLead`): they are passed
+    /// by while it starts up, and read on their own each would decode from its
+    /// key frame on the lanes the pass needs.
     public static func covers(frame: Int, running: ClosedRange<Int>, reached: Int, playhead: Int,
-                              reach: Int = aheadFrames) -> Bool {
-        running.contains(frame) && frame >= reached && frame <= max(reached, playhead + reach)
+                              reach: Int = aheadFrames, speed: Double = 1) -> Bool {
+        if frame < running.lowerBound {
+            return frame >= running.lowerBound - startLead(speed: speed)
+        }
+        return running.contains(frame) && frame >= reached && frame <= max(reached, playhead + reach)
     }
 
     // MARK: Fast forwards
@@ -113,6 +135,67 @@ public enum MoviePlayPass {
     /// (2026-11-13).
     public static func fallenBehind(speed: Double) -> Int {
         fallenBehindFrames * MoviePlayBackward.stride(speed: speed)
+    }
+
+    /// How long a pass started over takes to hand over its first frame: it
+    /// decodes from the key frame before where it starts. 25 to 90ms on the
+    /// six minute reference edit with other passes reading (2026-11-13);
+    /// this leaves room on a loaded machine.
+    public static let startUpMS = 150
+
+    /// How many grid frames ahead of the playhead a pass that fell behind is
+    /// started over, at this speed: none up to double speed, where the sound
+    /// plays and the picture must not jump; above it, as far as the playhead
+    /// moves while the pass starts up (`startUpMS`), in whole strides so the
+    /// first frame it reads is one it keeps. At 8x the playhead covers that
+    /// start-up in 6 to 22 grid frames, and a pass opened under it was
+    /// already behind when its first frame came, so it was started over
+    /// again and again (2026-11-13).
+    public static func startLead(speed: Double) -> Int {
+        guard speed > PlaybackSpeed.fastestWithSound else { return 0 }
+        let stride = MoviePlayBackward.stride(speed: speed)
+        let frames = Int((Double(startUpMS) * speed / Double(MovieRef.frameStepMS)).rounded(.up))
+        return (frames + stride - 1) / stride * stride
+    }
+
+    /// Whether a pass, or a frame in hand, read at another size than the
+    /// canvas now shows still does at this speed: above double speed, yes.
+    /// A zoom in the edit changes that size every few ticks, and at 8x a
+    /// zoom of a second is an eighth of a second of the clock; started over
+    /// at each new size, every pass was stopped before its first frame and
+    /// the stopped ones held the decoder while the new ones waited for it
+    /// (the reference edit, 2026-11-13). Nobody judges sharpness at 8x, and
+    /// the playhead stopping reads its frame at the right size.
+    public static func anySizeServes(speed: Double) -> Bool {
+        speed > PlaybackSpeed.fastestWithSound
+    }
+
+    /// Whether a pass at this speed decodes only the frames other frames are
+    /// decoded from, and the key frames: above double speed. About half of a
+    /// screen recording's frames are decoded from by nothing; at 8x a 60fps
+    /// recording asked 480 decodes a second of a decoder that does about 630
+    /// on the reference recordings, so the far side of every cut starting up
+    /// beside it left the picture behind. Skipping them, the same decoder
+    /// covers about 1200 frames of the recording a second (2026-11-13). A
+    /// frame skipped shows the one decoded before it, 17ms of the recording
+    /// earlier, and the clock shows one frame in eight there anyway.
+    public static func skipsUnreferenced(speed: Double) -> Bool {
+        speed > PlaybackSpeed.fastestWithSound
+    }
+
+    /// How far ahead in the edit a stretch about to come on is looked for at
+    /// this speed: `comingLeadMS` of the clock, which at 8x is twelve seconds
+    /// of the edit. A second and a half of the edit was under 0.2s of the
+    /// clock there, about what the far side of a cut takes to start.
+    public static func comingLead(speed: Double) -> Int {
+        Int((Double(comingLeadMS) * max(1, speed)).rounded())
+    }
+
+    /// How many frames into a stretch about to come on a pass reads at this
+    /// speed: `primeFrames`, in strides, so a thinned pass has as many kept
+    /// frames ready as a full one.
+    public static func prime(speed: Double) -> Int {
+        primeFrames * MoviePlayBackward.stride(speed: speed)
     }
 
     /// Whether a pass at this speed turns `frame` into a picture. A pass
@@ -166,6 +249,7 @@ public enum MoviePlayPass {
     public static func plan(now: [Int], coming: [Int], passes: [Running],
                             inHand: (Int) -> Bool, speed: Double = 1) -> Plan {
         var plan = Plan()
+        let stride = MoviePlayBackward.stride(speed: speed)
         for frame in unique(now) {
             let serving = passes.indices.filter {
                 plan.aim[$0] == nil
@@ -174,15 +258,21 @@ public enum MoviePlayPass {
             }
             let aim = Aim(playhead: frame, reach: reach(speed: speed))
             if let best = serving.min(by: { abs(passes[$0].reached - frame) < abs(passes[$1].reached - frame) }) {
-                plan.aim[best] = aim
+                // A pass opened ahead that the playhead has not reached yet
+                // is aimed at its own start, so it reads rather than waits.
+                plan.aim[best] = Aim(playhead: max(frame, passes[best].running.lowerBound), reach: aim.reach)
             } else {
-                plan.open.append(aim)
+                // One reading here that fell behind is started over ahead,
+                // above double speed (`startLead`).
+                let fellBehind = passes.contains { $0.running.contains(frame) && $0.reached <= frame }
+                plan.open.append(Aim(playhead: frame + (fellBehind ? startLead(speed: speed) : 0),
+                                     reach: aim.reach))
             }
         }
         for frame in unique(coming) {
             let kept = plan.aim.contains { index, aim in
                 reaches(frame, running: passes[index].running, reached: passes[index].reached,
-                        aim: aim, inHand: inHand)
+                        aim: aim, inHand: inHand, stride: stride)
             }
             let opening = plan.open.contains { $0.playhead <= frame && frame <= $0.playhead + $0.reach }
             if kept || opening { continue }
@@ -190,22 +280,27 @@ public enum MoviePlayPass {
                 plan.aim[$0] == nil
                     && reaches(frame, running: passes[$0].running, reached: passes[$0].reached,
                                aim: Aim(playhead: passes[$0].playhead, reach: passes[$0].reach),
-                               inHand: inHand)
+                               inHand: inHand, stride: stride)
             }) {
                 plan.aim[waiting] = Aim(playhead: passes[waiting].playhead, reach: passes[waiting].reach)
                 continue
             }
             guard plan.aim.count + plan.open.count < passesPerRecording else { break }
-            plan.open.append(Aim(playhead: frame, reach: primeFrames))
+            plan.open.append(Aim(playhead: frame, reach: prime(speed: speed)))
         }
         return plan
     }
 
     /// Whether a pass aimed at `aim` will have `frame` in hand without the
     /// playhead moving: inside it, within its reach, and not gone by and let go.
+    ///
+    /// At a speed that keeps only some frames, "in hand" is the first kept
+    /// frame from `frame` on: the one the pass reads for it.
     private static func reaches(_ frame: Int, running: ClosedRange<Int>, reached: Int, aim: Aim,
-                                inHand: (Int) -> Bool) -> Bool {
-        running.contains(frame) && frame <= aim.playhead + aim.reach && (frame >= reached || inHand(frame))
+                                inHand: (Int) -> Bool, stride: Int = 1) -> Bool {
+        let kept = frame + (stride - frame % stride) % stride
+        return running.contains(frame) && frame <= aim.playhead + aim.reach
+            && (kept >= reached || inHand(frame) || inHand(kept))
     }
 
     private static func unique(_ frames: [Int]) -> [Int] {

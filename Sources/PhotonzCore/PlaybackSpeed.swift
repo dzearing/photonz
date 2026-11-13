@@ -44,6 +44,34 @@ public enum PlaybackSpeed {
         choices.last { $0 < speed - 1e-9 } ?? choices[0]
     }
 
+    /// Whether a playhead measured going at `measured` over `overSeconds` of
+    /// the wall clock went at `rate`: within two percent, plus what one tick
+    /// of the playing clock can hide. The playhead moves once a frame's step
+    /// (`PlayClockPace`), so a look finds it up to a step stale, and over two
+    /// seconds at 0.5x that alone read 0.514x on a clock going at exactly
+    /// 0.5x (2026-11-13).
+    public static func wentAtSpeed(measured: Double, rate: Double, overSeconds: Double) -> Bool {
+        let tick = Double(MovieRef.frameStepMS) / 1000
+        let allowed = 0.02 * abs(rate) + abs(rate) * tick / max(overSeconds, tick)
+        return abs(measured - rate) <= allowed
+    }
+
+    /// How fast a playhead went, in milliseconds of the edit per millisecond
+    /// of the wall clock, from looks at it (`seconds` of the wall clock, the
+    /// playhead's `ms`): the slope of the line through them all, so one look
+    /// that found the playhead stale does not throw it. Nil with fewer than
+    /// two looks at different times.
+    public static func pace(of looks: [(seconds: Double, ms: Double)]) -> Double? {
+        guard looks.count >= 2 else { return nil }
+        let count = Double(looks.count)
+        let meanT = looks.reduce(0) { $0 + $1.seconds } / count
+        let meanM = looks.reduce(0) { $0 + $1.ms } / count
+        let spread = looks.reduce(0) { $0 + ($1.seconds - meanT) * ($1.seconds - meanT) }
+        guard spread > 1e-12 else { return nil }
+        let together = looks.reduce(0) { $0 + ($1.seconds - meanT) * ($1.ms - meanM) }
+        return together / spread / 1000
+    }
+
     /// Whether `speed` is one of the menu's.
     public static func isChoice(_ speed: Double) -> Bool {
         choices.contains { abs($0 - speed) < 1e-9 }
@@ -99,7 +127,20 @@ public enum TonePitch {
             pick = index
             break
         }
-        guard let peak = pick else { return nil }
+        guard var peak = pick else { return nil }
+        // ...nor at twice its period when the cycles are uneven: sound with
+        // its pitch held is spliced from overlapping pieces, and the 440 Hz
+        // tone at 1.5x read 220.1 Hz in 2 of 5 walks (2026-11-13). A tone has
+        // a clear peak half way along; a sound whose period really is that
+        // long has a trough there.
+        let half = (peak + minLag) / 2 - minLag
+        if half >= 1 {
+            let near = max(1, half - 2)...min(scores.count - 2, half + 2)
+            if let top = near.max(by: { scores[$0] < scores[$1] }), scores[top] > 0.5 * best,
+               scores[top] >= scores[top - 1], scores[top] >= scores[top + 1] {
+                peak = top
+            }
+        }
         // A parabola through the peak and its neighbours puts it between
         // samples.
         let left = Double(scores[peak - 1]), centre = Double(scores[peak]), right = Double(scores[peak + 1])

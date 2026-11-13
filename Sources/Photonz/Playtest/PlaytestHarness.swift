@@ -12178,10 +12178,11 @@ private final class Run {
         await sleep(0.3)
         editor.playDocument(rate: rate)
         let started = Date()
-        // How far the playhead really went against the wall clock, from the
-        // first look to the last (`PlaybackSpeed`).
+        // How far the playhead really went against the wall clock, through
+        // every look (`PlaybackSpeed.pace`).
         var firstSeen: (at: Date, ms: Int)?
         var lastSeen: (at: Date, ms: Int)?
+        var paceLooks: [(seconds: Double, ms: Double)] = []
         var looks: [CGImage] = []
         var empty: [Int] = []
         var gaps = 0
@@ -12199,6 +12200,7 @@ private final class Run {
             if editor.isDocumentPlaying {
                 if firstSeen == nil { firstSeen = (Date(), playhead) }
                 lastSeen = (Date(), playhead)
+                paceLooks.append((Date().timeIntervalSince(started), Double(playhead)))
             }
             let on = clips.filter { $0.movieFrameSourceMS(atTimeMS: playhead) != nil }
             // The stand-in the canvas draws for a frame still being read is
@@ -12268,16 +12270,20 @@ private final class Run {
         if let behind = PlaybackKeepsUp.problem(lateLooks: late, framesBehind: worstLag, looks: moments) {
             throw Failure(description: "the picture did not keep up while it played: \(behind)\(worstLook); \(lateness)")
         }
-        // The playhead goes at the rate asked, to within two percent of it,
-        // measured over at least half a second of the wall clock.
+        // The playhead goes at the rate asked, to within two percent of it
+        // and the tick a look can find it stale by, measured over at least
+        // half a second of the wall clock (`PlaybackSpeed.wentAtSpeed`).
         var pace = ""
         if let first = firstSeen, let last = lastSeen, last.at.timeIntervalSince(first.at) >= 0.5 {
-            let measured = Double(last.ms - first.ms) / 1000 / last.at.timeIntervalSince(first.at)
+            // The line through every look (`PlaybackSpeed.pace`).
+            let measured = PlaybackSpeed.pace(of: paceLooks)
+                ?? Double(last.ms - first.ms) / 1000 / last.at.timeIntervalSince(first.at)
             pace = String(format: "; the playhead went %.3fx the wall clock over %.2fs",
                           measured, last.at.timeIntervalSince(first.at))
-            guard abs(measured - rate) <= 0.02 * abs(rate) else {
+            guard PlaybackSpeed.wentAtSpeed(measured: measured, rate: rate,
+                                            overSeconds: last.at.timeIntervalSince(first.at)) else {
                 throw Failure(description: "the playhead did not go at \(PlaybackSpeed.label(rate))"
-                    + pace + ", more than 2 percent off")
+                    + pace + ", more than 2 percent off and more than a tick can hide")
             }
         }
         let sizes = Set(clips.compactMap(\.movie).map { "\(Int($0.pixelSize.width))x\(Int($0.pixelSize.height))" })

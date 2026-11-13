@@ -450,7 +450,9 @@ extension EditorState {
             // A clock playing forwards also opens the far side of each cut
             // coming up, so the picture does not stick there (`MoviePlayPass`).
             let playing = isDocumentPlaying && playheadTravel != .backward
-                ? moviePlayLookahead.points(in: document, atTimeMS: documentTimeMS) : nil
+                ? moviePlayLookahead.points(in: document, atTimeMS: documentTimeMS,
+                                            leadMS: MoviePlayPass.comingLead(speed: abs(documentPlaybackRate)))
+                : nil
             // ...and a clock playing backwards reads the stretch behind it a
             // block at a time (`MoviePlayBackward`).
             let playingBackward = isDocumentPlaying && playheadTravel == .backward

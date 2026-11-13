@@ -5,6 +5,7 @@ import Foundation
 import PhotonzCore
 import PhotonzRender
 import Synchronization
+import VideoToolbox
 
 // Where a clip's pixels actually come from (`docs/design/video.md` §4).
 //
@@ -353,9 +354,14 @@ enum MovieSweeper {
     /// `keeps` picks the grid frames worth handing over; every sample is still
     /// decoded, but only those are turned into pictures, which is most of the
     /// cost (`MoviePlayBackward.stride`).
+    ///
+    /// `skipsUnreferenced` decodes only the frames other frames are decoded
+    /// from (`MoviePlayPass.skipsUnreferenced`); a skipped frame's grid frames
+    /// show the one decoded before it.
     static func sweep(movie: MovieRef, url: URL, frames: ClosedRange<Int>, size: CGSize,
                       waitsAt: (@Sendable (Int) -> Bool)? = nil,
                       keeps: (@Sendable (Int) -> Bool)? = nil,
+                      skipsUnreferenced: Bool = false,
                       deliver: @escaping @Sendable (Int, CGImage) -> Void) async -> Bool {
         // Only a few read at once (`SweepGate`); one asked to stop while it
         // waited for its turn reads nothing.
@@ -374,13 +380,32 @@ enum MovieSweeper {
             end: CMTime(value: CMTimeValue((frames.upperBound + 1) * step), timescale: 1000))
         // The decoder's own format: asking for RGB made the pass three times
         // slower, and only the frames kept are converted.
-        let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
+        let format: [String: Any] = [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
-        ])
+        ]
+        // Skipping, the samples come over as they are in the file and are
+        // decoded here (`SkippingDecoder`); a track that cannot be decoded
+        // that way is read the usual way.
+        let skipping: SkippingDecoder?
+        if skipsUnreferenced, let description = try? await track.load(.formatDescriptions).first {
+            skipping = SkippingDecoder(format: description, attributes: format)
+        } else {
+            skipping = nil
+        }
+        let output = AVAssetReaderTrackOutput(track: track, outputSettings: skipping == nil ? format : nil)
         output.alwaysCopiesSampleData = false
         guard reader.canAdd(output) else { return false }
         reader.add(output)
         guard reader.startReading() else { return false }
+        defer { skipping?.close() }
+        func nextFrame() -> (ms: Double, buffer: CVPixelBuffer)? {
+            if let skipping { return skipping.next(from: output) }
+            while let sample = output.copyNextSampleBuffer() {
+                guard let buffer = CMSampleBufferGetImageBuffer(sample) else { continue }
+                return (CMSampleBufferGetPresentationTimeStamp(sample).seconds * 1000, buffer)
+            }
+            return nil
+        }
 
         var grid = MovieSweepGrid(frames: frames)
         var previous: CVPixelBuffer?
@@ -397,9 +422,7 @@ enum MovieSweeper {
                 try? await Task.sleep(for: .milliseconds(4))
                 continue
             }
-            guard let sample = output.copyNextSampleBuffer() else { break }
-            guard let buffer = CMSampleBufferGetImageBuffer(sample) else { continue }
-            let ms = CMSampleBufferGetPresentationTimeStamp(sample).seconds * 1000
+            guard let (ms, buffer) = nextFrame() else { break }
             hand(grid.arrived(atMS: ms), previous)
             previous = buffer
         }
@@ -409,6 +432,89 @@ enum MovieSweeper {
             hand(grid.finished(), previous)
         }
         return true
+    }
+
+    /// Decodes a recording's samples itself, in the order the file holds
+    /// them, skipping every one no other frame is decoded from, and hands the
+    /// rest back in the order they are shown (`MovieDecodeReorder`). What a
+    /// pass above double speed reads with (`MoviePlayPass.skipsUnreferenced`).
+    // Unchecked: it holds a decoder session, which is not Sendable, and is
+    // used only by the one task reading its pass; the decoder's own thread
+    // touches only `finished`, under its lock.
+    final class SkippingDecoder: @unchecked Sendable {
+        private let session: VTDecompressionSession
+        /// Frames the decoder has finished, in the order it finished them;
+        /// filled on the decoder's own thread.
+        private final class Finished: @unchecked Sendable {
+            // Unchecked: a pixel buffer is not Sendable, and every touch of
+            // `frames` is under `lock`; the decoder hands each one over once.
+            private let lock = NSLock()
+            private var frames: [(ms: Double, buffer: CVPixelBuffer)] = []
+            func add(_ ms: Double, _ buffer: CVPixelBuffer) {
+                lock.withLock { frames.append((ms, buffer)) }
+            }
+            func takeAll() -> [(ms: Double, buffer: CVPixelBuffer)] {
+                lock.withLock { defer { frames.removeAll() }; return frames }
+            }
+        }
+        private let finished = Finished()
+        /// Only touched by the one task reading the pass.
+        private var order = MovieDecodeReorder<CVPixelBuffer>(depth: 3)
+        private var ended = false
+
+        init?(format: CMFormatDescription, attributes: [String: Any]) {
+            var made: VTDecompressionSession?
+            let status = VTDecompressionSessionCreate(
+                allocator: nil, formatDescription: format, decoderSpecification: nil,
+                imageBufferAttributes: attributes as CFDictionary, outputCallback: nil,
+                decompressionSessionOut: &made)
+            guard status == noErr, let made else { return nil }
+            session = made
+        }
+
+        /// The next frame in the order shown, decoding as many samples as it
+        /// takes; nil once the samples run out and every frame is handed on.
+        func next(from output: AVAssetReaderTrackOutput) -> (ms: Double, buffer: CVPixelBuffer)? {
+            while true {
+                take()
+                if let ready = order.next() { return (ready.ms, ready.frame) }
+                if ended { return order.drain().map { ($0.ms, $0.frame) } }
+                guard let sample = output.copyNextSampleBuffer() else {
+                    VTDecompressionSessionWaitForAsynchronousFrames(session)
+                    ended = true
+                    continue
+                }
+                guard CMSampleBufferGetNumSamples(sample) > 0, !Self.unreferenced(sample) else { continue }
+                let status = VTDecompressionSessionDecodeFrame(
+                    session, sampleBuffer: sample, flags: [._EnableAsynchronousDecompression],
+                    infoFlagsOut: nil
+                ) { [finished] status, _, image, shown, _ in
+                    guard status == noErr, let image else { return }
+                    finished.add(shown.seconds * 1000, image)
+                }
+                if status != noErr { continue }
+            }
+        }
+
+        func close() {
+            VTDecompressionSessionWaitForAsynchronousFrames(session)
+            VTDecompressionSessionInvalidate(session)
+        }
+
+        private func take() {
+            for frame in finished.takeAll() {
+                order.insert(frame.ms, frame.buffer)
+            }
+        }
+
+        /// Whether nothing else in the recording is decoded from this sample.
+        private static func unreferenced(_ sample: CMSampleBuffer) -> Bool {
+            guard let all = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: false)
+                    as? [[CFString: Any]], let first = all.first,
+                  let referenced = first[kCMSampleAttachmentKey_IsDependedOnByOthers] as? Bool
+            else { return false }
+            return !referenced
+        }
     }
 
     /// One decoded frame, turned the way the recording is shown and at most
@@ -534,6 +640,10 @@ final class MovieFrameFetcher {
     /// so a change of speed that changes this starts them all over: a pass
     /// thinned for 8x left running at 1x would show every third frame.
     private var playPassStride = 1
+    /// ...and whether they skip the frames nothing is decoded from
+    /// (`MoviePlayPass.skipsUnreferenced`): one opened at 4x left running at
+    /// 2x would show some frames a frame early.
+    private var playPassSkips = false
 
     /// A block of frames being read behind a playhead playing backwards, in
     /// one pass, at the size the canvas shows it (`MoviePlayBackward`).
@@ -643,9 +753,11 @@ final class MovieFrameFetcher {
         let playsAhead = playing != nil && !handMoving && !backward
         if !playsAhead { stopPlayPasses() }
         let stride = MoviePlayBackward.stride(speed: playingSpeed)
-        if playsAhead, stride != playPassStride {
+        let skips = MoviePlayPass.skipsUnreferenced(speed: playingSpeed)
+        if playsAhead, stride != playPassStride || skips != playPassSkips {
             stopPlayPasses()
             playPassStride = stride
+            playPassSkips = skips
         }
         let playsBack = playingBackward != nil && !handMoving
         if !playsBack { stopBackBlocks() }
@@ -677,8 +789,9 @@ final class MovieFrameFetcher {
                 }
             }
             if handMoving, !unsweepable.contains(request.movie.id) { continue }
-            if let filed = filedWidth(request.ref), filed >= width.width - 1 { continue }
-            if playsAhead, coveredByPlay(request, width: width) { continue }
+            if let filed = filedWidth(request.ref),
+               filed >= width.width - 1 || (playsAhead && MoviePlayPass.anySizeServes(speed: playingSpeed)) { continue }
+            if playsAhead, coveredByPlay(request, width: width, speed: playingSpeed) { continue }
             if playsBack, coveredByBack(request, width: width) { continue }
             // ...and at a speed that keeps only some frames, one it does not
             // keep is never read on its own: a seek from the key frame for a
@@ -719,13 +832,13 @@ final class MovieFrameFetcher {
 
     /// Whether a pass reading ahead of the playhead will reach this frame, so
     /// nothing reads it on its own.
-    private func coveredByPlay(_ request: MovieFrameRequest, width: CGSize) -> Bool {
+    private func coveredByPlay(_ request: MovieFrameRequest, width: CGSize, speed: Double) -> Bool {
         let frame = request.movie.frameIndex(atSourceMS: request.sourceMS)
         return (playPasses[request.movie.id] ?? []).contains { pass in
             let aim = pass.mark.aim
-            return pass.width >= Int(width.width.rounded()) - 1
+            return (pass.width >= Int(width.width.rounded()) - 1 || MoviePlayPass.anySizeServes(speed: speed))
                 && MoviePlayPass.covers(frame: frame, running: pass.frames, reached: pass.mark.reached,
-                                        playhead: aim.playhead, reach: aim.reach)
+                                        playhead: aim.playhead, reach: aim.reach, speed: speed)
         }
     }
 
@@ -788,7 +901,9 @@ final class MovieFrameFetcher {
         if !now.isEmpty { focus[movie.id] = now }
         coming[movie.id] = next
         let passes = (playPasses[movie.id] ?? []).filter { pass in
-            if pass.width == width { return true }
+            // Above double speed one read at another size goes on
+            // (`MoviePlayPass.anySizeServes`).
+            if pass.width == width || MoviePlayPass.anySizeServes(speed: speed) { return true }
             pass.task.cancel()
             return false
         }
@@ -841,9 +956,11 @@ final class MovieFrameFetcher {
         } else {
             keeps = nil
         }
+        let skips = MoviePlayPass.skipsUnreferenced(speed: speed)
         let task = Task.detached(priority: .userInitiated) {
             let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size,
-                                                 waitsAt: { mark.passed($0) }, keeps: keeps) { index, image in
+                                                 waitsAt: { mark.passed($0) }, keeps: keeps,
+                                                 skipsUnreferenced: skips) { index, image in
                 Task { @MainActor in file(index, image) }
             }
             if !Task.isCancelled { await finished(swept) }
