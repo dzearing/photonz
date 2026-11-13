@@ -40,11 +40,19 @@ struct TimelineTimeScroller: View {
             if showing {
                 // The playhead, so the window and the moment you are on are
                 // read off the same picture.
-                Capsule()
-                    .fill(VideoKit.Palette.accent.opacity(0.7))
-                    .frame(width: 1.5, height: Self.height)
-                    .offset(x: min(max(0, laneWidth * CGFloat(Double(editorState.documentTimeMS) / reach)),
-                                   laneWidth - 1.5))
+                // Read in an island of its own on every frame (`VideoKit.Island`).
+                VideoKit.LayerIsland({ [editorState, laneWidth] in
+                    // To the half point: a frame that moves it less draws nothing.
+                    let x = min(max(0, laneWidth * CGFloat(Double(editorState.documentTimeMS) / reach)),
+                                laneWidth - 1.5)
+                    return (x * 2).rounded() / 2
+                }) { x, canvas in
+                    let mark = canvas.layer("playhead") { CALayer() }
+                    mark.backgroundColor = canvas.color(VideoKit.Palette.accent, opacity: 0.7)
+                    mark.cornerRadius = 0.75
+                    mark.frame = CGRect(x: x, y: 0, width: 1.5, height: Self.height)
+                }
+                .frame(width: laneWidth, height: Self.height)
                 Capsule()
                     .fill(Color.primary.opacity(active ? 0.45 : 0.28))
                     .frame(width: width, height: active ? 7 : 5)

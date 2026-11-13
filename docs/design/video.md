@@ -777,10 +777,20 @@ passes per frame is what to keep down, not only what each one rebuilds.
 
 The rule, for any view added to the editor window:
 
-1. **Only what moves with the playhead inside a clip may watch it every
-   tick**: the playhead line, the transport's time and scrubber, the time
-   scroller's mark. Each is its own small view, so the clock wakes only it
-   (`TimelinePlayheadLine`, `TimelineTransport`, `TransportScrubber`).
+1. **What moves with the playhead inside a clip is not a SwiftUI view at
+   all.** The playhead line, the scrub bar's played part and knob, the
+   transport's time and the time scroller's mark are drawn with Core
+   Animation layers by `VideoKit.LayerIsland`, which reads and watches the
+   playhead itself, outside any pass of the window's, and moves its layers
+   only when what they show changes (rounded to half a point, a whole
+   second). As small SwiftUI views of their own they still made one window
+   pass each per frame and per move of a scrubbing hand, and so did small
+   SwiftUI hosts of their own (`NSHostingView` in a representable): a host
+   that draws again is laid out again, and the window's host with it. On the
+   6 minute reference edit (2026-11-13) a medium scrub was answered at 73 to 82
+   of the display's 240 refreshes with them as views, 94 to 108 in hosts of
+   their own, and 232 to 241 as layers. A new thing that has to follow the
+   playhead every frame is a `LayerIsland`, never a view that reads it.
 2. **A view that shows what the playhead is ON (the clip, piece, cut, speed
    stop, title in hand) watches the answer, not the clock.** The answers are
    worked out on every tick but written only when one changes, and the view
@@ -792,7 +802,11 @@ The rule, for any view added to the editor window:
    - timeline right-click menus: `timelineMenuRows`, built again on each
      right click instead.
    If a new view needs an answer that is not in one of those values, add it
-   there rather than reading the playhead.
+   there rather than reading the playhead. The panel's answers wait while a
+   hand is moving the playhead and catch up once it holds still for
+   `MovieSweep.settleMS` or lets go (`catchUpPanelPlayhead`): a quick scrub
+   crosses a clip on nearly every move, and following each one cost the
+   scrub two thirds of its refreshes.
 3. **Something that needs the playhead only when it draws asks for it then.**
    The canvas reads `documentTimeMSUnwatched` through a closure
    (`CanvasView.documentTimeMS`) instead of being handed it, because every new
@@ -810,7 +824,10 @@ The rule, for any view added to the editor window:
 
 Measured with these in place (short speed walk, 2026-11-13): a minute of 1x
 play dropped 4 of about 1,820 frames, against 379 before; every transition
-played without a dropped frame. `ViewBuildMeter`'s `idleBuilds` and the play
+played without a dropped frame. With the layer islands and the panel waiting
+for the hand (later the same day): the worst of three runs dropped 4 a minute,
+and a medium scrub showed the frame under the hand 2 display frames after it
+moved in the middle and 4 at worst, against 8 and 21. `ViewBuildMeter`'s `idleBuilds` and the play
 measure of `Scripts/perf/speed-walk.sh` are how a new view is checked against
 this.
 

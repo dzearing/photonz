@@ -1102,7 +1102,10 @@ private struct TransportScrubber: View {
         let length = Double(max(1, editorState.documentLengthMS))
         let marks = [editorState.document?.markInMS, editorState.document?.markOutMS]
             .compactMap { $0.map { Double($0) / length } }
-        VideoKit.Scrubber(fraction: Double(editorState.documentTimeMS) / length, marks: marks,
+        // The playhead is read inside the bar's own island, never here
+        // (`VideoKit.Island`, `docs/design/video.md` 8f).
+        VideoKit.Scrubber(fraction: 0, marks: marks,
+                          liveFraction: { [editorState] in Double(editorState.documentTimeMS) / length },
                           onScrub: onScrub)
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             .onContinuousHover { phase in
@@ -1552,9 +1555,12 @@ private struct TimelineTransport: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        VideoKit.TransportBar(current: editorState.documentTimecode
-                                  + (editorState.shuttleReading.map { "  \($0)" } ?? ""),
-                              duration: editorState.documentLengthTimecode) {
+        let shuttle = editorState.shuttleReading.map { "  \($0)" } ?? ""
+        // The time is read in an island of its own on every frame; the bar
+        // only knows how wide it can be (`VideoKit.Island`).
+        VideoKit.TransportBar(current: VideoKit.Timecode.shape(of: editorState.documentLengthTimecode) + shuttle,
+                              duration: editorState.documentLengthTimecode,
+                              liveCurrent: { [editorState] in editorState.documentTimecode + shuttle }) {
             // QuickTime's speaker and slider. How loud YOU are listening,
             // not the document's own levels, which are the clips' Volume in
             // the panel. There is no mix meter: the user found it did
@@ -1639,20 +1645,85 @@ private struct TimelineTransport: View {
 /// screen: a zoomed timeline with the playhead elsewhere has no playhead
 /// to draw, rather than one pinned to its edge.
 /// A view of its own, because it moves with every step of the playhead: drawn
-/// inside the dock's tracks, each step rebuilt all of them.
+/// inside the dock's tracks, each step rebuilt all of them. And drawn with
+/// layers, because even as a view of its own every step was a pass over the
+/// whole window (`VideoKit.LayerIsland`). It is `VideoKit.Playhead`, the same
+/// line and head in the same colour.
 private struct TimelinePlayheadLine: View {
     @Environment(EditorState.self) private var editorState
     let laneWidth: CGFloat
 
     var body: some View {
-        // Not read at all behind View, so playing there never draws the
-        // tracks out of sight again (`AsleepBehindView`).
-        let fraction = editorState.editPiecesAsleep
-            ? -1 : editorState.motionStripRuler.fraction(ofMS: Double(editorState.documentTimeMS))
-        if fraction >= -0.001, fraction <= 1.001 {
-            VideoKit.Playhead(fraction: fraction)
-                .frame(width: laneWidth)
-                .panelReadout("playhead \(editorState.documentTimecode)")
+        VideoKit.LayerIsland({ [editorState, laneWidth] in Spot(editorState, laneWidth: laneWidth) }) {
+            [laneWidth] spot, canvas in
+            Self.paint(spot, laneWidth: laneWidth, on: canvas)
+        }
+    }
+
+    @MainActor private static func paint(_ spot: Spot, laneWidth: CGFloat, on canvas: VideoKit.IslandCanvas) {
+        let line = canvas.layer("line") { CALayer() }
+        let head = canvas.layer("head") { CAShapeLayer() }
+        let width = VideoKit.Metrics.playheadWidth
+        let height = canvas.bounds.height
+        let x = laneWidth * CGFloat(min(max(0, spot.fraction ?? 0), 1))
+        line.isHidden = spot.fraction == nil
+        head.isHidden = spot.fraction == nil
+        line.backgroundColor = canvas.color(VideoKit.Palette.crit)
+        line.frame = CGRect(x: x - width / 2, y: 0, width: width, height: height)
+        // The head stands 2pt proud of the top, point down, 12 by 6.
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: x - 6, y: height + 2))
+        path.addLine(to: CGPoint(x: x + 6, y: height + 2))
+        path.addLine(to: CGPoint(x: x, y: height - 4))
+        path.closeSubpath()
+        head.path = path
+        head.fillColor = canvas.color(VideoKit.Palette.crit)
+        #if PHOTONZ_PLAYTEST
+        // Where a walk reads the line and its time (`PlaytestRulerMark`,
+        // `panelReadout`), moved with it.
+        guard PlaytestMarkers.areHung else { return }
+        let mark = canvas.subviews.compactMap { $0 as? PlaytestRulerMarkView }.first ?? {
+            let made = PlaytestRulerMarkView(role: .playhead(fraction: 0))
+            canvas.addSubview(made)
+            return made
+        }()
+        let readout = canvas.subviews.compactMap { $0 as? ReadoutAnchorView }.first ?? {
+            let made = ReadoutAnchorView(text: "")
+            canvas.addSubview(made)
+            return made
+        }()
+        let frame = CGRect(x: x - 6, y: 0, width: 12, height: height)
+        for view in [mark, readout] as [NSView] {
+            view.isHidden = spot.fraction == nil
+            if view.frame != frame { view.frame = frame }
+        }
+        mark.role = .playhead(fraction: spot.fraction ?? 0)
+        readout.text = "playhead \(spot.timecode)"
+        #endif
+    }
+
+    /// Where the line is, to the half point, or nil off screen; and the time
+    /// it is at, as a walk reads it.
+    private struct Spot: Equatable {
+        var fraction: Double?
+        var timecode: String
+
+        @MainActor init(_ editorState: EditorState, laneWidth: CGFloat) {
+            // Not read at all behind View, so playing there never draws the
+            // tracks out of sight again (`AsleepBehindView`).
+            if editorState.editPiecesAsleep {
+                fraction = nil
+                timecode = ""
+                return
+            }
+            let now = editorState.motionStripRuler.fraction(ofMS: Double(editorState.documentTimeMS))
+            let halves = max(1, Double(laneWidth) * 2)
+            fraction = now >= -0.001 && now <= 1.001 ? (now * halves).rounded() / halves : nil
+            #if PHOTONZ_PLAYTEST
+            timecode = editorState.documentTimecode
+            #else
+            timecode = ""
+            #endif
         }
     }
 }

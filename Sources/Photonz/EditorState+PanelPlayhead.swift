@@ -66,6 +66,24 @@ extension EditorState {
         let answers = withObservationTracking { workOutPanelPlayhead() } onChange: { [weak self] in
             DispatchQueue.main.async { MainActor.assumeIsolated { self?.watchPanelPlayhead() } }
         }
+        guard answers != panelPlayhead else { return }
+        // A hand moving the playhead along crosses a clip on almost every
+        // move of a quick scrub, and every write here is a pass over the
+        // window: on the 6 minute reference edit a medium scrub was answered
+        // at 75 of the display's 240 refreshes with the panel following each
+        // move, and at about 230 without (2026-11-13). So the panel catches
+        // up when the hand holds still (`MovieSweep.settleMS`) or lets go
+        // (`catchUpPanelPlayhead`), as the sharp picture does.
+        if playheadInHand, !playheadSettled { return }
+        panelPlayhead = answers
+    }
+
+    /// The panel's answers brought up to where the playhead is, once a hand
+    /// on it holds still or lets go. Read without watching: the watch set up
+    /// by `watchPanelPlayhead` goes on as it was.
+    func catchUpPanelPlayhead() {
+        guard watchesPanelPlayhead else { return }
+        let answers = workOutPanelPlayhead()
         if answers != panelPlayhead { panelPlayhead = answers }
     }
 

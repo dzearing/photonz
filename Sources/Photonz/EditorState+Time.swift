@@ -111,6 +111,7 @@ extension EditorState {
             try? await Task.sleep(for: .milliseconds(MovieSweep.settleMS))
             guard let self, !Task.isCancelled, !playheadSettled else { return }
             playheadSettled = true
+            catchUpPanelPlayhead()
             documentMomentChanged()
         }
     }
@@ -143,6 +144,7 @@ extension EditorState {
         // if the hand was still moving when it let go.
         let unsettled = !playheadSettled
         playheadSettled = true
+        catchUpPanelPlayhead()
         if momentAwaitingRefresh || unsettled {
             momentAwaitingRefresh = false
             documentMomentChanged()
