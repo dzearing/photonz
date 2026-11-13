@@ -4,12 +4,12 @@
   "goal": "When Ask mocks a web page, controls that are the same thing (python.org has twelve navigation links) become one Library component with copies placed on the page, instead of twelve separate components all called Nav Link.",
   "epic": "agent-ask",
   "priority": "p2-normal",
-  "seq": 220,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-03T14:52:14.194Z",
-  "updated": "2026-11-11T16:14:30.050Z",
+  "updated": "2026-11-13T14:15:34.878Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-11-03 (queue/audits/2026-11-03-ask-mocks-a-web-page.json, rough): python.org came back as 23 components, twelve of them called Nav Link. add_page_parts lands each call as its own component (AskConversation.webPlan / addWebParts); same name + same box shape could be one component placed with per-copy words.",
@@ -46,6 +46,10 @@
     {
       "t": "2026-11-11T16:14:30.049Z",
       "note": "seq 210 -> 220"
+    },
+    {
+      "t": "2026-11-13T14:15:34.877Z",
+      "note": "seq 220 -> 120"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "The user asked 'make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.' and got a still drawing of a trash can (Ask's row: drew a trash can), no motion. The shorter 'make an animated trash can icon where it opens, some trash is thrown in' animates in the walk. A request that tells the motion as several beats must be animated through all of them, never fall back to a still.",
   "epic": "icon-svg",
   "priority": "p1-high",
-  "seq": 10,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-12T13:20:11.195Z",
+  "updated": "2026-11-13T14:15:33.474Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -418,6 +418,10 @@
     {
       "t": "2026-11-12T13:20:11.194Z",
       "note": "digest 2026-11-12, judged on the user's trash (2026-11-12-story-trash-pass16-two-laps.png): the lid opens and the scrap flies in from the right (0.52 to 0.78 s), but after it meets the lid the lid shuts at 0.91 s with the scrap lying ON it, the scrap then hops up above the shut can (1.04 s), lands across the lid again (1.17 to 1.30 s) and fades out as a grey ghost sitting on top (1.43 s). It never goes into the can, so the one beat a person reads first ('trash is thrown in') is missing, and it is still a solid black block in a line icon. Next pass order: (1) the scrap ends inside the can and out of sight before or as the lid shuts, (2) no hop after the lid is shut, (3) the scrap drawn in line like the can. Seven passes since the user's 'Keep going, judged on your trash' (2026-11-10); four of them (13 to 16, about 5 h 20 m) in the last 24 hours, story score flat at 57 to 58."
+    },
+    {
+      "t": "2026-11-13T14:15:33.473Z",
+      "note": "seq 10 -> 30"
     }
   ],
   "started": "2026-11-12T10:25:07.198Z",

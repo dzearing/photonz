@@ -4,12 +4,12 @@
   "goal": "When a copy of a component is given its own words, they sit off centre: a tab worded Privacy reads several points to the right of the middle of its tab, while the component's own word is centred. Anyone wording a row of tabs or buttons sees them look crooked.",
   "epic": "ui-prototyping",
   "priority": "p2-normal",
-  "seq": 640,
+  "seq": 520,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-06T20:30:58.710Z",
-  "updated": "2026-11-09T14:31:45.178Z",
+  "updated": "2026-11-13T14:15:37.856Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-06 at Next defaults with Scripts/playtest/component-preview-walk.json (place_component words on a Tab whose Label is centred across a 96 wide box), measured on its picture with /tmp/pv/ink.py: 'Tab worded Privacy (own words): plate centre 430.0 pt, ink centre 441.0 pt, off by +11.0 pt', 'Tab worded Billing (own words): plate centre 540.0 pt, ink centre 547.0 pt, off by +7.0 pt', and for the look's own words 'Field worded Robin Avery: plate centre 379.5 pt, ink centre 380.0 pt, off by +0.5 pt'. Seen in the first draft of that walk too, before the wording change in applyOverrides, so that change did not cause it. Cause not looked into. See queue/audits/2026-11-06-component-preview-5-tab.png.",
@@ -37,6 +37,10 @@
     {
       "t": "2026-11-09T14:31:45.177Z",
       "note": "seq 650 -> 640"
+    },
+    {
+      "t": "2026-11-13T14:15:37.855Z",
+      "note": "seq 640 -> 520"
     }
   ]
 }

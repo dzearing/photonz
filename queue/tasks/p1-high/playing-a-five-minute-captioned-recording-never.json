@@ -4,12 +4,12 @@
   "goal": "The video focus promises that on a five minute recording with its captions written, no frame of playback keeps the app busy for more than 50 ms, so a click or key during playback answers at once. Nothing has ever measured that while the video plays. Measure it, fix any frame that holds the app longer, and keep a walk that turns red if it ever comes back.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 15,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:22:21.058Z",
-  "updated": "2026-11-13T04:57:55.310Z",
+  "updated": "2026-11-13T14:15:33.857Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -242,6 +242,10 @@
     {
       "t": "2026-11-13T04:57:55.309Z",
       "note": "manager pass 2026-11-12: moved to p1 under the video-perf focus (epic set to video-perf) and made to wait on a-speed-walk-measures-the-long-reference-edit-th, so it measures the main thread during playback with that walk's tools instead of building its own. Its own load (a five minute talk with about 170 caption cues) stays the case it checks."
+    },
+    {
+      "t": "2026-11-13T14:15:33.856Z",
+      "note": "seq 15 -> 80"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "On a long edit the timeline is where a person spends their time, and it is the part most likely to slow down as clips pile up: every clip bar, thumbnail strip and waveform drawn again when anything moves. Make the timeline of the 60 minute reference edit, several hundred clips, scroll, zoom and follow a playing playhead at the display's 120 Hz, and keep an edit on it inside one frame.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 12,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-13T13:22:13.012Z",
+  "updated": "2026-11-13T14:19:11.579Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -39,6 +39,14 @@
     {
       "t": "2026-11-13T13:22:13.011Z",
       "note": "From a-long-edit-with-transitions-plays-scrubs-and-ed (2026-11-13): the document now keeps its track layout and edit points (DocumentDerived.swift), and timeline right-click menus no longer rebuild every tick (EditorState.timelineMenuRows). 20 min edit after: zoom 489 ms a frame (was 2515), scroll 207 ms (was 2003), edits 212-428 ms (were 2.8-29.8 s). Time Profiler playing the 6 min edit: ~86% of the main thread is SwiftUI graph work after each playhead move (ObservationGraphMutation ~15%, AccessibilityViewGraph 8-12%), few bodies rebuilt (ViewBodyAccessor ~4%): something high in the window is dirtied each tick and SwiftUI re-checks everything under it."
+    },
+    {
+      "t": "2026-11-13T14:15:33.623Z",
+      "note": "seq 12 -> 50"
+    },
+    {
+      "t": "2026-11-13T14:19:11.578Z",
+      "note": "triage 2026-11-13, seen in queue/audits/2026-11-13-long-edit-plays-after-the-edits-sc.png: on the 6 minute reference edit the timeline stacks a separate 'Zoom' lane under V1 for each zoomed clip (three show, more below the fold), each nearly empty, with bars around 5:30 while the picked clip is at 0:24. The reference edit zooms every third clip, so the 60 minute one carries well over a hundred such lanes: count them, measure what they cost the timeline's redraw, and say in the audit whether a long edit's zooms should share fewer lanes (the zoom mock, video-zoom-wt.html, draws a picked clip's Scale and Centre lanes, not one per clip for the whole edit). Not filed on its own: unconfirmed whether every zoomed clip always gets its lane."
     }
   ]
 }

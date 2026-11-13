@@ -4,12 +4,12 @@
   "goal": "Playing and scrubbing a long edit keeps decoded frames, thumbnails, waveforms and composited pictures in memory, and if nothing lets go the app grows until the Mac slows down. Make sure that playing and scrubbing the 60 minute reference edit for ten minutes levels off under a ceiling, and keep a check that fails if it ever grows again.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 14,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:40.003Z",
-  "updated": "2026-11-13T13:35:13.042Z",
+  "updated": "2026-11-13T14:15:33.777Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -39,6 +39,10 @@
     {
       "t": "2026-11-13T13:35:13.041Z",
       "note": "From a-long-edit-with-transitions-plays-scrubs-and-ed (2026-11-13, 0582a551c): with the main thread no longer stalled the 60 min edit really plays and scrubs, and memory over 600 s of play and scrub went UP: footprint 1857 -> 1701 MB, peak 2873 MB, resident peak 3124 MB (was 998 -> 1131 MB, peak 1426, resident 1728 on 2026-11-12, when it showed 0 frames). Movie reads (MovieSweeper) now each run on a thread of their own; a scrub starts one per stretch and cancels the last between samples, so several readers can be alive at once. Results: ~/Library/Caches/Photonz Reference Edit/speed-results/2026-11-13-0521-0582a551c-long-60.json"
+    },
+    {
+      "t": "2026-11-13T14:15:33.776Z",
+      "note": "seq 14 -> 70"
     }
   ]
 }

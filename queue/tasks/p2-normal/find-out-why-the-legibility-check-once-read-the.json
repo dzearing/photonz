@@ -1,26 +1,39 @@
 {
   "id": "find-out-why-the-legibility-check-once-read-the",
-  "title": "Find out why the legibility check once read the dark lower-third caption preview as unreadable",
-  "goal": "Main's tests went red once on 2026-11-12 because the legibility check read the dark Lower third caption preview as grey text on the same grey. The next run on the same app code passed, so either the check sometimes photographs the preview before its words are drawn, or the preview really does sometimes draw unreadable words. Find out which and fix that one.",
-  "epic": "video-perf",
+  "title": "Find out why main’s checks sometimes see a title’s words as not drawn, then pass on the same code",
+  "goal": "Three times in a day main’s tests went red on CI because a check that looks at drawn words found them missing: twice the title entrance check saw most of a title’s words off screen, and once the legibility check read a dark caption preview as grey text on the same grey. Each time the next run on the same app code passed, and the tests pass on this Mac. Find out whether the words really are sometimes drawn late or blank on a busy machine, or the checks look too early, and fix whichever it is so main stays green.",
+  "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 135,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T05:49:07.555Z",
-  "updated": "2026-11-13T05:49:07.558Z",
+  "updated": "2026-11-13T14:17:46.546Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/43367299841 (commit 610f1dc95), Test slice 1 of 3, step Run tests, after all 5535 tests passed: 'legibility: 1546 words and icons measured on 122 specimens, light and dark, in 43s' then 'legibility: UNREADABLE (the user: no white on white or black on black, ever): Caption preview, Lower third, still, dark: 1.00:1, #232323 on #232323, at 10,10 (caption-preview-lower-third-still-dark.png)' and exit 1. The next CI run, 43368952566 on b20245458 (a queue-only commit, same app code), passed. Not reproduced locally; the check lives in Scripts/test.sh (grep photonz-legibility). Filed by a-long-reference-edit-opens-in-the-probe-in-one, which does not touch captions. Epic is video-perf only because the queue requires a now-staged epic; it is a test-health item.",
   "acceptance": [
-    "The cause is named with evidence: a reproduction of the unreadable preview, or the check's timing shown to be the cause.",
-    "Whichever it is is fixed, and the legibility check passes 10 runs in a row on the caption previews."
+    "The cause is named with evidence for both checks: a reproduction of the missing words (for example the suite run under load, or on a CI runner), or the check’s timing shown to be the cause.",
+    "Whichever it is is fixed, and TextRevealUnclippedTests and the legibility check on the caption previews each pass 10 runs in a row under the same parallel load CI uses (Scripts/test.sh --shard K/3).",
+    "If the cause is in the app (words drawn blank when the machine is busy), a person playing or exporting a title never sees a frame with its words missing, and a test holds that."
   ],
   "log": [
     {
       "t": "2026-11-13T05:49:07.557Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-13T14:15:14.264Z",
+      "note": "triage 2026-11-13: epic video-perf -> unmanned-loop. It is a test-health item (main went red once in CI on a caption preview), not playback speed, so it no longer ranks as focus work; it sits right after the focus tasks in p2, ahead of the older p2 work, since a red main stops every commit."
+    },
+    {
+      "t": "2026-11-13T14:15:34.201Z",
+      "note": "seq 135 -> 30"
+    },
+    {
+      "t": "2026-11-13T14:17:46.545Z",
+      "note": "triage 2026-11-13: widened from “Find out why the legibility check once read the dark lower-third caption preview as unreadable”. Same pattern twice more on main, slice 2 of 3: run 43238687651 (09fbb7b3d, 2026-11-12 14:55Z) and run 43292163161 (5d233f4f3, 19:46Z), TextRevealUnclippedTests.swift:129 and :182, e.g. ‘preset .keynote: (worst.share 0.1157) >= (Self.whole 0.998)’, ‘style .maskReveal: worst.share 0.0’, .terminal 0.0014, .sessionsStage 0.0048, .softGlass 0.228, .glass 0.098. Later runs on main passed (43375063522 on f12423c41). Locally: Scripts/test.sh --filter TextRevealUnclippedTests passed all 31 cases in 10 s (2026-11-13 06:17). A share near 0 means the words were missing from the frame, as the legibility read #232323 on #232323 says for its preview: likely one cause. Separately, run 43411231183 failed in Build app bundle on ‘curl: (6) Could not resolve host: github.com’ fetching llama-server: a one-off network fault, not this task."
     }
   ],
   "walks": []

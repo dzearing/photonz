@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T06:08:38.373Z",
-  "updated": "2026-11-05T14:50:00.905Z",
+  "updated": "2026-11-13T14:15:38.757Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-09-29 while running the IA task. Reproduction (walk windows are never active): a walk with appearance dark, blank 900x700 in a 1400x900 window, action showGrid, action showGridSettings, snapshot. Capture: queue/audits/2026-09-29-grid-settings-dark-over-white.png. Light appearance reads fine (grid-settings-walk 3-open). Not caused by the IA change: the popover's content is unchanged apart from the new Cell row, and the chip-anchored popover also sits over the canvas. Popover is CanvasGridSettingsPopover, anchored in EditorView (gridSettingsBinding(at: .toolBar)).",
@@ -57,6 +57,10 @@
     {
       "t": "2026-11-05T14:50:00.904Z",
       "note": "seq 20 -> 10"
+    },
+    {
+      "t": "2026-11-13T14:15:38.756Z",
+      "note": "seq 10 -> 10"
     }
   ]
 }

@@ -2,14 +2,14 @@
   "id": "edit-mode-s-contents-come-in-with-the-slide-not",
   "title": "Switching a long recording to Edit never freezes the app, and its tool bar arrives with the slide",
   "goal": "Switching a long captioned recording from View to Edit slides smoothly, but the tool bar and the track rows fill in up to about 0.7s after the key, and now and then the app freezes for longer than 100 ms in that time (118.6 ms in the 2026-10-20 full sweep), which fails its walk. The panel may arrive just after the slide (settled on 2026-10-20, when the waiting cards were taken as recommended); the tool bar and track rows should arrive with it, and nothing should hold the app for 100 ms.",
-  "epic": "video-editing",
+  "epic": "video-perf",
   "priority": "p2-normal",
-  "seq": 380,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-11-11T16:14:31.471Z",
+  "updated": "2026-11-13T14:15:34.128Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -238,6 +238,14 @@
     {
       "t": "2026-11-11T16:14:31.470Z",
       "note": "seq 370 -> 380"
+    },
+    {
+      "t": "2026-11-13T14:15:33.202Z",
+      "note": "triage 2026-11-13: epic video-editing -> video-perf. A freeze of over 100 ms switching a long recording to Edit is exactly what the video-perf focus promises away (editing stays instant at any length), so it moves to the head of p2 with the other focus work. The speed walk tools (Scripts/perf/speed-walk.sh, rank-trace.py) measure the main thread the same way; the first long-edit fixes (c771adfbb) may already have shrunk it, so measure before fixing."
+    },
+    {
+      "t": "2026-11-13T14:15:34.127Z",
+      "note": "seq 380 -> 20"
     }
   ],
   "walks": [

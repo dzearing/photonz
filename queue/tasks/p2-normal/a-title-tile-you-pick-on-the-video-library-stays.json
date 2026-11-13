@@ -4,12 +4,12 @@
   "goal": "In a video, picking a title page in the Library opens its section above the shelf, and about two thirds of a second later the shelf grows shorter and the row with the tile you just picked slides partly under the bottom edge of the panel. The picked tile, and the one beside it, should stay fully in view without the person having to scroll.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 4080,
+  "seq": 630,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-12T17:47:53.036Z",
-  "updated": "2026-11-12T17:47:53.039Z",
+  "updated": "2026-11-13T14:15:38.673Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-12 on main (811a2e29a + the walk fix in the-library-tile-click-timing-walk-passes-again) with a debug walk: library-tile-click-latency-walk steps 1-9, then press Film Super, wait 1.0, snapshot, panel. The panel listing (panel-*.json) said: \"Film Super\" is 26pt below the bottom of the part of its own scrolling area that is on screen (same for Keynote Section). Inside timeTileClicks the gap was larger: the next press had to scroll 82pt to reach Keynote Section. Picture: queue/audits/2026-11-12-picked-title-tile-slides-under-panel-edge.png (crop: ...-crop.png): the Title Page section shows Film Super above the shelf and the two tiles sit cut off behind the Sections bar. Mechanism: InspectorPanel settleShelfPane() runs EditorState.shelfHoldSeconds + 0.02 after selectedLibraryItemID changes and animates the shelf pane to its unheld height (PanelShelfPane.drawnHeight), which is shorter now that the Title Page section is open, without keeping the picked tile in view. Possible fix: scroll the shelf so the picked tile stays visible when the pane settles (ScrollViewReader proxy is already in shelfPane).",
@@ -22,6 +22,10 @@
     {
       "t": "2026-11-12T17:47:53.038Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-13T14:15:38.672Z",
+      "note": "seq 4080 -> 630"
     }
   ],
   "walks": [

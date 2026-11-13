@@ -4,12 +4,12 @@
   "goal": "Opening the 20 minute reference edit freezes the app for about 14 seconds and the 60 minute one for over two minutes before anything can be clicked. A long project should open as quickly as a short one feels, with the window usable within a couple of seconds.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 17.5,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T05:48:39.928Z",
-  "updated": "2026-11-13T05:48:39.931Z",
+  "updated": "2026-11-13T14:15:33.932Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-12 with the reference edit (task a-long-reference-edit-opens-in-the-probe-in-one). Command: Scripts/playtest.sh <copy of Scripts/playtest/reference-edit-opens-walk.json with setup referenceEdit 20 or 60 and expectTimeline lengthMS to match> --no-build. Output, the walk's log: 20 min (177 clips, 125 cuts): 'wait 2.0s, never went quiet ... mainBusy 18286.5ms over 883 passes, longest 13841.7ms from 48ms in'. 60 min (524 clips, 377 cuts): setup's open took ~140 s ('written in 145s', the write itself is under a second), then 'wait 2.0s ... mainBusy 181522.3ms over 3223 passes, longest 134942.9ms from 144ms in', walk ran out of time after 180s. 6 min (55 clips): longest pass on open 2.9 s. Likely suspects to confirm with a profile, not assume: the core's track layout is recomputed per call (trackLayout(), editPoints(onTrack:), editPointCut) and many callers ask per clip or per cut, so work grows with the square of the clip count. In the builder at 60 minutes, landing one clip with PhotonzDocument.land cost ~40 ms and setting one transition with setTransition(at: .edit) ~100 ms, so ReferenceEdit.Builder bypasses them; the timeline's views likely do the same per-clip asking.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-11-13T05:48:39.930Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-13T14:15:14.374Z",
+      "note": "triage 2026-11-13 spot check, after the first long-edit fixes (c771adfbb, 0582a551c, 8f1d0bc46; probe built 05:57): ran a copy of Scripts/playtest/reference-edit-opens-walk.json with setup referenceEdit 20, lengthMS 1200000, first three steps, --no-build. Still reproduces: '[1 wait] 2.0s, never went quiet (8 of 8 slices busy ... busiest 14901.1ms); mainBusy 17825.9ms over 829 passes, longest 14887.0ms from 2981ms in'. Keeping the document's track layout did not touch opening; stays p1."
+    },
+    {
+      "t": "2026-11-13T14:15:33.931Z",
+      "note": "seq 17.5 -> 90"
     }
   ],
   "walks": [

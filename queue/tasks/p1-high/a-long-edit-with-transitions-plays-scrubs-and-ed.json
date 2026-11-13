@@ -4,12 +4,12 @@
   "goal": "With a moderately complex 6 minute video with transitions, performance tanked: playback, scrubbing and editing all slowed. Build a reference edit and a perf harness that measures it the way a person uses it, find where the time goes, and fix the biggest costs until playback, scrubbing and editing meet the video-perf objective's numbers. Then file the remaining costs as follow-up tasks under video-perf, each with its own measured bar.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 3e-10,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-13T14:11:50.297Z",
+  "updated": "2026-11-13T14:18:35.426Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -23,6 +23,7 @@
     "Fix the biggest costs in this task (likely candidates to confirm, not assume: decoding ahead of the playhead, caching composited transition frames, timeline views redrawing for every frame, per-frame allocations) until, on the 6 minute edit: 1x playback drops no frames, scrubbing shows the frame under the pointer within one display frame, and each edit finishes within 16 ms on the main thread. Each fix with a before and after number.",
     "What is not reached here is filed as follow-up tasks under video-perf (p1, source user), one cost each, with its measured bar and the harness command that checks it. The 20 and 60 minute versions are measured and their numbers recorded even if not yet fixed.",
     "No change in what is drawn: export of the reference edit is byte for byte the same before and after (or within a stated tolerance, measured). Perf note in every commit that touches the composite path.",
+    "Once the per-tick SwiftUI cost is found, the rule it implies (which views may watch the playhead on every tick, and how the rest read it) is written into the video design notes in docs/design, so the next view added to the window does not slow playback again. Two of the four fixes so far were this same pattern: work recomputed per query (track layout) and views re-reading the playhead (timeline menus).",
     "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
   ],
   "log": [
@@ -73,6 +74,14 @@
     {
       "t": "2026-11-13T14:11:50.296Z",
       "note": "Four fixes landed: playback 4 -> ~1450 of 1819 frames a minute, worst gap 17.9 s -> 125 ms, scrub lag 160 -> 8 frames, edits 1.4-5.7 s -> 90-203 ms on the 6 min edit. Bars (no dropped frames, scrub within 1 frame, edits <=16 ms) not yet reached: the remaining cost is SwiftUI graph work per playhead move."
+    },
+    {
+      "t": "2026-11-13T14:15:33.325Z",
+      "note": "seq 3e-10 -> 10"
+    },
+    {
+      "t": "2026-11-13T14:18:35.425Z",
+      "note": "triage 2026-11-13: added an acceptance line asking for the playhead-watching rule to be written down once found. Recurring pattern across this task, the speed walk and the open-time bug: derived data rebuilt on every query and views that watch the playhead every tick."
     }
   ],
   "started": "2026-11-13T10:57:37.033Z",
