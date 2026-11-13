@@ -23021,3 +23021,10 @@ units.
 - `AskModelWatch`: a server silent for 90 s is given up ("Ask's model went quiet. Try again."), nothing changes, the server is stopped. 90 s measured against 26,849 server tasks (worst working gap 37 s). Reproduced with kill -STOP on the probe's server.
 - Walk setup `askSeconds` and `ask-ends-inside-its-time-walk`. Held-out run 20261112-233938: 0 of 53 cases hit the limit, total 59.9.
 - Next: whether landing part of a long plan beats waiting (asked in the audit).
+
+## 2026-11-13 — Ask puts a recording from History on the timeline and cuts where something happens
+
+- Task ask-puts-a-recording-from-history-on-the-timelin (Next), tests first (`AskVideoTimelineTests`): on a video Ask's model is offered list_history (a look) and add_clip (a step), and, for a model that sees, contact_sheet. A sheet's picture goes to the model in a user message after the turn's tool answers (`AskConversation.showPictures`), at most 3 sheets a request, 12 frames 320 wide, and the oldest goes first when the window fills. Two general rule lines on a video only; picture requests see the same tools and rules as before.
+- Found while measuring: Ask added `document` to every look, and list_history takes none, so it was refused every time (`AskLook.request(document:)` now passes it only to tools that take one).
+- Eval: dissolve case 8.5 -> 87.4 / 83.1; History case 7.5 -> 75.8 / 67.9 / 75.8 (the judge marks the eval's History recording down as a repeat of the same footage; rules 10 every time). Held-out 59.8 against 59.9 (20261113-022038-ask-held-out). Walk `ask-puts-the-latest-recording-on-the-timeline-walk` green with a real capture.
+- The three-clip video case no longer starts (its setup cannot find the open video over the bridge): folded into the-ask-scoring-run-refuses-to-score-when-the-mo.

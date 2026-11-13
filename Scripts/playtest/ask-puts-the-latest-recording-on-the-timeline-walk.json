@@ -1,0 +1,35 @@
+{
+  "out": "/tmp/photonz-playtest/ask-puts-the-latest-recording-on-the-timeline-walk",
+  "seed": "Ask on a video at Next defaults: the sample recording open with History holding recordings and newer screenshots, the title bar's Ask button, 'put my latest recording after this one'. Ask looks through History, skips the screenshots, and lays the newest recording on the timeline straight after the open clip; one undo takes it back. Needs Ask's model on this Mac (docs/design/ask.md).",
+  "clock": 420,
+  "setup": {
+    "timelineOpen": true,
+    "history": 6,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "put my latest recording after this one" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
+    { "do": "describe", "stage": "run-ended", "note": "where the request ended" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran", "timeout": 1 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-ran", "note": "a second clip on the timeline after the sample, and one row in the Agent group saying a clip was added" },
+    { "do": "expectLayers", "atLeast": 2 },
+    { "do": "expect", "control": "Agent Change 1", "present": true },
+    { "do": "snapshot", "name": "1-ran" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-undone", "note": "one Command Z took the clip back off" },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "expect", "control": "Agent Change 1 State", "reads": "undone" }
+  ]
+}

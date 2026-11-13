@@ -1,0 +1,27 @@
+{
+  "feature": "Ask adds a recording from History and cuts where something happens",
+  "epic": "agent-ask",
+  "summary": "On a video, Ask can now put a recording from History on the timeline, and can look at the video's frames to find a moment by what happens in it, then cut there and put a transition on the cut.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Ask's built-in model downloaded. History holding at least one recording.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and press Ask in the title bar." },
+    { "do": "Type: put my latest recording after this one, and press Return.", "shot": "2026-11-13-ask-history-clip-1-ran-sc.png" },
+    { "do": "Check the timeline: your newest recording sits on V1 straight after the open clip, and newer screenshots in History were skipped." },
+    { "do": "Press Command Z once: the added clip comes back off." },
+    { "do": "Ask again: cut this clip where <something on screen> starts and put a dissolve across the cut.", "shot": "2026-11-13-ask-dissolve-at-the-copy-frames.png" },
+    { "do": "Scrub across the cut: it lands on the first frame that shows the change, with a dissolve on it." }
+  ],
+  "evaluate": [
+    "Did Ask pick the recording you meant by 'latest', skipping newer screenshots?",
+    "Did the cut land on the moment you described, within a few frames?",
+    "Is the extra wait while Ask looks at the frames (about half a minute to two minutes) acceptable for a request like this?",
+    "Would you expect Ask to say which recording it added, by name, in its row?"
+  ],
+  "rough": [
+    "No mock covers Ask's video requests; the row in the Agent group reads as any other Ask change ('Added a clip').",
+    "The second picture is the eval's contact sheet of the result (cut at 2.0 s, 0.4 s dissolve), not a window capture; the walk photographs only the History request.",
+    "Finding a moment needs a model that sees. With a model that cannot see pictures, Ask is not offered the frames and still answers that it cannot find the moment.",
+    "The eval scores the History case 67.9 to 75.8 across three runs: the judge marks it down because the eval's History recording is the same footage as the open clip, which reads as a repeat. Ask's result is right every time (rules 10 of 10)."
+  ]
+}
