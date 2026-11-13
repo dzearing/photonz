@@ -1,0 +1,36 @@
+{
+  "id": "exporting-the-six-minute-reference-edit-takes-no",
+  "title": "Exporting the six minute reference edit takes no longer than the edit itself",
+  "goal": "A person exporting a long screen recording edit waits for it, and a tool that takes longer than the video to write it feels broken next to Final Cut. Make the 6 minute reference edit, with its transitions, titles and zooms, export at the sheet's default settings in at most six minutes on this Mac, with the same picture as today.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 13,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T04:57:39.881Z",
+  "updated": "2026-11-13T04:57:54.935Z",
+  "deps": [
+    "a-speed-walk-measures-the-long-reference-edit-th"
+  ],
+  "blockedBy": [],
+  "notes": "Sixth success item of video-perf ('Export of the 6 minute reference edit takes at most its own length on this Mac'). Depends on a-speed-walk-measures-the-long-reference-edit-th. If the baseline already meets the bar, the guarded number in the short speed walk is the deliverable and the audit says so plainly. Competitors: Final Cut renders in the background and exports a cuts-only edit by passing frames through; that is an idea for later, not this task.",
+  "acceptance": [
+    "Measured first: the speed walk's export time for the 6 minute reference edit at the export sheet's defaults, and a profile of the export saying where its time goes (decoding, compositing, encoding, waiting on the main thread). Numbers in the audit before any change.",
+    "The 6 minute reference edit exports in at most 6 minutes at the sheet's defaults on this Mac, measured three times, the slowest one counting; the 20 minute edit's time is recorded too.",
+    "What is drawn does not change: frames sampled at 20 moments (several mid-transition, one on a title, one in a zoom) differ from today's export by no more than a stated tolerance, measured.",
+    "The app stays usable while it exports: the longest main thread pass during the export is recorded and under 50 ms.",
+    "Walks that export video (the 1080p export walk, an-editing-session-walk) stay green; Scripts/test.sh passes; a perf note in the commit since the composite path is touched.",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T04:57:39.883Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-13T04:57:54.934Z",
+      "note": "seq 19.375 -> 13"
+    }
+  ]
+}

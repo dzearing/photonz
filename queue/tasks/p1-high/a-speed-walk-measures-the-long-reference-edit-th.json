@@ -1,0 +1,38 @@
+{
+  "id": "a-speed-walk-measures-the-long-reference-edit-th",
+  "title": "A speed walk measures the long reference edit the way a person uses it, and says where the time goes",
+  "goal": "Before anything is made faster, measure the long reference edit the way a person uses it: play it through at 1x, scrub it end to end, trim, blade and undo while it plays, scroll and zoom its timeline, play an hour of it for ten minutes, and export it. Record dropped frames, how late the picture is under the pointer, the longest stall per edit, memory and export time, and profile where the time goes. Every later speed fix is judged by this walk's numbers. Second slice of the user's ask that a long edit with transitions plays, scrubs and edits without a stutter.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 2e-10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T04:57:14.236Z",
+  "updated": "2026-11-13T04:57:54.786Z",
+  "deps": [
+    "a-long-reference-edit-opens-in-the-probe-in-one"
+  ],
+  "blockedBy": [],
+  "notes": "Split from the user's task a-long-edit-with-transitions-plays-scrubs-and-ed (its second and third acceptance lines) by the manager pass of 2026-11-12. Depends on a-long-reference-edit-opens-in-the-probe-in-one. Reuse what exists, do not rebuild it: expectPlaybackNeverBlank and the late-look count (PlaytestHarness.swift, PlaybackKeepsUp in PhotonzCore), expectScrubSmooth (scrub-never-blacks-out-walk), the wait step's longestUnderMS and busyUnderMS (PlaytestStep.wait in PlaytestScript.swift), ViewBuildMeter.swift. Leads worth confirming, not assuming: 23 app files outside EditorState read editorState.documentTimeMS (grep -rl documentTimeMS Sources/Photonz), so any of them read in a per-clip body rebuilds that clip every playback frame; frames across a cut and a cut within the same recording are read by the exact-read lanes rather than the one-pass sweeper (left rough in a-full-screen-retina-recording-keeps-up-while-it); MoviePlayLookahead compares the whole document every tick (self.document != document). Perf rules from CLAUDE.md: speed budgets live in a ...PerfTests suite judged against MachineSpeed/PerfClock, not flat milliseconds.",
+  "acceptance": [
+    "Playing: the 6 minute edit played whole at 1x at Next defaults records frames due against frames shown, the count dropped, the worst gap between two shown frames, and the same three numbers for each transition on its own, so a dropped frame is pinned to the cut it happened at. Sound: any gap or underrun the audio engine reports while it plays.",
+    "Scrubbing: the playhead dragged end to end at a slow, a medium and a fling speed records how many display frames the picture trails the pointer (median and worst), on the 6 and the 60 minute edits.",
+    "Editing while it plays: trim, move, blade, undo, add a transition and change a title's words, each recording the longest main thread pass it caused, plus how many view bodies are rebuilt per playback frame (Sources/Photonz/Playtest/ViewBuildMeter.swift) with nothing being edited.",
+    "Timeline: scroll and zoom the 60 minute edit's timeline end to end, recording frame times against the 120 Hz display.",
+    "Memory: resident memory sampled once a second while the 60 minute edit plays and is scrubbed for 10 minutes; the curve and its peak recorded. Export: wall time to export the 6 minute edit at the export sheet's defaults.",
+    "Every run writes one results file and a compare command prints two runs side by side (Scripts/perf/compare.sh or a flag on the walk). A short form, at most 2 minutes (60 seconds of play across 3 transitions, one scrub, three edits), joins the walk set and fails on anything worse than the baseline by a stated margin; the long form is a command, never in the rotating check.",
+    "The baseline for today's HEAD on the 6, 20 and 60 minute edits is in the audit, beside a Time Profiler (and Metal System Trace if the GPU is in question) trace of playing across three transitions and of one blade while playing, with where the time goes ranked: decoding, compositing transitions, the timeline's SwiftUI updates, waveform and thumbnail drawing, other main thread work, memory churn. No fix lands in this task except to the measuring; the ranked list is the input to the next slice.",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T04:57:14.238Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-13T04:57:54.785Z",
+      "note": "seq 17.5 -> 2e-10"
+    }
+  ]
+}

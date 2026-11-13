@@ -1,0 +1,34 @@
+{
+  "id": "a-long-reference-edit-opens-in-the-probe-in-one",
+  "title": "A long reference edit opens in the probe in one step, at 6, 20 and 60 minutes",
+  "goal": "Every speed fix for video needs the same long, busy edit to measure against, built the same way every time, so a number before a change and a number after it mean something. Build that edit: screen recordings at Retina size cut into a 6 minute video with three tracks, thirty cuts with dissolves, a push and a 3D transition, titles, zooms, a moving background and sound, plus 20 and 60 minute versions. This is the first slice of the user's ask that a long edit with transitions plays, scrubs and edits without a stutter.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 1e-10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T04:56:57.804Z",
+  "updated": "2026-11-13T04:57:54.708Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split from the user's task a-long-edit-with-transitions-plays-scrubs-and-ed (2026-11-12 intake: 'With a moderately complex 6minute video with transitions, perf tanked'), its first acceptance line, by the manager pass of 2026-11-12. Precedent for a generated, kept recording: Sources/Photonz/Playtest/PlaytestLongTalk.swift (five minute talk written once per machine, each walk opens a fresh copy). Test fixtures have no long Retina recording, and video files are not committed (find . -name '*.mov' finds only audit reels). Use the shared transition and title catalogues so the edit exercises real presets (dissolve, push, a 3D one such as cube or flip), not special-case code. The next slice, the speed walk that measures this edit, depends on this task.",
+  "acceptance": [
+    "Source recordings are generated, not committed: screen-recording-like footage at 3456x2234 (60 fps, the rate a Retina recording is captured at, or 30 if the encoder cannot keep 60 and the audit says so), with the moving content a real recording has (a pointer travelling, text scrolling, a window sliding) and a voice or music track. Written once per machine and kept, the way PlaytestLongTalk keeps its five minute talk, and re-made when its recipe version changes.",
+    "A builder in PhotonzCore, pure and unit tested, lays the recordings into a document from a seed: 3 or more video tracks, 30 or more cuts, dissolves at most cuts plus at least one push and one 3D transition, at least 4 titles (one on a moving background), at least 6 zooms, a moving picture background behind the recording, attached sound and a music track. Same seed, same document: a test says so. The 20 and 60 minute versions are the 6 minute recipe carried on with varied cuts (so the 60 minute one has several hundred clips), not one file looped.",
+    "Opens in one step in the probe: a walk setup (\"reference edit\" with a length of 6, 20 or 60) and a script Scripts/perf/reference-edit.sh 6|20|60 that writes the project under a known folder and opens it with Scripts/probe-app.sh. A person can press Space on it at Next defaults and it plays.",
+    "A test counts what the 6 minute edit holds (tracks, cuts, each transition kind, titles, zooms, sound) against the list in the video-perf objective.",
+    "Nothing in the app changes for a person; this is a measuring tool. Audit written under queue/audits/ with a contact sheet of the 6 minute edit at 12 moments (several mid-transition) and a picture of its timeline, so a reader can see it is a realistic edit.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T04:56:57.806Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-13T04:57:54.707Z",
+      "note": "seq 15 -> 1e-10"
+    }
+  ]
+}

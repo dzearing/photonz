@@ -2,15 +2,17 @@
   "id": "playing-a-five-minute-captioned-recording-never",
   "title": "Playing a five minute captioned recording never holds the app over 50 ms",
   "goal": "The video focus promises that on a five minute recording with its captions written, no frame of playback keeps the app busy for more than 50 ms, so a click or key during playback answers at once. Nothing has ever measured that while the video plays. Measure it, fix any frame that holds the app longer, and keep a walk that turns red if it ever comes back.",
-  "epic": "video-beats-premiere",
-  "priority": "p2-normal",
-  "seq": 330,
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 15,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:22:21.058Z",
-  "updated": "2026-11-11T16:14:31.019Z",
-  "deps": [],
+  "updated": "2026-11-13T04:57:55.310Z",
+  "deps": [
+    "a-speed-walk-measures-the-long-reference-edit-th"
+  ],
   "blockedBy": [],
   "notes": "Third success item of video-beats-premiere in queue/objectives.json. Open thread in the manager reports of 2026-10-15 and 2026-10-16. Checked 2026-10-19: a-long-captioned-recording-walk.json measures the longest pass after key presses (longestUnderMS 80, lines 22-42) and after captions land (150, line 14) but never plays; a-captioned-recording-sits-quiet-walk measures idle busy time (busyUnderMS 400). The step is PlaytestStep.wait(seconds:onTheClock:longestUnderMS:busyUnderMS:) (PhotonzCore/PlaytestScript.swift:2713-2723). Frame lateness while playing is already guarded by playing-a-recording-never-blinks-walk (done tasks a-full-screen-retina-recording-keeps-up-while-it, a-full-screen-recording-keeps-up-as-it-plays-acr); this task is about the main thread, not frame supply.",
   "acceptance": [
@@ -228,6 +230,18 @@
     {
       "t": "2026-11-11T16:14:31.018Z",
       "note": "seq 320 -> 330"
+    },
+    {
+      "t": "2026-11-13T04:57:55.084Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-11-13T04:57:55.160Z",
+      "note": "seq 330 -> 15"
+    },
+    {
+      "t": "2026-11-13T04:57:55.309Z",
+      "note": "manager pass 2026-11-12: moved to p1 under the video-perf focus (epic set to video-perf) and made to wait on a-speed-walk-measures-the-long-reference-edit-th, so it measures the main thread during playback with that walk's tools instead of building its own. Its own load (a five minute talk with about 170 caption cues) stays the case it checks."
     }
   ]
 }

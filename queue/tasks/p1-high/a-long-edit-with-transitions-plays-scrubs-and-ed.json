@@ -9,8 +9,11 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-13T03:17:18.355Z",
-  "deps": [],
+  "updated": "2026-11-13T04:57:55.235Z",
+  "deps": [
+    "a-long-reference-edit-opens-in-the-probe-in-one",
+    "a-speed-walk-measures-the-long-reference-edit-th"
+  ],
   "blockedBy": [],
   "notes": "User, 2026-11-12 (intake): 'With a moderately complex 6minute video with transitions, perf tanked. I think we need to focus on perf so that editing and playing back video is top notch and scalable.' video-perf was made the objectives focus the same day, with its success numbers. Existing pieces to read first: Sources/PhotonzCore/MoviePlayPass.swift, PlaybackKeepsUp.swift, the scrubbing task scrubbing-is-smooth-never-goes-black-and-the-pic. Runs are long: keep each runner pass inside the three passes a day cap by splitting into the follow-ups above.",
   "acceptance": [
@@ -30,6 +33,10 @@
     {
       "t": "2026-11-13T03:17:18.354Z",
       "note": "seq 15 -> 3e-10"
+    },
+    {
+      "t": "2026-11-13T04:57:55.234Z",
+      "note": "manager pass 2026-11-12: split so each runner sitting finishes. The reference edit (first acceptance line) is a-long-reference-edit-opens-in-the-probe-in-one; the speed walk, baseline and ranked profile (second and third lines) are a-speed-walk-measures-the-long-reference-edit-th. Both are deps of this task, so it starts from their baseline and ranked list and does the fixes (lines four to six). The timeline at hundreds of clips, export time and memory each have their own task under video-perf."
     }
   ]
 }

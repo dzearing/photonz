@@ -17054,3 +17054,20 @@
 {"t":"2026-11-13T04:41:59.009Z","ev":"task_dropped","id":"the-ask-test-set-runs-its-three-clip-video-case","from":"pending","note":"folded into the-ask-scoring-run-refuses-to-score-when-the-mo"}
 {"t":"2026-11-13T04:42:09.829Z","ev":"task_note","id":"ask-puts-a-recording-from-history-on-the-timelin"}
 {"t":"2026-11-13T04:42:41.405Z","ev":"task_done","id":"ask-puts-a-recording-from-history-on-the-timelin","from":"in_progress","note":"Ask on a video now has list_history and add_clip, and a model that sees gets contact sheets of frames to find a moment (e478f6063); a look passes the document only to tools that take one, which had refused every list_history. Eval: dissolve case 8.5 -> 87.4/83.1, History case 7.5 -> 75.8/67.9/75.8 (median 75.8, rules 10 each run); held-out 59.8 vs 59.9. Walk ask-puts-the-latest-recording-on-the-timeline-walk green at Next defaults with a real capture; audit queue/audits/2026-11-13-ask-puts-a-recording-from-history-on-the-timelin.json."}
+{"t":"2026-11-13T04:52:19.708Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-13T04:54:22.790Z","ev":"slice_pass","walks":30,"passed":29,"failed":1,"seconds":548,"of":1157,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-13T04:56:57.808Z","ev":"task_created","id":"a-long-reference-edit-opens-in-the-probe-in-one","priority":"p1-high","title":"A long reference edit opens in the probe in one step, at 6, 20 and 60 minutes"}
+{"t":"2026-11-13T04:57:14.240Z","ev":"task_created","id":"a-speed-walk-measures-the-long-reference-edit-th","priority":"p1-high","title":"A speed walk measures the long reference edit the way a person uses it, and says where the time goes"}
+{"t":"2026-11-13T04:57:39.762Z","ev":"task_created","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","priority":"p1-high","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips"}
+{"t":"2026-11-13T04:57:39.885Z","ev":"task_created","id":"exporting-the-six-minute-reference-edit-takes-no","priority":"p1-high","title":"Exporting the six minute reference edit takes no longer than the edit itself"}
+{"t":"2026-11-13T04:57:40.007Z","ev":"task_created","id":"memory-stays-bounded-while-an-hour-long-edit-pla","priority":"p1-high","title":"Memory stays bounded while an hour-long edit plays and scrubs for ten minutes"}
+{"t":"2026-11-13T04:57:54.709Z","ev":"task_resequenced","id":"a-long-reference-edit-opens-in-the-probe-in-one","from":15,"to":1e-10}
+{"t":"2026-11-13T04:57:54.787Z","ev":"task_resequenced","id":"a-speed-walk-measures-the-long-reference-edit-th","from":17.5,"to":2e-10}
+{"t":"2026-11-13T04:57:54.861Z","ev":"task_resequenced","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":18.75,"to":12}
+{"t":"2026-11-13T04:57:54.936Z","ev":"task_resequenced","id":"exporting-the-six-minute-reference-edit-takes-no","from":19.375,"to":13}
+{"t":"2026-11-13T04:57:55.011Z","ev":"task_resequenced","id":"memory-stays-bounded-while-an-hour-long-edit-pla","from":19.6875,"to":14}
+{"t":"2026-11-13T04:57:55.086Z","ev":"task_reprioritized","id":"playing-a-five-minute-captioned-recording-never","from":"p2-normal","to":"p1-high"}
+{"t":"2026-11-13T04:57:55.162Z","ev":"task_resequenced","id":"playing-a-five-minute-captioned-recording-never","from":330,"to":15}
+{"t":"2026-11-13T04:57:55.236Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-13T04:57:55.311Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-11-13T04:58:39.157Z","ev":"manager","filed":5,"readyBefore":65,"readyAfter":64,"report":"queue/manager/2026-11-12-2058.md"}

@@ -1,0 +1,36 @@
+{
+  "id": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
+  "title": "The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips",
+  "goal": "On a long edit the timeline is where a person spends their time, and it is the part most likely to slow down as clips pile up: every clip bar, thumbnail strip and waveform drawn again when anything moves. Make the timeline of the 60 minute reference edit, several hundred clips, scroll, zoom and follow a playing playhead at the display's 120 Hz, and keep an edit on it inside one frame.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T04:57:39.758Z",
+  "updated": "2026-11-13T04:57:54.860Z",
+  "deps": [
+    "a-speed-walk-measures-the-long-reference-edit-th"
+  ],
+  "blockedBy": [],
+  "notes": "Fourth success item of video-perf ('the timeline scrolls and zooms at 120 Hz with hundreds of clips'). Depends on the speed walk task a-speed-walk-measures-the-long-reference-edit-th; if that walk's ranking says the timeline is not where the time goes, say so in the log and narrow this to what it measured. Precedents for building only what is on screen: the-layers-list-only-builds-the-rows-you-can-see, the-layers-panel-only-draws-thumbnails-for-the-r, keying-a-value-redraws-only-what-the-key-changes (all done). Timeline code: TimelineTrackRows.swift, ClipPiecesBar.swift (104 KB), TimelineDock.swift, SoundLane.swift; 23 app files read editorState.documentTimeMS. The playhead belongs on its own layer, not in the clip rows' bodies.",
+  "acceptance": [
+    "Measured first with the speed walk on the 60 minute reference edit at Next defaults: frame times scrolling and zooming the timeline end to end, view bodies rebuilt per playback frame, and the longest main thread pass for trim, move, blade and undo. Numbers in the audit before any change.",
+    "Scrolling and zooming the 60 minute timeline: no frame over 8.3 ms on the main thread (120 Hz) in 95 percent of frames and none over 16 ms, measured by the speed walk.",
+    "While it plays with nothing being edited, only the playhead and what the playhead changes are rebuilt each frame: clip bars, thumbnails and waveforms off screen or unchanged are not built again (counted with ViewBuildMeter, the count in the audit before and after).",
+    "Trim, move, blade and undo on the 60 minute edit each finish within 16 ms on the main thread, as on the 6 minute one.",
+    "No change in what the timeline shows: the timeline walks that photograph it (cut, trim, transitions, key lanes) stay green. Perf numbers before and after in the audit; Scripts/test.sh passes.",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T04:57:39.760Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-13T04:57:54.859Z",
+      "note": "seq 18.75 -> 12"
+    }
+  ]
+}

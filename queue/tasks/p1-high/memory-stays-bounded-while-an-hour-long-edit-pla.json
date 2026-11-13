@@ -1,0 +1,36 @@
+{
+  "id": "memory-stays-bounded-while-an-hour-long-edit-pla",
+  "title": "Memory stays bounded while an hour-long edit plays and scrubs for ten minutes",
+  "goal": "Playing and scrubbing a long edit keeps decoded frames, thumbnails, waveforms and composited pictures in memory, and if nothing lets go the app grows until the Mac slows down. Make sure that playing and scrubbing the 60 minute reference edit for ten minutes levels off under a ceiling, and keep a check that fails if it ever grows again.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 14,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T04:57:40.003Z",
+  "updated": "2026-11-13T04:57:55.010Z",
+  "deps": [
+    "a-speed-walk-measures-the-long-reference-edit-th"
+  ],
+  "blockedBy": [],
+  "notes": "Fifth success item of video-perf ('playing and scrubbing the 60 minute edit for 10 minutes never grows past a measured ceiling'). Depends on a-speed-walk-measures-the-long-reference-edit-th. Places that keep pictures: MovieFrames.swift and MovieFramesInHand (frame budget, farthest-first eviction), MoviePlayPass.frameBudget, ImageStore (PhotonzRender), PaintRasterCache, thumbnail strips (DrawnFilmstrips) and waveforms (DrawnWaveforms). History holds up to 200 document snapshots (History.swift limit), which hold refs not pixels, so check that parked originals do not pin frames.",
+  "acceptance": [
+    "Measured first with the speed walk's long form: resident memory once a second over 10 minutes of playing and scrubbing the 60 minute reference edit at Next defaults, and what holds it (Allocations or a memory graph at the peak). Curve and peak in the audit before any change.",
+    "After the first minute, memory levels off: growth from minute 2 to minute 10 is under 10 percent, and the peak sits under a ceiling set from the measurement and written in the audit (with the 6 minute edit's peak beside it).",
+    "Whatever does not let go (frame windows, thumbnail or waveform caches, the image store, composited pictures, undo snapshots holding pictures) is fixed, each with its before and after.",
+    "The long-form memory check is a command a later speed change can run; the short speed walk records peak memory for its two minutes so a jump shows on every rotating check.",
+    "Playback and scrub walks stay green; Scripts/test.sh passes.",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T04:57:40.005Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-13T04:57:55.009Z",
+      "note": "seq 19.6875 -> 14"
+    }
+  ]
+}
