@@ -318,8 +318,14 @@ extension EditorState {
             // block decodes from the key frame before it, and a playhead that
             // ran on meanwhile leaves the picture stuck (`MoviePlayBackward`).
             if rate < 0 { await self?.preRollBackward() }
+            // Ticks on its own beat, not a frame after each tick's work
+            // (`PlayClockPace`).
+            let beat = ContinuousClock.now
             while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(MovieRef.frameStepMS))
+                let sinceBeat = beat.duration(to: .now)
+                let elapsedMS = Double(sinceBeat.components.seconds) * 1000
+                    + Double(sinceBeat.components.attoseconds) / 1e15
+                try? await Task.sleep(for: .milliseconds(PlayClockPace.waitMS(elapsedMS: elapsedMS)))
                 // A change of speed cancels this clock mid-sleep, and the sleep
                 // ends early rather than throwing it out: read against the new
                 // clock's start, nothing has elapsed, and from the last frame

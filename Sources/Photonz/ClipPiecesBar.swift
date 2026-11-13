@@ -1840,8 +1840,9 @@ struct TimelineClipMenu: View {
         // as it is (`EditorState+TimelinePointing`).
         let _ = editorState.timelineRightPresses
         let _ = editorState.timelineMenuBuilt(for: .clip(layerID, piece: piece, onTheSound: onTheSound))
-        MenuRowsView(rows: editorState.timelineClipMenuRows(layerID: layerID, piece: piece,
-                                                            onTheSound: onTheSound))
+        MenuRowsView(rows: editorState.timelineMenuRows {
+            editorState.timelineClipMenuRows(layerID: layerID, piece: piece, onTheSound: onTheSound)
+        })
     }
 }
 
@@ -1852,7 +1853,7 @@ struct TimelineCutMenu: View {
     let cut: Int
 
     var body: some View {
-        MenuRowsView(rows: editorState.timelineCutMenuRows(layerID: layerID, cut: cut))
+        MenuRowsView(rows: editorState.timelineMenuRows { editorState.timelineCutMenuRows(layerID: layerID, cut: cut) })
     }
 }
 

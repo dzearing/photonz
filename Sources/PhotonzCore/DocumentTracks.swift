@@ -182,8 +182,17 @@ extension PhotonzDocument {
 
     /// The track a clip is on. Anything inside a clip is on its clip's track.
     public func trackID(ofClip id: UUID) -> UUID? {
-        guard let top = topLevelLayer(containing: id) else { return nil }
-        return trackLayout().clips.first { $0.value.contains(top.id) }?.key
+        derived.answer(\.trackOfLayer) {
+            let layout = trackLayout()
+            var home: [UUID: UUID] = [:]
+            for (track, members) in layout.clips { for clip in members { home[clip] = track } }
+            var map: [UUID: UUID] = [:]
+            for layer in layers {
+                guard let track = home[layer.id] else { continue }
+                for inside in layer.selfAndDescendants where map[inside.id] == nil { map[inside.id] = track }
+            }
+            return map
+        }[id]
     }
 
     /// Whether this clip sits on a locked track.
@@ -216,14 +225,20 @@ extension PhotonzDocument {
 
     /// The tracks, what is on each, and which sound row each clip's own
     /// sound is drawn on.
-    struct TrackLayout {
+    struct TrackLayout: Sendable {
         var tracks: [DocumentTrack] = []
         var clips: [UUID: [UUID]] = [:]
         /// Sound row to the clips whose own sound is drawn on it.
         var linked: [UUID: [UUID]] = [:]
     }
 
+    /// Laid out once per document and kept until its layers or tracks change
+    /// (`DocumentDerived.swift`).
     func trackLayout() -> TrackLayout {
+        derived.answer(\.trackLayout) { layingOutTracks() }
+    }
+
+    func layingOutTracks() -> TrackLayout {
         let clipLayers = timelineClipLayers
         guard !clipLayers.isEmpty || !tracks.isEmpty else { return TrackLayout() }
         // A picture track's sound row is laid out under its picture track

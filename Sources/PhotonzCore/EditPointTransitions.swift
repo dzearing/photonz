@@ -228,17 +228,35 @@ extension PhotonzDocument {
         var isHolding = false
     }
 
+    /// Every edit point carrying a transition, in layer order: the clip
+    /// arriving with it, the one it meets, and the cut between them. Found
+    /// once per document and kept until its layers or tracks change
+    /// (`DocumentDerived.swift`), since every frame drawn and every moment a
+    /// playing clock looks ahead to asks.
+    func editPointTransitions() -> [DocumentDerived.EditPointTransition] {
+        guard hasEditPointTransitions else { return [] }
+        return derived.answer(\.editPointTransitions) {
+            layers.compactMap { incoming in
+                guard incoming.arrivalTransition != nil,
+                      let trackID = trackID(ofClip: incoming.id),
+                      let point = editPoints(onTrack: trackID).first(where: { $0.incoming == incoming.id }),
+                      let cut = editPointCut(outgoing: point.outgoing, incoming: incoming.id)
+                else { return nil }
+                return DocumentDerived.EditPointTransition(incoming: incoming.id, outgoing: point.outgoing, cut: cut)
+            }
+        }
+    }
+
     /// Every transition between two clips running at `ms`. At most one per
     /// clip: a transition may not reach past the middle of either side.
     func editPointMoments(atMS ms: Int) -> [EditPointMoment] {
         var moments: [EditPointMoment] = []
-        for incoming in layers where incoming.arrivalTransition != nil {
-            guard let trackID = trackID(ofClip: incoming.id),
-                  let point = editPoints(onTrack: trackID).first(where: { $0.incoming == incoming.id }),
-                  let cut = editPointCut(outgoing: point.outgoing, incoming: incoming.id),
-                  let drawn = cut.drawnTransition,
+        for found in editPointTransitions() {
+            let cut = found.cut
+            guard let drawn = cut.drawnTransition,
                   ms >= cut.atMS - drawn.beforeMS, ms < cut.atMS + drawn.holdMS + drawn.afterMS,
-                  let outgoing = layer(id: point.outgoing) else { continue }
+                  let incoming = layer(id: found.incoming),
+                  let outgoing = layer(id: found.outgoing) else { continue }
             let outgoingOnScreen = ms < cut.atMS + drawn.holdMS
             var source: Int?
             if drawn.kind.needsOverlap {

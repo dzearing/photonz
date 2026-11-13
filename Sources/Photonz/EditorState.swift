@@ -1832,7 +1832,7 @@ final class EditorState {
     /// every frame of playback, and the bar flickered with it.
     var documentTimeMS: Int {
         get {
-            if !Self.readingForTheMenu { access(keyPath: \.documentTimeMS) }
+            if !Self.readingForTheMenu, !Self.readingAMenuOnTheTimeline { access(keyPath: \.documentTimeMS) }
             return storedDocumentTimeMS
         }
         set {

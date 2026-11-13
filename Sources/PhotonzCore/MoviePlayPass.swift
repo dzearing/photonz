@@ -528,3 +528,26 @@ extension PhotonzDocument {
         return places
     }
 }
+
+/// When a playing clock ticks next (`EditorState.restartDocumentClock`).
+///
+/// On its own beat, a frame's length apart from when it started, rather than a
+/// frame's length after each tick's work: sleeping a whole step after the work
+/// let every millisecond the work took push the next tick back, so a tick of
+/// 10 ms played 23 ticks a second instead of 30 (measured on the 6 minute
+/// reference edit, 2026-11-13). A tick that runs past the next beat waits a
+/// moment anyway, so the window can draw the picture it just asked for, and
+/// joins the beat at the next step rather than racing through the ones it
+/// missed: the playhead is read off the wall clock, so nothing is lost but
+/// the ticks themselves.
+public enum PlayClockPace {
+    /// The least a clock waits between two ticks, however late it is.
+    public static let shortestWaitMS = 4.0
+
+    /// How long to wait, `elapsedMS` after the clock started.
+    public static func waitMS(elapsedMS: Double, stepMS: Int = MovieRef.frameStepMS) -> Double {
+        let step = Double(stepMS)
+        let next = ((elapsedMS / step).rounded(.down) + 1) * step
+        return max(shortestWaitMS, next - elapsedMS)
+    }
+}

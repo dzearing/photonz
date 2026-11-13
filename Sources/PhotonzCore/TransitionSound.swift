@@ -189,17 +189,14 @@ extension PhotonzDocument {
     /// sound: exactly the ones the picture draws (`editPointMoments`).
     func editPointSoundCrossings() -> [TransitionSoundCrossing] {
         guard hasEditPointTransitions else { return [] }
-        return layers.compactMap { incoming in
-            guard incoming.arrivalTransition != nil,
-                  let trackID = trackID(ofClip: incoming.id),
-                  let point = editPoints(onTrack: trackID).first(where: { $0.incoming == incoming.id }),
-                  let cut = editPointCut(outgoing: point.outgoing, incoming: incoming.id),
-                  let drawn = cut.drawnTransition,
+        return editPointTransitions().compactMap { found in
+            let cut = found.cut
+            guard let drawn = cut.drawnTransition,
                   !(drawn.kind.needsOverlap && cut.isContinuous),
-                  let outPieces = layer(id: point.outgoing)?.clipPieces else { return nil }
+                  let outPieces = layer(id: found.outgoing)?.clipPieces else { return nil }
             return TransitionSoundCrossing(
-                outgoing: TransitionSoundPiece(layerID: point.outgoing, index: outPieces.count - 1),
-                incoming: TransitionSoundPiece(layerID: incoming.id, index: 0),
+                outgoing: TransitionSoundPiece(layerID: found.outgoing, index: outPieces.count - 1),
+                incoming: TransitionSoundPiece(layerID: found.incoming, index: 0),
                 cutAtMS: cut.atMS, shape: .transition(drawn))
         }
     }

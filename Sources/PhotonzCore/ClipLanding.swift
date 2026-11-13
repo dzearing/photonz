@@ -370,6 +370,10 @@ extension PhotonzDocument {
     /// with holds on its colour (`ClipTransition.holdMS`): that gap is the
     /// hold, put there by the cut, and the cut is still one cut.
     public func editPoints(onTrack id: UUID) -> [TimelineEditPoint] {
+        derived.editPoints(onTrack: id) { findingEditPoints(onTrack: id) }
+    }
+
+    private func findingEditPoints(onTrack id: UUID) -> [TimelineEditPoint] {
         let clips = clipIDs(onTrack: id)
             .compactMap { clip -> (id: UUID, time: LayerTime, hold: Int)? in
                 guard let layer = layer(id: clip), let time = layer.time else { return nil }

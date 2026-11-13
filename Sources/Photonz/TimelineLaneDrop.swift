@@ -477,6 +477,18 @@ struct TimelineNewTrackSlot: View {
 /// "At this cut"). Once a transition is on it, the cut is drawn as the band
 /// over both clips (§03), as long as the transition is, and either end of the
 /// band drags its length.
+/// What a right click on an edit point, or the transition on one, offers.
+/// A view of its own, so the rows are built in its body and not in the edit
+/// point's, and read the playhead unwatched (`timelineMenuRows`).
+struct TimelineEditPointMenu: View {
+    @Environment(EditorState.self) private var editorState
+    let point: TimelineEditPoint
+
+    var body: some View {
+        MenuRowsView(rows: editorState.timelineMenuRows { editorState.timelineEditPointMenuRows(point) })
+    }
+}
+
 struct TimelineEditPointView: View {
     @Environment(EditorState.self) private var editorState
     @Environment(\.colorScheme) private var colorScheme
@@ -585,7 +597,7 @@ struct TimelineEditPointView: View {
             editorState.pickEditPoint(point)
             editorState.openTransitionPicker(at: place)
         }
-        .contextMenu { MenuRowsView(rows: editorState.timelineEditPointMenuRows(point)) }
+        .contextMenu { TimelineEditPointMenu(point: point) }
         .transitionPicker(at: place, editorState: editorState)
         .playtestHover("Edit point \(name)") { isHovered = $0 }
         .playtestControl("Edit point \(name)", detail: "Timeline")
@@ -679,7 +691,7 @@ struct TimelineEditPointView: View {
             .contentShape(Rectangle())
             .onTapGesture(count: 2) { editorState.openTransitionPicker(at: place) }
             .onTapGesture { editorState.pickEditPoint(point) }
-            .contextMenu { MenuRowsView(rows: editorState.timelineEditPointMenuRows(point)) }
+            .contextMenu { TimelineEditPointMenu(point: point) }
             .overlay(alignment: .leading) {
                 if ClipTransitionEdgeDrag.canGrab(leadingEdge: true, of: drawn) { bandGrip(leading: true) }
             }

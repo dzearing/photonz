@@ -6,7 +6,8 @@ import Foundation
 /// through methods so commands/undo can wrap them uniformly.
 public struct PhotonzDocument: Hashable, Codable, Sendable {
     public var canvasSize: CGSize
-    public var layers: [Layer]
+    /// Every write starts the worked-out answers again (`DocumentDerived`).
+    public var layers: [Layer] { didSet { derived = DocumentDerived() } }
     /// Bitmap pixels per logical point of the source capture (1 for non-Retina,
     /// 2 for a Retina screenshot). Measures divide raw pixel distances by this to
     /// read out in points. Set from the capture's `backingScaleFactor`.
@@ -89,7 +90,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // in it. Nought is how a duration gets cleared.
         set { storedDurationMS = (newValue ?? 0) > 0 ? newValue : nil }
     }
-    private var storedDurationMS: Int?
+    private var storedDurationMS: Int? { didSet { derived = DocumentDerived() } }
     /// What the app has read off the pictures in this document, so a separated
     /// run's row says its words the moment the file opens rather than after a
     /// second of background reading (`ReadWords.swift`).
@@ -102,7 +103,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// The timeline's tracks, top to bottom, once anybody has changed one
     /// (`DocumentTracks.swift`). Empty is every document nobody has, whose
     /// timeline still shows a track per clip, worked out as it is read.
-    public var tracks: [DocumentTrack] = []
+    public var tracks: [DocumentTrack] = [] { didSet { derived = DocumentDerived() } }
     /// The groups tracks have been gathered into.
     public var trackGroups: [DocumentTrackGroup] = []
     /// The recordings and sounds this document has been given, in the order
@@ -132,6 +133,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// nobody has turned in 3D looking exactly as it does, and is every
     /// document written before this existed.
     public var camera: SceneCamera?
+    /// What has been worked out from the layers and tracks, kept until either
+    /// changes (`DocumentDerived.swift`). Not content: never compared, hashed
+    /// or saved.
+    var derived = DocumentDerived()
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
                 colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],

@@ -117,6 +117,30 @@ extension EditorState {
         readingForTheMenu = false
     }
 
+    /// True while a timeline right-click menu's rows are built
+    /// (`timelineMenuRows`): reading the playhead then is not watched.
+    @MainActor static var readingAMenuOnTheTimeline = false
+
+    /// A right-click menu on the timeline (a clip's, a cut's), built so the
+    /// clock moving on never builds it again.
+    ///
+    /// SwiftUI builds a `.contextMenu`'s rows whenever the view carrying it
+    /// updates, not when it opens, and the rows read the playhead (Roll Edit to
+    /// the playhead, Split at the playhead), so every tick of a playing clock
+    /// built every cut's and clip's menu again: on the 6 minute reference edit
+    /// the edit points' bodies and menus kept SwiftUI busy for most of the main
+    /// thread while it played (Time Profiler, 2026-11-13). Here the playhead is
+    /// read without being watched, and the rows are built again on every right
+    /// click on the tracks instead (`timelineRightPresses`), which lands before
+    /// the menu opens, so the menu always acts at the playhead as it is.
+    func timelineMenuRows(_ build: () -> [MenuRow]) -> [MenuRow] {
+        _ = timelineRightPresses
+        let was = Self.readingAMenuOnTheTimeline
+        Self.readingAMenuOnTheTimeline = true
+        defer { Self.readingAMenuOnTheTimeline = was }
+        return build()
+    }
+
     /// The document changed: the menu bar hears about it in the next pass,
     /// once however many edits this one makes.
     func noteWhatTheMenuSees() {
