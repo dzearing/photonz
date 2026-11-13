@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.242Z",
-  "updated": "2026-11-13T20:34:37.091Z",
+  "updated": "2026-11-13T23:12:03.074Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-12 (intake): 'Also another feature, I'd like playback to allow for speed control. .25x .5x 1 1.5 2 4 8x something like that?' Today: Sources/PhotonzCore/TimelineKeys.swift TimelineShuttle.ladder = [1, 2, 4, 8] (Premiere's J/K/L), no visible control, no slow speeds. Grown-up tools: Final Cut has no speed menu but plays slow and fast with J/K/L; Premiere likewise; QuickTime and YouTube show a speed menu with 0.25x to 2x, which is the pattern asked for.",
@@ -58,12 +58,33 @@
     {
       "t": "2026-11-13T20:34:37.090Z",
       "note": "Shipped the speed menu, pitch-kept sound, keys and walks (0c0b3edf8); every acceptance item verified except 8x on the six minute reference edit, which still falls up to 185 frames behind. Left open for that one bar; next step is in the log."
+    },
+    {
+      "t": "2026-11-13T20:38:35.806Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-13T22:52:27.003Z",
+      "note": "Reproduced the 8x bar first: playback-speed-on-the-reference-edit-walk failed at 8x, 21 of 24 looks late, up to 177 behind. Traced every pass open/stop: (1) serves() asked for the playhead's own frame at 8x where only every third is kept, so passes ahead of the playhead restarted two ticks in three; (2) the same in plan's reaches() tore down the primed far side of each cut every tick; (3) every decode-width change during a zoom cancelled every pass, and cancelled passes held the sweep gate; (4) the reference recordings are 60fps H.264 with B-frames, so 8x needs 480 decodes/s of a decoder that does ~630 total (bench). Fixed all four: kept-frame checks with an in-flight margin, any size serves above 2x, and above 2x passes decode through VideoToolbox skipping unreferenced samples (~half; bench 632 -> 1199 frames/s). Plus restart startLead ahead above 2x, comingLead in clock time, prime by stride. Tested first in MoviePlayPassTests, MovieDecodeReorderTests."
+    },
+    {
+      "t": "2026-11-13T22:52:27.081Z",
+      "note": "Chose letting a pass read at another size go on above 2x over restarting it at each size, because a zoom at 8x is an eighth of a second on screen and restarting stuck the picture; frames can look soft during a fast zoom until the playhead stops. Chose not to widen the fallen-behind limit (tried max(12, startLead): fewer restarts but more looks behind)."
+    },
+    {
+      "t": "2026-11-13T22:52:27.159Z",
+      "note": "Fixed two flaky measurements in this task's own walks rather than loosening them: the pace check now allows the one 33ms clock tick a look can find the playhead stale by (0.5x read 0.514x twice on an exact clock), and TonePitch no longer reads an uneven 440 tone at 220.1 Hz (2 of 5 runs of playback-speed-walk at 1.5x); both with unit tests."
+    },
+    {
+      "t": "2026-11-13T23:12:03.072Z",
+      "note": "8x now keeps up on the six minute reference edit (every look within 3 frames, pace 7.96 to 8.07x, 6 runs of 6; was up to 185 behind): above 2x passes decode only the frames other frames depend on (VideoToolbox, ~2x decoder throughput), kept-frame checks no longer restart passes ahead of the playhead, zooms no longer restart passes. Walk pace and pitch readers made robust (pace through every look; no octave-down misread). Commit ad24392f4; all three walks green, full Scripts/test.sh green."
     }
   ],
-  "started": "2026-11-13T19:14:58.566Z",
+  "started": "2026-11-13T20:38:35.805Z",
   "walks": [
     "playback-speed-walk",
     "playback-speed-keeps-pace-walk",
     "playback-speed-on-the-reference-edit-walk"
-  ]
+  ],
+  "completed": "2026-11-13T23:12:03.073Z"
 }
