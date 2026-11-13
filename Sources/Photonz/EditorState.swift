@@ -1832,7 +1832,9 @@ final class EditorState {
     /// every frame of playback, and the bar flickered with it.
     var documentTimeMS: Int {
         get {
-            if !Self.readingForTheMenu, !Self.readingAMenuOnTheTimeline { access(keyPath: \.documentTimeMS) }
+            if !Self.readingForTheMenu, !Self.readingAMenuOnTheTimeline, !Self.readingForThePanel {
+                access(keyPath: \.documentTimeMS)
+            }
             return storedDocumentTimeMS
         }
         set {
@@ -1846,10 +1848,26 @@ final class EditorState {
         }
     }
     @ObservationIgnored private var storedDocumentTimeMS = 0
+    /// The playhead read without being watched, for something that asks for
+    /// it when it needs it rather than being built again whenever it moves
+    /// (the canvas, `CanvasView.documentTimeMS`).
+    var documentTimeMSUnwatched: Int { storedDocumentTimeMS }
+    /// The canvas's way of putting a playing frame straight up
+    /// (`showPlayingPicture`), handed over when the canvas is made.
+    @ObservationIgnored var playingPictures: ((CGImage, PhotonzDocument?) -> Bool)?
+    /// The picture on the canvas went up without SwiftUI being told
+    /// (`showPlayingPicture`), so it is told once play stops or the hand lets
+    /// go (`catchUpOnQuietPictures`).
+    @ObservationIgnored private var pictureShownQuietly = false
     /// What the menu bar shows that depends on the playhead, written only when
     /// one of those answers changes (`EditorState+MenuPlayhead`).
     var menuPlayhead = MenuPlayhead()
     @ObservationIgnored var watchesMenuPlayhead = false
+    /// The same for the panel's Time section: the clip, piece, cut and speed
+    /// stop it is talking about, written only when one of them changes
+    /// (`EditorState+PanelPlayhead`).
+    var panelPlayhead = PanelPlayhead()
+    @ObservationIgnored var watchesPanelPlayhead = false
     /// What the menu bar watches instead of the document while its body is
     /// built, moving on in the pass after the document does
     /// (`noteWhatTheMenuSees`).
@@ -5943,6 +5961,48 @@ final class EditorState {
     }
 
     /// No playing frame's tile lands from here on.
+    /// A frame of a playing video, put on the canvas without telling SwiftUI.
+    ///
+    /// Handed through SwiftUI, every frame built the canvas again and made a
+    /// pass over the whole window, and a pass costs about as much again as the
+    /// timeline has views, whatever started it: on the 6 minute reference edit
+    /// those passes were most of what was left of the main thread while it
+    /// played (`EditorState+PanelPlayhead`). The picture and the moment are
+    /// still kept, quietly, so anything that builds the canvas later builds it
+    /// with this frame, and the canvas is handed the document posed at the
+    /// frame's moment, so a click lands on what is drawn.
+    ///
+    /// Only while playing or while a hand scrubs the playhead, and only when
+    /// the canvas says the picture is all that changes
+    /// (`CanvasNSView.showPlayingPicture`); anything else goes the usual way,
+    /// and stopping or letting go does too, so the frame left on screen is
+    /// built as every still picture is.
+    private func showPlayingPicture(_ picture: CGImage, moment: Int?) -> Bool {
+        guard isDocumentPlaying || playheadInHand, moment != nil, !crispTileOutOfDate, crispTile == nil,
+              let playingPictures else { return false }
+        let keptImage = _renderedImage
+        let keptMoment = _shownMomentMS
+        _renderedImage = picture
+        _shownMomentMS = moment
+        let posed = documentHasKeyClock ? canvasGeometryDocument : nil
+        if playingPictures(picture, posed) {
+            pictureShownQuietly = true
+            return true
+        }
+        _renderedImage = keptImage
+        _shownMomentMS = keptMoment
+        return false
+    }
+
+    /// Tells everything that watches the picture about the frames that went
+    /// up quietly, once, when play stops or the hand on the playhead lets go.
+    func catchUpOnQuietPictures() {
+        guard pictureShownQuietly else { return }
+        pictureShownQuietly = false
+        renderedImage = _renderedImage
+        shownMomentMS = _shownMomentMS
+    }
+
     private func stopPlayTiles() {
         playTileRun += 1
         playTileViewport = nil
@@ -5969,8 +6029,13 @@ final class EditorState {
             crispTileKeptUntilReplaced = landing
         } else {
             crispTileOutOfDate = false
-            crispTile = nil
-            crispTileViewport = nil
+            // Written only when there is something to take down: `@Observable`
+            // tells every reader about a write whether or not the value
+            // changed, and this runs for every frame of a playing video, where
+            // each pass SwiftUI makes costs as much again as the timeline has
+            // views (`EditorState+PanelPlayhead`).
+            if crispTile != nil { crispTile = nil }
+            if crispTileViewport != nil { crispTileViewport = nil }
         }
 
         guard Experiments.shared.crispZoomEnabled,
@@ -6080,15 +6145,17 @@ final class EditorState {
                 await MainActor.run {
                     // Drop the frame if the document was closed while rendering.
                     guard let self, self.history != nil, !self.windowClosed else { return }
-                    self.renderedImage = frame.image
-                    if self.crispTileOutOfDate, !self.crispTileKeptUntilReplaced {
-                        self.crispTileOutOfDate = false
-                        self.crispTile = nil
-                        self.crispTileViewport = nil
-                    }
-                    self.shownDrawnDocument = frame.document
                     let moment = frame.document.hasTime ? frame.stamp : nil
-                    if self.shownMomentMS != moment { self.shownMomentMS = moment }
+                    self.shownDrawnDocument = frame.document
+                    if !(frame.image.map { self.showPlayingPicture($0, moment: moment) } ?? false) {
+                        self.renderedImage = frame.image
+                        if self.crispTileOutOfDate, !self.crispTileKeptUntilReplaced {
+                            self.crispTileOutOfDate = false
+                            self.crispTile = nil
+                            self.crispTileViewport = nil
+                        }
+                        if self.shownMomentMS != moment { self.shownMomentMS = moment }
+                    }
                     if let pending = self.typeInOnceShown, moment == pending.atMS {
                         self.typeInOnceShown = nil
                         self.askToTypeIn(pending.layerID)

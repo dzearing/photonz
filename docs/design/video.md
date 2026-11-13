@@ -763,6 +763,57 @@ worst gap read 17 to 28 s across four runs of one build on 2026-11-12). The long
 `Scripts/perf/walks/`) is a command and never in a sweep;
 `Scripts/perf/compare.sh before.json after.json` sets two runs side by side.
 
+## 8f. Who may watch the playhead
+
+While a video plays the playhead moves thirty times a second, and everything
+that watches it is woken thirty times a second. What that costs is not the
+views woken. **Every pass SwiftUI makes over the window costs about as much
+again as the timeline has views, whatever started the pass.** On the 6 minute
+reference edit (2026-11-13), playing 20 s showed 500 of 606 frames; hiding only
+the tracks showed 605, even with every per-tick view still updating, and
+counting bodies showed that not one clip, track or row body ran while it
+played. The cost is SwiftUI walking a big graph once per pass, so the number of
+passes per frame is what to keep down, not only what each one rebuilds.
+
+The rule, for any view added to the editor window:
+
+1. **Only what moves with the playhead inside a clip may watch it every
+   tick**: the playhead line, the transport's time and scrubber, the time
+   scroller's mark. Each is its own small view, so the clock wakes only it
+   (`TimelinePlayheadLine`, `TimelineTransport`, `TransportScrubber`).
+2. **A view that shows what the playhead is ON (the clip, piece, cut, speed
+   stop, title in hand) watches the answer, not the clock.** The answers are
+   worked out on every tick but written only when one changes, and the view
+   reads the playhead unwatched inside the matching scope:
+   - the menu bar: `MenuPlayhead`, `EditorState.beginMenuRead`;
+   - the panel: `PanelPlayhead`, `readingThePlayheadForThePanel`
+     (`EditorState+PanelPlayhead.swift`); the Time section and the facts that
+     decide the panel's cut rows read through it;
+   - timeline right-click menus: `timelineMenuRows`, built again on each
+     right click instead.
+   If a new view needs an answer that is not in one of those values, add it
+   there rather than reading the playhead.
+3. **Something that needs the playhead only when it draws asks for it then.**
+   The canvas reads `documentTimeMSUnwatched` through a closure
+   (`CanvasView.documentTimeMS`) instead of being handed it, because every new
+   picture redraws its chrome anyway.
+4. **A playing or scrubbed frame reaches the canvas without SwiftUI.**
+   `EditorState.showPlayingPicture` puts it straight on the canvas's layer and
+   keeps `renderedImage` and `shownMomentMS` up to date without telling their
+   watchers, then tells them once when play stops or the hand lets go
+   (`catchUpOnQuietPictures`). It steps aside, and the frame goes the usual
+   way, whenever something else on the canvas could change with the picture
+   (something picked, a drag, a stroke landing, a crisp tile up).
+5. **Never write an observed property with the value it already has** on a
+   path that runs per frame: `@Observable` tells every watcher about a write
+   whether or not the value changed, and that is a pass.
+
+Measured with these in place (short speed walk, 2026-11-13): a minute of 1x
+play dropped 4 of about 1,820 frames, against 379 before; every transition
+played without a dropped frame. `ViewBuildMeter`'s `idleBuilds` and the play
+measure of `Scripts/perf/speed-walk.sh` are how a new view is checked against
+this.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

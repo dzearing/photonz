@@ -3,105 +3,105 @@
 
   },
   "composites" : {
-    "askedToShownMedianMS" : 9.875333,
-    "askedToShownWorstMS" : 18.950458,
-    "drawMedianMS" : 9.815167,
-    "drawWorstMS" : 18.586875,
-    "pictures" : 1890
+    "askedToShownMedianMS" : 9.692042,
+    "askedToShownWorstMS" : 17.306875,
+    "drawMedianMS" : 9.686625,
+    "drawWorstMS" : 17.303084,
+    "pictures" : 2100
   },
-  "date" : "2026-11-13T13:05:14Z",
+  "date" : "2026-11-13T16:50:25Z",
   "edits" : [
     {
-      "callMS" : 3.972041653469205,
+      "callMS" : 3.8828752003610134,
       "did" : "half a second off the end of Take 2",
       "edit" : "trim",
-      "longestPassMS" : 90.0239166803658
+      "longestPassMS" : 84.93870845995843
     },
     {
-      "callMS" : 6.362375104799867,
+      "callMS" : 6.856291554868221,
       "did" : "Take 1 cut at 0:22.4",
       "edit" : "blade",
-      "longestPassMS" : 202.95512513257563
+      "longestPassMS" : 224.9019166920334
     },
     {
-      "callMS" : 2.3510833270847797,
+      "callMS" : 4.205458331853151,
       "did" : "the last edit taken back",
       "edit" : "undo",
-      "longestPassMS" : 119.2848333157599
+      "longestPassMS" : 127.29487498290837
     }
   ],
   "form" : "short",
   "frameStepMS" : 33,
-  "head" : "c771adfbb+changes (worst of 3)",
+  "head" : "1f7ec3fbf+changes (worst of 3)",
   "machine" : "Mac16,5, 16 cores, 64GB",
   "minutes" : 6,
   "plays" : [
     {
-      "dropped" : 379,
-      "framesDue" : 1819,
-      "framesShown" : 1440,
+      "dropped" : 10,
+      "framesDue" : 1818,
+      "framesShown" : 1808,
       "label" : "whole",
-      "seconds" : 60.02237933315337,
-      "worstGapMS" : 124.94008336216211
+      "seconds" : 60.00132416654378,
+      "worstGapMS" : 130.23933325894177
     },
     {
-      "dropped" : 4,
+      "dropped" : 0,
       "framesDue" : 12,
-      "framesShown" : 8,
+      "framesShown" : 12,
       "label" : "cross dissolve at 0:21.6",
       "seconds" : 0.4,
-      "worstGapMS" : 67.16550001874566
+      "worstGapMS" : 75.47354162670672
     },
     {
-      "dropped" : 5,
+      "dropped" : 0,
       "framesDue" : 12,
-      "framesShown" : 7,
+      "framesShown" : 12,
       "label" : "push at 0:28.0",
       "seconds" : 0.4,
-      "worstGapMS" : 90.66329174675047
+      "worstGapMS" : 62.92650010436773
     },
     {
-      "dropped" : 4,
+      "dropped" : 1,
       "framesDue" : 12,
-      "framesShown" : 8,
+      "framesShown" : 11,
       "label" : "cross dissolve at 0:39.0",
       "seconds" : 0.4,
-      "worstGapMS" : 92.25537511520088
+      "worstGapMS" : 72.61833338998258
     },
     {
-      "dropped" : 5,
+      "dropped" : 0,
       "framesDue" : 12,
-      "framesShown" : 7,
+      "framesShown" : 12,
       "label" : "cross dissolve at 0:50.1",
       "seconds" : 0.4,
-      "worstGapMS" : 68.86795838363469
+      "worstGapMS" : 61.943791806697845
     },
     {
-      "dropped" : 6,
+      "dropped" : 0,
       "framesDue" : 24,
-      "framesShown" : 18,
+      "framesShown" : 24,
       "label" : "cube at 0:59.8",
       "seconds" : 0.8,
-      "worstGapMS" : 93.4091666713357
+      "worstGapMS" : 61.83620844967663
     },
     {
-      "dropped" : 4,
+      "dropped" : 1,
       "framesDue" : 12,
-      "framesShown" : 8,
+      "framesShown" : 11,
       "label" : "cross dissolve at 1:08.5",
       "seconds" : 0.4,
-      "worstGapMS" : 91.90783347003162
+      "worstGapMS" : 69.53066657297313
     }
   ],
   "scrubs" : [
     {
       "frames" : 240,
       "lagMedianFrames" : 8,
-      "lagWorstFrames" : 19,
-      "movesMade" : 44,
-      "seconds" : 2.0726778332609683,
+      "lagWorstFrames" : 21,
+      "movesMade" : 45,
+      "seconds" : 2.062384333461523,
       "speed" : "medium",
-      "worstFrameMS" : 104.65958341956139
+      "worstFrameMS" : 107.23987501114607
     }
   ],
   "sound" : {

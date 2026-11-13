@@ -316,6 +316,31 @@ extension CanvasNSView {
         refreshOverlaysInsideTransaction()
     }
 
+    /// A frame of a playing video, put straight up rather than handed through
+    /// SwiftUI, which would build the canvas again and with it make a pass
+    /// over the whole window for every frame (`EditorState.showPlayingPicture`).
+    ///
+    /// Only the picture changes: anything else the canvas draws is drawn as
+    /// it was. So it says no, and the frame goes the usual way, whenever
+    /// something else on the canvas could want to change with the picture:
+    /// nothing up yet, a drag or a held picture in flight, something picked
+    /// (whose handles follow a keyed layer), a stroke landing.
+    func showPlayingPicture(_ picture: CGImage, posed: PhotonzDocument?) -> Bool {
+        guard image != nil, viewport != nil, !contentLayer.isHidden,
+              calloutHoldImage == nil, annotationCommitImage == nil, dragPreview == nil,
+              selectedLayerID == nil, multiSelectedLayerIDs.isEmpty,
+              brushStroke == nil, brushLandings.isEmpty else { return false }
+        image = picture
+        // What a click is aimed against: keyed layers where this frame has
+        // them (`EditorState.canvasGeometryDocument`).
+        if let posed { document = posed }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        contentLayer.contents = picture
+        CATransaction.commit()
+        return true
+    }
+
     /// Takes delivery of a redrawn patch of what you can see.
     func applyCrispTile(_ tile: CrispTile?, viewport tileViewport: Viewport?) {
         guard crispTile?.image !== tile?.image || crispTileViewport != tileViewport else { return }

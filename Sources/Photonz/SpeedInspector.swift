@@ -20,7 +20,11 @@ struct SpeedInspector: View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.timeSection)
         #endif
-        readingForTheLookRows { lookBody }
+        // Nothing here moves with the playhead inside a piece, so the clock
+        // moving on does not build it again (`EditorState+PanelPlayhead`).
+        editorState.readingThePlayheadForThePanel {
+            readingForTheLookRows { lookBody }
+        }
     }
 
     /// The body, built by `readingForTheLookRows`: nothing in it shows a

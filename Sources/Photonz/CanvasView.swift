@@ -302,7 +302,16 @@ struct CanvasView: NSViewRepresentable {
     /// Where the playhead is, in a document that has time. The chrome reads it
     /// to know whether the picked layer is on screen at all right now
     /// (`TitleTime.swift`).
-    let documentTimeMS: Int
+    ///
+    /// Asked for when the canvas needs it rather than handed in: handed in,
+    /// every step of a playing clock built the canvas again, all of it, for a
+    /// number its chrome reads only when it redraws, which every new picture
+    /// makes it do anyway (`EditorState+PanelPlayhead`).
+    let documentTimeMS: () -> Int
+    /// Takes the canvas's way of putting a playing frame straight up, so a
+    /// video playing goes past SwiftUI frame by frame
+    /// (`EditorState.showPlayingPicture`).
+    var registerPlayingPictures: ((@escaping (CGImage, PhotonzDocument?) -> Bool) -> Void)?
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -570,7 +579,8 @@ struct CanvasView: NSViewRepresentable {
         view.onDocumentStepFrames = onDocumentStepFrames
         view.onCanvasPressed = onCanvasPressed
         view.documentHasTime = documentHasTime
-        view.documentTimeMS = documentTimeMS
+        view.documentTimeNow = documentTimeMS
+        view.registerPlayingPictures = registerPlayingPictures
         view.onPathEditHintChange = onPathEditHintChange
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
@@ -745,7 +755,19 @@ final class CanvasNSView: NSView {
     var onDocumentStepFrames: ((Int) -> Void) = { _ in }
     var onCanvasPressed: (() -> Void) = {}
     var documentHasTime = false
-    var documentTimeMS = 0
+    /// Where the playhead is right now (`CanvasView.documentTimeMS`).
+    var documentTimeNow: () -> Int = { 0 }
+    var documentTimeMS: Int { documentTimeNow() }
+    /// Hands the editor a way to put a playing frame straight up
+    /// (`showPlayingPicture`), once, when the view is first given one.
+    var registerPlayingPictures: ((@escaping (CGImage, PhotonzDocument?) -> Bool) -> Void)? {
+        didSet {
+            guard oldValue == nil, let registerPlayingPictures else { return }
+            registerPlayingPictures { [weak self] picture, posed in
+                self?.showPlayingPicture(picture, posed: posed) ?? false
+            }
+        }
+    }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }

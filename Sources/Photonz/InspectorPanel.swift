@@ -2957,15 +2957,19 @@ struct PanelTimeFacts: Equatable {
     }
 }
 
-/// Reads `PanelTimeFacts` on every step of the playhead, which costs next to
-/// nothing, and tells the panel only when they change.
+/// Reads `PanelTimeFacts` when the clip, piece or cut under the playhead
+/// changes, and tells the panel only when they change.
 private struct PanelTimeFactsWatcher: View {
     @Environment(EditorState.self) private var editorState
     let onChange: (PanelTimeFacts) -> Void
 
     var body: some View {
         Color.clear
-            .onChange(of: PanelTimeFacts(editorState), initial: true) { _, now in onChange(now) }
+            // Read through the answers the playhead decides, so the clock
+            // moving on inside one piece does not run this at all
+            // (`EditorState+PanelPlayhead`).
+            .onChange(of: editorState.readingThePlayheadForThePanel { PanelTimeFacts(editorState) },
+                      initial: true) { _, now in onChange(now) }
             .accessibilityHidden(true)
     }
 }

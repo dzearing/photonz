@@ -135,6 +135,7 @@ extension EditorState {
     /// ...and let go. Whatever the last refresh had not yet drawn is drawn now.
     func endPlayheadDrag() {
         playheadInHand = false
+        catchUpOnQuietPictures()
         scrubFrames?.stop()
         playheadSettleTask?.cancel()
         // Letting go is holding still for good: whatever the last refresh had
@@ -300,6 +301,7 @@ extension EditorState {
         documentPlaybackTask?.cancel()
         documentPlaybackTask = nil
         documentPlaybackStartedAt = nil
+        catchUpOnQuietPictures()
         documentMomentChanged()
     }
 

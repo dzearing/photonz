@@ -159,7 +159,10 @@ struct EditorCanvasSurface: View {
                    onDocumentStepFrames: { editorState.stepDocument(byFrames: $0) },
                    onCanvasPressed: { editorState.releaseTimelineKeyboard() },
                    documentHasTime: editorState.documentHasTime,
-                   documentTimeMS: editorState.documentTimeMS,
+                   // Read when the canvas needs it, never watched: a playing
+                   // clock does not build the canvas again (`CanvasView`).
+                   documentTimeMS: { [weak editorState] in editorState?.documentTimeMSUnwatched ?? 0 },
+                   registerPlayingPictures: { [weak editorState] in editorState?.playingPictures = $0 },
                    onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },
                    onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
                    onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
