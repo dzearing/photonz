@@ -17205,3 +17205,4 @@
 {"t":"2026-11-13T20:34:32.512Z","ev":"task_note","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2"}
 {"t":"2026-11-13T20:34:32.589Z","ev":"task_note","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2"}
 {"t":"2026-11-13T20:34:32.677Z","ev":"task_note","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2"}
+{"t":"2026-11-13T20:34:37.092Z","ev":"task_pending","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2","from":"in_progress","note":"Shipped the speed menu, pitch-kept sound, keys and walks (0c0b3edf8); every acceptance item verified except 8x on the six minute reference edit, which still falls up to 185 frames behind. Left open for that one bar; next step is in the log."}

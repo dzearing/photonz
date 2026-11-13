@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.242Z",
-  "updated": "2026-11-13T20:34:32.676Z",
+  "updated": "2026-11-13T20:34:37.091Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-12 (intake): 'Also another feature, I'd like playback to allow for speed control. .25x .5x 1 1.5 2 4 8x something like that?' Today: Sources/PhotonzCore/TimelineKeys.swift TimelineShuttle.ladder = [1, 2, 4, 8] (Premiere's J/K/L), no visible control, no slow speeds. Grown-up tools: Final Cut has no speed menu but plays slow and fast with J/K/L; Premiere likewise; QuickTime and YouTube show a speed menu with 0.25x to 2x, which is the pattern asked for.",
@@ -54,6 +54,10 @@
     {
       "t": "2026-11-13T20:34:32.675Z",
       "note": "Left rough, not filed: 2x from rest on the Retina talk held one look 4 frames behind at 0.14 s in 1 of 3 runs (start-up decode; 2x has sound, so it does not pre-roll). Filed separately: a-picked-sound-clip-draws-no-size-badge-or-handl (a 0 x 0 badge on the canvas for a picked sound, seen in this walk's pictures). Folded CI red (TextRevealUnclippedTests, run 43467774822) into find-out-why-the-legibility-check-once-read-the. Shared code note: the speed menu lives in the shared TimelineDock, reached only through the document timeline that Next opens recordings into."
+    },
+    {
+      "t": "2026-11-13T20:34:37.090Z",
+      "note": "Shipped the speed menu, pitch-kept sound, keys and walks (0c0b3edf8); every acceptance item verified except 8x on the six minute reference edit, which still falls up to 185 frames behind. Left open for that one bar; next step is in the log."
     }
   ],
   "started": "2026-11-13T19:14:58.566Z",
