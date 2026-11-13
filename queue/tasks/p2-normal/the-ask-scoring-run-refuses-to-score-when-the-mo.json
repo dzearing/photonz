@@ -9,7 +9,7 @@
   "release": "next",
   "area": "loop",
   "created": "2026-10-22T16:26:02.189Z",
-  "updated": "2026-11-11T16:14:29.344Z",
+  "updated": "2026-11-13T04:41:58.942Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the digest pass 2026-10-22 16:24 UTC with Ollama not running (pgrep -fl ollama empty, curl localhost:11434/api/ps empty):\n  Scripts/ask-eval.sh run --engine ask --cases video-latest-recording-after-this-one,video-dissolve-where-the-copy-starts --tag digest-repro-2026-10-22\nOutput: both cases ran in about 1 s ('asked, quiet after 0.13s'), ask state phase stopped, says 'Ask needs Ollama. See Settings.', steps []. Scored 8.6 and 7.5 (judge read 'the video is unchanged'), total 8.1, printed '==> WORSE: throw it away (against \"picture model try: z-image-turbo q8 + vtracer\")' and appended run 20261022-162402-ask to queue/evals/ask-eval-history.jsonl. The digest pass removed that history line and the run folder by hand. Code: Scripts/ask-eval/eval.mjs.\n\nFolded in from an-eval-case-that-starts-on-three-clips-runs-whe: Reproduced 2026-10-22 by the ask-works-on-a-mac-that-has-nothing-else-install runner: runs 20261023-001800-ask, 20261023-002716-ask, 20261023-004119-ask and 20261023-010308-ask all printed `total 0 over 1 cases` / `not run: the sample recording never opened`; the walk folder stayed empty (no log.json) and playtest.sh ran out of time at 540 s with the probe idle. The same walk file run by hand (Scripts/playtest.sh <ask-walk.json> --no-build) starts and runs. Cause: engines.mjs prepare() starts the MCP bridge in parallel with the walk; Sources/PhotonzMCP/main.swift launches the probe itself when none is running (PHOTONZ_APP_PATH, launchPatience 25 s). When the build or launch is slow the bridge launches a bare probe first, the walk launch lands on that instance and its --playtest arguments are lost. With --no-build it usually wins the race (4 of 5 runs scored). Fix: start the bridge only after the walk has started (wait for the walk log), or tell the bridge not to launch.",
@@ -19,7 +19,8 @@
     "A case whose Ask state says it needs the runner partway through a run (the runner died mid-run) is marked could-not-run, not scored, and the run's total and verdict leave it out",
     "With the runner up, the same two cases score as before",
     "Scripts/ask-eval.sh run --engine ask --cases video-case-titles-before-three-clips (with the build) scores the case rather than 0, three runs out of three",
-    "A case whose copies cannot be laid down is reported as not run, never scored as 0"
+    "A case whose copies cannot be laid down is reported as not run, never scored as 0",
+    "Scripts/ask-eval.sh run --engine ask --cases video-case-titles-before-three-clips runs and scores the case (it has not run since 2026-10-24)"
   ],
   "log": [
     {
@@ -61,6 +62,10 @@
     {
       "t": "2026-11-11T16:14:29.343Z",
       "note": "seq 130 -> 140"
+    },
+    {
+      "t": "2026-11-13T04:41:58.941Z",
+      "note": "2026-11-13: the three-clip case (video-case-titles-before-three-clips) now never runs at all: twice in run 20261113-041650-ask it printed 'not run: the sample recording never opened' (prepare() in Scripts/ask-eval/engines.mjs found no video with a file over the bridge in 150 s), and the walk then waited out 540 s on clipsOfOneRecording 3. Last scored 2026-10-24 (85.6). Other video cases read their results over the same bridge fine."
     }
   ]
 }

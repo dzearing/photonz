@@ -17048,3 +17048,9 @@
 {"t":"2026-11-13T03:17:18.246Z","ev":"task_created","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2","priority":"p1-high","title":"Playback speed you can pick: 0.25x, 0.5x, 1x, 1.5x, 2x, 4x and 8x"}
 {"t":"2026-11-13T03:17:18.356Z","ev":"task_resequenced","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":15,"to":3e-10}
 {"t":"2026-11-13T03:17:18.431Z","ev":"task_resequenced","id":"playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2","from":4010,"to":9e-10}
+{"t":"2026-11-13T04:41:41.126Z","ev":"task_walks","id":"ask-puts-a-recording-from-history-on-the-timelin","walks":["ask-puts-the-latest-recording-on-the-timeline-walk"]}
+{"t":"2026-11-13T04:41:49.817Z","ev":"task_created","id":"the-ask-test-set-runs-its-three-clip-video-case","priority":"p2-normal","title":"The Ask test set runs its three-clip video case again"}
+{"t":"2026-11-13T04:41:58.943Z","ev":"task_note","id":"the-ask-scoring-run-refuses-to-score-when-the-mo"}
+{"t":"2026-11-13T04:41:59.009Z","ev":"task_dropped","id":"the-ask-test-set-runs-its-three-clip-video-case","from":"pending","note":"folded into the-ask-scoring-run-refuses-to-score-when-the-mo"}
+{"t":"2026-11-13T04:42:09.829Z","ev":"task_note","id":"ask-puts-a-recording-from-history-on-the-timelin"}
+{"t":"2026-11-13T04:42:41.405Z","ev":"task_done","id":"ask-puts-a-recording-from-history-on-the-timelin","from":"in_progress","note":"Ask on a video now has list_history and add_clip, and a model that sees gets contact sheets of frames to find a moment (e478f6063); a look passes the document only to tools that take one, which had refused every list_history. Eval: dissolve case 8.5 -> 87.4/83.1, History case 7.5 -> 75.8/67.9/75.8 (median 75.8, rules 10 each run); held-out 59.8 vs 59.9. Walk ask-puts-the-latest-recording-on-the-timeline-walk green at Next defaults with a real capture; audit queue/audits/2026-11-13-ask-puts-a-recording-from-history-on-the-timelin.json."}

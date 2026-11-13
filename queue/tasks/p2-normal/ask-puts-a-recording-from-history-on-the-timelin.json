@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T16:47:34.564Z",
-  "updated": "2026-11-13T02:20:38.030Z",
+  "updated": "2026-11-13T04:42:41.404Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the-ask-test-set-scores-video-requests-too. Reproduce: Scripts/ask-eval.sh run --engine ask --cases video-latest-recording-after-this-one,video-dissolve-where-the-copy-starts --tag repro. Run 20261021-153141-ask: history case steps [run_command add_video_track], score 7.5; dissolve case steps [run_command split_at_playhead, set_transition dissolve], skipped: \"Split at Playhead cannot run now: it needs a clip under the playhead\" / \"This video has no cuts\", says \"None of it could run. Nothing was changed.\" (8.6). Skill run 20261021-154541-skill scores 80.8 and 85 on the same two cases. AskTools.doing (Sources/PhotonzCore/AskPlanning.swift) has cut but not add_clip or list_history; the server has both (AgentVideo.swift, AgentTools.swift).",
@@ -55,7 +55,23 @@
     {
       "t": "2026-11-13T02:20:38.029Z",
       "note": "Reproduced 2026-11-13 run 20261113-013532-ask: 8.5 dissolve (Ask said nothing could watch the frames), 7.5 history (no tool adds a clip). Fix e478f6063: list_history + add_clip on a video, contact_sheet for a model that sees with the picture shown after the tool answer, and looks pass document only to tools that take one (list_history was refused every time). After: dissolve 87.4 (20261113-014700-ask), history 75.8 (20261113-020149-ask)."
+    },
+    {
+      "t": "2026-11-13T04:41:41.124Z",
+      "note": "owns these walks: ask-puts-the-latest-recording-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-11-13T04:42:09.827Z",
+      "note": "Chose a contact sheet shown to the model (only when it sees) over a non-visual activity profile because it finds any moment a person can name on screen, the way the skill does. Eval: dissolve 87.4 and 83.1; History 75.8, 67.9, 75.8 (median 75.8; judge reads the eval's identical History recording as a repeat, rules 10 every run). Held-out 59.8 vs 59.9 before (20261113-022038-ask-held-out, video 59.4 vs 60.2), climb from report: 75.8 (latest climb run is the History case alone); five-case video climb run 20261113-041650-ask scored 4 cases (the three-clip case cannot start: folded into the-ask-scoring-run-refuses-to-score-when-the-mo). Looked at both result contact sheets and the walk capture: cut at 2.0 s with 0.4 s dissolve where Ready turns to Copying; Recording 0002 on V1 after Tutorial Sample."
+    },
+    {
+      "t": "2026-11-13T04:42:41.402Z",
+      "note": "Ask on a video now has list_history and add_clip, and a model that sees gets contact sheets of frames to find a moment (e478f6063); a look passes the document only to tools that take one, which had refused every list_history. Eval: dissolve case 8.5 -> 87.4/83.1, History case 7.5 -> 75.8/67.9/75.8 (median 75.8, rules 10 each run); held-out 59.8 vs 59.9. Walk ask-puts-the-latest-recording-on-the-timeline-walk green at Next defaults with a real capture; audit queue/audits/2026-11-13-ask-puts-a-recording-from-history-on-the-timelin.json."
     }
   ],
-  "started": "2026-11-13T01:35:06.692Z"
+  "started": "2026-11-13T01:35:06.692Z",
+  "walks": [
+    "ask-puts-the-latest-recording-on-the-timeline-walk"
+  ],
+  "completed": "2026-11-13T04:42:41.403Z"
 }

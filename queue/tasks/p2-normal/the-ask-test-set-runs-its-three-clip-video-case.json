@@ -1,0 +1,30 @@
+{
+  "id": "the-ask-test-set-runs-its-three-clip-video-case",
+  "title": "The Ask test set runs its three-clip video case again",
+  "goal": "One of the five video requests in the Ask test set (title pages before each of three clips) has not run since 2026-10-24: its setup never finds the open recording, so it cannot lay the two extra copies, and every video score since leaves it out.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 4090,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T04:41:49.813Z",
+  "updated": "2026-11-13T04:41:59.008Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced twice on 2026-11-13 (commit e478f6063): Scripts/ask-eval.sh run --engine ask --cases video-case-titles-before-three-clips,... printed \"--> video-case-titles-before-three-clips: ... not run: the sample recording never opened\", and --resume 20261113-041650-ask printed the same. The message comes from prepare() in Scripts/ask-eval/engines.mjs: for 150 s the bridge list_documents found no document with kind video and a file. The walk then sat on waitFor clipsOfOneRecording 3 until 540 s ran out. Last scored run: 20261024-160940-ask (85.6). Other video cases read results over the same bridge fine, so suspect what list_documents says about the sample (file missing?) or the bridge start while the walk is in its setup, not Ask.",
+  "acceptance": [
+    "Scripts/ask-eval.sh run --engine ask --cases video-case-titles-before-three-clips runs the case and scores it",
+    "The case starts with three clips of the sample recording on the timeline"
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T04:41:49.815Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-13T04:41:59.007Z",
+      "note": "folded into the-ask-scoring-run-refuses-to-score-when-the-mo"
+    }
+  ]
+}
