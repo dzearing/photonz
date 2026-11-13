@@ -1,0 +1,35 @@
+{
+  "id": "a-long-edit-with-transitions-plays-scrubs-and-ed",
+  "title": "A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast",
+  "goal": "With a moderately complex 6 minute video with transitions, performance tanked: playback, scrubbing and editing all slowed. Build a reference edit and a perf harness that measures it the way a person uses it, find where the time goes, and fix the biggest costs until playback, scrubbing and editing meet the video-perf objective's numbers. Then file the remaining costs as follow-up tasks under video-perf, each with its own measured bar.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 3e-10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T03:17:18.133Z",
+  "updated": "2026-11-13T03:17:18.355Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-12 (intake): 'With a moderately complex 6minute video with transitions, perf tanked. I think we need to focus on perf so that editing and playing back video is top notch and scalable.' video-perf was made the objectives focus the same day, with its success numbers. Existing pieces to read first: Sources/PhotonzCore/MoviePlayPass.swift, PlaybackKeepsUp.swift, the scrubbing task scrubbing-is-smooth-never-goes-black-and-the-pic. Runs are long: keep each runner pass inside the three passes a day cap by splitting into the follow-ups above.",
+  "acceptance": [
+    "A reference edit generator kept in the repo (Scripts/perf/) that builds a 6 minute document from real screen recordings: 3 or more tracks, 30 or more cuts with dissolves, a push and a 3D transition, titles, zooms, a moving background, attached sound; and 20 and 60 minute versions. Deterministic, so every run measures the same thing.",
+    "A perf harness (a walk or a probe script) that plays the whole edit at 1x, scrubs end to end, and trims, moves, blades and undoes while playing, recording: dropped frames and the worst frame time during playback, frame latency while scrubbing, the longest main thread pass per edit, memory over time, and export time. Its numbers go in the audit before any fix.",
+    "Profile with Instruments (Time Profiler, the Metal and Core Animation templates) on the reference edit and say in the audit where the time goes, ranked: decoding, compositing transitions, the timeline's SwiftUI updates, waveform and thumbnail drawing, the main thread, memory churn.",
+    "Fix the biggest costs in this task (likely candidates to confirm, not assume: decoding ahead of the playhead, caching composited transition frames, timeline views redrawing for every frame, per-frame allocations) until, on the 6 minute edit: 1x playback drops no frames, scrubbing shows the frame under the pointer within one display frame, and each edit finishes within 16 ms on the main thread. Each fix with a before and after number.",
+    "What is not reached here is filed as follow-up tasks under video-perf (p1, source user), one cost each, with its measured bar and the harness command that checks it. The 20 and 60 minute versions are measured and their numbers recorded even if not yet fixed.",
+    "No change in what is drawn: export of the reference edit is byte for byte the same before and after (or within a stated tolerance, measured). Perf note in every commit that touches the composite path.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T03:17:18.135Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-13T03:17:18.354Z",
+      "note": "seq 15 -> 3e-10"
+    }
+  ]
+}

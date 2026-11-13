@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T16:47:34.564Z",
-  "updated": "2026-11-11T16:14:29.259Z",
+  "updated": "2026-11-13T02:20:38.030Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the-ask-test-set-scores-video-requests-too. Reproduce: Scripts/ask-eval.sh run --engine ask --cases video-latest-recording-after-this-one,video-dissolve-where-the-copy-starts --tag repro. Run 20261021-153141-ask: history case steps [run_command add_video_track], score 7.5; dissolve case steps [run_command split_at_playhead, set_transition dissolve], skipped: \"Split at Playhead cannot run now: it needs a clip under the playhead\" / \"This video has no cuts\", says \"None of it could run. Nothing was changed.\" (8.6). Skill run 20261021-154541-skill scores 80.8 and 85 on the same two cases. AskTools.doing (Sources/PhotonzCore/AskPlanning.swift) has cut but not add_clip or list_history; the server has both (AgentVideo.swift, AgentTools.swift).",
@@ -47,6 +47,15 @@
     {
       "t": "2026-11-11T16:14:29.258Z",
       "note": "seq 120 -> 130"
+    },
+    {
+      "t": "2026-11-13T01:35:06.693Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-13T02:20:38.029Z",
+      "note": "Reproduced 2026-11-13 run 20261113-013532-ask: 8.5 dissolve (Ask said nothing could watch the frames), 7.5 history (no tool adds a clip). Fix e478f6063: list_history + add_clip on a video, contact_sheet for a model that sees with the picture shown after the tool answer, and looks pass document only to tools that take one (list_history was refused every time). After: dissolve 87.4 (20261113-014700-ask), history 75.8 (20261113-020149-ask)."
     }
-  ]
+  ],
+  "started": "2026-11-13T01:35:06.692Z"
 }

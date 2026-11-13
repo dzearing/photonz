@@ -1,0 +1,35 @@
+{
+  "id": "playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2",
+  "title": "Playback speed you can pick: 0.25x, 0.5x, 1x, 1.5x, 2x, 4x and 8x",
+  "goal": "The person wants to play a video slower or faster with a visible control, not only Premiere's J and L shuttle (which today steps 1x, 2x, 4x, 8x and has no slow speeds). Add a speed control to the transport with 0.25x, 0.5x, 1x, 1.5x, 2x, 4x and 8x; the picture and sound play at that speed, sound keeping its pitch; it does not change the edit or the export.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 9e-10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T03:17:18.242Z",
+  "updated": "2026-11-13T03:17:18.430Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-12 (intake): 'Also another feature, I'd like playback to allow for speed control. .25x .5x 1 1.5 2 4 8x something like that?' Today: Sources/PhotonzCore/TimelineKeys.swift TimelineShuttle.ladder = [1, 2, 4, 8] (Premiere's J/K/L), no visible control, no slow speeds. Grown-up tools: Final Cut has no speed menu but plays slow and fast with J/K/L; Premiere likewise; QuickTime and YouTube show a speed menu with 0.25x to 2x, which is the pattern asked for.",
+  "acceptance": [
+    "A speed control in the transport, beside play (a small menu showing the current speed, 1x by default), with 0.25x, 0.5x, 1x, 1.5x, 2x, 4x and 8x. Choosing one plays at that speed at once; it is remembered per window, not saved into the document, and never affects export.",
+    "Sound plays at the chosen speed with its pitch kept (AVAudioTimePitchAlgorithm or the audio engine's time pitch), up to 2x; above 2x sound is muted, as editors do, and the control says so.",
+    "Keyboard: the J/K/L shuttle keeps Premiere's ladder (1, 2, 4, 8) and shows its speed in the same control while held; Shift-period and Shift-comma (or the editor's convention, checked against Final Cut and Premiere and written down) step the chosen speed up and down.",
+    "At 0.25x and 0.5x every frame is shown (no frame skipping); at 4x and 8x playback skips frames to keep up and never falls behind the clock, measured on the reference edit from the video-perf work.",
+    "The playhead, the time readout and looping (in to out marks) all follow the speed.",
+    "Walks: pick each speed, play, the playhead advances at that rate within 2 percent; sound pitch kept at 0.5x and 1.5x (measure the pitch of a test tone); J L L shows 4x.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T03:17:18.244Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-13T03:17:18.429Z",
+      "note": "seq 4010 -> 9e-10"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "updated": "2026-10-24T14:36:45.513Z",
-  "focus": "icon-svg",
+  "focus": "video-perf",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
     "Every area of the window has one purpose, and everything in it serves that purpose. Putting a control in an area whose purpose it does not share (zoom in the tool bar, a meter in the timeline bar, a sentence in the chrome) confuses people, however useful the control is. Elegant, easy to understand and sensible to an end user beats complete. (The user, 2026-09-29.)",
@@ -133,6 +133,33 @@
       "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it. Promoted to now on 2026-09-15 by the manager pass, acting on the user's answer to \"You moved video editing up the list this morning, above redlining. Should the loop start building it?\", which was \"Start video now\": the loop builds video editing in the app, beginning with cutting a recording into pieces, while icon and redlining work keep going around it. Focus from 2026-09-18: the user shifted priority to video. The clickthroughs are ideas to build on, not specs. The whole set turns on one thesis they all repeat: video is not a separate mode, it is the same document with time.",
       "stage": "now",
       "children": [
+        {
+          "id": "video-perf",
+          "title": "Video editing and playback that stay fast at any length",
+          "stage": "now",
+          "note": "The user, 2026-11-12: \"With a moderately complex 6 minute video with transitions, perf tanked. I think we need to focus on perf so that editing and playing back video is top notch and scalable.\" Made the FOCUS that day (icons, icon-svg, stay now).",
+          "success": [
+            "A reference edit is kept in the repo and measured on every perf change: 6 minutes and longer (also 20 and 60 minute versions), 3 or more tracks, 30 or more cuts with transitions (dissolves and 3D ones), titles, zooms and a moving background, from screen recordings at Retina size.",
+            "Playback at 1x plays every frame at the document rate (60 fps where the source is) with no dropped frames, through every transition, and sound never stutters, measured over the whole reference edit.",
+            "Scrubbing and dragging the playhead show the frame under the pointer within one display frame, on any length of edit.",
+            "Editing stays instant at any length: trim, move, blade, undo, add a transition, change a title each finish within one frame (16 ms) on the main thread, and the timeline scrolls and zooms at 120 Hz with hundreds of clips.",
+            "Memory stays bounded: playing and scrubbing the 60 minute edit for 10 minutes never grows past a measured ceiling.",
+            "Export of the 6 minute reference edit takes at most its own length on this Mac, and every number above sits in an audit with before and after."
+          ],
+          "spec": {
+            "mocks": [
+              "video.html",
+              "video-motion.html",
+              "video-transitions.html",
+              "video-animate.html"
+            ],
+            "competitors": [
+              "Final Cut Pro: plays a long multi-track edit with transitions in real time on Apple silicon, background rendering, instant scrubbing",
+              "Premiere Pro: real-time playback with Mercury, smart rendering, the dropped-frame indicator"
+            ],
+            "workflow": "Open the reference edit (6 minutes, 3 tracks, 30 cuts with dissolves and a 3D transition, titles, zooms), press Space and watch it play to the end with no dropped frame, scrub the playhead end to end, trim a clip and blade one in the middle while it plays, undo, add a transition, then export it; count dropped frames, the longest main thread pass and the export time."
+          }
+        },
         {
           "id": "video-beats-premiere",
           "title": "Better than Premiere at editing screen recordings",
