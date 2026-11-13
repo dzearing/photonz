@@ -321,38 +321,100 @@ enum MovieSweeper {
         reader.add(output)
         guard reader.startReading() else { return false }
 
-        var grid = MovieSweepGrid(frames: frames)
-        var previous: CVPixelBuffer?
-        func hand(_ arrived: [Int], _ buffer: CVPixelBuffer?) {
-            let indices = keeps.map { arrived.filter($0) } ?? arrived
-            guard !indices.isEmpty, let buffer,
-                  let image = picture(of: buffer, orientation: orientation, size: size) else { return }
-            for index in indices { deliver(index, image) }
-        }
-        // Stopped between samples only: `cancelReading` from another thread
-        // while a sample is being read crashes (tried 2026-09-27).
-        while !Task.isCancelled {
-            if let waitsAt, waitsAt(grid.nextFrame) {
-                try? await Task.sleep(for: .milliseconds(4))
-                continue
+        // The reading runs on a thread of its own, never on Swift's shared
+        // pool. `copyNextSampleBuffer` blocks until the decoder hands a sample
+        // over, and a hand scrubbing starts a pass with every stretch it moves
+        // into: once a pass per thread of the pool was blocked there, nothing
+        // asynchronous anywhere in the app could run (sixteen passes parked
+        // in CoreMedia, the decoder's own threads waiting with them, and the
+        // window idle with its playhead frozen; the speed walk's scrub,
+        // 2026-11-13). Cancelling the task stops the thread between samples.
+        let job = SweepJob(reader: reader, output: output, frames: frames, size: size,
+                           orientation: orientation, waitsAt: waitsAt, keeps: keeps, deliver: deliver)
+        let stop = SweepStop()
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (done: CheckedContinuation<Bool, Never>) in
+                let thread = Thread {
+                    job.read(until: stop)
+                    done.resume(returning: true)
+                }
+                thread.name = "Photonz movie sweep"
+                thread.qualityOfService = .userInitiated
+                thread.start()
             }
-            guard let sample = output.copyNextSampleBuffer() else { break }
-            guard let buffer = CMSampleBufferGetImageBuffer(sample) else { continue }
-            let ms = CMSampleBufferGetPresentationTimeStamp(sample).seconds * 1000
-            hand(grid.arrived(atMS: ms), previous)
-            previous = buffer
+        } onCancel: {
+            stop.raise()
         }
-        if Task.isCancelled {
-            reader.cancelReading()
-        } else if reader.status == .completed {
-            hand(grid.finished(), previous)
+    }
+
+    /// Asked to stop, from any thread.
+    final class SweepStop: Sendable {
+        private let raised = Atomic<Bool>(false)
+        func raise() { raised.store(true, ordering: .relaxed) }
+        var isRaised: Bool { raised.load(ordering: .relaxed) }
+    }
+
+    /// One pass's reader, read start to end on the thread it is handed to.
+    ///
+    /// `@unchecked Sendable` because AVFoundation's reader and output are not
+    /// marked Sendable: they are made on the task that starts the pass and from
+    /// then on touched by the one thread reading them, never by two at once.
+    final class SweepJob: @unchecked Sendable {
+        let reader: AVAssetReader
+        let output: AVAssetReaderTrackOutput
+        let frames: ClosedRange<Int>
+        let size: CGSize
+        let orientation: CGImagePropertyOrientation
+        let waitsAt: (@Sendable (Int) -> Bool)?
+        let keeps: (@Sendable (Int) -> Bool)?
+        let deliver: @Sendable (Int, CGImage) -> Void
+
+        init(reader: AVAssetReader, output: AVAssetReaderTrackOutput, frames: ClosedRange<Int>, size: CGSize,
+             orientation: CGImagePropertyOrientation, waitsAt: (@Sendable (Int) -> Bool)?,
+             keeps: (@Sendable (Int) -> Bool)?, deliver: @escaping @Sendable (Int, CGImage) -> Void) {
+            self.reader = reader
+            self.output = output
+            self.frames = frames
+            self.size = size
+            self.orientation = orientation
+            self.waitsAt = waitsAt
+            self.keeps = keeps
+            self.deliver = deliver
         }
-        return true
+
+        func read(until stop: SweepStop) {
+            var grid = MovieSweepGrid(frames: frames)
+            var previous: CVPixelBuffer?
+            func hand(_ arrived: [Int], _ buffer: CVPixelBuffer?) {
+                let indices = keeps.map { arrived.filter($0) } ?? arrived
+                guard !indices.isEmpty, let buffer,
+                      let image = MovieSweeper.picture(of: buffer, orientation: orientation, size: size) else { return }
+                for index in indices { deliver(index, image) }
+            }
+            // Stopped between samples only: `cancelReading` from another
+            // thread while a sample is being read crashes (tried 2026-09-27).
+            while !stop.isRaised {
+                if let waitsAt, waitsAt(grid.nextFrame) {
+                    Thread.sleep(forTimeInterval: 0.004)
+                    continue
+                }
+                guard let sample = output.copyNextSampleBuffer() else { break }
+                guard let buffer = CMSampleBufferGetImageBuffer(sample) else { continue }
+                let ms = CMSampleBufferGetPresentationTimeStamp(sample).seconds * 1000
+                hand(grid.arrived(atMS: ms), previous)
+                previous = buffer
+            }
+            if stop.isRaised {
+                reader.cancelReading()
+            } else if reader.status == .completed {
+                hand(grid.finished(), previous)
+            }
+        }
     }
 
     /// One decoded frame, turned the way the recording is shown and at most
     /// `size` big, in the recording's own colours.
-    private static func picture(of buffer: CVPixelBuffer, orientation: CGImagePropertyOrientation,
+    fileprivate static func picture(of buffer: CVPixelBuffer, orientation: CGImagePropertyOrientation,
                                 size: CGSize) -> CGImage? {
         var image = CIImage(cvPixelBuffer: buffer).oriented(orientation)
         let scale = min(1, size.width / max(1, image.extent.width))
