@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-13T14:15:33.474Z",
+  "updated": "2026-11-14T01:42:44.963Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -422,9 +422,33 @@
     {
       "t": "2026-11-13T14:15:33.473Z",
       "note": "seq 10 -> 30"
+    },
+    {
+      "t": "2026-11-13T23:23:32.685Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T01:42:44.665Z",
+      "note": "Pass seventeen, from the 2026-11-12 digest's order (scrap in the can before or as the lid shuts; no hop after it shuts). Replayed pass sixteen's walk plan exactly (AskMotionInBeforeShutWalk, from the walk trace): two causes. (1) travelsSeen read the trip home (1.2 to 1.5 s, back to where the lap starts) as a journey to be seen and moved the fade to 1.4 to 1.46 s; staysTillGone then found no arrival inside the fade, so the trash rose out of the can over the shut lid in view. Fixed: goesHome, a fade that starts at an arrival and turns back home on the last leg is left to staysTillGone. (2) The model shut the lid 0.8 to 0.95 s, marked the trash touching the lid at 0.95 s (on top of the shut lid), hopped it up at 1.1 s and dropped it in at 1.2 s through the shut lid. New step inBeforeShut (after tuckedIn): a part that goes out of sight where it lands, in view and touching something still, and passes through a closer while seen, has the keys after the closer sets off that take it further from the landing left out (the hop), and lands at the latest moment no later than the closer shuts that clears it, pushed past the closer's resting line as little as needed, holding there until its old landing moment; the leg off the hit leaves at speed (curved); touching the closer counts as the hit for 0.05 s at most."
+    },
+    {
+      "t": "2026-11-14T01:42:44.740Z",
+      "note": "Shipped and pushed 0adc95f2c, 18ea7cf71, 03a5c2bf2, 8d55abd6b, tests first (AskMotionInBeforeShutTests: pass 16's walk, this pass's walk two, the eval's Ease out back lid, a part leaving the frame left alone, each failing before its fix; the frame-guard test checked failing with the guard taken out). Scripts/test.sh exit 0 on each. Walk ask-animates-a-story-walk at Next defaults ok three times (plans 251, 285, 286 s; Copy SVG repeatCount=indefinite x3); walk 1 (on 0adc95f2c) still dropped through the shut lid, which is how walk two's fixture was found. Pictures looked at: replay sheets of all three plans before and after, the final walk's two-lap reel rendered in WebKit from its exported SVG (thrown in from the right 0.65 s, meets the lid 0.78 s, inside the shut can 0.91 s overlapping the right wall for that frame, fades inside by 1.30 s, nothing on the lid, both laps alike, seam 0), the eval trash and envelope result sheets. Audit queue/audits/2026-11-13-animated-icon-story-in-before-shut.json, reel 2026-11-13-story-trash-pass17-two-laps.gif."
+    },
+    {
+      "t": "2026-11-14T01:42:44.813Z",
+      "note": "Measured, reads as asked: run 20261114-001632-ask (18ea7cf71) total 57.7: bell 7.1, checkbox 6.4, heart 5.3, envelope 3.6, rocket 5.4, trash 5.0 (1 of 6). Run 20261114-004542-ask (03a5c2bf2) total 55.6: bell 7.1, checkbox 7.4, heart 5.6, envelope 2.0, rocket 4.8, trash 5.1 (2 of 6). Envelope and trash again on 8d55abd6b (run 20261114-011948-ask): envelope 14.9 with the same plan shape (the model keyed the whole envelope 17 down out of the frame by 0.75 s; the letter's keys are untouched by this change), trash 33.8 (a plan that never aims the scrap into the can: it fades in on the open lid and fades above the shut lid, nothing for inBeforeShut to act on)."
+    },
+    {
+      "t": "2026-11-14T01:42:44.887Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases read as asked at 7; this pass 2 of 6 at best (bell 7.1, checkbox 7.4). The user's own walk now reads thrown in, met, shut, gone inside. Next levers, from the judges: (1) the bounce reads as a glance, not a rebound: a visible small rebound off the lid's underside before the drop, inside the time the lid takes to shut; (2) the scrap reads solid at icon size and lands over a rib: land it clear of the ribs, or ask for it drawn larger and lighter; (3) the eval's other trash plans (trash on top of the lid, never aimed in) are the model's design, the next place to look is the design ask for 'goes in'; (4) plans run 285 s of 300, so the look-and-mend never lands for this sentence. Left rough, no new task (all inside this one): inBeforeShut searches up to about 200 trials when nothing clears, under a second per plan."
+    },
+    {
+      "t": "2026-11-14T01:42:44.962Z",
+      "note": "Pass 17: the trash is in the can before the lid shuts and fades where it landed (0adc95f2c, 18ea7cf71, 03a5c2bf2, 8d55abd6b); story bar (5 of 6 at 7) not met, 2 of 6"
     }
   ],
-  "started": "2026-11-12T10:25:07.198Z",
+  "started": "2026-11-13T23:23:32.684Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"

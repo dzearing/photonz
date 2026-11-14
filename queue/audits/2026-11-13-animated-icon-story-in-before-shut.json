@@ -1,0 +1,28 @@
+{
+  "feature": "An animated icon told as a little story: the trash is in the can before the lid shuts",
+  "epic": "icon-svg",
+  "summary": "In your trash sentence the scrap now goes into the can as the lid slams shut and fades inside it. Before, it lay on the shut lid, hopped up and sank through it, then rose back out in view. The bar (five of six stories reading as asked) is still not met: two of six this pass (bell and checkbox).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-13-story-trash-pass17-playing-sc.png" },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return, wait about five minutes, press Space." },
+    { "do": "Watch your sentence's reel from this pass's last walk, two laps.", "shot": "2026-11-13-story-trash-pass17-two-laps.gif" },
+    { "do": "Read its frames: thrown in from the right 0.65 s, meets the lid 0.78 s, inside the shut can 0.91 s, fades inside by 1.30 s, nothing on the lid.", "shot": "2026-11-13-story-trash-pass17-two-laps.png" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-13-story-trash-pass17.svg" }
+  ],
+  "evaluate": [
+    "Does the scrap meeting the lid and the lid slamming over it read as the scrap closing the lid?",
+    "At 16 and 24 points, can you tell the scrap went into the can, or does it just vanish?",
+    "Is the glance off the lid enough of a bounce, or do you want it to visibly rebound before it drops in?"
+  ],
+  "rough": [
+    "No mock covers what Ask makes for this request; the reel is judged against your sentence.",
+    "The bounce is a glance: the scrap changes direction at the lid and drops in, with no rebound you could call a hop; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "The scrap still reads as a solid blob at icon size and sits over the left rib inside the can; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "At 0.91 s the scrap overlaps the can's right wall for one frame before it moves to the middle; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "Story scores on the final code, reads as asked: bell 7.1, checkbox 7.4, heart 5.6, envelope 2.0, rocket 4.8, trash 5.1 (run 20261114-004542-ask, total 55.6; earlier today 57.7, last pass 57.5). The envelope and rocket drops are the agent's own plans (the envelope keyed out of the frame), not this change.",
+    "The eval's own trash plans differ from your walk's: one scored 52 with the scrap still crossing the lid's line, and another scored 34 where the agent never aimed the scrap into the can at all.",
+    "Planning your sentence took 285 seconds, close to Ask's five minute limit, so the agent's look-and-mend round ran out of time both walks."
+  ]
+}
