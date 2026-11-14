@@ -1,0 +1,33 @@
+{
+  "id": "a-recording-dragged-out-of-history-lands-on-a-ne",
+  "title": "A recording dragged out of History lands on a new video's timeline",
+  "goal": "Make a new video, open History, and drag a recording onto the timeline: today nothing happens. The recording should show where it will land while it is dragged and become a clip when let go, the way it did when this was fixed in late October.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 5e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-14T04:53:29.939Z",
+  "updated": "2026-11-14T04:53:33.928Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-13: \"i create a new video and i can't drag any videos from history into the timeline\". Targets Next (current defaults).\n\nREPRODUCED from the user's own drags in the Dev app (pid 15767, launched 20:12, log process name reads 'Photonz Probe'): `log show --predicate 'category == \"timeline-drop\"'` at 20:51:48 to 20:52:04 shows five drags, each 'a drag came over the timeline ... 1 carrying a file' then 'the file on that drag could not be read', then 'let go over the timeline ..., the ghost saying nothing'. So the drop reaches TimelineFileDropDelegate (Sources/Photonz/TimelineLaneDrop.swift:126-132) and FileDrop.fileURL (Sources/Photonz/FileDrop.swift:149) returns nil on all three of its paths: loadObject(URL), draggedFile() (CaptureThumbnailView.lifted, which must exist on disk), and a movie/audio/image file representation.\n\nRegression of f2f9ac1f8 (2026-10-28, 'A real History drag lands on the timeline'), which fixed exactly this by remembering the lifted tile (CaptureThumbnailView.swift:90-110). Later commits that touched this area: 087b8cb7f (History drag picture gives way to the ghost), 500f13636, c771adfbb. NOT confirmed which broke it.\n\nSuspects, not causes (verify each): (1) draggedFile() reads CaptureThumbnailView.lifted, set inside dragPayload; something may clear it, or the History tile the user drags may no longer be a CaptureThumbnailView .onDrag (check HistoryOverlay.swift:644 and HistoryDragPicture.swift:39, and whether Next has a different History surface); (2) store.fileURL(for:) is just entry.url (CaptureStore.swift:756): the entry may point at a file that does not exist (an edit sidecar, a renamed or moved recording) so fileExists fails; (3) the whenWritten path promises the file with no URL object, so it only works through the in-place representation; (4) the file-representation fallback filters to .movie/.audio/.image, and provider.registeredTypeIdentifiers on the receiving side may only list a promise type. Add a log line naming which path failed and the URL tried before guessing.\n\nTrap: the walk passed when f2f9ac1f8 landed and probably still passes; walks build their payload through playtestTarget (CaptureThumbnailView.swift:81-83), not through AppKit's drag pasteboard, so a green walk proves nothing about a real drag. Confirm with a real drag (the walk 'windowDrag' kind or by hand) before closing.",
+  "acceptance": [
+    "Reproduced first in the real app with a real mouse drag (not only a walk): File > New > Video, open History, drag a recording onto the timeline, nothing lands, and the timeline-drop log says 'the file on that drag could not be read'. The cause is named in the log entry before any fix",
+    "With the fix, the same real drag draws the clip-shaped ghost while over the timeline and leaves a clip on the new video when let go, for a plain recording, a screenshot, and an edited recording whose file has finished writing",
+    "The same works on a video that already has clips, not only on a new empty one",
+    "The walk a-history-clip-drops-where-let-go-walk passes, and if it passed while the real drag failed, it is changed so it fails the way the real drag did with the fix taken out (it carries its payload a different way from a real pointer)",
+    "Audit under queue/audits/ with the before and after timeline-drop log lines from a real drag and a picture of the clip landed; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-14T04:53:29.941Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-14T04:53:33.927Z",
+      "note": "seq 4020 -> 5e-7"
+    }
+  ]
+}
