@@ -1,0 +1,36 @@
+{
+  "id": "ask-can-draw-any-thing-and-animate-something-abo",
+  "title": "Ask can draw any thing and animate something about it, from a set of general motion techniques",
+  "goal": "Ask should be able to draw whatever it is asked for and make some part of it move in a believable way: a door swinging, a flag waving, a cup steaming, a dog wagging its tail, a phone buzzing. It gets there from a toolbox of general animation techniques it knows how to pick from and combine, not from tuning one example until it works. The trash can was only ever an example.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 8e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-14T23:22:06.571Z",
+  "updated": "2026-11-14T23:22:06.699Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-14, after stopping an-animated-icon-told-as-a-little-story-moves-th (dropped at 20 passes, 2 of 6 story cases): \"the trash can was just an example, i don't want it to hyperfocus on trashcan animations, i want it to be able to draw a thing and animate something about it. I want it to have techniques for doing that.\"\n\nWhat exists (docs/design/ask.md, 'A moving icon (2026-11-06)' and 'A story of several beats'): AskMotion.designAsk (design in words: parts, hinges, beats), AskMotion.principles (general motion principles), tools add_drawing / set_timing / set_keys, AskMotion.landing ($1/part ids on a 24 grid), AskMotionCheck, AskMotion.fitted / leaving / marksGo / comesBack / foldsLand / hidden, MotionSVG.folds and carried, AskMotion.beatsReview. Much of it is already subject-free, but twenty passes were spent tuning against the trash story; read that task's log for what each pass changed and which of those rules are general and which only served one case, and say so in the audit. Rules that only served one case are candidates to take out.\n\nEval: Scripts/ask-eval (README.md, eval.mjs, judge.mjs), cases/animated-*.json and held-out/animated-h1..h8.json. A run is about four minutes a request; budget the runs. Memory rule (user): Ask quality comes from model, prompt and general techniques, never stored or coded subjects. Contradicts nothing queued: the dropped trash task's shipped work stays and is the starting point.",
+  "acceptance": [
+    "A written catalogue of general motion techniques Ask knows, each one described by what it does to parts, pivots, paths and time, never by a subject: at least turning on a hinge or pivot, folding along an edge, squash and stretch, a throw along an arc with a bounce and settle, shake or buzz, pulse and breathe, sway and wave (a chain of parts each a little behind the last), spin and orbit, a line drawing itself, popping in and out, entering and leaving the frame, a loop that rests between laps, follow-through and staggering. For each, which keys and pivots carry it, and which of them an animated SVG keeps. In docs/design/ask.md under the moving-icon section",
+    "Ask picks techniques for a request from what it says should happen, combines two or more when the request asks for more than one thing, and makes the parts it needs as their own named layers with their pivots in the right place. Its design step says which technique it chose for which part",
+    "No code, prompt text or example names a subject (no trash, lid, bell, envelope, heart...): techniques and examples are written about parts in general, and a reviewer grep of the diff for the eval's subject words comes back empty outside the eval cases themselves",
+    "Measured on a NEW held-out set of at least 16 animated requests of everyday things none of the existing animated cases cover, written before any tuning and never looked at while tuning, spread across the techniques (each technique at least twice). Each is judged on: the right thing is drawn, the asked-for part moves the asked-for way, nothing else moves that should not, it loops cleanly. Before and after scores on that set, the existing animated cases, and the existing held-out animated cases (animated-h1..h8) all go in the audit; the existing ones do not drop",
+    "No pass works on one subject. Every pass is judged on the whole held-out set and the score moves or the pass is reverted. Stop after 8 passes or when the new set reads 75 percent or better, whichever comes first, and say which it was. A pass that only helps one case does not count",
+    "A contact sheet of every held-out case (two frames a beat) and a reel of the best and worst four, under queue/audits/ and named in the audit, so the user can look without running Ask",
+    "Works at Next defaults in the New window and with Command K on an empty picture; Copy SVG of three of them plays as it does in the app",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-14T23:22:06.573Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-14T23:22:06.698Z",
+      "note": "seq 4010 -> 8e-7"
+    }
+  ]
+}
