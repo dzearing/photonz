@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T05:16:19.351Z",
-  "updated": "2026-11-14T22:36:06.221Z",
+  "updated": "2026-11-14T22:36:19.367Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried over from measuring-a-ui-gives-a-calm-redline-each-kind-of (2026-10-20), which shipped code-chosen marks and clear readout placement (Sources/PhotonzCore/Redline.swift, find_measurements / mark_measurements) and took the settings case from 32.5 to 59.0 for Ask (judge 2.8 to 4.8). What the judge still says, verbatim, from Scripts/ask-eval.sh run --engine ask --cases settings-measurements (runs 20261021-044351-ask, 20261021-044837-ask, 20261021-050243-ask or the latest): \"values don't match what they point at (124 px on a roughly 250 px button, 18 px on a gap that is clearly larger)\"; \"there are no end ticks to show what is being measured\"; \"the brackets don't clearly mark what they measure (26 px, 30 px, 17 px)\". The 124 is right in points (MeasureUnit.points, logical px) but labelled px: MeasureUnit.suffix is \"px\" for both units by design (Measure.swift line 12). Only three call sites use the suffix (Measure.swift label/chipText, MeasureSizeGroup.swift:176, DocumentUnit.swift:27) but about 46 test files and 38 walks expect px readouts, which is why it did not fit in the redline task. Size brackets are MeasureSizeGroup + caliper extension lines (MeasurePlan.swift, MeasureRasterizer.swift).",
@@ -243,6 +243,10 @@
     {
       "t": "2026-11-14T22:36:06.220Z",
       "note": "Verified: Scripts/test.sh exit 0; 14 walks ok in the probe (the 8 owned, ask-redlines-a-dialog/feed, redline-walk, svg-export-redline, capture-to-redline-steps, ask-annotates-a-screenshot). ask-annotates-a-screenshot-walk exited 1 on its first run (output overwritten before I read it) and passed on the rerun. Looked at the app capture and the settings sheet: pt everywhere, 44 pt with ticks, 220 above the field, 124 below Save Changes, 12 on its line. Eval not re-run: the layout output is identical to the state measured at Ask 73 / skill 71.2."
+    },
+    {
+      "t": "2026-11-14T22:36:19.365Z",
+      "note": "Back on the older layout the user picked on 2026-11-14 (cd1dfa7b6): numbers ride brackets set off their objects, pt on 2x pictures and end ticks kept. Sheets byte-identical to the card's left pictures; test.sh green; 14 walks ok; audit queue/audits/2026-11-14-redline-older-layout.json. Eval bar of 8 closed short on the user's answer (Ask 73, clean 5.4)."
     }
   ],
   "walks": [
@@ -255,5 +259,6 @@
     "size-steps-and-resizes-walk",
     "copy-svg-into-a-code-editor-walk"
   ],
-  "started": "2026-11-14T22:16:54.988Z"
+  "started": "2026-11-14T22:16:54.988Z",
+  "completed": "2026-11-14T22:36:19.366Z"
 }
