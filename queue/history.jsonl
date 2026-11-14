@@ -17261,3 +17261,12 @@
 {"t":"2026-11-14T09:49:59.818Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-14T09:50:19.814Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-14T09:50:19.902Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."}
+{"t":"2026-11-14T10:03:30.048Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":611,"of":1164,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-14T10:03:30.244Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-14T10:04:00.281Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
+{"t":"2026-11-14T12:09:54.403Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-14T12:09:54.482Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-14T12:09:54.561Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-14T12:09:54.638Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-14T12:09:54.716Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-14T12:09:54.793Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 4 landed cbfda886b: edits while playing trim 87->33, blade 223->85, undo 119->62 ms (repeated trims/moves ~18-20); play 1 dropped a minute. Bars not reached: edits <=16 ms, scrub within 1 frame, no dropped frames. Stays open."}

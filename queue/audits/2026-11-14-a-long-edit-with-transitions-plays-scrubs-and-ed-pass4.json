@@ -1,0 +1,29 @@
+{
+  "feature": "Editing a long video while it plays (pass 4)",
+  "epic": "video-perf",
+  "summary": "On the 6 minute reference edit, a trim or a move made while it plays now holds the window about 18 to 33 ms instead of 87, the blade 85 instead of 223 and undo 62 instead of 119, and a minute of play drops 1 frame instead of 4. The picture changes in the edit's own frame; the timeline and the panel follow one frame later.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Build the reference edit with Scripts/perf/reference-edit.sh 6 and open it.",
+  "switched": {},
+  "try": [
+    { "do": "Press Space to play the reference edit from about 0:15.", "shot": "2026-11-14-long-edit-pass4-after-the-edits-sc.png" },
+    { "do": "While it plays, pick a clip ahead of the playhead and drag its end in by half a second." },
+    { "do": "While it plays, press Command Z." },
+    { "do": "While it plays, press B over a recording." },
+    { "do": "Play a minute across the cross dissolves and pushes and watch for any hitch." },
+    { "do": "To measure it: Scripts/perf/speed-walk.sh (short form, about two minutes)." }
+  ],
+  "evaluate": [
+    "Does a trim or Undo while playing leave the picture running without a hitch you can see?",
+    "When the timeline follows the picture one frame later after a key or menu edit, can you see that frame at all?",
+    "Is the blade stopping playback (still the case) something you want changed to keep playing, as Premiere's Add Edit does?",
+    "Does a minute of play across the transitions look smooth now?"
+  ],
+  "rough": [
+    "Not at the bar yet (bar: every edit within 16 ms): repeated trims and moves land at 18 to 20 ms, the first edit after opening about 30, the blade 85 and Undo right after a blade about 60, because the blade pauses and picks a piece and the panel builds every section for it. Stays open on this task.",
+    "Scrub is unchanged at 2 display frames behind the hand in the middle and 4 at worst (bar: 1). Stays open on this task.",
+    "Play still drops about 1 frame a minute (bar: none). Stays open on this task.",
+    "An edit by a key, menu or agent while playing now shows the timeline and panel one frame after the picture; a drag let go is not split, so a dropped clip never springs back.",
+    "A change that handed click ticks their values from the lane broke dragging a tick (a-click-tick-is-hidden-and-slid-walk failed, passed again with it taken out); it was taken out, cause not found. Logged on this task.",
+    "Screen Recording was granted and the screen unlocked: the picture is a real capture of the probe after the speed walk's edits."
+  ]
+}

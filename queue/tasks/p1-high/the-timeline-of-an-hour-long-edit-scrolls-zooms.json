@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-14T09:50:19.901Z",
+  "updated": "2026-11-14T12:09:54.713Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -103,6 +103,10 @@
     {
       "t": "2026-11-14T09:50:19.900Z",
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
+    },
+    {
+      "t": "2026-11-14T12:09:54.712Z",
+      "note": "From a-long-edit pass 4 (cbfda886b): TimelineChildMarks (part timing marks) is now made only for clips that have marks, with values from the lane. Click ticks were NOT changed: an Equatable ClickTicksView fed from the lane broke the tick drag in a-click-tick-is-hidden-and-slid-walk, so a pass on click ticks needs that walk green."
     }
   ],
   "started": "2026-11-14T06:48:15.847Z",

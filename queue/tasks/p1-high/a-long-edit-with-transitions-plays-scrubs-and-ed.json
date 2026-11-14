@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-14T09:30:19.904Z",
+  "updated": "2026-11-14T12:09:54.792Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -134,9 +134,33 @@
     {
       "t": "2026-11-14T09:30:19.903Z",
       "note": "From the-timeline-of-an-hour-long-edit-scrolls-zooms pass 2 (2026-11-14): with the hour-long timeline's plain clips and cuts now painted as one layer per lane, an edit while playing the 60 min edit holds the main thread 150-250 ms longest pass (trim 192, move 170, blade 247, undo 179; were 526/534/683/704). A sample of those edits (speed walk edits step x2) puts the timeline's own share small (TimelineTrackRow ~40 of ~1100 samples); the rest is restarting playback after the write: EditorState.restartDocumentClock -> movieFrameLanded/displayDocument/documentMomentChanged (~440), followAudio + audioHeadroom + PhotonzDocument.audioMix (~250), MovieFrameFetcher.open/filePlayed (~360, partly the decode thread's callbacks), the inspector's SectionRevealLayout/CaptionsInspector (~120), and whole-document scans per edit: PhotonzDocument.hasClickEffects (40), hasPictureFades (36), hasZooms (35). Reproduce: a walk on referenceEdit 60 with two { do: speed, measure: edits } steps, sampled with 'sample <probe pid> 14' from 12 s in."
+    },
+    {
+      "t": "2026-11-14T10:03:30.239Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T12:09:54.401Z",
+      "note": "Pass 4 landed cbfda886b (6 min edit, short speed walk worst of 3, baseline rewritten): trim 87 -> 33 ms, blade 223 -> 85, undo 119 -> 62; play 4 -> 1 dropped a minute, worst gap 118 -> 67 ms; scrub unchanged 2/4. Repeated trims/moves after the first 30-35 -> 18-20 ms, undo 17-19 (Time Profiler on a /tmp edits walk). Fixes: (1) perform while playing defers the timeline and panel a pass (catchUpOnTheNextPassOnAVideo, as Undo did), never for a drag let go (isHandLettingGo, mouse up/drag events); (2) PhotonzDocument keeps its sound plan (DocumentDerived.audioMix; EditorState.audioMix worked it out 3x per read); canvasSize/pixelScale writes now reset derived answers; (3) TimelineChildMarks gets values from the lane, made only where marks exist; (4) TrackKeyDiamond, AddKeyControl, HeldFrameBadgeOverlay watch PanelPlayhead answers, not the clock. Rules 6 and 7 in docs/design/video.md 8f. Audit queue/audits/2026-11-14-a-long-edit-with-transitions-plays-scrubs-and-ed-pass4.json."
+    },
+    {
+      "t": "2026-11-14T12:09:54.480Z",
+      "note": "Chose deferring the timeline and panel one frame for edits made by a key, menu or agent while playing, over drawing everything in the edit's frame, because the picture is what a person is watching and the split halves the longest pass; drags let go stay in one pass so a dropped clip never springs back."
+    },
+    {
+      "t": "2026-11-14T12:09:54.559Z",
+      "note": "Findings that did NOT pay: painting every plain clip on small lanes (TimelinePaint.busyLane 24 -> 1) saved 2-3 ms per edit; the canvas fast path stepping aside with a clip picked costs ~1 frame in 600 now (604 vs 605 of 606), not worth the risk. sample(1) on the probe showed SwiftUI's AccessibilityNode.updateFocus walking all responders (25% of main), but Time Profiler on the same walk showed none of it: an artifact of sample, do not chase. lldb breakpoints on SwiftUI internals slow it to minutes; Time Profiler via xctrace --attach + a jsonl export of main-thread stacks bucketed into passes was the tool that worked."
+    },
+    {
+      "t": "2026-11-14T12:09:54.635Z",
+      "note": "Left rough, not filed (stays this task's): handing ClickTicksView its ticks from the lane (Equatable, made only for clips with clicks) broke a-click-tick-is-hidden-and-slid-walk at the tick drag (step 16, reproduced twice, passes with the old code); reverted, cause not found. Next for this task: (a) the first edit after opening is ~30 ms (likely the title bar/edited state); (b) blade 85 ms and undo after a blade ~60: the blade pauses and picks a piece, so the panel builds every section (CollapsibleSection/SectionFoldWindow bodies 128 in 1.5 s, InspectorPanel 33); (c) zoom lanes (13) and clip bars (17) still rebuild on every edit; (d) scrub 2 frames vs 1; (e) ~1 dropped frame a minute."
+    },
+    {
+      "t": "2026-11-14T12:09:54.791Z",
+      "note": "Pass 4 landed cbfda886b: edits while playing trim 87->33, blade 223->85, undo 119->62 ms (repeated trims/moves ~18-20); play 1 dropped a minute. Bars not reached: edits <=16 ms, scrub within 1 frame, no dropped frames. Stays open."
     }
   ],
-  "started": "2026-11-13T17:08:34.477Z",
+  "started": "2026-11-14T10:03:30.238Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
