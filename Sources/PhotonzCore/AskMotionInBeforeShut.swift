@@ -16,7 +16,8 @@ extension AskMotion {
     /// from where it lands than it was then are left out (a hop up over what
     /// is shutting), and its landing comes at the latest moment, no later
     /// than the closer shuts, at which it passes through nothing it is meant
-    /// to go in under. The keys between keep their order, closer in time.
+    /// to go in under, pushed in past the closer's resting line as little
+    /// as that takes (`tuckStep`, up to `mostTuck`). The keys between keep their order, closer in time.
     /// A landing no moment clears keeps its keys.
     ///
     /// On 2026-11-12 the user's trash met the lid as it began to snap shut
@@ -66,15 +67,22 @@ extension AskMotion {
                 while setsOff - tick > 0, !same(current.ink(closer, at: setsOff - tick), current.ink(closer, at: setsOff)) { setsOff -= tick }
                 guard shut < lapEnd - tick, setsOff < shut - tick, landedAt > shut + 0.0005, setsOff < landedAt,
                       let from = point(AskMotionCheck.value(of: out[index], at: setsOff)) else { continue }
+                // Through the closer while seen. Meeting it as the closer sets
+                // off is the hit itself (placed touching it): only meeting it
+                // again, once the two have come apart, counts, and a part that
+                // never comes away from it before it is gone has gone through.
                 func through(_ made: [AskStep]) -> Bool {
                     guard let lap = Lap(made) else { return true }
                     var moment = setsOff + tick
+                    var hitting = true
                     while moment < lapEnd - 0.0005 {
-                        guard lap.placed(part, at: moment)?.seen ?? true else { break }
-                        if inkMeets(lap.ink(part, at: moment), lap.ink(closer, at: moment), within: -passesThrough) { return true }
+                        guard lap.placed(part, at: moment)?.seen ?? true else { return hitting }
+                        let meets = inkMeets(lap.ink(part, at: moment), lap.ink(closer, at: moment), within: -passesThrough)
+                        if meets, !hitting { return true }
+                        if !meets { hitting = false }
                         moment += tick
                     }
-                    return false
+                    return hitting
                 }
                 guard through(out), var object = out[index].arguments.objectValue, let list = object["keys"]?.arrayValue else { continue }
                 // Further from the landing than it was as the closer set off: left out.
@@ -85,24 +93,73 @@ extension AskMotion {
                     return hypot(goal.x - here.x, goal.y - here.y) <= far
                 }
                 let between = kept.compactMap { $0["seconds"]?.doubleValue }.filter { $0 > setsOff + 0.0005 && $0 < landedAt - 0.0005 }
-                var lands = shut
-                while lands >= setsOff + shortestWayIn - 0.0005 {
-                    let share = (lands - setsOff) / (landedAt - setsOff)
-                    let moved: [AgentJSON] = kept.map { key in
-                        guard var one = key.objectValue, let at = one["seconds"]?.doubleValue,
-                              at > setsOff + 0.0005, at <= landedAt + 0.0005 else { return key }
-                        one["seconds"] = .number(Double(rounded(CGFloat(setsOff + (at - setsOff) * share))))
-                        return .object(one)
+                // Where it lands, and the keys holding it there, may also go
+                // a little further in, straight away from where the closer
+                // rests: a landing just under the shut lid's line is still in
+                // its stroke (the walk of 2026-11-13).
+                let width = current.art.viewBox?.width ?? current.art.bounds.width
+                let landedInk = current.ink(part, at: landedAt).flatMap { $0 }
+                guard !landedInk.isEmpty else { break }
+                let middle = CGPoint(x: landedInk.map(\.x).reduce(0, +) / CGFloat(landedInk.count),
+                                     y: landedInk.map(\.y).reduce(0, +) / CGFloat(landedInk.count))
+                let touch = rest.map { nearest(to: middle, on: $0) }
+                    .min { hypot($0.x - middle.x, $0.y - middle.y) < hypot($1.x - middle.x, $1.y - middle.y) }
+                var away = CGVector.zero
+                if let touch, hypot(middle.x - touch.x, middle.y - touch.y) > 1e-6 {
+                    let length = hypot(middle.x - touch.x, middle.y - touch.y)
+                    away = CGVector(dx: (middle.x - touch.x) / length, dy: (middle.y - touch.y) / length)
+                }
+                let holds = keys.indices.filter { $0 >= landing && keys[$0].value == keys[landing].value }.map { keys[$0].seconds }
+                let near = Double(PropertyKeys.nearMS) / 1000
+                var pushes: [CGFloat] = [0]
+                if away != .zero {
+                    var push = tuckStep * width
+                    while push <= mostTuck * width + 0.0005 { pushes.append(push); push += tuckStep * width }
+                }
+                var found = false
+                for push in pushes {
+                    var lands = shut
+                    while lands >= setsOff + shortestWayIn - 0.0005 {
+                        let share = (lands - setsOff) / (landedAt - setsOff)
+                        var moved: [AgentJSON] = kept.map { key in
+                            guard var one = key.objectValue, let at = one["seconds"]?.doubleValue else { return key }
+                            if push > 0, holds.contains(where: { abs($0 - at) <= 0.0005 }),
+                               let x = one["value"]?["x"]?.doubleValue, let y = one["value"]?["y"]?.doubleValue {
+                                one["value"] = ["x": .number(Double(rounded(CGFloat(x) + away.dx * push))),
+                                                "y": .number(Double(rounded(CGFloat(y) + away.dy * push)))]
+                            }
+                            if at > setsOff + 0.0005, at <= landedAt + 0.0005 {
+                                one["seconds"] = .number(Double(rounded(CGFloat(setsOff + (at - setsOff) * share))))
+                            }
+                            return .object(one)
+                        }
+                        // Landed sooner, it waits there until the moment it
+                        // landed before: what it does after (home, unseen)
+                        // keeps its time.
+                        if lands < landedAt - near,
+                           let slot = moved.firstIndex(where: { abs(($0["seconds"]?.doubleValue ?? -1) - Double(rounded(CGFloat(lands)))) <= 0.0005 }),
+                           var arrival = moved[slot].objectValue {
+                            var stays = arrival
+                            stays["seconds"] = .number(landedAt)
+                            arrival["curve"] = .string(AgentKeyCurve.hold)
+                            moved[slot] = .object(arrival)
+                            if !moved.contains(where: { abs(($0["seconds"]?.doubleValue ?? -1) - landedAt) <= 0.0005 }) { moved.append(.object(stays)) }
+                            moved.sort { ($0["seconds"]?.doubleValue ?? 0) < ($1["seconds"]?.doubleValue ?? 0) }
+                        }
+                        let times = moved.compactMap { $0["seconds"]?.doubleValue }.sorted()
+                        if between.isEmpty || zip(times, times.dropFirst()).allSatisfy({ $1 - $0 > near }) {
+                            object["keys"] = .array(moved)
+                            var made = out
+                            made[index] = AskStep(tool: made[index].tool, arguments: .object(object))
+                            // Off what it met at speed, as a hit is left
+                            // (`curved`): a slow start there is caught by the
+                            // closer coming down.
+                            made = curved(made, step: index, leaving: setsOff, arriving: false)
+                            if !through(made) { out = made; found = true; break }
+                        }
+                        lands -= tick
                     }
-                    let times = moved.compactMap { $0["seconds"]?.doubleValue }.sorted()
-                    let near = Double(PropertyKeys.nearMS) / 1000
-                    if between.isEmpty || zip(times, times.dropFirst()).allSatisfy({ $1 - $0 > near }) {
-                        object["keys"] = .array(moved)
-                        var made = out
-                        made[index] = AskStep(tool: made[index].tool, arguments: .object(object))
-                        if !through(made) { out = made; break }
-                    }
-                    lands -= tick
+                    if found { break }
                 }
                 break
             }

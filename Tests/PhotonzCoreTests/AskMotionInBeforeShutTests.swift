@@ -93,3 +93,59 @@ extension AskMotionInBeforeShutTests {
         #expect(middle > lidLowest, "trash middle \(middle) above the shut lid's line \(lidLowest) at \(shut)")
     }
 }
+
+/// The same sentence walked on 2026-11-13 at 15:52 on the first change of
+/// pass seventeen: the lid hinged at (5, 7), no hop, the trash faded over
+/// 0.95 to 1.2 s as it dropped into the can, after the lid shut at 0.95 s.
+enum AskMotionInBeforeShutWalkTwo {
+    static let bin = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g id="bin"><path id="body" d="M6 9 L7 20 Q7 21 8 21 L16 21 Q17 21 17 20 L18 9"/><line id="rib-left" x1="10" y1="12" x2="10.5" y2="18"/><line id="rib-right" x1="14" y1="12" x2="13.5" y2="18"/></g><g id="lid"><line id="lid-bar" x1="5" y1="7" x2="19" y2="7"/><line id="lid-knob" x1="11" y1="5" x2="13" y2="5"/></g><g id="trash"><path id="crumple" d="M18 2 L21 3 L20 5 L17 4 Z"/></g></svg>"##
+    static let moves = #"[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"value":{"x":-6,"y":2}},{"seconds":0.95,"value":{"x":-6,"y":0}},{"seconds":1.2,"value":{"x":-6,"y":8}},{"seconds":1.5,"value":{"x":0,"y":0}}]"#
+    static let touching = #"[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"touches":"lid","value":{"x":-6,"y":2}},{"seconds":0.95,"touches":"lid","value":{"x":-6,"y":0}},{"seconds":1.2,"touches":"bin","value":{"x":-6,"y":8}},{"seconds":1.5,"value":{"x":0,"y":0}}]"#
+
+    static func steps() throws -> [AskStep] {
+        let args = AskMotionInBeforeShutWalk.args
+        return [AskStep(tool: "add_drawing", arguments: ["icon": true, "subject": "trash bin with hinged lid and a piece of trash", "svg": .string(bin)]),
+                AskStep(tool: "set_timing", arguments: ["loop": true, "seconds": .number(1.5)]),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"curve":"Hold","seconds":0,"value":0},{"curve":"Ease out","seconds":0.2,"value":0},{"curve":"Hold","seconds":0.5,"value":-50},{"curve":"Ease in out","seconds":0.8,"value":-50},{"curve":"Hold","seconds":0.95,"value":0},{"seconds":1.5,"value":0}],"layer":"$1/lid","pivot":{"x":5,"y":7},"property":"rotation"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":{"x":18,"y":2}},{"seconds":0.5,"value":{"x":18,"y":2}},{"seconds":0.8,"value":{"x":12,"y":4}},{"seconds":0.95,"value":{"x":12,"y":2}},{"seconds":1.2,"value":{"x":12,"y":10}},{"seconds":1.5,"value":{"x":12,"y":10}}],"layer":"$1/trash","property":"position"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":100},{"seconds":0.5,"value":100},{"seconds":0.8,"value":100},{"seconds":0.95,"value":100},{"seconds":1.2,"value":0},{"seconds":1.5,"value":0}],"layer":"$1/trash","property":"opacity"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(moves),"layer":"$1/trash","property":"position","replace":true}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":100},{"seconds":0.5,"value":100},{"seconds":0.8,"value":100},{"seconds":0.95,"value":100},{"seconds":1.2,"value":0},{"seconds":1.5,"value":100}],"layer":"$1/trash","property":"opacity","replace":true}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(touching),"layer":"$1/trash","property":"position","replace":true}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(moves),"layer":"$1/trash","property":"position","replace":true}"#))]
+    }
+}
+
+extension AskMotionInBeforeShutTests {
+    @Test("Walk two's frames, written out on request",
+          .enabled(if: ProcessInfo.processInfo.environment["PHOTONZ_LAP_DUMP2"] != nil))
+    func dumpTwo() throws {
+        let path = try #require(ProcessInfo.processInfo.environment["PHOTONZ_LAP_DUMP2"])
+        let landed = AskMotion.planned(try AskMotionInBeforeShutWalkTwo.steps())
+        for step in landed where step.tool == "set_keys" { print("LANDED", step.arguments.encodedString()) }
+        try LapDump.write(landed, to: path, frames: 48)
+    }
+}
+
+extension AskMotionInBeforeShutTests {
+    /// Walk two landed the trash with its top in the shut lid's stroke, so
+    /// no landing moment cleared and it dropped in after the lid shut.
+    @Test("Walk two: in before the lid shuts, held where it landed till gone")
+    func walkTwoInBeforeShut() throws {
+        let landed = AskMotion.planned(try AskMotionInBeforeShutWalkTwo.steps())
+        let lap = try #require(AskMotion.Lap(landed))
+        // Touching the lid at the hit (0.8 s, placed so) is the hit; once
+        // apart, never through it again while seen.
+        var apart = false
+        var moment = 0.8
+        while moment < 1.5 {
+            if lap.placed("trash", at: moment)?.seen ?? false {
+                let meets = AskMotion.inkMeets(lap.ink("trash", at: moment), lap.ink("lid", at: moment), within: -AskMotion.passesThrough)
+                #expect(!(meets && apart), "through the lid at \(moment)")
+                if !meets { apart = true }
+            }
+            moment += 0.01
+        }
+        #expect(apart, "never came away from the lid")
+    }
+}
