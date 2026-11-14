@@ -16617,7 +16617,7 @@
 {"t":"2026-11-10T10:30:13.562Z","ev":"task_done","id":"ask-s-first-answer-after-its-model-loads-comes-i","from":"in_progress","note":"Ask's built-in server now saves its read of the tools and rules every request starts with (13.5k tokens) and restores it in about 1 s on each first turn (AskStandingRead in PhotonzCore, keyed by model, its files, server build, window and exact tokens, with tests; AskModelServer.standingRead; commit 4c6f8a072). settings-measurements from a cold probe 16.4 s (17.4 s in the full run) against 83 to 101 s. On the baseline's own 40 climb cases median 56.9 s against 142.0, total 73.7 against 75.1; held-out total 54.9 against 56, median 115.4 s against 146.5. Scripts/test.sh green. Audit queue/audits/2026-11-10-ask-s-first-answer-after-its-model-loads-comes-i.json."}
 {"t":"2026-11-10T10:39:08.010Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-10T10:41:14.108Z","ev":"slice_pass","walks":28,"passed":25,"failed":3,"seconds":506,"of":1140,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-10T10:41:14.291Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high","repeats":1,"until":"2026-11-10T10:41:14.291Z","rolledUp":true}
+{"t":"2026-11-10T10:41:14.291Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high","repeats":2,"until":"2026-11-10T13:22:17.880Z","rolledUp":true}
 {"t":"2026-11-10T12:14:55.155Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-10T12:14:55.231Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-10T12:14:55.306Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
@@ -16644,7 +16644,6 @@
 {"t":"2026-11-10T13:21:02.824Z","ev":"task_resequenced","id":"an-agent-can-change-what-it-made-fonts-captions","from":4080,"to":680}
 {"t":"2026-11-10T13:21:08.814Z","ev":"triage","summary":"merged 0, dropped 0, priority moves 0, filed 1 (CI on main red since 11-03, reproduced, p1 seq 20), reset 0, leftovers 0, groomed 1 (user-eye read and steer on the story icon task), renumbered 14, no new loop p1 bugs to spot-check"}
 {"t":"2026-11-10T13:21:59.172Z","ev":"digest","file":"2026-11-10.md"}
-{"t":"2026-11-10T13:22:17.880Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-10T13:40:45.576Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-10T14:49:51.127Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-10T15:28:20.812Z","ev":"task_walks","id":"an-animated-icon-told-as-a-little-story-moves-th","walks":["ask-animates-a-story-walk","ask-animates-a-story-without-the-word-walk"]}
@@ -16654,7 +16653,7 @@
 {"t":"2026-11-10T15:28:38.788Z","ev":"task_blocked","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Bounce away from what is hit, contact runs kept on the lid, buried touches pushed out, thrown in from outside (06a359946). Story bar not met (1 of 6 in three runs). Per the digest, the user decides whether to keep going: card with the marked reel frames."}
 {"t":"2026-11-10T15:37:00.610Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-10T15:39:06.540Z","ev":"slice_pass","walks":28,"passed":27,"failed":1,"seconds":470,"of":1140,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-10T15:39:06.713Z","ev":"task_started","id":"the-checks-on-main-pass-again-and-stay-green-whe","title":"The checks on main pass again, and stay green when walks are added","priority":"p1-high"}
+{"t":"2026-11-10T15:39:06.713Z","ev":"task_started","id":"the-checks-on-main-pass-again-and-stay-green-whe","title":"The checks on main pass again, and stay green when walks are added","priority":"p1-high","repeats":1,"until":"2026-11-10T15:39:06.713Z","rolledUp":true}
 {"t":"2026-11-10T15:56:48.396Z","ev":"task_walks","id":"the-checks-on-main-pass-again-and-stay-green-whe","walks":[]}
 {"t":"2026-11-10T16:07:26.373Z","ev":"task_note","id":"the-checks-on-main-pass-again-and-stay-green-whe"}
 {"t":"2026-11-10T16:07:26.441Z","ev":"task_note","id":"the-checks-on-main-pass-again-and-stay-green-whe"}
@@ -16666,18 +16665,18 @@
 {"t":"2026-11-10T16:24:27.066Z","ev":"loop_reloaded","from":"69108e9d0b50","to":"83d83fbfbbdf"}
 {"t":"2026-11-10T16:24:27.176Z","ev":"loop_started","pid":36463}
 {"t":"2026-11-10T16:24:27.221Z","ev":"loop_awake","held":true,"pid":36473,"screenLocked":false}
-{"t":"2026-11-10T16:24:27.771Z","ev":"task_started","id":"text-keeps-every-word-at-every-zoom","title":"Text keeps every word at every zoom","priority":"p1-high"}
+{"t":"2026-11-10T16:24:27.771Z","ev":"task_started","id":"text-keeps-every-word-at-every-zoom","title":"Text keeps every word at every zoom","priority":"p1-high","repeats":1,"until":"2026-11-10T16:24:27.771Z","rolledUp":true}
 {"t":"2026-11-10T16:49:14.679Z","ev":"task_walks","id":"text-keeps-every-word-at-every-zoom","walks":["text-keeps-every-word-at-every-zoom-walk"]}
 {"t":"2026-11-10T16:49:28.511Z","ev":"task_note","id":"text-keeps-every-word-at-every-zoom"}
 {"t":"2026-11-10T16:49:28.585Z","ev":"task_note","id":"text-keeps-every-word-at-every-zoom"}
 {"t":"2026-11-10T16:49:28.660Z","ev":"task_note","id":"text-keeps-every-word-at-every-zoom"}
 {"t":"2026-11-10T16:49:28.736Z","ev":"task_note","id":"text-keeps-every-word-at-every-zoom"}
 {"t":"2026-11-10T16:49:53.225Z","ev":"task_done","id":"text-keeps-every-word-at-every-zoom","from":"in_progress","note":"Text rasterizer (still and reveal) lays words out in the measured box, not pixels / scale, so a line that fits never wraps at a zoom whose pixel width rounds down (commit 6bffae84a, shared renderer, so Current and Next). Verified: TextBreaksAtEveryScaleTests over 30+ rounding-down scales incl. 0.6715 and 1.343; walk text-keeps-every-word-at-every-zoom-walk at 64% on a 2x screen ends at 'anytime.' where the old renderer ended at 'cancel'; whole-point boxes at 100% byte-identical; Scripts/test.sh green. Audit queue/audits/2026-11-10-text-keeps-every-word-at-every-zoom.json."}
-{"t":"2026-11-10T16:53:41.764Z","ev":"task_started","id":"ask-chat-has-the-mock-s-new-conversation-button","title":"Each row of the / command list wears its own icon","priority":"p1-high"}
+{"t":"2026-11-10T16:53:41.764Z","ev":"task_started","id":"ask-chat-has-the-mock-s-new-conversation-button","title":"Each row of the / command list wears its own icon","priority":"p1-high","repeats":1,"until":"2026-11-10T16:53:41.764Z","rolledUp":true}
 {"t":"2026-11-10T17:25:24.081Z","ev":"task_walks","id":"ask-chat-has-the-mock-s-new-conversation-button","walks":["ask-slash-lists-commands-walk","ask-lists-commands-in-the-panel-walk"]}
 {"t":"2026-11-10T17:26:07.046Z","ev":"task_note","id":"ask-chat-has-the-mock-s-new-conversation-button"}
 {"t":"2026-11-10T17:26:27.049Z","ev":"task_done","id":"ask-chat-has-the-mock-s-new-conversation-button","from":"in_progress","note":"Every / row in Ask now wears its own icon (AppCommandID.symbol, an exhaustive switch over all commands; Align and Space Evenly rows show their own edge/axis). Tests: AppCommandSymbolTests (no shared icons unless same words; no area wears one icon), AppCommandSymbolsDrawTests (every name draws on this macOS). Full Scripts/test.sh green (exit 0); ask-slash-lists-commands-walk (new Align step) and ask-lists-commands-in-the-panel-walk ok at Next defaults with real captures. Shared mock's New conversation button removed. Commit 8a376544a."}
-{"t":"2026-11-10T17:26:52.737Z","ev":"task_started","id":"an-unmanned-session-never-opens-the-installed-ph","title":"An unmanned session never opens the installed Photonz beside the app you are using","priority":"p1-high"}
+{"t":"2026-11-10T17:26:52.737Z","ev":"task_started","id":"an-unmanned-session-never-opens-the-installed-ph","title":"An unmanned session never opens the installed Photonz beside the app you are using","priority":"p1-high","repeats":1,"until":"2026-11-10T17:26:52.737Z","rolledUp":true}
 {"t":"2026-11-10T17:44:55.687Z","ev":"task_created","id":"the-moving-icon-preview-speed-check-passes-on-a","priority":"p2-normal","title":"The moving icon preview speed check passes on a busy run as well as alone"}
 {"t":"2026-11-10T17:48:43.111Z","ev":"task_note","id":"an-unmanned-session-never-opens-the-installed-ph"}
 {"t":"2026-11-10T17:48:43.176Z","ev":"task_note","id":"an-unmanned-session-never-opens-the-installed-ph"}
@@ -16687,21 +16686,20 @@
 {"t":"2026-11-10T17:48:43.436Z","ev":"task_note","id":"an-unmanned-session-never-opens-the-installed-ph"}
 {"t":"2026-11-10T17:48:51.602Z","ev":"task_walks","id":"an-unmanned-session-never-opens-the-installed-ph","walks":[]}
 {"t":"2026-11-10T17:48:59.889Z","ev":"task_done","id":"an-unmanned-session-never-opens-the-installed-ph","from":"in_progress","note":"Shipped in 133d08055: the agent bridge (Sources/PhotonzMCP, PhotonzAgentLink AgentChannelAddress.launchAttempts/whileClosed) opens only the app it was asked for, so a loop session opens the probe and never /Applications/Photonz.app, and it answers Claude Code's opening server/discover itself (-32601) instead of starting an app, which was the no-tool-call launch at session start. Reproduced first with the shipping 0.23.0 helper in a stand-in bundle; verified after with the fixed helper and a real claude -p session; a person's own session still opens its own app. Dev retakes the capture shortcuts on its own when an older copy quits (didTerminate re-check, verified by mechanism). 6 new tests, Scripts/test.sh green. Reaches loop sessions once a release after 0.23.0 is installed in /Applications."}
-{"t":"2026-11-10T17:52:39.171Z","ev":"task_started","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","title":"A clip dropped a frame from a cut lands on the cut","priority":"p1-high"}
+{"t":"2026-11-10T17:52:39.171Z","ev":"task_started","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","title":"A clip dropped a frame from a cut lands on the cut","priority":"p1-high","repeats":2,"until":"2026-11-10T19:10:07.349Z","rolledUp":true}
 {"t":"2026-11-10T19:09:13.625Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
 {"t":"2026-11-10T19:09:13.699Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
 {"t":"2026-11-10T19:09:13.775Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
 {"t":"2026-11-10T19:09:13.859Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
 {"t":"2026-11-10T19:09:13.938Z","ev":"task_walks","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","walks":["a-cut-opens-into-its-two-clips-walk","expand-the-cut-from-its-menus-walk","roll-the-cut-between-two-clips-walk","roll-the-cut-between-two-clips-from-the-menu-bar-walk","copy-and-paste-a-range-walk","transition-edge-follows-the-pointer-walk","transition-picker-at-a-cut-walk","transition-placement-and-hold-walk","a-click-on-the-cut-opens-its-tiles-walk"]}
 {"t":"2026-11-10T19:09:29.889Z","ev":"task_pending","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","from":"in_progress","note":"Drop snapping fixed (9cb260dbd): a clip dropped one or two frames short of a cut lands on it. 8 of the 9 walks pass three runs in a row. Still open: transition-edge-follows-the-pointer-walk step 34, where Escape during a transition band drag does not call it off because the key never reaches the drag's watcher until the mouse button is up. Trace and next step are in the log."}
-{"t":"2026-11-10T19:10:07.349Z","ev":"task_started","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","title":"A clip dropped a frame from a cut lands on the cut","priority":"p1-high"}
 {"t":"2026-11-10T21:24:56.992Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
 {"t":"2026-11-10T21:24:57.069Z","ev":"task_note","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c"}
 {"t":"2026-11-10T21:24:57.145Z","ev":"task_walks","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","walks":["a-cut-opens-into-its-two-clips-walk","expand-the-cut-from-its-menus-walk","roll-the-cut-between-two-clips-walk","roll-the-cut-between-two-clips-from-the-menu-bar-walk","copy-and-paste-a-range-walk","transition-edge-follows-the-pointer-walk","transition-picker-at-a-cut-walk","transition-placement-and-hold-walk","a-click-on-the-cut-opens-its-tiles-walk","command-drag-ripple-trims-an-edge-walk"]}
 {"t":"2026-11-10T21:24:57.272Z","ev":"task_done","id":"a-clip-dropped-a-frame-from-a-cut-lands-on-the-c","from":"in_progress","note":"Drop beside a cut snaps (9cb260dbd) and Escape mid drag calls the drag off (03eb6f222): macOS 27 AppKit drops keys during SwiftUI drags, HeldDragKeys catches them where the run loop takes them off the queue. All 9 walks + the ripple walk pass twice in a row, test.sh green, audit 2026-11-10-escape-mid-drag."}
 {"t":"2026-11-10T21:34:33.787Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-10T21:36:34.739Z","ev":"slice_pass","walks":32,"passed":31,"failed":1,"seconds":545,"of":1141,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-10T21:36:34.924Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-26","title":"Walks that fail in the full sweep","priority":"p1-high"}
+{"t":"2026-11-10T21:36:34.924Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-26","title":"Walks that fail in the full sweep","priority":"p1-high","repeats":1,"until":"2026-11-10T21:36:34.924Z","rolledUp":true}
 {"t":"2026-11-10T21:49:01.518Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-10T22:28:58.342Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-10T23:09:00.504Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
@@ -16711,7 +16709,7 @@
 {"t":"2026-11-11T01:00:02.798Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-11T01:00:02.873Z","ev":"task_pending","id":"walks-that-fail-in-the-full-sweep-26","from":"in_progress","note":"27 of 33 owned walks pass twice; 4 still fail (design-mode-tool-strip, ask-makes-it-again-as-a-photo, two segmented thumb films), diagnosis in the log"}
 {"t":"2026-11-11T01:00:02.948Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-26","walks":["design-mode-tool-strip-walk","ask-makes-it-again-as-a-photo-walk","segmented-thumb-film-walk","segmented-chip-refraction-film-walk"]}
-{"t":"2026-11-11T01:00:44.586Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-26","title":"Walks that fail in the full sweep","priority":"p1-high"}
+{"t":"2026-11-11T01:00:44.586Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-26","title":"Walks that fail in the full sweep","priority":"p1-high","repeats":1,"until":"2026-11-11T01:00:44.586Z","rolledUp":true}
 {"t":"2026-11-11T02:28:03.062Z","ev":"task_created","id":"find-out-whether-the-view-edit-switch-s-picked-c","priority":"p2-normal","title":"Find out whether the View | Edit switch's picked chip stays grey in a window that should be active"}
 {"t":"2026-11-11T02:28:07.835Z","ev":"task_walks","id":"find-out-whether-the-view-edit-switch-s-picked-c","walks":[]}
 {"t":"2026-11-11T02:28:24.868Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
@@ -16726,7 +16724,7 @@
 {"t":"2026-11-11T03:48:30.921Z","ev":"task_note","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it"}
 {"t":"2026-11-11T03:48:30.962Z","ev":"task_created","id":"walks-that-fail-in-the-full-sweep-27","priority":"p2-normal","title":"Walks that fail in the full sweep"}
 {"t":"2026-11-11T03:50:33.639Z","ev":"slice_pass","walks":33,"passed":30,"failed":3,"seconds":831,"of":1141,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-11T03:50:33.840Z","ev":"task_started","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","title":"A redline of a 2x screenshot reads in points, with dimension lines that show what each number spans","priority":"p1-high"}
+{"t":"2026-11-11T03:50:33.840Z","ev":"task_started","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","title":"A redline of a 2x screenshot reads in points, with dimension lines that show what each number spans","priority":"p1-high","repeats":4,"until":"2026-11-11T22:23:36.860Z","rolledUp":true}
 {"t":"2026-11-11T04:57:24.703Z","ev":"decision_resolved","id":"an-animated-icon-told-as-a-little-story-moves-th-after-nine-passes-the-trash-meet","taskId":"an-animated-icon-told-as-a-little-story-moves-th","choice":"b"}
 {"t":"2026-11-11T04:57:24.743Z","ev":"task_unblocked","id":"an-animated-icon-told-as-a-little-story-moves-th","decision":"an-animated-icon-told-as-a-little-story-moves-th-after-nine-passes-the-trash-meet"}
 {"t":"2026-11-11T05:07:01.784Z","ev":"task_walks","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","walks":["size-reads-buttons-and-pills-walk","caliper-foot-keeps-its-grip-walk","an-alignment-guide-re-measures-as-you-drag-walk","a-size-measurement-is-one-group-walk","gap-reads-line-to-line-walk","size-reads-avatars-and-stacks-walk","size-steps-and-resizes-walk"]}
@@ -16734,20 +16732,18 @@
 {"t":"2026-11-11T05:07:01.941Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T05:07:02.018Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T05:07:02.096Z","ev":"task_pending","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":"in_progress","note":"Units (pt on 2x), end ticks and short-bracket hugging landed; eval clean 4.2 Ask / 3.9 skill against a bar of 8, and hand placement does not yet get the never-cover rule, so left open"}
-{"t":"2026-11-11T05:08:01.694Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-11T05:08:01.694Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high","repeats":4,"until":"2026-11-11T18:48:22.490Z","rolledUp":true}
 {"t":"2026-11-11T05:25:37.182Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T06:49:34.178Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T07:39:30.352Z","ev":"task_walks","id":"an-animated-icon-told-as-a-little-story-moves-th","walks":["ask-animates-a-story-walk","ask-animates-a-story-without-the-word-walk"]}
 {"t":"2026-11-11T07:39:30.430Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T07:39:30.507Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T07:39:30.583Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"The can keeps its drawn shape (fe40711be, 89dafc069); story bar (5 of 6 read as asked at 7) still not met, 0 of 6, totals 56.3 and 61.1"}
-{"t":"2026-11-11T07:40:14.142Z","ev":"task_started","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","title":"A redline of a 2x screenshot reads in points, with dimension lines that show what each number spans","priority":"p1-high"}
 {"t":"2026-11-11T09:00:12.446Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T09:00:12.522Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T09:00:12.597Z","ev":"task_pending","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":"in_progress","note":"Tidy spacing numbers landed (Ask 73, skill 71.2 on settings; clean 5.4/5.2); bar of 8 not reached and a hand-placed ideal tops out near 6, so left open for the user's read"}
 {"t":"2026-11-11T09:10:24.452Z","ev":"task_note","id":"a-clip-or-title-held-as-an-insert-shows-what-mov"}
 {"t":"2026-11-11T09:12:29.947Z","ev":"slice_pass","walks":32,"passed":31,"failed":1,"seconds":563,"of":1141,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-11T09:12:30.135Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-11T09:29:33.277Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T11:15:18.567Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T11:37:51.694Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
@@ -16825,7 +16821,6 @@
 {"t":"2026-11-11T16:15:29.806Z","ev":"task_note","id":"the-whole-walk-set-finishes-at-least-once-every"}
 {"t":"2026-11-11T16:15:29.832Z","ev":"triage","summary":"merged 0, dropped 0, priority moves 0, filed 1 (whole walk set has not finished since 11-04: three runs stopped and thrown away), reset 0, leftovers 0, reproduced 2 new p1 bugs (component naming keyboard, Library tile pick-up) and kept both p1, retagged 1 (component naming to ui-components), walk ownership 2 (component naming owns 13 walks, redline owns copy-svg px walk), groomed 4 (story reel read, redline picture read, panel blank rows cousin, audit pictures), resequenced p1 (component naming to 2nd) and p2 (audit pictures to 9th, three new tasks to the end)"}
 {"t":"2026-11-11T16:16:20.545Z","ev":"digest","file":"2026-11-11.md"}
-{"t":"2026-11-11T16:16:38.436Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-11T18:33:05.496Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T18:33:05.571Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T18:33:05.644Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
@@ -16837,29 +16832,26 @@
 {"t":"2026-11-11T18:46:17.977Z","ev":"task_note","id":"naming-a-new-component-or-a-copy-takes-the-keybo"}
 {"t":"2026-11-11T18:46:18.016Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
 {"t":"2026-11-11T18:48:22.307Z","ev":"slice_pass","walks":33,"passed":30,"failed":3,"seconds":746,"of":1141,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-11T18:48:22.490Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-11T19:20:28.083Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T20:13:50.448Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T20:23:53.677Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T20:23:53.753Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-11T20:23:53.827Z","ev":"task_walks","id":"an-animated-icon-told-as-a-little-story-moves-th","walks":["ask-animates-a-story-walk","ask-animates-a-story-without-the-word-walk"]}
 {"t":"2026-11-11T20:23:53.901Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 13: the planned fade is kept (it was refused whole), thrown in from off the frame, comes back off the lid, lands in the can's middle (a8a571008); story total 61.2, trash 57.7 (its best); bar (5 of 6 at reads as asked 7) not met, 1 of 6"}
-{"t":"2026-11-11T20:24:36.865Z","ev":"task_started","id":"naming-a-new-component-or-a-copy-takes-the-keybo","title":"Naming a new component or a copy takes the keyboard again","priority":"p1-high"}
+{"t":"2026-11-11T20:24:36.865Z","ev":"task_started","id":"naming-a-new-component-or-a-copy-takes-the-keybo","title":"Naming a new component or a copy takes the keyboard again","priority":"p1-high","repeats":1,"until":"2026-11-11T20:24:36.865Z","rolledUp":true}
 {"t":"2026-11-11T21:20:10.126Z","ev":"task_note","id":"naming-a-new-component-or-a-copy-takes-the-keybo"}
 {"t":"2026-11-11T21:20:10.203Z","ev":"task_note","id":"naming-a-new-component-or-a-copy-takes-the-keybo"}
 {"t":"2026-11-11T21:20:19.748Z","ev":"task_done","id":"naming-a-new-component-or-a-copy-takes-the-keybo","from":"in_progress","note":"Fixed in 1d31de231: the panel's top-edge mask (from 7bc8dd3d6, 2026-11-09) dropped every focus a field asks for in code; PanelTopEdge now clips and draws its scrolled fade as a material band. All 13 owned walks plus the title-bar edge walks pass, the four named walks twice in a row; Scripts/test.sh green. Audit queue/audits/2026-11-11-naming-a-new-component-or-a-copy-takes-the-keybo.json"}
-{"t":"2026-11-11T21:20:57.826Z","ev":"task_started","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","title":"A redline of a 2x screenshot reads in points, with dimension lines that show what each number spans","priority":"p1-high"}
 {"t":"2026-11-11T22:22:49.935Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T22:22:50.011Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T22:22:50.087Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T22:22:50.162Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T22:22:50.237Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T22:22:50.312Z","ev":"task_pending","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":"in_progress","note":"Pictures fixed (hugging brackets, field width inside the field, no touching marks, short leaders, copy-svg walk on pt); eval bar of 8 not reached (Ask 63-65, clean ~5.1; skill 59.8) and the judge prefers the older layout, so left open for the user's read of the audit"}
-{"t":"2026-11-11T22:23:36.860Z","ev":"task_started","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","title":"A redline of a 2x screenshot reads in points, with dimension lines that show what each number spans","priority":"p1-high"}
 {"t":"2026-11-11T22:24:59.425Z","ev":"decision_opened","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit-your-calm-redline-asked-for-8-ou","taskId":"a-redline-of-a-2x-screenshot-reads-in-points-wit","question":"Your calm redline asked for 8 out of 10 from the agent judge on clean and aligned. After four passes the boxed marks are tidy, but the score is stuck near 5 to 6 and hand-drawn ideals of this screen score about 6 too. Close it on the pictures, go back to the older layout the judge likes better, or keep going for 8?"}
 {"t":"2026-11-11T22:25:11.636Z","ev":"task_note","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit"}
 {"t":"2026-11-11T22:25:11.726Z","ev":"task_blocked","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":"in_progress","note":"Pictures fixed and committed (pt, end ticks, hugging brackets, untangled marks, copy-svg walk on pt). The eval bar of 8 looks unreachable on this screen and the judge prefers the older layout: asked the user to close on the pictures, go back to the older layout, or keep going."}
-{"t":"2026-11-11T22:25:36.669Z","ev":"task_started","id":"the-keynote-clean-title-page-draws-its-starfield","title":"The Keynote Clean title page draws its starfield without square blocks around the glows","priority":"p1-high"}
+{"t":"2026-11-11T22:25:36.669Z","ev":"task_started","id":"the-keynote-clean-title-page-draws-its-starfield","title":"The Keynote Clean title page draws its starfield without square blocks around the glows","priority":"p1-high","repeats":1,"until":"2026-11-11T22:25:36.669Z","rolledUp":true}
 {"t":"2026-11-11T22:47:32.025Z","ev":"task_note","id":"the-keynote-clean-title-page-draws-its-starfield"}
 {"t":"2026-11-11T22:47:32.101Z","ev":"task_note","id":"the-keynote-clean-title-page-draws-its-starfield"}
 {"t":"2026-11-11T22:47:32.176Z","ev":"task_note","id":"the-keynote-clean-title-page-draws-its-starfield"}
@@ -16868,7 +16860,7 @@
 {"t":"2026-11-11T22:47:32.403Z","ev":"task_walks","id":"the-keynote-clean-title-page-draws-its-starfield","walks":[]}
 {"t":"2026-11-11T22:47:42.640Z","ev":"task_done","id":"the-keynote-clean-title-page-draws-its-starfield","from":"in_progress","note":"Keynote Clean's specks no longer sit in dark boxes: the particles look now reads the 3x3 neighbouring cells and fades each halo out inside them (LiveBackdrops.swift). Energy Streams' cut-off packets fixed too. New LiveBackdropSeamTests: Keynote Clean went from 218/268 seams to 0 at 1080p and 3456x2234; probe export at both sizes checked frame by frame; full suite green. Audit 2026-11-11-keynote-clean-no-boxes.json."}
 {"t":"2026-11-11T23:00:58.151Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":630,"of":1141,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-11T23:00:58.330Z","ev":"task_started","id":"on-a-video-captions-and-transitions-sit-where-th","title":"On a video, Captions and Transitions sit where a video editor expects them","priority":"p1-high"}
+{"t":"2026-11-11T23:00:58.330Z","ev":"task_started","id":"on-a-video-captions-and-transitions-sit-where-th","title":"On a video, Captions and Transitions sit where a video editor expects them","priority":"p1-high","repeats":1,"until":"2026-11-11T23:00:58.330Z","rolledUp":true}
 {"t":"2026-11-11T23:05:31.959Z","ev":"task_note","id":"on-a-video-captions-and-transitions-sit-where-th"}
 {"t":"2026-11-11T23:31:46.377Z","ev":"task_note","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it"}
 {"t":"2026-11-12T00:25:16.840Z","ev":"task_created","id":"a-video-s-library-opened-by-hand-stays-a-short-s","priority":"p1-high","title":"A video's Library opened by hand stays a short shelf at the foot, as the video mock draws it"}
@@ -16880,13 +16872,13 @@
 {"t":"2026-11-12T00:25:51.842Z","ev":"task_note","id":"on-a-video-captions-and-transitions-sit-where-th"}
 {"t":"2026-11-12T00:25:51.916Z","ev":"task_note","id":"on-a-video-captions-and-transitions-sit-where-th"}
 {"t":"2026-11-12T00:26:13.996Z","ev":"task_done","id":"on-a-video-captions-and-transitions-sit-where-th","from":"in_progress","note":"Shipped in 73a9da629 (Next, no flags): on a video Captions shows with nothing or the captions picked, the Transitions tiles only with a cut picked (VideoDocumentSections, core tests first); a new video's Library is held open only while the timeline is empty. Recorded today's order first (task log). Verified: Scripts/test.sh green; panel-shows-what-is-picked-video (expectSections for clip, nothing, cut, title, sound), sound-fades-in-the-panel, video-panel-order, line-thickness-typed (Width in view on the new video) and 8 more updated walks green at defaults with real pictures. UX-PATTERNS shell item 6 rewritten. Audit queue/audits/2026-11-11-video-panel-captions-transitions.json. Follow-up filed: a-video-s-library-opened-by-hand-stays-a-short-s."}
-{"t":"2026-11-12T00:26:54.119Z","ev":"task_started","id":"the-panel-shows-what-the-picked-thing-is-and-its","title":"The panel shows what the picked thing is, and its one-shot buttons move to right-click and the menus","priority":"p1-high"}
+{"t":"2026-11-12T00:26:54.119Z","ev":"task_started","id":"the-panel-shows-what-the-picked-thing-is-and-its","title":"The panel shows what the picked thing is, and its one-shot buttons move to right-click and the menus","priority":"p1-high","repeats":1,"until":"2026-11-12T00:26:54.119Z","rolledUp":true}
 {"t":"2026-11-12T01:16:00.015Z","ev":"task_walks","id":"the-panel-shows-what-the-picked-thing-is-and-its","walks":["the-panel-keeps-one-main-action-walk","captions-guides-and-track-bar-walk","captions-panel-keeps-its-margins-walk"]}
 {"t":"2026-11-12T01:16:00.091Z","ev":"task_note","id":"the-panel-shows-what-the-picked-thing-is-and-its"}
 {"t":"2026-11-12T01:16:00.166Z","ev":"task_note","id":"the-panel-shows-what-the-picked-thing-is-and-its"}
 {"t":"2026-11-12T01:16:00.240Z","ev":"task_note","id":"the-panel-shows-what-the-picked-thing-is-and-its"}
 {"t":"2026-11-12T01:16:19.085Z","ev":"task_done","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":"in_progress","note":"One main action per section: Sound Channel's Flatten moved to the volume line's right-click (+ Clip > Flatten Level); Captions section's Timing and Subtitles rows moved to the caption right-click (More) and the menu bar; caption track bar lost Clear, Reset and readouts. Rule written into UX-PATTERNS Inspector row and enforced by PanelKeepsOneMainActionTests; kept buttons listed in the log. Verified: Scripts/test.sh green, the-panel-keeps-one-main-action-walk (measurement, clip, sound, captions at Next defaults) plus 9 touched walks green; audit queue/audits/2026-11-11-the-panel-shows-what-the-picked-thing-is-and-its.json."}
-{"t":"2026-11-12T01:17:02.108Z","ev":"task_started","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","title":"A sound lane is as tall as the mock's and its waveform is one smooth shape","priority":"p1-high"}
+{"t":"2026-11-12T01:17:02.108Z","ev":"task_started","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","title":"A sound lane is as tall as the mock's and its waveform is one smooth shape","priority":"p1-high","repeats":1,"until":"2026-11-12T01:17:02.108Z","rolledUp":true}
 {"t":"2026-11-12T02:54:40.478Z","ev":"task_created","id":"a-sound-at-its-recorded-level-draws-its-volume-l","priority":"p1-high","title":"A sound at its recorded level draws its volume line near the top of its lane, as the audio mock does"}
 {"t":"2026-11-12T02:55:01.232Z","ev":"task_walks","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","walks":["a-sound-lane-is-as-tall-as-the-mock-walk","a-sound-s-waveform-follows-its-level-walk","fade-diamonds-and-level-points-look-like-the-mock-walk"]}
 {"t":"2026-11-12T02:55:57.934Z","ev":"task_note","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa"}
@@ -16894,7 +16886,7 @@
 {"t":"2026-11-12T02:55:58.080Z","ev":"task_note","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa"}
 {"t":"2026-11-12T02:55:58.151Z","ev":"task_note","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa"}
 {"t":"2026-11-12T02:56:11.880Z","ev":"task_done","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":"in_progress","note":"A sound on its own track now has video-audio.html's 84pt lane (72 narrow) on the panel colour with a lane-coloured edge, header name at the top; panel-ground switch on by default in Next; right-click on a fade's line in the tall lane fixed (read at the drawn line). Commit da91a74ad. Verified: Scripts/test.sh exit 0; 57 sound walks re-run, all green except a-transition-is-picked-at-the-cut-walk which fails without this change too; new a-sound-lane-is-as-tall-as-the-mock-walk at defaults. Audit queue/audits/2026-11-11-sound-lane-84.json. Follow-up filed: a-sound-at-its-recorded-level-draws-its-volume-l."}
-{"t":"2026-11-12T02:56:57.378Z","ev":"task_started","id":"the-brush-sits-right-after-crop-on-a-picture-s-t","title":"The Brush sits right after Crop on a picture's tool bar, where the mock draws it","priority":"p1-high"}
+{"t":"2026-11-12T02:56:57.378Z","ev":"task_started","id":"the-brush-sits-right-after-crop-on-a-picture-s-t","title":"The Brush sits right after Crop on a picture's tool bar, where the mock draws it","priority":"p1-high","repeats":1,"until":"2026-11-12T02:56:57.378Z","rolledUp":true}
 {"t":"2026-11-12T03:21:08.679Z","ev":"task_walks","id":"the-brush-sits-right-after-crop-on-a-picture-s-t","walks":["brush-sits-after-crop-walk","design-mode-tool-strip-walk"]}
 {"t":"2026-11-12T03:22:04.715Z","ev":"task_note","id":"the-brush-sits-right-after-crop-on-a-picture-s-t"}
 {"t":"2026-11-12T03:22:04.792Z","ev":"task_note","id":"the-brush-sits-right-after-crop-on-a-picture-s-t"}
@@ -16903,42 +16895,42 @@
 {"t":"2026-11-12T03:32:49.733Z","ev":"task_note","id":"folding-a-section-that-lets-the-panel-fit-again"}
 {"t":"2026-11-12T03:32:49.773Z","ev":"task_note","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it"}
 {"t":"2026-11-12T03:34:53.034Z","ev":"slice_pass","walks":31,"passed":29,"failed":2,"seconds":602,"of":1144,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-12T03:34:53.213Z","ev":"task_started","id":"a-picked-arrow-s-appearance-starts-with-its-arro","title":"A picked arrow's Appearance starts with its Arrow row, as the approved prototype draws it","priority":"p1-high"}
+{"t":"2026-11-12T03:34:53.213Z","ev":"task_started","id":"a-picked-arrow-s-appearance-starts-with-its-arro","title":"A picked arrow's Appearance starts with its Arrow row, as the approved prototype draws it","priority":"p1-high","repeats":1,"until":"2026-11-12T03:34:53.213Z","rolledUp":true}
 {"t":"2026-11-12T03:52:59.855Z","ev":"task_walks","id":"a-picked-arrow-s-appearance-starts-with-its-arro","walks":["arrow-appearance-simple-walk","measure-appearance-simple-walk","the-whole-look-carries-over-walk"]}
 {"t":"2026-11-12T03:52:59.932Z","ev":"task_note","id":"a-picked-arrow-s-appearance-starts-with-its-arro"}
 {"t":"2026-11-12T03:53:00.008Z","ev":"task_note","id":"a-picked-arrow-s-appearance-starts-with-its-arro"}
 {"t":"2026-11-12T03:53:08.727Z","ev":"task_done","id":"a-picked-arrow-s-appearance-starts-with-its-arro","from":"in_progress","note":"A picked arrow's Appearance reads Arrow, Chip, Color, Marker, Size, Advanced with nothing above Arrow (a measurement the same from Chip); Opacity, Blending, Key and Masked by sit at the end of Advanced, written in markup.md section 8. Other layers unchanged. Verified by arrow/measure-appearance-simple walks (absent while closed, present when open), 10 related walks green, Scripts/test.sh green; audit 2026-11-11-arrow-appearance-starts-at-arrow.json with a new side by side."}
-{"t":"2026-11-12T03:53:41.683Z","ev":"task_started","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it","title":"A walk that pulls a Library tile by hand sees it come away again on macOS 27","priority":"p1-high"}
+{"t":"2026-11-12T03:53:41.683Z","ev":"task_started","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it","title":"A walk that pulls a Library tile by hand sees it come away again on macOS 27","priority":"p1-high","repeats":1,"until":"2026-11-12T03:53:41.683Z","rolledUp":true}
 {"t":"2026-11-12T05:02:36.859Z","ev":"task_note","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it"}
 {"t":"2026-11-12T05:02:36.935Z","ev":"task_note","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it"}
 {"t":"2026-11-12T05:02:37.011Z","ev":"task_note","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it"}
 {"t":"2026-11-12T05:02:40.126Z","ev":"task_done","id":"a-walk-that-pulls-a-library-tile-by-hand-sees-it","from":"in_progress","note":"A person's tile drag was never broken: from macOS 27.0.1 (installed 2026-10-25) SwiftUI starts a tile's drag through AppKit's new gesture-based call, which the walk harness did not watch. PlaytestTilePickUp now watches every drag door (be6e82181). The four pick-up walks pass twice in a row, each tile coming away with its own payload; Scripts/test.sh green."}
 {"t":"2026-11-12T05:02:56.688Z","ev":"task_created","id":"the-app-crashed-in-run-pickuptile","priority":"p1-high","title":"The app crashed in Run.pickUpTile"}
-{"t":"2026-11-12T05:03:13.271Z","ev":"task_started","id":"a-video-s-library-opened-by-hand-stays-a-short-s","title":"A video's Library opened by hand stays a short shelf at the foot, as the video mock draws it","priority":"p1-high"}
+{"t":"2026-11-12T05:03:13.271Z","ev":"task_started","id":"a-video-s-library-opened-by-hand-stays-a-short-s","title":"A video's Library opened by hand stays a short shelf at the foot, as the video mock draws it","priority":"p1-high","repeats":1,"until":"2026-11-12T05:03:13.271Z","rolledUp":true}
 {"t":"2026-11-12T06:05:59.200Z","ev":"task_walks","id":"a-video-s-library-opened-by-hand-stays-a-short-s","walks":["video-library-short-shelf-walk"]}
 {"t":"2026-11-12T06:06:27.757Z","ev":"task_note","id":"a-video-s-library-opened-by-hand-stays-a-short-s"}
 {"t":"2026-11-12T06:06:27.829Z","ev":"task_note","id":"a-video-s-library-opened-by-hand-stays-a-short-s"}
 {"t":"2026-11-12T06:06:27.898Z","ev":"task_note","id":"a-video-s-library-opened-by-hand-stays-a-short-s"}
 {"t":"2026-11-12T06:06:47.816Z","ev":"task_done","id":"a-video-s-library-opened-by-hand-stays-a-short-s","from":"in_progress","note":"On a video the Library opened by hand is the mock's short shelf: header + 118pt, tiles scroll inside (PanelShelfPane.startCap, InspectorPanel.shelfCap). 1200x720 with a clip picked: 224pt -> 163pt (mock 162). Properties whole; Time folds to its header by the 2026-10-24 open-room rule, since Properties+Time+the folded header already fill that column (logged, asked in the audit). video-library-short-shelf-walk (Next defaults, real click) fails with the cap off and passes with it; 16 of 18 related walks ok, the other failure is pre-existing; Scripts/test.sh exit 0. Commit 1db5bdff4, audit 2026-11-11-video-library-short-shelf.json."}
-{"t":"2026-11-12T06:07:16.193Z","ev":"task_started","id":"a-sound-at-its-recorded-level-draws-its-volume-l","title":"A sound at its recorded level draws its volume line near the top of its lane, as the audio mock does","priority":"p1-high"}
+{"t":"2026-11-12T06:07:16.193Z","ev":"task_started","id":"a-sound-at-its-recorded-level-draws-its-volume-l","title":"A sound at its recorded level draws its volume line near the top of its lane, as the audio mock does","priority":"p1-high","repeats":1,"until":"2026-11-12T06:07:16.193Z","rolledUp":true}
 {"t":"2026-11-12T06:35:14.133Z","ev":"task_walks","id":"a-sound-at-its-recorded-level-draws-its-volume-l","walks":["a-sound-lane-is-as-tall-as-the-mock-walk","a-sound-s-bend-handle-follows-the-hand-walk","a-sound-s-volume-line-plain-clicks-walk","a-sound-s-volume-line-picks-and-shapes-walk","a-sound-s-volume-line-menus-alternate-walk","fade-diamonds-and-level-points-look-like-the-mock-walk","a-sound-s-waveform-follows-its-level-walk"]}
 {"t":"2026-11-12T06:35:36.185Z","ev":"task_note","id":"a-sound-at-its-recorded-level-draws-its-volume-l"}
 {"t":"2026-11-12T06:35:36.261Z","ev":"task_note","id":"a-sound-at-its-recorded-level-draws-its-volume-l"}
 {"t":"2026-11-12T06:35:36.336Z","ev":"task_note","id":"a-sound-at-its-recorded-level-draws-its-volume-l"}
 {"t":"2026-11-12T06:35:52.113Z","ev":"task_done","id":"a-sound-at-its-recorded-level-draws-its-volume-l","from":"in_progress","note":"The volume line now sits where video-audio.html's yOfLevel puts it: recorded level 12 of 100 down the lane (10 pt of 84, measured on the probe), silence at 90, with the strip above for turning up to +6 dB. Change is in PhotonzCore SoundLaneShape.levelY/gain(atLevelY:), with tests written first, and SoundLane.swift uses it. The lane walk turns the sound down (-3 dB), up by drag (+4.5 dB) and up by the slider (+5 dB). 18 walks green, Scripts/test.sh green. Audit: queue/audits/2026-11-11-sound-volume-line-at-the-top.json"}
-{"t":"2026-11-12T06:36:17.179Z","ev":"task_started","id":"the-app-crashed-in-run-pickuptile","title":"The app crashed in Run.pickUpTile","priority":"p1-high"}
+{"t":"2026-11-12T06:36:17.179Z","ev":"task_started","id":"the-app-crashed-in-run-pickuptile","title":"The app crashed in Run.pickUpTile","priority":"p1-high","repeats":1,"until":"2026-11-12T06:36:17.179Z","rolledUp":true}
 {"t":"2026-11-12T06:38:56.973Z","ev":"task_created","id":"the-title-presets-walk-pulls-film-super-off-the","priority":"p2-normal","title":"The title presets walk pulls Film Super off the video Library's short shelf again"}
 {"t":"2026-11-12T06:39:09.869Z","ev":"task_walks","id":"the-app-crashed-in-run-pickuptile","walks":[]}
 {"t":"2026-11-12T06:39:09.945Z","ev":"task_note","id":"the-app-crashed-in-run-pickuptile"}
 {"t":"2026-11-12T06:39:10.022Z","ev":"task_note","id":"the-app-crashed-in-run-pickuptile"}
 {"t":"2026-11-12T06:39:10.098Z","ev":"task_note","id":"the-app-crashed-in-run-pickuptile"}
 {"t":"2026-11-12T06:39:15.363Z","ev":"task_done","id":"the-app-crashed-in-run-pickuptile","from":"in_progress","note":"Not an app bug: the probe that crashed at 20:22 was built from another runner's uncommitted diagnostic code in pickUpTile (NSStringFromClass over objc_copyClassList, trapping in ___forwarding___), shown from the report's line numbers and that runner's session, which hit this exact crash at 04:22Z and removed the code before committing be6e82181. On HEAD the pick-up walks run with no crash (3 ok; title presets walk fails cleanly on the new short shelf, filed the-title-presets-walk-pulls-film-super-off-the). crash-watch.json marks the report as a runner diagnostic."}
-{"t":"2026-11-12T06:39:38.347Z","ev":"task_started","id":"a-looping-motion-moves-on-the-canvas-while-it-pl","title":"Find out what a picture with a saved motion does at Next defaults: does it move on the canvas, and does its strip read","priority":"p2-normal"}
+{"t":"2026-11-12T06:39:38.347Z","ev":"task_started","id":"a-looping-motion-moves-on-the-canvas-while-it-pl","title":"Find out what a picture with a saved motion does at Next defaults: does it move on the canvas, and does its strip read","priority":"p2-normal","repeats":1,"until":"2026-11-12T06:39:38.347Z","rolledUp":true}
 {"t":"2026-11-12T06:43:55.692Z","ev":"task_walks","id":"a-looping-motion-moves-on-the-canvas-while-it-pl","walks":["a-saved-looping-turn-plays-at-defaults-walk"]}
 {"t":"2026-11-12T06:52:09.822Z","ev":"task_note","id":"a-looping-motion-moves-on-the-canvas-while-it-pl"}
 {"t":"2026-11-12T06:52:09.897Z","ev":"task_note","id":"a-looping-motion-moves-on-the-canvas-while-it-pl"}
 {"t":"2026-11-12T06:52:14.843Z","ev":"task_done","id":"a-looping-motion-moves-on-the-canvas-while-it-pl","from":"in_progress","note":"At Next defaults a picture saved with a looping Rotation still opens, plays when opened, and swings on the canvas on first and second play (bell, icon-frame glyph with its Actual sizes card, lone 800 ms spinner); the old strip's repeats label is readable beside 800 and between ticks. No app fault reaches a person at defaults; the freeze needs next-picture-keys forced off. Proof: Scripts/playtest/a-saved-looping-turn-plays-at-defaults-walk.json (no flags, expectPictureMoves after each play, green), audit queue/audits/2026-11-11-saved-loop-at-defaults.json, Scripts/test.sh exit 0."}
-{"t":"2026-11-12T06:52:41.483Z","ev":"task_started","id":"a-see-through-shape-looks-the-same-on-the-canvas","title":"Find out whether any see-through shape differs between the canvas and its file at Next defaults","priority":"p2-normal"}
+{"t":"2026-11-12T06:52:41.483Z","ev":"task_started","id":"a-see-through-shape-looks-the-same-on-the-canvas","title":"Find out whether any see-through shape differs between the canvas and its file at Next defaults","priority":"p2-normal","repeats":1,"until":"2026-11-12T06:52:41.483Z","rolledUp":true}
 {"t":"2026-11-12T07:50:40.994Z","ev":"task_walks","id":"a-see-through-shape-looks-the-same-on-the-canvas","walks":["see-through-svg-walk"]}
 {"t":"2026-11-12T07:50:55.620Z","ev":"task_note","id":"a-see-through-shape-looks-the-same-on-the-canvas"}
 {"t":"2026-11-12T07:50:55.694Z","ev":"task_note","id":"a-see-through-shape-looks-the-same-on-the-canvas"}
@@ -16947,30 +16939,28 @@
 {"t":"2026-11-12T07:50:55.921Z","ev":"task_note","id":"a-see-through-shape-looks-the-same-on-the-canvas"}
 {"t":"2026-11-12T07:51:30.776Z","ev":"task_done","id":"a-see-through-shape-looks-the-same-on-the-canvas","from":"in_progress","note":"At Next defaults a 30% shape, a shape drawn at 30%, and the named real files (VS Code letterpress, record button halo, ONNX) all match macOS within 1 level of 255. Three other see-through cases differed and are fixed in the SVG reader: stroke-opacity beside a fill, rgba()/#RRGGBBAA alpha, and a faded group of overlapping shapes (now a group at that opacity on File > Open). Commit f5e479dbd. Verified by SeeThroughSVGRenderTests + 4 SVGOpeningTests, full Scripts/test.sh exit 0 incl. speed suites, see-through-svg-walk green with no flags (captures read the macOS shades; the unfixed build showed the old ones), all 14 svg walks green. Audit queue/audits/2026-11-12-see-through-svg.json with before/after pictures."}
 {"t":"2026-11-12T08:05:41.333Z","ev":"slice_pass","walks":30,"passed":30,"failed":0,"seconds":500,"of":1147,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-12T08:05:41.516Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-12T08:05:41.516Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high","repeats":3,"until":"2026-11-12T10:25:07.203Z","rolledUp":true}
 {"t":"2026-11-12T09:03:09.633Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T09:03:09.707Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T09:03:09.782Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T09:03:15.441Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 14: a swing carries what it hangs from, a part tipping about its middle gets room, a mark over a mover is sent back (fe236ffc8); story bar (5 of 6 at 7) not met, 1 of 6, total 52.4"}
-{"t":"2026-11-12T09:07:13.253Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-12T10:24:15.371Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T10:24:15.447Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T10:24:15.521Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T10:24:15.597Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 15: the hit is met where the trash's own rebound off the lid drops it into the can, a fall keeps its speed, ribs are not walls (909f3b0a6); story bar (5 of 6 at 7) not met, 1 of 6, total 58.1"}
-{"t":"2026-11-12T10:25:07.203Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
 {"t":"2026-11-12T10:43:19.978Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T11:53:32.853Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T11:53:32.929Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-12T11:53:33.003Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 16: the letter goes into the envelope, a ticked box starts over cleanly, a position written as a place is sent back (86ec35420, 08488d859); story bar (5 of 6 at 7) not met, 1 of 6, total 57.5"}
-{"t":"2026-11-12T11:54:32.381Z","ev":"task_started","id":"find-out-whether-boxes-and-ovals-ask-draws-land","title":"Find out whether boxes and ovals Ask draws land half a line too small","priority":"p2-normal"}
+{"t":"2026-11-12T11:54:32.381Z","ev":"task_started","id":"find-out-whether-boxes-and-ovals-ask-draws-land","title":"Find out whether boxes and ovals Ask draws land half a line too small","priority":"p2-normal","repeats":1,"until":"2026-11-12T11:54:32.381Z","rolledUp":true}
 {"t":"2026-11-12T12:08:42.643Z","ev":"task_walks","id":"find-out-whether-boxes-and-ovals-ask-draws-land","walks":[]}
 {"t":"2026-11-12T12:08:42.719Z","ev":"task_note","id":"find-out-whether-boxes-and-ovals-ask-draws-land"}
 {"t":"2026-11-12T12:08:48.590Z","ev":"task_done","id":"find-out-whether-boxes-and-ovals-ask-draws-land","from":"in_progress","note":"Yes, they did, and it is already fixed: the same model SVG box (3,3 18x18 rx 4, line 2) landed at 4,4 16x16 rx 3 before 5ced1498a (run 20261108-235558-ask) and lands exactly as written since (run 20261112-105732-ask). Pinned through Ask's addDrawing, on and off the icon grid, in AskIconTests (6763c0ea2); it fails with the line put back inside. Climb 57.5, held-out 54.9, both run after the fix. Scripts/test.sh green."}
 {"t":"2026-11-12T12:23:16.722Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":729,"of":1147,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-12T12:23:16.906Z","ev":"task_started","id":"find-out-why-sweeping-with-the-arrow-tool-shows","title":"Find out why sweeping with the arrow tool shows no size pill on an Icon picture","priority":"p2-normal"}
+{"t":"2026-11-12T12:23:16.906Z","ev":"task_started","id":"find-out-why-sweeping-with-the-arrow-tool-shows","title":"Find out why sweeping with the arrow tool shows no size pill on an Icon picture","priority":"p2-normal","repeats":1,"until":"2026-11-12T12:23:16.906Z","rolledUp":true}
 {"t":"2026-11-12T12:45:22.677Z","ev":"task_walks","id":"find-out-why-sweeping-with-the-arrow-tool-shows","walks":["arrow-sweep-with-a-path-picked-says-its-size-walk"]}
 {"t":"2026-11-12T12:45:28.857Z","ev":"task_done","id":"find-out-why-sweeping-with-the-arrow-tool-shows","from":"in_progress","note":"Not icon-specific: any picture with a pen path picked swept a points band the size pill did not know about. The pill now reads that band too (6 × 3 in icon units, points elsewhere). Verified by a new walk at Next defaults, the original evidence walk, 13 related walks and Scripts/test.sh green."}
-{"t":"2026-11-12T12:46:07.214Z","ev":"task_started","id":"a-group-in-an-icon-shows-what-an-icon-needs-not","title":"A group in an icon shows what an icon needs, not page layout rows","priority":"p2-normal"}
+{"t":"2026-11-12T12:46:07.214Z","ev":"task_started","id":"a-group-in-an-icon-shows-what-an-icon-needs-not","title":"A group in an icon shows what an icon needs, not page layout rows","priority":"p2-normal","repeats":1,"until":"2026-11-12T12:46:07.214Z","rolledUp":true}
 {"t":"2026-11-12T13:16:28.858Z","ev":"task_walks","id":"a-group-in-an-icon-shows-what-an-icon-needs-not","walks":["a-group-in-an-icon-shows-no-page-layout-walk","the-whole-icon-workflow-walk"]}
 {"t":"2026-11-12T13:16:36.375Z","ev":"task_note","id":"a-group-in-an-icon-shows-what-an-icon-needs-not"}
 {"t":"2026-11-12T13:16:43.724Z","ev":"task_done","id":"a-group-in-an-icon-shows-what-an-icon-needs-not","from":"in_progress","note":"A group or shape picked in an icon (Icon picture or icon frame) no longer shows Layout or Columns at Next defaults; a group on an ordinary picture keeps Layout. Core rule isAllDrawnInAnIcon with 5 tests; panel and Columns target read it. Verified by the new walk a-group-in-an-icon-shows-no-page-layout-walk (no flags) plus 6 related walks green, full Scripts/test.sh green. Audit: queue/audits/2026-11-12-a-group-in-an-icon-shows-what-an-icon-needs-not.json"}
@@ -16983,13 +16973,13 @@
 {"t":"2026-11-12T13:20:17.066Z","ev":"task_resequenced","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":30,"to":20}
 {"t":"2026-11-12T13:20:17.098Z","ev":"triage","summary":"merged 0, dropped 0, reset 0, moved 1 (colour swatch bug p3 to p2: its epic is staged now), renumbered 3 (title presets walk 4080 to 730, swatch to 740, redline 30 to 20), groomed 3 (story icon user-eye read of pass 16, swatch and title presets walk notes); open 72 to 72"}
 {"t":"2026-11-12T13:21:21.947Z","ev":"digest","file":"2026-11-12.md"}
-{"t":"2026-11-12T13:21:35.248Z","ev":"task_started","id":"the-saved-stroke-button-stays-on-screen-beside-a","title":"The saved stroke button stays on screen beside a long layers list","priority":"p2-normal"}
+{"t":"2026-11-12T13:21:35.248Z","ev":"task_started","id":"the-saved-stroke-button-stays-on-screen-beside-a","title":"The saved stroke button stays on screen beside a long layers list","priority":"p2-normal","repeats":1,"until":"2026-11-12T13:21:35.248Z","rolledUp":true}
 {"t":"2026-11-12T13:54:41.669Z","ev":"task_note","id":"the-saved-stroke-button-stays-on-screen-beside-a"}
 {"t":"2026-11-12T13:54:41.746Z","ev":"task_note","id":"the-saved-stroke-button-stays-on-screen-beside-a"}
 {"t":"2026-11-12T13:54:41.821Z","ev":"task_note","id":"the-saved-stroke-button-stays-on-screen-beside-a"}
 {"t":"2026-11-12T13:54:41.897Z","ev":"task_note","id":"the-saved-stroke-button-stays-on-screen-beside-a"}
 {"t":"2026-11-12T13:54:46.311Z","ev":"task_done","id":"the-saved-stroke-button-stays-on-screen-beside-a","from":"in_progress","note":"An icon's Layers pane starts at 0.25 of the panel (PanelListsPane.iconShare) so with 4 or 5 layers and the Styles shelf open at 1280x900 the Style row under Line is whole on screen. Reproduced failing first (23pt past the fold), walk a-glyph-takes-the-saved-stroke-walk now asserts expectInView Style at 4 and 5 layers at Next defaults and passes; 19 icon/svg walks pass; Scripts/test.sh green. Audit 2026-11-12-the-saved-stroke-button-stays-on-screen-beside-a.json."}
-{"t":"2026-11-12T13:55:25.190Z","ev":"task_started","id":"a-straight-line-and-an-oval-in-a-glyph-can-wear","title":"A straight line and an oval in a glyph can wear the saved stroke too","priority":"p2-normal"}
+{"t":"2026-11-12T13:55:25.190Z","ev":"task_started","id":"a-straight-line-and-an-oval-in-a-glyph-can-wear","title":"A straight line and an oval in a glyph can wear the saved stroke too","priority":"p2-normal","repeats":1,"until":"2026-11-12T13:55:25.190Z","rolledUp":true}
 {"t":"2026-11-12T13:58:38.075Z","ev":"task_note","id":"a-straight-line-and-an-oval-in-a-glyph-can-wear"}
 {"t":"2026-11-12T14:33:58.307Z","ev":"task_created","id":"a-saved-stroke-tile-on-the-styles-shelf-counts-e","priority":"p2-normal","title":"A saved stroke tile on the Styles shelf counts every line wearing it as soon as one takes it"}
 {"t":"2026-11-12T14:34:16.773Z","ev":"task_walks","id":"a-straight-line-and-an-oval-in-a-glyph-can-wear","walks":["a-line-and-an-oval-wear-the-saved-stroke-walk","a-glyph-takes-the-saved-stroke-walk"]}
@@ -16998,7 +16988,7 @@
 {"t":"2026-11-12T14:34:28.176Z","ev":"task_note","id":"a-straight-line-and-an-oval-in-a-glyph-can-wear"}
 {"t":"2026-11-12T14:34:28.260Z","ev":"task_note","id":"a-straight-line-and-an-oval-in-a-glyph-can-wear"}
 {"t":"2026-11-12T14:34:45.087Z","ev":"task_done","id":"a-straight-line-and-an-oval-in-a-glyph-can-wear","from":"in_progress","note":"A Line tool line and an outlined box or oval on an icon take the saved stroke in one click (line: Style row under Line; box/oval: Stroke row on its Border), and the saved stroke's width moves them with the paths in one undo step. Core in SavedStrokes.swift with SavedStrokeShapesTests; Scripts/test.sh green; new walk a-line-and-an-oval-wear-the-saved-stroke-walk green at Next defaults with real captures; commit ed5406456. Audit queue/audits/2026-11-12-a-straight-line-and-an-oval-in-a-glyph-can-wear.json."}
-{"t":"2026-11-12T14:35:23.910Z","ev":"task_started","id":"an-animated-picture-exports-as-a-gif","title":"An animated picture exports as a GIF","priority":"p2-normal"}
+{"t":"2026-11-12T14:35:23.910Z","ev":"task_started","id":"an-animated-picture-exports-as-a-gif","title":"An animated picture exports as a GIF","priority":"p2-normal","repeats":1,"until":"2026-11-12T14:35:23.910Z","rolledUp":true}
 {"t":"2026-11-12T15:43:13.489Z","ev":"task_walks","id":"an-animated-picture-exports-as-a-gif","walks":["a-moving-picture-exports-as-a-gif-walk"]}
 {"t":"2026-11-12T15:48:33.468Z","ev":"task_done","id":"an-animated-picture-exports-as-a-gif","from":"in_progress","note":"Export on a picture that moves offers GIF at the end of the format row (next-export-gif, on in Next); a still picture does not. The GIF plays the timeline's loop: round for ever, or once and holding where it landed when Repeat is off. Checked by sampling it playing in WebKit and Chromium and by reading it back through ImageIO (frames, delays, loop count). A 512 ball with a 1 s lap is 33 KB with its canvas, 14 KB without and 69 KB at 2x. Commit 2d97652a8. Unit tests PictureGIFTests and PictureGIFEncoderTests; walk a-moving-picture-exports-as-a-gif-walk passes at Next defaults; full Scripts/test.sh green. Audit queue/audits/2026-11-12-an-animated-picture-exports-as-a-gif.json."}
 {"t":"2026-11-12T15:48:59.580Z","ev":"task_started","id":"a-saved-stroke-tile-on-the-styles-shelf-counts-e","title":"A saved stroke tile on the Styles shelf counts every line wearing it as soon as one takes it","priority":"p2-normal"}
@@ -17270,3 +17260,98 @@
 {"t":"2026-11-14T12:09:54.638Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-14T12:09:54.716Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-14T12:09:54.793Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 4 landed cbfda886b: edits while playing trim 87->33, blade 223->85, undo 119->62 ms (repeated trims/moves ~18-20); play 1 dropped a minute. Bars not reached: edits <=16 ms, scrub within 1 frame, no dropped frames. Stays open."}
+{"t":"2026-11-14T15:00:23.545Z","ev":"sweep_pass","walks":238,"seconds":10182,"passed":236,"failed":2,"complete":false,"total":1164,"interrupted":true}
+{"t":"2026-11-14T15:02:28.014Z","ev":"task_reprioritized","id":"the-app-crashed-in-documentaudioengine-play","from":"p1-high","to":"p2-normal"}
+{"t":"2026-11-14T15:02:28.096Z","ev":"task_note","id":"the-app-crashed-in-documentaudioengine-play"}
+{"t":"2026-11-14T15:02:57.855Z","ev":"decision_resolved","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit-your-calm-redline-asked-for-8-ou","taskId":"a-redline-of-a-2x-screenshot-reads-in-points-wit","choice":"b"}
+{"t":"2026-11-14T15:02:57.913Z","ev":"task_unblocked","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","decision":"a-redline-of-a-2x-screenshot-reads-in-points-wit-your-calm-redline-asked-for-8-ou"}
+{"t":"2026-11-14T15:03:07.635Z","ev":"task_note","id":"the-whole-walk-set-finishes-at-least-once-every"}
+{"t":"2026-11-14T15:03:49.808Z","ev":"task_resequenced","id":"an-animated-icon-told-as-a-little-story-moves-th","from":30,"to":20}
+{"t":"2026-11-14T15:03:49.894Z","ev":"task_resequenced","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":40,"to":30}
+{"t":"2026-11-14T15:03:49.981Z","ev":"task_resequenced","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":50,"to":40}
+{"t":"2026-11-14T15:03:50.061Z","ev":"task_resequenced","id":"exporting-the-six-minute-reference-edit-takes-no","from":60,"to":50}
+{"t":"2026-11-14T15:03:50.141Z","ev":"task_resequenced","id":"memory-stays-bounded-while-an-hour-long-edit-pla","from":70,"to":60}
+{"t":"2026-11-14T15:03:50.220Z","ev":"task_resequenced","id":"playing-a-five-minute-captioned-recording-never","from":80,"to":70}
+{"t":"2026-11-14T15:03:50.300Z","ev":"task_resequenced","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","from":90,"to":80}
+{"t":"2026-11-14T15:03:50.382Z","ev":"task_resequenced","id":"a-long-edit-with-many-zooms-shows-one-zoom-lane","from":25,"to":30}
+{"t":"2026-11-14T15:03:50.462Z","ev":"task_resequenced","id":"the-app-crashed-in-documentaudioengine-play","from":4010,"to":40}
+{"t":"2026-11-14T15:03:50.540Z","ev":"task_resequenced","id":"find-out-why-the-legibility-check-once-read-the","from":30,"to":50}
+{"t":"2026-11-14T15:03:50.623Z","ev":"task_resequenced","id":"the-whole-walk-set-finishes-at-least-once-every","from":600,"to":60}
+{"t":"2026-11-14T15:03:50.703Z","ev":"task_resequenced","id":"the-ask-scoring-run-refuses-to-score-when-the-mo","from":40,"to":70}
+{"t":"2026-11-14T15:03:50.782Z","ev":"task_resequenced","id":"a-painted-drawing-s-layers-are-named-for-the-par","from":50,"to":80}
+{"t":"2026-11-14T15:03:50.871Z","ev":"task_resequenced","id":"the-ask-score-report-shows-every-group-beside-th","from":60,"to":90}
+{"t":"2026-11-14T15:03:50.951Z","ev":"task_resequenced","id":"ask-on-qwen3-8-27b-keeps-a-drawing-its-look-name","from":70,"to":100}
+{"t":"2026-11-14T15:03:51.031Z","ev":"task_resequenced","id":"while-ask-writes-a-long-plan-its-line-names-each","from":80,"to":110}
+{"t":"2026-11-14T15:03:51.110Z","ev":"task_resequenced","id":"find-out-whether-landing-a-component-sheet-holds","from":90,"to":120}
+{"t":"2026-11-14T15:03:51.192Z","ev":"task_resequenced","id":"ask-works-on-an-8-gb-mac","from":100,"to":130}
+{"t":"2026-11-14T15:03:51.280Z","ev":"task_resequenced","id":"find-out-why-a-sheet-the-skill-built-shows-faint","from":110,"to":140}
+{"t":"2026-11-14T15:03:51.361Z","ev":"task_resequenced","id":"a-page-mock-makes-same-named-controls-copies-of","from":120,"to":150}
+{"t":"2026-11-14T15:03:51.443Z","ev":"task_resequenced","id":"stop-while-ask-s-model-is-still-loading-lets-the","from":130,"to":160}
+{"t":"2026-11-14T15:03:51.520Z","ev":"task_resequenced","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo","from":140,"to":170}
+{"t":"2026-11-14T15:03:51.599Z","ev":"task_resequenced","id":"trimming-a-clip-start-into-a-speed-stop-freeze-k","from":150,"to":180}
+{"t":"2026-11-14T15:03:51.676Z","ev":"task_resequenced","id":"the-design-rules-and-the-premiere-gap-report-sto","from":160,"to":190}
+{"t":"2026-11-14T15:03:51.752Z","ev":"task_resequenced","id":"a-recording-handed-to-photonz-as-it-starts-opens","from":170,"to":200}
+{"t":"2026-11-14T15:03:51.830Z","ev":"task_resequenced","id":"the-frame-shown-at-a-whole-second-is-the-one-tha","from":180,"to":210}
+{"t":"2026-11-14T15:03:51.908Z","ev":"task_resequenced","id":"find-out-whether-a-new-video-should-keep-the-len","from":190,"to":220}
+{"t":"2026-11-14T15:03:51.985Z","ev":"task_resequenced","id":"a-chart-or-title-keeps-what-you-set-by-hand-when","from":200,"to":230}
+{"t":"2026-11-14T15:03:52.063Z","ev":"task_resequenced","id":"the-rotating-walk-check-moves-on-through-the-set","from":210,"to":240}
+{"t":"2026-11-14T15:03:52.143Z","ev":"task_resequenced","id":"a-colour-grade-can-be-its-own-track-over-the-cli","from":220,"to":250}
+{"t":"2026-11-14T15:03:52.222Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":230,"to":260}
+{"t":"2026-11-14T15:03:52.302Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":240,"to":270}
+{"t":"2026-11-14T15:03:52.381Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":250,"to":280}
+{"t":"2026-11-14T15:03:52.458Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":260,"to":290}
+{"t":"2026-11-14T15:03:52.533Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":270,"to":300}
+{"t":"2026-11-14T15:03:52.608Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":280,"to":310}
+{"t":"2026-11-14T15:03:52.683Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":290,"to":320}
+{"t":"2026-11-14T15:03:52.756Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":300,"to":330}
+{"t":"2026-11-14T15:03:52.831Z","ev":"task_resequenced","id":"wherever-you-ease-a-key-a-segment-a-row-or-the-b","from":310,"to":340}
+{"t":"2026-11-14T15:03:52.905Z","ev":"task_resequenced","id":"a-clip-or-title-held-as-an-insert-shows-what-mov","from":320,"to":350}
+{"t":"2026-11-14T15:03:52.978Z","ev":"task_resequenced","id":"the-panel-s-hold-takes-any-typed-length","from":330,"to":360}
+{"t":"2026-11-14T15:03:53.053Z","ev":"task_resequenced","id":"a-ramped-clip-s-bar-is-tinted-by-its-speed-bands","from":340,"to":370}
+{"t":"2026-11-14T15:03:53.127Z","ev":"task_resequenced","id":"a-picked-cut-opens-from-a-chevron-on-its-track-h","from":350,"to":380}
+{"t":"2026-11-14T15:03:53.202Z","ev":"task_resequenced","id":"words-on-a-curve-are-typed-on-the-curve-and-come","from":360,"to":390}
+{"t":"2026-11-14T15:03:53.278Z","ev":"task_resequenced","id":"a-title-part-row-shows-where-its-hand-dragged-mo","from":370,"to":400}
+{"t":"2026-11-14T15:03:53.352Z","ev":"task_resequenced","id":"a-picked-measurement-s-numbers-stay-readable-cle","from":380,"to":410}
+{"t":"2026-11-14T15:03:53.437Z","ev":"task_resequenced","id":"the-measuring-legend-says-something-useful-now-t","from":390,"to":420}
+{"t":"2026-11-14T15:03:53.516Z","ev":"task_resequenced","id":"words-can-be-underlined-and-the-underline-follow","from":400,"to":430}
+{"t":"2026-11-14T15:03:53.592Z","ev":"task_resequenced","id":"find-the-misalignments-stays-quiet-on-busy-app-s","from":410,"to":440}
+{"t":"2026-11-14T15:03:53.668Z","ev":"task_resequenced","id":"the-daily-renumbering-never-undoes-an-order-the","from":420,"to":450}
+{"t":"2026-11-14T15:03:53.742Z","ev":"task_resequenced","id":"where-the-loop-s-day-went-counts-a-resumed-walk","from":430,"to":460}
+{"t":"2026-11-14T15:03:53.815Z","ev":"task_resequenced","id":"folding-a-section-that-lets-the-panel-fit-again","from":440,"to":470}
+{"t":"2026-11-14T15:03:53.888Z","ev":"task_resequenced","id":"the-library-shelf-picker-keeps-its-segments-when","from":450,"to":480}
+{"t":"2026-11-14T15:03:53.963Z","ev":"task_resequenced","id":"clicking-shorten-the-cut-trims-the-clips-and-pla","from":460,"to":490}
+{"t":"2026-11-14T15:03:54.036Z","ev":"task_resequenced","id":"a-path-s-line-picks-its-brush-by-its-stroke-with","from":470,"to":500}
+{"t":"2026-11-14T15:03:54.110Z","ev":"task_resequenced","id":"brush-sizes-use-the-same-unit-word-as-every-othe","from":480,"to":510}
+{"t":"2026-11-14T15:03:54.190Z","ev":"task_resequenced","id":"a-corner-resize-that-keeps-proportions-still-sna","from":490,"to":520}
+{"t":"2026-11-14T15:03:54.271Z","ev":"task_resequenced","id":"picking-a-perspective-preset-or-sliding-it-keeps","from":500,"to":530}
+{"t":"2026-11-14T15:03:54.351Z","ev":"task_resequenced","id":"a-task-waits-on-the-user-only-when-nothing-is-le","from":510,"to":540}
+{"t":"2026-11-14T15:03:54.430Z","ev":"task_resequenced","id":"a-copy-s-own-words-stay-centred-in-their-control","from":520,"to":550}
+{"t":"2026-11-14T15:03:54.510Z","ev":"task_resequenced","id":"leaving-preview-slides-back-without-a-hitch","from":530,"to":560}
+{"t":"2026-11-14T15:03:54.598Z","ev":"task_resequenced","id":"the-agent-panel-shows-what-ask-will-work-on-as-i","from":540,"to":570}
+{"t":"2026-11-14T15:03:54.680Z","ev":"task_resequenced","id":"building-the-app-stops-running-a-second-build-an","from":550,"to":580}
+{"t":"2026-11-14T15:03:54.758Z","ev":"task_resequenced","id":"an-agent-can-change-what-it-made-fonts-captions","from":560,"to":590}
+{"t":"2026-11-14T15:03:54.862Z","ev":"task_resequenced","id":"the-moving-icon-preview-speed-check-passes-on-a","from":570,"to":600}
+{"t":"2026-11-14T15:03:54.949Z","ev":"task_resequenced","id":"find-out-whether-the-view-edit-switch-s-picked-c","from":580,"to":610}
+{"t":"2026-11-14T15:03:55.028Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-27","from":590,"to":620}
+{"t":"2026-11-14T15:03:55.107Z","ev":"task_resequenced","id":"the-title-presets-walk-pulls-film-super-off-the","from":610,"to":630}
+{"t":"2026-11-14T15:03:55.186Z","ev":"task_resequenced","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","from":620,"to":640}
+{"t":"2026-11-14T15:03:55.267Z","ev":"task_resequenced","id":"a-title-tile-you-pick-on-the-video-library-stays","from":630,"to":650}
+{"t":"2026-11-14T15:03:55.344Z","ev":"task_resequenced","id":"a-picked-sound-clip-draws-no-size-badge-or-handl","from":4100,"to":660}
+{"t":"2026-11-14T15:03:55.423Z","ev":"task_note","id":"the-whole-walk-set-finishes-at-least-once-every"}
+{"t":"2026-11-14T15:04:17.331Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-14T15:04:23.398Z","ev":"task_created","id":"the-playback-speed-control-is-a-small-round-icon","priority":"p1-high","title":"The playback speed control is a small round icon button like play's neighbours"}
+{"t":"2026-11-14T15:04:23.524Z","ev":"task_resequenced","id":"the-playback-speed-control-is-a-small-round-icon","from":4010,"to":6e-7}
+{"t":"2026-11-14T15:04:40.348Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-14T15:05:07.658Z","ev":"task_resequenced","id":"the-playback-speed-control-is-a-small-round-icon","from":6e-7,"to":10}
+{"t":"2026-11-14T15:05:07.736Z","ev":"task_resequenced","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":10,"to":20}
+{"t":"2026-11-14T15:05:07.817Z","ev":"task_resequenced","id":"an-animated-icon-told-as-a-little-story-moves-th","from":20,"to":30}
+{"t":"2026-11-14T15:05:07.896Z","ev":"task_resequenced","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":30,"to":40}
+{"t":"2026-11-14T15:05:07.976Z","ev":"task_resequenced","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":40,"to":50}
+{"t":"2026-11-14T15:05:08.054Z","ev":"task_resequenced","id":"exporting-the-six-minute-reference-edit-takes-no","from":50,"to":60}
+{"t":"2026-11-14T15:05:08.133Z","ev":"task_resequenced","id":"memory-stays-bounded-while-an-hour-long-edit-pla","from":60,"to":70}
+{"t":"2026-11-14T15:05:08.213Z","ev":"task_resequenced","id":"playing-a-five-minute-captioned-recording-never","from":70,"to":80}
+{"t":"2026-11-14T15:05:08.293Z","ev":"task_resequenced","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","from":80,"to":90}
+{"t":"2026-11-14T15:05:15.768Z","ev":"task_created","id":"the-play-bar-s-scrubber-knob-never-covers-the-ti","priority":"p1-high","title":"The play bar's scrubber knob never covers the time beside it"}
+{"t":"2026-11-14T15:05:15.897Z","ev":"task_resequenced","id":"the-play-bar-s-scrubber-knob-never-covers-the-ti","from":4010,"to":7e-7}
+{"t":"2026-11-14T15:05:47.934Z","ev":"triage","summary":"merged 0, dropped 0, moved 1 (audio crash p1 to p2 as an open question: built from unfinished source), reset 0, re-tagged 1, groomed 4 (crash retitled; whole-walk-set task widened and moved up to p2 seq 60; timeline task +2 acceptance items; trash story task given a stopping point), renumbered p1 10-90 and p2 10-660; open 75 -> 76 (one new user ask)"}
+{"t":"2026-11-14T15:06:44.650Z","ev":"digest","file":"2026-11-14.md"}
