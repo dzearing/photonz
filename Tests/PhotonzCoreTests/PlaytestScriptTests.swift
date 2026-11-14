@@ -3481,7 +3481,7 @@ struct PlaytestScriptTests {
                        "seconds": 8, "insert": true, "hold": "in-the-air", "says": "lands on V1" } ] }
         """)
         guard case .dropOnTimeline(let file, let tile, let track, let seconds, let insert, let hold,
-                                   let release, let says) = script.steps[0] else {
+                                   let release, let says, let fromAnotherApp) = script.steps[0] else {
             Issue.record("dropOnTimeline"); return
         }
         #expect(file == "scratch/b-roll.mp4")
@@ -3492,7 +3492,35 @@ struct PlaytestScriptTests {
         #expect(hold == "in-the-air")
         #expect(release)
         #expect(says == "lands on V1")
+        #expect(!fromAnotherApp)
         #expect(PlaytestStep.names.contains("dropOnTimeline"))
+    }
+
+    // History is one folder every Photonz on the Mac shows, and ⇧⌘H opens the
+    // History of whichever copy holds the shortcut, often not the one the
+    // video is open in. A drag that began in another app arrives with nothing
+    // remembered on this side (user 2026-11-13).
+    @Test("A dropOnTimeline step can carry a History tile as if another Photonz began the drag")
+    func dropOnTimelineFromAnotherApp() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dropOnTimeline", "tile": "@Tutorial Sample.mp4", "track": "V1",
+                       "seconds": 6, "fromAnotherApp": true } ] }
+        """)
+        guard case .dropOnTimeline(_, let tile, _, _, _, _, _, _, let fromAnotherApp) = script.steps[0] else {
+            Issue.record("dropOnTimeline"); return
+        }
+        #expect(tile == "@Tutorial Sample.mp4")
+        #expect(fromAnotherApp)
+    }
+
+    @Test("Only a tile can come from another app: a file from disk already does")
+    func dropOnTimelineFromAnotherAppNeedsATile() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dropOnTimeline", "file": "a.mov", "track": "V1", "seconds": 2,
+                           "fromAnotherApp": true } ] }
+            """)
+        }
     }
 
     // The mock's first clip comes off the Library: a tile dragged onto a track
@@ -3502,7 +3530,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dropOnTimeline", "tile": "b-roll.mov", "track": "V1", "seconds": 2 } ] }
         """)
-        guard case .dropOnTimeline(let file, let tile, let track, let seconds, _, _, _, _) = script.steps[0] else {
+        guard case .dropOnTimeline(let file, let tile, let track, let seconds, _, _, _, _, _) = script.steps[0] else {
             Issue.record("dropOnTimeline"); return
         }
         #expect(file == nil)

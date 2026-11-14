@@ -128,12 +128,13 @@ struct TimelineFileDropDelegate: DropDelegate {
         Self.log.notice("a drag came over the timeline at \(Int(info.location.x), privacy: .public),\(Int(info.location.y), privacy: .public), \(providers.count, privacy: .public) carrying a file")
         guard let provider = providers.first else { return }
         Task { @MainActor [editorState] in
-            guard let url = await FileDrop.fileURL(from: provider) else {
-                Self.log.notice("the file on that drag could not be read")
+            guard let (url, source) = await FileDrop.read(provider) else {
+                let (offered, held) = FileDrop.carried(provider)
+                Self.log.notice("the file on that drag could not be read: the drop offered [\(offered, privacy: .public)], the drag pasteboard held [\(held ?? "nothing a walk stood in", privacy: .public)]")
                 return
             }
             editorState.beginTimelineFileHover(url)
-            Self.log.notice("its file is \(url.lastPathComponent, privacy: .public)")
+            Self.log.notice("its file is \(url.lastPathComponent, privacy: .public), read off \(source.rawValue, privacy: .public)")
         }
     }
 
@@ -242,7 +243,13 @@ struct TimelineFileDropDelegate: DropDelegate {
         let insert = Self.insertHeld
         let editorState = editorState
         Task { @MainActor in
-            guard let url = await FileDrop.fileURL(from: provider) else { return }
+            guard let (url, source) = await FileDrop.read(provider) else {
+                let (offered, held) = FileDrop.carried(provider)
+                Self.log.notice("nothing landed, the file could not be read: the drop offered [\(offered, privacy: .public)], the drag pasteboard held [\(held ?? "nothing a walk stood in", privacy: .public)]")
+                editorState.endTimelineFileHover()
+                return
+            }
+            Self.log.notice("landing \(url.lastPathComponent, privacy: .public), read off \(source.rawValue, privacy: .public)")
             // A sound, a recording or a picture lands on the timeline.
             // Anything else is answered the way the rest of the window
             // answers it.

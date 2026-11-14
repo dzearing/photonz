@@ -1,0 +1,120 @@
+{
+  "out": "/tmp/photonz-playtest/a-history-tile-from-another-photonz-lands-walk",
+  "seed": "User 2026-11-13: \"i create a new video and i can't drag any videos from history into the timeline\". History is one folder every Photonz on the Mac shows, and Shift Command H opens the History of whichever copy holds the shortcut, which is often not the copy the video is open in. Such a drag reached the timeline with nothing remembered on this side and a provider that answered nothing, so no ghost was drawn and nothing landed. A new empty video, History open, a recording and then a screenshot carried in from another app's History, each read off the drag itself as the History file. At Next defaults, no flag set.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "captures": [
+      "sample-recording",
+      "fixtures/Plain blue tile 200x140.png"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blankVideo",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectTimeline",
+      "tracks": [
+        "V1",
+        "Audio"
+      ],
+      "open": true
+    },
+    {
+      "do": "shortcut",
+      "key": "h",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Show History",
+      "checked": false
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "@Tutorial Sample.mp4",
+      "track": "V1",
+      "seconds": 2,
+      "fromAnotherApp": true,
+      "hold": "1-recording-in-the-air",
+      "says": "V1 \u00b7 0:02"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-recording-landed",
+      "note": "A recording carried from another Photonz's History onto the empty V1 of a new video draws its ghost while in the air and lands at 0:02, read off the drag as the History file itself rather than SwiftUI's copy of it"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-recording-landed"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "@Tutorial Sample.mp4",
+      "track": "below",
+      "seconds": 1,
+      "fromAnotherApp": true,
+      "says": "New"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "count": 2
+    },
+    {
+      "do": "describe",
+      "stage": "2-onto-a-video-with-clips",
+      "note": "The same drag onto the video, which now holds that clip, let go under the tracks at 0:01, lands on a track of its own"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-onto-a-video-with-clips"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "@Plain blue tile 200x140.png",
+      "track": "below",
+      "seconds": 4,
+      "fromAnotherApp": true,
+      "hold": "3-screenshot-in-the-air"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-screenshot-landed",
+      "note": "A screenshot carried from another Photonz's History lands on a track of its own under the tracks, read off the drag as the History file"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-screenshot-landed"
+    }
+  ]
+}

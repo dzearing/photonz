@@ -3207,8 +3207,17 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `tile` carries a recording or sound off the Library shelf instead of a
     /// file, by its name there, through the tile's own drag: exactly one of
     /// `file` and `tile` is given.
+    ///
+    /// `fromAnotherApp` carries the tile the way it arrives when another
+    /// Photonz on the Mac began the drag: History is one folder every copy
+    /// shows, and ⇧⌘H opens the History of whichever copy holds the shortcut.
+    /// Nothing about the tile is remembered on this side then, and the drag
+    /// holds the file twice, a copy SwiftUI made as its file link and the
+    /// History file itself as its plain link (read off a real drag between
+    /// two copies, 2026-11-13). Only a tile: a file from disk already arrives
+    /// from another app.
     case dropOnTimeline(file: String?, tile: String?, track: String, seconds: Double, insert: Bool,
-                        hold: String?, release: Bool, says: String?)
+                        hold: String?, release: Bool, says: String?, fromAnotherApp: Bool = false)
     /// A file carried from the Finder onto the Library shelf, through the
     /// shelf's own drop target, and let go there unless `release` is false. A
     /// recording or a sound lands on the shelf and nowhere else. `hold` names
@@ -5510,12 +5519,19 @@ public enum PlaytestStep: Sendable, Equatable {
                     reason: "a dropOnTimeline step carries either a \"file\" from disk or a \"tile\" "
                         + "off the Library shelf, exactly one of them")
             }
+            let fromAnotherApp = try f.optionalFlag("fromAnotherApp") ?? false
+            if fromAnotherApp, tile == nil {
+                throw PlaytestScriptError.invalidField(
+                    index: index, step: name, field: "fromAnotherApp",
+                    reason: "only a \"tile\" can come from another app; a \"file\" from disk already does")
+            }
             self = .dropOnTimeline(file: file, tile: tile, track: try f.string("track"),
                                    seconds: try f.number("seconds"),
                                    insert: try f.optionalFlag("insert") ?? false,
                                    hold: try f.optionalString("hold"),
                                    release: try f.optionalFlag("release") ?? true,
-                                   says: try f.optionalString("says"))
+                                   says: try f.optionalString("says"),
+                                   fromAnotherApp: fromAnotherApp)
         case "dropOnLibrary":
             self = .dropOnLibrary(file: try f.string("file"), hold: try f.optionalString("hold"),
                                   release: try f.optionalFlag("release") ?? true)

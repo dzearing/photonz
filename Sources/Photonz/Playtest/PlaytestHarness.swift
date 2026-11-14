@@ -2324,10 +2324,11 @@ private final class Run {
                     + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)\(landed)\(after)",
                  state: describe())
 
-        case .dropOnTimeline(let file, let tile, let track, let seconds, let insert, let hold, let release, let says):
+        case .dropOnTimeline(let file, let tile, let track, let seconds, let insert, let hold, let release, let says,
+                             let fromAnotherApp):
             note(number, step.name, try await dropOnTimeline(file: file, tile: tile, track: track, seconds: seconds,
                                                              insert: insert, hold: hold, release: release,
-                                                             says: says),
+                                                             says: says, fromAnotherApp: fromAnotherApp),
                  state: describe())
 
         case .dropOnLibrary(let file, let hold, let release):
@@ -22230,7 +22231,8 @@ extension Run {
     /// so a walk names a track and a second rather than a place in the
     /// window, and does not break when the dock moves.
     func dropOnTimeline(file: String?, tile: String?, track: String, seconds: Double, insert: Bool,
-                        hold: String?, release: Bool, says: String?) async throws -> String {
+                        hold: String?, release: Bool, says: String?,
+                        fromAnotherApp: Bool = false) async throws -> String {
         let editor = try requireEditor()
         let window = try requireWindow()
         let carried = tile.map { "the tile \($0)" } ?? file ?? "?"
@@ -22248,7 +22250,11 @@ extension Run {
             guard let payload = target.payload else {
                 throw Failure(description: "the tile \"\(tile)\" cannot be picked up")
             }
-            board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "timelineTile")
+            board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "timelineTile",
+                                                           fromAnotherApp: fromAnotherApp)
+            // Another app began it: nothing about the tile is remembered
+            // here, whatever building the payload just wrote down.
+            if fromAnotherApp { CaptureThumbnailView.lifted = nil }
             // A transition tile out of the panel's Transitions group carries
             // no file: it lands on the cut under it instead.
             if board.data(forType: NSPasteboard.PasteboardType(TransitionDrag.typeIdentifier)) != nil {
@@ -22281,7 +22287,7 @@ extension Run {
                 return try await dropTitleOnTimeline(tile, board: board, track: track, seconds: seconds,
                                                      hold: hold, release: release, says: says)
             }
-            guard let carriedURL = DragCargo.fileURL(on: board) else {
+            guard let carriedURL = FileDrop.file(on: board, at: 0) ?? DragCargo.fileURL(on: board) else {
                 throw Failure(description: "the tile \"\(tile)\" carries no file to land: it carries "
                     + (board.types ?? []).map(\.rawValue).joined(separator: ", "))
             }
@@ -22334,7 +22340,14 @@ extension Run {
             throw Failure(description: "the window has no content view")
         }
         TimelineFileDropDelegate.walkHoldsInsert = insert
-        defer { TimelineFileDropDelegate.walkHoldsInsert = nil }
+        // The board stands in for the drag pasteboard a real drag is read
+        // off (`FileDrop.dragPasteboard`), for this drag only.
+        FileDrop.playtestPasteboard = board
+        FileDrop.playtestLastRead = nil
+        defer {
+            TimelineFileDropDelegate.walkHoldsInsert = nil
+            FileDrop.playtestPasteboard = nil
+        }
         let chain = Self.visibleDestinations(at: windowPoint, in: content)
         // The room made for the file in the air moves no second on screen.
         let spanBeforeTheAir = editor.timelineWindow.visibleMS(documentMS: editor.timelineLengthForZoomMS)
@@ -22437,6 +22450,17 @@ extension Run {
             let landed = (editor.document?.allLayers.count ?? before) != before
             settledFor = landed && editor.timelineZoomGlide == nil ? settledFor + 0.016 : 0
         }
+        // Carried from another app, it is read off the drag itself, and as
+        // the History file, never SwiftUI's copy of it.
+        let read = FileDrop.playtestLastRead
+        let readNote = read.map { ", read off \($0.source.rawValue) as \($0.url.path)" } ?? ""
+        if fromAnotherApp {
+            guard let read, read.url.standardizedFileURL == url.standardizedFileURL else {
+                throw Failure(description: "carried from another app, \(url.lastPathComponent) was read as "
+                    + (read.map { "\($0.url.path) off \($0.source.rawValue)" } ?? "nothing")
+                    + ", not as the History file \(url.path)")
+            }
+        }
         let jump = zip(spans, spans.dropFirst()).map { abs($1 - $0) / max(1, $0) }.max() ?? 0
         let span = String(format: "the strip showed %.1fs before letting go and %.1fs once settled, "
                           + "%.0f%% at most in one frame", spans[0] / 1000, (spans.last ?? 0) / 1000, jump * 100)
@@ -22444,7 +22468,8 @@ extension Run {
             throw Failure(description: "letting go of \(url.lastPathComponent) moved the timeline in one frame: "
                 + span + " (user 2026-10-28: \"it just immediately snaps\")")
         }
-        return "\(url.lastPathComponent) let go over \(track) at \(seconds)s (\(insert ? "⌘ held" : "no keys")), "
+        return "\(url.lastPathComponent) let go over \(track) at \(seconds)s (\(insert ? "⌘ held" : "no keys"))"
+            + "\(fromAnotherApp ? ", carried from another app" : "")\(readNote), "
             + "saying \"\(sentence)\"\(held); the document now holds "
             + "\(editor.document?.allLayers.count ?? 0) layers, was \(before); \(span); \(MainThreadMeter.shared.report)"
             + (markersDownCost.isEmpty ? "" : "; " + markersDownCost)

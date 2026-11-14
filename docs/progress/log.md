@@ -23084,3 +23084,9 @@ units.
 - The speed walk had been timing ~29,000 walk-only marker views on the long timeline; speed measures now take the markers down.
 - Lanes build only what is in sight (`TimelineSight`), `layer(id:)` keeps an index, hold drifts are gathered once per document. 60 min edit: scroll 554 -> 50 ms a frame, zoom 736 -> 571 ms, playback at full rate.
 - Next: paint clips too narrow to grab as one layer per track (zoom near fit), and the graph upkeep after an edit (0.5-0.7 s). Task left pending.
+
+## 2026-11-14 — A History drag from another Photonz lands on the timeline (a-recording-dragged-out-of-history-lands-on-a-ne)
+
+- Cause, from the user's own drags in the unified log: the drag began in the installed Photonz (⇧⌘H is held by one copy only) and was dropped in another copy's timeline. SwiftUI's provider offers nothing and `CaptureThumbnailView.lifted` is per process, so nothing could be read.
+- `FileDrop.read` now falls back to the drag pasteboard during a real drop (the plain link, which is the History file, before the file link, which is SwiftUI's cache copy) and never reads the system drag pasteboard during a walk. The timeline-drop log names where each file was read from, and what an unreadable drop carried.
+- Walk `a-history-tile-from-another-photonz-lands-walk` (new `dropOnTimeline` option `fromAnotherApp`) fails as the user's drag did with the fix out and passes with it. Not confirmed with a real pointer: no agent here can post a real drag.

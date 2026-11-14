@@ -115,8 +115,8 @@ enum FileDrop {
         guard !providers.isEmpty else { return false }
         Task { @MainActor in
             var urls: [URL] = []
-            for provider in providers {
-                if let url = await fileURL(from: provider) { urls.append(url) }
+            for (index, provider) in providers.enumerated() {
+                if let url = await fileURL(from: provider, index: index) { urls.append(url) }
             }
             await editorState.importMedia(urls)
         }
@@ -136,24 +136,125 @@ enum FileDrop {
     /// The History tile the drag in the air began on, when its file is still
     /// there. The provider SwiftUI hands a drop of a History tile answers
     /// "nothing" to every way of asking it for its file (user 2026-10-28: "the
-    /// timeline is not a droptarget at all"). The drag pasteboard is not read
-    /// instead: it is the whole Mac's, and still holds the last drag made
-    /// anywhere, so a walk read off it the person's own drag of the night
-    /// before and landed the wrong recording.
+    /// timeline is not a droptarget at all").
     static func draggedFile() -> URL? {
         guard let lifted = CaptureThumbnailView.lifted,
               FileManager.default.fileExists(atPath: lifted.path) else { return nil }
         return lifted
     }
 
-    static func fileURL(from provider: NSItemProvider) async -> URL? {
+    /// Where the file a drop is carrying was found, for the line each drag
+    /// writes (`TimelineFileDropDelegate.log`).
+    enum Source: String, Sendable {
+        case provider = "the drop itself"
+        case dragPasteboard = "the drag pasteboard"
+        case historyTile = "the tile lifted here"
+        case representation = "a copy of its contents"
+    }
+
+    /// The drag in the air, as AppKit holds it, when one is. A walk cannot
+    /// make a real drag, so it stands its own board here, and during a walk
+    /// nothing else is read: the drag pasteboard is the whole Mac's and keeps
+    /// the last drag made anywhere, so a walk read off it the person's own
+    /// drag of the night before and landed the wrong recording (2026-10-28).
+    static func dragPasteboard() -> NSPasteboard? {
+        #if PHOTONZ_PLAYTEST
+        if PlaytestHarness.isDrivingAWalk { return playtestPasteboard }
+        #endif
+        return NSPasteboard(name: .drag)
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// Set by the harness for the length of one scripted file drag, and put
+    /// back to nil the moment it ends.
+    static var playtestPasteboard: NSPasteboard?
+    #endif
+
+    /// The file the drag in the air holds as its `index`th item, read off the
+    /// drag pasteboard itself.
+    ///
+    /// A History tile dragged out of ANOTHER Photonz reaches this one with a
+    /// provider that answers nothing, and nothing remembered on this side
+    /// either: History is one folder every copy on the Mac shows, and ⇧⌘H
+    /// opens the History of whichever copy holds the shortcut, which is often
+    /// not the copy the video is open in (user 2026-11-13: "i can't drag any
+    /// videos from history into the timeline"). The pasteboard of that very
+    /// drag holds the file twice: the History file itself as its plain link,
+    /// and a copy SwiftUI made in its own caches as its file link. The History
+    /// file is taken, so the clip plays the recording History keeps rather
+    /// than a copy nobody will ever see again.
+    static func fileOnTheDrag(at index: Int = 0) -> URL? {
+        guard let board = dragPasteboard() else { return nil }
+        return file(on: board, at: index)
+    }
+
+    /// The file `board`'s `index`th item holds: its plain link when that is a
+    /// file still on disk, otherwise its file link when that is.
+    static func file(on board: NSPasteboard, at index: Int) -> URL? {
+        guard let items = board.pasteboardItems, items.indices.contains(index) else { return nil }
+        let item = items[index]
+        let exists = { (url: URL) in url.isFileURL && FileManager.default.fileExists(atPath: url.path) }
+        for type in [NSPasteboard.PasteboardType.URL, .fileURL] {
+            guard let text = item.string(forType: type), let url = URL(string: text) else { continue }
+            if exists(url) { return url.standardizedFileURL }
+        }
+        return nil
+    }
+
+    /// What a drop that could not be read carried, for the line that says so:
+    /// the types its provider offered, and what the drag pasteboard held (nil
+    /// during a walk that stood no board in).
+    static func carried(_ provider: NSItemProvider) -> (offered: String, held: String?) {
+        let held = dragPasteboard().map { board in
+            board.pasteboardItems?.first?.types.map(\.rawValue).joined(separator: " ") ?? ""
+        }
+        return (provider.registeredTypeIdentifiers.joined(separator: " "), held)
+    }
+
+    static func fileURL(from provider: NSItemProvider, index: Int = 0) async -> URL? {
+        await read(provider, index: index)?.url
+    }
+
+    /// The file a drop carries and where it was found: the provider's link,
+    /// then the drag pasteboard, then the History tile this app lifted, then
+    /// the contents as a file.
+    ///
+    /// The drag pasteboard is read before anything is awaited, while the drag
+    /// that put it there is certainly still the one on it.
+    static func read(_ provider: NSItemProvider, index: Int = 0) async -> (url: URL, source: Source)? {
+        let found = await find(provider, index: index)
+        #if PHOTONZ_PLAYTEST
+        playtestLastRead = found
+        #endif
+        return found
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// The last file a drop was read as and where it was found, so a walk can
+    /// say which way a drag it carried was read.
+    static var playtestLastRead: (url: URL, source: Source)?
+    #endif
+
+    private static func find(_ provider: NSItemProvider, index: Int) async -> (url: URL, source: Source)? {
+        let onTheDrag = fileOnTheDrag(at: index)
         let linked: URL? = await withCheckedContinuation { continuation in
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
                 continuation.resume(returning: url)
             }
         }
-        if let linked { return linked }
-        if let carried = draggedFile() { return carried }
+        // A link into SwiftUI's own drag caches is a copy made for the drag;
+        // the History file it was made from is on the pasteboard beside it.
+        if let linked, let onTheDrag, linked.path.contains("/com.apple.SwiftUI.Drag-") {
+            return (onTheDrag, .dragPasteboard)
+        }
+        if let linked { return (linked, .provider) }
+        if let onTheDrag { return (onTheDrag, .dragPasteboard) }
+        if let carried = draggedFile() { return (carried, .historyTile) }
+        return await representation(provider).map { ($0, .representation) }
+    }
+
+    /// A movie, a sound or a picture the provider will hand over as a file.
+    private static func representation(_ provider: NSItemProvider) async -> URL? {
         let media: [UTType] = [.movie, .audio, .image]
         guard let type = provider.registeredTypeIdentifiers.first(where: { id in
             UTType(id).map { found in media.contains { found.conforms(to: $0) } } ?? false

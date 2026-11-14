@@ -1,0 +1,29 @@
+{
+  "feature": "A recording dragged out of History lands on the timeline, from any Photonz",
+  "epic": "video-editing",
+  "summary": "Your drags last night began in a different Photonz: Shift Command H opened the History of the installed Photonz, and its drag reached this app's timeline with nothing it could read. The timeline now reads the file off the drag itself, so a recording or a screenshot from any copy's History draws its ghost and lands as a clip.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Keep the installed Photonz running too, so Shift Command H may open its History rather than this app's: that is the case that was broken.",
+  "switched": {},
+  "try": [
+    { "do": "In Photonz Dev, choose File > New > Video and press Return." },
+    { "do": "Press Shift Command H to open History (whichever Photonz answers it).", "shot": "2026-11-13-history-drag-from-another-photonz-1-recording-in-the-air-sc.png" },
+    { "do": "Drag a recording from History over V1 and hold: the ghost says Overwrite, V1 and the time. Let go." },
+    { "do": "Drag the same recording under the tracks of the video, which now has a clip, and let go: it lands on a new track.", "shot": "2026-11-13-history-drag-from-another-photonz-2-onto-a-video-with-clips-sc.png" },
+    { "do": "Drag a screenshot from History onto the timeline and let go: it lands as a picture clip.", "shot": "2026-11-13-history-drag-from-another-photonz-3-screenshot-landed-sc.png" },
+    { "do": "Optional: in Terminal run log show --last 5m --predicate 'category == \"timeline-drop\"' and look for 'read off the drag pasteboard'." }
+  ],
+  "evaluate": [
+    "Does the ghost appear as soon as the recording is over the timeline, with no pause?",
+    "Does a recording from History land where the ghost said, on a new video and on one that already has clips?",
+    "Does a screenshot from History land as a picture clip?",
+    "Do edited recordings (finished saving) drag in the same way?"
+  ],
+  "rough": [
+    "Not tried with a real pointer by the loop: nothing on this Mac lets an agent make a real drag (this terminal has no Accessibility or event posting access, and a walk cannot start a drag session between windows or apps). The fix was built from your own drags: the timeline-drop log at 20:51 to 20:52 showed the drag begun by the installed Photonz (pid 38272) and dropped in the probe (pid 15767), and the drag pasteboard still held that drag, which the new walk copies exactly.",
+    "Before, your drag (20:51:49): 'a drag came over the timeline at 407,1, 1 carrying a file', then 'the file on that drag could not be read', then 'let go over the timeline at 391,17, the ghost saying nothing'.",
+    "After, the walk's drag from another app (22:42:17): 'its file is Tutorial Sample.mp4, read off the drag pasteboard', then 'landing Tutorial Sample.mp4, read off the drag pasteboard'.",
+    "The clip uses the History file itself, not the copy SwiftUI makes in its caches for every such drag (that copy still sits in ~/Library/Caches/com.apple.SwiftUI.Drag-…; the installed app's drags leave it there, not this fix).",
+    "History opening in the other Photonz is by design (only one copy holds Shift Command H, the newest one launched), so double clicking a tile there opens it in that copy. Left as is and noted in the task log.",
+    "No mock covers this: it is a drop that should always have worked."
+  ]
+}

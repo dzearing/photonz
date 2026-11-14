@@ -70,9 +70,15 @@ import UniformTypeIdentifiers
 // a queue of its own, so it cannot be tied to the main actor.
 final class PromisedFileWriter: NSFilePromiseProvider, NSFilePromiseProviderDelegate, @unchecked Sendable {
     let url: URL
+    /// The copy SwiftUI makes in its own caches when another app began the
+    /// drag: then the file link names the copy and only the plain link names
+    /// the file itself (read off a real drag between two copies of Photonz,
+    /// 2026-11-13). Nil carries the file as one app's own drag does.
+    let copy: URL?
 
-    init(url: URL, type: UTType) {
+    init(url: URL, type: UTType, copy: URL? = nil) {
         self.url = url
+        self.copy = copy
         super.init()
         fileType = type.identifier
         delegate = self
@@ -83,7 +89,8 @@ final class PromisedFileWriter: NSFilePromiseProvider, NSFilePromiseProviderDele
     }
 
     override func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
-        if type == .fileURL || type == .URL { return url.absoluteString }
+        if type == .fileURL { return (copy ?? url).absoluteString }
+        if type == .URL { return url.absoluteString }
         return super.pasteboardPropertyList(forType: type)
     }
 
@@ -115,11 +122,15 @@ enum PlaytestPanelDrag {
     /// with no link, and the panel took the drop and added nothing
     /// (panel-takes-picture-walk, drop-hands-you-the-pointer-walk, from
     /// 2026-10-28 to 2026-11-10).
+    ///
+    /// `fromAnotherApp` puts the file on the drag the way it arrives when
+    /// another Photonz began the drag: its file link names a copy in a
+    /// folder like SwiftUI's drag caches, its plain link the file itself.
     static func pasteboard(from provider: NSItemProvider, named name: String,
-                           asTheFinder: Bool = false) async throws -> NSPasteboard {
+                           asTheFinder: Bool = false, fromAnotherApp: Bool = false) async throws -> NSPasteboard {
         let board = NSPasteboard(name: NSPasteboard.Name("photonz.playtest.\(name)"))
         board.clearContents()
-        if !asTheFinder, let promised = await promisedFile(provider) {
+        if !asTheFinder, let promised = await promisedFile(provider, copied: fromAnotherApp) {
             board.writeObjects([promised])
             return board
         }
@@ -154,14 +165,24 @@ enum PlaytestPanelDrag {
     /// drop walk passed while a real drag drew no ghost and landed nowhere.
     /// This is that pasteboard as a real drag leaves it, read off the drag
     /// pasteboard of a real History drag on 2026-10-27.
-    private static func promisedFile(_ provider: NSItemProvider) async -> NSPasteboardWriting? {
+    private static func promisedFile(_ provider: NSItemProvider, copied: Bool = false) async -> NSPasteboardWriting? {
         let media: [UTType] = [.movie, .audio, .image]
         guard let type = provider.registeredTypeIdentifiers.compactMap(UTType.init)
                 .first(where: { found in media.contains { found.conforms(to: $0) } }),
               provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier),
               let data = try? await provider.loadData(forTypeIdentifier: UTType.fileURL.identifier),
               let text = String(data: data, encoding: .utf8), let url = URL(string: text) else { return nil }
-        return PromisedFileWriter(url: url, type: type)
+        guard copied else { return PromisedFileWriter(url: url, type: type) }
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("com.apple.SwiftUI.Drag-\(UUID().uuidString)", isDirectory: true)
+        let copy = folder.appendingPathComponent(url.lastPathComponent)
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            try FileManager.default.copyItem(at: url, to: copy)
+        } catch {
+            return nil
+        }
+        return PromisedFileWriter(url: url, type: type, copy: copy)
     }
 
     /// Whether AppKit would deliver this drag to this view at all.
