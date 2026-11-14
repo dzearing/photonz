@@ -41,7 +41,8 @@ extension AskMotion {
     /// to the front of the can: an open outline is a line to the app, with no
     /// inside to hide anything.
     ///
-    /// Only a part keyed to move, drawn over the container, last seen with
+    /// Only a part keyed to move, drawn over the container or already behind
+    /// it (then only the inside is added), last seen with
     /// its middle inside the container's outline and seen outside it before;
     /// never when anything else drawn before the container lies in its
     /// mouth (the white would bury it) or the move would change the groups
@@ -91,7 +92,7 @@ extension AskMotion {
             // The smallest still open line it ends up in, drawn under it.
             let vessels = art.parts.indices.compactMap { at -> (at: Int, region: [CGPoint])? in
                 let part = art.parts[at]
-                guard at < first, part.name != nil, part.fill == nil, part.stroke != nil,
+                guard !own.contains(at), part.name != nil, part.fill == nil, part.stroke != nil,
                       !lap.isMover(part.name ?? ""), !part.groups.contains(where: { lap.isMover($0) }),
                       case .path(let outline) = part.shape, !outline.closed, outline.rings.count == 1,
                       let ring = outline.rings.first, let start = ring.first?.point, let end = ring.last?.point else { return nil }
@@ -109,7 +110,12 @@ extension AskMotion {
                   let vesselName = art.parts[vessel.at].name else { continue }
             let groupsBefore = own.map { art.parts[$0].groups }
             let places = [vesselName] + art.parts[vessel.at].groups.reversed().filter { group in !own.contains { Lap.holds(art.parts[$0], group) } }
-            let moved = places.lazy.compactMap { place -> String? in
+            // Drawn behind the container already (pass nineteen's walk, the
+            // model drew the trash first): it stays, and only the inside is
+            // added. The can's open outline hid nothing, and the scrap sat
+            // on the shut can's front as it faded.
+            let behind = own.allSatisfy { $0 < vessel.at }
+            let moved = behind ? svg : places.lazy.compactMap { place -> String? in
                 guard let text = svgMoving(plain(name), before: plain(place), in: svg),
                       case .success(let after) = SVGArtwork.parse(text, keepingGroups: true),
                       after.parts.filter({ Lap.holds($0, name) }).map(\.groups) == groupsBefore else { return nil }

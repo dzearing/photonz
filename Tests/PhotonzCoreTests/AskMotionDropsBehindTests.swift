@@ -98,3 +98,32 @@ struct AskMotionDropsBehindTests {
                                        points: [CGPoint(x: 5, y: 8), CGPoint(x: 6, y: 20), CGPoint(x: 18, y: 20), CGPoint(x: 19, y: 8)]) != nil)
     }
 }
+
+extension AskMotionDropsBehindTests {
+    /// Pass nineteen's walk of the user's sentence (2026-11-14): the model
+    /// drew the trash FIRST, already behind the can's lines, so nothing was
+    /// moved and no inside was drawn. The can's open outline hid nothing:
+    /// the scrap showed through the can over its back and sat on the shut
+    /// can's front as it faded (1.2 to 1.3 s on the walk's reel). A part
+    /// already drawn behind a container needs the container's inside just
+    /// the same.
+    @Test("Drawn behind the can already, the trash still gets the can's inside in front of it")
+    func alreadyBehind() throws {
+        var steps = try AskMotionInBeforeShutWalkTwo.steps()
+        let index = try #require(steps.firstIndex { $0.tool == "add_drawing" })
+        let trash = #"<g id="trash"><path id="crumple" d="M18 2 L21 3 L20 5 L17 4 Z"/></g>"#
+        let svg = AskMotionInBeforeShutWalkTwo.bin.replacingOccurrences(of: trash, with: "")
+            .replacingOccurrences(of: #"stroke-linejoin="round">"#, with: #"stroke-linejoin="round">"# + trash)
+        #expect(Self.ids(svg).first == "trash")
+        var object = try #require(steps[index].arguments.objectValue)
+        object["svg"] = .string(svg)
+        steps[index] = AskStep(tool: "add_drawing", arguments: .object(object))
+        let landed = AskMotion.planned(steps)
+        let order = Self.ids(try Self.drawing(landed))
+        let at = try #require(order.firstIndex(of: "trash"))
+        let inside = try #require(order.firstIndex(of: "body-inside"), "no inside drawn for the can: \(order)")
+        let body = try #require(order.firstIndex(of: "body"))
+        #expect(at < inside && inside < body, "order \(order)")
+    }
+}
+
