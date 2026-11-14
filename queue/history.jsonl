@@ -17228,3 +17228,9 @@
 {"t":"2026-11-14T02:42:10.855Z","ev":"task_walks","id":"an-animated-icon-told-as-a-little-story-moves-th","walks":["ask-animates-a-story-walk","ask-animates-a-story-without-the-word-walk"]}
 {"t":"2026-11-14T02:42:10.928Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-14T02:42:11.004Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 18 shipped 39167fc4c (the trash sinks behind the can instead of fading on its front); bar not met, 1 of 6 at reads as asked 7. Next: keep the scrap over the lid it hits, and hold it seen until it is below the rim."}
+{"t":"2026-11-14T02:42:56.955Z","ev":"task_started","id":"an-animated-icon-told-as-a-little-story-moves-th","title":"An animated icon told as a little story moves through every beat: 'the lid opens, trash is thrown in, bounces off the lid and it closes'","priority":"p1-high"}
+{"t":"2026-11-14T03:17:44.601Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-14T04:12:18.369Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-14T04:12:18.442Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-14T04:12:18.515Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
+{"t":"2026-11-14T04:12:18.589Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 19: hits placed against lines as drawn (667a684fd) and a part already behind a container gets its inside (1c857f5e8); story bar (5 of 6 at 7) not met, 1 of 6; story total 64.3"}

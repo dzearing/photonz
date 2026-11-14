@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <clipPath id="clip-1">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <g>
+    <g clip-path="url(#clip-1)">
+      <g opacity="0">
+        <animate attributeName="opacity" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.333;0.367;0.8;0.867;1" values="0;0;1;1;0;0"/>
+        <g>
+          <animateTransform attributeName="transform" type="translate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 1 1;0 0 0.2 1;0 0 1 1;0 0 1 1;0.4 0 0.2 1" keyTimes="0;0.333;0.533;0.633;0.866;0.867;1" values="0 0;8.862 -3.81;-4.432 1.905;-5.49 6.275;-5.49 6.275;-5.49 6.275;0 0"/>
+          <g transform="translate(16 5.5)">
+            <path d="M0.5 0 L3 1 L2.5 2.5 L0 2 L0.5 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          </g>
+        </g>
+      </g>
+      <g transform="translate(6.5 10.5)">
+        <path d="M0 0 L1 9.5 C1 10.023 0.977 10 1.5 10 L9.5 10 C10.023 10 10 10.023 10 9.5 L11 0 L0 0 Z" fill="#FFFFFF"/>
+        <path d="M0 0 L1 9.5 C1 10.023 0.977 10 1.5 10 L9.5 10 C10.023 10 10 10.023 10 9.5 L11 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(3 2.5)" d="M0 0 L0.5 5.5" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path transform="translate(7.5 2.5)" d="M0.5 0 L0 5.5" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g transform="rotate(0 5.725 10.431)">
+        <animateTransform attributeName="transform" type="rotate" dur="1500ms" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0 0 1 1;0 0 0.2 1;0 0 1 1;0 0 1 1;0.4 0 0.2 1;0 0 1 1;0 0 1 1" keyTimes="0;0.133;0.133;0.333;0.533;0.533;0.633;0.999;1" values="0 5.725 10.431;0 5.725 10.431;0 5.725 10.431;-39.099 5.725 10.431;-39.099 5.725 10.431;-39.099 5.725 10.431;0 5.725 10.431;0 5.725 10.431;0 5.725 10.431"/>
+        <g transform="translate(5.5 9)">
+          <path transform="translate(0 1.5)" d="M0 0 L13 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path transform="translate(5.5 0)" d="M0 0 L2 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+{
+  "feature": "An animated icon told as a little story: the trash meets the lid instead of cutting through it",
+  "epic": "icon-svg",
+  "summary": "In your trash sentence the thrown scrap now meets the lid's underside without its line sinking into the lid's line, and it drops in behind the can's front even when Ask draws the scrap first. The bar (five of six stories reading as asked) is still not met: one of six this pass (the bell).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-14-story-trash-pass19-playing-sc.png" },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return, wait about five minutes, press Space." },
+    { "do": "Watch your sentence's reel from this pass's walk, two laps.", "shot": "2026-11-14-story-trash-pass19-two-laps.gif" },
+    { "do": "Read its frames, 0.05 s apart: lid opens 0.25 s, thrown in from the right 0.55 s, meets the lid 0.8 s, behind the rim 0.85 s, lid shut 0.9 s.", "shot": "2026-11-14-story-trash-pass19-two-laps.png" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-14-story-trash-pass19.svg" },
+    { "do": "Compare the first walk this pass, before the second fix: the scrap shows through the can and sits on its front as it fades.", "shot": "2026-11-14-story-trash-pass19-walk-one.png" },
+    { "do": "Compare the story eval's own trash plan this pass: the hit is clean, but the agent's mend parks the scrap at the mouth until 1.1 s.", "shot": "2026-11-14-story-trash-pass19-eval.png" }
+  ],
+  "evaluate": [
+    "At 0.8 s does the scrap read as hitting the lid, rather than passing through it?",
+    "Is the hit too quick to read as a bounce, at 24 and 48 points?",
+    "Does the scrap dropping behind the rim as the lid shuts read as the lid shutting because of it?"
+  ],
+  "rough": [
+    "No mock covers what Ask makes for this request; the reel is judged against your sentence.",
+    "The bounce is still a glance off the lid, not a rebound you can see; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "In the eval's run the agent's own mend keyed the scrap still on the lid for 0.15 s, so the lid waited and the scrap hung at the can's mouth until 1.1 s (trash reads as asked 4); this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "The agent draws the scrap filled solid in a line icon, which the judges mark down; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "The can's inside is filled white, so in the Dark preview it shows as a white tub. Left in this task's log.",
+    "Story scores this pass, reads as asked: bell 7.0, checkbox 6.9, heart 5.9, envelope 6.1, rocket 6.1, trash 4.0 (run 20261114-032205-ask, total 64.3; last pass 52.6, best before 57.7). One run each, so the swing is partly noise."
+  ]
+}

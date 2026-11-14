@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-14T02:42:11.003Z",
+  "updated": "2026-11-14T04:12:18.588Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -474,9 +474,33 @@
     {
       "t": "2026-11-14T02:42:11.002Z",
       "note": "Pass 18 shipped 39167fc4c (the trash sinks behind the can instead of fading on its front); bar not met, 1 of 6 at reads as asked 7. Next: keep the scrap over the lid it hits, and hold it seen until it is below the rim."
+    },
+    {
+      "t": "2026-11-14T02:42:56.950Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T03:17:44.599Z",
+      "note": "Pass nineteen. Cause found by replaying the eval's own trash plan (run 20261114-021418-ask, AskMotionOverTheLidEval): the hit on the lid was placed with lines at their written width (2), then the drawing's frame grew 1.275 times to make room and the app keeps an icon's line weight at 2 on the 24 grid, so every placed contact shrank into its partner: 0.35 deep as drawn in the replay, 0.84 in the eval's export (an overlap of up to 0.3 is also taken as a touch). Tried first: widening every line through the whole landing (contacts, room, throw-in, tucks); right in principle but the throw-in from off the frame was then refused for the big trash fixture (its way in grazed the open lid's wider end) and it faded in on the lid, worse than before; taken out. Shipped instead: when the frame grows, the touches are placed again on a copy of the drawing with each line as wide as the app draws it (AskMotion.drawnWidth uses IconGridLanding.weight, so a 2 in a frame grown past a third comes to 1), keys only, the drawing lands as written. Tests: AskMotionOverTheLidTests (hit as drawn within -0.1 to 0.25, was -0.35); AskMotionBounceTowards and AskMotionBounceSeen now read the walls and the hit as drawn (the old 'outside edge is a unit further' was half the written width)."
+    },
+    {
+      "t": "2026-11-14T04:12:18.367Z",
+      "note": "Measured 667a684fd, story run 20261114-032205-ask (one run, four pieces): total 64.3 (last pass 52.6; best before 57.7); reads as asked bell 7.0, checkbox 6.89, heart 5.89, envelope 6.11, rocket 6.11, trash 4.0: 1 of 6 at 7. Eval trash frames: the hit at 0.8 s now meets the lid's underside without cutting it, but the agent's mend keyed the scrap still at the hit for 0.15 s (0.8 to 0.95 s same value), the lid waited for it to get clear and the scrap hung at the can's mouth until 1.1 s (judge 4 on every look)."
+    },
+    {
+      "t": "2026-11-14T04:12:18.440Z",
+      "note": "Walk one of the user's sentence on 667a684fd (ok at Next defaults): the model drew the trash FIRST in its drawing, already behind the can's lines, so dropsBehind added no inside and the scrap showed through the can and sat on the shut can's front while it faded (1.2 to 1.3 s). Fixed test first in 1c857f5e8 (AskMotionDropsBehindTests alreadyBehind, failing before): a part already behind its container keeps its place and the container still gets its white inside. Scripts/test.sh exit 0 on both commits. Walk two on 1c857f5e8 at Next defaults ok, Copy SVG repeatCount=indefinite x3, white inside present. Pictures looked at: walk one and walk two contact sheets rendered in WebKit from the exported SVGs (walk two: lid opens 0.25 s, thrown from the right 0.55 s, meets the lid's underside 0.8 s with no overlap, behind the rim 0.85 s as the lid shuts, shut 0.9 s, nothing on the can's front after), 3-playing-sc.png (real window, playing, Lid and Trash rows keyed), and the eval trash result.png. Audit queue/audits/2026-11-14-animated-icon-story-hit-as-drawn.json, reel 2026-11-14-story-trash-pass19-two-laps.gif."
+    },
+    {
+      "t": "2026-11-14T04:12:18.513Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases read as asked at 7; this pass 1 of 6 (bell 7.0; checkbox 6.89 just under). Next levers: (1) a key the model writes at the same place right after a hit ('rests on the lid') makes the lid wait and the part hang: a hit with no bounce away should still come off what it hit (the eval trash this pass); (2) the bounce as a visible rebound; (3) the scrap drawn solid in a line icon. Rough edges with no new task (all inside this one): the white inside reads as a white tub in the Dark preview; the eval's run is one per case, so a single pass's swing is partly noise."
+    },
+    {
+      "t": "2026-11-14T04:12:18.587Z",
+      "note": "Pass 19: hits placed against lines as drawn (667a684fd) and a part already behind a container gets its inside (1c857f5e8); story bar (5 of 6 at 7) not met, 1 of 6; story total 64.3"
     }
   ],
-  "started": "2026-11-14T01:43:29.271Z",
+  "started": "2026-11-14T02:42:56.949Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
