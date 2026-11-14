@@ -1,0 +1,31 @@
+{
+  "id": "a-long-edit-with-many-zooms-shows-one-zoom-lane",
+  "title": "A long edit with many zooms shows one Zoom lane per track, not one per zoomed clip",
+  "goal": "On an edit where many clips are zoomed, the timeline stacks a separate, mostly empty Zoom row under the track for every zoomed clip, so the hour-long reference edit shows 126 of them and everything below is pushed out of sight. Show a track's zooms on as few rows as the zoom mock draws, so a long edit reads like a short one.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-14T05:52:43.720Z",
+  "updated": "2026-11-14T05:52:43.723Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-11-14 by the-timeline-of-an-hour-long-edit-scrolls-zooms: queue/audits/2026-11-14-timeline-hour-long-fit-sc.png shows three Zoom rows under V1 and more below the fold. Cause in code: Sources/Photonz/TimelineTrackRows.swift, TimelineTrackRow.lateBody, `if row.zoomedClips.contains(clip.layerID) { ZoomLane(layerID: clip.layerID, ...) }` inside the per-clip ForEach, so each zoomed clip gets a ZoomLane row (ZoomLane.swift). The reference edit (Scripts/perf/reference-edit.sh 60) carries 126 zooms. They did not show as a cost in a sample of a zoom (ZoomBarsView absent from the top frames), so this is about reading the timeline, not speed. Design question for the runner: one shared Zoom row per track (bars side by side, they never overlap in time on one track?) versus only the picked clip's rows; the mock draws a picked clip's Scale and Centre lanes.",
+  "acceptance": [
+    "On the 60 minute reference edit the timeline shows no more Zoom rows under V1 than the zoom mock (video-zoom-wt.html) draws for a picked clip, and every zoom bar is still reachable and pickable",
+    "The zoom walks (pick-several-zooms-walk, zoom-bar-scrolls-at-the-edge-walk) stay green and a walk photographs the long edit's timeline with its zooms",
+    "Picking a clip still shows its zooms where the mock puts them"
+  ],
+  "log": [
+    {
+      "t": "2026-11-14T05:52:43.722Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "pick-several-zooms-walk",
+    "zoom-bar-scrolls-at-the-edge-walk"
+  ]
+}

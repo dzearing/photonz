@@ -23078,3 +23078,9 @@ units.
   - Also: a pass that fell behind above 2x restarts `startLead` ahead (150 ms of clock) and the frames in that gap are not read one by one; the far side of a cut is looked for `comingLead` (1.5 s of clock, so 12 s of edit at 8x) and primed by the stride.
 - Walk measuring fixed, not loosened: the pace is the least-squares line through every look (`PlaybackSpeed.pace`), and allows the one 33 ms clock tick a look can find the playhead stale by (`PlaybackSpeed.wentAtSpeed`); first-to-last read 0.514 and 0.520 at 0.5x on an exact clock, and `TonePitch` no longer reads an uneven tone an octave down (220.1 Hz for the 440 tone at 1.5x in 2 of 5 runs).
 - Perf note (composite path untouched; frame reading changed above 2x only).
+
+## 2026-11-14 — Hour-long timeline, pass 1 (the-timeline-of-an-hour-long-edit-scrolls-zooms)
+
+- The speed walk had been timing ~29,000 walk-only marker views on the long timeline; speed measures now take the markers down.
+- Lanes build only what is in sight (`TimelineSight`), `layer(id:)` keeps an index, hold drifts are gathered once per document. 60 min edit: scroll 554 -> 50 ms a frame, zoom 736 -> 571 ms, playback at full rate.
+- Next: paint clips too narrow to grab as one layer per track (zoom near fit), and the graph upkeep after an edit (0.5-0.7 s). Task left pending.

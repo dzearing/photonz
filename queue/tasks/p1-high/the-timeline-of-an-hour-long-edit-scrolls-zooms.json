@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 50,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-14T04:23:37.173Z",
+  "updated": "2026-11-14T05:53:22.675Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -51,7 +51,41 @@
     {
       "t": "2026-11-14T04:23:37.169Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T05:53:06.358Z",
+      "note": "owns these walks: open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk"
+    },
+    {
+      "t": "2026-11-14T05:53:06.438Z",
+      "note": "Pass 1 (2026-11-14). Found first: the speed walk timed the probe with the walk's own markers hung, about 29,000 AppKit views on the 60 min timeline (PanelTargetAnchor 4548, HoverTargetAnchor 2055, HelpAnchor 1621, ReadoutAnchor 1465, each with its host), which a person's app does not have. Speed measures now take the markers down (PlaytestHarness .speed -> takeTheMarkersDownForATimedStep(always: true)): 374 views. Numbers on the 60 min edit, markers down, before any timeline change: zoom in 736 ms a frame, zoom out 747, scroll 554. With markers (as the old walk read it): zoom 1225/1099, scroll 901, edits trim 833 / move 780 / blade 977 / undo 837 ms longest pass."
+    },
+    {
+      "t": "2026-11-14T05:53:06.520Z",
+      "note": "Pass 1 landed: (1) TimelineSight (PhotonzCore, tested): a lane builds only the clips, linked sounds, gaps, edit points, child marks, click ticks, blade and track-select targets within the window plus half a window each side, snapped to power-of-two steps so a slow scroll reuses the same lists; picked, trimmed and in-hand clips keep their views. (2) layer(id:) answers from an index kept in DocumentDerived once a document has been asked 16 times without a write (it was 13% of a zoom frame). (3) holdDrifts gathers the picture-only holds once per document instead of walking the document per bar. After, 60 min edit: zoom in 571 ms (p95 650), zoom out 580, scroll 50 ms (p95 59); edits trim 559 / move 492 / blade 696 / undo 713 ms; playing untouched 93 pictures in 3 s (full clock rate, was 70), clip bars built per picture 0 (also 0 before). 24 timeline walks green incl. speed-walk and an-editing-session-walk; Scripts/test.sh green. Audit: queue/audits/2026-11-14-timeline-hour-long-scroll-zoom.json."
+    },
+    {
+      "t": "2026-11-14T05:53:06.599Z",
+      "note": "Still open, bars not reached: zoom near the whole-hour view (~570 ms vs 8.3 ms; every clip is in sight there, profile is ~70% SwiftUI graph upkeep for ~500 clip views + ~18% bodies; next: draw clips too narrow to grab as one painted layer per track, keeping a tap to pick); scroll 50 ms vs 8.3 (remaining cost per in-sight clip: motionStripRuler / motionStripCycleMSPastAGlide read per bar through shownDocument, and ClipPiecesBar's body); edits 0.5-0.7 s vs 16 ms (graph upkeep after a document write, same as a-long-edit-with-transitions-plays-scrubs-and-ed). Zoom lanes: one per zoomed clip (TimelineTrackRow lateBody), 126 on the 60 min edit; not a visible cost in the zoom profile; filed a-long-edit-with-many-zooms-shows-one-zoom-lane (p2) for the reading problem. Left rough, not filed: the short speed walk's baseline (short-6.json) was written with markers hung, so it is now lenient; rewrite it with Scripts/perf/speed-walk.sh --baseline once playback work settles. Measured with a timeline-only walk (/tmp, not committed) because the long-60 walk needs over an hour; to repeat, run Scripts/perf/walks/long-60.json's timeline, idleBuilds and edits steps."
+    },
+    {
+      "t": "2026-11-14T05:53:06.676Z",
+      "note": "Main was red when this ran: TextRevealUnclippedTests on CI slice 2 (run 43551236496), folded into find-out-why-the-legibility-check-once-read-the; nothing in this task touches titles."
+    },
+    {
+      "t": "2026-11-14T05:53:22.674Z",
+      "note": "Pass 1 landed 602579415: scroll on the 60 min edit 554 -> 50 ms a frame (only what is in sight is built), zoom 736 -> 571 ms, playing at full rate with 0 clip bars rebuilt. Bars not reached: zoom near the whole-hour view (needs narrow clips painted as one layer), scroll 50 vs 8.3 ms, edits 0.5-0.7 s vs 16 ms. Stays open for those."
     }
   ],
-  "started": "2026-11-14T04:23:37.168Z"
+  "started": "2026-11-14T04:23:37.168Z",
+  "walks": [
+    "open-out-the-timeline-walk",
+    "timeline-pinch-both-ways-walk",
+    "first-long-jump-when-zoomed-in-walk",
+    "clip-pictures-when-zoomed-in-walk",
+    "cut-on-the-timeline-walk",
+    "key-lanes-walk",
+    "transitions-where-clips-meet-walk",
+    "speed-walk"
+  ]
 }

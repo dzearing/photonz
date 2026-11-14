@@ -17234,3 +17234,15 @@
 {"t":"2026-11-14T04:12:18.442Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-14T04:12:18.515Z","ev":"task_note","id":"an-animated-icon-told-as-a-little-story-moves-th"}
 {"t":"2026-11-14T04:12:18.589Z","ev":"task_pending","id":"an-animated-icon-told-as-a-little-story-moves-th","from":"in_progress","note":"Pass 19: hits placed against lines as drawn (667a684fd) and a part already behind a container gets its inside (1c857f5e8); story bar (5 of 6 at 7) not met, 1 of 6; story total 64.3"}
+{"t":"2026-11-14T04:23:36.995Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":509,"of":1162,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-14T04:23:37.174Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-14T04:24:06.233Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
+{"t":"2026-11-14T04:53:29.943Z","ev":"task_created","id":"a-recording-dragged-out-of-history-lands-on-a-ne","priority":"p1-high","title":"A recording dragged out of History lands on a new video's timeline"}
+{"t":"2026-11-14T04:53:33.929Z","ev":"task_resequenced","id":"a-recording-dragged-out-of-history-lands-on-a-ne","from":4020,"to":5e-7}
+{"t":"2026-11-14T05:52:43.724Z","ev":"task_created","id":"a-long-edit-with-many-zooms-shows-one-zoom-lane","priority":"p2-normal","title":"A long edit with many zooms shows one Zoom lane per track, not one per zoomed clip"}
+{"t":"2026-11-14T05:53:06.360Z","ev":"task_walks","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","walks":["open-out-the-timeline-walk","timeline-pinch-both-ways-walk","first-long-jump-when-zoomed-in-walk","clip-pictures-when-zoomed-in-walk","cut-on-the-timeline-walk","key-lanes-walk","transitions-where-clips-meet-walk","speed-walk"]}
+{"t":"2026-11-14T05:53:06.440Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-14T05:53:06.522Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-14T05:53:06.601Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-14T05:53:06.678Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-14T05:53:22.676Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 1 landed 602579415: scroll on the 60 min edit 554 -> 50 ms a frame (only what is in sight is built), zoom 736 -> 571 ms, playing at full rate with 0 clip bars rebuilt. Bars not reached: zoom near the whole-hour view (needs narrow clips painted as one layer), scroll 50 vs 8.3 ms, edits 0.5-0.7 s vs 16 ms. Stays open for those."}

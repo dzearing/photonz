@@ -1,0 +1,36 @@
+{
+  "feature": "The timeline of an hour-long edit: scrolling and zooming",
+  "epic": "video-perf",
+  "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
+  "summary": "Scrolling along the hour-long reference edit's timeline went from about half a second a frame to about 50 ms, because the timeline now builds only the clips, cuts and gaps near what is on screen. Zooming near the whole-edit view is still slow (about 570 ms a frame), so this task stays open.",
+  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60.",
+  "switched": {},
+  "try": [
+    { "do": "Run Scripts/perf/reference-edit.sh 60 and wait for the edit to open.", "shot": "2026-11-14-timeline-hour-long-fit-sc.png" },
+    { "do": "Pinch the timeline in until about a minute shows, then two-finger scroll along it end to end." },
+    { "do": "Pinch back out to the whole hour and watch how the timeline keeps up." },
+    { "do": "Press Space and watch the playhead run along the zoomed-in timeline." },
+    { "do": "Trim the end of a clip ahead of the playhead while it plays, then press Command-Z." }
+  ],
+  "evaluate": [
+    "Does scrolling along the zoomed-in hour feel smooth enough to work in now?",
+    "Is zooming out to the whole hour slow enough that you would avoid doing it?",
+    "Does the timeline look exactly as it did before at every zoom (clips, cuts, gaps, ticks)?",
+    "Are the stacked Zoom lanes under V1 (one per zoomed clip) something you want gone on long edits?"
+  ],
+  "measured": [
+    "Measured with a timeline walk on the 60 minute reference edit (524 clips, 377 cuts, 126 zooms), the speed walk's timeline, idleBuilds and edits measures, on this Mac at 120 Hz.",
+    "Before, as the speed walk used to measure it (with the walk's own markers hung, about 29,000 AppKit views in the window): zoom in 1225 ms a frame, zoom out 1099 ms, scroll 901 ms; edits while playing, longest main thread pass: trim 833 ms, move 780 ms, blade 977 ms, undo 837 ms.",
+    "The speed walk now takes the walk's markers down for every speed measure, as a person's app has none (374 AppKit views in the window). Before any timeline change, measured that way: zoom in 736 ms a frame, zoom out 747 ms, scroll 554 ms.",
+    "After: zoom in 571 ms a frame (p95 650), zoom out 580 ms (p95 759), scroll 50 ms (p95 59, worst 68). No frame meets 8.3 ms yet.",
+    "After, edits while playing, longest main thread pass: trim 559 ms, move 492 ms, blade 696 ms, undo 713 ms (bar: 16 ms).",
+    "Playing with nothing edited: 93 new pictures in 3 s (the clock's full rate; 70 before), and clip bars built per new picture: 0 before and after; only the panel's Time section, 0.01 a picture.",
+    "Where a zoom frame's time goes now (sample, main thread): about 70% SwiftUI's graph upkeep for the ~500 clip views on screen at the whole-hour view, about 18% their bodies; the layer-by-id search (13% before) and the hold-drift walk per bar are gone from the profile."
+  ],
+  "rough": [
+    "Zooming near the whole-hour view is still about 570 ms a frame: every clip is on screen there, so building only what is in sight does not help. The next step, still this task's: draw clips too narrow to grab as one painted layer per track instead of a view each.",
+    "Edits on the hour-long edit still hold the main thread 0.5 to 0.7 s against the 16 ms bar; the cause is the same graph upkeep after a document write that a-long-edit-with-transitions-plays-scrubs-and-ed names for the 6 minute edit.",
+    "Every zoomed clip gets its own Zoom lane under its track, so the hour-long edit stacks 126 near-empty lanes; they did not show as a cost in the profile, but they push everything below them out of sight. Filed as a-long-edit-with-many-zooms-shows-one-zoom-lane.",
+    "Every speed walk number before 2026-11-14 was measured with the walk's markers hung, which made timeline numbers about half again slower than a person's app; the short walk's baseline was not rewritten, since it only fails on a worse number."
+  ]
+}
