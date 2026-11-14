@@ -149,3 +149,55 @@ extension AskMotionInBeforeShutTests {
         #expect(apart, "never came away from the lid")
     }
 }
+
+/// The story eval's trash on pass seventeen (run 20261114-001632-ask): the
+/// lid shut on Ease out back, the hit near the hinge, only the hit keyed as
+/// touching. The trash sat on the shut lid at 0.9 to 1.1 s and sank through it.
+enum AskMotionInBeforeShutEval {
+    static let bin = ##"<svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g id="bin"><path id="body" d="M5 9 L6 20 Q6 21 7 21 L17 21 Q18 21 18 20 L19 9"/><line id="rib-left" x1="9" y1="12" x2="9.5" y2="18"/><line id="rib-right" x1="15" y1="12" x2="14.5" y2="18"/></g><g id="lid"><line id="lid-bar" x1="4" y1="7" x2="20" y2="7"/><line id="lid-knob" x1="11" y1="5" x2="13" y2="5"/></g><path id="trash" d="M19 2 L22 3 L21 5 L18 4 Z"/></svg>"##
+    static let moves = #"[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"value":{"x":-10,"y":4}},{"seconds":0.95,"value":{"x":-10,"y":2}},{"seconds":1.2,"value":{"x":-10,"y":8}},{"seconds":1.5,"value":{"x":0,"y":0}}]"#
+    static let touching = #"[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"touches":"lid","value":{"x":-10,"y":4}},{"seconds":0.95,"value":{"x":-10,"y":2}},{"seconds":1.2,"value":{"x":-10,"y":8}},{"seconds":1.5,"value":{"x":0,"y":0}}]"#
+
+    static func steps() throws -> [AskStep] {
+        let args = AskMotionInBeforeShutWalk.args
+        return [AskStep(tool: "add_drawing", arguments: ["icon": true, "subject": "trash bin with openable lid", "svg": .string(bin)]),
+                AskStep(tool: "set_timing", arguments: ["loop": true, "seconds": .number(1.5)]),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"curve":"Hold","seconds":0,"value":0},{"curve":"Ease out","seconds":0.2,"value":0},{"curve":"Hold","seconds":0.5,"value":-50},{"curve":"Ease out back","seconds":0.8,"value":-50},{"curve":"Hold","seconds":0.95,"value":0},{"seconds":1.5,"value":0}],"layer":"$1/lid","pivot":{"x":4,"y":7},"property":"rotation"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(moves),"layer":"$1/trash","property":"position"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":100},{"seconds":0.5,"value":100},{"seconds":1.2,"value":100},{"seconds":1.35,"value":0},{"seconds":1.5,"value":0}],"layer":"$1/trash","property":"opacity"}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(moves),"layer":"$1/trash","property":"position","replace":true}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":[{"seconds":0,"value":100},{"seconds":0.5,"value":100},{"seconds":1.2,"value":100},{"seconds":1.35,"value":0},{"seconds":1.5,"value":100}],"layer":"$1/trash","property":"opacity","replace":true}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(touching),"layer":"$1/trash","property":"position","replace":true}"#)),
+                AskStep(tool: "set_keys", arguments: try args(#"{"keys":\#(moves),"layer":"$1/trash","property":"position","replace":true}"#))]
+    }
+}
+
+extension AskMotionInBeforeShutTests {
+    @Test("The eval's frames, written out on request",
+          .enabled(if: ProcessInfo.processInfo.environment["PHOTONZ_LAP_DUMP3"] != nil))
+    func dumpEval() throws {
+        let path = try #require(ProcessInfo.processInfo.environment["PHOTONZ_LAP_DUMP3"])
+        let landed = AskMotion.planned(try AskMotionInBeforeShutEval.steps())
+        for step in landed where step.tool == "set_keys" { print("LANDED", step.arguments.encodedString()) }
+        try LapDump.write(landed, to: path, frames: 48)
+    }
+}
+
+extension AskMotionInBeforeShutTests {
+    /// The lid slammed down on Ease out back through the trash it was hit
+    /// by, and the trash sank through the shut lid: touching it for longer
+    /// than a hit is going through it.
+    @Test("The eval's trash: in under the slamming lid, never through it after the hit")
+    func evalInBeforeShut() throws {
+        let landed = AskMotion.planned(try AskMotionInBeforeShutEval.steps())
+        let lap = try #require(AskMotion.Lap(landed))
+        var moment = 0.8 + AskMotion.hitGrace + 0.01
+        while moment < 1.5 {
+            if lap.placed("trash", at: moment)?.seen ?? false {
+                #expect(!AskMotion.inkMeets(lap.ink("trash", at: moment), lap.ink("lid", at: moment), within: -AskMotion.passesThrough),
+                        "through the lid at \(moment)")
+            }
+            moment += 0.01
+        }
+    }
+}

@@ -8,6 +8,9 @@ extension AskMotion {
     /// The shortest the way in from where the part was as the closer began
     /// to shut may take, in seconds.
     static let shortestWayIn = 0.08
+    /// How long after the closer sets off the part may still be touching it
+    /// at the hit, in seconds.
+    static let hitGrace = 0.05
 
     /// `steps` with a part that goes out of sight where it lands, and passes
     /// through another moving part (a closer: a lid, a flap, a door) while
@@ -68,9 +71,10 @@ extension AskMotion {
                 guard shut < lapEnd - tick, setsOff < shut - tick, landedAt > shut + 0.0005, setsOff < landedAt,
                       let from = point(AskMotionCheck.value(of: out[index], at: setsOff)) else { continue }
                 // Through the closer while seen. Meeting it as the closer sets
-                // off is the hit itself (placed touching it): only meeting it
-                // again, once the two have come apart, counts, and a part that
-                // never comes away from it before it is gone has gone through.
+                // off is the hit itself (placed touching it), for `hitGrace`
+                // at most: meeting it again once the two have come apart, or
+                // staying in it longer (a lid slamming down through what hit
+                // it, the eval of 2026-11-13), counts.
                 func through(_ made: [AskStep]) -> Bool {
                     guard let lap = Lap(made) else { return true }
                     var moment = setsOff + tick
@@ -78,7 +82,7 @@ extension AskMotion {
                     while moment < lapEnd - 0.0005 {
                         guard lap.placed(part, at: moment)?.seen ?? true else { return hitting }
                         let meets = inkMeets(lap.ink(part, at: moment), lap.ink(closer, at: moment), within: -passesThrough)
-                        if meets, !hitting { return true }
+                        if meets, !hitting || moment > setsOff + hitGrace + 0.0005 { return true }
                         if !meets { hitting = false }
                         moment += tick
                     }
