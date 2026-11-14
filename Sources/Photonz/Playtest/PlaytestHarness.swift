@@ -353,8 +353,8 @@ private final class Run {
     /// them, so the stopwatch zeroed next reads the click and not the
     /// teardown (`PlaytestSetup.timedWithoutMarkers`). The next step puts them
     /// back up before it looks for anything (`putTheMarkersBackUp`).
-    private func takeTheMarkersDownForATimedStep() async {
-        guard timesWithoutMarkers, PlaytestMarkers.areHung, !PlaytestMarkerHold.shared.isDown else { return }
+    private func takeTheMarkersDownForATimedStep(always: Bool = false) async {
+        guard timesWithoutMarkers || always, PlaytestMarkers.areHung, !PlaytestMarkerHold.shared.isDown else { return }
         MainThreadMeter.shared.install()
         MainThreadMeter.shared.reset()
         PlaytestMarkerHold.shared.isDown = true
@@ -3338,6 +3338,13 @@ private final class Run {
             let editor = try requireEditor()
             let probe = speedProbe ?? SpeedWalkProbe(out: out, scriptURL: scriptURL)
             speedProbe = probe
+            // Every speed measure is a stopwatch, so it runs with the walk's
+            // markers down whatever the setup says: a person's app has none,
+            // and on the hour-long edit the timeline hung about 19,000 of
+            // them (an AppKit view each, plus its host), which made every
+            // frame of a zoom or scroll cost a second (2026-11-14). The next
+            // step puts them back up.
+            await takeTheMarkersDownForATimedStep(always: true)
             do {
                 note(number, step.name, try await probe.measure(measure, editor: editor))
             } catch let failure as SpeedWalkProbe.Failure {

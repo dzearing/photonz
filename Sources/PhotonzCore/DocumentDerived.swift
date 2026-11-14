@@ -40,6 +40,22 @@ struct DocumentDerived: Hashable, Sendable {
         var trackOfLayer: [UUID: UUID]?
         var editPoints: [UUID: [TimelineEditPoint]] = [:]
         var editPointTransitions: [EditPointTransition]?
+        /// Where each layer is in the tree, one index per level, built once
+        /// the document has been asked for layers by id a few times
+        /// (`layerPath(of:)`).
+        var layerPaths: [UUID: [Int]]?
+        /// How many times this document has been asked for a layer by id
+        /// without its index.
+        var layerLookups = 0
+        /// Every hold that pushed the picture alone, where it starts and how
+        /// long it is, and the clip it is in (`holdDrifts(forLayer:)`).
+        var pictureOnlyHolds: [PictureOnlyHold]?
+    }
+
+    struct PictureOnlyHold: Sendable {
+        let layerID: UUID
+        let atMS: Int
+        let lengthMS: Int
     }
 
     final class Store: Sendable {
@@ -59,6 +75,46 @@ struct DocumentDerived: Hashable, Sendable {
         let made = make()
         store.answers.withLock { $0[keyPath: path] = made }
         return made
+    }
+
+    /// How many lookups by id a document answers by walking its tree before
+    /// it builds the index: a document read once after each edit (most
+    /// commands) never pays for one, and one read over and over (every bar
+    /// and cut of a long timeline on every frame) pays once.
+    static let lookupsBeforeIndex = 16
+
+    /// Where the layer is, when the index is built: `.some(nil)` when the
+    /// index says the layer is not in the tree, nil when there is no index
+    /// yet. The index is built from `layers` the moment enough lookups have
+    /// been counted.
+    func layerPath(of id: UUID, in layers: [Layer]) -> [Int]?? {
+        let index: [UUID: [Int]]? = store.answers.withLock { answers in
+            if answers.layerPaths == nil {
+                answers.layerLookups += 1
+                guard answers.layerLookups > Self.lookupsBeforeIndex else { return nil }
+            }
+            return answers.layerPaths ?? [:]
+        }
+        guard var index else { return nil }
+        if index.isEmpty, !layers.isEmpty {
+            index = Self.paths(of: layers)
+            let made = index
+            store.answers.withLock { $0.layerPaths = made }
+        }
+        return .some(index[id])
+    }
+
+    static func paths(of layers: [Layer]) -> [UUID: [Int]] {
+        var found: [UUID: [Int]] = [:]
+        func walk(_ list: [Layer], _ prefix: [Int]) {
+            for index in list.indices {
+                let path = prefix + [index]
+                found[list[index].id] = path
+                if case .group(let group) = list[index].content { walk(group.children, path) }
+            }
+        }
+        walk(layers, [])
+        return found
     }
 
     /// The edit points on one track, kept per track.

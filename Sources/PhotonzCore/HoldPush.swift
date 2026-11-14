@@ -265,28 +265,33 @@ extension PhotonzDocument {
     /// thing that can give a bar a drift mark. Asked once per draw of the
     /// timeline, so the 170 bars of a captioned talk need not each ask
     /// `holdDrifts` when the answer is none.
-    public var hasPictureOnlyHolds: Bool {
-        var found = false
-        forEachLayer { layer in
-            guard !found, let pieces = layer.clipPieces else { return }
-            found = (0..<pieces.count).contains { pieces.piece(at: $0)?.holdPush == .thisTrack }
+    public var hasPictureOnlyHolds: Bool { !pictureOnlyHolds.isEmpty }
+
+    /// Every hold that pushed the picture alone, gathered once per document.
+    var pictureOnlyHolds: [DocumentDerived.PictureOnlyHold] {
+        derived.answer(\.pictureOnlyHolds) {
+            var holds: [DocumentDerived.PictureOnlyHold] = []
+            forEachLayer { other in
+                guard let theirTime = other.time, let pieces = other.clipPieces else { return }
+                for index in 0..<pieces.count {
+                    guard let piece = pieces.piece(at: index), piece.holdPush == .thisTrack,
+                          let range = pieces.rangeMS(ofPiece: index) else { continue }
+                    holds.append(.init(layerID: other.id, atMS: theirTime.inMS + range.start,
+                                       lengthMS: piece.lengthMS))
+                }
+            }
+            return holds
         }
-        return found
     }
 
     public func holdDrifts(forLayer id: UUID) -> [HoldDrift] {
-        guard let time = layer(id: id)?.time else { return [] }
-        var holds: [(atMS: Int, lengthMS: Int)] = []
-        forEachLayer { other in
-            guard other.id != id, let theirTime = other.time, let pieces = other.clipPieces else { return }
-            for index in 0..<pieces.count {
-                guard let piece = pieces.piece(at: index), piece.holdPush == .thisTrack,
-                      let range = pieces.rangeMS(ofPiece: index) else { continue }
-                let start = theirTime.inMS + range.start
-                guard start > time.inMS, start < time.outMS else { continue }
-                holds.append((start, piece.lengthMS))
-            }
-        }
+        // Every bar on the timeline asks, so the holds are gathered once per
+        // document (`DocumentDerived`): gathered per bar, an hour-long edit's
+        // 524 bars each walked the whole document (2026-11-14).
+        let every = pictureOnlyHolds
+        guard !every.isEmpty, let time = layer(id: id)?.time else { return [] }
+        let holds = every.filter { $0.layerID != id && $0.atMS > time.inMS && $0.atMS < time.outMS }
+            .map { (atMS: $0.atMS, lengthMS: $0.lengthMS) }
         var running = 0
         return holds.sorted { $0.atMS < $1.atMS }.map { hold in
             running += hold.lengthMS

@@ -363,7 +363,16 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // ...and then the component library, so an original is found by id the
         // way every model command already finds a layer. The canvas never asks
         // for one: nothing in the picture carries an original's id.
-        return search(layers) ?? (componentOriginals.isEmpty ? nil : search(componentOriginals))
+        func originals() -> Layer? { componentOriginals.isEmpty ? nil : search(componentOriginals) }
+        // A document asked again and again keeps where each layer is
+        // (`DocumentDerived.layerPath`): on the hour-long reference edit the
+        // timeline's bars and cuts asked this thousands of times a frame, and
+        // the walk was an eighth of the main thread (2026-11-14).
+        if let indexed = derived.layerPath(of: id, in: layers) {
+            guard let path = indexed else { return originals() }
+            return layer(atPath: path)
+        }
+        return search(layers) ?? originals()
     }
 
     /// The layer's slot in the TOP-LEVEL stack. Nil for a layer that lives

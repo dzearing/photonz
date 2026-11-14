@@ -366,9 +366,17 @@ final class SpeedWalkProbe {
         let length = Double(editor.documentLengthMS)
         editor.fitTimeline()
         await settle(editor, frames: frames)
+        let viewsAtFit = Self.viewCensus(editor)
 
+        // How many clip bars each frame built, per measure, for the line.
+        var barsPerFrame: [String] = []
         func film(_ label: String, moves: Int, _ move: () -> Bool) async -> SpeedWalk.FrameTimes {
+            ViewBuildMeter.shared.reset()
             var at: [Double] = []
+            defer {
+                let built = ViewBuildMeter.shared.count(.clipBar)
+                barsPerFrame.append(String(format: "%@ %.0f", label, Double(built) / Double(max(1, at.count - 1))))
+            }
             let start = CACurrentMediaTime()
             await frames.next()
             at.append(0)
@@ -403,12 +411,30 @@ final class SpeedWalkProbe {
             editor.panTimeline(byMS: scrollable / Double(moves))
             return true
         }
+        let viewsZoomed = Self.viewCensus(editor)
         editor.fitTimeline()
         run.timeline = [zoomIn, zoomOut, scroll]
-        return [zoomIn, zoomOut, scroll].map {
+        return "views at fit: \(viewsAtFit); views zoomed in: \(viewsZoomed); clip bars built a frame: "
+            + barsPerFrame.joined(separator: ", ") + "; " + [zoomIn, zoomOut, scroll].map {
             String(format: "%@: %d frames, median %.1fms, p95 %.1fms, worst %.0fms, %d late against %.1fms",
                    $0.label, $0.frames, $0.medianMS, $0.p95MS, $0.worstMS, $0.late, $0.refreshMS)
         }.joined(separator: "; ")
+    }
+
+    /// How many AppKit views the window holds, by class, most first: a
+    /// timeline that hangs a view per clip shows here first (2026-11-14).
+    static func viewCensus(_ editor: EditorState) -> String {
+        guard let root = editor.hostWindow?.contentView else { return "no window" }
+        var counts: [String: Int] = [:]
+        var total = 0
+        func walk(_ v: NSView) {
+            total += 1
+            counts[String(describing: type(of: v)), default: 0] += 1
+            v.subviews.forEach(walk)
+        }
+        walk(root)
+        return "\(total) views: " + counts.sorted { $0.value > $1.value }.prefix(8)
+            .map { "\($0.key) \($0.value)" }.joined(separator: ", ")
     }
 
     // MARK: - Memory

@@ -484,11 +484,30 @@ struct TimelineTrackRow: View {
     /// The lane's own space, which a press on a gap is read in.
     static func laneSpace(_ track: UUID) -> String { "timeline-lane-\(track.uuidString)" }
 
+    /// The clips on this track that keep their views out of sight: picked,
+    /// being trimmed, or in a hand.
+    private var keptOutOfSight: Set<UUID> {
+        var kept = editorState.clipBarInHandIDs
+        if let trimmed = editorState.trimSession?.layerID { kept.insert(trimmed) }
+        for clip in row.clips + row.linked where editorState.isLayerSelected(clip.layerID) {
+            kept.insert(clip.layerID)
+        }
+        return kept
+    }
+
     private var lane: some View {
         #if PHOTONZ_PLAYTEST
         ViewBuildMeter.shared.built(.trackLane)
         #endif
         let ruler = editorState.motionStripRuler
+        // Only what is in sight, and half a window each side, is built: on
+        // the hour-long reference edit a lane of every clip, gap and cut made
+        // each frame of a zoom or scroll cost most of a second
+        // (`TimelineSight`). A clip picked, trimmed or in a hand keeps its
+        // view wherever it is, since its drag lives there.
+        let sight = TimelineSight(ruler: ruler)
+        let kept = keptOutOfSight
+        let clipsInSight = sight.clips(row.clips, keeping: kept)
         return ZStack(alignment: .topLeading) {
             // The same wash as the header's, so a picked track reads as one
             // thing from its name to the end of its lane.
@@ -513,7 +532,7 @@ struct TimelineTrackRow: View {
             // right-click menu that leads with Ripple Delete, as Premiere's
             // does (`EditorState+TimelineGap`). The press is read in the
             // lane's space, so a click or a box starting here is the lane's.
-            ForEach(editorState.timelineGaps(onTrack: track), id: \.range.lowerBound) { gap in
+            ForEach(sight.gaps(editorState.timelineGaps(onTrack: track)), id: \.range.lowerBound) { gap in
                 let x0 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.lowerBound))), 1)
                 let x1 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.upperBound))), 1)
                 if x1 - x0 >= 1 {
@@ -544,7 +563,7 @@ struct TimelineTrackRow: View {
                 .allowsHitTesting(!track.isLocked)
             }
             let paintedIDs = Set(painted.map(\.id))
-            ForEach(row.clips.filter { !paintedIDs.contains($0.id) }) { clip in
+            ForEach(clipsInSight.filter { !paintedIDs.contains($0.id) }) { clip in
                 TimelineClipView(group: clip, laneWidth: laneWidth, height: pictureHeight(of: clip),
                                  half: carriesItsSound(clip) ? .picture(soundHeight: halves.sound) : .whole,
                                  alternate: alternates.contains(clip.id), isCaptionCue: row.isCaptions,
@@ -557,26 +576,26 @@ struct TimelineTrackRow: View {
             // fall, faint along the foot of its bar, so there is plainly
             // something inside to open and retime (`TimelineChildMarks`).
             if !row.isCaptions {
-                ForEach(row.clips) { clip in
+                ForEach(clipsInSight) { clip in
                     TimelineChildMarks(layerID: clip.layerID, laneWidth: laneWidth, height: pictureHeight(of: clip))
                 }
             }
             // Each click of a recording, as a tick along the foot of its bar
             // (`ClickTicksView`).
             if editorState.canWorkWithClickEffects, !isBlade, !isTrackSelect, !row.isCaptions {
-                ForEach(row.clips) { clip in
+                ForEach(clipsInSight) { clip in
                     ClickTicksView(layerID: clip.layerID, laneWidth: laneWidth, height: pictureHeight(of: clip),
                                    isLocked: track.isLocked)
                 }
             }
             if isBlade, !track.isLocked {
-                ForEach(row.clips) { clip in
+                ForEach(clipsInSight) { clip in
                     TimelineBlade(group: clip, laneWidth: laneWidth)
                         .frame(height: pictureHeight(of: clip))
                 }
             }
             if isTrackSelect, !track.isLocked {
-                ForEach(row.clips) { clip in
+                ForEach(clipsInSight) { clip in
                     TimelineTrackSelect(group: clip, laneWidth: laneWidth)
                         .frame(height: pictureHeight(of: clip))
                 }
@@ -584,7 +603,7 @@ struct TimelineTrackRow: View {
             // A clip's own sound: the bottom half of the clip, its bar a second
             // time as sound, so every drag on it is a drag on the clip and the
             // two never part until Detach Audio.
-            ForEach(row.linked) { clip in
+            ForEach(sight.clips(row.linked, keeping: kept)) { clip in
                 TimelineClipView(group: clip, laneWidth: laneWidth, height: halves.sound, half: .sound,
                                  isLinkedSound: true, soundNumber: row.soundNumber,
                                  soundIsMuted: row.soundIsMuted, soundIsOff: row.soundIsOff)
@@ -603,7 +622,7 @@ struct TimelineTrackRow: View {
                 }
             }
             if !isBlade, !isTrackSelect {
-                ForEach(editorState.document?.editPoints(onTrack: track.id) ?? []) { point in
+                ForEach(sight.editPoints(editorState.document?.editPoints(onTrack: track.id) ?? [])) { point in
                     TimelineSpareStrips(point: point, laneWidth: laneWidth, height: laneHeight)
                     TimelineEditPointView(point: point, laneWidth: laneWidth, height: laneHeight)
                         .allowsHitTesting(!track.isLocked)
