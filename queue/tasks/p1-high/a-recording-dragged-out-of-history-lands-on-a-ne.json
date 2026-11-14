@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 5e-7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T04:53:29.939Z",
-  "updated": "2026-11-14T04:53:33.928Z",
+  "updated": "2026-11-14T06:47:47.751Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-13: \"i create a new video and i can't drag any videos from history into the timeline\". Targets Next (current defaults).\n\nREPRODUCED from the user's own drags in the Dev app (pid 15767, launched 20:12, log process name reads 'Photonz Probe'): `log show --predicate 'category == \"timeline-drop\"'` at 20:51:48 to 20:52:04 shows five drags, each 'a drag came over the timeline ... 1 carrying a file' then 'the file on that drag could not be read', then 'let go over the timeline ..., the ghost saying nothing'. So the drop reaches TimelineFileDropDelegate (Sources/Photonz/TimelineLaneDrop.swift:126-132) and FileDrop.fileURL (Sources/Photonz/FileDrop.swift:149) returns nil on all three of its paths: loadObject(URL), draggedFile() (CaptureThumbnailView.lifted, which must exist on disk), and a movie/audio/image file representation.\n\nRegression of f2f9ac1f8 (2026-10-28, 'A real History drag lands on the timeline'), which fixed exactly this by remembering the lifted tile (CaptureThumbnailView.swift:90-110). Later commits that touched this area: 087b8cb7f (History drag picture gives way to the ghost), 500f13636, c771adfbb. NOT confirmed which broke it.\n\nSuspects, not causes (verify each): (1) draggedFile() reads CaptureThumbnailView.lifted, set inside dragPayload; something may clear it, or the History tile the user drags may no longer be a CaptureThumbnailView .onDrag (check HistoryOverlay.swift:644 and HistoryDragPicture.swift:39, and whether Next has a different History surface); (2) store.fileURL(for:) is just entry.url (CaptureStore.swift:756): the entry may point at a file that does not exist (an edit sidecar, a renamed or moved recording) so fileExists fails; (3) the whenWritten path promises the file with no URL object, so it only works through the in-place representation; (4) the file-representation fallback filters to .movie/.audio/.image, and provider.registeredTypeIdentifiers on the receiving side may only list a promise type. Add a log line naming which path failed and the URL tried before guessing.\n\nTrap: the walk passed when f2f9ac1f8 landed and probably still passes; walks build their payload through playtestTarget (CaptureThumbnailView.swift:81-83), not through AppKit's drag pasteboard, so a green walk proves nothing about a real drag. Confirm with a real drag (the walk 'windowDrag' kind or by hand) before closing.",
@@ -28,6 +28,40 @@
     {
       "t": "2026-11-14T04:53:33.927Z",
       "note": "seq 4020 -> 5e-7"
+    },
+    {
+      "t": "2026-11-14T05:54:06.324Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T06:15:21.410Z",
+      "note": "CAUSE NAMED: the user's drags at 20:51-20:52 began in ANOTHER Photonz. The unified log shows the drag server session opened by Photonz[38272] (/Applications/Photonz.app, the release, running since Nov 6) and the drop in Photonz Probe[15767]. Shift-Cmd-H is a system-wide shortcut held by exactly one running Photonz (CaptureShortcutOwner: the probe never claims it), so History opened in the release app and the drag crossed processes. CaptureThumbnailView.lifted is per-process, so the 10-28 fix cannot help, and SwiftUI's receiving provider offers no types at all. The drag pasteboard still held that drag (read with a swift script): public.url = ~/Pictures/Screenshots/Recording 2026-10-28 at 14.21.13.mp4 (the History file), public.file-url = ~/Library/Caches/com.apple.SwiftUI.Drag-<uuid>/same name (a copy SwiftUI made), plus promise types and the movie bytes. Real-mouse reproduction by me was not possible: this terminal has neither Accessibility nor post-event access (AXIsProcessTrusted false, CGPreflightPostEventAccess false), and a walk's windowDrag cannot start a drag session that crosses windows or apps. The user's own logged drags are the reproduction."
+    },
+    {
+      "t": "2026-11-14T06:15:21.494Z",
+      "note": "Chose a receiver-side fix (read the file off the drag pasteboard during a real drop, the History file first) over changing what History tiles hand out, because the drag source in the user's case is the installed release build, which will keep sending this shape until it updates; and changing the source to a plain file link risks Finder moving a recording out of History on a drag to the Desktop, which I cannot test without a real pointer."
+    },
+    {
+      "t": "2026-11-14T06:15:21.572Z",
+      "note": "owns these walks: a-history-tile-from-another-photonz-lands-walk, a-history-clip-drops-where-let-go-walk"
+    },
+    {
+      "t": "2026-11-14T06:47:42.110Z",
+      "note": "left rough: History opens in whichever Photonz holds Shift-Cmd-H (the newest launched), so with two copies running a double click on a History tile opens it in the other copy. By design (CaptureShortcutOwner); not filed, since nobody has complained of it."
+    },
+    {
+      "t": "2026-11-14T06:47:42.191Z",
+      "note": "left rough: every cross-app SwiftUI History drag leaves a copy of the file in ~/Library/Caches/com.apple.SwiftUI.Drag-* (six such folders, oldest July). Made by SwiftUI in the source app, not by this fix; not filed (cache folder, a person would not notice)."
+    },
+    {
+      "t": "2026-11-14T06:47:47.749Z",
+      "note": "Cause: the user's drags began in the installed Photonz (Shift-Cmd-H opened ITS History) and were dropped on another copy's timeline; the item provider offered nothing and the remembered tile is per process. FileDrop now reads the file off the drag pasteboard during a real drop, the History file rather than SwiftUI's cache copy, never during a walk; the timeline-drop log names where it was read from. Walk a-history-tile-from-another-photonz-lands-walk fails like the real drag with the fix out and passes with it (recording on a new video, on a video with a clip, a screenshot); 8 other drop walks and Scripts/test.sh green. Commit 68b401457. Not confirmed with a real pointer (no agent here can post one): the audit asks the user to try it."
     }
-  ]
+  ],
+  "started": "2026-11-14T05:54:06.323Z",
+  "walks": [
+    "a-history-tile-from-another-photonz-lands-walk",
+    "a-history-clip-drops-where-let-go-walk"
+  ],
+  "completed": "2026-11-14T06:47:47.750Z"
 }
