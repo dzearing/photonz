@@ -4,12 +4,12 @@
   "goal": "With a moderately complex 6 minute video with transitions, performance tanked: playback, scrubbing and editing all slowed. Build a reference edit and a perf harness that measures it the way a person uses it, find where the time goes, and fix the biggest costs until playback, scrubbing and editing meet the video-perf objective's numbers. Then file the remaining costs as follow-up tasks under video-perf, each with its own measured bar.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 10,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-14T12:09:54.792Z",
+  "updated": "2026-11-14T15:05:07.735Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -158,6 +158,10 @@
     {
       "t": "2026-11-14T12:09:54.791Z",
       "note": "Pass 4 landed cbfda886b: edits while playing trim 87->33, blade 223->85, undo 119->62 ms (repeated trims/moves ~18-20); play 1 dropped a minute. Bars not reached: edits <=16 ms, scrub within 1 frame, no dropped frames. Stays open."
+    },
+    {
+      "t": "2026-11-14T15:05:07.734Z",
+      "note": "seq 10 -> 20"
     }
   ],
   "started": "2026-11-14T10:03:30.238Z",

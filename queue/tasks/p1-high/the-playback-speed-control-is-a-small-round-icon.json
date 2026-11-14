@@ -4,12 +4,12 @@
   "goal": "The speed picker on the video play bar is a wide dropdown that takes too much room. Make it a round icon button the same size and look as the Go to Start and Go to End buttons beside it, opening the same list of speeds, so the play bar stays compact.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 6e-7,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T15:04:23.394Z",
-  "updated": "2026-11-14T15:04:23.523Z",
+  "updated": "2026-11-14T15:05:07.657Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-14, after finding the speed menu in the Dev app: \"i want it to take less horiz space, can we maybe have an icon button like other icon buttons\".\n\nToday: PlaybackSpeedMenu (Sources/Photonz/TimelineDock.swift ~1551) is a VideoKit.Dropdown (an NSViewRepresentable, Sources/Photonz/VideoKit/VideoKitControls.swift:292) with a text value, placed after Go to End in TimelineTransport's controls (~1630). The neighbours are VideoKit.TransportButton (Sources/Photonz/VideoKit/VideoKitTransport.swift:103): a round ghost button, 11pt semibold symbol, Palette.dim, ink on hover. Shipped by task playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2 (commit 0c0b3edf8).\n\nKeep the logic in EditorState/PlaybackSpeed (chosenPlaybackSpeed, playbackSpeedReading, playbackSpeedIsSilent, setPlaybackSpeed); only the view changes. The menu should be a real menu (an NSMenu off the button, or a SwiftUI Menu styled to the TransportButton face), not a popover. Trap: walks pick from the menu without opening it on screen (CLAUDE.md, walks run while the person works), so whatever replaces the Dropdown must still be reachable that way; check how VideoKit.Dropdown is driven by walks before swapping it. Next is the target; TimelineDock is shared, so Current gets it too, which is fine.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-11-14T15:04:23.522Z",
       "note": "seq 4010 -> 6e-7"
+    },
+    {
+      "t": "2026-11-14T15:05:07.656Z",
+      "note": "seq 6e-7 -> 10"
     }
   ]
 }

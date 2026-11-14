@@ -4,12 +4,12 @@
   "goal": "The user asked 'make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.' and got a still drawing of a trash can (Ask's row: drew a trash can), no motion. The shorter 'make an animated trash can icon where it opens, some trash is thrown in' animates in the walk. A request that tells the motion as several beats must be animated through all of them, never fall back to a still.",
   "epic": "icon-svg",
   "priority": "p1-high",
-  "seq": 20,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-14T15:03:49.807Z",
+  "updated": "2026-11-14T15:05:07.816Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -104,16 +104,9 @@
       "note": "Plans quicker and fold replaced keys (05a277aaa); story bar (5 of 6 at 7) still not met, best 7 once. Next lever: a fresh short call per value for the look's critique, or contact placed from boxes."
     },
     {
-      "t": "2026-11-09T08:23:44.882Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-09T08:51:34.569Z",
-      "note": "Baseline on the steady judge (nine looks, rubric 4a03a8fc), run 20261109-082429 at bebc5c0e4: total 48.6, reads as asked bell 5.6, checkbox 7.2, heart 3.9, envelope 3.2, rocket 4.9, trash 4.3: 1 of 6 at 7. Plans 122 to 197 s; the look fired for 4 (trash, rocket, checkbox; bell said All good while the judge saw rubber). Trash trace: after the look, the mend in the long talk re-sent its keys with one key added (1.5 s) and the ball still never met the lid."
-    },
-    {
-      "t": "2026-11-09T09:30:23.986Z",
-      "note": "Run B 20261109-085127 (fresh mend + touches, look up to 200 s): total 50.1; reads as asked bell 4.4, checkbox 7.2, heart out of 300 s (plan 197 s, look, then a 2,900 token mend and more rounds), envelope 6, rocket 7.1, trash 3: 2 of 6 at 7. Trash trace showed two real defects: (1) jumpsUnseen put a Hold key at 0.59 s beside the throw's key at 0.6 s, the app refused the whole position step ('two keys at 0.59 s are one key') and the trash never moved; (2) the model wrote touches: $1/lid and the planning argument check refused it. Both fixed test first; the mend is now bounded (no round after 250 s, lands the looked-at motion instead) and the look starts by 175 s."
+      "t": "2026-11-14T15:05:07.815Z",
+      "note": "... 3 earlier entries elided",
+      "elided": 3
     },
     {
       "t": "2026-11-09T10:09:57.776Z",
@@ -502,6 +495,14 @@
     {
       "t": "2026-11-14T15:03:49.806Z",
       "note": "seq 30 -> 20"
+    },
+    {
+      "t": "2026-11-14T15:04:40.345Z",
+      "note": "Digest 2026-11-14: judged pass 19's two-lap reel (2026-11-14-story-trash-pass19-two-laps.png) as a user: the user's own sentence now plays every beat in order (lid opens, scrap thrown in from the right, meets the lid, drops behind the rim, lid shuts), with the bounce small but there. What keeps this open is the six-story eval bar (5 of 6 at 7), which has read 1 or 2 of 6 on every pass since pass 13 on 11 November, seven passes, while this task holds p1 ahead of the video speed focus. A stopping point: if pass 20 does not reach 3 of 6, stop passing and ask the user on a card with this reel whether to close on their sentence's pictures or keep going, as the redline task did. The eval runs each case once, so a single pass's swing is partly noise; average two runs before reading a pass as better or worse."
+    },
+    {
+      "t": "2026-11-14T15:05:07.814Z",
+      "note": "seq 20 -> 30"
     }
   ],
   "started": "2026-11-14T02:42:56.949Z",

@@ -1,0 +1,34 @@
+{
+  "id": "the-play-bar-s-scrubber-knob-never-covers-the-ti",
+  "title": "The play bar's scrubber knob never covers the time beside it",
+  "goal": "With the playhead at the start of a video, the round knob on the play bar's scrubber sits over the current time and hides it (and at the end it reaches over the length). The knob should stay inside the scrubber's own space at both ends, the way a Mac slider's does, so both times are always fully readable.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 7e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-14T15:05:15.764Z",
+  "updated": "2026-11-14T15:05:15.896Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-14, with screenshot /Users/dzearing/Pictures/Screenshots/Screenshot 2026-11-14 at 07.04.25.png (knob at 0:00 covering the second '0' of '0:00'): \"also, the slider covers up the time label\".\n\nLikely cause (read from code, not measured): VideoKit.TransportBar (Sources/Photonz/VideoKit/VideoKitTransport.swift:32-50) lays out timecode, scrubber, length with HStack spacing 12. The knob is 26x18 (thumbWidth/thumbHeight, :255-256) and is centred on the playhead x, which runs 0...width of the scrubber (SwiftUI path :275 offset x - thumbWidth/2; layer path :300-336 thumb.position x, scaled 1.12 when lifted). So at 0 it hangs 13pt (14.6pt lifted) plus a 2pt shadow out of the scrubber's frame, past the 12pt gap and onto the time; same at the far end over the length.\n\nThe usual fix is to inset the travel by half a knob at each end (track still full width or inset too, played fill starting under the knob), and the hit-to-fraction mapping (Scrubber / TransportScrubber in TimelineDock.swift ~1099-1152, and scrub(toDocumentFraction:)) must use the same inset or a click lands half a knob off. Marks are laid out at width * fraction (:330) and must follow the same mapping. Both the SwiftUI face and the layer-painted island must change together.",
+  "acceptance": [
+    "Reproduced first: a video at 0:00 in the play bar under the video, with a picture showing the knob over the current time, and the overlap MEASURED in points in the audit",
+    "At the start and the end, resting, hovered and while dragged (the knob grows 1.12x while lifted), the knob and its shadow leave a measured gap of at least 4pt to the current time and to the length; every number goes in the audit",
+    "The knob still sits exactly on the playhead's spot: the knob's centre at the start and end of the travel matches the first and last frame, clicking anywhere on the bar still moves the playhead to where the pointer is (no jump of half a knob), and in/out marks still line up with the knob at the same time",
+    "Same fix wherever this play bar is used (the timeline's play bar and any player built from the same parts); the bar does not get wider",
+    "Walks touching the transport scrubber pass (Scripts/playtest-all.sh --no-build scrub)",
+    "Audit under queue/audits/ with before and after pictures at 0:00 and at the end; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-14T15:05:15.766Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-14T15:05:15.895Z",
+      "note": "seq 4010 -> 7e-7"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "On a long edit the timeline is where a person spends their time, and it is the part most likely to slow down as clips pile up: every clip bar, thumbnail strip and waveform drawn again when anything moves. Make the timeline of the 60 minute reference edit, several hundred clips, scroll, zoom and follow a playing playhead at the display's 120 Hz, and keep an edit on it inside one frame.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 40,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-14T15:04:17.354Z",
+  "updated": "2026-11-14T15:05:07.975Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -117,6 +117,10 @@
     {
       "t": "2026-11-14T15:04:17.329Z",
       "note": "Digest 2026-11-14 design review: pass 2's audit says a painted cut or transition band answers a click only once the pointer has rested on it, and a click with no pointer move first picks the clip under it, and that no walk clicks a cut on a busy track. A person does click without moving: scroll or pinch the timeline with the pointer held still, so a cut slides under it, then click. That would pick the clip when they meant the cut. Not reproduced by me (no real-pointer walk runs here), so added as an acceptance item for this task rather than filed as a bug. Also: docs/design/video.md section 8 carries the playhead rules 1 to 7 but nothing yet on painted busy lanes (24 or more clips in sight paint; a clip under the pointer becomes its view). Worth a rule 8 when this task closes, so the next per-clip feature knows it is drawn twice."
+    },
+    {
+      "t": "2026-11-14T15:05:07.974Z",
+      "note": "seq 40 -> 50"
     }
   ],
   "started": "2026-11-14T06:48:15.847Z",
