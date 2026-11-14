@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-14T18:50:22.373Z",
+  "updated": "2026-11-14T20:48:24.666Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -186,11 +186,36 @@
     {
       "t": "2026-11-14T18:50:22.372Z",
       "note": "Pass 5: bars not reached (trim ~29, blade ~55 own pass/88 longest, undo ~58 vs 16 ms; scrub 2 frames vs 1; ~1 dropped frame a minute). Found the edit's pass scales with the window's view count, not with what rebuilds; landed the cache prune fix and a stored documentHasTime. Stays open for pass 6."
+    },
+    {
+      "t": "2026-11-14T18:50:59.739Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T20:48:24.345Z",
+      "note": "walks speed-walk, scrub-never-blacks-out-walk -> speed-walk, scrub-never-blacks-out-walk, keyframe-anything-walk"
+    },
+    {
+      "t": "2026-11-14T20:48:24.426Z",
+      "note": "Pass 6 (0aa333984): (1) the Properties section read the piece under the playhead off the clock (clipPieceInHand via keyClipLine), so with a cut clip picked it rebuilt every tick of play: 44-46 builds in the 1.5 s after a blade, now 1-3 (readingThePlayheadForThePanel). (2) keyframe-anything-walk failed at step 27 (timeSection rebuilt by a new key) since pass 4 put the key diamond and Add Key answers in PanelPlayhead; split into PanelKeyPlayhead, walk passes. (3) hasPictureFades/hasZooms/hasClickEffects kept in DocumentDerived.TreeFacts: they copied every layer 3x per drawn moment, ~6 ms of main thread per second of play on the 6 min edit (Time Profiler, 387 samples/min). Short speed walk vs baseline: trim 29, blade 82, undo 61 ms; play 1 dropped/min; scrub 2/3 frames (within noise, baseline not rewritten). test.sh green; 24 walks ok."
+    },
+    {
+      "t": "2026-11-14T20:48:24.506Z",
+      "note": "Pass 6 findings that did NOT pay: (a) the timeline's grid in an NSHostingView of its own (a separate SwiftUI graph) with the dock reading rows and sound plan a pass late: trim own pass 27-28, blade 51-54, undo 55-57, unchanged. The edit's own pass is the views its writes wake plus the window render, not the graph's size; written in docs/design/video.md 8f, do not retry. (b) moving the dock's naturalBodyHeight/audioPlan reads a pass late alone: own pass unchanged, late pass +1-4 ms (grid built twice); reverted. Tools: Time Profiler via xctrace --attach on a walk of 40 trims, main-thread samples split into bursts at 1.6 ms gaps and the burst holding SpeedWalkProbe.perform taken as the edit's own pass; a temporary withObservationTracking wrapper round a body writing Thread.callStackSymbols on wake named the setter (catchUpOnTheNextPass, history via perform, documentTimeMS via restartDocumentClock)."
+    },
+    {
+      "t": "2026-11-14T20:48:24.584Z",
+      "note": "Next for this task (pass 7): (a) the first edit after opening costs ~10 ms more plus a ~20 ms body-less pass: NSWindow _setDocumentEdited -> theme frame -> window layout -> NSHostingView.layout, and the root's saveTarget focused value flipping (EditorWindowRoots.swift); try setting isDocumentEdited a pass later. (b) every edit's own pass still runs a window layout (NSHostingView.layout ~12-20% of it) and NSWindow _resetDragMargins (blade); find what changes size. (c) views still woken in the own pass: ClickTicksView (reads clickTicks off the document), CaptionGuidesOverlay, EditorCanvasSurface, ZoomBarsView. (d) blade: after the pick the panel builds sections over ~600 ms in passes of 20-80 ms (first blade only; later ones 7 inspector builds). Bars not reached: edits <=16 ms (trim 29, blade 82, undo 61), scrub within 1 frame (2), no dropped frames (1/min)."
+    },
+    {
+      "t": "2026-11-14T20:48:24.665Z",
+      "note": "Pass 6 landed 0aa333984: Properties no longer rebuilds every tick with a cut clip picked (44-46 -> 1-3 builds), a new key no longer rebuilds Time (keyframe-anything-walk green again), the tree's fade/zoom/click questions kept per document. Bars not reached: edits while playing trim 29 / blade 82 / undo 61 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute. Stays open for pass 7 (leads in the log)."
     }
   ],
-  "started": "2026-11-14T16:30:48.736Z",
+  "started": "2026-11-14T18:50:59.738Z",
   "walks": [
     "speed-walk",
-    "scrub-never-blacks-out-walk"
+    "scrub-never-blacks-out-walk",
+    "keyframe-anything-walk"
   ]
 }

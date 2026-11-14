@@ -17378,3 +17378,9 @@
 {"t":"2026-11-14T18:50:22.214Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-14T18:50:22.295Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-14T18:50:22.374Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 5: bars not reached (trim ~29, blade ~55 own pass/88 longest, undo ~58 vs 16 ms; scrub 2 frames vs 1; ~1 dropped frame a minute). Found the edit's pass scales with the window's view count, not with what rebuilds; landed the cache prune fix and a stored documentHasTime. Stays open for pass 6."}
+{"t":"2026-11-14T18:50:59.744Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-14T20:48:24.347Z","ev":"task_walks","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","walks":["speed-walk","scrub-never-blacks-out-walk","keyframe-anything-walk"]}
+{"t":"2026-11-14T20:48:24.428Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-14T20:48:24.508Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-14T20:48:24.586Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-14T20:48:24.667Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 6 landed 0aa333984: Properties no longer rebuilds every tick with a cut clip picked (44-46 -> 1-3 builds), a new key no longer rebuilds Time (keyframe-anything-walk green again), the tree's fade/zoom/click questions kept per document. Bars not reached: edits while playing trim 29 / blade 82 / undo 61 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute. Stays open for pass 7 (leads in the log)."}
