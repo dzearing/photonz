@@ -1,0 +1,55 @@
+{
+  "id": "an-animated-icon-told-as-a-little-story-moves-th-after-twenty-passes-your-trash-p",
+  "taskId": "an-animated-icon-told-as-a-little-story-moves-th",
+  "question": "After twenty passes your trash plays every beat, with the bounce small (boxed frames 1 to 4). The six-story bar still reads 2 of 6. Close it on your trash, keep going behind the video speed work, or keep going now?",
+  "context": "Pass 20 gave things that pop in a margin from the frame edge and asked for bigger shakes and repeated beats. Two runs on today's build: bell 7.67 and 7.67, checkbox 7.11 and 7.22 now read as asked every time; heart 6.67 and 4.89, rocket 4.67 and 5.33, your trash 5.0 and 4.22, envelope 3.78 and 3.89. The boxed frames are your exact sentence made in the app today; the reel is 2026-11-14-story-trash-pass20-two-laps.gif.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Close it on your trash",
+      "summary": "The task ends. Your trash sentence plays every beat as in the picture, with a small bounce. Story icons stay as they are now.",
+      "pros": [
+        "Frees the loop for the video speed focus after twenty passes",
+        "What you first asked for, an animated icon instead of a still, works every time"
+      ],
+      "cons": [
+        "The bounce stays small and easy to miss",
+        "Four of six test stories still read below 7"
+      ],
+      "mitigation": "If a story icon disappoints later, say so and it comes back as a new task with that example.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Keep going, behind video speed",
+      "summary": "The task stays open but waits behind the video speed work, so the loop comes back to the bounce and the other stories only when nothing more important is waiting.",
+      "pros": [
+        "The video focus is not held up",
+        "The story work is not thrown away"
+      ],
+      "cons": [
+        "It may be days before the next pass",
+        "The score has sat at 1 or 2 of six for eleven passes"
+      ],
+      "mitigation": "Each pass still ends with a reel of your trash in front of you."
+    },
+    {
+      "id": "c",
+      "label": "Keep going now, ahead of everything",
+      "summary": "More passes right away, about two hours each, each read on two runs of the six stories.",
+      "pros": [
+        "Aims straight at the bar you set",
+        "This pass moved the bell and the checkbox above 7 to stay"
+      ],
+      "cons": [
+        "Holds the video speed focus back",
+        "Eleven passes have not reached 3 of six"
+      ],
+      "mitigation": "Each pass ends with the reel, so you can stop it at any point."
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-11-14T22:15:48.124Z",
+  "shot": "2026-11-14-story-trash-pass20-card.png"
+}
