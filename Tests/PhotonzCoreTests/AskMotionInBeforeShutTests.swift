@@ -201,3 +201,17 @@ extension AskMotionInBeforeShutTests {
         }
     }
 }
+
+extension AskMotionInBeforeShutTests {
+    /// What leaves the frame does not go in under anything: the eval's
+    /// envelope flying off read as a landing on 2026-11-13. Walk two's keys
+    /// sent down through the can and off the bottom of the frame are left alone.
+    @Test("A part leaving the frame is not landed sooner")
+    func leavingIsNotGoingIn() throws {
+        let away = #"[{"seconds":0,"value":{"x":0,"y":0}},{"seconds":0.5,"value":{"x":0,"y":0}},{"seconds":0.8,"value":{"x":-6,"y":2}},{"seconds":0.95,"value":{"x":-6,"y":0}},{"seconds":1.2,"value":{"x":-6,"y":30}},{"seconds":1.5,"value":{"x":0,"y":0}}]"#
+        var steps = try AskMotionInBeforeShutWalkTwo.steps()
+        steps.append(AskStep(tool: "set_keys", arguments: try AskMotionInBeforeShutWalk.args(#"{"keys":\#(away),"layer":"$1/trash","property":"position","replace":true}"#)))
+        let after = AskMotion.inBeforeShut(steps)
+        #expect(after.last?.arguments == steps.last?.arguments)
+    }
+}

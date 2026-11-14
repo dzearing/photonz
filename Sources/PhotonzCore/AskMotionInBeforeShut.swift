@@ -21,7 +21,8 @@ extension AskMotion {
     /// than the closer shuts, at which it passes through nothing it is meant
     /// to go in under, pushed in past the closer's resting line as little
     /// as that takes (`tuckStep`, up to `mostTuck`). The keys between keep their order, closer in time.
-    /// A landing no moment clears keeps its keys.
+    /// Only a part that lands in view, on or in a part that stays still. A
+    /// landing no moment clears keeps its keys.
     ///
     /// On 2026-11-12 the user's trash met the lid as it began to snap shut
     /// at 0.8 s; the model then had it ride the lid down, hop up off the shut
@@ -51,6 +52,19 @@ extension AskMotion {
             guard keys.count >= 3, let landedAt = goneAt(part, keys: keys, in: out),
                   let landing = keys.firstIndex(where: { abs($0.seconds - landedAt) <= 0.0005 }), landing > 0,
                   let goal = point(keys[landing].value) else { continue }
+            // Only what goes IN: it lands in view, on or in something that
+            // stays still (the can), never a part leaving the frame (on the
+            // eval of 2026-11-13 an envelope flying off read as a landing).
+            let width = current.art.viewBox?.width ?? current.art.bounds.width
+            let view = current.art.viewBox ?? current.art.bounds
+            let landedInk = current.ink(part, at: landedAt)
+            let landedPoints = landedInk.flatMap { $0 }
+            guard !landedPoints.isEmpty else { continue }
+            let middle = CGPoint(x: landedPoints.map(\.x).reduce(0, +) / CGFloat(landedPoints.count),
+                                 y: landedPoints.map(\.y).reduce(0, +) / CGFloat(landedPoints.count))
+            guard view.contains(middle),
+                  current.still.contains(where: { inkMeets(landedInk, current.ink($0.name, at: landedAt), within: tuckGap * width) })
+            else { continue }
             let family = Set([plain(part)] + current.carriers(of: part).map(plain))
             let closers = current.movers.filter { other in
                 !family.contains(plain(other)) && !current.carriers(of: other).contains { plain($0) == plain(part) }
@@ -101,11 +115,6 @@ extension AskMotion {
                 // a little further in, straight away from where the closer
                 // rests: a landing just under the shut lid's line is still in
                 // its stroke (the walk of 2026-11-13).
-                let width = current.art.viewBox?.width ?? current.art.bounds.width
-                let landedInk = current.ink(part, at: landedAt).flatMap { $0 }
-                guard !landedInk.isEmpty else { break }
-                let middle = CGPoint(x: landedInk.map(\.x).reduce(0, +) / CGFloat(landedInk.count),
-                                     y: landedInk.map(\.y).reduce(0, +) / CGFloat(landedInk.count))
                 let touch = rest.map { nearest(to: middle, on: $0) }
                     .min { hypot($0.x - middle.x, $0.y - middle.y) < hypot($1.x - middle.x, $1.y - middle.y) }
                 var away = CGVector.zero
