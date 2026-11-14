@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-14T15:05:07.816Z",
+  "updated": "2026-11-14T22:16:07.500Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -104,29 +104,9 @@
       "note": "Plans quicker and fold replaced keys (05a277aaa); story bar (5 of 6 at 7) still not met, best 7 once. Next lever: a fresh short call per value for the look's critique, or contact placed from boxes."
     },
     {
-      "t": "2026-11-14T15:05:07.815Z",
-      "note": "... 3 earlier entries elided",
-      "elided": 3
-    },
-    {
-      "t": "2026-11-09T10:09:57.776Z",
-      "note": "Run C 20261109-093019 (mend bounded at 250 s, look by 175 s): total 46.5, reads as asked 4.8, 6, 2.7, 6.3, 5.6, 2; 0 of 6. The bound cut off the rocket's and heart's mends (landed un-mended); the trash lost its design: replayed the design call on a bounded model copy, the model wrote a whole design and then went on to 'Now I'll draw it' and an svg, and any answer holding <svg was dropped whole. Fixed test first (keep the words before the drawing). In B the mend helped whenever it finished (envelope 28 to 58, rocket 49 to 82, checkbox 77 to 85), so mend rounds now start by 260 s and a round still going at 285 s is cancelled and the looked-at motion lands."
-    },
-    {
-      "t": "2026-11-09T11:19:00.737Z",
-      "note": "Shipped a2012994a (pushed): fresh short mend after the look (look by 175 s, mend rounds by 260 s, cut at 285 s landing the looked-at motion), touches placed where parts meet, jumpsUnseen no longer puts a key beside another (the trash's whole position step was refused), a design kept when the model goes on to draw. Scripts/test.sh exit 0. Walks at Next defaults pass: ask-animates-a-story-walk (268 s on a loaded Mac, Copy SVG repeatCount=indefinite x4) and ask-animates-a-story-without-the-word-walk (passed at 300 s on the second try; the first ran out while Spotlight indexing held a core and the load was 13; the model runs at 14 to 18 tok/s in walks against 31 in the eval, which holds the front). Pictures looked at: run D contact sheet (heart beats twice then splits; rocket shakes, leaves, returns; trash lid opens and shuts but the ball never visibly meets it; bell reads as a lampshade; letter drawn over the envelope) and the walk's 3-playing-sc.png. Audit queue/audits/2026-11-09-animated-icon-story-mend.json."
-    },
-    {
-      "t": "2026-11-09T11:19:00.813Z",
-      "note": "NOT DONE, the bar: 5 of 6 story cases at reads as asked 7. Run D 20261109-100952: total 57.4 (baseline 48.6), asked bell 5, checkbox 5.2, heart 6.6, envelope 6, rocket 6, trash 4.1: 0 of 6 (run B had checkbox 7.2 and rocket 7.1). Next levers: the look is lenient (the bell 'all good' three runs running while the judge sees a lampshade with its handle left behind), so a stricter look or a look on single frames of each beat; the trash's model wrote touches on the lid key but the ball still read as dropping beside it, so check the placed contact in the frames. Left rough, no task earned: a story with a look and mend takes about four minutes."
-    },
-    {
-      "t": "2026-11-09T11:19:00.900Z",
-      "note": "Mend and contact shipped (a2012994a): story total 48.6 to 57.4; bar (5 of 6 at reads as asked 7) not met, best 0 to 2 of 6 per run"
-    },
-    {
-      "t": "2026-11-09T11:29:55.501Z",
-      "note": "claimed by go loop"
+      "t": "2026-11-14T22:16:07.497Z",
+      "note": "... 8 earlier entries elided",
+      "elided": 8
     },
     {
       "t": "2026-11-09T11:51:53.299Z",
@@ -503,9 +483,29 @@
     {
       "t": "2026-11-14T15:05:07.814Z",
       "note": "seq 20 -> 30"
+    },
+    {
+      "t": "2026-11-14T21:00:26.166Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T22:16:02.188Z",
+      "note": "Pass twenty, from pass 19's levers and the digest's stopping rule. Looked across all six story cases in runs 20261114-032205 and 021418 for one fix with reach rather than another trash-only step. Bell: every look said its ring marks were cut at the right edge; replay of its plan (AskMotionRingsWalk) showed the room held a mark's slide-out with 0.25 of slack, so at its widest the mark sat 0.22 past the frame. Also checked the bell's 'shears instead of turning': a still render at the same angle matches the eval frame, so the rotation is rigid and that complaint is the drawing, not a bug. Shipped bca563f89, test first (AskMotionRoomMarginTests, failing at 0.22 before, 0.83 after): a part hidden at the top of the lap that comes into sight by its opacity gets the resting ink's margin when the room allows; parts seen from the start keep the slack (first version padded all motion and grew the user's trash frame to 29.9, failing AskMotionRoomTests' size bar, so it was narrowed). Prompt: a shake is 8 to 12 degrees or 1.5 on the grid over 400 to 600 ms; a counted beat is as big each time, with nothing that reads as one more. Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-14T22:16:02.272Z",
+      "note": "Measured bca563f89 on two runs, as the digest asked: run 20261114-211628-ask total 61.0, reads as asked bell 7.67, checkbox 7.11, heart 6.67, envelope 3.78, rocket 4.67, trash 5.0 (2 of 6); run 20261114-214710-ask total 57.9, bell 7.67, checkbox 7.22, heart 4.89, envelope 3.89, rocket 5.33, trash 4.22 (2 of 6). Bell and checkbox now steady above 7 (were 7.0/6.89 and 6.89/7.78). Envelope fell (flap swung up to a peak in both plans; the change did not touch folds, so likely the model's spread). Rocket shake now planned at 1.5 but judges still say barely reads. Walk ask-animates-a-story-walk at Next defaults ok on bca563f89 (3 real window captures, Copy SVG repeatCount=indefinite x3). Pictures looked at: the two-lap sheet rendered in WebKit from its exported SVG (2026-11-14-story-trash-pass20-two-laps.png: lid opens 0.31 s, thrown in from the right 0.63 to 0.78 s cut by the edge, meets the lid's underside 0.94 s, small step off 1.09 s, lid shuts 1.25 s with a sliver of trash under it, gone 1.41 s, both laps alike, seam 0, no blank frames) and the bell sheet of run 20261114-032205 at full size. Audit queue/audits/2026-11-14-animated-icon-story-pass20.json."
+    },
+    {
+      "t": "2026-11-14T22:16:02.350Z",
+      "note": "Digest's stopping rule met (pass 20 under 3 of 6): no more passes; card an-animated-icon-told-as-a-little-story-moves-th-after-twenty-passes-your-trash-p asks the user to close on their trash, keep going behind the video speed focus (recommended), or keep going now. Left rough, no new task (all inside this one, named in the audit): the scrap still solid, enters cut at the edge, a sliver under the lid as it shuts; envelope swing between runs."
+    },
+    {
+      "t": "2026-11-14T22:16:07.496Z",
+      "note": "Pass 20 (bca563f89): marks that pop in keep clear of the frame edge, prompt asks for bigger shakes and repeated beats; two runs read 2 of 6 (bell and checkbox now steady above 7). Digest's stopping rule met: card asks close on your trash, keep going behind video speed, or keep going now."
     }
   ],
-  "started": "2026-11-14T02:42:56.949Z",
+  "started": "2026-11-14T21:00:26.165Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"
