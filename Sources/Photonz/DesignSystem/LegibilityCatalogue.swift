@@ -377,6 +377,22 @@ enum LegibilityCatalogue {
                 }
                 .frame(width: 520))
             },
+            // The speed menu beside play: a round icon at 1x, a short badge
+            // at any other speed, a struck-through speaker on a silent one.
+            Specimen(control: "Speed button", state: "1x", ground: .panel) {
+                AnyView(Kit.SelectFace(value: "1x", size: .small,
+                                       round: .init(symbol: "gauge.with.dots.needle.67percent")))
+            },
+            Specimen(control: "Speed button", state: "2x", ground: .panel) {
+                AnyView(Kit.SelectFace(value: "2x", size: .small,
+                                       round: .init(symbol: "gauge.with.dots.needle.67percent", badge: "2x")))
+            },
+            Specimen(control: "Speed button", state: "8x, silent", ground: .panel, inks: 2) {
+                AnyView(Kit.SelectFace(value: "8x", size: .small,
+                                       leadImage: NSImage(systemSymbolName: "speaker.slash.fill",
+                                                          accessibilityDescription: nil),
+                                       round: .init(symbol: "gauge.with.dots.needle.67percent", badge: "8x")))
+            },
         ]
     }
 

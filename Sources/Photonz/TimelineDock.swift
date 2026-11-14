@@ -1550,14 +1550,18 @@ private struct TimelineToggleButton: View {
 }
 
 /// The transport's speed menu, beside play: the seven speeds QuickTime and
-/// the web players offer, 1x in every new window (`PlaybackSpeed`). It shows
-/// the speed it is playing at, a J/K/L shuttle's included, and the one Space
-/// will play at while stopped; a speaker struck through says that speed plays
-/// without sound.
+/// the web players offer, 1x in every new window (`PlaybackSpeed`). A round
+/// icon button like Go to End beside it at 1x, so the bar stays compact (the
+/// user, 2026-11-14: "i want it to take less horiz space"); at any other speed
+/// it says it in a short badge instead: the speed it is playing at, a J/K/L
+/// shuttle's included, and the one Space will play at while stopped. A
+/// speaker struck through says that speed plays without sound.
 private struct PlaybackSpeedMenu: View {
     @Environment(EditorState.self) private var editorState
 
     static let silentImage = NSImage(systemSymbolName: "speaker.slash.fill", accessibilityDescription: "Silent")
+    /// A speedometer, the speed control's picture in players that have one.
+    static let symbol = "gauge.with.dots.needle.67percent"
 
     var body: some View {
         let chosen = editorState.chosenPlaybackSpeed
@@ -1571,9 +1575,12 @@ private struct PlaybackSpeedMenu: View {
         let choices = PlaybackSpeed.choices.filter { PlaybackSpeed.playsSound(atRate: $0) }.map(row)
             + [.divider, .heading("Without Sound")]
             + PlaybackSpeed.choices.filter { !PlaybackSpeed.playsSound(atRate: $0) }.map(row)
-        return VideoKit.Dropdown(label: "Playback Speed", value: editorState.playbackSpeedReading,
+        let reading = editorState.playbackSpeedReading
+        return VideoKit.Dropdown(label: "Playback Speed", value: reading,
                                  help: "Playback speed (⇧. faster, ⇧, slower)",
                                  leadImage: editorState.playbackSpeedIsSilent ? Self.silentImage : nil,
+                                 round: .init(symbol: Self.symbol,
+                                              badge: reading == PlaybackSpeed.label(1) ? nil : reading),
                                  choices: choices)
             .fixedSize()
             .playtestControl("Playback Speed", detail: "Transport")

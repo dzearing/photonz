@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T15:04:23.394Z",
-  "updated": "2026-11-14T15:05:07.657Z",
+  "updated": "2026-11-14T16:25:57.047Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-14, after finding the speed menu in the Dev app: \"i want it to take less horiz space, can we maybe have an icon button like other icon buttons\".\n\nToday: PlaybackSpeedMenu (Sources/Photonz/TimelineDock.swift ~1551) is a VideoKit.Dropdown (an NSViewRepresentable, Sources/Photonz/VideoKit/VideoKitControls.swift:292) with a text value, placed after Go to End in TimelineTransport's controls (~1630). The neighbours are VideoKit.TransportButton (Sources/Photonz/VideoKit/VideoKitTransport.swift:103): a round ghost button, 11pt semibold symbol, Palette.dim, ink on hover. Shipped by task playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2 (commit 0c0b3edf8).\n\nKeep the logic in EditorState/PlaybackSpeed (chosenPlaybackSpeed, playbackSpeedReading, playbackSpeedIsSilent, setPlaybackSpeed); only the view changes. The menu should be a real menu (an NSMenu off the button, or a SwiftUI Menu styled to the TransportButton face), not a popover. Trap: walks pick from the menu without opening it on screen (CLAUDE.md, walks run while the person works), so whatever replaces the Dropdown must still be reachable that way; check how VideoKit.Dropdown is driven by walks before swapping it. Next is the target; TimelineDock is shared, so Current gets it too, which is fine.",
@@ -33,6 +33,40 @@
     {
       "t": "2026-11-14T15:05:07.656Z",
       "note": "seq 6e-7 -> 10"
+    },
+    {
+      "t": "2026-11-14T15:59:38.361Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T16:25:38.849Z",
+      "note": "owns these walks: playback-speed-button-walk, playback-speed-walk"
+    },
+    {
+      "t": "2026-11-14T16:25:49.891Z",
+      "note": "Adversarial review before: a first-time user may not read a speedometer as speed at once; the tooltip names it, and YouTube-style players use an icon too. Premiere and Final Cut have no transport speed menu (they shuttle with J/K/L, still shown in the control). The trap in the notes, walks picking from the menu without it on screen, is handled by keeping the same AppKit pull-down (VideoKit.Dropdown) and giving SelectFace a round look (SelectFace.Round), so accessibility label, value, rows and the walk's hold-open path are untouched."
+    },
+    {
+      "t": "2026-11-14T16:25:49.968Z",
+      "note": "Chose a badge in place of the icon at non-1x speeds (2x, 8x with a struck speaker) over a superscript on the gauge, because at 24pt a superscript is unreadable; the badge rests on the hover's faint glass so a non-default speed reads as on."
+    },
+    {
+      "t": "2026-11-14T16:25:50.048Z",
+      "note": "Measured with expectApart in playback-speed-button-walk: old dropdown 53 / 54.5 / 76pt at 1x / 2x / 8x; new 24 / 28 / 42pt; Go to End 24pt. Legibility sheet gained three Speed button specimens, all pass light and dark. Walks: playback-speed (4), scrub (5), transport-volume, timeline-toggle, timeline-right-click, timeline-dock-resizes, draw-a-range-by-hand all ok. the-scrubber-knob-clears-the-times-walk and double-click-clears-a-range-walk clicked fixed points computed for the old scrub-bar start (x 315, now 286): recomputed and passing; the second was already off since the knob-travel commit 2d3067b00 (7426 vs 7200±200). Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-14T16:25:50.126Z",
+      "note": "Pictures looked at: speed-button-after (round gauge at 1x, '2x' badge, speaker + '8x' badge; Go to End at rest in all three), speed-button-hover (speed button hovered matches Go to End hovered), before (old dropdowns). left rough: the time and scrubber shift up to 18pt as the badge grows, as before but less; not a new task since the dropdown already did this."
+    },
+    {
+      "t": "2026-11-14T16:25:57.045Z",
+      "note": "The play bar's speed menu is a round speedometer button the size of Go to End (24pt, was a 53pt dropdown); at other speeds it reads a short badge (2x 28pt, 8x with struck speaker 42pt), same menu, keys and tooltip. VideoKit SelectFace.Round on the same AppKit pull-down so walks still read and pick it. Verified by playback-speed-button-walk (widths via expectApart, real captures), the playback-speed walks, legibility sheet, Scripts/test.sh green. Audit 2026-11-14-the-playback-speed-control-is-a-small-round-icon.json"
     }
-  ]
+  ],
+  "started": "2026-11-14T15:59:38.360Z",
+  "walks": [
+    "playback-speed-button-walk",
+    "playback-speed-walk"
+  ],
+  "completed": "2026-11-14T16:25:57.046Z"
 }

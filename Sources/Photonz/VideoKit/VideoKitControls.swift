@@ -130,11 +130,72 @@ extension VideoKit {
         /// The chevron at the end. Down for a list; right for a field that
         /// takes you somewhere, as the variants mock's main-component field does.
         var chevron = "chevron.down"
+        /// The transport's round icon look (`Round`) instead of a field: a
+        /// list that hangs off an icon button, the speed menu beside play.
+        var round: Round?
+
+        /// A dropdown dressed as one of the transport's round ghost buttons
+        /// (`TransportButton`): the same diameter, symbol weight, colours and
+        /// hover. With a `badge` it says that in a short capsule instead of the
+        /// symbol, `leadImage` in front of it, so a value off its default
+        /// shows without opening the list.
+        struct Round {
+            var symbol: String
+            var badge: String?
+        }
 
         @State private var isHovering = false
 
         var body: some View {
-            if isBare { bareBody } else { faceBody }
+            if let round { roundBody(round) } else if isBare { bareBody } else { faceBody }
+        }
+
+        private func roundBody(_ round: Round) -> some View {
+            let lit = isHovering || isOpen
+            let diameter = Metrics.controlSmall
+            return Group {
+                if let badge = round.badge {
+                    HStack(spacing: 3) {
+                        if let leadImage {
+                            Image(nsImage: leadImage)
+                                .renderingMode(.template)
+                                .resizable()
+                                .interpolation(.high)
+                                .frame(width: 11, height: 11)
+                        }
+                        Text(badge)
+                            .font(.system(size: 11, weight: .semibold))
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .fixedSize()
+                    }
+                    .measuredInk()
+                    .foregroundStyle(Palette.ink)
+                    .padding(.horizontal, 7)
+                    .frame(minWidth: diameter)
+                    .frame(height: diameter)
+                    // A speed off its default wears the hover's glass at rest,
+                    // so it reads as a setting that is on.
+                    .background(Capsule().fill(Palette.glassThin))
+                    .overlay(Capsule().strokeBorder(lit ? AnyShapeStyle(Palette.edgeLo)
+                                                        : AnyShapeStyle(Color.clear)))
+                    .contentShape(Capsule())
+                } else {
+                    Image(systemName: round.symbol)
+                        .measuredInk()
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(lit ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.dim))
+                        .frame(width: diameter, height: diameter)
+                        .background {
+                            Circle()
+                                .fill(lit ? AnyShapeStyle(Palette.glassThin) : AnyShapeStyle(Color.clear))
+                                .overlay(Circle().strokeBorder(lit ? AnyShapeStyle(Palette.edgeLo)
+                                                                   : AnyShapeStyle(Color.clear)))
+                        }
+                        .contentShape(Circle())
+                }
+            }
+            .kitHover(value) { isHovering = $0 }
         }
 
         private var bareBody: some View {
@@ -309,6 +370,8 @@ extension VideoKit {
         var chevron = "chevron.down"
         /// A picture in front of the value (`SelectFace.leadImage`).
         var leadImage: NSImage?
+        /// The transport's round icon look (`SelectFace.Round`).
+        var round: SelectFace.Round?
         let choices: [Choice]
         /// The app is asking for this list open, the way ⌘R asks for the
         /// Speed list (`EditorState+SpeedKey`). It opens once the dropdown is
@@ -320,6 +383,7 @@ extension VideoKit {
         init(label: String, value: String, swatch: AnyShapeStyle? = nil, size: SelectFace.Size = .small,
              valueStyle: AnyShapeStyle? = nil, help: String? = nil, isBare: Bool = false,
              isComponent: Bool = false, chevron: String = "chevron.down", leadImage: NSImage? = nil,
+             round: SelectFace.Round? = nil,
              choices: [Choice], opensWhenAsked: Bool = false, opened: @escaping @MainActor () -> Void = {}) {
             self.label = label
             self.value = value
@@ -331,6 +395,7 @@ extension VideoKit {
             self.isComponent = isComponent
             self.chevron = chevron
             self.leadImage = leadImage
+            self.round = round
             self.choices = choices
             self.opensWhenAsked = opensWhenAsked
             self.opened = opened
@@ -339,12 +404,17 @@ extension VideoKit {
         private var face: SelectFace {
             SelectFace(value: value, swatch: swatch, size: size, isComponent: isComponent,
                        valueStyle: valueStyle, isBare: isBare, showsComponentMark: isComponent,
-                       leadImage: leadImage, chevron: chevron)
+                       leadImage: leadImage, chevron: chevron, round: round)
+        }
+
+        /// The focus ring's corner: a round face's is half its height.
+        private var radius: CGFloat {
+            round != nil ? Metrics.controlSmall / 2 : size == .small ? 6 : 8
         }
 
         func makeNSView(context: Context) -> DropdownButton {
             let button = DropdownButton(face: face)
-            button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
+            button.update(label: label, value: value, radius: radius, choices: choices)
             button.toolTip = help
             enable(button, context.environment.isEnabled)
             button.open(whenAsked: opensWhenAsked, opened: opened)
@@ -361,7 +431,7 @@ extension VideoKit {
 
         func updateNSView(_ button: DropdownButton, context: Context) {
             button.face = face
-            button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
+            button.update(label: label, value: value, radius: radius, choices: choices)
             if button.toolTip != help { button.toolTip = help }
             enable(button, context.environment.isEnabled)
             button.open(whenAsked: opensWhenAsked, opened: opened)

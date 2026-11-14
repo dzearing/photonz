@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/playback-speed-button-walk",
+  "seed": "The transport's speed control at Next defaults, no flag touched: at 1x it is one round icon button as wide as Go to End beside it, and at 2x and 8x it says the speed in a short badge (8x with a struck-through speaker), each opened by a click on its face. Every box is printed so the widths are numbers.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "key", "key": "home" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "speed": "1x", "rate": 0 },
+    { "do": "expectApart", "controls": ["Go to Start", "Play", "Go to End", "Playback Speed"], "gap": 0, "whole": [] },
+    { "do": "describe", "stage": "1-at-1x", "note": "the play bar at 1x: the speed control beside Go to End" },
+    { "do": "snapshot", "name": "1-speed-at-1x" },
+
+    { "do": "panelMenu", "menu": "Playback Speed", "at": ["centre"], "choose": "2x" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "speed": "2x", "rate": 0 },
+    { "do": "expectApart", "controls": ["Go to Start", "Play", "Go to End", "Playback Speed"], "gap": 0, "whole": [] },
+    { "do": "describe", "stage": "2-at-2x", "note": "a click on the speed control's face and 2x picked: the control says 2x" },
+    { "do": "snapshot", "name": "2-speed-at-2x" },
+
+    { "do": "panelMenu", "menu": "Playback Speed", "at": ["centre"], "choose": "8x" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "speed": "8x", "rate": 0, "sound": false },
+    { "do": "expectApart", "controls": ["Go to Start", "Play", "Go to End", "Playback Speed"], "gap": 0, "whole": [] },
+    { "do": "describe", "stage": "3-at-8x", "note": "8x picked from under Without Sound: the control says 8x with a struck-through speaker" },
+    { "do": "snapshot", "name": "3-speed-at-8x" },
+
+    { "do": "key", "key": ",", "modifiers": ["shift"] },
+    { "do": "key", "key": ",", "modifiers": ["shift"] },
+    { "do": "key", "key": ",", "modifiers": ["shift"] },
+    { "do": "key", "key": ",", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "speed": "1x", "rate": 0 },
+    { "do": "describe", "stage": "4-back-to-1x", "note": "Shift-comma four times stepped it back down from 8x to 1x, and the control is the round icon again" },
+    { "do": "snapshot", "name": "4-back-to-1x" },
+    { "do": "move", "control": "Playback Speed" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-hovered", "note": "the pointer on the speed button: the same glass circle and brighter symbol Go to End wears under the pointer" },
+    { "do": "snapshot", "name": "5-speed-hovered" },
+    { "do": "move", "control": "Go to End" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "6-go-to-end-hovered" }
+  ]
+}

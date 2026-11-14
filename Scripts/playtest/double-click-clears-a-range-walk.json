@@ -286,8 +286,9 @@
       "seconds": 0.4
     },
     {
+      "comment": "The scrub bar runs x 286 to 1638 here, its knob stopping half a knob (13) in from each end: x 1532 is (1532 - 286 - 13) / 1326 of 8s, 7439 ms.",
       "do": "expectTimeline",
-      "playheadMS": 7200,
+      "playheadMS": 7440,
       "withinMS": 200,
       "hasIn": false,
       "hasOut": false

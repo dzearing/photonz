@@ -1,0 +1,29 @@
+{
+  "feature": "The playback speed control is a small round icon button",
+  "epic": "video-editing",
+  "summary": "The speed menu on the play bar is now a round icon button the size of Go to End beside it. At any speed but 1x it shows the speed in a short badge instead, so the bar stays compact and you still see the speed without opening it.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any video (File > Open, or the sample recording).",
+  "switched": {},
+  "try": [
+    { "do": "Look at the play bar: right of Go to End is a round speedometer icon, the same size as Go to End.", "shot": "2026-11-14-speed-button-1x-sc.png" },
+    { "do": "Rest the pointer on it: it lights up like Go to End and the tip says 'Playback speed (⇧. faster, ⇧, slower)'.", "shot": "2026-11-14-speed-button-hover.png" },
+    { "do": "Click it and pick 2x: the menu is the same list as before, and the button now reads 2x.", "shot": "2026-11-14-speed-button-after.png" },
+    { "do": "Click it and pick 8x under Without Sound: it reads 8x with a struck-through speaker.", "shot": "2026-11-14-speed-button-8x-sc.png" },
+    { "do": "Press Shift-comma until it says 1x: the badge goes and the round icon comes back." },
+    { "do": "Press L three times: the button reads 4x while the shuttle runs, then K stops it." },
+    { "do": "Compare with the old wide dropdown.", "shot": "2026-11-14-speed-button-before.png" }
+  ],
+  "evaluate": [
+    "Does the speedometer icon say 'speed' to you at a glance, or would you rather see '1x' in the circle?",
+    "Is the 2x / 8x badge clear enough as a speed that is on, sitting on its faint glass?",
+    "Is it fine that the time and scrubber shift a little to the right when the badge appears (24pt at 1x, 28pt at 2x, 42pt at 8x)?",
+    "Does the menu still feel like it hangs from the right place under a button this small?"
+  ],
+  "rough": [
+    "Measured widths (the walk's own control boxes): the old dropdown was 53pt at 1x, 54.5pt at 2x and 76pt at 8x; the round button is 24pt at 1x, 28pt at 2x and 42pt at 8x. Go to End is 24pt.",
+    "No mock draws a speed control: it sits in the transport because the placement contract gives that row play controls (UX-PATTERNS placement contract, Transport row). The round face is the mock's transport ghost button (video.html transport), at the same size, weight, colours and hover.",
+    "Chose a short badge in place of the icon at speeds other than 1x over a small 2x laid on the icon: at 24pt a superscript on the gauge was unreadable, while '2x' alone in the circle's own height is plain text a person reads at once. A non-1x speed rests on the hover's faint glass so it reads as a setting that is on.",
+    "The time and the scrubber still move a few points when the badge appears or grows, as they did with the dropdown (by far less now: 18pt at most against 23pt before).",
+    "Two walks clicked the scrub bar at fixed points worked out for the old bar start (x 315). The bar now starts at x 286, so the-scrubber-knob-clears-the-times-walk and double-click-clears-a-range-walk have their points and expected times recomputed in comments. The second was already off its expected time since the knob-travel change (it would read 7426ms against 7200 ± 200)."
+  ]
+}
