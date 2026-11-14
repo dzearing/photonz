@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-13T19:11:12.193Z",
+  "updated": "2026-11-14T09:30:19.904Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -130,6 +130,10 @@
     {
       "t": "2026-11-13T19:11:12.192Z",
       "note": "Pass 3 landed 142d6420d: scrub on the 6 min edit now 2/4 display frames behind (was 8/21) at the display's pace, play 4 dropped a minute. Bars not yet reached: edits while playing (87-223 ms, bar 16), scrub (2 frames, bar 1), a few dropped frames a minute (bar 0)."
+    },
+    {
+      "t": "2026-11-14T09:30:19.903Z",
+      "note": "From the-timeline-of-an-hour-long-edit-scrolls-zooms pass 2 (2026-11-14): with the hour-long timeline's plain clips and cuts now painted as one layer per lane, an edit while playing the 60 min edit holds the main thread 150-250 ms longest pass (trim 192, move 170, blade 247, undo 179; were 526/534/683/704). A sample of those edits (speed walk edits step x2) puts the timeline's own share small (TimelineTrackRow ~40 of ~1100 samples); the rest is restarting playback after the write: EditorState.restartDocumentClock -> movieFrameLanded/displayDocument/documentMomentChanged (~440), followAudio + audioHeadroom + PhotonzDocument.audioMix (~250), MovieFrameFetcher.open/filePlayed (~360, partly the decode thread's callbacks), the inspector's SectionRevealLayout/CaptionsInspector (~120), and whole-document scans per edit: PhotonzDocument.hasClickEffects (40), hasPictureFades (36), hasZooms (35). Reproduce: a walk on referenceEdit 60 with two { do: speed, measure: edits } steps, sampled with 'sample <probe pid> 14' from 12 s in."
     }
   ],
   "started": "2026-11-13T17:08:34.477Z",

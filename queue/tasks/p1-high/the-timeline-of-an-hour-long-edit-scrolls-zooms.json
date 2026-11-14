@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-14T05:53:22.675Z",
+  "updated": "2026-11-14T09:50:19.901Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -75,9 +75,37 @@
     {
       "t": "2026-11-14T05:53:22.674Z",
       "note": "Pass 1 landed 602579415: scroll on the 60 min edit 554 -> 50 ms a frame (only what is in sight is built), zoom 736 -> 571 ms, playing at full rate with 0 clip bars rebuilt. Bars not reached: zoom near the whole-hour view (needs narrow clips painted as one layer), scroll 50 vs 8.3 ms, edits 0.5-0.7 s vs 16 ms. Stays open for those."
+    },
+    {
+      "t": "2026-11-14T06:48:15.848Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T09:49:59.558Z",
+      "note": "walks open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk -> open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk"
+    },
+    {
+      "t": "2026-11-14T09:49:59.642Z",
+      "note": "Pass 2 (2026-11-14). Baseline re-measured at 602579415 (60 min edit, markers down): zoom in 567 ms/frame (only 38 frames, ~4x, in its 20 s), zoom out 588, scroll 50; edits trim 526 / move 534 / blade 683 / undo 704 ms. Floor experiment (throwaway switch): clip bars stubbed out -> zoom 24 ms; bars, edit points, ticks and zoom lanes all out -> 8.3 ms. So the cost was the bar views."
+    },
+    {
+      "t": "2026-11-14T09:49:59.723Z",
+      "note": "Pass 2 landed: a busy lane (24+ clips in sight, TimelinePaint in PhotonzCore, tested) paints its plain clips (fill, edge, name, picture fades, linked sound half with waveform, level line and fade diamonds) and its cuts (seams and transition bands, in the lane's own order) in two Canvas layers (TimelinePaintedClips.swift). A clip/cut picked, in a hand, trimmed, renamed, under the pointer (lane-wide onContinuousHover), or carrying anything the painting does not draw (pieces, still, badge, keys, drift, level points, sound badge, pictures along it, a hold on a band) stays its full view. Painted clips take a click, drag and right click (TimelinePaintedHands). Parity checked pixel by pixel against pre-change captures at Fit, 2x, 4x (<800 stray pixels of 765k). Gotchas: SwiftUI snaps view frames to pixels (snap minX/maxX), the band view is never narrower than its 12 pt glyph (centred), custom Tone ShapeStyles do not resolve in a Canvas (use .color(tone.color(scheme)) with the VIEW's colorScheme), a sub-pixel picture fade shade shows as a 1 px line only when pixel-rounding gives it width. After: zoom 50 ms median over all 240 frames (p95 229/244), scroll 50 (unchanged: pictures show there, still full bars), edits trim 192 / move 167 / blade 243 / undo 177 ms. New walk painted-clips-take-a-hand-walk (real click on a painted clip picks it). 11 timeline/reference walks + speed-walk + an-editing-session-walk green; Scripts/test.sh green. Audit queue/audits/2026-11-14-timeline-hour-long-painted-clips.json."
+    },
+    {
+      "t": "2026-11-14T09:49:59.806Z",
+      "note": "Still open, bars not reached: zoom/scroll ~50 ms vs 8.3 ms. Next: paint clips that show pictures (the film strip) so zoomed-in lanes paint too; that stretch is the zoom's slow p95 (~230 ms) and all of the scroll measure. Then Zoom lanes (~10 ms of a far zoom frame, 126 rows; task a-long-edit-with-many-zooms-shows-one-zoom-lane) and click ticks/part marks (~5 ms, a view per clip in sight even when empty). Edits 150-245 ms are now mostly outside the timeline (playback restart, audio mix, inspector, hasClickEffects/hasPictureFades/hasZooms scans): profile folded into a-long-edit-with-transitions-plays-scrubs-and-ed. Left rough, not filed: a click on a painted band with no pointer move first picks the clip under it (pointer always rests first for a person; no walk clicks cuts on busy tracks). Measuring walks used: /tmp tl60 walk = long-60.json minus scrub (timeline, idleBuilds, edits), ~2 min."
+    },
+    {
+      "t": "2026-11-14T09:50:19.812Z",
+      "note": "Pass 2 landed f76901a22: zoom on the 60 min edit 567 -> 50 ms a frame over the whole range, edits 0.5-0.7 s -> 150-245 ms, look unchanged pixel for pixel. Bars not reached (zoom/scroll 50 ms vs 8.3, edits vs 16 ms); stays open for painting clips that show pictures."
+    },
+    {
+      "t": "2026-11-14T09:50:19.900Z",
+      "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     }
   ],
-  "started": "2026-11-14T04:23:37.168Z",
+  "started": "2026-11-14T06:48:15.847Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
@@ -86,6 +114,7 @@
     "cut-on-the-timeline-walk",
     "key-lanes-walk",
     "transitions-where-clips-meet-walk",
-    "speed-walk"
+    "speed-walk",
+    "painted-clips-take-a-hand-walk"
   ]
 }
