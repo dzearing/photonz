@@ -4,12 +4,12 @@
   "goal": "On a long edit the timeline is where a person spends their time, and it is the part most likely to slow down as clips pile up: every clip bar, thumbnail strip and waveform drawn again when anything moves. Make the timeline of the 60 minute reference edit, several hundred clips, scroll, zoom and follow a playing playhead at the display's 120 Hz, and keep an edit on it inside one frame.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 50,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-14T12:09:54.713Z",
+  "updated": "2026-11-14T15:04:17.354Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -21,6 +21,8 @@
     "While it plays with nothing being edited, only the playhead and what the playhead changes are rebuilt each frame: clip bars, thumbnails and waveforms off screen or unchanged are not built again (counted with ViewBuildMeter, the count in the audit before and after).",
     "Trim, move, blade and undo on the 60 minute edit each finish within 16 ms on the main thread, as on the 6 minute one.",
     "No change in what the timeline shows: the timeline walks that photograph it (cut, trim, transitions, key lanes) stay green. Perf numbers before and after in the audit; Scripts/test.sh passes.",
+    "On a busy track, a click on a cut or transition band right after scrolling or zooming the timeline with the pointer held still picks the cut, not the clip under it (a walk scrolls a cut under a still pointer and clicks)",
+    "The painted busy-lane rule (when a track paints its clips, and when a clip becomes its full view again) is written into docs/design/video.md beside the playhead rules",
     "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not."
   ],
   "log": [
@@ -107,6 +109,14 @@
     {
       "t": "2026-11-14T12:09:54.712Z",
       "note": "From a-long-edit pass 4 (cbfda886b): TimelineChildMarks (part timing marks) is now made only for clips that have marks, with values from the lane. Click ticks were NOT changed: an Equatable ClickTicksView fed from the lane broke the tick drag in a-click-tick-is-hidden-and-slid-walk, so a pass on click ticks needs that walk green."
+    },
+    {
+      "t": "2026-11-14T15:03:49.979Z",
+      "note": "seq 50 -> 40"
+    },
+    {
+      "t": "2026-11-14T15:04:17.329Z",
+      "note": "Digest 2026-11-14 design review: pass 2's audit says a painted cut or transition band answers a click only once the pointer has rested on it, and a click with no pointer move first picks the clip under it, and that no walk clicks a cut on a busy track. A person does click without moving: scroll or pinch the timeline with the pointer held still, so a cut slides under it, then click. That would pick the clip when they meant the cut. Not reproduced by me (no real-pointer walk runs here), so added as an acceptance item for this task rather than filed as a bug. Also: docs/design/video.md section 8 carries the playhead rules 1 to 7 but nothing yet on painted busy lanes (24 or more clips in sight paint; a clip under the pointer becomes its view). Worth a rule 8 when this task closes, so the next per-clip feature knows it is drawn twice."
     }
   ],
   "started": "2026-11-14T06:48:15.847Z",

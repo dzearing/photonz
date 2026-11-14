@@ -4,12 +4,12 @@
   "goal": "A person exporting a long screen recording edit waits for it, and a tool that takes longer than the video to write it feels broken next to Final Cut. Make the 6 minute reference edit, with its transitions, titles and zooms, export at the sheet's default settings in at most six minutes on this Mac, with the same picture as today.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 60,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.881Z",
-  "updated": "2026-11-13T14:15:33.699Z",
+  "updated": "2026-11-14T15:03:50.060Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -39,6 +39,10 @@
     {
       "t": "2026-11-13T14:15:33.698Z",
       "note": "seq 13 -> 60"
+    },
+    {
+      "t": "2026-11-14T15:03:50.059Z",
+      "note": "seq 60 -> 50"
     }
   ]
 }

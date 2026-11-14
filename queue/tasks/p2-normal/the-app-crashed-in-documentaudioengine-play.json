@@ -1,0 +1,39 @@
+{
+  "id": "the-app-crashed-in-documentaudioengine-play",
+  "title": "Find out whether the 13 November crash when sound starts playing is in shipped code or came from a runner's unfinished build",
+  "goal": "The loop's test copy of the app crashed once on 13 November just as a video's sound started to play. That copy was built from work that had not been finished yet, so the crash may never have been in the app as shipped. Find out which, and fix it if a person could hit it.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-13T20:35:06.151Z",
+  "updated": "2026-11-14T15:03:50.461Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-13-114048.ips\nException: EXC_CRASH SIGABRT\nMessages: \nStack (app frames):\nDocumentAudioEngine.play(_:fromMS:speed:) (DocumentAudioPlayer.swift:275)\nclosure #4 in DocumentAudioPlayer.play(_:fromMS:speed:) (DocumentAudioPlayer.swift:85)\nclosure #1 in DocumentAudioEngine.run(_:) (DocumentAudioPlayer.swift:178)",
+  "acceptance": [
+    "Today's probe plays the playback speed walk and the long captioned recording walk three times each, and crash-watch records no new report with this signature (or the crash is reproduced and its conditions written down)",
+    "If it reproduces: the cause fixed, with a test or walk that fails before and passes after",
+    "If it does not: closed with the evidence that it came from unfinished source, and crash-watch marks the report as a runner diagnostic"
+  ],
+  "log": [
+    {
+      "t": "2026-11-13T20:35:06.153Z",
+      "note": "created (crash-watch)"
+    },
+    {
+      "t": "2026-11-14T15:02:28.012Z",
+      "note": "priority p1-high -> p2-normal"
+    },
+    {
+      "t": "2026-11-14T15:02:28.094Z",
+      "note": "Digest spot check 2026-11-14: no reproduction command in the notes, only the crash report, so it does not hold the top of p1. What I checked: the report's probe launched 2026-11-13 11:40:28 -0800 and crashed 10 s later in AVAudioPlayerNode play (an NSException out of AVAudioPlayerNodeImpl::StartImpl, abort). Its stack names DocumentAudioEngine.play(_:fromMS:speed:), and that speed: parameter first reached main in 0c0b3edf8 at 12:34 -0800, nearly an hour later. So the crashing probe was built from the playback-speed runner's unfinished source, the same shape as the-app-crashed-in-run-pickuptile. Shipped code still calls node.play() straight after engine.start (DocumentAudioPlayer.swift around line 282), so it is worth one look: run playback-speed-walk and a-long-captioned-recording-walk a few times on today's probe and check crash-watch. If neither crashes, close it as a runner diagnostic. Re-tagged from unmanned-loop to video-perf: a crash while playing is a playback fault, not loop health."
+    },
+    {
+      "t": "2026-11-14T15:03:50.460Z",
+      "note": "seq 4010 -> 40"
+    }
+  ]
+}

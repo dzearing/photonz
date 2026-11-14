@@ -1,0 +1,34 @@
+{
+  "id": "the-playback-speed-control-is-a-small-round-icon",
+  "title": "The playback speed control is a small round icon button like play's neighbours",
+  "goal": "The speed picker on the video play bar is a wide dropdown that takes too much room. Make it a round icon button the same size and look as the Go to Start and Go to End buttons beside it, opening the same list of speeds, so the play bar stays compact.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 6e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-14T15:04:23.394Z",
+  "updated": "2026-11-14T15:04:23.523Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-14, after finding the speed menu in the Dev app: \"i want it to take less horiz space, can we maybe have an icon button like other icon buttons\".\n\nToday: PlaybackSpeedMenu (Sources/Photonz/TimelineDock.swift ~1551) is a VideoKit.Dropdown (an NSViewRepresentable, Sources/Photonz/VideoKit/VideoKitControls.swift:292) with a text value, placed after Go to End in TimelineTransport's controls (~1630). The neighbours are VideoKit.TransportButton (Sources/Photonz/VideoKit/VideoKitTransport.swift:103): a round ghost button, 11pt semibold symbol, Palette.dim, ink on hover. Shipped by task playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2 (commit 0c0b3edf8).\n\nKeep the logic in EditorState/PlaybackSpeed (chosenPlaybackSpeed, playbackSpeedReading, playbackSpeedIsSilent, setPlaybackSpeed); only the view changes. The menu should be a real menu (an NSMenu off the button, or a SwiftUI Menu styled to the TransportButton face), not a popover. Trap: walks pick from the menu without opening it on screen (CLAUDE.md, walks run while the person works), so whatever replaces the Dropdown must still be reachable that way; check how VideoKit.Dropdown is driven by walks before swapping it. Next is the target; TimelineDock is shared, so Current gets it too, which is fine.",
+  "acceptance": [
+    "At 1x the control is one round ghost icon button, the same diameter, weight, colour and hover as the Go to Start / Go to End buttons beside it (a speed symbol such as gauge.with.dots.needle or similar from SF Symbols). Its width is MEASURED against the old dropdown's and against Go to End's and both numbers go in the audit",
+    "At any speed other than 1x the button still says which speed is on without opening it, in no more room than a short badge (for example a small '2x' on or beside the icon); a silent speed (above 2x) still says it plays without sound. A J/K/L shuttle still shows in it while it runs",
+    "Clicking it opens the same choices as today (0.25x to 2x with sound, 4x and 8x under Without Sound), with the chosen one ticked; Shift-period, Shift-comma and Sequence > Play Faster / Play Slower still work",
+    "Its tooltip names it and the keys: 'Playback speed (⇧. faster, ⇧, slower)'",
+    "Walks that find the control by name ('Playback Speed', detail 'Transport') or read its panel readout still pass; run them by name (Scripts/playtest-all.sh --no-build speed)",
+    "Audit under queue/audits/ with before and after pictures of the play bar at 1x, 2x and 8x, and the measured widths; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-14T15:04:23.396Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-14T15:04:23.522Z",
+      "note": "seq 4010 -> 6e-7"
+    }
+  ]
+}
