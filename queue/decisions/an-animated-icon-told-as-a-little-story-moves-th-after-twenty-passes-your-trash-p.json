@@ -49,7 +49,12 @@
     }
   ],
   "recommended": "b",
-  "status": "pending",
+  "status": "resolved",
   "created": "2026-11-14T22:15:48.124Z",
-  "shot": "2026-11-14-story-trash-pass20-card.png"
+  "shot": "2026-11-14-story-trash-pass20-card.png",
+  "answer": {
+    "choice": "b",
+    "note": "",
+    "resolved": "2026-11-14T23:20:27.249Z"
+  }
 }
