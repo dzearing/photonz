@@ -30,14 +30,19 @@ struct AskMotionBounceTowardsTests {
     func neverOutside() throws {
         let landed = AskMotion.planned(try Self.steps())
         let lap = try #require(AskMotion.Lap(landed))
+        // The wall as it is drawn: an icon's lines keep their weight on the
+        // final grid, so in a frame grown to make room it is wider than written.
+        let svg = try #require(landed.first?.arguments["svg"]?.stringValue)
+        let view = try #require(try SVGArtwork.parse(svg).get().viewBox)
+        let half = AskMotion.drawnWidth(2, viewBox: view.width, from: 24) / 2
         var moment = 0.9
         var outside: [Double] = []
         while moment < 1.5 {
             if lap.placed("trash", at: moment)?.seen ?? false {
                 let ink = lap.ink("trash", at: moment).flatMap { $0 }
                 let middle = CGPoint(x: ink.map(\.x).reduce(0, +) / CGFloat(ink.count), y: ink.map(\.y).reduce(0, +) / CGFloat(ink.count))
-                // The right wall runs from (17, 9) to (16, 20): its outside edge is a unit further.
-                if middle.y > 10, middle.x > 17 + 1 - (middle.y - 9) / 11 { outside.append(moment) }
+                // The right wall runs from (17, 9) to (16, 20): its outside edge is half its drawn line further.
+                if middle.y > 10, middle.x > 17 + half - (middle.y - 9) / 11 { outside.append(moment) }
             }
             moment += 0.01
         }

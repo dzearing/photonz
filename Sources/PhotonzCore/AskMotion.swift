@@ -523,13 +523,74 @@ public enum AskMotion {
     /// goes behind its front (`dropsBehind`). Last, a line that drew itself
     /// starts over unseen (`startsOver`).
     public static func planned(_ steps: [AskStep]) -> [AskStep] {
-        let timed = foldsOpen(foldsLand(inBeforeShut(tuckedIn(touchesPlaced(landsInTheMiddle(hitStarts(staysTillGone(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(carried(steps)))))))))))))))
+        func timing(_ steps: [AskStep], drawn: (viewBox: CGFloat, from: CGFloat)? = nil) -> [AskStep] {
+            foldsOpen(foldsLand(inBeforeShut(tuckedIn(touchesPlaced(landsInTheMiddle(hitStarts(staysTillGone(travelsSeen(holdsMove(drawnNotFaded(swingsFitted(landingFolded(touchesKept(carried(steps)))))))))), drawn: drawn)))))
+        }
+        let timed = timing(steps)
         let made = fitted(comesClear(dropsBehind(hidden(hingesShared(timed)))))
         // Hinges again for the room made, if any: lines and corner rounds
-        // keep their size on the final grid as the drawing shrinks.
-        let grow = viewBoxWidth(made).flatMap { after in viewBoxWidth(timed).map { after / $0 } } ?? 1
-        guard grow > 1.001 else { return keysApart(jumpsUnseen(startsOver(made))) }
-        return keysApart(jumpsUnseen(startsOver(fitted(comesClear(dropsBehind(hidden(hingesShared(timed, grow: grow))))))))
+        // keep their size on the final grid as the drawing shrinks. And every
+        // hit placed again against the lines as wide as they will be drawn:
+        // on the eval's trash of 2026-11-14 a hit placed at the written width
+        // sat 0.84 deep in the lid's bar once the drawing shrank 1.275 times
+        // round its lines, "passes through the lid" in nine looks of nine.
+        guard let grown = viewBoxWidth(made), let was = viewBoxWidth(timed), grown / was > 1.001 else {
+            return keysApart(jumpsUnseen(startsOver(made)))
+        }
+        let placed = timing(steps, drawn: (grown, was))
+        return keysApart(jumpsUnseen(startsOver(fitted(comesClear(dropsBehind(hidden(hingesShared(placed, grow: grown / was))))))))
+    }
+
+    /// How wide a line written `width` wide is drawn, in the drawing's own
+    /// units, once an icon drawn on a grid `from` across lands with its
+    /// frame grown to `viewBox` across: scaled to the 24 grid and landed on
+    /// a whole or half unit there, as the app lands every line weight
+    /// (`IconGridLanding.weight`).
+    static func drawnWidth(_ width: CGFloat, viewBox: CGFloat, from: CGFloat) -> CGFloat {
+        guard viewBox > 0, from > 0, abs(viewBox - from) > 1e-3,
+              let grid = IconGridLanding(side: IconUnits.pictureSide, halves: true) else { return width }
+        let side = IconKeylines.artboardSide
+        let units = grid.weight(width * side / viewBox * grid.unit) / grid.unit
+        return units * viewBox / side
+    }
+
+    /// `steps` with every line of an icon drawing (`icon: true`) as wide as
+    /// it is drawn in a frame grown from `from` to `viewBox` across
+    /// (`drawnWidth`). A drawing that is not an icon scales its lines with
+    /// it, and is left as it is.
+    static func linesAsDrawn(_ steps: [AskStep], on viewBox: CGFloat, from: CGFloat) -> [AskStep] {
+        guard steps.first(where: { $0.tool == "add_drawing" })?.arguments["icon"]?.boolValue == true else { return steps }
+        return strokeWidths(steps) { said in
+            guard let width = Double(said) else { return said }
+            let drawn = (Double(drawnWidth(CGFloat(width), viewBox: viewBox, from: from)) * 1000).rounded() / 1000
+            return drawn == drawn.rounded() ? String(Int(drawn)) : String(drawn)
+        }
+    }
+
+    /// `steps` with every `stroke-width` the drawing says (as an attribute
+    /// or in a style) put through `change`, as written, and nothing else
+    /// changed.
+    static func strokeWidths(_ steps: [AskStep], _ change: (String) -> String) -> [AskStep] {
+        guard let index = steps.firstIndex(where: { $0.tool == "add_drawing" }),
+              let svg = steps[index].arguments["svg"]?.stringValue,
+              var object = steps[index].arguments.objectValue,
+              let pattern = try? NSRegularExpression(pattern: #"(stroke-width\s*(?:=\s*["']|:\s*))([0-9]*\.?[0-9]+)"#) else { return steps }
+        let text = svg as NSString
+        var out = ""
+        var last = 0
+        for match in pattern.matches(in: svg, range: NSRange(location: 0, length: text.length)) {
+            let number = match.range(at: 2)
+            out += text.substring(with: NSRange(location: last, length: number.location - last))
+            out += change(text.substring(with: number))
+            last = number.location + number.length
+        }
+        guard last > 0 else { return steps }
+        out += text.substring(from: last)
+        guard out != svg else { return steps }
+        object["svg"] = .string(out)
+        var changed = steps
+        changed[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
+        return changed
     }
 
     /// The width of the drawing's viewBox, if it has one.

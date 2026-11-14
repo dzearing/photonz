@@ -291,11 +291,27 @@ extension AskMotion {
         return out
     }
 
+    /// `touchesPlaced` with the hits placed, bounced off and waited for on
+    /// the drawing as it will be drawn in a frame grown from `from` to
+    /// `viewBox` across: an icon's lines keep their weight on the final
+    /// grid as everything else shrinks, so parts placed to meet at the
+    /// written width end deep in each other (the eval's trash of 2026-11-14,
+    /// 0.84 into the lid's bar at the hit). Only the keys change: the
+    /// drawing comes back as written.
+    public static func touchesPlaced(_ steps: [AskStep], drawn: (viewBox: CGFloat, from: CGFloat)?) -> [AskStep] {
+        guard let drawn, let index = steps.firstIndex(where: { $0.tool == "add_drawing" }) else { return touchesPlaced(steps) }
+        var placed = touchesPlaced(linesAsDrawn(steps, on: drawn.viewBox, from: drawn.from))
+        guard placed.indices.contains(index), placed[index].tool == "add_drawing" else { return touchesPlaced(steps) }
+        placed[index] = steps[index]
+        return placed
+    }
+
     /// The steps with every position key that says what it `touches` moved,
     /// straight towards that part, just far enough that the two meet at that
     /// moment, as the keys move them both; and `touches` taken off every key,
     /// moved or not. A key already touching, or naming a part the drawing
     /// does not have, keeps its value.
+    ///
     public static func touchesPlaced(_ steps: [AskStep]) -> [AskStep] {
         guard steps.contains(where: { step in (step.arguments["keys"]?.arrayValue ?? []).contains { $0["touches"] != nil } }) else {
             return steps

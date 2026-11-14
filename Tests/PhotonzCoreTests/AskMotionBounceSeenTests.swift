@@ -50,7 +50,9 @@ extension AskMotionBounceSeenTests {
     func bounceTurnsClear() throws {
         let landed = AskMotion.planned(try Self.steps())
         let trash = try #require(landed.last { $0.tool == "set_keys" && $0.arguments["layer"]?.stringValue == "$1/trash" && $0.arguments["property"]?.stringValue == "position" })
-        let lap = try #require(AskMotion.Lap(landed))
+        // Read with its lines as wide as they are drawn in the grown frame,
+        // which is what the hit is placed against.
+        let lap = try #require(AskMotion.Lap(AskMotionOverTheLidTests.asDrawn(landed)))
         let keys = AskMotionCheck.timed(trash)
         let hit = try #require(keys.firstIndex { key in
             key.seconds > 0.6 && key.seconds < 1 && AskMotion.inkMeets(lap.ink("trash", at: key.seconds), lap.ink("lid", at: key.seconds))
