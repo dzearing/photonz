@@ -1,0 +1,25 @@
+{
+  "feature": "Animated story icons: what pops in stays clear of the edge",
+  "epic": "icon-svg",
+  "summary": "Ring marks, smoke and pieces that appear part way through an animated icon now keep an icon's margin from the frame edge instead of sitting on it, and Ask is told to make shakes and counted beats big enough to see. The bell and the checkbox stories now read as asked in both runs; the other four do not.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: ask-animates-a-story-walk.",
+  "switched": {},
+  "try": [
+    { "do": "File > New, pick Icon, type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.", "shot": "2026-11-14-story-trash-pass20-playing-sc.png" },
+    { "do": "Wait for it to finish (about four minutes) and press space to play it." },
+    { "do": "Watch the reel of the same sentence instead, two laps: 2026-11-14-story-trash-pass20-two-laps.gif", "shot": "2026-11-14-story-trash-pass20-two-laps.png" },
+    { "do": "Hover the exported icon to play it at every size.", "shot": "2026-11-14-story-trash-pass20.svg" },
+    { "do": "Ask for: make an animated bell icon: the bell swings, rings twice and settles. Watch the ring marks at the widest swing." }
+  ],
+  "evaluate": [
+    "In your trash, can you see the trash bounce off the lid, or does it just meet it and go in?",
+    "Do the bell's ring marks now sit clear of the edge?",
+    "Is your trash sentence good enough to close this task on, with the other stories left as they are?"
+  ],
+  "rough": [
+    "The bar (5 of 6 story cases read as asked at 7) is not met: two runs on this commit read 2 of 6 each (bell 7.67 and 7.67, checkbox 7.11 and 7.22; heart 6.67 and 4.89, rocket 4.67 and 5.33, trash 5.0 and 4.22, envelope 3.78 and 3.89). Left open on the card on this task.",
+    "Your trash: the bounce off the lid is a small step, easy to miss; the scrap still reads as a solid block in a line icon; it enters cut by the right edge; a sliver of it shows under the lid in the frame it shuts.",
+    "The envelope fell from 6.11 last pass to under 4 in both runs: its plans swung the flap up into a peak instead of closing it. The prompt change this pass touched only shakes and counted beats, so this reads as the model's spread, not this change, but it is not proven.",
+    "No mock covers story icons; the bar is the eval's judge."
+  ]
+}
