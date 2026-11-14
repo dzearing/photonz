@@ -1,0 +1,28 @@
+{
+  "feature": "The play bar's knob stays clear of the times",
+  "epic": "video-editing",
+  "summary": "The round knob on the play bar's scrubber now stops half a knob in from each end, the way a Mac slider's does, so the current time and the length beside the bar are always whole. A click on the bar still puts the knob's centre exactly under the pointer, and In and Out marks still sit under the knob.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Any screen recording. The walk is Scripts/playtest/the-scrubber-knob-clears-the-times-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and press Home so the playhead is at 0:00.", "shot": "2026-11-14-scrubber-knob-before-after.png" },
+    { "do": "Rest the pointer on the play bar so the knob grows: 0:00 stays whole to its left.", "shot": "2026-11-14-scrubber-knob-after-start-hovered-sc.png" },
+    { "do": "Press End: the knob sits at the right end of the bar and the length stays whole.", "shot": "2026-11-14-scrubber-knob-after-end-resting-sc.png" },
+    { "do": "Click the bar an eighth of the way along: the knob's centre lands under the pointer." },
+    { "do": "Press I there, click near the far end, press O, then press Home.", "shot": "2026-11-14-scrubber-knob-after-marks-sc.png" },
+    { "do": "Drag the knob all the way to each end and back while watching both times." }
+  ],
+  "evaluate": [
+    "At 0:00 and at the end, can you read both times whole, resting, hovered and while dragging?",
+    "Does the knob sitting flush with the bar's ends look right to you, the way a Mac slider's knob does?",
+    "When you click anywhere on the bar, does the knob land exactly under the pointer?",
+    "Do the green In and Out marks line up with where the knob was when you set them?"
+  ],
+  "rough": [
+    "Measured before (2x window captures, same layout before and after): at 0:00 the resting knob covered 0.5pt of the last digit of 0:00 and its shadow 4pt of it; with the pointer on the bar the knob covered 2pt and its shadow 5pt, which is most of that digit (the user's screenshot). At the end, with the pointer on the bar, the knob covered 1.5pt of 0:03's first digit and its shadow 2.5pt; resting, the shadow 0.5pt.",
+    "Measured after, from the knob's painted edge and from the furthest pixel its shadow darkens to the nearest ink of the time: at 0:00 resting 12.5pt (knob) and 10.0pt (shadow); at 0:00 hovered 10.5pt and 8.0pt; at the end resting 12.5pt and 10.5pt; at the end hovered 11.0pt and 8.5pt. In the code a drag lifts the knob by the same flag as a hover (1.12 times), so the hovered numbers are the dragged ones; no picture was taken mid-drag. The readings are within half a point.",
+    "Click and marks, measured: a click at x 440pt (an eighth along) went to 414 ms and the knob's centre drew at 440.0pt; a click at 1221pt (seven eighths along, tracks open) went to 3186 ms and the knob drew at 1221.0pt. The old mapping would have given 450 and 3150 ms. In and Out set there drew at 444.0pt and 1221.0pt, exactly where the knob draws for those moments.",
+    "The mock's own scrubber (overlays.css .scrub) lets the knob hang half a knob past each end, which is what covered the times; this change goes further than the mock on the user's own request of 2026-11-14 (\"the slider covers up the time label\"). The bar is the same width as before, and the played part now runs to the knob's centre, which starts 13pt in (hidden under the knob at 0:00).",
+    "The older video editor's player bar already stopped its knob half a knob in, so it needed nothing. Every window that uses the play bar (View and Edit, with or without the tracks) gets the change, since they share one scrubber."
+  ]
+}

@@ -1110,11 +1110,12 @@ private struct TransportScrubber: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             .onContinuousHover { phase in
                 if case .active(let point) = phase {
-                    pointerMS = Int((min(max(0, point.x / max(1, width)), 1) * length).rounded())
+                    pointerMS = Int((VideoKit.Scrubber.travel(width).fraction(atX: point.x) * length).rounded())
                 }
             }
             .contextMenu {
-                TimelineRulerMenu(atMS: pointerMS, reachMS: Int(length * 6 / Double(max(1, width))))
+                TimelineRulerMenu(atMS: pointerMS,
+                                  reachMS: Int(length * 6 / Double(max(1, VideoKit.Scrubber.travel(width).travel))))
             }
     }
 }

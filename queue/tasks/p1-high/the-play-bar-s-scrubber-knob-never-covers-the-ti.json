@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 7e-7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T15:05:15.764Z",
-  "updated": "2026-11-14T15:05:15.896Z",
+  "updated": "2026-11-14T15:42:24.718Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-14, with screenshot /Users/dzearing/Pictures/Screenshots/Screenshot 2026-11-14 at 07.04.25.png (knob at 0:00 covering the second '0' of '0:00'): \"also, the slider covers up the time label\".\n\nLikely cause (read from code, not measured): VideoKit.TransportBar (Sources/Photonz/VideoKit/VideoKitTransport.swift:32-50) lays out timecode, scrubber, length with HStack spacing 12. The knob is 26x18 (thumbWidth/thumbHeight, :255-256) and is centred on the playhead x, which runs 0...width of the scrubber (SwiftUI path :275 offset x - thumbWidth/2; layer path :300-336 thumb.position x, scaled 1.12 when lifted). So at 0 it hangs 13pt (14.6pt lifted) plus a 2pt shadow out of the scrubber's frame, past the 12pt gap and onto the time; same at the far end over the length.\n\nThe usual fix is to inset the travel by half a knob at each end (track still full width or inset too, played fill starting under the knob), and the hit-to-fraction mapping (Scrubber / TransportScrubber in TimelineDock.swift ~1099-1152, and scrub(toDocumentFraction:)) must use the same inset or a click lands half a knob off. Marks are laid out at width * fraction (:330) and must follow the same mapping. Both the SwiftUI face and the layer-painted island must change together.",
@@ -29,6 +29,39 @@
     {
       "t": "2026-11-14T15:05:15.895Z",
       "note": "seq 4010 -> 7e-7"
+    },
+    {
+      "t": "2026-11-14T15:07:01.993Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T15:41:59.783Z",
+      "note": "owns these walks: the-scrubber-knob-clears-the-times-walk"
+    },
+    {
+      "t": "2026-11-14T15:42:10.932Z",
+      "note": "Adversarial pass before building: a Premiere or QuickTime user expects the knob to stop at the bar's ends the way a Mac slider does; the trap is that a press, the hover readout, the right-click menu's 'near a marker' reach and the In/Out marks all mapped x = width * fraction, so all of them must move to the same inset mapping or a click jumps half a knob. Chose an inset of half the RESTING knob (13pt) over half the lifted knob (14.6pt) because the resting knob then sits flush with the bar's end (no sliver of played colour beside it) and the lifted one still clears the time by 10pt."
+    },
+    {
+      "t": "2026-11-14T15:42:11.011Z",
+      "note": "Reproduced: walk the-scrubber-knob-clears-the-times-walk on the old code, 2x captures. At 0:00 the hovered knob covered 2pt of 0:00's last digit and its shadow 5pt; resting 0.5pt and 4pt. At the end, hovered, 1.5pt and 2.5pt of the length. Matches the user's screenshot."
+    },
+    {
+      "t": "2026-11-14T15:42:11.089Z",
+      "note": "Built: PhotonzCore/ScrubberTravel.swift (tested, ScrubberTravelTests), used by VideoKit.Scrubber for the knob, played part, marks and press, and by TimelineDock's TransportScrubber for its hover moment and right-click reach. The kit compiles alone, so ScrubberTravel.swift is compiled beside it in Scripts/test.sh and Scripts/video-kit-gallery.sh, like TileGridPlan. After: knob 10.5 to 12.5pt and shadow 8 to 10.5pt clear of either time; clicks land at 440.0/1221.0pt under the pointer (414/3186 ms); marks at 444.0/1221.0pt. Walks: scrub fragment 5 walks pass (scrub-never-blacks-out failed once on a 1-of-165-frames timing check, passed on rerun; it drives the playhead directly, not the bar) and right-click-keeps-the-playhead passes. Pictures looked at: before/after sheet, after-start-hovered, after-end-resting, after-marks: times whole in every one."
+    },
+    {
+      "t": "2026-11-14T15:42:11.167Z",
+      "note": "Full Scripts/test.sh: first run failed one media test (PieceCopyWriterTests notCopyable, 39 s under load, passes alone in 2.3 s); second full run exit 0. Filed as p2 find-out-why-the-cut-export-test-fails-again-in (it recurs a fix from 2026-11-09). Audit rough items are all measurements or settled; nothing else to file."
+    },
+    {
+      "t": "2026-11-14T15:42:24.716Z",
+      "note": "The play bar's knob now stops half a knob in from each end (ScrubberTravel in PhotonzCore, tested; used by VideoKit.Scrubber and TransportScrubber), so 0:00 and the length are never covered: 8pt+ between the knob's shadow and either time, resting or lifted, measured on real window captures (before: the knob and shadow covered 2pt/5pt of the last digit). Clicks land the knob's centre under the pointer (440.0/1221.0pt, 414/3186 ms) and In/Out marks sit under the knob. Walk the-scrubber-knob-clears-the-times-walk plus the scrub walks pass; full Scripts/test.sh green. Audit queue/audits/2026-11-14-the-play-bar-s-scrubber-knob-never-covers-the-ti.json."
     }
-  ]
+  ],
+  "started": "2026-11-14T15:07:01.992Z",
+  "walks": [
+    "the-scrubber-knob-clears-the-times-walk"
+  ],
+  "completed": "2026-11-14T15:42:24.717Z"
 }

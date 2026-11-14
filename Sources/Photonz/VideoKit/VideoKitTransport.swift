@@ -1,4 +1,10 @@
 import AppKit
+// The kit stands on its own (Scripts/test.sh typechecks it alone, and the
+// gallery compiles it with nothing else), so `ScrubberTravel` is compiled in
+// beside it there instead of imported.
+#if canImport(PhotonzCore)
+import PhotonzCore
+#endif
 import QuartzCore
 import SwiftUI
 
@@ -164,6 +170,9 @@ extension VideoKit {
     ///
     /// What is DRAWN is 6pt; what can be GRABBED is 24pt, because a control
     /// that asks for precision should not also ask you to hit a 6pt line.
+    ///
+    /// The knob stops half a knob in from each end (`ScrubberTravel`), as a
+    /// Mac slider's does, so it never hangs over the times beside the bar.
     struct Scrubber: View {
         /// Where the playhead is, 0 to 1. Unused with `liveFraction`.
         let fraction: Double
@@ -201,11 +210,11 @@ extension VideoKit {
                     .onChanged { value in
                         let phase: ScrubPhase = isDragging ? .changed : .began
                         isDragging = true
-                        onScrub(clamped(value.location.x / max(1, width)), phase)
+                        onScrub(Self.travel(width).fraction(atX: value.location.x), phase)
                     }
                     .onEnded { value in
                         isDragging = false
-                        onScrub(clamped(value.location.x / max(1, width)), .ended)
+                        onScrub(Self.travel(width).fraction(atX: value.location.x), .ended)
                     })
             }
             .frame(height: Self.hitHeight)
@@ -217,7 +226,12 @@ extension VideoKit {
             .modifier(ScrubberValue(percent: liveFraction == nil ? ScrubberFace.Spot(fraction, width: 1).said : nil))
         }
 
-        private func clamped(_ value: Double) -> Double { min(max(0, value), 1) }
+        /// How the bar's width maps to moments: the knob stops half a knob in
+        /// from each end, so it never covers the times beside the bar. A
+        /// press, a hover and everything drawn read the bar through it.
+        nonisolated static func travel(_ width: CGFloat) -> ScrubberTravel {
+            ScrubberTravel(width: width, knobWidth: ScrubberFace.thumbWidth)
+        }
     }
 
     private struct ScrubberValue: ViewModifier {
@@ -239,7 +253,7 @@ extension VideoKit {
 
             init(_ fraction: Double, width: CGFloat) {
                 let now = ScrubberFace.clamped(fraction)
-                halfPoints = Int((Double(width) * now * 2).rounded())
+                halfPoints = Int((Double(Scrubber.travel(width).x(at: now)) * 2).rounded())
                 percent = Int((now * 100).rounded())
             }
 
@@ -252,7 +266,7 @@ extension VideoKit {
         let lifted: Bool
         let width: CGFloat
 
-        private static let thumbWidth: CGFloat = 26
+        nonisolated static let thumbWidth: CGFloat = 26
         private static let thumbHeight: CGFloat = 18
 
         var body: some View {
@@ -268,7 +282,7 @@ extension VideoKit {
                     RoundedRectangle(cornerRadius: 1)
                         .fill(Palette.good)
                         .frame(width: 2, height: (lifted ? 8 : 6) + 8)
-                        .offset(x: width * Self.clamped(mark) - 1)
+                        .offset(x: Scrubber.travel(width).x(at: mark) - 1)
                 }
                 thumb
                     .scaleEffect(lifted ? 1.12 : 1)
@@ -327,7 +341,7 @@ extension VideoKit {
                 guard index < marks.count else { continue }
                 layer.backgroundColor = canvas.color(Palette.good)
                 layer.cornerRadius = 1
-                layer.frame = CGRect(x: width * clamped(marks[index]) - 1, y: middle - (thick + 8) / 2,
+                layer.frame = CGRect(x: Scrubber.travel(width).x(at: marks[index]) - 1, y: middle - (thick + 8) / 2,
                                      width: 2, height: thick + 8)
             }
             thumb.transform = lifted ? CATransform3DMakeScale(1.12, 1.12, 1) : CATransform3DIdentity

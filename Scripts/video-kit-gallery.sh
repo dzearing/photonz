@@ -18,5 +18,6 @@ bin="$(mktemp -d)/video-kit-gallery"
 trap 'rm -rf "$(dirname "$bin")"' EXIT
 swiftc -parse-as-library -swift-version 6 -O \
   Sources/Photonz/VideoKit/*.swift Sources/PhotonzCore/TileGridPlan.swift \
+  Sources/PhotonzCore/ScrubberTravel.swift \
   Scripts/video-kit-gallery.swift -o "$bin"
 "$bin" "$out"

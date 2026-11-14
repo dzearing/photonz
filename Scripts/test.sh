@@ -357,8 +357,9 @@ watch_for_a_parked_run() {
 # The video kit (Sources/Photonz/VideoKit) must stand on its own: every video
 # surface assembles it, and the gallery that draws it beside the mocks compiles
 # it with nothing else. A typecheck of the kit alone is the guard that it never
-# starts reading app state (`Scripts/video-kit-gallery.sh`). The one pure
-# core file the kit leans on, the tile grids' column math, comes along.
+# starts reading app state (`Scripts/video-kit-gallery.sh`). The two pure
+# core files the kit leans on, the tile grids' column math and the scrub bar's
+# knob travel, come along.
 #
 # Every word and icon on every shared control is legible against what is drawn
 # behind it, in every state, light and dark, over what can be behind it (the
@@ -374,6 +375,7 @@ after_checks() {
   local ok=0
   if ! swiftc -typecheck -parse-as-library -swift-version 6 \
       Sources/Photonz/VideoKit/*.swift Sources/PhotonzCore/TileGridPlan.swift \
+      Sources/PhotonzCore/ScrubberTravel.swift \
       Scripts/video-kit-gallery.swift; then
     echo "==> The video kit no longer compiles on its own: a piece in Sources/Photonz/VideoKit reaches into the app."
     ok=1

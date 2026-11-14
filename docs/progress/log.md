@@ -23098,3 +23098,11 @@ units.
 - 60 min edit: zoom 567 -> 50 ms a frame median over the whole range (it used to run out of time 4x in); scroll 50 ms (unchanged: zoomed in, pictures show and clips stay full bars); edits 0.5-0.7 s -> 150-245 ms, the rest mostly playback restart (folded into a-long-edit-with-transitions-plays-scrubs-and-ed).
 - Next: paint clips that show pictures, then the Zoom lanes and click ticks. Task left pending.
 - Perf note: composite path untouched.
+
+## 2026-11-14 — The play bar's knob stays clear of the times (the-play-bar-s-scrubber-knob-never-covers-the-ti)
+
+- Reproduced the user's report with a walk: at 0:00 the hovered knob covered 2pt of 0:00's last digit (its shadow 5pt); at the end it reached over the length the same way.
+- `ScrubberTravel` (PhotonzCore, tested) stops the knob's centre half a knob in from each end, like a Mac slider; `VideoKit.Scrubber` draws the knob, played part and marks and reads a press through it, and `TransportScrubber`'s hover moment and right-click reach use it too. The kit's standalone typecheck and gallery compile the file beside it, as with `TileGridPlan`.
+- After: 8pt or more between the knob's shadow and either time, resting or lifted; a click lands the knob's centre exactly under the pointer; In/Out marks sit under the knob. Walk `the-scrubber-knob-clears-the-times-walk`.
+- Filed p2 `find-out-why-the-cut-export-test-fails-again-in` (one load-related PieceCopyWriterTests failure in a full run; passes alone).
+- Perf note: composite path untouched.
