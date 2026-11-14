@@ -1890,6 +1890,8 @@ final class EditorState {
     /// stop it is talking about, written only when one of them changes
     /// (`EditorState+PanelPlayhead`).
     var panelPlayhead = PanelPlayhead()
+    /// The key diamond and Add Key's answers, beside it (`PanelKeyPlayhead`).
+    var panelKeyPlayhead = PanelKeyPlayhead()
     @ObservationIgnored var watchesPanelPlayhead = false
     /// What the menu bar watches instead of the document while its body is
     /// built, moving on in the pass after the document does

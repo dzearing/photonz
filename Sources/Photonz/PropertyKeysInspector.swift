@@ -28,7 +28,13 @@ struct PropertyKeysInspector: View {
     // window's ~35 ms of answering any edit (`keyframe-anything-walk`,
     // 2026-10-18); it comes in with the timeline's key lane instead. Every
     // other edit reaches it exactly as before.
-    var body: some View { readingALatePass { lateBody } }
+    //
+    // The clip line names the piece under the playhead, which it reads
+    // through the panel's answers (`readingThePlayheadForThePanel`) rather
+    // than the clock: read off the clock it rebuilt this section on every
+    // tick of a video played with a cut clip picked, 45 times in the second
+    // and a half after a blade on the 6 minute reference edit (2026-11-14).
+    var body: some View { readingALatePass { editorState.readingThePlayheadForThePanel { lateBody } } }
 
     @ViewBuilder private var lateBody: some View {
         #if PHOTONZ_PLAYTEST

@@ -40,10 +40,15 @@ struct PanelPlayhead: Equatable {
     /// The frame being held where the playhead is, for the badge on the
     /// canvas (`HeldFrameBadgeOverlay`): the same all the way through a hold.
     var heldFrame: HeldFrame?
-    /// The picked layer's key diamond on its track's header, and whether Add
-    /// Key can add one here: they change only where a key is, and read off
-    /// the clock they rebuilt the header and the panel's Add Key on every tick
-    /// of a video played with a clip picked.
+}
+
+/// The picked layer's key diamond on its track's header, and whether Add Key
+/// can add one here: they change only where a key is, and read off the clock
+/// they rebuilt the header and the panel's Add Key on every tick of a video
+/// played with a clip picked. A value of their own, beside `PanelPlayhead`
+/// rather than in it: a key added changes them, and in it every view of the
+/// Time section was built again for a key (`keyframe-anything-walk`).
+struct PanelKeyPlayhead: Equatable {
     var keyLayerDiamond: KeyDiamond?
     var canKeyAtPlayhead = false
 }
@@ -54,9 +59,11 @@ extension EditorState {
     @MainActor static var readingForThePanel = false
 
     /// Builds what `build` builds with the playhead read unwatched, and
-    /// `panelPlayhead` watched in its place (see the top of this file).
-    func readingThePlayheadForThePanel<T>(_ build: () -> T) -> T {
-        _ = panelPlayhead
+    /// `panelPlayhead` watched in its place (see the top of this file), or
+    /// with `keys`, `panelKeyPlayhead`: for a view that shows only the key
+    /// diamond or whether a key can be added here.
+    func readingThePlayheadForThePanel<T>(keys: Bool = false, _ build: () -> T) -> T {
+        if keys { _ = panelKeyPlayhead } else { _ = panelPlayhead }
         if !watchesPanelPlayhead {
             // Never written while a body is being built: the first answers
             // land on the next turn of the run loop.
@@ -73,10 +80,12 @@ extension EditorState {
     /// the moment any of that changes. The value is written only when it is
     /// different, so a clock moving on inside one piece writes nothing.
     func watchPanelPlayhead() {
-        let answers = withObservationTracking { workOutPanelPlayhead() } onChange: { [weak self] in
+        let (answers, keyAnswers) = withObservationTracking {
+            (workOutPanelPlayhead(), workOutPanelKeyPlayhead())
+        } onChange: { [weak self] in
             DispatchQueue.main.async { MainActor.assumeIsolated { self?.watchPanelPlayhead() } }
         }
-        guard answers != panelPlayhead else { return }
+        guard answers != panelPlayhead || keyAnswers != panelKeyPlayhead else { return }
         // A hand moving the playhead along crosses a clip on almost every
         // move of a quick scrub, and every write here is a pass over the
         // window: on the 6 minute reference edit a medium scrub was answered
@@ -85,7 +94,8 @@ extension EditorState {
         // up when the hand holds still (`MovieSweep.settleMS`) or lets go
         // (`catchUpPanelPlayhead`), as the sharp picture does.
         if playheadInHand, !playheadSettled { return }
-        panelPlayhead = answers
+        if answers != panelPlayhead { panelPlayhead = answers }
+        if keyAnswers != panelKeyPlayhead { panelKeyPlayhead = keyAnswers }
     }
 
     /// The panel's answers brought up to where the playhead is, once a hand
@@ -95,6 +105,8 @@ extension EditorState {
         guard watchesPanelPlayhead else { return }
         let answers = workOutPanelPlayhead()
         if answers != panelPlayhead { panelPlayhead = answers }
+        let keyAnswers = workOutPanelKeyPlayhead()
+        if keyAnswers != panelKeyPlayhead { panelKeyPlayhead = keyAnswers }
     }
 
     func workOutPanelPlayhead() -> PanelPlayhead {
@@ -103,8 +115,12 @@ extension EditorState {
                              pieceInHand: clipPieceInHand,
                              cutInHand: clipCutInHand?.index,
                              speedStopInHand: speedStopInHand,
-                             heldFrame: heldFrameNow,
-                             keyLayerDiamond: keyLayer.map { headerKeyDiamond($0.id) },
-                             canKeyAtPlayhead: canKeyAtPlayhead)
+                             heldFrame: heldFrameNow)
+    }
+
+    func workOutPanelKeyPlayhead() -> PanelKeyPlayhead {
+        guard documentHasTime else { return PanelKeyPlayhead() }
+        return PanelKeyPlayhead(keyLayerDiamond: keyLayer.map { headerKeyDiamond($0.id) },
+                                canKeyAtPlayhead: canKeyAtPlayhead)
     }
 }

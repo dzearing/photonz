@@ -174,6 +174,41 @@ struct DocumentDerivedTests {
         #expect(!doc.audioMix().contains { onIt.contains($0.layerID) })
     }
 
+    @Test("What the tree holds (fades, zooms, click effects) is kept, and a change to a layer is seen at once")
+    func treeFactsKept() throws {
+        var doc = Self.six
+        #expect(doc.derived.keptTreeFacts == nil)
+        let first = (doc.hasPictureFades, doc.hasZooms, doc.hasClickEffects)
+        #expect(doc.derived.keptTreeFacts != nil)
+        let fresh = Self.fresh(doc)
+        #expect(first == (fresh.allLayers.contains { $0.pictureFade != nil },
+                          fresh.allLayers.contains { $0.zooms?.isEmpty == false },
+                          fresh.allLayers.contains { $0.clickEffect?.isOn == true }))
+        // Every zoom taken off: the next question says so.
+        #expect(doc.hasZooms)
+        for layer in doc.allLayers where layer.zooms?.isEmpty == false {
+            doc.updateLayer(id: layer.id) { $0.zooms = nil }
+        }
+        #expect(doc.derived.keptTreeFacts == nil)
+        #expect(!doc.hasZooms)
+        // A fade put on one clip, and a click effect turned on on another.
+        let clips = doc.allLayers.filter { $0.movie != nil && $0.time != nil }
+        let faded = try #require(clips.first { $0.pictureFade == nil })
+        let didFade = doc.setPictureFade(faded.id, .in, toMS: 400)
+        #expect(didFade)
+        #expect(doc.hasPictureFades)
+        let clicked = try #require(clips.last)
+        doc.setClickEffect(onClip: clicked.id, recorded: nil) { $0.isOn = true }
+        #expect(doc.hasClickEffects)
+        // And a copy keeps its own answers once either is written to.
+        var copy = doc
+        for layer in copy.allLayers where layer.clickEffect?.isOn == true {
+            copy.setClickEffect(onClip: layer.id, recorded: nil) { $0.isOn = false }
+        }
+        #expect(!copy.hasClickEffects)
+        #expect(doc.hasClickEffects)
+    }
+
     @Test("A new canvas size or pixel scale starts the kept answers again")
     func canvasChangeForgets() {
         var doc = Self.six

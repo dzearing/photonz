@@ -57,6 +57,20 @@ struct DocumentDerived: Hashable, Sendable {
         /// reference edit played worked it out about a dozen times
         /// (2026-11-14).
         var audioMix: [AudioMixSegment]?
+        /// Whether anything anywhere in the tree fades, zooms or shows its
+        /// clicks (`TreeFacts`).
+        var treeFacts: TreeFacts?
+    }
+
+    /// What the whole tree holds that drawing a moment has to do something
+    /// about. Asked on every tick of a playing video and in every edit's
+    /// pass, each was a copy of every layer in the document and a walk of it
+    /// (`allLayers`): on the 6 minute reference edit about 6 ms of the main
+    /// thread a second of play (2026-11-14), growing with the edit.
+    struct TreeFacts: Sendable, Equatable {
+        var pictureFades = false
+        var zooms = false
+        var clickEffects = false
     }
 
     struct PictureOnlyHold: Sendable {
@@ -73,6 +87,8 @@ struct DocumentDerived: Hashable, Sendable {
 
     /// The sound plan kept, for tests: nil until the document is asked.
     var keptAudioMix: [AudioMixSegment]? { store.answers.withLock { $0.audioMix } }
+    /// The tree's facts kept, for tests: nil until the document is asked.
+    var keptTreeFacts: TreeFacts? { store.answers.withLock { $0.treeFacts } }
 
     static func == (lhs: DocumentDerived, rhs: DocumentDerived) -> Bool { true }
     func hash(into hasher: inout Hasher) {}
@@ -133,5 +149,22 @@ struct DocumentDerived: Hashable, Sendable {
         let made = make()
         store.answers.withLock { $0.editPoints[id] = made }
         return made
+    }
+}
+
+extension PhotonzDocument {
+    /// What the tree holds that drawing a moment has to act on, worked out in
+    /// one walk that copies nothing and kept until a layer changes
+    /// (`DocumentDerived.TreeFacts`).
+    var treeFacts: DocumentDerived.TreeFacts {
+        derived.answer(\.treeFacts) {
+            var facts = DocumentDerived.TreeFacts()
+            forEachLayer { layer in
+                if layer.pictureFade != nil { facts.pictureFades = true }
+                if layer.zooms?.isEmpty == false { facts.zooms = true }
+                if layer.clickEffect?.isOn == true { facts.clickEffects = true }
+            }
+            return facts
+        }
     }
 }

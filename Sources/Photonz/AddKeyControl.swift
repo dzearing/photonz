@@ -30,8 +30,8 @@ struct AddKeyControl: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            // Watches the answer, not the clock (`PanelPlayhead.canKeyAtPlayhead`).
-            .disabled(!editorState.readingThePlayheadForThePanel { editorState.canKeyAtPlayhead })
+            // Watches the answer, not the clock (`PanelKeyPlayhead.canKeyAtPlayhead`).
+            .disabled(!editorState.readingThePlayheadForThePanel(keys: true) { editorState.canKeyAtPlayhead })
             .panelHelp("Add a key at the playhead, then change the layer (K)")
             .playtestControl("Add Key", detail: "Motion")
             Divider().frame(height: 14)

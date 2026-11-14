@@ -171,9 +171,7 @@ extension Layer {
 extension PhotonzDocument {
 
     /// Whether anything in this document fades its picture.
-    var hasPictureFades: Bool {
-        allLayers.contains { $0.pictureFade != nil }
-    }
+    var hasPictureFades: Bool { treeFacts.pictureFades }
 
     /// Fade a layer's picture in or out over this many milliseconds, or stop
     /// with nought. The other end keeps the length it is shown with. A title's

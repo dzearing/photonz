@@ -290,9 +290,7 @@ extension ClipPieces {
 extension PhotonzDocument {
 
     /// Whether anything in this document draws its clicks.
-    var hasClickEffects: Bool {
-        allLayers.contains { $0.clickEffect?.isOn == true }
-    }
+    var hasClickEffects: Bool { treeFacts.clickEffects }
 
     /// Change a clip's click effect, making it if it has none. Turned on with
     /// no copy of the recorded clicks yet, it keeps `recorded`.

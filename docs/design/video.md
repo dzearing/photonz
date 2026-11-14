@@ -882,6 +882,30 @@ and watching each editor property with `withObservationTracking` during one
 edit, were the tools that settled it. lldb breakpoints on property setters
 did not work on the probe.
 
+**What a graph of its own for the tracks does not do either** (2026-11-14,
+pass 6). The timeline's whole grid of tracks was put in an `NSHostingView` of
+its own, a separate SwiftUI graph the window's pass never walks, with the dock
+reading the rows and the sound plan a pass late so it did not hand that host a
+new root in the edit's pass. A trim while the 6 minute edit played still held
+the window 27 to 28 ms in its own pass, a blade 51 to 54 and an undo 55 to 57,
+the same as with the tracks in the window's graph. So the edit's own pass is
+not the window's graph being big: it is the views that are woken by the edit's
+writes, wherever they live, plus the window's render. Do not try the separate
+host again for this; find what the edit wakes.
+
+One that was found that way, and is rule 2 again: the panel's Properties
+section named the piece of the clip under the playhead by reading the clock
+(`clipPieceInHand`), so with a cut clip picked it was built again on every
+tick of play, 44 to 46 times in the second and a half after a blade. It reads
+the piece through `readingThePlayheadForThePanel` now and is built once or
+twice. And one value per kind of answer: the key diamond and Add Key's
+answers had been put in `PanelPlayhead` beside the clip, piece and cut, so a
+key added built the Time section again (`keyframe-anything-walk`); they are
+`PanelKeyPlayhead` now, read with `readingThePlayheadForThePanel(keys: true)`. The three questions drawing a moment asks of the whole tree (does
+anything fade, zoom or show its clicks) are kept beside the document
+(`DocumentDerived.TreeFacts`) instead of copying every layer three times on
+every tick.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

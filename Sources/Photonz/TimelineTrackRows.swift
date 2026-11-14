@@ -959,8 +959,8 @@ struct TrackKeyDiamond: View {
     @State private var isHovering = false
 
     var body: some View {
-        // Watches the answer, not the clock (`PanelPlayhead.keyLayerDiamond`).
-        let state = editorState.readingThePlayheadForThePanel { editorState.headerKeyDiamond(layerID) }
+        // Watches the answer, not the clock (`PanelKeyPlayhead.keyLayerDiamond`).
+        let state = editorState.readingThePlayheadForThePanel(keys: true) { editorState.headerKeyDiamond(layerID) }
         Button {
             editorState.toggleHeaderKey(layerID)
         } label: {

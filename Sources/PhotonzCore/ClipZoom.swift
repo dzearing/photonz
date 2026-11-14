@@ -472,9 +472,7 @@ extension ClipPieces {
 extension PhotonzDocument {
 
     /// Whether anything in this document zooms.
-    var hasZooms: Bool {
-        allLayers.contains { $0.zooms?.isEmpty == false }
-    }
+    var hasZooms: Bool { treeFacts.zooms }
 
     /// Add a zoom to a clip, starting at a moment of the document and running
     /// `ClipZoom.defaultLengthMS`, cut short where the clip or the next zoom
