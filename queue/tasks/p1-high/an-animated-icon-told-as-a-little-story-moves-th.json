@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-08T07:01:36.263Z",
-  "updated": "2026-11-14T01:42:44.963Z",
+  "updated": "2026-11-14T02:42:11.003Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-07 (intake): 'i still can't seem to ask it to make an animated icon' ... 'for example \"make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close.\" This translates into draw a trashcan'. Their app (Photonz Dev, built 22:10 with c41e1fcd3 New window fix and e1ac11193 Ask animates) was current. The intake window's walk with the user's sentence (a copy of ask-animates-from-the-new-window-walk) got as far as 'made a 512 by 512 picture, as an icon' and then the probe quit with no crash report while the user's app held a 26 GB llama-server. Prior: ask-animates-what-it-makes-an-animated-svg-icon notes the trash animates for the shorter wording; asking-the-new-window-for-an-animated-icon-makes notes the moving route needs 'icon' or 'svg' and a blank icon.",
@@ -446,9 +446,37 @@
     {
       "t": "2026-11-14T01:42:44.962Z",
       "note": "Pass 17: the trash is in the can before the lid shuts and fades where it landed (0adc95f2c, 18ea7cf71, 03a5c2bf2, 8d55abd6b); story bar (5 of 6 at 7) not met, 2 of 6"
+    },
+    {
+      "t": "2026-11-14T01:43:29.272Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T02:24:28.435Z",
+      "note": "Pass eighteen, from pass seventeen's reel (2026-11-13-story-trash-pass17-two-laps.png): the scrap went into the can and faded there drawn OVER the ribs, a dark blob on the front of the can. Cause: the can's body is an open path (a U), which the app draws as a line with no inside (PathContent.paintsAnInside needs closed), so hidden() could not put anything behind it. Shipped 39167fc4c, tests first (AskMotionDropsBehindTests 4, each failing before): dropsBehind, after hidden: a part keyed to move, drawn over a still open line that sags at least 0.4 of its mouth and whose mouth is at least half its longer side, last seen (just before it goes out of sight) with its middle inside that line's hull and seen outside it before, is moved before the container's group and the container gets a closed white copy of itself with no stroke ('<id>-inside') just under its outline; refused when anything else drawn under the white lies in the mouth. First version also redrew solid ink in the container's line (as hidden's inLine does): that made the scrap a unit wider after every contact was placed and broke AskMotionTuckedIn and AskMotionStruckWaits (through the lid at 1.02 to 1.08 s); taken out. Scripts/test.sh exit 0. Walk ask-animates-a-story-walk at Next defaults ok (on the first version), exported SVG draws trash, white inside, can; two-lap frames rendered in WebKit: the scrap sinks behind the rim at 2.35 s and nothing sits on the can's front after, seam 0, no blank frames."
+    },
+    {
+      "t": "2026-11-14T02:42:10.692Z",
+      "note": "Measured 39167fc4c, story run 20261114-021418-ask (one run, four pieces): total 52.6 (last pass 55.6, 57.7); reads as asked bell 6.4, checkbox 7.4, heart 5.1, envelope 2.3, rocket 4.0, trash 5.9: 1 of 6 at 7. Trash 5.9 is its best in four runs (5.0, 5.1, 33.8 score run, now 51.8 score). The eval's own trash plan also went behind the can (white inside in its result.svg). Pictures looked at: the walk's two-lap sheet rendered in WebKit (sinks behind the rim at 2.35 s, nothing on the can's front after, seam 0) and the eval trash result.png (0.8 s the scrap drawn BEHIND the lid bar, which nine looks of nine read as 'passes through the lid'; 0.9 s a sliver above the rim as it fades). Audit queue/audits/2026-11-14-animated-icon-story-drops-behind.json, reel 2026-11-14-story-trash-pass18-two-laps.gif."
+    },
+    {
+      "t": "2026-11-14T02:42:10.777Z",
+      "note": "NOT DONE, the bar: 5 of 6 story cases read as asked at 7; this pass 1 of 6 (checkbox 7.4). Next levers, from this pass's judges: (1) dropsBehind moves the scrap before the can's group, which also puts it behind the lid drawn after; at the hit it reads as cutting through the lid. Put it just before the can only (after the lid when the lid is drawn before the can) or move the lid's group after it, so it stays over what it touches; (2) once a part goes behind a container, its fade is not needed to hide it: hold it fully seen until it is wholly below the mouth (or fade only after), so it is seen dropping in instead of a one-frame sliver; (3) the bounce as a rebound; (4) the scrap enters cut by the frame edge (thrown from off the frame, pass 13) and judges dock it every look. Left rough, no new task (all inside this one): the white inside shows as a white tub on a dark backdrop, as the envelope's already does; the walk took about 12 minutes with a cold probe build."
+    },
+    {
+      "t": "2026-11-14T02:42:10.853Z",
+      "note": "walks ask-animates-a-story-walk, ask-animates-a-story-without-the-word-walk -> ask-animates-a-story-walk, ask-animates-a-story-without-the-word-walk"
+    },
+    {
+      "t": "2026-11-14T02:42:10.926Z",
+      "note": "Pass 18: what drops into an open container goes behind its front (39167fc4c); story bar (5 of 6 at 7) not met, 1 of 6, trash 5.9 (its best)"
+    },
+    {
+      "t": "2026-11-14T02:42:11.002Z",
+      "note": "Pass 18 shipped 39167fc4c (the trash sinks behind the can instead of fading on its front); bar not met, 1 of 6 at reads as asked 7. Next: keep the scrap over the lid it hits, and hold it seen until it is below the rim."
     }
   ],
-  "started": "2026-11-13T23:23:32.684Z",
+  "started": "2026-11-14T01:43:29.271Z",
   "walks": [
     "ask-animates-a-story-walk",
     "ask-animates-a-story-without-the-word-walk"

@@ -1,0 +1,28 @@
+{
+  "feature": "An animated icon told as a little story: the trash drops in behind the can's front",
+  "epic": "icon-svg",
+  "summary": "In your trash sentence the scrap now sinks behind the can's rim as it goes in, instead of fading on the front of the can over its ribs. The bar (five of six stories reading as asked) is still not met: one of six this pass (the checkbox).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. New window, Icon, then Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new Icon and press Command K.", "shot": "2026-11-14-story-trash-pass18-playing-sc.png" },
+    { "do": "Type: make an animated trash icon where the lid opens and some trash is thrown in, bouncing off the lid and causing it to close. Press Return, wait about five minutes, press Space." },
+    { "do": "Watch your sentence's reel from this pass's walk, two laps.", "shot": "2026-11-14-story-trash-pass18-two-laps.gif" },
+    { "do": "Read its frames: lid opens 0.26 s, thrown in from the right 0.65 s, meets the lid 0.78 s, half behind the rim 2.35 s, nothing on the can's front after.", "shot": "2026-11-14-story-trash-pass18-two-laps.png" },
+    { "do": "Hover the exported icon to play it at real sizes.", "shot": "2026-11-14-story-trash-pass18.svg" },
+    { "do": "Compare the story eval's own trash plan this pass.", "shot": "2026-11-14-story-trash-pass18-eval.png" }
+  ],
+  "evaluate": [
+    "Does the scrap sinking behind the rim read as it going into the can?",
+    "At 16 and 24 points, is the scrap gone too quickly to see where it went?",
+    "Is the white inside the can right on a dark backdrop, or should the can stay see-through there?"
+  ],
+  "rough": [
+    "No mock covers what Ask makes for this request; the reel is judged against your sentence.",
+    "The scrap is drawn behind the lid as well as the can now, so where it meets the lid it reads as cutting through it (nine judge looks of nine on the eval's plan); this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "The scrap starts fading while half of it is still above the rim, so for one frame a sliver of it shows on the rim before it vanishes; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "The bounce is still a glance off the lid, not a rebound; this task covers it (an-animated-icon-told-as-a-little-story-moves-th).",
+    "The can's inside is now filled white, so on a dark backdrop the can shows as a white tub; the envelope already did this. Left in this task's log.",
+    "Story scores this pass, reads as asked: bell 6.4, checkbox 7.4, heart 5.1, envelope 2.3, rocket 4.0, trash 5.9 (run 20261114-021418-ask, total 52.6; last pass 55.6 and 57.7). Trash is its best in four runs; the envelope and rocket swings are the agent's own plans, not this change."
+  ]
+}

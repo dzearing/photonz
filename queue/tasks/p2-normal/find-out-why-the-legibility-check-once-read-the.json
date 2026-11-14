@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T05:49:07.555Z",
-  "updated": "2026-11-13T19:15:24.767Z",
+  "updated": "2026-11-14T01:44:05.584Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/43367299841 (commit 610f1dc95), Test slice 1 of 3, step Run tests, after all 5535 tests passed: 'legibility: 1546 words and icons measured on 122 specimens, light and dark, in 43s' then 'legibility: UNREADABLE (the user: no white on white or black on black, ever): Caption preview, Lower third, still, dark: 1.00:1, #232323 on #232323, at 10,10 (caption-preview-lower-third-still-dark.png)' and exit 1. The next CI run, 43368952566 on b20245458 (a queue-only commit, same app code), passed. Not reproduced locally; the check lives in Scripts/test.sh (grep photonz-legibility). Filed by a-long-reference-edit-opens-in-the-probe-in-one, which does not touch captions. Epic is video-perf only because the queue requires a now-staged epic; it is a test-health item.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-11-13T19:15:24.766Z",
       "note": "Again on main: run 43467774822 (c9093cd3b, 2026-11-13 16:56Z), slice 2 of 3, TextRevealUnclippedTests.swift:182: .keynote worst.share 0.1224, .softGlass 0.2076 >= 0.998. Fourth red on main from this check; seen by playback-speed runner, which does not touch titles."
+    },
+    {
+      "t": "2026-11-14T01:44:05.583Z",
+      "note": "Again on main: run 43536367657 (03a5c2bf2, 2026-11-14 00:46Z), slice 2 of 3, TextRevealUnclippedTests.swift:129 and :182, 27 issues (.glass, .terminal, .maskReveal at worst.share 0.0; .keynote 0.052). Fifth red from this check; seen by the story-icon runner, whose commit touches only Ask's motion code (Sources/Photonz/Ask), nothing in titles."
     }
   ],
   "walks": []
