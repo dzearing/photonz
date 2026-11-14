@@ -23090,3 +23090,11 @@ units.
 - Cause, from the user's own drags in the unified log: the drag began in the installed Photonz (⇧⌘H is held by one copy only) and was dropped in another copy's timeline. SwiftUI's provider offers nothing and `CaptureThumbnailView.lifted` is per process, so nothing could be read.
 - `FileDrop.read` now falls back to the drag pasteboard during a real drop (the plain link, which is the History file, before the file link, which is SwiftUI's cache copy) and never reads the system drag pasteboard during a walk. The timeline-drop log names where each file was read from, and what an unreadable drop carried.
 - Walk `a-history-tile-from-another-photonz-lands-walk` (new `dropOnTimeline` option `fromAnotherApp`) fails as the user's drag did with the fix out and passes with it. Not confirmed with a real pointer: no agent here can post a real drag.
+
+## 2026-11-14 — Hour-long timeline, pass 2 (the-timeline-of-an-hour-long-edit-scrolls-zooms)
+
+- Measured first: with every clip bar stubbed out a zoom frame on the 60 min edit fell from ~570 ms to 24 ms, so the bar views were the cost.
+- A busy lane (24+ clips in sight, `TimelinePaint`) now paints its plain clips and its cuts (seams and transition bands) in two Canvas layers (`TimelinePaintedClips.swift`); a clip or cut picked, in a hand, under the pointer, or carrying anything the painting does not draw stays its full view. Checked pixel by pixel against captures taken before the change at Fit, 2x and 4x.
+- 60 min edit: zoom 567 -> 50 ms a frame median over the whole range (it used to run out of time 4x in); scroll 50 ms (unchanged: zoomed in, pictures show and clips stay full bars); edits 0.5-0.7 s -> 150-245 ms, the rest mostly playback restart (folded into a-long-edit-with-transitions-plays-scrubs-and-ed).
+- Next: paint clips that show pictures, then the Zoom lanes and click ticks. Task left pending.
+- Perf note: composite path untouched.

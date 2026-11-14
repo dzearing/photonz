@@ -114,7 +114,7 @@ struct CaptionCuesLayer: View, Equatable {
     /// The name as the full bar sets it on one line: whole where it fits, and
     /// otherwise cut short with an ellipsis, the way `.truncationMode(.tail)`
     /// ends it.
-    private static func fitted(_ name: String, width: CGFloat, in context: GraphicsContext,
+    static func fitted(_ name: String, width: CGFloat, in context: GraphicsContext,
                                ink: Color) -> GraphicsContext.ResolvedText {
         func resolved(_ words: String) -> GraphicsContext.ResolvedText {
             context.resolve(Text(words).font(.system(size: 9.5, weight: .semibold)).foregroundStyle(ink))

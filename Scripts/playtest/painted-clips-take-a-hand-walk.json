@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/painted-clips-take-a-hand-walk",
+  "seed": "At Next defaults, no flag set: the 6 minute reference edit, whose V1 track has dozens of clips in sight at Fit, so its plain clips, their sounds and the cuts between them are painted as one layer rather than built as a view each (the-timeline-of-an-hour-long-edit-scrolls-zooms). The pointer coming to rest on a painted clip turns it into its full bar, and one real click on it picks it, the way a person picks a clip.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 6
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "snapshot",
+      "name": "0-fit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The pointer comes to rest on Take 1, about 3:41 in and clear of the transitions at either end, and a real click there picks it.",
+      "do": "windowClick",
+      "lane": "V1",
+      "seconds": 221
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Take 1"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "1-take-1-picked"
+    }
+  ]
+}

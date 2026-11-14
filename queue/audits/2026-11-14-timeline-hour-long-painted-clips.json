@@ -1,0 +1,39 @@
+{
+  "feature": "The timeline of an hour-long edit: clips and cuts painted instead of built",
+  "epic": "video-perf",
+  "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
+  "summary": "Zooming the hour-long reference edit's timeline went from about 570 ms a frame to about 50 ms, and it now gets all the way in and back out in the time it used to take to zoom four times in. A busy track now paints its plain clips, their sounds and the cuts between them in one go, and a clip becomes its full self the moment the pointer reaches it, so the timeline looks and works as before.",
+  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60.",
+  "switched": {},
+  "try": [
+    { "do": "Run Scripts/perf/reference-edit.sh 60 and wait for the edit to open at Fit.", "shot": "2026-11-14-timeline-painted-hour-fit-sc.png" },
+    { "do": "Pinch the timeline in until about a minute shows, then pinch back out to the whole hour." },
+    { "do": "Compare the strips: each pair is the same view before this change (upper) and after it (lower), at Fit and at a quarter hour.", "shot": "2026-11-14-timeline-painted-before-after.png" },
+    { "do": "Rest the pointer on a clip in V1, then click it.", "shot": "2026-11-14-timeline-painted-take-1-picked-sc.png" },
+    { "do": "Drag a fade diamond on a clip's sound half, or the end of a transition band, near the whole-hour view." },
+    { "do": "Press Space and trim the end of a clip ahead of the playhead while it plays, then press Command-Z." }
+  ],
+  "evaluate": [
+    "Does zooming out to the whole hour now keep up with your fingers well enough that you would use it?",
+    "Does the timeline look exactly as it did before at every zoom (clips, names, sounds, fade diamonds, cuts, transition bands)?",
+    "When the pointer reaches a clip, a cut or a transition near the whole-hour view, does everything you reach for (grips, fade diamonds, the level line, right click) work at once?",
+    "Is scrolling along a zoomed-in stretch of the hour, where clips show their pictures, smooth enough yet?"
+  ],
+  "measured": [
+    "Measured with the speed walk's timeline, idleBuilds and edits measures on the 60 minute reference edit (524 clips, 377 cuts, 126 zooms) at 120 Hz, markers down, on this Mac. Before is this task's pass 1 commit 602579415, re-measured today.",
+    "Zoom in, before: 567 ms a frame median (p95 627), and the 20 seconds ran out after 38 frames, about four times in from Fit. After: 50 ms median over the whole range, 240 frames from Fit to as far in as it goes (p95 229 ms, the stretch where clips show pictures and stay full bars).",
+    "Zoom out, before: 588 ms median (p95 694) over 37 frames. After: 50 ms median over 240 frames (p95 244 ms).",
+    "Clip bars built per frame of zoom: 808 before, 58 after (a painted lane counts as one).",
+    "Scroll along the zoomed-in hour, half a minute on screen: 50 ms median before and after (p95 59 before, 66 after). Zoomed that far in, clips show their pictures, so they are still full bars.",
+    "Edits while it plays, longest main thread pass, before / after: trim 526 / 192 ms, move 534 / 167, blade 683 / 243, undo 704 / 177, transition 948 / 211, title 475 / 149. The bar is 16 ms.",
+    "Playing with nothing edited: 99 new pictures in 3 s (the clock's full rate) and no clip bar built per picture, before and after.",
+    "What it looks like, pixel by pixel, against pictures of the same views taken before the change: at Fit 754 of 765,184 timeline pixels differ by more than a sixth, at 2x 31, at 4x 443, all single stray pixels at shadow edges. Zoomed further in nothing is painted (pictures show), and the remaining differences are film strip thumbnails that had loaded at different moments."
+  ],
+  "rough": [
+    "Zoom and scroll are still about 50 ms a frame against the 8.3 ms bar, so this task stays open. Zoomed in far enough for pictures along the clips, every clip in sight is still a full bar, and that stretch is the slow 5 percent of a zoom (about 230 ms) and all of a scroll. Painting the pictures too is the next step, still this task's.",
+    "Of what is left in a far-out zoom frame, the 126 Zoom lanes under V1 cost about 10 ms and the click ticks and part marks (a view per clip in sight) about 5 ms; the Zoom lanes are a-long-edit-with-many-zooms-shows-one-zoom-lane.",
+    "Edits are now 150 to 245 ms, and the timeline is a small part of that: restarting playback after the write (the audio mix, movie frames) and the inspector take most of it, with three whole-document scans per edit. Folded into a-long-edit-with-transitions-plays-scrubs-and-ed with the profile.",
+    "A painted cut or transition band answers a click only once the pointer has rested on it (it is then its full view); a click with no pointer move first on a band lands on the clip under it and picks the clip. A person's pointer always moves there first, and no walk clicks a cut on a busy track.",
+    "A busy track is one with 24 or more clips in sight; tracks with fewer, which is every walk's small document, build every clip as before."
+  ]
+}

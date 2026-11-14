@@ -345,7 +345,7 @@ struct SoundLevelLine: View {
             for point in points.dropFirst() { path.addLine(to: point) }
         }
         .stroke(lineColor, style: StrokeStyle(lineWidth: lineWidth, lineJoin: .round))
-        .shadow(color: .black.opacity(0.6), radius: 1.5)
+        .shadow(color: Self.restingShadow.color, radius: Self.restingShadow.radius)
         .allowsHitTesting(false)
     }
 
@@ -398,11 +398,24 @@ struct SoundLevelLine: View {
     /// and the steps along a curve, which are exactly the corners the mix
     /// plays ramps between (`AudioLevel.moments`).
     private var shape: [CGPoint] {
-        guard lengthMS > 0, width > 0 else { return [] }
-        let level = shownLevel
-        let moments = level.moments(fromMS: fromMS, toMS: toMS)
-        return moments.map { CGPoint(x: x(atMS: $0), y: y(forGain: level.gain(atLayerMS: $0))) }
+        Self.shape(of: shownLevel, lengthMS: lengthMS, fromMS: fromMS, toMS: toMS, width: width, height: height)
     }
+
+    /// The line's corners, in its own points: what it draws at rest, and what
+    /// a busy lane paints for a sound nobody is working on
+    /// (`TimelinePaintedClips`).
+    static func shape(of level: AudioLevel, lengthMS: Int, fromMS: Int, toMS: Int,
+                      width: CGFloat, height: CGFloat) -> [CGPoint] {
+        guard lengthMS > 0, width > 0 else { return [] }
+        let span = max(1, toMS - fromMS)
+        return level.moments(fromMS: fromMS, toMS: toMS).map { ms in
+            CGPoint(x: width * CGFloat(min(max(fromMS, ms), toMS) - fromMS) / CGFloat(span),
+                    y: SoundLaneShape.levelY(forGain: level.gain(atLayerMS: ms), height: height, inset: inset))
+        }
+    }
+
+    /// How the resting line is stroked, shared with the painting.
+    static let restingShadow = (color: Color.black.opacity(0.6), radius: CGFloat(1.5))
 
     // MARK: A dot
 

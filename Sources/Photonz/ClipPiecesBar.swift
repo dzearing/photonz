@@ -779,14 +779,23 @@ struct ClipPiecesBar: View {
     /// full once the timeline is opened out far enough for each picture to
     /// stand for a short stretch (`ClipFilmstrip.opacity`).
     private var picturesOpacity: Double {
-        guard let movie = pictureMovie, laneWidth > 0 else { return 0 }
+        guard let movie = pictureMovie else { return 0 }
         // How far in, never where: nothing about this changes with a scroll.
-        let ruler = editorState.motionStripRuler(measuredFromMS: 0)
+        return Self.picturesOpacity(movie: movie, barHeight: barHeight, laneWidth: laneWidth,
+                                    spanMS: editorState.motionStripRuler(measuredFromMS: 0).spanMS,
+                                    zoom: editorState.timelineScaleOnly)
+    }
+
+    /// How strongly a recording's pictures show along a bar this tall, at
+    /// this zoom: nought at Fit. A busy lane paints only bars at nought
+    /// (`TimelinePaintedClips`).
+    static func picturesOpacity(movie: MovieRef, barHeight: CGFloat, laneWidth: CGFloat, spanMS: Double,
+                                zoom: TimelineZoom) -> Double {
+        guard laneWidth > 0 else { return 0 }
         let strip = max(1, barHeight - ClipFilmstripStrip.band)
         let aspect = movie.pixelSize.height > 0 ? movie.pixelSize.width / movie.pixelSize.height : 16.0 / 9
-        let msPerTile = Double(ClipFilmstrip.tileWidth(height: strip, aspect: aspect))
-            * ruler.spanMS / Double(laneWidth)
-        return ClipFilmstrip.opacity(zoom: editorState.timelineScaleOnly, msPerTile: msPerTile)
+        let msPerTile = Double(ClipFilmstrip.tileWidth(height: strip, aspect: aspect)) * spanMS / Double(laneWidth)
+        return ClipFilmstrip.opacity(zoom: zoom, msPerTile: msPerTile)
     }
 
     /// The row of pictures inside one piece, faded in and out as the timeline
@@ -1803,7 +1812,7 @@ struct SoundFadeDiamond: View {
 
 /// The shape a fade in flight is drawn with: the part of the segment the fade
 /// takes the sound out of.
-private struct FadeWedge: Shape {
+struct FadeWedge: Shape {
     let isIn: Bool
     /// What the fade runs on: the wedge's edge is the level line, so it is
     /// drawn along the curve (`PictureFade.curve`).
