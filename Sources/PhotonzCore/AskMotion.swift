@@ -247,7 +247,8 @@ public enum AskMotion {
         - A story of several beats plays them in the order told, one after another, each long enough to read: \
         200 ms at the least, a journey 300 to 600 ms. What a beat causes starts as that beat ends, at the key where \
         the two parts touch: that position key says "touches" with the other part's id. A beat the words count \
-        (twice, three times) happens exactly that many times, each seen apart. A bounce is a hop: the part goes up \
+        (twice, three times) happens exactly that many times, each seen apart and each as big as the first, \
+        with nothing between or after them that looks like one more. A bounce is a hop: the part goes up \
         at least 2 on the grid and comes back down, squashing a little as it lands; a pulse in size alone reads \
         as a beat, not a bounce. The beats fill most of a 2 to 4 second lap with a short rest at its end, never a burst \
         at the start and a long still wait.
@@ -256,7 +257,8 @@ public enum AskMotion {
         into something passes behind its front and is gone inside it.
         - When the whole object moves (flies off, lifts off, swings, shakes), draw all of it inside one <g> and key \
         that <g>, so no part is left behind; a part that also moves on its own is a <g> inside it. A shake is quick \
-        turns of 5 to 10 degrees, or moves of 1 on the grid, three or four times. A thing hanging from a point swings \
+        turns of 8 to 12 degrees, or moves of 1.5 on the grid, three or four times over 400 to 600 ms: smaller \
+        is lost at icon size. A thing hanging from a point swings \
         with rotation about that point, never rotationX or rotationY, which only fold a flat cover over an edge.
         - A lap is 1 to 3 seconds, a story 2 to 4, and loops unless the words say once. It must loop cleanly: set_timing seconds is \
         the lap, and every value's last key sits at the end of the lap with its first value, or a turn ends on a \
@@ -621,14 +623,29 @@ public enum AskMotion {
         guard cut || past else { return (steps, view) }
         // What the frame has to hold: the ink at rest with an icon's margin,
         // and what the keys do with a little slack.
-        func holding(_ reach: CGRect) -> CGRect {
+        func holding(_ reach: CGRect, marks: CGRect = .null) -> CGRect {
             var needed = still.isNull ? CGRect.null : still.insetBy(dx: -margin, dy: -margin)
             if !reach.isNull { needed = needed.union(reach.insetBy(dx: -slack, dy: -slack)) }
+            if !marks.isNull { needed = needed.union(marks.insetBy(dx: -margin, dy: -margin)) }
             return needed
         }
         let most = view.width * (past ? mostRoom : mostRest)
         var out = steps
         var box = Self.room(holding: holding(reach), in: view, least: view.width, most: most)
+        // What comes into sight part way through (a ring mark, smoke, a
+        // piece) keeps an icon's margin wherever its keys take it, when the
+        // room allows: it pops in and is read whole. With slack alone the
+        // eval's bell of 2026-11-14 slid its ring marks out onto the frame's
+        // edge and every look said they were cut off
+        // (AskMotionRoomMarginTests). What is seen from the start (a lid
+        // swinging up) keeps the slack, so the drawing keeps its size.
+        let marks = Self.appearingReach(steps, in: art)
+        if past, !marks.isNull, box.insetBy(dx: -slack, dy: -slack).contains(reach),
+           view.insetBy(dx: -slack, dy: -slack).contains(marks) == false {
+            let padded = Self.room(holding: holding(reach, marks: marks), in: view, least: view.width, most: most)
+            if padded.insetBy(dx: margin * 0.75, dy: margin * 0.75).contains(marks),
+               padded.insetBy(dx: -slack, dy: -slack).contains(reach) { box = padded }
+        }
         if past, !box.insetBy(dx: -slack, dy: -slack).contains(reach) {
             // Something travels past all the room there is: it is meant to
             // leave, and leaves whole rather than stopping half over the edge.
@@ -642,6 +659,23 @@ public enum AskMotion {
         object["svg"] = .string(svg.replacingCharacters(in: found, with: "viewBox=\"\(said)\""))
         out[index] = AskStep(tool: steps[index].tool, arguments: .object(object))
         return (out, box)
+    }
+
+    /// The furthest the keys take every part that is out of sight at the top
+    /// of the lap and comes into sight by its opacity (a mark, smoke, a
+    /// piece), or null when there is none. Boxes and keys only.
+    static func appearingReach(_ steps: [AskStep], in art: SVGArtwork) -> CGRect {
+        let keyed = steps.filter { $0.tool == "set_keys" }
+        var whole = CGRect.null
+        for step in keyed where step.arguments["property"]?.stringValue == MotionProperty.opacity.rawValue {
+            guard let part = (step.arguments["layer"]?.stringValue).flatMap(partReference)?.part else { continue }
+            let values = AskMotionCheck.timed(step)
+            guard let first = values.first, first.seconds <= 0, (first.value.doubleValue ?? 100) <= unseen,
+                  values.contains(where: { ($0.value.doubleValue ?? 0) > unseen }),
+                  let far = AskMotionCheck.reach(of: keyed, in: art, only: part) else { continue }
+            whole = whole.union(far)
+        }
+        return whole
     }
 
     /// How far the room's middle may sit from the drawing's, a share of its side.
