@@ -1,0 +1,24 @@
+{
+  "feature": "A redline of a 2x screenshot, back on the layout you picked",
+  "epic": "measure-redline",
+  "summary": "Redlines are back on the older layout you chose on 2026-11-14: numbers ride their brackets set a little off what they measure. Numbers still say pt on a 2x screenshot and short spans still carry end ticks.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: ask-annotates-a-screenshot-walk. The settings, sign-in and people-list pictures are the renderer's own drawing (PHOTONZ_REDLINE_SHEETS with RedlineSheetTests).",
+  "switched": {},
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, press Ask and send \"annotate the ux with measurements around the major ui elements\".", "shot": "2026-11-14-redline-older-layout-ask-sc.png" },
+    { "do": "Read the Measurements list: every row says pt (Button 124 × 30 pt, Field 220 × 26 pt)." },
+    { "do": "Look at the settings redline as the renderer draws it: 220 pt above the field, 124 pt below Save Changes, 12 pt on its line below the buttons.", "shot": "2026-11-14-redline-older-layout-settings.png" },
+    { "do": "Look at the sign-in screen's redline on the same layout.", "shot": "2026-11-14-redline-older-layout-login.png" },
+    { "do": "Look at the people list's redline on the same layout.", "shot": "2026-11-14-redline-older-layout-feed.png" }
+  ],
+  "evaluate": [
+    "Now that you see it again, is the older layout the one you want to keep?",
+    "Does the 220 pt bracket above the field still read as the field's width, with its leg near the 26 pt mark?",
+    "Is the 12 pt number below the buttons easy enough to tie to the gap between Reset and Save Changes?"
+  ],
+  "rough": [
+    "The agent judge's bar of 8 on clean and aligned is not reached on this layout: it measured Ask 73 (clean 5.4, aligned 5.6) and the skill 71.2 on 2026-11-11, and the drawing is pixel for pixel the same now. Closed short of 8 on your answer to the card on 2026-11-14.",
+    "This brings back the two things the 2026-11-11 read called clumsy: the 220 pt bracket's left leg runs down toward the 26 pt mark, and 12 pt hangs on a longer line below the buttons. Your call on 2026-11-14.",
+    "Measurements placed by hand get pt and end ticks but not the redline's placement rules; you chose earlier that a hand-placed number between rows stays on its line."
+  ]
+}

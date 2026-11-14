@@ -5,18 +5,18 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T05:16:19.351Z",
-  "updated": "2026-11-14T15:05:07.895Z",
+  "updated": "2026-11-14T22:36:06.221Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried over from measuring-a-ui-gives-a-calm-redline-each-kind-of (2026-10-20), which shipped code-chosen marks and clear readout placement (Sources/PhotonzCore/Redline.swift, find_measurements / mark_measurements) and took the settings case from 32.5 to 59.0 for Ask (judge 2.8 to 4.8). What the judge still says, verbatim, from Scripts/ask-eval.sh run --engine ask --cases settings-measurements (runs 20261021-044351-ask, 20261021-044837-ask, 20261021-050243-ask or the latest): \"values don't match what they point at (124 px on a roughly 250 px button, 18 px on a gap that is clearly larger)\"; \"there are no end ticks to show what is being measured\"; \"the brackets don't clearly mark what they measure (26 px, 30 px, 17 px)\". The 124 is right in points (MeasureUnit.points, logical px) but labelled px: MeasureUnit.suffix is \"px\" for both units by design (Measure.swift line 12). Only three call sites use the suffix (Measure.swift label/chipText, MeasureSizeGroup.swift:176, DocumentUnit.swift:27) but about 46 test files and 38 walks expect px readouts, which is why it did not fit in the redline task. Size brackets are MeasureSizeGroup + caliper extension lines (MeasurePlan.swift, MeasureRasterizer.swift).",
   "acceptance": [
     "On a 2x screenshot every measurement readout and the Measurements list say pt unless the person chose pixels (the user's calm-redline checklist, 2026-10-20), and every walk and test that expected px on a 2x picture changes in the same commit",
     "Before and after crops of the calm redline on Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, from the app's own render: in the after, every dimension line starts and stops on the two edges it measures (end ticks or the Measure tool's equivalent), and no bracket runs along an edge it does not measure",
-    "The settings measurements case scores 8 or more on clean and aligned for Ask and for the skill (Scripts/ask-eval.sh run --cases settings-measurements); it scored 4 on clean when the calm redline shipped",
+    "The settings measurements case scores 8 or more on clean and aligned for Ask and for the skill (Scripts/ask-eval.sh run --cases settings-measurements); it scored 4 on clean when the calm redline shipped (superseded by the user on 2026-11-14: card answer \"Go back to the left layout\", closing on the older layout, judged Ask 73 / clean 5.4 on 2026-11-11)",
     "Measurements a person places by hand get the same units and the same clearer ends, and every walk that photographs a measurement still passes"
   ],
   "log": [
@@ -231,6 +231,18 @@
     {
       "t": "2026-11-14T15:05:07.894Z",
       "note": "seq 30 -> 40"
+    },
+    {
+      "t": "2026-11-14T22:16:54.989Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-14T22:36:06.142Z",
+      "note": "User answered the card on 2026-11-14: go back to the left layout, then close. Reverted f6a1c7b07's placement code and its three tests (sizeBracketsHug, marksStayApart, shortLeaders, the inside-field exception) to 7d9ae7b5c's Redline.swift; kept pt units, end ticks, the copy-svg walk on 124 pt and the PHOTONZ_REDLINE_SHEETS tool. The settings and sign-in sheets are byte-identical (cmp) to the card's left pictures (2026-11-11-redline-tidy-after.png, -hugs-login-before.png)."
+    },
+    {
+      "t": "2026-11-14T22:36:06.220Z",
+      "note": "Verified: Scripts/test.sh exit 0; 14 walks ok in the probe (the 8 owned, ask-redlines-a-dialog/feed, redline-walk, svg-export-redline, capture-to-redline-steps, ask-annotates-a-screenshot). ask-annotates-a-screenshot-walk exited 1 on its first run (output overwritten before I read it) and passed on the rerun. Looked at the app capture and the settings sheet: pt everywhere, 44 pt with ticks, 220 above the field, 124 below Save Changes, 12 on its line. Eval not re-run: the layout output is identical to the state measured at Ask 73 / skill 71.2."
     }
   ],
   "walks": [
@@ -243,5 +255,5 @@
     "size-steps-and-resizes-walk",
     "copy-svg-into-a-code-editor-walk"
   ],
-  "started": "2026-11-11T22:23:36.854Z"
+  "started": "2026-11-14T22:16:54.988Z"
 }
