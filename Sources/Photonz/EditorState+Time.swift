@@ -16,10 +16,8 @@ extension EditorState {
 
     // MARK: Whether there is time at all
 
-    /// True where this document runs for a length of time. False for every
-    /// screenshot, which is what keeps the transport, the timeline and the
-    /// frame fetching out of the way of everything else.
-    var documentHasTime: Bool { document?.hasTime ?? false }
+    // Whether there is time at all is `documentHasTime`, kept beside
+    // `hasDocument` in EditorState.swift.
 
     /// Whether this window's tool bar is a video's: a document with time on
     /// Next's families bar, where the video's own tools lead and the T tool

@@ -237,8 +237,11 @@ final class SpeedWalkProbe {
             // Which counted views the edit built again, so a slow edit names
             // where its time went rather than leaving it to a profile.
             let built = ViewBuildMeter.shared.countsReport
-            lines.append(String(format: "%@ (%@): %.0fms in the call, longest pass %.0fms%@ (%@)", edit, did, call, longest,
-                                stillPlaying ? "" : ", and it stopped playing", built))
+            // And every long pass after it, in order, so the edit's own pass
+            // and the ones that follow it can be told apart.
+            lines.append(String(format: "%@ (%@): %.0fms in the call, longest pass %.0fms%@ (%@); passes: %@", edit, did,
+                                call, longest, stillPlaying ? "" : ", and it stopped playing", built,
+                                MainThreadMeter.shared.longPassesReport))
         }
         editor.pauseDocument()
         return "edited while it played: " + lines.joined(separator: "; ")

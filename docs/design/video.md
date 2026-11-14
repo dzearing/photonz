@@ -850,6 +850,38 @@ playing 33, 85 and 62 ms at worst, against 87, 223 and 119. `ViewBuildMeter`'s `
 measure of `Scripts/perf/speed-walk.sh` are how a new view is checked against
 this.
 
+**What the 30 ms left in an edit's own pass is not** (2026-11-14, pass 5 of
+`a-long-edit-with-transitions-plays-scrubs-and-ed`). With rules 6 and 7 in
+place a trim while the 6 minute edit plays still holds the window about 30 ms
+in its own pass, and a SwiftUI pass with no body run at all follows it at
+about 20 ms. Taking pieces out one at a time, behind a file switch, on the
+same build:
+
+| shown | trim | blade | undo |
+| --- | --- | --- | --- |
+| the whole window | 30 | 53 to 58 | 59 to 62 |
+| no timeline | 12 to 17 | 25 to 33 | 31 to 34 |
+| no panel | 17 to 28 | 36 to 39 | 35 |
+| neither | 7 to 9 | 12 to 13 | 7 to 12 |
+| lanes empty, the rest of the timeline kept | 18 to 21 | 35 to 40 | 39 to 42 |
+
+and things that changed nothing measurable: no clip bar rebuilding at all on
+an edit (36 bodies down to 2), no click ticks on the lanes, the panel's body
+not run in the edit's pass, and three thumbnail caches no longer rewritten by
+every edit. So the cost is not bodies rebuilding: the edit's pass costs about
+as much as the window has views, whichever of them it touches. The profile
+agrees: the pass is AttributeGraph dirtying and walking attributes
+(`ObservationGraphMutation.apply`, `propagate_dirty`, `UpdateStack::update`),
+then the hosting view's layout and display list, with almost no app code in
+it. What would move it is fewer views in the lanes and the panel (paint what
+nobody is touching, as busy lanes already do) or the timeline in a graph of
+its own that an edit's pass does not walk; which of the two is the next pass
+of that task. The speed walk's edit line now lists every pass of 6 ms or more
+after an edit, with what it built (`MainThreadMeter.longPasses`); that list,
+and watching each editor property with `withObservationTracking` during one
+edit, were the tools that settled it. lldb breakpoints on property setters
+did not work on the probe.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

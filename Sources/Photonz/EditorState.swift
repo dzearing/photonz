@@ -27,6 +27,8 @@ final class EditorState {
         didSet {
             let has = history != nil
             if hasDocument != has { hasDocument = has }
+            let hasTime = history?.current.hasTime ?? false
+            if documentHasTime != hasTime { documentHasTime = hasTime }
             noteWhatTheLookRowsSee()
             noteWhatTheMenuSees()
         }
@@ -132,6 +134,15 @@ final class EditorState {
     /// instead made every edit (a mark, a nudge) re-run the whole editor
     /// body and everything under it (`a-long-captioned-recording-walk`).
     private(set) var hasDocument = false
+    /// True where this document runs for a length of time. False for every
+    /// screenshot, which is what keeps the transport, the timeline and the
+    /// frame fetching out of the way of everything else. Changing only when
+    /// that answer does, like `hasDocument`: two hundred places ask it (the
+    /// window's mode, the panel's shelf, the timeline's toggle), and worked
+    /// out from the document each of them was told of every edit; the
+    /// panel's whole body ran again in the frame of every trim of a long
+    /// video for it (`a-long-edit-with-transitions-plays-scrubs-and-ed`).
+    private(set) var documentHasTime = false
     /// Which mode THIS window is in (Next, `next-window-modes`). Per window on
     /// purpose: a recording's window and a picture's window never share one,
     /// and a new window starts a picture in Image. See `EditorState+WindowMode`.
@@ -5665,6 +5676,20 @@ final class EditorState {
         copyConfirmation = nil
     }
 
+    /// Takes the pictures of layers that have gone out of the thumbnail
+    /// caches, writing a cache only when something in it died.
+    private func pruneDeadThumbnails(in document: PhotonzDocument) {
+        if !thumbnailCache.isEmpty {
+            let ids = Set(document.layers.map(\.id))
+            if let pruned = thumbnailCache.withoutDead(keeping: ids.contains) { thumbnailCache = pruned }
+        }
+        guard !shelfThumbnails.isEmpty || !iconPreviews.isEmpty else { return }
+        var living = Set<UUID>()
+        document.forEachLayer { living.insert($0.id) }
+        if let pruned = shelfThumbnails.withoutDead(keeping: { living.contains($0.id) }) { shelfThumbnails = pruned }
+        if let pruned = iconPreviews.withoutDead(keeping: { living.contains($0.frameID) }) { iconPreviews = pruned }
+    }
+
     // MARK: - Rendering
 
     func rerender() {
@@ -5697,14 +5722,13 @@ final class EditorState {
         // A title's sounds are made, not shipped: any score this document
         // plays that has no file yet gets one now (`TitleSoundFiles`).
         TitleSoundFiles.prepare(for: document)
-        // Thumbnails for layers that no longer exist are dead weight.
-        if thumbnailCache.count != document.layers.count {
-            let ids = Set(document.layers.map(\.id))
-            thumbnailCache = thumbnailCache.filter { ids.contains($0.key) }
-            let living = Set(document.layers.flatMap { $0.selfAndDescendants.map(\.id) })
-            shelfThumbnails = shelfThumbnails.filter { living.contains($0.key.id) }
-            iconPreviews = iconPreviews.filter { living.contains($0.key.frameID) }
-        }
+        // Thumbnails for layers that no longer exist are dead weight. Each
+        // cache is written only when a picture in it has died: they are
+        // watched, and until 2026-11-14 the prune ran whenever the cache's
+        // count differed from the layer count, which on a video is every edit,
+        // so every edit rewrote all three and copied every layer to do it
+        // (`CachePruningTests`).
+        pruneDeadThumbnails(in: document)
         // Crop/resize/undo can change the canvas size; keep the camera in sync.
         if var vp = viewport, vp.documentSize != document.canvasSize {
             vp.documentSize = document.canvasSize

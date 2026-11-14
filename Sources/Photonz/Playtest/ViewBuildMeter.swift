@@ -77,7 +77,7 @@ final class ViewBuildMeter {
         case menuBarRowAddedOrRemoved
     }
 
-    private var counts: [Subject: Int] = [:]
+    private(set) var counts: [Subject: Int] = [:]
 
     /// Called from a view body. Cheap on purpose: a dictionary bump, and only
     /// in a build that carries the harness at all.

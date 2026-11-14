@@ -22078,6 +22078,7 @@ final class MainThreadMeter {
             sinceAsked += d
             passes += 1
             passesSinceAsked += 1
+            notePass(lasting: d, endedAt: now)
             if d > longest {
                 longest = d
                 longestEndedAt = now
@@ -22098,7 +22099,43 @@ final class MainThreadMeter {
     /// passes like any other; this is only so a step can say so.
     private var slide = WindowSlideSpan()
 
+    /// Every pass of 6 ms or more since the meter was zeroed: when it began,
+    /// how long it took and which counted views it built. Which pass of an
+    /// edit is the long one, and what ran in it, is what tells a fix where
+    /// to look: on 2026-11-14 it showed the edit's own pass costing 30 ms
+    /// with three bodies built in it (`a-long-edit-with-transitions-plays-scrubs-and-ed`).
+    struct LongPass {
+        let startMS: Double
+        let ms: Double
+        let built: [ViewBuildMeter.Subject: Int]
+    }
+    private(set) var longPasses: [LongPass] = []
+    private var builtAtLastPass: [ViewBuildMeter.Subject: Int] = [:]
+
+    private func notePass(lasting d: CFTimeInterval, endedAt now: CFTimeInterval) {
+        let built = ViewBuildMeter.shared.counts
+        if d >= 0.006, longPasses.count < 40 {
+            let fresh = built.reduce(into: [ViewBuildMeter.Subject: Int]()) { into, entry in
+                let more = entry.value - (builtAtLastPass[entry.key] ?? 0)
+                if more > 0 { into[entry.key] = more }
+            }
+            longPasses.append(LongPass(startMS: (now - d - zeroedAt) * 1000, ms: d * 1000, built: fresh))
+        }
+        builtAtLastPass = built
+    }
+
+    /// The long passes as one line: "30ms at 0 (clipBar 18, trackRow 5), 20ms at 37".
+    var longPassesReport: String {
+        longPasses.map { pass in
+            let built = pass.built.sorted { $0.key.rawValue < $1.key.rawValue }
+                .map { "\($0.key.rawValue) \($0.value)" }.joined(separator: ", ")
+            return String(format: "%.0fms at %.0f", pass.ms, pass.startMS) + (built.isEmpty ? "" : " (\(built))")
+        }.joined(separator: ", ")
+    }
+
     func reset() {
+        longPasses = []
+        builtAtLastPass = ViewBuildMeter.shared.counts
         busy = 0; passes = 0; longest = 0; menuBarLeftOut = 0
         zeroedAt = CACurrentMediaTime()
         slide.reset(at: zeroedAt)
