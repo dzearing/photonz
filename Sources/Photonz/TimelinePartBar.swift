@@ -139,16 +139,20 @@ struct TimelinePartBar: View {
 /// there is something inside to open up and retime. Nothing on an open row,
 /// whose parts have rows of their own, and nothing where every part runs the
 /// whole way.
-struct TimelineChildMarks: View {
-    @Environment(EditorState.self) private var editorState
-    let layerID: UUID
+struct TimelineChildMarks: View, Equatable {
+    /// The parts' own timings (`EditorState.timelineChildMarks(of:)`), read by
+    /// the lane rather than here: an edit anywhere in the document re-runs the
+    /// lane once, where a view per clip that read the document itself was woken
+    /// for every clip on every edit (55 of them on the 6 minute reference
+    /// edit, `a-long-edit-with-transitions-plays-scrubs-and-ed`). The lane makes
+    /// one only for a clip that has marks to draw.
+    let marks: [LayerTime]
+    let ruler: MotionStripRuler
     let laneWidth: CGFloat
     let height: CGFloat
 
     var body: some View {
-        let marks = editorState.timelineChildMarks(of: layerID)
         if !marks.isEmpty {
-            let ruler = editorState.motionStripRuler
             Canvas { context, size in
                 for (index, mark) in marks.enumerated() {
                     let x0 = size.width * ruler.fraction(ofMS: Double(mark.inMS))

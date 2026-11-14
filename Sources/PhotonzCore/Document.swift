@@ -5,13 +5,15 @@ import Foundation
 /// Index 0 renders at the bottom. Pure value type — all mutation goes
 /// through methods so commands/undo can wrap them uniformly.
 public struct PhotonzDocument: Hashable, Codable, Sendable {
-    public var canvasSize: CGSize
+    /// A merged clip's sound is worked out at the canvas size and pixel scale,
+    /// so a write to either starts the worked-out answers again too.
+    public var canvasSize: CGSize { didSet { derived = DocumentDerived() } }
     /// Every write starts the worked-out answers again (`DocumentDerived`).
     public var layers: [Layer] { didSet { derived = DocumentDerived() } }
     /// Bitmap pixels per logical point of the source capture (1 for non-Retina,
     /// 2 for a Retina screenshot). Measures divide raw pixel distances by this to
     /// read out in points. Set from the capture's `backingScaleFactor`.
-    public var pixelScale: CGFloat
+    public var pixelScale: CGFloat { didSet { derived = DocumentDerived() } }
     /// The named colors this document's layers point at
     /// (`docs/design/ui-building.md`, step D8). Styles live in the document
     /// they were made in, the same way components do.

@@ -591,9 +591,18 @@ struct TimelineTrackRow: View {
             // A closed clip made of parts marks where its parts' own timings
             // fall, faint along the foot of its bar, so there is plainly
             // something inside to open and retime (`TimelineChildMarks`).
+            // Each is read here and made only for a clip with something to
+            // draw: the lane runs once an edit, where a view per clip that read
+            // the document was woken for every clip.
             if !row.isCaptions {
-                ForEach(clipsInSight) { clip in
-                    TimelineChildMarks(layerID: clip.layerID, laneWidth: laneWidth, height: pictureHeight(of: clip))
+                let marked = clipsInSight.compactMap { clip in
+                    let marks = editorState.timelineChildMarks(of: clip.layerID)
+                    return marks.isEmpty ? nil : (clip: clip, marks: marks)
+                }
+                ForEach(marked, id: \.clip.id) { item in
+                    TimelineChildMarks(marks: item.marks, ruler: ruler, laneWidth: laneWidth,
+                                       height: pictureHeight(of: item.clip))
+                        .equatable()
                 }
             }
             // Each click of a recording, as a tick along the foot of its bar
@@ -950,7 +959,8 @@ struct TrackKeyDiamond: View {
     @State private var isHovering = false
 
     var body: some View {
-        let state = editorState.headerKeyDiamond(layerID)
+        // Watches the answer, not the clock (`PanelPlayhead.keyLayerDiamond`).
+        let state = editorState.readingThePlayheadForThePanel { editorState.headerKeyDiamond(layerID) }
         Button {
             editorState.toggleHeaderKey(layerID)
         } label: {
@@ -1524,7 +1534,11 @@ struct TimelineInnerRow: View {
                         if isBlade, !isLocked { TimelineBlade(group: group, laneWidth: laneWidth) }
                     }
                     if nesting.opens {
-                        TimelineChildMarks(layerID: group.layerID, laneWidth: laneWidth, height: height)
+                        let marks = editorState.timelineChildMarks(of: group.layerID)
+                        if !marks.isEmpty {
+                            TimelineChildMarks(marks: marks, ruler: ruler, laneWidth: laneWidth, height: height)
+                                .equatable()
+                        }
                     }
                 }
                 .frame(width: laneWidth, height: height, alignment: .topLeading)

@@ -121,7 +121,7 @@ final class ViewBuildMeter {
         (playbackReport.isEmpty ? "" : playbackReport + "; ") + countsReport
     }
 
-    private var countsReport: String {
+    var countsReport: String {
         counts.isEmpty
             ? "no view bodies counted"
             : counts.sorted { $0.key.rawValue < $1.key.rawValue }

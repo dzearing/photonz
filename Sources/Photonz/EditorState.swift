@@ -102,6 +102,18 @@ final class EditorState {
         }
     }
 
+    /// Whether `event` is a button let go or a drag still moving: the edit it
+    /// carries ends something the hand was holding on screen.
+    static func isHandLettingGo(_ event: NSEvent?) -> Bool {
+        guard let event else { return false }
+        switch event.type {
+        case .leftMouseUp, .rightMouseUp, .otherMouseUp, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged:
+            return true
+        default:
+            return false
+        }
+    }
+
     /// `catchUpOnTheNextPass` where the timeline and the panel are built in
     /// pieces: Next's videos (`next-panel-builds-what-you-see`). A key picked
     /// from Animate a property, and Undo and Redo, draw the picture in their
@@ -5372,6 +5384,15 @@ final class EditorState {
         }
         let before = document
         flushSelectionToHistory()
+        // While a video plays, an edit made by a key, a menu or an agent draws
+        // the picture in its own pass and the timeline's tracks and the panel
+        // follow in the next (`catchUpOnTheNextPassOnAVideo`), as Undo does:
+        // in one pass a trim or a move held the 6 minute reference edit's
+        // window 30 to 35 ms, in two its longest is about 18
+        // (`a-long-edit-with-transitions-plays-scrubs-and-ed`, 2026-11-14). A
+        // drag let go is not split: its bar stops following the hand in this
+        // pass, and would spring back to where it was for a frame.
+        if isDocumentPlaying, !Self.isHandLettingGo(NSApp.currentEvent) { catchUpOnTheNextPassOnAVideo() }
         // The edit is worked out first and recorded second, and never in one
         // mutating call on `history`. A command's closure is allowed to read
         // `document`, which reads `history` — renaming a layer does, for the

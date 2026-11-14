@@ -821,13 +821,32 @@ The rule, for any view added to the editor window:
 5. **Never write an observed property with the value it already has** on a
    path that runs per frame: `@Observable` tells every watcher about a write
    whether or not the value changed, and that is a pass.
+6. **An edit made while a video plays draws the picture in its own pass, and
+   the timeline's tracks and the panel follow in the next.** `perform` marks
+   it (`catchUpOnTheNextPassOnAVideo`, as Undo and Redo already did), unless
+   the edit is a drag being let go, whose bar would spring back for a frame
+   (`isHandLettingGo`). On the 6 minute reference edit (2026-11-14) a trim or
+   a move while playing held the window 30 to 35 ms in one pass, and about 18
+   in two. A new view that reads the document belongs inside
+   `readingALatePass` if it shows the timeline or the panel.
+7. **A view per clip reads nothing off the editor itself; its lane hands it
+   values, and makes it only for a clip with something to draw.** Every view
+   that reads the document is woken by every edit to any clip, so 55 empty
+   part-timing views (`TimelineChildMarks`) ran on every edit until the lane
+   worked out the marks and made views only for the clips that have them.
+   The same holds for anything that changes only at a key or a hold: the
+   header key diamond, Add Key and the held-frame badge watch their answers
+   in `PanelPlayhead` (rule 2), where they had rebuilt on every tick of a
+   video played with a clip picked.
 
 Measured with these in place (short speed walk, 2026-11-13): a minute of 1x
 play dropped 4 of about 1,820 frames, against 379 before; every transition
 played without a dropped frame. With the layer islands and the panel waiting
 for the hand (later the same day): the worst of three runs dropped 4 a minute,
 and a medium scrub showed the frame under the hand 2 display frames after it
-moved in the middle and 4 at worst, against 8 and 21. `ViewBuildMeter`'s `idleBuilds` and the play
+moved in the middle and 4 at worst, against 8 and 21. With rules 6 and 7
+(2026-11-14): 1 dropped a minute, worst gap 67 ms; trim, blade and undo while
+playing 33, 85 and 62 ms at worst, against 87, 223 and 119. `ViewBuildMeter`'s `idleBuilds` and the play
 measure of `Scripts/perf/speed-walk.sh` are how a new view is checked against
 this.
 

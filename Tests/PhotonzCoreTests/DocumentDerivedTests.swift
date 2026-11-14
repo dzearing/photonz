@@ -133,6 +133,59 @@ struct DocumentDerivedTests {
         #expect(!doc.editPointMoments(atMS: point.atMS - 1).contains { $0.onScreen == clip.id || $0.borrowed == clip.id })
     }
 
+    @Test("The sound plan kept is the plan worked out afresh, and is kept")
+    func soundPlanKept() {
+        let doc = Self.six
+        let first = doc.audioMix()
+        #expect(!first.isEmpty)
+        #expect(doc.audioMix() == Self.fresh(doc).audioMix())
+        #expect(doc.derived.keptAudioMix != nil)
+        for moment in stride(from: 0, to: 360_000, by: 7_300) {
+            #expect(doc.audioMix(atMS: moment) == Self.fresh(doc).audioMix(atMS: moment))
+        }
+    }
+
+    @Test("A trim, a level or a muted track is heard at once")
+    func soundPlanChangeSeen() throws {
+        var doc = Self.six
+        let before = doc.audioMix()
+        let heard = try #require(before.first)
+        // A trim: the clip's sound ends half a second sooner.
+        doc.updateLayer(id: heard.layerID) { layer in
+            layer.time = layer.time.map { LayerTime(inMS: $0.inMS, outMS: $0.outMS - 500,
+                                                    sourceInMS: $0.sourceInMS,
+                                                    sourceLengthMS: $0.sourceLengthMS) }
+        }
+        #expect(doc.audioMix() != before)
+        #expect(doc.audioMix() == Self.fresh(doc).audioMix())
+        // A level pulled all the way down: nothing of that layer is heard.
+        doc.updateLayer(id: heard.layerID) { layer in
+            var level = layer.soundLevel ?? AudioLevel()
+            level.gain = 0
+            level.points = []
+            layer.soundLevel = level
+        }
+        #expect(!doc.audioMix().contains { $0.layerID == heard.layerID })
+        // A muted track: nothing on it is heard.
+        let soundTrack = try #require(doc.timelineTracks.first { $0.kind == .audio && !doc.clipIDs(onTrack: $0.id).isEmpty })
+        let onIt = Set(doc.clipIDs(onTrack: soundTrack.id))
+        #expect(doc.audioMix().contains { onIt.contains($0.layerID) })
+        doc.updateTrack(soundTrack.id) { $0.isMuted = true }
+        #expect(!doc.audioMix().contains { onIt.contains($0.layerID) })
+    }
+
+    @Test("A new canvas size or pixel scale starts the kept answers again")
+    func canvasChangeForgets() {
+        var doc = Self.six
+        _ = doc.audioMix()
+        #expect(doc.derived.keptAudioMix != nil)
+        doc.canvasSize = CGSize(width: doc.canvasSize.width + 2, height: doc.canvasSize.height)
+        #expect(doc.derived.keptAudioMix == nil)
+        _ = doc.audioMix()
+        doc.pixelScale += 1
+        #expect(doc.derived.keptAudioMix == nil)
+    }
+
     @Test("Kept answers take no part in equality, hashing or saving")
     func notContent() throws {
         let asked = Self.six

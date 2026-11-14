@@ -3697,14 +3697,15 @@ private struct MeasureLegendOverlay: View {
 }
 
 /// Why the picture has stopped moving while the clock has not
-/// (`HeldFrame.swift`), on the canvas's top right corner. A view of its own
-/// because it reads the playhead: read by the editor, every step of it rebuilt
-/// the whole window.
+/// (`HeldFrame.swift`), on the canvas's top right corner. It watches the answer
+/// (`PanelPlayhead.heldFrame`), not the clock: read off the playhead it was
+/// built again on every tick of a playing video, a pass over the whole window
+/// each (`docs/design/video.md` 8f, rule 2).
 private struct HeldFrameBadgeOverlay: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        if let held = editorState.heldFrameNow { badge(held) }
+        if let held = editorState.readingThePlayheadForThePanel({ editorState.heldFrameNow }) { badge(held) }
     }
 
     /// The one line the canvas says while a frame is being held: which frame it

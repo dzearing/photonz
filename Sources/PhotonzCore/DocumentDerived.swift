@@ -15,7 +15,8 @@ import Synchronization
 //
 // So the answers are kept beside the document they were read off, and thrown
 // away the moment anything they were read off changes: every write to
-// `layers`, `tracks` or the duration gives the document a fresh, empty store
+// `layers`, `tracks`, the duration, the canvas size or the pixel scale gives
+// the document a fresh, empty store
 // (the `didSet`s in `Document.swift`). A copy shares the store it was copied
 // with until one of them is written to, which is exactly when their answers
 // could start to differ. The store never takes part in equality, hashing or
@@ -50,6 +51,12 @@ struct DocumentDerived: Hashable, Sendable {
         /// Every hold that pushed the picture alone, where it starts and how
         /// long it is, and the clip it is in (`holdDrifts(forLayer:)`).
         var pictureOnlyHolds: [PictureOnlyHold]?
+        /// Everything that plays (`audioMix()`). Asked by the player on every
+        /// tick and by the panel and the timeline after every edit, and it
+        /// walks every layer and every cut: an edit while the 6 minute
+        /// reference edit played worked it out about a dozen times
+        /// (2026-11-14).
+        var audioMix: [AudioMixSegment]?
     }
 
     struct PictureOnlyHold: Sendable {
@@ -63,6 +70,9 @@ struct DocumentDerived: Hashable, Sendable {
     }
 
     private let store = Store()
+
+    /// The sound plan kept, for tests: nil until the document is asked.
+    var keptAudioMix: [AudioMixSegment]? { store.answers.withLock { $0.audioMix } }
 
     static func == (lhs: DocumentDerived, rhs: DocumentDerived) -> Bool { true }
     func hash(into hasher: inout Hasher) {}

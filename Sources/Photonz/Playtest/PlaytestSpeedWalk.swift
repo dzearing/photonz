@@ -214,6 +214,7 @@ final class SpeedWalkProbe {
         for edit in edits {
             if !editor.isDocumentPlaying { editor.playDocument(rate: 1) }
             MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
             let began = CACurrentMediaTime()
             let did: String
             do {
@@ -233,8 +234,11 @@ final class SpeedWalkProbe {
             let stillPlaying = editor.isDocumentPlaying
             run.edits.removeAll { $0.edit == edit }
             run.edits.append(SpeedWalk.EditTally(edit: edit, did: did, callMS: call, longestPassMS: longest))
-            lines.append(String(format: "%@ (%@): %.0fms in the call, longest pass %.0fms%@", edit, did, call, longest,
-                                stillPlaying ? "" : ", and it stopped playing"))
+            // Which counted views the edit built again, so a slow edit names
+            // where its time went rather than leaving it to a profile.
+            let built = ViewBuildMeter.shared.countsReport
+            lines.append(String(format: "%@ (%@): %.0fms in the call, longest pass %.0fms%@ (%@)", edit, did, call, longest,
+                                stillPlaying ? "" : ", and it stopped playing", built))
         }
         editor.pauseDocument()
         return "edited while it played: " + lines.joined(separator: "; ")

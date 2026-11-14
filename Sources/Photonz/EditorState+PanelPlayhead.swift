@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import PhotonzCore
 
 // MARK: What the panel knows about the playhead
 //
@@ -36,6 +37,15 @@ struct PanelPlayhead: Equatable {
     var pieceInHand: Int?
     var cutInHand: Int?
     var speedStopInHand: Int?
+    /// The frame being held where the playhead is, for the badge on the
+    /// canvas (`HeldFrameBadgeOverlay`): the same all the way through a hold.
+    var heldFrame: HeldFrame?
+    /// The picked layer's key diamond on its track's header, and whether Add
+    /// Key can add one here: they change only where a key is, and read off
+    /// the clock they rebuilt the header and the panel's Add Key on every tick
+    /// of a video played with a clip picked.
+    var keyLayerDiamond: KeyDiamond?
+    var canKeyAtPlayhead = false
 }
 
 extension EditorState {
@@ -92,6 +102,9 @@ extension EditorState {
         return PanelPlayhead(clipInHand: clipInHandID,
                              pieceInHand: clipPieceInHand,
                              cutInHand: clipCutInHand?.index,
-                             speedStopInHand: speedStopInHand)
+                             speedStopInHand: speedStopInHand,
+                             heldFrame: heldFrameNow,
+                             keyLayerDiamond: keyLayer.map { headerKeyDiamond($0.id) },
+                             canKeyAtPlayhead: canKeyAtPlayhead)
     }
 }
