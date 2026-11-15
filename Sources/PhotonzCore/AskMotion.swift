@@ -195,11 +195,19 @@ public enum AskMotion {
         \(AskIcon.smallParts)
         """
 
+    /// What follows `design` in the talk: `drawTheDesign`, and how to key the
+    /// techniques the design chose (`AskMotionTechnique.chosen`), when it
+    /// names any.
+    public static func drawTheDesign(_ design: String) -> String {
+        guard let how = AskMotionTechnique.howToKey(AskMotionTechnique.chosen(in: design)) else { return drawTheDesign }
+        return "\(drawTheDesign)\n\(how)"
+    }
+
     /// The body of the one call that designs the motion: no tools, no document.
     public static func designBody(model: String, request: String) -> AgentJSON {
         let rules = AskConversation.iconRules.replacingOccurrences(of: AskConversation.iconActionRule, with: "")
         return ["model": .string(model), "stream": false, "think": false, "keep_alive": "30m",
-                "messages": [["role": "system", "content": .string("You design moving icons.\n\(rules)\n\(drawRules)")],
+                "messages": [["role": "system", "content": .string("You design moving icons.\n\(rules)\n\(drawRules)\n\(AskMotionTechnique.catalogue)")],
                              ["role": "user", "content": .string("\(request)\n\n\(designAsk)")]],
                 "options": ["temperature": 0, "num_predict": .number(Double(mostDesignTokens))]]
     }
@@ -225,7 +233,6 @@ public enum AskMotion {
         how it LEAVES that key: Ease in leaves rest, Ease out arrives, Ease out back overshoots, Linear is a steady \
         spin. Hold stays exactly at that key's value until the next key and then jumps, so a change you want to see \
         never leaves a Hold.
-        \(AskMotionTechnique.catalogue)
         - Move only the parts the words say move, with the pivot where the part is really fixed, hinged at its end \
         on the object's real edge, never in the middle of what stays still. Everything else stays still.
         - A change of state is a movement, never one picture fading into another. Pieces never stand still: three to \
@@ -233,7 +240,8 @@ public enum AskMotion {
         to 0, are two calls. What breaks in two shows no line where it will part until it breaks: \
         each half is drawn as an open path, the part of the outline it carries and nothing along the break. At the \
         break the halves move apart, 1 or 2 on the grid each, as they tilt away, never still joined at a point. \
-        What moves never crosses what stays still: it stops short of it.
+        What moves never crosses what stays still: it stops short of it. A line that draws itself is keyed on \
+        trimEnd alone, trimEnd 0 at the lap's start.
         - Marks that show a part moving (lines behind it, a trail) go with it or are gone before it is, never left on \
         their own; what it leaves behind where it was grows there, scale 30 to 100, as it fades over 400 to 800 ms.
         - A story of several beats plays them in the order told, one after another, each long enough to read: \
@@ -263,6 +271,7 @@ public enum AskMotion {
         of what holds it. scale is a percent, opacity 0 to 100, rotation degrees clockwise about pivot, which is x and \
         y as fractions of the layer's own box (0.5, 0 is the middle of its top edge). trimEnd is how much of a line is \
         drawn, 0 to 100.
+        \(AskMotionTechnique.catalogue)
         \(principles)
         """
 
@@ -2283,6 +2292,36 @@ public enum AskMotionCheck {
         return said
     }
 
+    /// How far from a part, or from anything drawn, a swing's pivot may be
+    /// before it turns about empty space, in units of the drawing's grid.
+    static let pivotReach: CGFloat = 1.5
+
+    /// "arm turns about x 21 y 3", for a part that swings (turns less than a
+    /// whole turn) about a point well clear of its own box and of every other
+    /// part's: a turn is on the joint where the part is fixed, so a pivot in
+    /// empty space sends it off what holds it. The judge, 2026-11-14, of plans
+    /// for several subjects: "floats off its hinge", "detached up and to the
+    /// left". Boxes and keys only; an orbit (a whole turn) goes round a centre
+    /// it need not touch.
+    static func turnsAboutNothing(_ steps: [AskStep]) -> [String] {
+        guard let svg = steps.first(where: { $0.tool == "add_drawing" })?.arguments["svg"]?.stringValue,
+              case .success(let art) = SVGArtwork.parse(svg, keepingGroups: true) else { return [] }
+        var said: [String] = []
+        for step in steps where step.tool == "set_keys" && step.arguments["property"]?.stringValue == MotionProperty.rotation.rawValue {
+            let turns = timed(step).compactMap { $0.value.doubleValue }
+            guard let low = turns.min(), let high = turns.max(), high - low >= 4, high - low < 300,
+                  let own = box(of: name(of: step), in: art),
+                  let x = step.arguments["pivot"]?["x"]?.doubleValue, let y = step.arguments["pivot"]?["y"]?.doubleValue,
+                  !AskMotion.isFraction(x, y) else { continue }
+            let pivot = CGPoint(x: x, y: y)
+            let near = { (box: CGRect) in box.insetBy(dx: -pivotReach, dy: -pivotReach).contains(pivot) }
+            guard !near(own), !art.parts.contains(where: { near(SVGArtwork.shapeBounds($0.shape).insetBy(dx: -$0.strokeWidth / 2, dy: -$0.strokeWidth / 2)) }) else { continue }
+            func said2(_ v: Double) -> String { v == v.rounded() ? String(Int(v)) : String(format: "%.1f", v) }
+            said.append("\(name(of: step)) turns about x \(said2(x)) y \(said2(y))")
+        }
+        return said
+    }
+
     /// `step`'s value at `seconds` as the icon plays it: each run between
     /// keys on the curve of the key it leaves (Ease in out when it names
     /// none, as set_keys makes it), standing on a Hold, overshooting where
@@ -2571,6 +2610,10 @@ public enum AskMotionCheck {
         let into = swingsInto(steps)
         if !into.isEmpty {
             said.append("\(into.joined(separator: "; ")): turned that way it falls into what stays still. Turn it the other way: set_keys again with replace true, every rotation value with the opposite sign.")
+        }
+        let adrift = turnsAboutNothing(steps)
+        if !adrift.isEmpty {
+            said.append("\(adrift.joined(separator: "; ")): that point is on nothing drawn, so the part swings off what holds it. A part turns on the joint where it is fixed: its own end, or the point on the part it hangs from. Call set_keys again with replace true for its rotation, pivot on that joint.")
         }
         let quick = keyed.compactMap { tooQuick($0, among: keyed) }
         if !quick.isEmpty {

@@ -84,7 +84,43 @@ public enum AskMotionTechnique: String, CaseIterable, Sendable {
         }
     }
 
-    /// The catalogue as the model reads it: one line a technique.
+    /// What else a design may call it: a model names a technique in its own
+    /// words as often as by the catalogue's.
+    var said: [String] {
+        switch self {
+        case .turn: [name, "turn on its pivot", "turn on pivot", "turns on a pivot"]
+        case .fold: [name, "fold over its edge", "folds over", "fold"]
+        case .squash: [name, "squash", "stretch"]
+        case .throwArc: [name, "thrown on an arc", "throw"]
+        case .shake: [name, "buzz"]
+        case .pulse: [name, "breathe", "breathing"]
+        case .sway: [name, "sway"]
+        case .spin: [name, "spin", "orbit"]
+        case .drawsOn: [name, "draws on", "draw on", "draws itself", "draw itself"]
+        case .pop: [name, "pops in", "pops out", "pop"]
+        case .entersOrLeaves: [name, "enter the frame", "enters the frame", "leave the frame", "leaves the frame"]
+        case .restsBetweenLaps: [name, "rests between laps"]
+        case .followThrough: [name, "follow through", "follows through", "stagger"]
+        }
+    }
+
+    /// The techniques a design names, in the catalogue's order.
+    public static func chosen(in design: String) -> [AskMotionTechnique] {
+        let words = " " + design.lowercased().map { $0.isLetter ? $0 : " " }.split(separator: " ").joined(separator: " ") + " "
+        return allCases.filter { technique in technique.said.contains { words.contains(" \($0) ") } }
+    }
+
+    /// How to key what a design chose, for the plan that draws it: only those
+    /// techniques, so the plan reads a few lines rather than the catalogue.
+    /// Read whole, the catalogue lengthened the plan and broke three times as
+    /// many tool calls on the sealed motion set (2026-11-14, 12 of 233
+    /// against 4 of 187).
+    public static func howToKey(_ chosen: [AskMotionTechnique]) -> String? {
+        guard !chosen.isEmpty else { return nil }
+        return "How to key the techniques you chose:\n" + chosen.map { "- \($0.name): \($0.does)" }.joined(separator: "\n")
+    }
+
+    /// The catalogue as the model reads it: one line a technique.    /// The catalogue as the model reads it: one line a technique.
     public static var catalogue: String {
         "- Techniques. Pick for each part that moves the technique that makes it do what the words say, and combine two or more when the words ask for more than one thing:\n"
             + allCases.map { "  - \($0.name): \($0.does)" }.joined(separator: "\n")

@@ -65,14 +65,17 @@ public enum AskMotionLook {
         These are frames of a moving icon, evenly across one lap, left to right then top to bottom, each labelled \
         with its time. It was made for this request: "{{request}}"
 
-        Go through the beats the request tells, in its order. For each beat write one line: the beat in a few \
-        words, then the times of the frames where you can plainly see it happening, or: not seen. A beat is seen \
-        only if it happens the way the words say: what hits, bounces off or knocks something touches that thing \
+        Go through what the request asks to move, each beat in its order. For each write one line: the beat in a \
+        few words, then the times of the frames where you can plainly see it happening, or: not seen. It is seen \
+        only if the part the words name moves the way the words say: what hits, bounces off or knocks something touches that thing \
         in a frame; what goes in or into something passes behind its front and is hidden by it; what closes ends \
         closed and what opens ends open; what flies off or leaves goes out of the frame. Then one line for each \
         thing that looks wrong: a part that appears or vanishes in place instead of travelling, a part cut off by \
         the edge while it stays, a change too small to notice, beats in \
-        the wrong order, a part left behind when the rest moves, a part drawn over what it should be behind. A \
+        the wrong order, a part left behind when the rest moves, a part drawn over what it should be behind, a part \
+        the words did not ask to move moving, a part that turns but comes away from what it is fixed to instead of \
+        staying on its joint, a part that warps or changes shape when it should move as one piece, a lap that \
+        jumps from the last frame to the first. A \
         part that flies out of the frame, is gone a moment and comes back in from another edge is travelling, \
         not vanishing, and is cut by the edge only while it crosses it: that is fine. Be \
         strict: a beat counts only if a person watching would see it. If every beat is seen, in order, and \

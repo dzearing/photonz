@@ -1390,10 +1390,24 @@ Twenty passes on one story (a trash can's lid) taught Ask a great deal about tha
 story and little about motion. The user, 2026-11-14: "i want it to be able to draw
 a thing and animate something about it. I want it to have techniques for doing
 that." So the model now reads a catalogue of general techniques
-(`AskMotionTechnique`, one line each in `AskMotion.principles`, which the design,
-the plan and keys on a picture all read), and its design names, for each part
-that moves, the technique it chose, as "part: technique, its pivot or its path",
-two or more when the request asks for more than one thing (`AskMotion.designAsk`).
+(`AskMotionTechnique`, one line each), and its design names, for each part that
+moves, the technique it chose, as "part: technique, its pivot or its path", two
+or more when the request asks for more than one thing (`AskMotion.designAsk`).
+The design step reads the whole catalogue; the plan that draws the design reads
+only the lines of the techniques it named (`AskMotion.drawTheDesign(_:)`,
+`AskMotionTechnique.chosen`), and keys on a picture, which have no design, read
+it whole (`AskMotion.keyRules`). Read whole by the plan too (pass 1), the
+catalogue lengthened plans and broke three times as many tool calls, and the
+sealed set read 35.8 against 38.6.
+
+Two checks go with it, both true of any subject. The look before a motion lands
+(`AskMotionLook.question`) asks what a person judges in any moving icon, not only
+a story's beats: the part the words name moves the way they say, nothing they did
+not name moves, a turn stays on its joint, a part that should move as one piece
+keeps its shape, the lap does not jump. And a part that swings (less than a whole
+turn) about a point on nothing drawn, well clear of itself and every other part,
+is sent back to turn on its joint (`AskMotionCheck.turnsAboutNothing`): an orbit,
+a whole turn, may go round a centre it never touches.
 
 Each technique is said by what it does to parts, pivots, paths and time, never by
 a subject. Every key below is one an animated SVG keeps (`MotionSVG.carried`,
