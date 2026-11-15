@@ -1,0 +1,31 @@
+{
+  "feature": "The speed button reads at a glance and looks like the play bar's other buttons",
+  "epic": "video-editing",
+  "summary": "The round speed button now says 1x, in the same grey, height and solid weight as Go to Start, Go to End and the speaker, instead of a thin speedometer outline. Any other speed shows in the same lettering on its faint glass, so every speed looks like one family.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any video (the sample recording will do). Walk: Scripts/playtest/playback-speed-button-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Look at the play bar: right of Go to End it says 1x, quiet grey like Go to End, in a 24pt round button.", "shot": "2026-11-15-speed-button-1x-sc.png" },
+    { "do": "Rest the pointer on it: it lights up exactly as Go to End does.", "shot": "2026-11-15-speed-button-hovered-sc.png" },
+    { "do": "Click it and pick 2x, then 0.25x: the badge says the speed in the same lettering on faint glass.", "shot": "2026-11-15-speed-button-quarter-sc.png" },
+    { "do": "Pick 8x under Without Sound: the struck speaker is drawn at the volume speaker's own size and weight.", "shot": "2026-11-15-speed-button-8x-sc.png" },
+    { "do": "Compare before and after, row by row.", "shot": "2026-11-15-speed-button-before-after.png" },
+    { "do": "See the other pictures that were tried in the same spot (outline gauge, filled gauge, 1x semibold, 1x heavy, hare).", "shot": "2026-11-15-speed-button-candidates.png" }
+  ],
+  "evaluate": [
+    "Does 1x read as the speed at a glance from where you sit?",
+    "Does it look like part of the same set as Go to Start, Go to End and the speaker?",
+    "Is the badge at 2x and 8x clear enough as a speed that is on, without shouting?",
+    "Is the heavier lettering fine in the 0.25x badge, which is now 51.5pt wide?"
+  ],
+  "rough": [
+    "Measured on the real window captures (2 px per point, ink = brightness over 110). Go to End at rest: 21x17 px, 8.5pt tall, coverage 0.703, peak brightness 182; hovered 233.",
+    "Before, the speedometer at 1x: 22x22 px, 11.0pt tall (2.5pt taller than Go to End), coverage 0.386 (45 percent below Go to End's). Failed both bars.",
+    "After, 1x at rest: 27x17 px, 8.5pt tall (same as Go to End), coverage 0.577 (18 percent below Go to End's, inside the 25 percent bar), peak brightness 182 at rest and 233 hovered, both exactly Go to End's.",
+    "Badges after: digits 9.0pt tall at 2x and 8x, 9.5pt at 0.25x (within 1pt of 1x's 8.5pt; 2, 8 and 0 overshoot the 1 a little), peak brightness 233 at rest, equal to a hovered neighbour and never brighter. Widths: 1x 24pt (Go to End is 24pt), 2x 30pt (was 28), 8x silent 46pt (was 42), 0.25x 51.5pt.",
+    "Struck speaker at 8x: now the same 11pt semibold symbol as the volume speaker, 10.0pt tall against the volume speaker's 9.5pt (the strike runs past its top and bottom). Before it was a picture squeezed into an 11pt square, 8.5pt tall.",
+    "Chose '1x' in the heaviest system lettering over a filled speedometer and over a hare because of a no-context naming test on real-size strips: '1x' was named playback speed, fairly sure, in both weights tried and again on the shipped window capture; the outline gauge about 65 percent sure; the filled gauge 50 percent, read as a clock; the hare left untested once it looked like a blob at this size (candidates picture). '1x' in the buttons' own semibold weight read just as well but measured 0.39 coverage, too thin beside solid symbols, so the lettering is black weight, which is what makes it look as solid as its neighbours.",
+    "Chose proportional digits over the fixed-width ones the badge used: the speed steps, it never counts, so nothing jitters, and 1x is 2 px tighter.",
+    "No mock draws a speed control: it sits in the transport by the placement contract's Transport row, as before. The badges are 2 to 4pt wider than before, so the time and scrubber shift a little further when one appears."
+  ]
+}

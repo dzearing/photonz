@@ -135,13 +135,30 @@ extension VideoKit {
         var round: Round?
 
         /// A dropdown dressed as one of the transport's round ghost buttons
-        /// (`TransportButton`): the same diameter, symbol weight, colours and
-        /// hover. With a `badge` it says that in a short capsule instead of the
-        /// symbol, `leadImage` in front of it, so a value off its default
-        /// shows without opening the list.
+        /// (`TransportButton`): the same diameter, colours and hover, with
+        /// its value written on it in place of a symbol. At its default it
+        /// rests dim on nothing, like Go to End beside it; off its default it
+        /// says so in ink on the hover's glass, in a capsule as wide as the
+        /// value, so a setting that is on shows without opening the list.
+        ///
+        /// The words are as heavy as the neighbours' solid symbols and as
+        /// tall as them: a thin outline picture beside filled ones could not
+        /// be made out (the user, 2026-11-15), while "1x" was read as the
+        /// speed at once (`queue/audits/2026-11-15-speed-button-reads.json`).
         struct Round {
-            var symbol: String
-            var badge: String?
+            /// What the face says: the value, short ("1x", "0.25x").
+            var text: String
+            /// The value is the default, so the face rests quiet.
+            var isDefault: Bool
+            /// A symbol in front of the value, drawn as the transport's own
+            /// symbols are (the speaker struck through on a silent speed).
+            var leadSymbol: String?
+
+            /// The value's face: as tall and as solid as the transport's
+            /// 11pt semibold filled symbols. Proportional digits, so "1x" is
+            /// one tight mark: the value steps, it never counts, so nothing
+            /// jitters for want of tabular figures.
+            static let font = Font.system(size: 12, weight: .black)
         }
 
         @State private var isHovering = false
@@ -153,48 +170,32 @@ extension VideoKit {
         private func roundBody(_ round: Round) -> some View {
             let lit = isHovering || isOpen
             let diameter = Metrics.controlSmall
-            return Group {
-                if let badge = round.badge {
-                    HStack(spacing: 3) {
-                        if let leadImage {
-                            Image(nsImage: leadImage)
-                                .renderingMode(.template)
-                                .resizable()
-                                .interpolation(.high)
-                                .frame(width: 11, height: 11)
-                        }
-                        Text(badge)
-                            .font(.system(size: 11, weight: .semibold))
-                            .monospacedDigit()
-                            .lineLimit(1)
-                            .fixedSize()
-                    }
-                    .measuredInk()
-                    .foregroundStyle(Palette.ink)
-                    .padding(.horizontal, 7)
-                    .frame(minWidth: diameter)
-                    .frame(height: diameter)
-                    // A speed off its default wears the hover's glass at rest,
-                    // so it reads as a setting that is on.
-                    .background(Capsule().fill(Palette.glassThin))
+            // Quiet at its default: dim on nothing, ink on the glass under the
+            // pointer, exactly as a ghost transport button. Off its default
+            // it wears the glass and the ink at rest, a setting that is on.
+            let grounded = lit || !round.isDefault
+            return HStack(spacing: 3) {
+                if let leadSymbol = round.leadSymbol {
+                    Image(systemName: leadSymbol)
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                Text(round.text)
+                    .font(Round.font)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            .measuredInk()
+            .foregroundStyle(lit || !round.isDefault ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.dim))
+            .padding(.horizontal, round.isDefault && round.leadSymbol == nil ? 0 : 7)
+            .frame(minWidth: diameter)
+            .frame(height: diameter)
+            .background {
+                Capsule()
+                    .fill(grounded ? AnyShapeStyle(Palette.glassThin) : AnyShapeStyle(Color.clear))
                     .overlay(Capsule().strokeBorder(lit ? AnyShapeStyle(Palette.edgeLo)
                                                         : AnyShapeStyle(Color.clear)))
-                    .contentShape(Capsule())
-                } else {
-                    Image(systemName: round.symbol)
-                        .measuredInk()
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(lit ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.dim))
-                        .frame(width: diameter, height: diameter)
-                        .background {
-                            Circle()
-                                .fill(lit ? AnyShapeStyle(Palette.glassThin) : AnyShapeStyle(Color.clear))
-                                .overlay(Circle().strokeBorder(lit ? AnyShapeStyle(Palette.edgeLo)
-                                                                   : AnyShapeStyle(Color.clear)))
-                        }
-                        .contentShape(Circle())
-                }
             }
+            .contentShape(Capsule())
             .kitHover(value) { isHovering = $0 }
         }
 
