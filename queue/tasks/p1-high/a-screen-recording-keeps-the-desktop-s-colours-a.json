@@ -1,7 +1,7 @@
 {
   "id": "a-screen-recording-keeps-the-desktop-s-colours-a",
   "title": "A screen recording keeps the desktop's colours and smooth gradients",
-  "goal": "A video recorded from the screen should look like the screen did: the same colours, and soft gradients (dark translucent windows, wallpaper) staying smooth instead of breaking into visible bands. Today recordings come out shifted in colour and banded.",
+  "goal": "A video recorded from the screen should look like the screen did: the same colours, and soft gradients (dark translucent windows, wallpaper) staying smooth instead of breaking into visible bands. Today recordings come out shifted in colour and banded. The user wants all three at once: recording starts and runs with low latency, does not tax the Mac while it records, and keeps the picture as close to lossless as possible. Where those pull against each other, find the best balance by measuring, and say plainly what was given up.",
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 9e-7,
@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-15T22:52:44.646Z",
-  "updated": "2026-11-15T22:52:44.811Z",
+  "updated": "2026-11-15T22:53:13.287Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-15, with /Users/dzearing/Pictures/Screenshots/Screenshot 2026-11-15 at 14.51.04.png (their recording /Users/dzearing/Pictures/Screenshots/Recording 2026-10-28 at 14.21.13.mp4 open in Photonz Dev, a dark Ghoztty window with translucent purple panes): \"when i record a video, it does not seem to have the same color as the original desktop. i have this banding going.\"\n\nChecked by the intake window: ffprobe of that file says h264 Main, yuv420p, tv range, bt709 primaries/transfer/matrix, about 5.0 Mbps for 3456x2234 (394 frames over 9 s). A frame pulled from the file with ffmpeg shows the banding is IN THE FILE (contour bands across the dark pane gradients), not only in Photonz's player. Colour: the same spots read about 6 to 8 code values brighter in Photonz's player (screenshot, Display P3 profile) than ffmpeg's untagged decode, e.g. (53,50,55) vs (60,57,62); that does NOT say which is right, since the original desktop at that moment is not available. Hence the controlled scene above.\n\nCode: recordings are written by Apple's SCRecordingOutput (Sources/Photonz/Capture/ScreenRecorder.swift recordingOutput(to:), only outputURL and .mp4 set: no codec, so H.264 and no bit rate control). streamConfiguration (~line 267) sets size, cursor, 60 fps, audio; no colorSpaceName, pixelFormat or captureDynamicRange. SCRecordingOutputConfiguration has videoCodecType (HEVC possible) but no bit rate; a bit rate or 10-bit needs Photonz's own AVAssetWriter from the stream's samples, which is a bigger change (keep the start latency work in RecordingWarmStart / RecordingStartLatencyDiag intact and measure start latency before and after). MovieColour (Sources/PhotonzMedia/MovieColour.swift) documents an earlier tagging bug for exports, worth reading first. Thumbnails read 420v/420f in CaptureThumbnail.swift:159.",
@@ -17,7 +17,9 @@
     "Reproduced first with a controlled scene: a window filling the screen with known flat swatches (greys, sRGB and Display P3 primaries, a dark purple like a translucent terminal) and a slow dark gradient, recorded with Photonz at default settings and screenshotted at the same moment. Measure, per swatch, the colour the screenshot has, the colour the file decodes to colour-managed (QuickTime / AVFoundation, not ffmpeg's untagged default), and the colour Photonz's own player shows; and count the bands across the gradient in each. Numbers in the audit",
     "Find where each error comes from and say so in the audit: the stream's capture colour space (SCStreamConfiguration colorSpaceName / pixelFormat, never set today), the file's tags (Apple's SCRecordingOutput writes 709/709/709), Photonz's player or thumbnails decoding it, the encoder's bit rate (the user's 3456x2234 recording is H.264 Main 8-bit 4:2:0 at about 5 Mbps), or 8-bit 4:2:0 itself",
     "With the fix, every swatch in the file and in Photonz's player is within a Delta E of 2 of the screenshot, a P3 colour beyond sRGB keeps its saturation or is mapped the way the screenshot of it is, and the slow gradient shows no band edge a person can see at 100 percent in QuickTime or in Photonz (measured: no step of more than 1 code value per channel between neighbouring bands, or the same band count as the screenshot)",
-    "Files stay a sensible size: the audit lists bytes per minute for a still desktop and for scrolling, before and after, and a recording does not more than triple without a reason written down. If the fix is HEVC or 10-bit, the file still plays in QuickTime, Safari and the editor, and exports still work",
+    "Low latency and light on the Mac, MEASURED before and after on the same scene: time from Start to the first recorded frame (the existing start latency diagnostics), dropped or late frames over a minute of scrolling and video playback at 60 fps, and the CPU, GPU and memory the recording adds (Activity Monitor / powermetrics style numbers, the media engine's load where it can be read). None may get worse by more than 10 percent without the user being shown the trade",
+    "As lossless as possible within that: compare the candidates on the controlled scene and the user's kind of screen (dark translucent gradients, text): today's H.264, HEVC at the hardware encoder's top quality, HEVC 10-bit, ProRes 422 / ProRes 422 HQ (hardware ProRes on Apple silicon is close to lossless and cheap to encode, but files are large), and a higher bit rate H.264. For each: colour error, band count, text sharpness, start latency, dropped frames, CPU/GPU load, bytes per minute. A table of all of it in the audit, and the default chosen from it with the reason",
+    "If no one setting wins on all three, the default is the best balance and the others are reachable as a Recording quality choice in Settings (for example Smaller file / Best quality), named in plain words; this is the one place a decision card is allowed, showing the table and a crop from each candidate. Files stay playable in QuickTime, Safari and the editor, and exports still work",
     "Exported videos made from a recording keep the same colours (MovieColour, VideoExporter); the existing colour tests still pass",
     "Audit under queue/audits/ with side-by-side crops (screenshot, file in QuickTime, Photonz player) before and after, and a crop of the user's own recording's banding; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
   ],
@@ -29,6 +31,10 @@
     {
       "t": "2026-11-15T22:52:44.810Z",
       "note": "seq 4010 -> 9e-7"
+    },
+    {
+      "t": "2026-11-15T22:53:13.285Z",
+      "note": "User, 2026-11-15, added while filing: 'i want recording to be low latency and not taxing on the system AND as lossless as possible... not sure we can do both but that's what i want'. Goal and acceptance updated: measured latency/load/quality table across codecs (H.264, HEVC, HEVC 10-bit, ProRes 422/HQ), default chosen from it, a Settings choice only if no single setting wins."
     }
   ]
 }
