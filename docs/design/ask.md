@@ -1386,8 +1386,8 @@ the can and sank back); the model repeated its words and planned worse.
 
 ### The techniques it picks from (2026-11-14)
 
-Twenty passes on one story (a trash can's lid) taught Ask a great deal about that
-story and little about motion. The user, 2026-11-14: "i want it to be able to draw
+Twenty passes on one story taught Ask a great deal about that story and little
+about motion. The user, 2026-11-14: "i want it to be able to draw
 a thing and animate something about it. I want it to have techniques for doing
 that." So the model now reads a catalogue of general techniques
 (`AskMotionTechnique`, one line each), and its design names, for each part that
@@ -1434,8 +1434,8 @@ and timed in milliseconds, anticipation, what each curve does, move only the par
 the words say move, a change of state is a movement, nothing appears out of
 nowhere, a lap that loops cleanly. The examples the rules used to give for a
 hinge or a fold (a door, a cover, a page) are gone: a part is said by how it is
-fixed, never by what it is. The still icon's id example moved off the eval's
-subjects too (`id="top"` for `id="lid"`).
+fixed, never by what it is. The still icon's id example now names a part by where
+it is (`id="top"`), off the eval's subjects.
 
 **Measured on a set nobody climbed.** `Scripts/ask-eval/held-out-motion/` is sixteen
 animated requests of everyday things, each technique called for by at least two,
@@ -1443,9 +1443,24 @@ written before this work by an agent that never saw Ask's prompt, the climb set 
 the sealed sets, and read in total only (`--set held-out-motion`). The numbers are
 in the task's audit, `queue/audits/2026-11-15-ask-motion-techniques.json`.
 
+What the passes read on the sealed set (16 cases, about 3 points of spread
+between two runs of the same code):
+
+| Pass | What changed | Sealed set |
+| --- | --- | --- |
+| Baseline | Before any of this (93c0cff97) | 38.6 |
+| 1 | The whole catalogue in the plan's rules, the design names a technique per part | 35.8, three times the broken tool calls; its shape taken out |
+| 2 | The plan reads only the techniques the design chose; the look asks what a person judges in any motion; no swing about empty space | 37.3, kept as the form of the catalogue the task asks for |
+| 3 | The look sends a plan back only for a beat not seen | 34.1, reverted: the re-plan after a look helps on balance, even though the look sends nearly every plan back |
+
+So the catalogue is in, and it has not yet moved the score: on this model the
+drawing and the plan, not the choice of technique, are what the judge marks down
+(its lines on the baseline: clean 4.6, designed 4, did what was asked 4, loops
+6.4).
+
 #### Which of the story passes' rules are general
 
-The trash story's twenty passes left a run of rules on keys that every plan goes
+The story's twenty passes left a run of rules on keys that every plan goes
 through (`AskMotion.planned`). Each is written in boxes, keys and time, so none
 names a subject, but not all of them were ever needed by more than that one
 story. Sorted for the next pass, which may take out the second list if the

@@ -5,11 +5,27 @@ import Testing
 /// The general motion techniques Ask picks from for a moving icon
 /// (`AskMotionTechnique`, docs/design/ask.md "The techniques it picks from").
 @Suite struct AskMotionTechniquesTests {
-    /// Every subject the eval's animated cases and the user's examples name.
+    /// Every subject the eval's animated climb cases name (their `names`),
+    /// read from the cases themselves so no list of subjects lives here.
     /// None of them may appear in what the model is told about motion.
-    static let subjects = ["trash", "lid", "bell", "envelope", "heart", "rocket", "checkbox", "checkmark", "balloon",
-                           "spinner", "gear", "wifi", "plane", "letter", "star", "arrow", "door", "flag", "cup",
-                           "steam", "dog", "tail", "phone", "bin", "tick", "flap"]
+    static let subjects: [String] = {
+        let cases = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("Scripts/ask-eval/cases")
+        let files = (try? FileManager.default.contentsOfDirectory(atPath: cases.path)) ?? []
+        var names: Set<String> = []
+        for file in files where file.hasPrefix("animated-") && file.hasSuffix(".json") {
+            guard let data = try? Data(contentsOf: cases.appendingPathComponent(file)),
+                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let said = object["names"] as? [String] else { continue }
+            for name in said { names.formUnion(name.lowercased().split { !$0.isLetter }.map(String.init)) }
+        }
+        return names.sorted()
+    }()
+
+    @Test("The subjects are read from the eval's own cases")
+    func subjectsRead() {
+        #expect(Self.subjects.count >= 10)
+    }
 
     @Test("The catalogue holds the thirteen techniques the user's list names, each said once")
     func thirteen() {
