@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 20,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T23:22:06.571Z",
-  "updated": "2026-11-15T19:35:11.613Z",
+  "updated": "2026-11-15T22:51:50.973Z",
   "deps": [
     "ask-s-motion-eval-tells-a-real-gain-from-chance"
   ],
@@ -141,6 +141,14 @@
     {
       "t": "2026-11-15T19:35:11.610Z",
       "note": "Eight passes done, none a gain: pass 8 (pass 7's rules) read 35.0 ± 1.1 vs 35.9 unchanged, inside chance, reverted. Ask's code is as it began. Card asks: rest moving icons here (recommended) or a bigger change where the app builds the move Ask names."
+    },
+    {
+      "t": "2026-11-15T22:51:50.971Z",
+      "note": "decision \"Ask's moving icons did not get better in eight tries. Rest them here, or make a bigger change to how Ask animates?\" resolved: Stop here: moving icons stay as they are today"
+    },
+    {
+      "t": "2026-11-15T22:51:50.972Z",
+      "note": "retired by that answer: \"Stop here: moving icons stay as they are today\" means this should not be built, so it will not be picked up again."
     }
   ],
   "started": "2026-11-15T17:25:57.090Z",
@@ -148,5 +156,7 @@
     "ask-animates-a-thing-from-the-new-window-walk",
     "ask-animates-a-swinging-part-with-command-k-walk",
     "ask-animates-a-rising-wisp-with-command-k-walk"
-  ]
+  ],
+  "parked": false,
+  "parkReason": ""
 }

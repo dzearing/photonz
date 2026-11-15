@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-15T21:46:02.670Z",
+  "updated": "2026-11-15T21:57:29.887Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -254,9 +254,13 @@
     {
       "t": "2026-11-15T21:46:02.669Z",
       "note": "Pass 7 landed 9c97068c5: edits on a video split across two frames when stopped too (stopped trim with a clip picked 54 -> 31-44 ms); the folded Library no longer bounces while a pick's sections arrive. Bars not reached: edits while playing trim 29 / blade 46 own, 75 longest / undo 57 vs 16 ms; scrub 2 frames vs 1; ~1 dropped frame a minute. Stays open; pass 8 leads in the log."
+    },
+    {
+      "t": "2026-11-15T21:57:29.882Z",
+      "note": "claimed by go loop"
     }
   ],
-  "started": "2026-11-15T20:16:54.531Z",
+  "started": "2026-11-15T21:57:29.881Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk",
