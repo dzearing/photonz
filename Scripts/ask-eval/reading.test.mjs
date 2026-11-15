@@ -45,16 +45,16 @@ test("the spread of a reading comes from how far each case moved between its own
 });
 
 test("two readings differ for real only past twice the standard error of the difference", () => {
-  const before = { total: 35, rounds: 2, cases: 16, spread: { standardError: 1.2, perRun: 9.6 } };
-  const small = chance({ total: 37, rounds: 2, cases: 16, spread: { standardError: 1.2, perRun: 9.6 } }, before);
+  const before = { total: 35, rounds: 2, caseCount: 16, spread: { standardError: 1.2, perRun: 9.6 } };
+  const small = chance({ total: 37, rounds: 2, caseCount: 16, spread: { standardError: 1.2, perRun: 9.6 } }, before);
   assert.equal(small.difference, 2);
   assert.equal(small.standardError, 1.7);
   assert.equal(small.real, false);
-  const big = chance({ total: 39, rounds: 2, cases: 16, spread: { standardError: 1.2, perRun: 9.6 } }, before);
+  const big = chance({ total: 39, rounds: 2, caseCount: 16, spread: { standardError: 1.2, perRun: 9.6 } }, before);
   assert.equal(big.real, true);
   // A one-round reading has no spread of its own: it borrows the other's per-run
   // spread at its own number of runs (9.6 / sqrt(16) = 2.4).
-  const old = chance({ total: 37, rounds: 2, cases: 16, spread: { standardError: 1.2, perRun: 9.6 } }, { total: 35, rounds: 1, cases: 16 });
+  const old = chance({ total: 37, rounds: 2, caseCount: 16, spread: { standardError: 1.2, perRun: 9.6 } }, { total: 35, rounds: 1, caseCount: 16 });
   assert.equal(old.standardError, 2.7);
-  assert.equal(chance({ total: 37, rounds: 1, cases: 16 }, { total: 35, rounds: 1, cases: 16 }), null);
+  assert.equal(chance({ total: 37, rounds: 1, caseCount: 16 }, { total: 35, rounds: 1, caseCount: 16 }), null);
 });

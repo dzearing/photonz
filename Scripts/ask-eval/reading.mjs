@@ -79,7 +79,7 @@ export function spread(cases) {
 export function chance(a, b) {
   const per = a.spread?.perRun ?? b.spread?.perRun;
   if (per === undefined) return null;
-  const errorOf = (r) => r.spread?.standardError ?? per / Math.sqrt((r.cases ?? 1) * (r.rounds ?? 1));
+  const errorOf = (r) => r.spread?.standardError ?? per / Math.sqrt((r.caseCount ?? 1) * (r.rounds ?? 1));
   const se = Math.sqrt(errorOf(a) ** 2 + errorOf(b) ** 2);
   const difference = round1(a.total - b.total);
   return { difference, standardError: round1(se), real: Math.abs(a.total - b.total) > 2 * se };
