@@ -4,6 +4,7 @@
 //
 //   run --engine ask|skill --tag "<what changed>" [--set climb|held-out] [--cases a,b]
 //       [--resume <run>] [--minutes N] [--no-build] [--judge-runs 9] [--on <switch>,<switch>]
+//       [--repeat N]                      run every case N times, round by round (held-out-motion: 2)
 //       [--models <id>,<id>]              the probe has only these built-in models, and no picture model
 //       [--mac 16]                        Ask plans as a Mac of this size would: its window and what it holds
 //   compare [<run>] [--with <run>|best]     a run against the best so far, case by case
@@ -25,6 +26,7 @@ import { repo, runAsk, runSkill, quitProbe, SKILL_MODEL } from "./engines.mjs";
 import { combine } from "./scoring.mjs";
 import { tally, describe } from "./lookups.mjs";
 import { iconSheet } from "./icon-sheet.mjs";
+import { roundsFor, slots, baseID, readingTotal, groupTotals, spread, chance } from "./reading.mjs";
 
 const here = path.join(repo, "Scripts/ask-eval");
 const runsDir = path.join(repo, ".ask-eval/runs");
@@ -54,12 +56,11 @@ export function loadCases(set = "climb") {
   return readdirSync(dir).filter((f) => f.endsWith(".json")).sort().map((f) => ({ id: f.replace(/\.json$/, ""), ...JSON.parse(readFileSync(path.join(dir, f), "utf8")) }));
 }
 
-const groupsOf = (results) => {
-  const groups = {};
-  for (const r of Object.values(results)) (groups[r.group] ??= []).push(r.score);
-  return Object.fromEntries(Object.entries(groups).map(([g, v]) => [g, Math.round(v.reduce((s, x) => s + x, 0) / v.length * 10) / 10]));
-};
-const mean = (values) => (values.length ? Math.round(values.reduce((s, v) => s + v, 0) / values.length * 10) / 10 : null);
+/// A reading's runs, round by round (`reading.mjs`); one round unless it says more.
+const slotsOf = (meta) => slots(meta.caseIDs, meta.rounds ?? 1);
+/// How far a reading could move by chance, as a line: "± 1.4 (two rounds)".
+const plusMinus = (h) => h.spread ? ` ± ${h.spread.standardError}` : "";
+const roundsWord = (n) => (n ?? 1) === 1 ? "one round" : `${n} rounds`;
 
 async function scoreCase(testCase, dir, got, judgeRuns) {
   if (!got.read || !got.picture) return { rules: null, judge: null, named: null, score: 0 };
@@ -102,9 +103,9 @@ async function drawSheet(runDir, meta) {
 }
 
 function saveMeta(runDir, meta) {
-  const scores = Object.values(meta.cases).map((r) => r.score);
-  meta.total = mean(scores);
-  meta.groups = groupsOf(meta.cases);
+  meta.total = readingTotal(meta.cases);
+  meta.groups = groupTotals(meta.cases);
+  meta.spread = spread(meta.cases);
   meta.wallSeconds = Math.round(Object.values(meta.cases).reduce((s, r) => s + (r.caseSeconds ?? 0), 0));
   meta.lookups = tally(meta.cases);
   meta.model = modelStats(meta.cases);
@@ -158,18 +159,26 @@ function historyLine(meta) {
     ...(Object.keys(meta.switched ?? {}).length ? { switched: meta.switched } : {}),
     ...(meta.models?.length ? { models: meta.models } : {}), ...(meta.mac ? { mac: meta.mac } : {}),
     wallSeconds: meta.wallSeconds, rubric: RUBRIC_ID, looks: meta.looks ?? null, judgeModel: JUDGE_MODEL, engineModel: meta.engineModel,
-    total: meta.total, groups: meta.groups, lookups: meta.lookups, model: meta.model, caseCount: Object.keys(meta.cases).length,
+    total: meta.total, rounds: meta.rounds ?? 1, ...(meta.spread ? { spread: meta.spread } : {}),
+    groups: meta.groups, lookups: meta.lookups, model: meta.model, caseCount: new Set(Object.keys(meta.cases).map(baseID)).size,
     lines: meta.lines ?? judgeLines(meta.cases), time: timeByGroup(meta.cases),
   };
   // A held-out run is recorded in total only, so no case can be climbed on.
   if (isSealed(meta.set)) return line;
-  return {
-    ...line,
-    cases: Object.fromEntries(Object.entries(meta.cases).map(([id, r]) => [id, {
+  // A case run in more than one round is one entry: its mean, and each round's score.
+  const cases = {};
+  for (const [key, r] of Object.entries(meta.cases)) {
+    const one = {
       score: r.score, rules: r.rules?.score ?? null, judge: r.judge?.score ?? null, named: r.named ? `${r.named.right}/${r.named.of}` : undefined,
       seconds: r.seconds, unrun: r.unrun, sources: r.sources,
-    }])),
-  };
+    };
+    const id = baseID(key);
+    if (!cases[id]) { cases[id] = one; continue; }
+    const rounds = cases[id].rounds ?? [cases[id].score];
+    rounds.push(r.score);
+    cases[id] = { ...cases[id], score: Math.round(rounds.reduce((s, v) => s + v, 0) / rounds.length * 10) / 10, rounds };
+  }
+  return { ...line, cases };
 }
 
 async function commandRun() {
@@ -185,6 +194,7 @@ async function commandRun() {
   const cases = wanted ? all.filter((c) => wanted.includes(c.id)) : all;
   if (wanted && cases.length !== wanted.length) throw new Error(`no such case: ${wanted.filter((w) => !all.some((c) => c.id === w)).join(", ")}`);
   const judgeRuns = Number(option("judge-runs", JUDGE_LOOKS));
+  const askedRounds = option("repeat") === undefined ? undefined : Number(option("repeat"));
   const minutes = Number(option("minutes", 0));
   const startedAt = Date.now();
 
@@ -194,10 +204,16 @@ async function commandRun() {
     runDir = findRunDir(resume);
     meta = JSON.parse(readFileSync(path.join(runDir, "run.json"), "utf8"));
     if (meta.engine !== engine) throw new Error(`${resume} is a ${meta.engine} run`);
+    // `--resume <run> --repeat N` with more rounds than it had carries a reading on:
+    // the new rounds are run and the reading is recorded again with them.
+    if (askedRounds !== undefined && roundsFor(set, askedRounds) > (meta.rounds ?? 1)) {
+      meta.rounds = roundsFor(set, askedRounds);
+      meta.recorded = false;
+    }
   } else {
     const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*/, "").replace("T", "-");
     meta = { id: `${stamp}-${engine}${sealed ? `-${set}` : ""}`, engine, set, tag: option("tag") ?? "untagged", commit: commit(), started: new Date().toISOString(),
-             caseIDs: cases.map((c) => c.id), engineModel: engine === "skill" ? SKILL_MODEL : null, cases: {}, looks: judgeRuns,
+             caseIDs: cases.map((c) => c.id), rounds: roundsFor(set, askedRounds), engineModel: engine === "skill" ? SKILL_MODEL : null, cases: {}, looks: judgeRuns,
              // Switches the run turns on that are off at Next defaults (--on a,b): a try measured
              // before it is anybody's default. Recorded so the run never reads as the default app.
              switched: Object.fromEntries((option("on") ?? "").split(",").filter(Boolean).map((name) => [name, true])),
@@ -208,24 +224,27 @@ async function commandRun() {
     runDir = runDirOf(meta.id, set);
     mkdirSync(runDir, { recursive: true });
   }
-  console.log(`==> ${meta.id}: ${engine}, ${set} set, "${meta.tag}", ${meta.caseIDs.length} cases, judged by ${JUDGE_MODEL} (rubric ${RUBRIC_ID}), ${judgeRuns} looks each`);
+  console.log(`==> ${meta.id}: ${engine}, ${set} set, "${meta.tag}", ${meta.caseIDs.length} cases in ${roundsWord(meta.rounds)}, judged by ${JUDGE_MODEL} (rubric ${RUBRIC_ID}), ${judgeRuns} looks each`);
   if (Object.keys(meta.switched ?? {}).length) console.log(`    switched on, off at Next defaults: ${Object.keys(meta.switched).join(", ")}`);
   if (meta.models?.length) console.log(`    only these models downloaded, no picture model: ${meta.models.join(", ")}`);
   if (meta.mac) console.log(`    Ask plans as a ${meta.mac} GB Mac would`);
   if (sealed) console.log("    held out: each case is scored and kept, but only the total is printed or recorded");
   let done = Object.values(meta.cases).filter((r) => !r.unrun).length;
   let build = !flag("no-build");
-  for (const testCase of all.filter((c) => meta.caseIDs.includes(c.id))) {
-    if (meta.cases[testCase.id] && !meta.cases[testCase.id].unrun) continue;
+  const byID = Object.fromEntries(all.map((c) => [c.id, c]));
+  const runs = slotsOf(meta);
+  for (const { key, id } of runs) {
+    const testCase = byID[id];
+    if (!testCase || (meta.cases[key] && !meta.cases[key].unrun)) continue;
     if (minutes && (Date.now() - startedAt) / 60000 > minutes) {
       console.log(`==> Stopped starting cases after ${minutes} minutes. Carry on with: Scripts/ask-eval.sh run --engine ${engine} --resume ${meta.id}`);
       saveMeta(runDir, meta);
       return;
     }
-    const dir = path.join(runDir, testCase.id);
+    const dir = path.join(runDir, key);
     mkdirSync(dir, { recursive: true });
     const caseStarted = Date.now();
-    process.stdout.write(sealed ? `--> held-out case ${done + 1} of ${meta.caseIDs.length} ... ` : `--> ${testCase.id}: "${testCase.request.slice(0, 60)}" ... `);
+    process.stdout.write(sealed ? `--> held-out run ${done + 1} of ${runs.length} ... ` : `--> ${key}: "${testCase.request.slice(0, 60)}" ... `);
     let got;
     try {
       got = engine === "ask" ? await runAsk(testCase, dir, { build, switched: meta.switched, models: meta.models, mac: meta.mac }) : await runSkill(testCase, dir, { build, switched: meta.switched });
@@ -237,7 +256,7 @@ async function commandRun() {
     if (got.engine?.model && !meta.engineModel) meta.engineModel = got.engine.model;
     if (got.unrun) {
       console.log(`not run: ${got.unrun}`);
-      meta.cases[testCase.id] = { group: testCase.group, score: 0, unrun: got.unrun, engine: got.engine };
+      meta.cases[key] = { group: testCase.group, score: 0, unrun: got.unrun, engine: got.engine };
       saveMeta(runDir, meta);
       if (/locked/.test(got.unrun)) { console.log("==> The screen is locked: Ask is found by name, so nothing can run. Resume when it is unlocked."); return; }
       continue;
@@ -249,7 +268,7 @@ async function commandRun() {
       caseSeconds: Math.round((Date.now() - caseStarted) / 100) / 10,
       engine: got.engine, error: got.error, sources: got.engine?.sources ?? [],
     };
-    meta.cases[testCase.id] = result;
+    meta.cases[key] = result;
     writeFileSync(path.join(dir, "score.json"), JSON.stringify(result, null, 2));
     saveMeta(runDir, meta);
     done += 1;
@@ -257,20 +276,24 @@ async function commandRun() {
     console.log(`${result.score}  (rules ${result.rules?.score ?? "-"}, judge ${result.judge?.score ?? "-"}${result.named ? `, named ${result.named.right}/${result.named.of} as ${result.named.said.join(" / ")}${result.named.note ? " (spelled out, not counted)" : ""}` : ""}, ${result.seconds ?? "-"}s${got.error ? `, ${got.error}` : ""})`);
   }
   saveMeta(runDir, meta);
-  const finished = meta.caseIDs.every((id) => meta.cases[id] && !meta.cases[id].unrun);
+  const finished = runs.every(({ key }) => meta.cases[key] && !meta.cases[key].unrun);
   const sheet = sealed ? null : await drawSheet(runDir, meta);
   // A case not run counts 0 in the total, so a run with any left reads as unfinished, never as its score
   // (2026-11-02: three cases deferred for a person at the Mac read as Qwen3.5 9B's 19.8; finished, it was 21.2).
-  const unrun = meta.caseIDs.filter((id) => !meta.cases[id] || meta.cases[id].unrun).length;
-  if (unrun) console.log(`==> ${meta.id}: UNFINISHED, ${unrun} of ${meta.caseIDs.length} cases not run yet; the total below counts them as 0 and is not this run's score`);
-  console.log(`==> ${meta.id}: total ${meta.total} over ${Object.keys(meta.cases).length} cases (${Object.entries(meta.groups).map(([g, v]) => `${g} ${v}`).join(", ")}), ${Math.round(meta.wallSeconds / 60)} min of cases`);
+  const unrun = runs.filter(({ key }) => !meta.cases[key] || meta.cases[key].unrun).length;
+  if (unrun) console.log(`==> ${meta.id}: UNFINISHED, ${unrun} of ${runs.length} runs not made yet; the total below counts them as 0 and is not this run's score`);
+  console.log(`==> ${meta.id}: total ${meta.total}${plusMinus(meta)} over ${meta.caseIDs.length} cases in ${roundsWord(meta.rounds)} (${Object.entries(meta.groups).map(([g, v]) => `${g} ${v}`).join(", ")}), ${Math.round(meta.wallSeconds / 60)} min of cases`);
+  if (meta.spread) console.log(`    by chance alone this reading moves about ${meta.spread.standardError} either way (one run of a case moves ${meta.spread.perRun}); two readings differ for real past ${Math.round(meta.spread.standardError * Math.SQRT2 * 2 * 10) / 10}`);
   console.log(`    ${describe(meta.lookups)}`);
   if (meta.model) console.log(`    ${meta.engineModel ?? engine}: ${meta.model.medianSeconds ?? "-"}s a request (median), ${meta.model.brokenCalls} of ${meta.model.calls} tool calls broken, ${meta.model.refused} refused by Ollama, ${meta.model.gigabytes ?? "-"} GB held`);
   if (sheet) console.log(`    contact sheet ${sheet}`);
   else console.log("    no contact sheet: a person who wants to see the held-out pictures runs `Scripts/ask-eval.sh sheet <run>` themselves");
   if (finished && !meta.recorded) {
     mkdirSync(path.dirname(historyFile), { recursive: true });
-    appendFileSync(historyFile, JSON.stringify(historyLine(meta)) + "\n");
+    // A reading carried on into more rounds replaces its own line.
+    const line = JSON.stringify(historyLine(meta));
+    if (history().some((h) => h.run === meta.id)) writeFileSync(historyFile, history().map((h) => (h.run === meta.id ? line : JSON.stringify(h))).join("\n") + "\n");
+    else appendFileSync(historyFile, line + "\n");
     meta.recorded = true;
     writeFileSync(path.join(runDir, "run.json"), JSON.stringify(meta, null, 2));
     console.log(`    recorded in ${path.relative(repo, historyFile)}`);
@@ -294,7 +317,10 @@ function compare(current, other) {
   const base = other ?? past.sort((a, b) => b.total - a.total)[0];
   if (!base) { console.log("    nothing to compare with yet: this is the first run of this engine on this set and rubric"); return; }
   if (isSealed(setOf(current)) || isSealed(setOf(base))) {
-    console.log(`\n${`${setOf(current)} total`.padEnd(24)}${String(current.total).padStart(10)}${String(base.total).padStart(10)}   ${(current.total - base.total).toFixed(1).padStart(6)}`);
+    console.log(`\n${`${setOf(current)} total`.padEnd(24)}${`${current.total}${plusMinus(current)}`.padStart(12)}${`${base.total}${plusMinus(base)}`.padStart(12)}   ${(current.total - base.total).toFixed(1).padStart(6)}`);
+    const odds = chance(current, base);
+    console.log(odds ? `    ${odds.real ? "a REAL difference" : "INSIDE CHANCE"}: ${odds.difference} against a standard error of ${odds.standardError} (real past ${Math.round(odds.standardError * 20) / 10})`
+      : "    neither reading ran a case twice, so nothing says how much of the difference is chance (README, \"How steady a reading is\")");
     console.log(`    ${describe(current.lookups)}\n    against "${base.tag}": ${describe(base.lookups)}`);
     return;
   }
@@ -377,7 +403,7 @@ async function rescore(id) {
     if (r.unrun || (only && !only.includes(caseID))) continue;
     const dir = path.join(runDir, caseID);
     const read = JSON.parse(readFileSync(path.join(dir, "read.json"), "utf8"));
-    const scored = await scoreCase(cases[caseID], dir, { read, picture: path.join(dir, "result.png") }, JUDGE_LOOKS);
+    const scored = await scoreCase(cases[baseID(caseID)], dir, { read, picture: path.join(dir, "result.png") }, JUDGE_LOOKS);
     Object.assign(r, { score: scored.score, rules: scored.rules, judge: scored.judge, named: scored.named });
     writeFileSync(path.join(dir, "score.json"), JSON.stringify(r, null, 2));
     if (!sealed) console.log(`${caseID.padEnd(24)} ${r.score}`);
@@ -493,7 +519,7 @@ function report() {
   const climb = mine.filter((h) => (h.set ?? "climb") === "climb").at(-1);
   const held = mine.filter((h) => h.set === "held-out").at(-1);
   const motion = mine.filter((h) => h.set === "held-out-motion").at(-1);
-  const line = (name, h) => h ? `${name.padEnd(9)} ${String(h.total).padStart(5)}  (${h.caseCount ?? Object.keys(h.cases ?? {}).length} cases, ${h.run}, "${h.tag}")\n          ${describe(h.lookups)}` : `${name.padEnd(9)}     -  (no run on rubric ${RUBRIC_ID} yet)`;
+  const line = (name, h) => h ? `${name.padEnd(9)} ${String(h.total).padStart(5)}${plusMinus(h)}  (${h.caseCount ?? Object.keys(h.cases ?? {}).length} cases, ${roundsWord(h.rounds)}, ${h.run}, "${h.tag}")\n          ${describe(h.lookups)}` : `${name.padEnd(9)}     -  (no run on rubric ${RUBRIC_ID} yet)`;
   console.log(`${engine} on rubric ${RUBRIC_ID}:\n${line("climb", climb)}\n${line("held-out", held)}${motion ? `\n${line("motion", motion)}` : ""}`);
 }
 
@@ -505,7 +531,7 @@ try {
     const w = option("with");
     compare(current, w && w !== "best" ? findRun(w) : undefined);
   } else if (command === "history") {
-    for (const h of history()) console.log(`${h.run}  ${h.engine.padEnd(5)}  ${(h.set ?? "climb").padEnd(8)}  total ${String(h.total).padStart(5)}  ${Object.entries(h.groups).map(([g, v]) => `${g} ${v}`).join(", ")}  ${Math.round(h.wallSeconds / 60)} min  "${h.tag}"`);
+    for (const h of history()) console.log(`${h.run}  ${h.engine.padEnd(5)}  ${(h.set ?? "climb").padEnd(8)}  total ${String(h.total).padStart(5)}${plusMinus(h)}  ${Object.entries(h.groups).map(([g, v]) => `${g} ${v}`).join(", ")}  ${Math.round(h.wallSeconds / 60)} min  "${h.tag}"`);
   } else if (command === "calibrate") await calibrate();
   else if (command === "feedback") importFeedback();
   else if (command === "report") report();
@@ -516,7 +542,7 @@ try {
     console.log(await drawSheet(runDir, JSON.parse(readFileSync(path.join(runDir, "run.json"), "utf8"))));
   } else if (command === "rescore") await rescore(positional);
   else {
-    console.log(readFileSync(new URL(import.meta.url), "utf8").split("\n").slice(1, 11).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
+    console.log(readFileSync(new URL(import.meta.url), "utf8").split("\n").slice(1, 12).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
     process.exitCode = command ? 1 : 0;
   }
 } catch (error) {
