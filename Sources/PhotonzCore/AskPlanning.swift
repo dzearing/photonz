@@ -1824,7 +1824,7 @@ public struct AskConversation: Sendable {
         rich colour or a linear gradient, then the one subject on it, big and simple, in white or a light tint, about \
         60 per cent of the tile, in solid shapes. No thin lines.
         - It must read at 16 px: nothing thinner than 1.5, no gap under 1.5, no detail under 2 on the 24 grid. Every \
-        shape has an id naming the part it is (id="lid", id="handle"), never the kind of shape.
+        shape has an id naming the part it is (id="top", id="handle"), never the kind of shape.
         """
 
     /// How to draw when there is no picture model: the model's own svg.

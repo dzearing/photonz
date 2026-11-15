@@ -277,6 +277,26 @@ looking at it. Work on Ask reports both numbers
 (`report`); a climb that does not move the held-out total did not make Ask
 better.
 
+### The held-out motion set
+
+`held-out-motion/` (2026-11-14) is sixteen animated requests of everyday things,
+written before Ask was taught its general motion techniques
+(`docs/design/ask.md`, "The techniques it picks from") by an agent that never
+saw Ask's prompt, the climb set or the other sealed sets. It kept off every
+subject the climb set animates and the user's own examples, and spread the
+requests so each of the thirteen techniques is called for by at least two of
+them. It runs on its own, in about 70 minutes:
+
+```bash
+Scripts/ask-eval.sh run --engine ask --set held-out-motion --tag "..." --minutes 50
+```
+
+and is sealed exactly like `held-out/`: totals only, no contact sheet, no
+`--cases`, its pictures in `.ask-eval/held-out-runs/`, and a runner never opens
+the folder. `report` prints its latest total on a third line. Work on motion is
+judged on it: a pass that does not move its total did not make Ask better at
+motion.
+
 ## Where the drawings came from
 
 Every run counts where each drawing came from, out of the app's own answer to

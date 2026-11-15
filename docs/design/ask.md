@@ -1384,6 +1384,77 @@ Measured: plans quicker (median 190 s to 159 to 179 s), reads as asked 7, 6, 3, 
 send-back for a part that comes into view where it goes out of view (rose out of
 the can and sank back); the model repeated its words and planned worse.
 
+### The techniques it picks from (2026-11-14)
+
+Twenty passes on one story (a trash can's lid) taught Ask a great deal about that
+story and little about motion. The user, 2026-11-14: "i want it to be able to draw
+a thing and animate something about it. I want it to have techniques for doing
+that." So the model now reads a catalogue of general techniques
+(`AskMotionTechnique`, one line each in `AskMotion.principles`, which the design,
+the plan and keys on a picture all read), and its design names, for each part
+that moves, the technique it chose, as "part: technique, its pivot or its path",
+two or more when the request asks for more than one thing (`AskMotion.designAsk`).
+
+Each technique is said by what it does to parts, pivots, paths and time, never by
+a subject. Every key below is one an animated SVG keeps (`MotionSVG.carried`,
+checked by `AskMotionTechniquesTests`).
+
+| Technique | What it does | Keys and pivots | What the SVG keeps |
+| --- | --- | --- | --- |
+| Turn on a pivot | A part fixed at one point swings about it, as far as it could go, and back; 300 to 600 ms a swing, Ease in out | `rotation`, pivot on the joint at the part's end | All of it: a rotate about the pivot |
+| Fold over an edge | A flat part hinged along a whole straight edge folds over it, 180 lying open | `rotationX` (level edge) or `rotationY` (upright edge), pivot the middle of that edge | A squeeze toward the hinge by the cosine of the turn, mirrored past 90; no perspective |
+| Squash and stretch | A soft part keeps its bulk: lower and wider as it lands or presses, taller and narrower as it leaps; 80 to 150 ms, back on Ease out back | Squash: `rotationX` 30 to 40 about its bottom edge plus `scale` 106 to 110. Stretch: `rotationY` 25 to 35 about its upright middle line plus `scale` 108 to 115. The app has no scale on one axis; a fold of a flat part is exactly that squeeze | All of it: a one-axis scale about the hinge and a scale about the middle |
+| Throw on an arc | Travels from where it is first seen along a curve, lands at speed, squashes, hops back about half as high and half as long two or three times, settles | `position` x and y keyed at the same times, rising keys Ease out, falling Ease in | All of it |
+| Shake | The whole object, in one group, jolts 8 to 12 degrees or 1 to 1.5 units, 50 to 80 ms a jolt, three or four times; a buzz is quicker and smaller, in bursts | `rotation` about its middle or base, or `position`, on the group | All of it |
+| Pulse | Grows and shrinks about its middle: a beat about 150 ms up, 250 down; breathing 1 to 2 s; a glow is a copy behind that grows as it fades | `scale` (always about the part's middle), `opacity` | All of it |
+| Sway in a chain | Each piece of a chain does the same curve 60 to 120 ms after the last and a little bigger toward the free end, so a ripple runs along it | `rotation` about each joint (pieces nested so each is carried by the one before) or `position` y | All of it |
+| Spin or orbit | Turns round and round, Linear; an orbit turns about the centre of the circle it travels round | `rotation` 0 to 360, pivot on that centre | All of it |
+| Draw a line on | A line appears along its length, one after another; holds drawn, fades, undraws unseen | `trimEnd` 0 to 100 (never `trimStart` too), `opacity` | A dash moving along the line; one end only |
+| Pop in or out | Appears from nothing at its middle on an overshoot; leaves by swelling a little and shrinking as it fades; a burst leaves three to six pieces flying | `scale` 0, 115, 100 on Ease out back, `opacity` in the first 80 ms; pieces as one group | All of it |
+| Enter or leave the frame | Travels from past the frame's edge to rest (Ease out) or from rest all the way out (Ease in), 300 to 500 ms, tilted into the way it goes, back by the next lap | `position`, a little `rotation` | All of it; the frame clips |
+| Rest between laps | The action in the first half of a 2 to 4 s lap, then every part holds still at rest, so it reads as an event that repeats | `set_timing` for the lap, each value's last key at the lap's end equal to its first | All of it |
+| Follow through and stagger | What hangs from or rides a moving part starts 40 to 100 ms after it, overshoots and settles; parts doing the same thing start 60 to 120 ms apart | The same keys offset in time; Ease out back | All of it |
+
+The rest of `AskMotion.principles` is what is true of every technique: beats first
+and timed in milliseconds, anticipation, what each curve does, move only the parts
+the words say move, a change of state is a movement, nothing appears out of
+nowhere, a lap that loops cleanly. The examples the rules used to give for a
+hinge or a fold (a door, a cover, a page) are gone: a part is said by how it is
+fixed, never by what it is. The still icon's id example moved off the eval's
+subjects too (`id="top"` for `id="lid"`).
+
+**Measured on a set nobody climbed.** `Scripts/ask-eval/held-out-motion/` is sixteen
+animated requests of everyday things, each technique called for by at least two,
+written before this work by an agent that never saw Ask's prompt, the climb set or
+the sealed sets, and read in total only (`--set held-out-motion`). The numbers are
+in the task's audit, `queue/audits/2026-11-15-ask-motion-techniques.json`.
+
+#### Which of the story passes' rules are general
+
+The trash story's twenty passes left a run of rules on keys that every plan goes
+through (`AskMotion.planned`). Each is written in boxes, keys and time, so none
+names a subject, but not all of them were ever needed by more than that one
+story. Sorted for the next pass, which may take out the second list if the
+sealed set does not drop without them:
+
+* **General, keep.** Keys written again play as written (`folded`); room for the
+  motion and leaving whole (`fitted`, `leaving`, `swingsFitted`); marks go with
+  what leaves and what left comes back (`marksGo`, `comesBack`); a fold opens and
+  lands where it is seen (`foldsOpen`, `foldsLand`, `hingesShared`); what comes
+  out of a part starts hidden in it and comes clear (`hidden`, `comesClear`); a
+  line draws itself from ink, not a fade, and starts over unseen
+  (`drawnNotFaded`, `startsOver`); a Hold that would jump runs on a curve
+  (`holdsMove`); what fades on a long journey stays seen until it arrives
+  (`travelsSeen`); a swing carries the small part it turns about (`carried`); no two
+  keys closer than the app takes (`keysApart`); contact read on the curves as
+  they play (`AskMotionCheck.played`).
+* **Built for one story: a part thrown into an open outline while another part
+  shuts over it.** `tuckedIn`, `inBeforeShut`, `landsInTheMiddle`, `dropsBehind`,
+  `struckWaits`, `staysTillGone`, `usedUpUnseen`, `thrownIn`, the bounce routing
+  (`bouncedAway` and its landing), `hitStarts`, and the placing of hits against
+  lines as drawn (`touchesPlaced`). They fire only on that shape of plan, so they
+  cost other requests nothing but time.
+
 ## Try paths (walks)
 
 `ask-animates-an-icon-walk`: an animated SVG icon from one request at Next

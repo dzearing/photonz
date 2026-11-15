@@ -179,13 +179,14 @@ public enum AskMotion {
     /// knew at rest and then found it could not move it: a flap with its hinge
     /// at the point, a swap of two pictures for a pop (the eval, 2026-11-06).
     static let designAsk = """
-        Before drawing, design this moving icon in words, under 120 words, no SVG and no numbers for its shape yet: you \
+        Before drawing, design this moving icon in words, under 140 words, no SVG and no numbers for its shape yet: you \
         will draw the object the way you know it. Say: 1) what the eye must see for this to read as that action and \
         not a plain pulse or swap; 2) the parts: which move, everything attached to a moving part that goes with it, \
-        what stays still, the hinge or centre of any turn and which way it turns, whether each part that opens or \
-        closes starts open or shut, and any extra pieces, where each \
-        is first seen (what goes into something is first seen outside it) and where it goes; 3) the beats in the order the request tells them, each with its time in ms, across a lap that ends \
-        back at rest.
+        what stays still, whether each part that opens or closes starts open or shut, and any extra pieces, where each \
+        is first seen (what goes into something is first seen outside it) and where it goes; 3) for each part that \
+        moves, the technique from the list that makes it do what the words say, by its name, as "part: technique, \
+        its pivot (the hinge, mount or centre it turns about) or its path", more than one technique when the words ask for more than one thing; 4) the beats in the \
+        order the request tells them, each with its time in ms, across a lap that ends back at rest.
         """
 
     /// What follows the design in the talk.
@@ -220,30 +221,21 @@ public enum AskMotion {
     /// How a thing moves well, true of anything.
     static let principles = """
         - Decide the beats first, then time them in milliseconds. Before a big move, a small anticipation the other \
-        way. A quick event is quick: a snap or a burst takes 60 to 150 ms, a settle 200 to 400 ms. Afterwards, \
-        follow-through: loose parts lag, overshoot and settle, each a little less. Let parts start a little apart, \
-        never all at once. A key's curve is how it LEAVES that key: Ease in leaves rest, Ease out arrives, Ease out \
-        back overshoots, Linear is a steady spin. Hold stays exactly at that key's value until the next key and \
-        then jumps, so a change you want to see never leaves a Hold.
-        - A change of state is a movement, never one picture fading into another. What breaks or bursts swells a \
-        little, is gone within 100 ms, and at that moment separate small pieces fly out from where it was, slowing \
-        and fading out within 400 ms: pieces never stand still. Three to six pieces in one <g>, drawn where they end \
-        up, keyed as that one group from scale 30 to 100 and opacity 100 to 0, are two calls. What breaks in two shows no line where it will part until it breaks: \
+        way. A quick event is quick: a snap or a burst takes 60 to 150 ms, a settle 200 to 400 ms. A key's curve is \
+        how it LEAVES that key: Ease in leaves rest, Ease out arrives, Ease out back overshoots, Linear is a steady \
+        spin. Hold stays exactly at that key's value until the next key and then jumps, so a change you want to see \
+        never leaves a Hold.
+        \(AskMotionTechnique.catalogue)
+        - Move only the parts the words say move, with the pivot where the part is really fixed, hinged at its end \
+        on the object's real edge, never in the middle of what stays still. Everything else stays still.
+        - A change of state is a movement, never one picture fading into another. Pieces never stand still: three to \
+        six pieces in one <g>, drawn where they end up, keyed as that one group from scale 30 to 100 and opacity 100 \
+        to 0, are two calls. What breaks in two shows no line where it will part until it breaks: \
         each half is drawn as an open path, the part of the outline it carries and nothing along the break. At the \
-        break the halves move apart, 1 or 2 on the grid each, as they tilt away, never still joined at a point. A part that swings on one point, seen side on (a door seen from above, an arm), \
-        turns with rotation, hinged at its end on the object's real edge, no more than it could swing. Lifting is a \
-        negative rotation when the hinge is at its left end and a positive one when the hinge is at its right end. A part hinged along a whole edge facing you (a cover, a page, a door seen from the front) folds over that \
-        edge: rotationX for a top or bottom edge, rotationY for a side, pivot the middle of that edge, 180 to lie \
-        open; it never turns flat. What moves never crosses what stays still: it stops short of it.
-        - A line that draws itself is keyed on trimEnd alone, never trimStart too: trimEnd 0 at 0 seconds, so the \
-        lap starts with it undrawn, then up to 100 in its own beat, several lines one after another a little apart, \
-        and it holds drawn. To start over it fades to opacity 0, then trimEnd goes back to 0 while it is unseen, \
-        then opacity back to 100 at the end of the lap.
-        - What leaves (flies off, is thrown, is sent) goes all the way out of the frame, never stopping half over \
-        its edge, seen the whole way: Ease in, speeding up over 300 to 500 ms. Then it comes back in from the other \
-        side, or fades in where it rests. Marks that show a part moving (lines behind it, a trail) go with it or \
-        are gone before it is, never left on their own; what it leaves behind where it was (smoke, dust) grows \
-        there, scale 30 to 100, as it fades over 400 to 800 ms.
+        break the halves move apart, 1 or 2 on the grid each, as they tilt away, never still joined at a point. \
+        What moves never crosses what stays still: it stops short of it.
+        - Marks that show a part moving (lines behind it, a trail) go with it or are gone before it is, never left on \
+        their own; what it leaves behind where it was grows there, scale 30 to 100, as it fades over 400 to 800 ms.
         - A story of several beats plays them in the order told, one after another, each long enough to read: \
         200 ms at the least, a journey 300 to 600 ms. What a beat causes starts as that beat ends, at the key where \
         the two parts touch: that position key says "touches" with the other part's id. A beat the words count \
@@ -255,11 +247,9 @@ public enum AskMotion {
         - Nothing appears out of nowhere. What is thrown, dropped or put in starts away from where it lands (in \
         view, or outside the frame) and travels the whole way there, x and y keyed together along an arc; what goes \
         into something passes behind its front and is gone inside it.
-        - When the whole object moves (flies off, lifts off, swings, shakes), draw all of it inside one <g> and key \
-        that <g>, so no part is left behind; a part that also moves on its own is a <g> inside it. A shake is quick \
-        turns of 8 to 12 degrees, or moves of 1.5 on the grid, three or four times over 400 to 600 ms: smaller \
-        is lost at icon size. A thing hanging from a point swings \
-        with rotation about that point, never rotationX or rotationY, which only fold a flat cover over an edge.
+        - When the whole object moves, draw all of it inside one <g> and key that <g>, so no part is left behind; a \
+        part that also moves on its own is a <g> inside it. A part hanging from a point swings with rotation about \
+        that point, never rotationX or rotationY, which only fold a flat part over an edge or squash it.
         - A lap is 1 to 3 seconds, a story 2 to 4, and loops unless the words say once. It must loop cleanly: set_timing seconds is \
         the lap, and every value's last key sits at the end of the lap with its first value, or a turn ends on a \
         whole 360. What vanishes comes back before the lap ends. Leave a beat at rest so the eye can read it. \
