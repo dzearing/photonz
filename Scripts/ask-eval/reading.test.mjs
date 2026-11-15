@@ -1,7 +1,7 @@
 // node --test Scripts/ask-eval/reading.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { roundsFor, slots, baseID, readingTotal, groupTotals, spread, chance } from "./reading.mjs";
+import { roundsFor, slots, baseID, readingTotal, groupTotals, spread, chance, pooledSpread, pooledReading } from "./reading.mjs";
 
 test("the sealed motion set is read in two rounds, every other set in one, unless asked", () => {
   assert.equal(roundsFor("held-out-motion"), 2);
@@ -57,4 +57,38 @@ test("two readings differ for real only past twice the standard error of the dif
   const old = chance({ total: 37, rounds: 2, caseCount: 16, spread: { standardError: 1.2, perRun: 9.6 } }, { total: 35, rounds: 1, caseCount: 16 });
   assert.equal(old.standardError, 2.7);
   assert.equal(chance({ total: 37, rounds: 1, caseCount: 16 }, { total: 35, rounds: 1, caseCount: 16 }), null);
+});
+
+test("the spread of one run is pooled over every reading of the set that ran cases twice", () => {
+  // 2026-11-15: two readings of the same code measured 5.7 and 4.0 a run; one
+  // reading's own figure is itself a draw, so the verdict uses them together.
+  const readings = [
+    { set: "held-out-motion", rubric: "r", spread: { perRun: 5.7, casesWithRounds: 16 } },
+    { set: "held-out-motion", rubric: "r", spread: { perRun: 4.0, casesWithRounds: 16 } },
+    { set: "held-out-motion", rubric: "r" },
+    { set: "climb", rubric: "r", spread: { perRun: 30, casesWithRounds: 2 } },
+    { set: "held-out-motion", rubric: "old", spread: { perRun: 30, casesWithRounds: 16 } },
+  ];
+  const pooled = pooledSpread(readings, { set: "held-out-motion", rubric: "r" });
+  assert.deepEqual(pooled, { perRun: 4.9, readings: 2 });
+  assert.equal(pooledSpread(readings, { set: "held-out", rubric: "r" }), null);
+  // With it, both readings' errors come from the pooled figure at their own runs:
+  // 4.9 / sqrt(32) = 0.87 and 4.9 / sqrt(16) = 1.23, so the difference's is 1.5.
+  const odds = chance({ total: 36, rounds: 2, caseCount: 16, spread: { standardError: 0.7, perRun: 4 } }, { total: 33.6, rounds: 1, caseCount: 16 }, pooled);
+  assert.equal(odds.standardError, 1.5);
+  assert.equal(odds.real, false);
+});
+
+test("several readings of the same code read as one, weighed by their rounds", () => {
+  const a = { run: "a", engine: "ask", set: "held-out-motion", rubric: "r", total: 35.7, rounds: 2, caseCount: 16, tag: "reading 1", lookups: {} };
+  const b = { run: "b", engine: "ask", set: "held-out-motion", rubric: "r", total: 36.0, rounds: 2, caseCount: 16, tag: "reading 2", lookups: {} };
+  const c = { run: "c", engine: "ask", set: "held-out-motion", rubric: "r", total: 33.6, rounds: 1, caseCount: 16, tag: "old", lookups: {} };
+  const both = pooledReading([a, b, c]);
+  assert.equal(both.total, 35.4);
+  assert.equal(both.rounds, 5);
+  assert.equal(both.caseCount, 16);
+  assert.equal(both.run, "a+b+c");
+  assert.equal(both.spread, undefined, "its error comes from the pooled spread at its own runs");
+  assert.throws(() => pooledReading([a, { ...b, set: "climb" }]), /same set/);
+  assert.throws(() => pooledReading([a, { ...b, caseCount: 17 }]), /same set/);
 });

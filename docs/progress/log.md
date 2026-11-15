@@ -23132,3 +23132,10 @@ units.
 - Pass 7 (2712051bb): pass 5 plus `marksStayIn` (a mark fading out while it travels stays inside the frame). Sealed 34.7. Reverted.
 - No net change to Ask's code. Filed p1 `ask-s-motion-eval-tells-a-real-gain-from-chance` (one reading steady to 2 points); the motion task now depends on it and its eighth pass waits.
 - Open question: whether the run-to-run spread comes from fresh layer ids in what the model reads (temperature is 0 everywhere).
+
+## 2026-11-15 — Ask's motion eval reads every request twice and says what is chance (task ask-s-motion-eval-tells-a-real-gain-from-chance)
+
+- Why one reading moved 5 points: Ask often makes a different thing from the same request (envelope 76 vs 33.9 on one code); short plans repeat byte for byte. The judge is about a tenth of the spread (re-judged pictures move a case 1.5, a fresh Ask run 4.9).
+- `Scripts/ask-eval.sh run --repeat N` runs the set in rounds (sealed motion set: 2 by default, about 95 min), scores the mean of each case's mean, and prints a standard error from how far cases moved between their own rounds (a total, sealed-safe). `compare --with a,b` reads several readings as one baseline and says REAL or INSIDE CHANCE on a spread pooled over every two-round reading. `--resume <run> --repeat 3` carries a reading into another round. `Scripts/ask-eval/reading.mjs`, tests in `reading.test.mjs`.
+- Two readings of unchanged Ask code: 35.7 ± 1.0 and 36.0 ± 0.7 (0.3 apart, 93 and 95 min). A two-round pass is real past about 2.1 against those two as one baseline.
+- Next: the motion task's eighth pass, measured that way.

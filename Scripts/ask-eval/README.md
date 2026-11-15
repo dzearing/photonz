@@ -12,6 +12,8 @@ Scripts/ask-eval.sh run --engine skill --tag "what changed"   # about 24 minutes
 Scripts/ask-eval.sh run --engine ask --cases dog,smiley-icon --tag "..."   # just these
 Scripts/ask-eval.sh compare                  # the last run against the best before it
 Scripts/ask-eval.sh compare <run> --with <run>
+Scripts/ask-eval.sh compare <run> --with <run>,<run>   # against several readings of one code, read as one
+Scripts/ask-eval.sh run --engine ask --cases dog --repeat 3 --tag "..."   # every case three times, round by round
 Scripts/ask-eval.sh history
 Scripts/ask-eval.sh run --engine ask --set held-out --tag "..."   # the held-out set, totals only, about 20 minutes
 Scripts/ask-eval.sh report                   # the latest climb and held-out totals, and the lookup line
@@ -285,10 +287,12 @@ written before Ask was taught its general motion techniques
 saw Ask's prompt, the climb set or the other sealed sets. It kept off every
 subject the climb set animates and the user's own examples, and spread the
 requests so each of the thirteen techniques is called for by at least two of
-them. It runs on its own, in about 70 minutes:
+them. It runs on its own, every request twice (below), in about 95 minutes:
 
 ```bash
-Scripts/ask-eval.sh run --engine ask --set held-out-motion --tag "..." --minutes 50
+Scripts/ask-eval.sh run --engine ask --set held-out-motion --tag "..." --minutes 6
+Scripts/ask-eval.sh run --engine ask --resume <run> --minutes 6     # again until it is recorded
+Scripts/ask-eval.sh compare <run> --with <baseline>,<baseline>      # REAL or INSIDE CHANCE
 ```
 
 and is sealed exactly like `held-out/`: totals only, no contact sheet, no
@@ -296,6 +300,74 @@ and is sealed exactly like `held-out/`: totals only, no contact sheet, no
 the folder. `report` prints its latest total on a third line. Work on motion is
 judged on it: a pass that does not move its total did not make Ask better at
 motion.
+
+### How a motion reading is taken
+
+Until 2026-11-15 a reading ran each of the sixteen requests once, and the very
+same Ask read 38.6 one night and 33.6 the next morning. Seven passes at teaching
+Ask motion were kept or thrown out on differences smaller than that. The judge
+was not the main cause (nine looks, a mean, above). Ask was: given the same
+request it often makes a different thing. On the climb set that morning the
+envelope request read 76 and 33.9 hours apart on the same code, because
+Ask's plan went another way. A short plan does repeat: the gear came out the same file
+byte for byte four times, and still read 46.0, 46.4, 41.1 and 38.6, the judge's
+didWhatWasAsked line scaling the whole score. The gear is the worst of it: the
+eighteen climb motion pictures of that morning judged again moved a case by 1.5
+(a standard deviation), against 4.9 for a fresh run of Ask, about a tenth of the
+spread. More looks would buy little; more runs of Ask buy the rest.
+
+So a reading now runs in **rounds**: the whole set, then the whole set again
+(`--repeat N`; the motion set reads in 2 rounds unless told otherwise, every
+other set in 1). A case's score is the mean of its rounds and the reading is
+the mean over cases, so its total is on the same scale as a one-round reading.
+How far each case moved between its own rounds gives the reading a standard
+error (`reading.mjs`, tests in `reading.test.mjs`). That is a total, so a
+sealed reading prints it without showing any case:
+
+```
+==> ...: total 36 ± 0.7 over 16 cases in 2 rounds (animated 36), 95 min of cases
+    by chance alone this reading moves about 0.7 either way (one run of a case moves 4); ...
+```
+
+Two readings of unchanged Ask code (047ec4901 and 97aedeba0, nothing under
+`Sources` between them), 2026-11-15:
+
+| reading | total | rounds | minutes of cases |
+| --- | --- | --- | --- |
+| 20261115-135228-ask-held-out-motion | 35.7 ± 1.0 | 2 | 93 |
+| 20261115-152626-ask-held-out-motion | 36.0 ± 0.7 | 2 | 95 |
+
+They land 0.3 apart, where one-round readings of the same code landed 5.0
+apart. Each round of the first read 35.4 and 35.9 on its own.
+
+**What it costs.** One round of the sixteen is about 47 minutes of cases, almost
+all of it Ask planning (judging and filming are about 20 seconds a case). Two
+rounds are about 95 minutes, inside a runner's two hours. Three are about 140
+and are not: a reading is carried into a third round by a later session with
+`--resume <run> --repeat 3`, which runs only the new round and records the
+reading again.
+
+**Telling a gain from chance.** `compare` pools the spread of one run of a case
+over every reading of the set that ran cases twice (4.9 points on 2026-11-15,
+from 5.7 and 4.0: one reading's own figure is a draw too), gives each reading
+the error of its own number of runs, and calls a difference REAL only past
+twice the error of the difference. `--with a,b` reads several readings of the
+same code as one baseline, weighed by their rounds. So:
+
+* a two-round pass against one two-round baseline is real past about 2.4;
+* against the two readings above as one four-round baseline, past about 2.1.
+  That is the bar for a pass: a gain of two points shows, a gain of one does not;
+* a one-round reading against that baseline is real only past about 2.8.
+
+Read against that, the seven passes of 2026-11-15 were all inside chance but
+pass 6 (29.8, a real drop of 6.1).
+
+**If Ask ever repeats itself.** A second round only helps because Ask makes
+something different each time. Were its plans made to repeat run to run (the
+same request, the same file), a second round would read the same as the first,
+the spread would read 0, and every difference would look real. It would not
+be: a change to Ask's prompt still sends every plan another way, so a pass
+would still need more requests, not more rounds, to be read steadily.
 
 ## Where the drawings came from
 

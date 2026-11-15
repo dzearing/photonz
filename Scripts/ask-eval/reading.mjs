@@ -72,15 +72,45 @@ export function spread(cases) {
   return { standardError: round1(standardError), perRun: round1(Math.sqrt(variance)), casesWithRounds: repeated.length };
 }
 
+/// The spread of one run of a case, pooled over every reading of the same set
+/// on the same rubric that ran cases twice (each weighed by how many cases it
+/// ran twice). One reading's own figure is a draw too: on 2026-11-15 two
+/// readings of the same code measured 5.7 and 4.0. Null when none has one.
+export function pooledSpread(readings, { set, rubric }) {
+  const mine = readings.filter((h) => (h.set ?? "climb") === set && h.rubric === rubric && h.spread?.perRun !== undefined);
+  if (!mine.length) return null;
+  const weight = mine.reduce((s, h) => s + h.spread.casesWithRounds, 0);
+  const variance = mine.reduce((s, h) => s + h.spread.perRun ** 2 * h.spread.casesWithRounds, 0) / weight;
+  return { perRun: round1(Math.sqrt(variance)), readings: mine.length };
+}
+
 /// Whether two readings of the same set differ by more than chance: the
-/// difference, its standard error, and `real` past twice that. A reading with
-/// no spread of its own (one round) borrows the other's per-run spread at its
-/// own number of runs. Null when neither has one.
-export function chance(a, b) {
-  const per = a.spread?.perRun ?? b.spread?.perRun;
+/// difference, its standard error, and `real` past twice that. With a pooled
+/// spread (`pooledSpread`) both readings' errors come from it at their own
+/// number of runs; without one, a reading with no spread of its own (one
+/// round) borrows the other's. Null when there is nothing to go on.
+export function chance(a, b, pooled = null) {
+  const per = pooled?.perRun ?? a.spread?.perRun ?? b.spread?.perRun;
   if (per === undefined) return null;
-  const errorOf = (r) => r.spread?.standardError ?? per / Math.sqrt((r.caseCount ?? 1) * (r.rounds ?? 1));
+  const atRuns = (r) => per / Math.sqrt((r.caseCount ?? 1) * (r.rounds ?? 1));
+  const errorOf = (r) => (pooled ? atRuns(r) : r.spread?.standardError ?? atRuns(r));
   const se = Math.sqrt(errorOf(a) ** 2 + errorOf(b) ** 2);
   const difference = round1(a.total - b.total);
   return { difference, standardError: round1(se), real: Math.abs(a.total - b.total) > 2 * se };
+}
+
+/// Several finished readings of the same code on the same set, read as one:
+/// the mean of their totals weighed by their rounds, and every round counted
+/// (`compare <run> --with a,b`). A baseline read twice in two rounds is a
+/// reading of four rounds, so a pass is measured against a steadier bar.
+export function pooledReading(readings) {
+  const [first] = readings;
+  const same = (h) => h.engine === first.engine && (h.set ?? "climb") === (first.set ?? "climb") && h.rubric === first.rubric && h.caseCount === first.caseCount;
+  if (!readings.every(same)) throw new Error("only readings of the same set, engine, rubric and cases can be read as one");
+  const rounds = readings.reduce((s, h) => s + (h.rounds ?? 1), 0);
+  const total = round1(readings.reduce((s, h) => s + h.total * (h.rounds ?? 1), 0) / rounds);
+  return {
+    run: readings.map((h) => h.run).join("+"), engine: first.engine, set: first.set, rubric: first.rubric, caseCount: first.caseCount,
+    total, rounds, tag: `${readings.length} readings as one: ${readings.map((h) => h.tag).join("; ")}`, lookups: first.lookups,
+  };
 }

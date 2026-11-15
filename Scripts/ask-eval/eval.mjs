@@ -7,7 +7,7 @@
 //       [--repeat N]                      run every case N times, round by round (held-out-motion: 2)
 //       [--models <id>,<id>]              the probe has only these built-in models, and no picture model
 //       [--mac 16]                        Ask plans as a Mac of this size would: its window and what it holds
-//   compare [<run>] [--with <run>|best]     a run against the best so far, case by case
+//   compare [<run>] [--with <run>[,<run>]|best]  a run against the best so far (or readings read as one), case by case
 //   report [--engine ask]                   the latest climb and held-out totals side by side
 //   lines <run> [--with <run>]              a run's judge lines in total (drawings, all cases), held-out runs too
 //   time <run> [<run> ...]                  per group: cases, how many ran out of time or stopped, median seconds and steps, held-out runs too
@@ -26,7 +26,7 @@ import { repo, runAsk, runSkill, quitProbe, SKILL_MODEL } from "./engines.mjs";
 import { combine } from "./scoring.mjs";
 import { tally, describe } from "./lookups.mjs";
 import { iconSheet } from "./icon-sheet.mjs";
-import { roundsFor, slots, baseID, readingTotal, groupTotals, spread, chance } from "./reading.mjs";
+import { roundsFor, slots, baseID, readingTotal, groupTotals, spread, chance, pooledSpread, pooledReading } from "./reading.mjs";
 
 const here = path.join(repo, "Scripts/ask-eval");
 const runsDir = path.join(repo, ".ask-eval/runs");
@@ -318,8 +318,9 @@ function compare(current, other) {
   if (!base) { console.log("    nothing to compare with yet: this is the first run of this engine on this set and rubric"); return; }
   if (isSealed(setOf(current)) || isSealed(setOf(base))) {
     console.log(`\n${`${setOf(current)} total`.padEnd(24)}${`${current.total}${plusMinus(current)}`.padStart(12)}${`${base.total}${plusMinus(base)}`.padStart(12)}   ${(current.total - base.total).toFixed(1).padStart(6)}`);
-    const odds = chance(current, base);
-    console.log(odds ? `    ${odds.real ? "a REAL difference" : "INSIDE CHANCE"}: ${odds.difference} against a standard error of ${odds.standardError} (real past ${Math.round(odds.standardError * 20) / 10})`
+    const pooled = pooledSpread(history(), { set: setOf(current), rubric: current.rubric });
+    const odds = chance(current, base, pooled);
+    console.log(odds ? `    ${odds.real ? "a REAL difference" : "INSIDE CHANCE"}: ${odds.difference} against a standard error of ${odds.standardError} (real past ${Math.round(odds.standardError * 20) / 10}${pooled ? `; one run of a case moves ${pooled.perRun}, pooled over ${pooled.readings} reading${pooled.readings === 1 ? "" : "s"}` : ""})`
       : "    neither reading ran a case twice, so nothing says how much of the difference is chance (README, \"How steady a reading is\")");
     console.log(`    ${describe(current.lookups)}\n    against "${base.tag}": ${describe(base.lookups)}`);
     return;
@@ -529,7 +530,9 @@ try {
     const current = findRun(positional);
     if (!current) throw new Error("no finished run to compare");
     const w = option("with");
-    compare(current, w && w !== "best" ? findRun(w) : undefined);
+    // --with a,b reads several readings of the same code as one baseline (`pooledReading`).
+    const base = w && w !== "best" ? (w.includes(",") ? pooledReading(w.split(",").map((id) => findRun(id) ?? (() => { throw new Error(`no finished run ${id}`); })())) : findRun(w)) : undefined;
+    compare(current, base);
   } else if (command === "history") {
     for (const h of history()) console.log(`${h.run}  ${h.engine.padEnd(5)}  ${(h.set ?? "climb").padEnd(8)}  total ${String(h.total).padStart(5)}${plusMinus(h)}  ${Object.entries(h.groups).map(([g, v]) => `${g} ${v}`).join(", ")}  ${Math.round(h.wallSeconds / 60)} min  "${h.tag}"`);
   } else if (command === "calibrate") await calibrate();
