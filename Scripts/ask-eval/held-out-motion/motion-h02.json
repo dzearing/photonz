@@ -1,0 +1,21 @@
+{
+  "request": "An animated icon of a laptop whose lid swings open on its hinge, then the screen softly glows brighter and dimmer.",
+  "group": "animated",
+  "story": true,
+  "from": "held-out-motion, written 2026-11-14 before the general motion techniques were tuned",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "laptop",
+    "notebook computer"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

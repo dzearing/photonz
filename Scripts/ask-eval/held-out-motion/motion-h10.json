@@ -1,0 +1,21 @@
+{
+  "request": "Make a looping animation of a palm tree whose fronds sway in the breeze, the tip of each frond lagging behind its base.",
+  "group": "animated",
+  "story": false,
+  "from": "held-out-motion, written 2026-11-14 before the general motion techniques were tuned",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "palm tree",
+    "palm"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

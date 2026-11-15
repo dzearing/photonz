@@ -1,0 +1,21 @@
+{
+  "request": "An animated icon of a sticky note whose bottom corner folds up over itself along a straight crease and flattens back down.",
+  "group": "animated",
+  "story": false,
+  "from": "held-out-motion, written 2026-11-14 before the general motion techniques were tuned",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "sticky note",
+    "note"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

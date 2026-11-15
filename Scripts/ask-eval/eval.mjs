@@ -30,8 +30,12 @@ const here = path.join(repo, "Scripts/ask-eval");
 const runsDir = path.join(repo, ".ask-eval/runs");
 /// Held-out runs live apart, and nothing here prints one of their cases.
 const heldOutRunsDir = path.join(repo, ".ask-eval/held-out-runs");
-const SETS = { climb: "cases", "held-out": "held-out" };
-const runDirOf = (id, set) => path.join(set === "held-out" ? heldOutRunsDir : runsDir, id);
+// held-out-motion (2026-11-14): animated requests of everyday things written
+// before the general motion techniques were tuned, sealed like held-out and run
+// on its own, so a pass on motion is judged on a set nobody climbed.
+const SETS = { climb: "cases", "held-out": "held-out", "held-out-motion": "held-out-motion" };
+const isSealed = (set) => (set ?? "climb") !== "climb";
+const runDirOf = (id, set) => path.join(isSealed(set) ? heldOutRunsDir : runsDir, id);
 const findRunDir = (id) => [runsDir, heldOutRunsDir].map((d) => path.join(d, id)).find((d) => existsSync(path.join(d, "run.json")));
 const historyFile = path.join(repo, "queue/evals/ask-eval-history.jsonl");
 
@@ -45,7 +49,7 @@ const positional = argv.slice(1).find((a, i, all) => !a.startsWith("--") && !(i 
 /// The held-out set (held-out/) is read only in total (README, "The
 /// held-out set").
 export function loadCases(set = "climb") {
-  if (!SETS[set]) throw new Error(`--set climb or --set held-out, not ${set}`);
+  if (!SETS[set]) throw new Error(`--set ${Object.keys(SETS).join(", --set ")}, not ${set}`);
   const dir = path.join(here, SETS[set]);
   return readdirSync(dir).filter((f) => f.endsWith(".json")).sort().map((f) => ({ id: f.replace(/\.json$/, ""), ...JSON.parse(readFileSync(path.join(dir, f), "utf8")) }));
 }
@@ -158,7 +162,7 @@ function historyLine(meta) {
     lines: meta.lines ?? judgeLines(meta.cases), time: timeByGroup(meta.cases),
   };
   // A held-out run is recorded in total only, so no case can be climbed on.
-  if (meta.set === "held-out") return line;
+  if (isSealed(meta.set)) return line;
   return {
     ...line,
     cases: Object.fromEntries(Object.entries(meta.cases).map(([id, r]) => [id, {
@@ -173,8 +177,8 @@ async function commandRun() {
   if (!["ask", "skill"].includes(engine)) throw new Error("--engine ask or --engine skill");
   const resume = option("resume");
   const set = resume ? JSON.parse(readFileSync(path.join(findRunDir(resume) ?? runDirOf(resume, "climb"), "run.json"), "utf8")).set ?? "climb" : option("set", "climb");
-  const sealed = set === "held-out";
-  if (sealed && !resume) importFeedback({ quiet: true });
+  const sealed = isSealed(set);
+  if (set === "held-out" && !resume) importFeedback({ quiet: true });
   const all = loadCases(set);
   const wanted = option("cases")?.split(",");
   if (sealed && wanted) throw new Error("the held-out set runs whole: it is read in total, never case by case");
@@ -192,7 +196,7 @@ async function commandRun() {
     if (meta.engine !== engine) throw new Error(`${resume} is a ${meta.engine} run`);
   } else {
     const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*/, "").replace("T", "-");
-    meta = { id: `${stamp}-${engine}${sealed ? "-held-out" : ""}`, engine, set, tag: option("tag") ?? "untagged", commit: commit(), started: new Date().toISOString(),
+    meta = { id: `${stamp}-${engine}${sealed ? `-${set}` : ""}`, engine, set, tag: option("tag") ?? "untagged", commit: commit(), started: new Date().toISOString(),
              caseIDs: cases.map((c) => c.id), engineModel: engine === "skill" ? SKILL_MODEL : null, cases: {}, looks: judgeRuns,
              // Switches the run turns on that are off at Next defaults (--on a,b): a try measured
              // before it is anybody's default. Recorded so the run never reads as the default app.
@@ -289,8 +293,8 @@ function compare(current, other) {
     && setOf(h) === setOf(current) && h.caseCount === current.caseCount);
   const base = other ?? past.sort((a, b) => b.total - a.total)[0];
   if (!base) { console.log("    nothing to compare with yet: this is the first run of this engine on this set and rubric"); return; }
-  if (setOf(current) === "held-out" || setOf(base) === "held-out") {
-    console.log(`\n${"held-out total".padEnd(24)}${String(current.total).padStart(10)}${String(base.total).padStart(10)}   ${(current.total - base.total).toFixed(1).padStart(6)}`);
+  if (isSealed(setOf(current)) || isSealed(setOf(base))) {
+    console.log(`\n${`${setOf(current)} total`.padEnd(24)}${String(current.total).padStart(10)}${String(base.total).padStart(10)}   ${(current.total - base.total).toFixed(1).padStart(6)}`);
     console.log(`    ${describe(current.lookups)}\n    against "${base.tag}": ${describe(base.lookups)}`);
     return;
   }
@@ -366,7 +370,7 @@ async function rescore(id) {
   const runDir = findRunDir(id);
   if (!runDir) throw new Error(`no run ${id}`);
   const meta = JSON.parse(readFileSync(path.join(runDir, "run.json"), "utf8"));
-  const sealed = meta.set === "held-out";
+  const sealed = isSealed(meta.set);
   const cases = Object.fromEntries(loadCases(meta.set ?? "climb").map((c) => [c.id, c]));
   const only = option("cases")?.split(",");
   for (const [caseID, r] of Object.entries(meta.cases)) {
@@ -488,8 +492,9 @@ function report() {
   const mine = history().filter((h) => h.engine === engine && h.rubric === RUBRIC_ID);
   const climb = mine.filter((h) => (h.set ?? "climb") === "climb").at(-1);
   const held = mine.filter((h) => h.set === "held-out").at(-1);
+  const motion = mine.filter((h) => h.set === "held-out-motion").at(-1);
   const line = (name, h) => h ? `${name.padEnd(9)} ${String(h.total).padStart(5)}  (${h.caseCount ?? Object.keys(h.cases ?? {}).length} cases, ${h.run}, "${h.tag}")\n          ${describe(h.lookups)}` : `${name.padEnd(9)}     -  (no run on rubric ${RUBRIC_ID} yet)`;
-  console.log(`${engine} on rubric ${RUBRIC_ID}:\n${line("climb", climb)}\n${line("held-out", held)}`);
+  console.log(`${engine} on rubric ${RUBRIC_ID}:\n${line("climb", climb)}\n${line("held-out", held)}${motion ? `\n${line("motion", motion)}` : ""}`);
 }
 
 try {

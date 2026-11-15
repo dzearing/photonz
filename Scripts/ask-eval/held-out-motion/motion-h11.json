@@ -1,0 +1,21 @@
+{
+  "request": "Draw a kite icon where the kite drifts across the frame, coming in one side and floating out the other, its tail rippling behind it.",
+  "group": "animated",
+  "story": false,
+  "from": "held-out-motion, written 2026-11-14 before the general motion techniques were tuned",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "kite",
+    "flying kite"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

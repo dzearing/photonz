@@ -1,0 +1,21 @@
+{
+  "request": "An animated icon of a pair of scissors whose blades swing open and closed around the center screw, snipping.",
+  "group": "animated",
+  "story": false,
+  "from": "held-out-motion, written 2026-11-14 before the general motion techniques were tuned",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "scissors",
+    "shears"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

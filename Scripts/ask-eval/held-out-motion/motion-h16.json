@@ -1,0 +1,21 @@
+{
+  "request": "An animated icon of a delivery truck that drives in from the left, stops and rocks on its springs, then drives off to the right.",
+  "group": "animated",
+  "story": true,
+  "from": "held-out-motion, written 2026-11-14 before the general motion techniques were tuned",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "delivery truck",
+    "truck"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

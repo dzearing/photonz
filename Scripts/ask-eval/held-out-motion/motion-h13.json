@@ -1,0 +1,21 @@
+{
+  "request": "An animated SVG of a pencil writing a loopy signature, the line drawing itself behind the tip as it moves.",
+  "group": "animated",
+  "story": false,
+  "from": "held-out-motion, written 2026-11-14 before the general motion techniques were tuned",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "pencil",
+    "drawing pencil"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

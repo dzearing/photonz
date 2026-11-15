@@ -1,0 +1,21 @@
+{
+  "request": "An animated icon of a basketball tossed in a high arc that lands, squashes a little on each bounce, and settles on the ground.",
+  "group": "animated",
+  "story": true,
+  "from": "held-out-motion, written 2026-11-14 before the general motion techniques were tuned",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "basketball",
+    "ball"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}
