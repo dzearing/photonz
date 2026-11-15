@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-14T23:22:06.571Z",
-  "updated": "2026-11-15T13:16:49.740Z",
+  "updated": "2026-11-15T17:09:16.086Z",
   "deps": [
     "ask-s-motion-eval-tells-a-real-gain-from-chance"
   ],
@@ -121,6 +121,10 @@
     {
       "t": "2026-11-15T13:16:49.739Z",
       "note": "seq 8e-7 -> 20"
+    },
+    {
+      "t": "2026-11-15T17:09:16.085Z",
+      "note": "The steadier reading is in (ask-s-motion-eval-tells-a-real-gain-from-chance): a sealed motion run now reads every request twice by default (about 95 min, --minutes 6 then --resume). Baseline for the eighth pass = the two readings of the unchanged code, read as one: Scripts/ask-eval.sh compare <pass-8 run> --with 20261115-135228-ask-held-out-motion,20261115-152626-ask-held-out-motion (35.9 over four rounds). It prints REAL or INSIDE CHANCE; a two-round pass is real past about 2.1. Against it, passes 1 to 7 were all inside chance except pass 6 (a real drop of 6.1). README 'How a motion reading is taken'."
     }
   ],
   "started": "2026-11-15T08:35:07.159Z",

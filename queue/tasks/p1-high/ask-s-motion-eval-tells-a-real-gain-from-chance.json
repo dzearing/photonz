@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-15T12:58:25.910Z",
-  "updated": "2026-11-15T13:16:49.664Z",
+  "updated": "2026-11-15T17:13:35.532Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-can-draw-any-thing-and-animate-something-abo (2026-11-15). Readings of the same motion code: 20261115-000921 38.6 (93c0cff97) and 20261115-100549 33.6 (f6550c00d, same Ask motion code). Passes 1 to 7 read 35.8, 37.3, 34.1, 32.9, 36.3, 29.8, 34.7, all but pass 6 inside that spread. Ask plans at temperature 0 everywhere (AskPlanning.swift, AskMotion.designBody), yet its plans differ run to run; a likely cause is the document read carrying fresh layer UUIDs each run, which changes the tokens the model sees (a hypothesis, not checked). The judge itself is steady (nine looks, mean; README 'How steady a reading is'), so the spread is Ask's output, not the judge. Options: run each sealed case 2 or 3 times and score the mean (eval.mjs, a --repeat N); add sealed cases (must be written by an agent that never saw Ask's prompt, the climb set or the sealed sets, as held-out-motion's 16 were); or make Ask's plan repeatable (stable ids in what the model reads). Never open Scripts/ask-eval/held-out-motion/ or .ask-eval/held-out-runs/ to do this. The motion task depends on this one: its eighth and last pass waits for it.",
@@ -34,6 +34,33 @@
     {
       "t": "2026-11-15T13:16:49.663Z",
       "note": "seq 7e-7 -> 10"
+    },
+    {
+      "t": "2026-11-15T13:19:01.171Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-15T15:26:26.742Z",
+      "note": "Reading 1 (two rounds, 32 runs, Ask code unchanged, 047ec4901): 20261115-135228-ask-held-out-motion = 35.7 ± 1.0, 93 min of cases; round 1 alone 35.4, round 2 alone 35.9. One run of a case moves 5.7 (pooled within-case SD). Found on the climb set first: animated-gear-turning made the same svg byte for byte three times yet scored 46.0, 46.4, 41.1 (the judge's didWhatWasAsked scaling); animated-envelope-opening read 76 against 33.9 that morning (Ask's plan went another way)."
+    },
+    {
+      "t": "2026-11-15T17:13:35.310Z",
+      "note": "Reading 2 (two rounds, same Ask code, 97aedeba0): 20261115-152626-ask-held-out-motion = 36.0 ± 0.7, 95 min of cases (15:26 to about 17:02 UTC). Readings 1 and 2 land 0.3 apart. Wall time of each reading 93 and 96 minutes, both under two hours. Chose two rounds of the same 16 over writing more sealed requests because: a new request needs an agent that never saw Ask's prompt, and the noise is in Ask's own runs (re-judging 18 climb pictures moved a case 1.5 SD against 4.9 for a fresh Ask run), so more runs of the same sealed requests reduce it just as well and keep every past reading comparable. Did not make Ask's plans repeatable: a repeatable Ask would make two readings agree while a change to its prompt still sends every plan another way, so it would hide the noise rather than remove it (README says so)."
+    },
+    {
+      "t": "2026-11-15T17:13:35.378Z",
+      "note": "left rough: the lookups line of a two-round reading counts runs as cases ('0 of 32 cases answered by lookup alone'), only a wording nit in a line a runner reads; the walks a task names do not apply (no app code changed, eval scripts and docs only)."
+    },
+    {
+      "t": "2026-11-15T17:13:35.446Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-15T17:13:35.530Z",
+      "note": "Ask's eval now reads the sealed motion set in two rounds (every request twice, about 95 min), prints each reading's standard error, and compare says REAL or INSIDE CHANCE against one or several baseline readings on a pooled spread (Scripts/ask-eval/reading.mjs + tests, eval.mjs, README 'How a motion reading is taken'). Two readings of unchanged Ask code: 35.7 ± 1.0 and 36.0 ± 0.7, 0.3 apart, 93 and 96 minutes each. A two-round pass is real past about 2.1 against those two as one baseline. Commits 047ec4901, 97aedeba0, 08e1ee015; node tests 54 pass, Scripts/test.sh green."
     }
-  ]
+  ],
+  "started": "2026-11-15T13:19:01.170Z",
+  "walks": [],
+  "completed": "2026-11-15T17:13:35.531Z"
 }

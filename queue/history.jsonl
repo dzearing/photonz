@@ -17510,3 +17510,10 @@
 {"t":"2026-11-15T13:17:29.125Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-15T13:17:29.156Z","ev":"triage","summary":"merged 0, dropped 0, moved priority 0, reset 0 (guard clean, no leftovers, no open cards), re-tagged 2 (both Ask motion tasks ui-building -> agent-ask), renumbered p1 10-80 and p2 10-670, logged 6 (stopping point on the Ask motion ask, flattening numbers on the long edit, walk step detail on shorten-the-cut, CI quiet on the legibility task, slow rotating check, re-tag notes); open 76 before and after (p1 8, p2 67, p3 1)"}
 {"t":"2026-11-15T13:18:43.239Z","ev":"digest","file":"2026-11-15.md"}
+{"t":"2026-11-15T13:19:01.177Z","ev":"task_started","id":"ask-s-motion-eval-tells-a-real-gain-from-chance","title":"Ask's motion eval tells a real gain from chance in one reading","priority":"p1-high"}
+{"t":"2026-11-15T15:26:26.744Z","ev":"task_note","id":"ask-s-motion-eval-tells-a-real-gain-from-chance"}
+{"t":"2026-11-15T17:09:16.087Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T17:13:35.312Z","ev":"task_note","id":"ask-s-motion-eval-tells-a-real-gain-from-chance"}
+{"t":"2026-11-15T17:13:35.380Z","ev":"task_note","id":"ask-s-motion-eval-tells-a-real-gain-from-chance"}
+{"t":"2026-11-15T17:13:35.448Z","ev":"task_walks","id":"ask-s-motion-eval-tells-a-real-gain-from-chance","walks":[]}
+{"t":"2026-11-15T17:13:35.533Z","ev":"task_done","id":"ask-s-motion-eval-tells-a-real-gain-from-chance","from":"in_progress","note":"Ask's eval now reads the sealed motion set in two rounds (every request twice, about 95 min), prints each reading's standard error, and compare says REAL or INSIDE CHANCE against one or several baseline readings on a pooled spread (Scripts/ask-eval/reading.mjs + tests, eval.mjs, README 'How a motion reading is taken'). Two readings of unchanged Ask code: 35.7 ± 1.0 and 36.0 ± 0.7, 0.3 apart, 93 and 96 minutes each. A two-round pass is real past about 2.1 against those two as one baseline. Commits 047ec4901, 97aedeba0, 08e1ee015; node tests 54 pass, Scripts/test.sh green."}
