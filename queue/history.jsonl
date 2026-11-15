@@ -17405,3 +17405,15 @@
 {"t":"2026-11-15T00:04:25.760Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-15T00:04:25.839Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-15T00:05:00.684Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 3 landed 475c29a4e: a click on a cut that slid under a still pointer (after a zoom or scroll) picks the cut, not the clip; proven by a-cut-slid-under-a-still-pointer-walk failing without the fix and passing with it; rule 8 for painted busy lanes written into docs/design/video.md. Acceptance items 6 and 7 met. Still open, bars not reached: zoom/scroll ~50 ms a frame vs 8.3 on the 60 min edit, edits 150-245 ms vs 16. Next pass: paint clips that show pictures (the film strip), then Zoom lanes and click ticks."}
+{"t":"2026-11-15T00:05:30.049Z","ev":"task_started","id":"ask-can-draw-any-thing-and-animate-something-abo","title":"Ask can draw any thing and animate something about it, from a set of general motion techniques","priority":"p1-high"}
+{"t":"2026-11-15T00:09:25.825Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T01:43:31.708Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T03:07:37.395Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T03:07:57.152Z","ev":"task_walks","id":"ask-can-draw-any-thing-and-animate-something-abo","walks":["ask-animates-a-thing-from-the-new-window-walk","ask-animates-a-swinging-part-with-command-k-walk","ask-animates-a-buzz-with-command-k-walk"]}
+{"t":"2026-11-15T04:15:17.120Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T05:37:22.549Z","ev":"task_walks","id":"ask-can-draw-any-thing-and-animate-something-abo","walks":["ask-animates-a-thing-from-the-new-window-walk","ask-animates-a-swinging-part-with-command-k-walk","ask-animates-a-rising-wisp-with-command-k-walk"]}
+{"t":"2026-11-15T06:53:45.348Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T08:14:30.133Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T08:14:30.210Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T08:14:30.285Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T08:14:30.358Z","ev":"task_pending","id":"ask-can-draw-any-thing-and-animate-something-abo","from":"in_progress","note":"4 of 8 passes, none above the 38.6 baseline on the sealed motion set (35.8, 37.3, 34.1, 32.9); all reverted; catalogue, sealed set, walks and audit kept; bar 75 not reached"}

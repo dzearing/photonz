@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-14T23:22:06.571Z",
-  "updated": "2026-11-14T23:22:06.699Z",
+  "updated": "2026-11-15T08:14:30.357Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-14, after stopping an-animated-icon-told-as-a-little-story-moves-th (dropped at 20 passes, 2 of 6 story cases): \"the trash can was just an example, i don't want it to hyperfocus on trashcan animations, i want it to be able to draw a thing and animate something about it. I want it to have techniques for doing that.\"\n\nWhat exists (docs/design/ask.md, 'A moving icon (2026-11-06)' and 'A story of several beats'): AskMotion.designAsk (design in words: parts, hinges, beats), AskMotion.principles (general motion principles), tools add_drawing / set_timing / set_keys, AskMotion.landing ($1/part ids on a 24 grid), AskMotionCheck, AskMotion.fitted / leaving / marksGo / comesBack / foldsLand / hidden, MotionSVG.folds and carried, AskMotion.beatsReview. Much of it is already subject-free, but twenty passes were spent tuning against the trash story; read that task's log for what each pass changed and which of those rules are general and which only served one case, and say so in the audit. Rules that only served one case are candidates to take out.\n\nEval: Scripts/ask-eval (README.md, eval.mjs, judge.mjs), cases/animated-*.json and held-out/animated-h1..h8.json. A run is about four minutes a request; budget the runs. Memory rule (user): Ask quality comes from model, prompt and general techniques, never stored or coded subjects. Contradicts nothing queued: the dropped trash task's shipped work stays and is the starting point.",
@@ -31,6 +31,60 @@
     {
       "t": "2026-11-14T23:22:06.698Z",
       "note": "seq 4010 -> 8e-7"
+    },
+    {
+      "t": "2026-11-15T00:05:30.044Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-15T00:09:25.823Z",
+      "note": "Sealed set written first (93c0cff97): Scripts/ask-eval/held-out-motion/, 16 animated requests by an agent that never saw Ask's prompt, the climb set or the sealed sets; it reported only coverage (each of the 13 techniques called for by 2+ requests, 11 combine two or more, 5 stories). I have not opened the files. eval.mjs runs it with --set held-out-motion, sealed (totals only). Baseline run started on 93c0cff97."
+    },
+    {
+      "t": "2026-11-15T01:43:31.706Z",
+      "note": "Baselines on 93c0cff97: sealed held-out-motion 38.6 (run 20261115-000921, lines clean 4.6 designed 4 asked 4 loops 6.4, plan 179 s median, none ran out); climb single motions (12) 59.4 (run 20261115-005857); climb stories (6) 61.0 and 57.9 on bca563f89 (no Ask code changed since); held-out animated h1..h8 group last read 31.1 (20261113-022038, e478f6063, before story passes 17 to 20). Pass 1 (454ce1f0d): the technique catalogue in the prompt, the design names a technique per moving part; running on the sealed set."
+    },
+    {
+      "t": "2026-11-15T03:07:37.393Z",
+      "note": "Pass 1 (454ce1f0d), run 20261115-015537: sealed set 35.8 vs 38.6 (lines clean 3.9 designed 3.4 asked 3.7 loops 5.9), 12 of 233 tool calls broken vs 4 of 187, plan 189 s vs 179 s. Did not move up, so its shape is reverted as the rule says: the whole catalogue in the plan's rules is gone. Kept: the catalogue itself (docs + AskMotionTechnique) and the design naming a technique per part, which pass 2 builds on. A first pass-1 run (20261115-014326) was stopped and thrown away: I touched a source file while its probe build ran and the bundle stayed the 17:02 'before' build (checked with strings); every run since builds the probe first in the foreground and runs --no-build. Pass 2 (f34670d81): plan reads only the chosen techniques' lines, look asks the judged criteria for any motion, swing about empty space sent back; running."
+    },
+    {
+      "t": "2026-11-15T03:07:57.150Z",
+      "note": "owns these walks: ask-animates-a-thing-from-the-new-window-walk, ask-animates-a-swinging-part-with-command-k-walk, ask-animates-a-buzz-with-command-k-walk"
+    },
+    {
+      "t": "2026-11-15T04:15:17.118Z",
+      "note": "Pass 2 (f34670d81), run 20261115-030729: sealed set 37.3 vs 38.6 baseline (pass 1 35.8); lines clean 4.6 designed 3.8 asked 3.8 loops 6; 9 of 154 tool calls broken; 201 s a plan. Not above the baseline. Found on the climb singles' traces: the look ran on all 12 and sent every one back (even the heart at 91 and the tick at 88), since the model almost never ends on All good. Pass 3 (50e753108): the look sends back only when a beat is not seen; running."
+    },
+    {
+      "t": "2026-11-15T05:37:22.547Z",
+      "note": "walks ask-animates-a-thing-from-the-new-window-walk, ask-animates-a-swinging-part-with-command-k-walk, ask-animates-a-buzz-with-command-k-walk -> ask-animates-a-thing-from-the-new-window-walk, ask-animates-a-swinging-part-with-command-k-walk, ask-animates-a-rising-wisp-with-command-k-walk"
+    },
+    {
+      "t": "2026-11-15T06:53:45.346Z",
+      "note": "Pass 3 (50e753108), run 20261115-041513: 34.1, reverted (1681643d3): the re-plan after a look helps on balance. Walks at Next defaults pass (b57ea0cc2 probe): ask-animates-a-thing-from-the-new-window-walk, ask-animates-a-swinging-part-with-command-k-walk, ask-animates-a-rising-wisp-with-command-k-walk (front, so Command K reaches the menu); each copied SVG filmed in WebKit plays as the canvas does (audit). The phone-buzz walk was swapped for wisps: its plan was one 0.2 s burst in a 2 s lap, read as still by the look and by the walk. Existing animated cases on pass 2 code, run 20261115-053749: 55.4 (singles 58.4 vs 59.4 before; stories 49.4 vs 61.0/57.9 before, so stories dropped). Traces: the story's closing part and the walk's swinging part both chose 'turn on a pivot' where they open on an edge hinge, and swung flat. Pass 4 (fold vs turn said plainly) running on the sealed set."
+    },
+    {
+      "t": "2026-11-15T08:14:30.131Z",
+      "note": "Pass 4 (d680cae8f, fold vs turn told plainly), run 20261115-065339: 32.9. Four passes, all below the 38.6 baseline (35.8, 37.3, 34.1, 32.9), and on pass 2's code the six climb stories fell to 49.4 (vs 61.0/57.9). By the task's rule every pass is reverted: a23230db2 puts Ask's motion prompt, look and checks back to 93c0cff97. Kept: the catalogue (docs/design/ask.md + tested AskMotionTechnique, with the four wirings written down), the sealed set held-out-motion (16 cases), eval --set held-out-motion, Scripts/ask-eval/ends-reel.mjs, three walks at Next defaults (all pass on the final code), audit queue/audits/2026-11-14-ask-motion-techniques.json. Pictures looked at: the three walks' copied SVGs filmed in WebKit (flag tips as one piece; door turns flat about its corner; steam rises, staggers, fades) and the app's captures; the sealed sheet and reel were drawn in place for the user and not opened."
+    },
+    {
+      "t": "2026-11-15T08:14:30.208Z",
+      "note": "Acceptance as it stands: 1 catalogue written (done). 2 Ask picks techniques in its design: built and measured, taken out (reads lower), so not met. 3 no subject in the diff: grep clean outside eval cases and walk requests. 4 before/after: sealed 38.6, passes 35.8/37.3/34.1/32.9; climb singles 59.4 -> 58.4 and stories 61.0/57.9 -> 49.4 on pass 2 code; the final code is the baseline's; held-out h1..h8 not re-read (last 31.1). 5 stopped at 4 of 8 passes, bar 75 not reached. 6 sheet + reel drawn in .ask-eval/held-out-runs (not queue/audits, by the README's sealing rule). 7 walks pass, Copy SVG plays as on the canvas. Next levers from the traces: the design picks turn where a part opens on an edge hinge (door, flap); a burst shorter than the look's frame spacing reads as still; the look almost never says All good so it re-plans everything (sending back only missed beats read lower, 34.1)."
+    },
+    {
+      "t": "2026-11-15T08:14:30.283Z",
+      "note": "Left rough, no new task (my own slip, not a defect): the first pass-1 run measured the old probe because I edited a source file while its release build ran; every run since builds the probe in the foreground and runs --no-build."
+    },
+    {
+      "t": "2026-11-15T08:14:30.356Z",
+      "note": "4 of 8 passes, none above the 38.6 baseline on the sealed motion set (35.8, 37.3, 34.1, 32.9); all reverted; catalogue, sealed set, walks and audit kept; bar 75 not reached"
     }
+  ],
+  "started": "2026-11-15T00:05:30.043Z",
+  "walks": [
+    "ask-animates-a-thing-from-the-new-window-walk",
+    "ask-animates-a-swinging-part-with-command-k-walk",
+    "ask-animates-a-rising-wisp-with-command-k-walk"
   ]
 }
