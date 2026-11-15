@@ -1,0 +1,35 @@
+{
+  "id": "the-speed-button-reads-at-a-glance-and-looks-lik",
+  "title": "The speed button reads at a glance and looks like the play bar's other buttons",
+  "goal": "The new round speed button on the video play bar is hard to make out and does not look like the buttons beside it: its speedometer picture is a thin outline with tiny dots, while Go to Start, Go to End and the speaker are solid shapes. Make it read as clearly as its neighbours and look like part of the same set, at 1x and at every other speed.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 4e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-15T18:02:48.481Z",
+  "updated": "2026-11-15T18:02:48.658Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-15, with a screenshot (in the system pasteboard folder, which the intake window could not open, so the runner should not expect it): \"the speed icon is illegible and does not match the size/aestheic of the other icons in the video viewer\".\n\nShipped by the-playback-speed-control-is-a-small-round-icon (commit 96ab505e2, done 2026-11-14). That task's acceptance said 'the same diameter, weight, colour and hover' and closed on matching the button's frame and the symbol's point size, not on how the glyph reads. Its own after picture (queue/audits/2026-11-14-speed-button-after.png, top row) shows the problem: an outline gauge next to filled transport glyphs. Measured by the intake window on that picture with a brightness threshold of 110: Go to End ink box 20x16 px with 251 ink px, Go to Start 20x16 with 260, speaker 24x18 with 219, gauge 21x21 with 187, so the gauge is spread thinner over a larger box.\n\nCode: PlaybackSpeedMenu.symbol = \"gauge.with.dots.needle.67percent\" (Sources/Photonz/TimelineDock.swift); the round face is VideoKit.SelectFace roundBody (Sources/Photonz/VideoKit/VideoKitControls.swift), 11pt semibold symbol, Palette.dim at rest; the badge uses Palette.ink on Palette.glassThin at rest, brighter than any neighbour at rest. Neighbours: VideoKit.TransportButton (VideoKitTransport.swift:103) with backward.end.fill / forward.end.fill. Keep the walk-reachable AppKit pull-down underneath. Do not go back to the wide dropdown: the user asked for a compact button.",
+  "acceptance": [
+    "Reproduced first: the play bar at 1x, 2x and 8x photographed at real size in the app, beside Go to Start, Go to End and the speaker, and the measurements below taken on the BEFORE picture too",
+    "At 1x the speed button's picture is a solid (filled) shape like its neighbours, or another form that reads as speed at this size (for example the speed written as '1x' in the same dim colour and weight as the button glyphs); whichever is chosen, it must pass every measure below, and the audit says why it was chosen over the others tried",
+    "MEASURED against Go to End in the same picture: the glyph's ink height within 1pt of Go to End's, its ink coverage (share of the glyph's box that is ink) within 25 percent of Go to End's, and the same resting and hover colours. Today's gauge FAILS this (in queue/audits/2026-11-14-speed-button-after.png the gauge is 21x21 px with 187 ink px against Go to End's 20x16 with 251)",
+    "Legible: shown at real size to a vision model with no context, it is named as a speed or playback speed control; the answer goes in the audit. Do not settle on a symbol whose detail (dots, needle) is under 1pt at the bar's size",
+    "At other speeds the badge looks like the same family: same glyph height for its digits, no brighter than a hovered neighbour at rest, and the struck speaker at 4x and 8x the same weight as the volume speaker; badge widths measured and listed (2x, 0.25x, 8x silent)",
+    "Menu, keys, tooltip and the walks that pick it by name still work (Scripts/playtest-all.sh --no-build speed)",
+    "Audit under queue/audits/ with before and after pictures at 1x, 2x, 8x and hovered, side by side with the neighbours, plus every number above; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-15T18:02:48.483Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-15T18:02:48.656Z",
+      "note": "seq 4010 -> 4e-7"
+    }
+  ]
+}
