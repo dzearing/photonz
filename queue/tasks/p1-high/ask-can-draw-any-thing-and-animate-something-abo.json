@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T23:22:06.571Z",
-  "updated": "2026-11-15T17:37:26.416Z",
+  "updated": "2026-11-15T19:35:11.613Z",
   "deps": [
     "ask-s-motion-eval-tells-a-real-gain-from-chance"
   ],
@@ -133,6 +133,14 @@
     {
       "t": "2026-11-15T17:37:26.415Z",
       "note": "Pass 8 (be3157f03): pass 7's two time rules again (restsWhole + marksStayIn, no prompt words), as the digest asked, now measured on the two-round reading against the four-round baseline 35.9. Probe built in the foreground first (nm shows restsWhole in the bundle); run with --no-build."
+    },
+    {
+      "t": "2026-11-15T19:34:27.292Z",
+      "note": "Pass 8 (be3157f03, pass 7's restsWhole + marksStayIn) read 35.0 ± 1.1 over two rounds (run 20261115-173726, 158 s a plan, 6 of 427 calls broken; lines clean 4.5 designed 3.7 asked 3.7 loops 5.2) against 35.9 for the unchanged code (135228 + 152626 as one): INSIDE CHANCE, -0.9, real past 2.4. Reverted (bb3709053). Eight passes done, as acceptance item 5 says: stopped at 8 of 8, bar 75 not reached. Ask's code ends exactly where it began (no diff under Sources or Tests since 76cd6c7a6), so the three walks and Copy SVG checks from earlier still hold. Sheet and reel of the final code's latest reading drawn in place, not opened: .ask-eval/held-out-runs/20261115-152626-ask-held-out-motion/. Audit and docs/design/ask.md updated. Item 2 (Ask picks techniques in its design) was built and measured and is not in Ask, so the task is not done: decision card opened as the digest asked, recommending the option that stops spending passes. Picture looked at: the door frames (turns flat about its corner, pokes past the frame 0.28 to 0.75 s), marked as the card's shot."
+    },
+    {
+      "t": "2026-11-15T19:35:11.610Z",
+      "note": "Eight passes done, none a gain: pass 8 (pass 7's rules) read 35.0 ± 1.1 vs 35.9 unchanged, inside chance, reverted. Ask's code is as it began. Card asks: rest moving icons here (recommended) or a bigger change where the app builds the move Ask names."
     }
   ],
   "started": "2026-11-15T17:25:57.090Z",
