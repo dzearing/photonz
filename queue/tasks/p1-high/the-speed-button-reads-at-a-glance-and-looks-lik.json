@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 4e-7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-15T18:02:48.481Z",
-  "updated": "2026-11-15T18:02:48.658Z",
+  "updated": "2026-11-15T20:16:23.598Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-15, with a screenshot (in the system pasteboard folder, which the intake window could not open, so the runner should not expect it): \"the speed icon is illegible and does not match the size/aestheic of the other icons in the video viewer\".\n\nShipped by the-playback-speed-control-is-a-small-round-icon (commit 96ab505e2, done 2026-11-14). That task's acceptance said 'the same diameter, weight, colour and hover' and closed on matching the button's frame and the symbol's point size, not on how the glyph reads. Its own after picture (queue/audits/2026-11-14-speed-button-after.png, top row) shows the problem: an outline gauge next to filled transport glyphs. Measured by the intake window on that picture with a brightness threshold of 110: Go to End ink box 20x16 px with 251 ink px, Go to Start 20x16 with 260, speaker 24x18 with 219, gauge 21x21 with 187, so the gauge is spread thinner over a larger box.\n\nCode: PlaybackSpeedMenu.symbol = \"gauge.with.dots.needle.67percent\" (Sources/Photonz/TimelineDock.swift); the round face is VideoKit.SelectFace roundBody (Sources/Photonz/VideoKit/VideoKitControls.swift), 11pt semibold symbol, Palette.dim at rest; the badge uses Palette.ink on Palette.glassThin at rest, brighter than any neighbour at rest. Neighbours: VideoKit.TransportButton (VideoKitTransport.swift:103) with backward.end.fill / forward.end.fill. Keep the walk-reachable AppKit pull-down underneath. Do not go back to the wide dropdown: the user asked for a compact button.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-11-15T18:02:48.656Z",
       "note": "seq 4010 -> 4e-7"
+    },
+    {
+      "t": "2026-11-15T19:35:32.518Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-15T20:15:56.777Z",
+      "note": "owns these walks: playback-speed-button-walk"
+    },
+    {
+      "t": "2026-11-15T20:15:56.841Z",
+      "note": "Reproduced on the real window captures: the gauge was 22x22px (11pt tall) with coverage 0.386 against Go to End's 21x17px (8.5pt) and 0.703. Screened candidates with the same measures offscreen (calibrated to match Go to End pixel for pixel), then a no-context naming test on real-size strips: outline gauge ~65% sure speed, filled gauge 50% (read as a clock), '1x' named playback speed in both weights."
+    },
+    {
+      "t": "2026-11-15T20:15:56.909Z",
+      "note": "Chose '1x' in 12pt black lettering over a filled gauge because the reader named it speed and the gauge read as a clock; over '1x' semibold because semibold measures 0.39 coverage, too thin beside solid symbols. Badges at other speeds use the same lettering; the struck speaker is now the volume speaker's own 11pt semibold symbol instead of an image squeezed into an 11pt square."
+    },
+    {
+      "t": "2026-11-15T20:15:56.975Z",
+      "note": "Looked at the audit pictures: before-after strip shows the outline gauge replaced by a solid grey 1x the height of Go to End, hover lights it as Go to End lights; 2x/8x/0.25x badges in the same lettering; legibility catalogue's light and dark 1x/2x/8x silent all read. Walks: 11 speed walks + scrubber/transport walks green; Scripts/test.sh exit 0. Nothing left rough enough to file: the slightly wider badges (2 to 4pt) are noted in the audit's rough list only."
+    },
+    {
+      "t": "2026-11-15T20:16:23.596Z",
+      "note": "The play bar's speed button now says 1x in 12pt black lettering, dim like Go to End at rest and lit like it on hover; other speeds use the same lettering on faint glass, the struck speaker is the volume speaker's own symbol (Sources/Photonz/VideoKit/VideoKitControls.swift SelectFace.Round, TimelineDock PlaybackSpeedMenu). Measured on real captures: 8.5pt tall like Go to End (gauge was 11pt), coverage 0.577 vs 0.703 (gauge 0.386), same rest/hover colours; a no-context reader named it playback speed. 11 speed walks + scrubber walks green, Scripts/test.sh exit 0. Audit queue/audits/2026-11-15-speed-button-reads.json. Commit 8644b1986."
     }
-  ]
+  ],
+  "started": "2026-11-15T19:35:32.517Z",
+  "walks": [
+    "playback-speed-button-walk"
+  ],
+  "completed": "2026-11-15T20:16:23.597Z"
 }
