@@ -94,15 +94,3 @@ import Testing
         #expect(squash.does.contains("bottom edge"))
     }
 }
-
-@Suite("Ask's moving icons: every piece in the icon's one look")
-struct AskMotionOneLookTests {
-    @Test("Drawing a moving icon asks for small pieces as lines of the same stroke, never filled blobs")
-    func smallPiecesAreLines() {
-        #expect(AskMotion.drawTheDesign.contains(AskMotion.oneLook))
-        #expect(AskMotion.oneLook.contains("same stroke"))
-        #expect(!AskMotion.drawTheDesign.contains(#"stroke="none""#))
-        // The still icon keeps its own rule.
-        #expect(AskIcon.drawTheDesign.contains(AskIcon.smallParts))
-    }
-}

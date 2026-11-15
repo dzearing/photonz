@@ -191,21 +191,7 @@ public enum AskMotion {
     /// What follows the design in the talk.
     public static let drawTheDesign = """
         Draw exactly that design, every part it names, then call set_timing and set_keys for its beats. \
-        \(oneLook)
-        """
-
-    /// How every piece of a moving icon is drawn: in the icon's one look.
-    /// The judge's notes on the climb set of 2026-11-15 (run
-    /// 20261115-005857-ask) marked down four plans of twelve for pieces in
-    /// another style than the rest: a burst's pieces as heavy filled shards
-    /// in an outline icon, an accent as a lumpy filled diamond, a filled
-    /// block over an outline. `AskIcon.smallParts` asked for exactly that
-    /// ("a solid shape with stroke none"), which reads on a still but not
-    /// beside moving outlines. Nothing here names a subject.
-    static let oneLook = """
-        Every piece is drawn in the icon's one look: in an outline icon, a piece under 4 across (a fragment, a \
-        spark, a mark) is one short straight line of the same stroke, and only a dot is ever filled; never a \
-        filled blob, a small outline or a wiggle. A curve bends once.
+        \(AskIcon.smallParts)
         """
 
     /// The body of the one call that designs the motion: no tools, no document.
@@ -241,7 +227,7 @@ public enum AskMotion {
         then jumps, so a change you want to see never leaves a Hold.
         - A change of state is a movement, never one picture fading into another. What breaks or bursts swells a \
         little, is gone within 100 ms, and at that moment separate small pieces fly out from where it was, slowing \
-        and fading out within 400 ms: pieces never stand still. Three to six pieces in one <g>, each a short straight line, drawn where they end \
+        and fading out within 400 ms: pieces never stand still. Three to six pieces in one <g>, drawn where they end \
         up, keyed as that one group from scale 30 to 100 and opacity 100 to 0, are two calls. What breaks in two shows no line where it will part until it breaks: \
         each half is drawn as an open path, the part of the outline it carries and nothing along the break. At the \
         break the halves move apart, 1 or 2 on the grid each, as they tilt away, never still joined at a point. A part that swings on one point, seen side on (a door seen from above, an arm), \
