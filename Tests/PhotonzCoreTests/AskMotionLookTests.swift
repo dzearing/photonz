@@ -75,10 +75,15 @@ struct AskMotionLookTests {
         // A beat not seen is not all good, whatever the last line says.
         let contradicts = "Opens: 0.2 s\nBounces: not seen\nAll good."
         #expect(AskMotionLook.critique(fromAnswer: contradicts)?.contains("Bounces: not seen") == true)
+        // Faults alone, with every beat seen, land as they are: the model almost never ends on All good, and
+        // on 2026-11-14 the look sent back all twelve single motions of the climb set, the 91 and the 88 too.
         let fault = "Opens: 0.2 s\n**Issues:**\n* The ball appears in place at 0.5 s instead of travelling."
-        #expect(AskMotionLook.critique(fromAnswer: fault)?.contains("appears in place") == true)
+        #expect(AskMotionLook.critique(fromAnswer: fault) == nil)
+        // With a beat not seen, the faults go back with it.
+        let both = "Opens: 0.2 s\nBounces: not seen\n**Issues:**\n* The ball appears in place at 0.5 s instead of travelling."
+        #expect(AskMotionLook.critique(fromAnswer: both)?.contains("appears in place") == true)
         // Markdown the model dresses its answer in is taken off.
-        #expect(AskMotionLook.critique(fromAnswer: fault)?.contains("**") == false)
+        #expect(AskMotionLook.critique(fromAnswer: both)?.contains("**") == false)
         let long = String(repeating: "Bounces: not seen. ", count: 200)
         #expect((AskMotionLook.critique(fromAnswer: long)?.count ?? 0) <= AskMotionLook.mostCritique)
     }

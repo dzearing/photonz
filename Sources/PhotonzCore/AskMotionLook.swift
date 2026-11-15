@@ -100,20 +100,18 @@ public enum AskMotionLook {
         return .object(whole)
     }
 
-    /// What the look saw, to send back, or nil when every beat was seen and
-    /// nothing looks wrong (or it said nothing, which never holds a plan up).
+    /// What the look saw, to send back, or nil when every beat was seen (or
+    /// it said nothing, which never holds a plan up). Faults alone, with every
+    /// beat seen, land as they are: the model almost never ends on All good,
+    /// so on 2026-11-14 the look sent back all twelve single motions of the
+    /// climb set, the heart at 91 and the tick at 88 too, each a re-plan of a
+    /// minute that can only lose what already read. A beat not seen is what
+    /// the judge's "did what was asked" turns on, and its faults go with it.
     public static func critique(fromAnswer answer: String) -> String? {
         let said = AskConversation.withoutThinking(answer)
             .replacingOccurrences(of: "**", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !said.isEmpty else { return nil }
-        let lower = said.lowercased()
-        let missed = lower.contains("not seen")
-        let lastLine = lower.split(whereSeparator: \.isNewline).last.map(String.init) ?? ""
-        if !missed, lastLine.trimmingCharacters(in: .whitespaces).trimmingCharacters(in: .punctuationCharacters)
-            .hasSuffix("all good") {
-            return nil
-        }
+        guard !said.isEmpty, said.lowercased().contains("not seen") else { return nil }
         // The verdict line is no fault to mend.
         let kept = said.split(separator: "\n", omittingEmptySubsequences: false).filter {
             $0.trimmingCharacters(in: .whitespaces).trimmingCharacters(in: .punctuationCharacters).lowercased() != "all good"
