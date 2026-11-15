@@ -23139,3 +23139,9 @@ units.
 - `Scripts/ask-eval.sh run --repeat N` runs the set in rounds (sealed motion set: 2 by default, about 95 min), scores the mean of each case's mean, and prints a standard error from how far cases moved between their own rounds (a total, sealed-safe). `compare --with a,b` reads several readings as one baseline and says REAL or INSIDE CHANCE on a spread pooled over every two-round reading. `--resume <run> --repeat 3` carries a reading into another round. `Scripts/ask-eval/reading.mjs`, tests in `reading.test.mjs`.
 - Two readings of unchanged Ask code: 35.7 ± 1.0 and 36.0 ± 0.7 (0.3 apart, 93 and 95 min). A two-round pass is real past about 2.1 against those two as one baseline.
 - Next: the motion task's eighth pass, measured that way.
+
+## 2026-11-15 — long edit perf, pass 7
+
+- Edits on a video (key, menu, agent) now draw the picture in their own pass and the timeline and panel in the next, stopped as well as playing (rule 6, `docs/design/video.md` 8f). A stopped trim with a clip picked went from 54-55 ms to 31-44 ms on the 6 minute reference edit.
+- The folded Library at the foot of the panel no longer bounces to its chosen height while a pick's sections arrive (`PanelShelfPane.drawnHeight(lastDrawn:)`, tested).
+- Next: the piece selection a blade makes and an undo hands back (~20-30 ms over a trim), the first pick's 450 ms of section arrivals, and a speed walk edit with a clip picked. Bars (edits <= 16 ms, scrub 1 frame, no dropped frames) still not reached.

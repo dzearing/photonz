@@ -141,10 +141,20 @@ public enum PanelShelfPane {
     ///   - aboveNeeds: the pick's sections drawn whole, nil until measured.
     ///   - foldedHeight: the pane's height with the shelf folded, nil while it
     ///     is open: a folded shelf is its header and asks for nothing more.
+    ///   - lastDrawn: the height it was drawn at last pass, nil before the
+    ///     first. While the pick is unmeasured (a section arriving is measured
+    ///     in the pass after it is built) the pane stays there rather than
+    ///     jumping to `chosen` and back: picking a clip on a video brings ten
+    ///     sections a pass apart, and each bounced the Library and cost the
+    ///     window two more passes (2026-11-15).
     public static func drawnHeight(chosen: CGFloat, column: CGFloat?, aboveNeeds: CGFloat?,
-                                   foldedHeight: CGFloat?) -> CGFloat {
+                                   foldedHeight: CGFloat?, lastDrawn: CGFloat? = nil) -> CGFloat {
         let asks = foldedHeight.map { min(chosen, $0) } ?? chosen
-        guard let column, let aboveNeeds else { return chosen }
+        guard let column else { return asks }
+        guard let aboveNeeds else {
+            guard let lastDrawn else { return asks }
+            return min(max(asks, lastDrawn), max(asks, column))
+        }
         return max(asks, column - aboveNeeds)
     }
 

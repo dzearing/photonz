@@ -94,6 +94,35 @@ struct PanelShelfPaneTests {
         #expect(PanelShelfPane.drawnHeight(chosen: 218, column: nil, aboveNeeds: 111, foldedHeight: nil) == 218)
     }
 
+    /// The 6 minute reference edit, 2026-11-15: picking a clip brings its
+    /// sections in one pass at a time, and each is unmeasured for the pass it
+    /// arrives in. The Library under them was folded, yet every arrival drew
+    /// it at its chosen 163pt and the next pass put it back to its 45pt
+    /// header: a bounce on screen and two window passes per section, ten
+    /// times after one pick (`a-long-edit-with-transitions-plays-scrubs-and-ed`).
+    @Test("A folded shelf stays its header while a section above is unmeasured")
+    func foldedWhileUnmeasured() {
+        #expect(PanelShelfPane.drawnHeight(chosen: 163, column: 611, aboveNeeds: nil, foldedHeight: 45) == 45)
+        #expect(PanelShelfPane.drawnHeight(chosen: 163, column: nil, aboveNeeds: nil, foldedHeight: 45) == 45)
+    }
+
+    @Test("A section arriving unmeasured leaves the pane where it was last drawn")
+    func holdsWhileASectionArrives() {
+        // Grown into the room a short pick left, then a section arrives.
+        #expect(PanelShelfPane.drawnHeight(chosen: 163, column: 611, aboveNeeds: nil, foldedHeight: 45,
+                                           lastDrawn: 434) == 434)
+        #expect(PanelShelfPane.drawnHeight(chosen: 163, column: 611, aboveNeeds: nil, foldedHeight: nil,
+                                           lastDrawn: 300) == 300)
+        // Never shorter than it asks for, never taller than the column.
+        #expect(PanelShelfPane.drawnHeight(chosen: 163, column: 611, aboveNeeds: nil, foldedHeight: nil,
+                                           lastDrawn: 100) == 163)
+        #expect(PanelShelfPane.drawnHeight(chosen: 163, column: 400, aboveNeeds: nil, foldedHeight: nil,
+                                           lastDrawn: 500) == 400)
+        // Measured, the last height has no say.
+        #expect(PanelShelfPane.drawnHeight(chosen: 163, column: 611, aboveNeeds: 573, foldedHeight: 45,
+                                           lastDrawn: 163) == 45)
+    }
+
     // MARK: A shelf is never cut across its first row
 
     /// tutorial-the-library-walk, 2026-10-19: a colour saved onto an empty

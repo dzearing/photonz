@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-15T13:17:29.124Z",
+  "updated": "2026-11-15T21:45:15.000Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -222,9 +222,37 @@
     {
       "t": "2026-11-15T13:17:29.123Z",
       "note": "digest 2026-11-15, correction to the line above: pass 6 already tried the timeline in a hosting view of its own and it did not pay (docs/design/video.md 8f says not to retry). The structural lead left is fewer live views in the lanes."
+    },
+    {
+      "t": "2026-11-15T20:16:54.532Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-15T21:45:15.000Z",
+      "note": "Pass 7 measured first (6 min edit, edits walk, playing): trim 19-23, move 16-21, blade 57 (own 43, then ~450 ms of 15-57 ms panel passes), undo after a blade 60, after a trim 20. Split by hand (temporary walk edits pick/pause/bladeStill): pausing 6-9 ms; with a clip picked and stopped, a trim 54-55 ms, a blade 59-75, the undo after it 56-66. The speed walk's trim has nothing picked so it never saw the picked case."
+    },
+    {
+      "t": "2026-11-15T21:45:15.000Z",
+      "note": "Fix 1 (PanelShelfPane.drawnHeight lastDrawn, tests in PanelShelfPaneTests): the first pick of a clip brings its ten sections one pass apart (PanelSectionArrival); while one was unmeasured the folded Library drew at its chosen 163 pt and went back to 45 the pass after, a visible bounce and two passes per section. Now it holds where it was. Panel builds after the first blade 35 -> 31; the tail's total time did not move (454 vs 464 ms summed), so it is a visual fix more than a speed one."
+    },
+    {
+      "t": "2026-11-15T21:45:15.000Z",
+      "note": "Fix 2 (EditorState.perform): rule 6 no longer waits for play: any key, menu or agent edit on a video draws the picture in its own pass and the timeline and panel in the next (drags let go excepted). Stopped trim with a clip picked 54-55 -> 31-44 ms. The blade (47-62) and undo after it (64-66) did not move: their extra is the piece selection change, not the document write. docs/design/video.md 8f rule 6 rewritten plus a paragraph on what a pick costs."
+    },
+    {
+      "t": "2026-11-15T21:45:15.000Z",
+      "note": "Did NOT pay or not settled: catchUpOnTheNextPassOnAVideo in splitClipAtPlayhead alone (blade own median ~49 -> ~39, noisy 36-60; subsumed by fix 2). Time Profiler on blade and trim bursts: SwiftUI bodies ~22%, rest of AG update ~44%, window layout ~16%, CA commit ~24%; no app function above ~4% (motionStripCycleMS ~2 ms an edit, ClickTicksView ~1.3). Tools: a withObservationTracking wrapper plus a body fingerprint of the panel's @State showed 1 of 35 panel builds came from EditorState and the rest from arrivalPass and budget measurements. Gotchas: foreground sleep is refused by the harness (exit 144); xctrace attach from a script using perl delays worked."
+    },
+    {
+      "t": "2026-11-15T21:45:15.000Z",
+      "note": "Verified: test.sh green (14,765 + split runs); speed-walk ok, 22 numbers within the baseline (trim 29, blade own 46 / longest 75, undo 57); 24 walks ok across cutting, trimming, holds, undo, keys, transitions and the Library shelf; a-transition-is-picked-at-the-cut-walk fails at step 46 (Fade In 0.51s) as on main, owned by walks-that-fail-in-the-full-sweep-27. Audit queue/audits/2026-11-15-a-long-edit-with-transitions-plays-scrubs-and-ed-pass7.json."
+    },
+    {
+      "t": "2026-11-15T21:45:15.000Z",
+      "note": "Next for pass 8: (a) the selection change a blade makes (selectClipPiece) and an undo hands back (restoreSelectionFromHistory) costs ~20-30 ms more than a trim's pass; find what reads selectedClipPieceIndex and move it to a late pass or a lane-handed value; (b) the first pick's 450 ms of section arrivals: each arrival is a whole window pass of 15-65 ms, Appearance and Effects the largest; (c) the speed walk should measure an edit with a clip picked, since that is how a person edits. Bars not reached: edits <=16 ms, scrub within 1 frame, no dropped frames. Stays open."
     }
   ],
-  "started": "2026-11-14T18:50:59.738Z",
+  "started": "2026-11-15T20:16:54.531Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk",

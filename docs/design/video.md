@@ -821,14 +821,17 @@ The rule, for any view added to the editor window:
 5. **Never write an observed property with the value it already has** on a
    path that runs per frame: `@Observable` tells every watcher about a write
    whether or not the value changed, and that is a pass.
-6. **An edit made while a video plays draws the picture in its own pass, and
-   the timeline's tracks and the panel follow in the next.** `perform` marks
-   it (`catchUpOnTheNextPassOnAVideo`, as Undo and Redo already did), unless
+6. **An edit made on a video draws the picture in its own pass, and the
+   timeline's tracks and the panel follow in the next.** `perform` marks it
+   (`catchUpOnTheNextPassOnAVideo`, as Undo and Redo already did), unless
    the edit is a drag being let go, whose bar would spring back for a frame
    (`isHandLettingGo`). On the 6 minute reference edit (2026-11-14) a trim or
    a move while playing held the window 30 to 35 ms in one pass, and about 18
-   in two. A new view that reads the document belongs inside
-   `readingALatePass` if it shows the timeline or the panel.
+   in two. Until 2026-11-15 this waited for play; stopped, with a clip
+   picked so the panel holds its ten sections, a trim held the window 54 to
+   55 ms in one pass and 31 to 44 in two, so it no longer does. A new view
+   that reads the document belongs inside `readingALatePass` if it shows the
+   timeline or the panel.
 7. **A view per clip reads nothing off the editor itself; its lane hands it
    values, and makes it only for a clip with something to draw.** Every view
    that reads the document is woken by every edit to any clip, so 55 empty
@@ -931,6 +934,24 @@ key added built the Time section again (`keyframe-anything-walk`); they are
 anything fade, zoom or show its clicks) are kept beside the document
 (`DocumentDerived.TreeFacts`) instead of copying every layer three times on
 every tick.
+
+**What a pick of a clip costs after the edit** (2026-11-15, pass 7). A
+blade on a clip nothing had picked yet held the window about 50 ms in its own
+pass and then kept it busy for another 450: the clip's ten sections arrive
+one per pass (`PanelSectionArrival`), and each one is unmeasured in the pass
+it arrives in. While any section above it was unmeasured, the Library's pane
+at the foot of the panel forgot it was folded and drew at its chosen 163 pt,
+then went back to its 45 pt header the pass after: a bounce on screen and two
+more window passes for every section. It now stays where it was last drawn
+until the section is measured (`PanelShelfPane.drawnHeight(lastDrawn:)`).
+That took the panel's builds after the first blade from 35 to 31 and the
+bounce off the screen, but not the half second: what is left is a window pass
+per arriving section, 15 to 65 ms each, the biggest when Appearance and
+Effects arrive. A later blade on the same clip builds the panel 7 times, not
+31. Pausing costs 6 to 9 ms; a blade made while stopped with the clip already
+picked still holds the window 47 to 75 ms, and the undo after it 56 to 66,
+against 31 to 44 for a trim, so the extra is the piece the blade picks and
+the undo hands back, not the cut.
 
 ## 9. What this deliberately does not do
 

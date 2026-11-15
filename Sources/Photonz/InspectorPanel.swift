@@ -949,7 +949,8 @@ struct InspectorPanel: View {
             chosen: shelfChosen(split, column: column),
             column: column,
             aboveNeeds: shelfAboveNeeds(split, pickIsEmpty: pickIsEmpty),
-            foldedHeight: split.shelf.allSatisfy(isCollapsed) ? floor : nil)
+            foldedHeight: split.shelf.allSatisfy(isCollapsed) ? floor : nil,
+            lastDrawn: shelfReveal.drawnPaneHeight)
         // Never drawn, held or not, shorter than the shelf needs to show its
         // first row of tiles whole, until the divider is moved: a colour saved
         // onto an empty Styles shelf gets its whole tile, name and all.
