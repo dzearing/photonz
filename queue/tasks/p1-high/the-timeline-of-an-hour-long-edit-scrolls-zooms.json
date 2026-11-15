@@ -4,12 +4,12 @@
   "goal": "On a long edit the timeline is where a person spends their time, and it is the part most likely to slow down as clips pile up: every clip bar, thumbnail strip and waveform drawn again when anything moves. Make the timeline of the 60 minute reference edit, several hundred clips, scroll, zoom and follow a playing playhead at the display's 120 Hz, and keep an edit on it inside one frame.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 50,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-15T00:05:00.683Z",
+  "updated": "2026-11-15T13:16:49.892Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -141,6 +141,10 @@
     {
       "t": "2026-11-15T00:05:00.682Z",
       "note": "Pass 3 landed 475c29a4e: a click on a cut that slid under a still pointer (after a zoom or scroll) picks the cut, not the clip; proven by a-cut-slid-under-a-still-pointer-walk failing without the fix and passing with it; rule 8 for painted busy lanes written into docs/design/video.md. Acceptance items 6 and 7 met. Still open, bars not reached: zoom/scroll ~50 ms a frame vs 8.3 on the 60 min edit, edits 150-245 ms vs 16. Next pass: paint clips that show pictures (the film strip), then Zoom lanes and click ticks."
+    },
+    {
+      "t": "2026-11-15T13:16:49.891Z",
+      "note": "seq 50 -> 40"
     }
   ],
   "started": "2026-11-14T22:36:46.937Z",

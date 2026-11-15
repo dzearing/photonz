@@ -2,14 +2,14 @@
   "id": "ask-can-draw-any-thing-and-animate-something-abo",
   "title": "Ask can draw any thing and animate something about it, from a set of general motion techniques",
   "goal": "Ask should be able to draw whatever it is asked for and make some part of it move in a believable way: a door swinging, a flag waving, a cup steaming, a dog wagging its tail, a phone buzzing. It gets there from a toolbox of general animation techniques it knows how to pick from and combine, not from tuning one example until it works. The trash can was only ever an example.",
-  "epic": "ui-building",
+  "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 8e-7,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T23:22:06.571Z",
-  "updated": "2026-11-15T13:12:55.552Z",
+  "updated": "2026-11-15T13:16:49.740Z",
   "deps": [
     "ask-s-motion-eval-tells-a-real-gain-from-chance"
   ],
@@ -113,6 +113,14 @@
     {
       "t": "2026-11-15T13:12:55.551Z",
       "note": "7 of 8 passes, none distinguishable from the unchanged code (readings 38.6 and 33.6); bar 75 not reached; eighth pass waits on ask-s-motion-eval-tells-a-real-gain-from-chance"
+    },
+    {
+      "t": "2026-11-15T13:16:41.287Z",
+      "note": "digest 2026-11-15: re-tagged ui-building -> agent-ask. Stopping point: about 13 hours over two sessions so far with no net change to Ask. If the eighth pass, measured on the steadier reading, does not beat the unchanged code by more than the reading's spread, close the passes and put a card to the user with the reel and the audit's question 'a steadier eval or a bigger change to how Ask draws a moving icon', recommending the option that STOPS spending passes. On 2026-11-14 the trash card recommended 'keep going' and the user, who did not mean that, had to stop the task by hand. Seen in the audit's door frames (2026-11-14-ask-motion-techniques-swing-svg-frames.png): the door turns flat about its corner and pokes past the top and right of its frame from 0.28 s to 0.75 s, which reads as a broken shape rather than a door opening."
+    },
+    {
+      "t": "2026-11-15T13:16:49.739Z",
+      "note": "seq 8e-7 -> 20"
     }
   ],
   "started": "2026-11-15T08:35:07.159Z",
