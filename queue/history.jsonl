@@ -17417,3 +17417,16 @@
 {"t":"2026-11-15T08:14:30.210Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
 {"t":"2026-11-15T08:14:30.285Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
 {"t":"2026-11-15T08:14:30.358Z","ev":"task_pending","id":"ask-can-draw-any-thing-and-animate-something-abo","from":"in_progress","note":"4 of 8 passes, none above the 38.6 baseline on the sealed motion set (35.8, 37.3, 34.1, 32.9); all reverted; catalogue, sealed set, walks and audit kept; bar 75 not reached"}
+{"t":"2026-11-15T08:33:01.684Z","ev":"task_note","id":"clicking-shorten-the-cut-trims-the-clips-and-pla"}
+{"t":"2026-11-15T08:33:01.724Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-15T08:35:06.974Z","ev":"slice_pass","walks":33,"passed":31,"failed":2,"seconds":1072,"of":1170,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-15T08:35:07.165Z","ev":"task_started","id":"ask-can-draw-any-thing-and-animate-something-abo","title":"Ask can draw any thing and animate something about it, from a set of general motion techniques","priority":"p1-high"}
+{"t":"2026-11-15T09:57:12.739Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T10:57:35.092Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T11:51:42.772Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T12:58:25.914Z","ev":"task_created","id":"ask-s-motion-eval-tells-a-real-gain-from-chance","priority":"p1-high","title":"Ask's motion eval tells a real gain from chance in one reading"}
+{"t":"2026-11-15T12:58:30.198Z","ev":"task_resequenced","id":"ask-s-motion-eval-tells-a-real-gain-from-chance","from":4010,"to":7e-7}
+{"t":"2026-11-15T12:59:08.564Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T12:59:08.638Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T12:59:08.714Z","ev":"task_note","id":"ask-can-draw-any-thing-and-animate-something-abo"}
+{"t":"2026-11-15T13:12:55.553Z","ev":"task_pending","id":"ask-can-draw-any-thing-and-animate-something-abo","from":"in_progress","note":"7 of 8 passes, none distinguishable from the unchanged code (readings 38.6 and 33.6); bar 75 not reached; eighth pass waits on ask-s-motion-eval-tells-a-real-gain-from-chance"}

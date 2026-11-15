@@ -1,0 +1,31 @@
+{
+  "id": "ask-s-motion-eval-tells-a-real-gain-from-chance",
+  "title": "Ask's motion eval tells a real gain from chance in one reading",
+  "goal": "Running the very same Ask on the sixteen sealed animated requests read 38.6 one time and 33.6 the next, so a change worth less than about five points cannot be seen, and seven passes at teaching Ask motion were kept or thrown out on chance. Make one reading steady enough that a gain of two points shows, before Ask's motion is climbed again.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 7e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-15T12:58:25.910Z",
+  "updated": "2026-11-15T12:58:30.197Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by ask-can-draw-any-thing-and-animate-something-abo (2026-11-15). Readings of the same motion code: 20261115-000921 38.6 (93c0cff97) and 20261115-100549 33.6 (f6550c00d, same Ask motion code). Passes 1 to 7 read 35.8, 37.3, 34.1, 32.9, 36.3, 29.8, 34.7, all but pass 6 inside that spread. Ask plans at temperature 0 everywhere (AskPlanning.swift, AskMotion.designBody), yet its plans differ run to run; a likely cause is the document read carrying fresh layer UUIDs each run, which changes the tokens the model sees (a hypothesis, not checked). The judge itself is steady (nine looks, mean; README 'How steady a reading is'), so the spread is Ask's output, not the judge. Options: run each sealed case 2 or 3 times and score the mean (eval.mjs, a --repeat N); add sealed cases (must be written by an agent that never saw Ask's prompt, the climb set or the sealed sets, as held-out-motion's 16 were); or make Ask's plan repeatable (stable ids in what the model reads). Never open Scripts/ask-eval/held-out-motion/ or .ask-eval/held-out-runs/ to do this. The motion task depends on this one: its eighth and last pass waits for it.",
+  "acceptance": [
+    "Two readings of unchanged Ask code on the sealed motion set land within 2 points of each other, both numbers in this task's log",
+    "How a reading is taken (more sealed requests written by an agent that never saw Ask's prompt, each request run more than once, or both) is written in Scripts/ask-eval/README.md with its cost in minutes",
+    "One reading still fits inside a go loop runner's session: under two hours"
+  ],
+  "log": [
+    {
+      "t": "2026-11-15T12:58:25.912Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-15T12:58:30.196Z",
+      "note": "seq 4010 -> 7e-7"
+    }
+  ]
+}

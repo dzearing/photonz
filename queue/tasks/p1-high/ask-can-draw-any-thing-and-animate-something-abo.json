@@ -9,8 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-14T23:22:06.571Z",
-  "updated": "2026-11-15T08:14:30.357Z",
-  "deps": [],
+  "updated": "2026-11-15T13:12:55.552Z",
+  "deps": [
+    "ask-s-motion-eval-tells-a-real-gain-from-chance"
+  ],
   "blockedBy": [],
   "notes": "User, 2026-11-14, after stopping an-animated-icon-told-as-a-little-story-moves-th (dropped at 20 passes, 2 of 6 story cases): \"the trash can was just an example, i don't want it to hyperfocus on trashcan animations, i want it to be able to draw a thing and animate something about it. I want it to have techniques for doing that.\"\n\nWhat exists (docs/design/ask.md, 'A moving icon (2026-11-06)' and 'A story of several beats'): AskMotion.designAsk (design in words: parts, hinges, beats), AskMotion.principles (general motion principles), tools add_drawing / set_timing / set_keys, AskMotion.landing ($1/part ids on a 24 grid), AskMotionCheck, AskMotion.fitted / leaving / marksGo / comesBack / foldsLand / hidden, MotionSVG.folds and carried, AskMotion.beatsReview. Much of it is already subject-free, but twenty passes were spent tuning against the trash story; read that task's log for what each pass changed and which of those rules are general and which only served one case, and say so in the audit. Rules that only served one case are candidates to take out.\n\nEval: Scripts/ask-eval (README.md, eval.mjs, judge.mjs), cases/animated-*.json and held-out/animated-h1..h8.json. A run is about four minutes a request; budget the runs. Memory rule (user): Ask quality comes from model, prompt and general techniques, never stored or coded subjects. Contradicts nothing queued: the dropped trash task's shipped work stays and is the starting point.",
   "acceptance": [
@@ -79,9 +81,41 @@
     {
       "t": "2026-11-15T08:14:30.356Z",
       "note": "4 of 8 passes, none above the 38.6 baseline on the sealed motion set (35.8, 37.3, 34.1, 32.9); all reverted; catalogue, sealed set, walks and audit kept; bar 75 not reached"
+    },
+    {
+      "t": "2026-11-15T08:35:07.160Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-15T09:57:12.737Z",
+      "note": "Pass 5 (01b91ba87): a still stretch of the lap with a part gone (faded, shrunk, undrawn or out of frame) cut to 0.3 s and its time given to the longest stretch where every part is seen (AskMotion.restsWhole, tested). From the judge's notes on the climb singles: download, wifi, burst rested a third to half the lap with a part gone. Sealed run 20261115-090542: 36.3 vs 38.6 (clean 4.6 = , designed 3.8 vs 4, asked 3.8 vs 4, loops 5.6 vs 6.4), 154 s a plan, 2 of 224 calls broken. Reverted. Five passes now read 32.9 to 37.3 against one baseline reading of 38.6, so next: a second reading of the baseline code (not a pass) to know the bar."
+    },
+    {
+      "t": "2026-11-15T10:57:35.090Z",
+      "note": "Baseline read again, same Ask motion code (f6550c00d), run 20261115-100549: 33.6 (10 of 198 calls broken, 178 s a plan) against 38.6 the first time. Two readings of unchanged code are 5 points apart, so the bar is their mean, 36.1, and every pass so far (35.8, 37.3, 34.1, 32.9, 36.3) is inside the spread of the code it changed: none can be told from the baseline on one run of 16 cases. Pass 6 (cc38f5975, every piece in the icon's one look) is measured against 36.1."
+    },
+    {
+      "t": "2026-11-15T11:51:42.770Z",
+      "note": "Pass 6 (cc38f5975): the motion route's draw step asked for every piece in the icon's one look (a piece under 4 across one short line of the same stroke, only a dot filled) in place of AskIcon.smallParts' solid shapes; burst pieces as short lines. From the judge's notes on the climb singles (filled shards, a lumpy filled accent, a filled block over outlines). Sealed run 20261115-110507: 29.8 (clean 3.8, designed 3.3, asked 3.3, loops 5.1), 26 of 217 tool calls broken against 2 to 10 on every other run. Reverted (d099c757a)."
+    },
+    {
+      "t": "2026-11-15T12:59:08.562Z",
+      "note": "Pass 7 (2712051bb): pass 5's restsWhole plus marksStayIn (a part that fades out while it travels has its moves scaled so it is inside the frame whenever it is seen fading; a part fading in from outside is left alone, the story rules throw things in that way). Tested; 918 Ask tests green. Sealed run 20261115-120451: 34.7 (clean 4.9, designed 3.8, asked 3.7, loops 5.5), 1 of 215 calls broken. Under the 36.1 bar: reverted (44f420850). Both rules that touch time (passes 5 and 7) read loops lower (5.6, 5.5 vs 6.4, 5.7), a hint that a quicker return reads as a pop at the loop."
+    },
+    {
+      "t": "2026-11-15T12:59:08.636Z",
+      "note": "Stopped at 7 of 8 passes, on purpose: two readings of unchanged code (38.6, 33.6) put every pass (35.8, 37.3, 34.1, 32.9, 36.3, 29.8, 34.7) inside chance, so an eighth single reading decides nothing. Filed p1 ask-s-motion-eval-tells-a-real-gain-from-chance (seq ahead of this one) and made this task depend on it; the eighth pass, ideally pass 5 + 7's rules re-measured, waits for a reading steady to 2 points. Ask's code ends exactly as it began (no net diff in Sources/Tests/Scripts since 76cd6c7a6), so the three walks verified at Next defaults and Copy SVG still hold, and the climb and h1..h8 numbers cannot have dropped. Sheet and reel of the final reading drawn in place, not opened: .ask-eval/held-out-runs/20261115-100549-ask-held-out-motion/. Audit and docs/design/ask.md updated."
+    },
+    {
+      "t": "2026-11-15T12:59:08.712Z",
+      "note": "Rough items: eval noise filed as its own task (above); door turns flat, held-out h1..h8 not re-read, sheet location, no mock: all already in the audit's rough list and this log, no new task (the door was tried by pass 4 and is a candidate lever for a measurable pass)."
+    },
+    {
+      "t": "2026-11-15T13:12:55.551Z",
+      "note": "7 of 8 passes, none distinguishable from the unchanged code (readings 38.6 and 33.6); bar 75 not reached; eighth pass waits on ask-s-motion-eval-tells-a-real-gain-from-chance"
     }
   ],
-  "started": "2026-11-15T00:05:30.043Z",
+  "started": "2026-11-15T08:35:07.159Z",
   "walks": [
     "ask-animates-a-thing-from-the-new-window-walk",
     "ask-animates-a-swinging-part-with-command-k-walk",
