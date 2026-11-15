@@ -1,7 +1,7 @@
 {
   "feature": "Ask animates a thing from general motion techniques",
-  "epic": "ui-building",
-  "summary": "There is a written catalogue of thirteen general motion techniques and a sealed set of sixteen everyday animated requests to judge Ask on. Seven passes (four ways of teaching the catalogue, then three rules on timing, style and the frame) all read inside the spread of Ask unchanged, which itself read 38.6 and 33.6 on two runs. Ask's motion is as it was, and the last pass waits for a steadier reading.",
+  "epic": "agent-ask",
+  "summary": "There is a written catalogue of thirteen general motion techniques and a sealed set of sixteen everyday animated requests to judge Ask on. Eight passes (four ways of teaching the catalogue, then four rules on timing, style and the frame) were each measured and none beat Ask unchanged (35.9 on the steadier two-round reading), so Ask's motion is as it was and the passes have stopped.",
   "setup": "Photonz Dev, release Next, no flag changed from its default.",
   "switched": {},
   "try": [
@@ -29,7 +29,7 @@
       "shot": "2026-11-14-ask-motion-techniques-wisps.svg"
     },
     {
-      "do": "Open the sealed set's sixteen results as Ask makes them today (its second baseline reading): .ask-eval/held-out-runs/20261115-100549-ask-held-out-motion/contact-sheet.png, and its best four then worst four as one video, ends-reel.mp4 in the same folder."
+      "do": "Open the sealed set's sixteen results as Ask makes them today, each read twice: .ask-eval/held-out-runs/20261115-152626-ask-held-out-motion/contact-sheet.png, and its best four then worst four as one video, ends-reel.mp4 in the same folder."
     }
   ],
   "evaluate": [
@@ -37,13 +37,13 @@
     "The door turns flat about its corner instead of folding on its hinge edge. Is that the first thing you would want fixed?",
     "Does the flag tipping as one piece read as waving to you?",
     "Looking at the sealed set's sheet, is the weakness mostly the drawing or mostly the motion?",
-    "Should the next work be a steadier eval reading first, or a bigger change to how Ask draws a moving icon?"
+    "Having seen the reel, should Ask's moving icons rest here for now, or get a bigger change in how they are made (decision card on this task)?"
   ],
   "rough": [
-    "Not done: the bar is 75 and Ask reads about 36 on the sealed set (38.6 and 33.6 for the same code). Seven passes of eight read 35.8, 37.3, 34.1, 32.9, 36.3, 29.8 and 34.7, and each was taken out.",
-    "One reading of sixteen requests swings five points with nothing changed, so no pass here could have shown a gain smaller than that. The eighth pass waits for task ask-s-motion-eval-tells-a-real-gain-from-chance.",
+    "Not done: the bar is 75 and Ask reads about 36 on the sealed set (35.9 over two two-round readings of the same code). Eight passes read 35.8, 37.3, 34.1, 32.9, 36.3, 29.8, 34.7 and, on the two-round reading, 35.0 ± 1.1; each was taken out.",
+    "Pass 8 put pass 7's two rules back and read them twice per request: 35.0 against 35.9, inside chance (-0.9, real only past 2.4). Against the steadier baseline every pass but pass 6 was inside chance. The passes stopped at eight, as the task said.",
     "Pass 6 is the one result that is plainly real: telling the model to draw small pieces as lines made it write plans the app refuses (26 of 217 calls broken against 1 to 10).",
-    "Passes 5 and 7 fixed things the judge named on the climb set (a lap resting half its length with a part gone; marks sliding through the frame's edge). They are kept in history, tested, for a pass that can be measured.",
+    "Passes 5, 7 and 8 fixed things the judge named on the climb set (a lap resting half its length with a part gone; marks sliding through the frame's edge). Measured twice per request they move nothing, so they stay out; they are in history (be3157f03), tested.",
     "The door turns flat about its corner like a clock hand, on today's prompt and on every pass; pass 4 told fold from turn plainly and read lower overall.",
     "The existing held-out animated group (h1 to h8) was not re-read: Ask's motion code ends where it began, and its last reading is 31.1 (2026-11-13).",
     "The sealed set's sheet and reel stay in .ask-eval/held-out-runs, not in queue/audits, because the set is still being climbed on and every runner reads queue/audits (README, The held-out set).",

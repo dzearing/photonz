@@ -1454,6 +1454,8 @@ between two runs of the same code):
 | 5 | A still stretch of the lap with a part gone (faded, shrunk, undrawn, outside the frame) cut to 0.3 s, its time given to the stretch where every part is seen (a8d727e75) | 36.3; taken out |
 | 6 | Every piece of a moving icon in its one look: a piece under 4 across one short line of the stroke, only a dot filled (cc38f5975) | 29.8, 26 of 217 tool calls broken against 1 to 10 on every other run; taken out |
 | 7 | Pass 5's rule, and a mark that fades out while it travels pulled in so it stays inside the frame while seen (2712051bb) | 34.7; taken out |
+| Baseline, two rounds | The same motion code, every request read twice, two readings as one (047ec4901, 97aedeba0) | 35.9 (35.7 and 36.0) |
+| 8 | Pass 7's two rules again, on the two-round reading (be3157f03) | 35.0 ± 1.1, inside chance (-0.9, real past 2.4); taken out |
 
 **One reading cannot tell these passes apart.** The same code read 38.6 and
 33.6, so the bar for passes 5 to 7 was their mean, 36.1, and every pass of the
@@ -1469,6 +1471,17 @@ measured: they fix what the judge's notes named on the climb set (a lap resting
 half its length with the arrow gone, waves sliding through the frame's edge).
 The one result that is plainly real is pass 6's: more words about how to draw
 made the model write plans the app refuses.
+
+**The eighth pass, on a reading that can see two points (2026-11-15).** Once
+the reading ran every request twice (`Scripts/ask-eval/README.md`, "How a motion
+reading is taken"), pass 7's rules were put back and read 35.0 ± 1.1 against
+35.9 for the code before them: inside chance, so they came out again. Read
+against that steadier baseline, every pass of the eight was inside chance but
+pass 6, a real drop. The passes stop there, as the task said they would: eight
+passes, none a gain, the bar of 75 not reached, and Ask's motion code ends
+exactly where it began. Small rules on keys and words in the prompt do not move
+this model's moving icons; what is left is a bigger change to how Ask makes one,
+which is the user's call.
 
 So the catalogue has not moved the score on this model. What the judge marks
 down is the drawing and the plan more than the choice of technique (its lines on

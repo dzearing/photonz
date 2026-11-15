@@ -1,0 +1,53 @@
+{
+  "id": "ask-can-draw-any-thing-and-animate-something-abo-ask-s-moving-icons-did-not-get-b",
+  "taskId": "ask-can-draw-any-thing-and-animate-something-abo",
+  "question": "Ask's moving icons did not get better in eight tries. Rest them here, or make a bigger change to how Ask animates?",
+  "context": "Eight passes at teaching Ask general motion techniques were each measured on sixteen sealed everyday requests, every one read twice. None beat Ask unchanged (35.9 of 100): the last, pass 8, read 35.0, inside chance. The picture is Ask's door from the walk: in the boxed frames it turns about its corner and pokes out of its frame instead of swinging open on its hinge. The reel of the sealed set's best and worst four is in the audit.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Stop here: moving icons stay as they are today",
+      "summary": "Ask keeps making moving icons the way it does now (the door turns about its corner, flags tip as one piece). The technique list stays written down, the eval stays, and no more time goes into this until you ask again.",
+      "pros": [
+        "Frees the loop for other work right away",
+        "Nothing you use today changes"
+      ],
+      "cons": [
+        "Moving icons stay at about 36 out of 100: the door in the picture still turns flat instead of opening on its hinge"
+      ],
+      "mitigation": "The technique list, the sixteen sealed requests and the steadier eval are kept, so a later try starts from a fair measure.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "A bigger change: Ask names the move, the app animates it",
+      "summary": "Instead of Ask writing every key by hand, it would say which part moves and which move it is (swing on its edge, wave, buzz, rise and fade), and the app would make the motion itself from that choice. A new task of several days, judged on the same sixteen requests.",
+      "pros": [
+        "Targets the failure in the picture directly: a door opening on its hinge would be the app's job, not the model's guess",
+        "Works for any subject, since the moves are general"
+      ],
+      "cons": [
+        "Several days of work with no promise the score clears the noise",
+        "Ask's moving icons may look more alike, since they share the app's moves"
+      ],
+      "mitigation": "Measured on the two-round reading after each step, and stopped if the first step reads inside chance."
+    },
+    {
+      "id": "c",
+      "label": "Keep small tweaks, on a bigger test set",
+      "summary": "Write sixteen more sealed requests so the eval can see a gain of one point, then go on adjusting Ask's instructions and rules one pass at a time.",
+      "pros": [
+        "Small honest gains would show"
+      ],
+      "cons": [
+        "Each reading takes about three hours",
+        "Eight small passes so far moved nothing, so more of the same is unlikely to help"
+      ],
+      "mitigation": "Cap it at four passes."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-11-15T19:34:12.014Z",
+  "shot": "2026-11-15-ask-motion-next-step-door-marked.png"
+}
