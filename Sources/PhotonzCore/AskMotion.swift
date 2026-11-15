@@ -537,10 +537,10 @@ public enum AskMotion {
         // sat 0.84 deep in the lid's bar once the drawing shrank 1.275 times
         // round its lines, "passes through the lid" in nine looks of nine.
         guard let grown = viewBoxWidth(made), let was = viewBoxWidth(timed), grown / was > 1.001 else {
-            return keysApart(jumpsUnseen(startsOver(made)))
+            return keysApart(restsWhole(marksStayIn(jumpsUnseen(startsOver(made)))))
         }
         let placed = timing(steps, drawn: (grown, was))
-        return keysApart(jumpsUnseen(startsOver(fitted(comesClear(dropsBehind(hidden(hingesShared(placed, grow: grown / was))))))))
+        return keysApart(restsWhole(marksStayIn(jumpsUnseen(startsOver(fitted(comesClear(dropsBehind(hidden(hingesShared(placed, grow: grown / was))))))))))
     }
 
     /// How wide a line written `width` wide is drawn, in the drawing's own
