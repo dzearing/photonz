@@ -1,0 +1,33 @@
+{
+  "feature": "Ask animates a thing from general motion techniques",
+  "epic": "ui-building",
+  "summary": "Ask now picks from thirteen general motion techniques (turn on a pivot, fold over an edge, squash and stretch, throw on an arc, shake, pulse, sway in a chain, spin or orbit, draw a line on, pop in or out, enter or leave the frame, rest between laps, follow through and stagger) and its design says which one each moving part uses. Measured on a new sealed set of 16 everyday requests it has not yet moved the score: 38.6 before, 37.3 with what shipped.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open the New window (File > New), type: make an animated icon of a flag waving in the wind on its pole, and press Create.", "shot": "2026-11-14-ask-motion-techniques-1-new-window-typed-sc.png" },
+    { "do": "Wait for Ask to finish, then press Space to play it. The flag is three strips, each swaying a little behind the last.", "shot": "2026-11-14-ask-motion-techniques-2-chain-playing-sc.png" },
+    { "do": "On an empty 512 by 512 picture press Command K and ask: make an animated icon of a door that swings open and closes again.", "shot": "2026-11-14-ask-motion-techniques-3-swing-playing-sc.png" },
+    { "do": "Press Space, and watch how the door moves (it turns flat about its corner, see rough).", "shot": "2026-11-14-ask-motion-techniques-swing-svg-frames.png" },
+    { "do": "On another empty picture press Command K and ask: make an animated icon of a cup of coffee with steam rising from it.", "shot": "2026-11-14-ask-motion-techniques-4-wisps-playing-sc.png" },
+    { "do": "Choose Copy SVG and paste it into a browser: it plays as on the canvas.", "shot": "2026-11-14-ask-motion-techniques-wisps.svg" },
+    { "do": "Open the sealed set's sixteen results: .ask-eval/held-out-runs/20261115-030729-ask-held-out-motion/contact-sheet.png, and its best four then worst four as one video, ends-reel.mp4 in the same folder." }
+  ],
+  "evaluate": [
+    "Does the flag read as waving, or as three tiles wobbling apart?",
+    "Is a door that turns flat about its corner (rather than folding on its hinge edge) the first thing you would want fixed?",
+    "Does the steam's long rest after it fades read as a calm loop, or as the icon stopping?",
+    "Looking at the sealed set's sheet, is the weakness mostly the drawing or mostly the motion?",
+    "Is the catalogue in docs/design/ask.md the right set of techniques, or is one missing?"
+  ],
+  "rough": [
+    "Not done: the sealed set reads 37.3 against 38.6 before, after 3 of the 8 passes (pass 1 35.8, pass 3 34.1 reverted); the bar is 75. The task stays open for the next passes.",
+    "The door picked turn on a pivot instead of fold over an edge, so it swings flat like a clock hand and off the frame: choosing between those two is the next pass's lever.",
+    "A buzz the model made as one 0.2 s burst in a 2 s lap reads as still both to Ask's own look (12 frames a lap) and to the walk's check; the phone walk was swapped for steam, and the burst length is a next pass lever.",
+    "The flag's strips part at their seams while they sway: the chain is drawn as separate boxes, not one cloth.",
+    "The existing held-out animated group (h1 to h8) was not re-read this session: a whole held-out run is about 110 minutes and is due when the passes stop. Its last reading is 31.1 (2026-11-13).",
+    "The sealed set's sheet and reel stay in .ask-eval/held-out-runs, not in queue/audits, because the set is still being climbed on and every runner reads queue/audits (README, The held-out set).",
+    "The sheet shows 16 frames across each lap rather than two a beat: the eval films a lap evenly and does not know where a case's beats fall.",
+    "No mock covers what Ask draws, so there is no side by side with a mock."
+  ]
+}

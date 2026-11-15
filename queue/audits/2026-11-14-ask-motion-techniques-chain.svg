@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <clipPath id="clip-1">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <g>
+    <g clip-path="url(#clip-1)">
+      <path transform="translate(5 4)" d="M0 0 L0 18" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse transform="translate(4 2)" cx="1" cy="1" rx="1" ry="1" fill="#1D1D1F"/>
+      <g transform="rotate(0 5 8)">
+        <animateTransform attributeName="transform" type="rotate" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.188;0.563;1" values="0 5 8;-4 5 8;0 5 8;0 5 8"/>
+        <path transform="translate(5 5)" d="M0 0 L4 0 L4 6 L0 6 L0 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g transform="rotate(0 9 8)">
+        <animateTransform attributeName="transform" type="rotate" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.238;0.613;1" values="0 9 8;-6 9 8;0 9 8;0 9 8"/>
+        <path transform="translate(9 5)" d="M0 0 L4 0 L4 6 L0 6 L0 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g transform="rotate(0 13 8)">
+        <animateTransform attributeName="transform" type="rotate" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.288;0.663;1" values="0 13 8;-8 13 8;0 13 8;0 13 8"/>
+        <path transform="translate(13 5)" d="M0 0 L4 0 L4 6 L0 6 L0 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+</svg>

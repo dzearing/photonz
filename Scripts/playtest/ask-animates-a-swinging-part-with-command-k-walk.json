@@ -1,0 +1,129 @@
+{
+  "out": "/tmp/photonz-playtest/ask-animates-a-swinging-part-with-command-k-walk",
+  "seed": "ask-can-draw-any-thing-and-animate-something-abo: Command K on an empty picture at Next defaults, no flag touched, asks for a thing with one part moving (a part turning on its hinge). Ask draws it, keys it, it plays on the canvas, and Copy SVG puts a looping animated SVG on the clipboard Front: Command K is a real key press, which a menu bar takes only in the app in front.",
+  "clock": 600,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 512,
+      "canvasHeight": 512,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "make an animated icon of a door that swings open and closes again"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-made",
+      "note": "Command K on an empty picture: one request drew the thing and keyed the part that moves"
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3,
+      "atMost": 24
+    },
+    {
+      "do": "snapshot",
+      "name": "1-the-icon-and-its-keys"
+    },
+    {
+      "do": "press",
+      "control": "Play"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Pause",
+      "present": true
+    },
+    {
+      "do": "expectPictureMoves"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-playing"
+    },
+    {
+      "do": "press",
+      "control": "Pause"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "writeSVG",
+      "name": "made",
+      "carries": "repeatCount=\"indefinite\""
+    },
+    {
+      "do": "agentTool",
+      "tool": "run_command",
+      "arguments": "{\"command\": \"copy_svg\"}"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "3-copied",
+      "textHas": "repeatCount=\"indefinite\""
+    }
+  ]
+}

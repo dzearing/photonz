@@ -1,0 +1,105 @@
+{
+  "out": "/tmp/photonz-playtest/ask-animates-a-thing-from-the-new-window-walk",
+  "seed": "ask-can-draw-any-thing-and-animate-something-abo: a thing and one part of it moving, typed into the New window at Next defaults, no flag touched. Ask draws it as an icon, keys the part that moves (a chain of pieces swaying, each a little behind the last), Space plays it on the canvas, and Copy SVG puts a looping animated SVG on the clipboard",
+  "clock": 600,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "askFromNothing",
+      "from": "newWindow",
+      "text": "make an animated icon of a flag waving in the wind on its pole",
+      "width": 1280,
+      "height": 900,
+      "card": "1-typed"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 State",
+      "reads": "standing"
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3,
+      "atMost": 30
+    },
+    {
+      "do": "describe",
+      "stage": "2-made",
+      "note": "the New window made an icon, and Ask drew the thing and keyed the part that moves"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-made"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Pause",
+      "present": true
+    },
+    {
+      "do": "expectPictureMoves"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-playing"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "writeSVG",
+      "name": "made",
+      "carries": "repeatCount=\"indefinite\""
+    },
+    {
+      "do": "agentTool",
+      "tool": "run_command",
+      "arguments": "{\"command\": \"copy_svg\"}"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "4-copied",
+      "textHas": "repeatCount=\"indefinite\""
+    }
+  ]
+}

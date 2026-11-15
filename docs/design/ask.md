@@ -1441,7 +1441,7 @@ it is (`id="top"`), off the eval's subjects.
 animated requests of everyday things, each technique called for by at least two,
 written before this work by an agent that never saw Ask's prompt, the climb set or
 the sealed sets, and read in total only (`--set held-out-motion`). The numbers are
-in the task's audit, `queue/audits/2026-11-15-ask-motion-techniques.json`.
+in the task's audit, `queue/audits/2026-11-14-ask-motion-techniques.json`.
 
 What the passes read on the sealed set (16 cases, about 3 points of spread
 between two runs of the same code):
