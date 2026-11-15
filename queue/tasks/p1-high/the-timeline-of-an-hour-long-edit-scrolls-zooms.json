@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 50,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-14T22:36:46.943Z",
+  "updated": "2026-11-15T00:05:00.683Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -125,6 +125,22 @@
     {
       "t": "2026-11-14T22:36:46.938Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-15T00:04:08.282Z",
+      "note": "walks open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk -> open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk"
+    },
+    {
+      "t": "2026-11-15T00:04:25.758Z",
+      "note": "Pass 3 (2026-11-14): reproduced the cut-after-scroll click. New walk a-cut-slid-under-a-still-pointer-walk (6 min edit, Fit, V1 painted): rest on a clip at 1:45.25, zoom out with the pointer still so the plain cut at 3:30.5 is under it, click with no move -> picked Take 1. Fix: the lane keeps the pointer's resting x unobserved (PointerSpot) and re-reads what is under it on every ruler or lane width change (TimelineTrackRow.readPointer). Proven both ways on the same build: without the two onChange lines the walk fails, with them it picks the cut at 3:30.5. Chose zoom over scroll for the walk because on the 6 min edit a lane is only painted when the whole edit is in view, where there is nothing to scroll; both go through the same ruler change. Found on the way: no synthesized move reaches SwiftUI onContinuousHover (lane pointer stayed nil through hover, windowClick and a front walk), so pass 2's 'the pointer resting turns a clip into its full bar' was never exercised by a walk; the lane's hover is now playtestContinuousHover (marker the walk's pointer hands its point to). Harness: hover on lane/seconds, windowClick still:true, expectTimelinePick cut:<s>|false. Rule 8 written into docs/design/video.md 8f. 12 timeline walks green, Scripts/test.sh green. Audit queue/audits/2026-11-14-timeline-cut-under-a-still-pointer.json."
+    },
+    {
+      "t": "2026-11-15T00:04:25.837Z",
+      "note": "Left rough, not filed: zoomed to 3 minutes across on the 6 min edit, a 0.4 s transition band is 6 pt wide and both its end grips cover it, so a click there picks nothing (moving or still, painted or not; seen in /tmp tl3-moveclick2). Old behaviour of the full band view, nobody has reported it; a later pass on band hit targets should give the middle back to the pick."
+    },
+    {
+      "t": "2026-11-15T00:05:00.682Z",
+      "note": "Pass 3 landed 475c29a4e: a click on a cut that slid under a still pointer (after a zoom or scroll) picks the cut, not the clip; proven by a-cut-slid-under-a-still-pointer-walk failing without the fix and passing with it; rule 8 for painted busy lanes written into docs/design/video.md. Acceptance items 6 and 7 met. Still open, bars not reached: zoom/scroll ~50 ms a frame vs 8.3 on the 60 min edit, edits 150-245 ms vs 16. Next pass: paint clips that show pictures (the film strip), then Zoom lanes and click ticks."
     }
   ],
   "started": "2026-11-14T22:36:46.937Z",
@@ -137,6 +153,7 @@
     "key-lanes-walk",
     "transitions-where-clips-meet-walk",
     "speed-walk",
-    "painted-clips-take-a-hand-walk"
+    "painted-clips-take-a-hand-walk",
+    "a-cut-slid-under-a-still-pointer-walk"
   ]
 }
