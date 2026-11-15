@@ -23114,3 +23114,11 @@ units.
 - Harness: no synthesized move reaches SwiftUI's `onContinuousHover` (traced: the lane's pointer stayed nil through `hover`, `windowClick` and a walk with the probe in front), so the lane's hover is now `playtestContinuousHover`, which hangs a marker the walk's pointer hands its point to, as `playtestHover` does. New steps: `hover` on a `lane`/`seconds` spot, `windowClick` with `"still": true`, and `expectTimelinePick` with `"cut"` (seconds, or false).
 - Rule 8 in docs/design/video.md section 8f: when a busy lane paints, what goes back to a full view, and that what is under the pointer is read again when the timeline moves.
 - 12 timeline walks green incl. an-editing-session-walk; Scripts/test.sh green. Perf bars of the task unchanged by this pass. Perf note: composite path untouched.
+
+## 2026-11-15 — Ask motion techniques (task ask-can-draw-any-thing-and-animate-something-abo)
+
+- Added a sealed eval set, `Scripts/ask-eval/held-out-motion/` (16 everyday animated requests, `--set held-out-motion`, totals only), written before tuning by an agent that never saw Ask's prompt.
+- Wrote the catalogue of 13 general motion techniques (docs/design/ask.md, `AskMotionTechnique`).
+- Four ways of wiring it into Ask read below the 38.6 baseline (35.8, 37.3, 34.1, 32.9); all reverted, so Ask's motion prompt is unchanged.
+- Three walks at Next defaults (New window, Command K twice) pass; audit `queue/audits/2026-11-14-ask-motion-techniques.json`.
+- Next: passes 5 to 8. Levers seen in traces: turn chosen where a part opens on an edge hinge; bursts shorter than the look's frames read as still; the look re-plans nearly everything.
