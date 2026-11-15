@@ -1450,6 +1450,25 @@ between two runs of the same code):
 | 2 | The plan reads only the techniques the design chose; the look asks what a person judges in any motion; no swing about empty space | 37.3; on its code the six climb stories read 49.4 against 61.0 and 57.9 before. Taken out |
 | 3 | The look sends a plan back only for a beat not seen | 34.1, reverted: the re-plan after a look helps on balance, even though the look sends nearly every plan back |
 | 4 | Pass 2, with fold and turn told apart | 32.9, taken out with pass 2 |
+| Baseline again | The same motion code as the baseline, read a second time (f6550c00d, 2026-11-15) | 33.6 |
+| 5 | A still stretch of the lap with a part gone (faded, shrunk, undrawn, outside the frame) cut to 0.3 s, its time given to the stretch where every part is seen (a8d727e75) | 36.3; taken out |
+| 6 | Every piece of a moving icon in its one look: a piece under 4 across one short line of the stroke, only a dot filled (cc38f5975) | 29.8, 26 of 217 tool calls broken against 1 to 10 on every other run; taken out |
+| 7 | Pass 5's rule, and a mark that fades out while it travels pulled in so it stays inside the frame while seen (2712051bb) | 34.7; taken out |
+
+**One reading cannot tell these passes apart.** The same code read 38.6 and
+33.6, so the bar for passes 5 to 7 was their mean, 36.1, and every pass of the
+seven (32.9 to 37.3) lies inside the spread of the code it changed. Ask plans at
+temperature 0, yet its plans differ from run to run (the document it reads
+carries fresh layer ids each time, which is enough to send a 27B model down
+another path), and sixteen cases is too few to average that out. A change worth
+less than about five points is invisible on one run, and that is larger than
+any rule here can be expected to move. The eighth pass waits for a reading that
+can see two points (the task `ask-s-motion-eval-tells-a-real-gain-from-chance`).
+The rules of passes 5 and 7 are kept in history, tested, for a pass that can be
+measured: they fix what the judge's notes named on the climb set (a lap resting
+half its length with the arrow gone, waves sliding through the frame's edge).
+The one result that is plainly real is pass 6's: more words about how to draw
+made the model write plans the app refuses.
 
 So the catalogue has not moved the score on this model. What the judge marks
 down is the drawing and the plan more than the choice of technique (its lines on

@@ -1,33 +1,52 @@
 {
   "feature": "Ask animates a thing from general motion techniques",
   "epic": "ui-building",
-  "summary": "There is now a written catalogue of thirteen general motion techniques and a sealed set of sixteen everyday animated requests to judge Ask on. Four ways of putting the catalogue into Ask's prompt all read lower than Ask without it (35.8, 37.3, 34.1, 32.9 against 38.6), so Ask's motion prompt is back as it was and the task stays open.",
+  "summary": "There is a written catalogue of thirteen general motion techniques and a sealed set of sixteen everyday animated requests to judge Ask on. Seven passes (four ways of teaching the catalogue, then three rules on timing, style and the frame) all read inside the spread of Ask unchanged, which itself read 38.6 and 33.6 on two runs. Ask's motion is as it was, and the last pass waits for a steadier reading.",
   "setup": "Photonz Dev, release Next, no flag changed from its default.",
   "switched": {},
   "try": [
-    { "do": "Read the catalogue: docs/design/ask.md, section The techniques it picks from (a table of what each technique does, its keys and what an SVG keeps)." },
-    { "do": "Open the New window (File > New), type: make an animated icon of a flag waving in the wind on its pole, and press Create.", "shot": "2026-11-14-ask-motion-techniques-1-new-window-typed-sc.png" },
-    { "do": "Press Space to play it: the flag tips back and forth as one piece.", "shot": "2026-11-14-ask-motion-techniques-chain-svg-frames.png" },
-    { "do": "On an empty 512 by 512 picture press Command K and ask: make an animated icon of a door that swings open and closes again. Press Space.", "shot": "2026-11-14-ask-motion-techniques-swing-svg-frames.png" },
-    { "do": "On another empty picture press Command K and ask: make an animated icon of a cup of coffee with steam rising from it. Press Space.", "shot": "2026-11-14-ask-motion-techniques-4-wisps-playing-sc.png" },
-    { "do": "Choose Copy SVG and paste it into a browser: it plays as on the canvas.", "shot": "2026-11-14-ask-motion-techniques-wisps.svg" },
-    { "do": "Open the sealed set's sixteen results as pass 2 made them: .ask-eval/held-out-runs/20261115-030729-ask-held-out-motion/contact-sheet.png, and its best four then worst four as one video, ends-reel.mp4 in the same folder." }
+    {
+      "do": "Read the catalogue: docs/design/ask.md, section The techniques it picks from (a table of what each technique does, its keys and what an SVG keeps)."
+    },
+    {
+      "do": "Open the New window (File > New), type: make an animated icon of a flag waving in the wind on its pole, and press Create.",
+      "shot": "2026-11-14-ask-motion-techniques-1-new-window-typed-sc.png"
+    },
+    {
+      "do": "Press Space to play it: the flag tips back and forth as one piece.",
+      "shot": "2026-11-14-ask-motion-techniques-chain-svg-frames.png"
+    },
+    {
+      "do": "On an empty 512 by 512 picture press Command K and ask: make an animated icon of a door that swings open and closes again. Press Space.",
+      "shot": "2026-11-14-ask-motion-techniques-swing-svg-frames.png"
+    },
+    {
+      "do": "On another empty picture press Command K and ask: make an animated icon of a cup of coffee with steam rising from it. Press Space.",
+      "shot": "2026-11-14-ask-motion-techniques-4-wisps-playing-sc.png"
+    },
+    {
+      "do": "Choose Copy SVG and paste it into a browser: it plays as on the canvas.",
+      "shot": "2026-11-14-ask-motion-techniques-wisps.svg"
+    },
+    {
+      "do": "Open the sealed set's sixteen results as Ask makes them today (its second baseline reading): .ask-eval/held-out-runs/20261115-100549-ask-held-out-motion/contact-sheet.png, and its best four then worst four as one video, ends-reel.mp4 in the same folder."
+    }
   ],
   "evaluate": [
     "Is the catalogue the right set of techniques, or is one missing?",
     "The door turns flat about its corner instead of folding on its hinge edge. Is that the first thing you would want fixed?",
     "Does the flag tipping as one piece read as waving to you?",
     "Looking at the sealed set's sheet, is the weakness mostly the drawing or mostly the motion?",
-    "Should the next passes keep trying to teach the model techniques, or work on the drawing first?"
+    "Should the next work be a steadier eval reading first, or a bigger change to how Ask draws a moving icon?"
   ],
   "rough": [
-    "Not done: the sealed set reads 38.6 with Ask as it was; four passes of 8 read lower (35.8, 37.3, 34.1, 32.9) and were taken out. The bar is 75; the task stays open for passes 5 to 8.",
-    "On pass 2's code the six climb stories read 49.4 against 61.0 and 57.9 before, which is part of why it was taken out; the twelve single motions held (58.4 against 59.4).",
+    "Not done: the bar is 75 and Ask reads about 36 on the sealed set (38.6 and 33.6 for the same code). Seven passes of eight read 35.8, 37.3, 34.1, 32.9, 36.3, 29.8 and 34.7, and each was taken out.",
+    "One reading of sixteen requests swings five points with nothing changed, so no pass here could have shown a gain smaller than that. The eighth pass waits for task ask-s-motion-eval-tells-a-real-gain-from-chance.",
+    "Pass 6 is the one result that is plainly real: telling the model to draw small pieces as lines made it write plans the app refuses (26 of 217 calls broken against 1 to 10).",
+    "Passes 5 and 7 fixed things the judge named on the climb set (a lap resting half its length with a part gone; marks sliding through the frame's edge). They are kept in history, tested, for a pass that can be measured.",
     "The door turns flat about its corner like a clock hand, on today's prompt and on every pass; pass 4 told fold from turn plainly and read lower overall.",
-    "A buzz the model made as one 0.2 s burst in a 2 s lap reads as still to Ask's own look and to the walk's check; the phone walk was swapped for steam.",
     "The existing held-out animated group (h1 to h8) was not re-read: Ask's motion code ends where it began, and its last reading is 31.1 (2026-11-13).",
     "The sealed set's sheet and reel stay in .ask-eval/held-out-runs, not in queue/audits, because the set is still being climbed on and every runner reads queue/audits (README, The held-out set).",
-    "The sheet shows 16 frames across each lap rather than two a beat: the eval films a lap evenly and does not know where a case's beats fall.",
     "No mock covers what Ask draws, so there is no side by side with a mock."
   ]
 }

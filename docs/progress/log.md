@@ -23122,3 +23122,13 @@ units.
 - Four ways of wiring it into Ask read below the 38.6 baseline (35.8, 37.3, 34.1, 32.9); all reverted, so Ask's motion prompt is unchanged.
 - Three walks at Next defaults (New window, Command K twice) pass; audit `queue/audits/2026-11-14-ask-motion-techniques.json`.
 - Next: passes 5 to 8. Levers seen in traces: turn chosen where a part opens on an edge hinge; bursts shorter than the look's frames read as still; the look re-plans nearly everything.
+
+## 2026-11-15 — Ask motion techniques, passes 5 to 7 (task ask-can-draw-any-thing-and-animate-something-abo)
+
+- Read the judge's notes on the climb singles for general faults: laps resting half their length with a part gone, filled pieces in outline icons, marks sliding through the frame's edge.
+- Pass 5 (a8d727e75, `restsWhole`): a still stretch with a part gone cut to 0.3 s, its time given to the whole rest. Sealed 36.3. Reverted.
+- Read the baseline code a second time: 33.6 (first reading 38.6). Unchanged code spans 5 points, so the bar became their mean, 36.1, and none of the seven passes can be told from it.
+- Pass 6 (cc38f5975): small pieces drawn as lines of the icon's stroke. Sealed 29.8 with 26 of 217 tool calls broken. Reverted; the only plainly real result.
+- Pass 7 (2712051bb): pass 5 plus `marksStayIn` (a mark fading out while it travels stays inside the frame). Sealed 34.7. Reverted.
+- No net change to Ask's code. Filed p1 `ask-s-motion-eval-tells-a-real-gain-from-chance` (one reading steady to 2 points); the motion task now depends on it and its eighth pass waits.
+- Open question: whether the run-to-run spread comes from fresh layer ids in what the model reads (temperature is 0 everywhere).
