@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-15T21:45:15.000Z",
+  "updated": "2026-11-15T21:46:02.670Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -250,6 +250,10 @@
     {
       "t": "2026-11-15T21:45:15.000Z",
       "note": "Next for pass 8: (a) the selection change a blade makes (selectClipPiece) and an undo hands back (restoreSelectionFromHistory) costs ~20-30 ms more than a trim's pass; find what reads selectedClipPieceIndex and move it to a late pass or a lane-handed value; (b) the first pick's 450 ms of section arrivals: each arrival is a whole window pass of 15-65 ms, Appearance and Effects the largest; (c) the speed walk should measure an edit with a clip picked, since that is how a person edits. Bars not reached: edits <=16 ms, scrub within 1 frame, no dropped frames. Stays open."
+    },
+    {
+      "t": "2026-11-15T21:46:02.669Z",
+      "note": "Pass 7 landed 9c97068c5: edits on a video split across two frames when stopped too (stopped trim with a clip picked 54 -> 31-44 ms); the folded Library no longer bounces while a pick's sections arrive. Bars not reached: edits while playing trim 29 / blade 46 own, 75 longest / undo 57 vs 16 ms; scrub 2 frames vs 1; ~1 dropped frame a minute. Stays open; pass 8 leads in the log."
     }
   ],
   "started": "2026-11-15T20:16:54.531Z",
