@@ -2132,6 +2132,17 @@ private final class Run {
         case .windowClick(let at, let count, let modifiers):
             try await windowClick(at: try windowPoint(at), saying: saying(at),
                                   count: count, modifiers: modifiers, number: number)
+        case .windowClickStill(let count, let modifiers):
+            // Where the walk's pointer rests, with no move first: whatever the
+            // timeline slid under it since is what a hand reaches.
+            let window = try requireWindow()
+            guard let resting = PlaytestPointer.location(in: window) else {
+                throw Failure(description: "a still click needs the pointer resting somewhere first; "
+                    + "put it there with a \"hover\" step")
+            }
+            try await windowClick(at: resting, saying: "where the pointer rests, window "
+                                  + short(resting) + " (AppKit), with no move first",
+                                  count: count, modifiers: modifiers, number: number, still: true)
         case .windowClickOn(let control, let count, let modifiers):
             // The middle of something the app names for a walk, measured as
             // it is laid out now, so a walk need not know where it is drawn.
@@ -2557,10 +2568,23 @@ private final class Run {
                  + "; while held: " + holdCost,
                  state: describe())
 
-        case .expectTimelinePick(let clips, let rangeOn, let fromSeconds, let toSeconds):
+        case .expectTimelinePick(let clips, let rangeOn, let fromSeconds, let toSeconds, let cut):
             let editor = try requireEditor()
             let reading = timelinePickReading(editor)
             var wrong: [String] = []
+            let pickedCut = editor.selectedEditPoint.map { String(format: "the cut at %.2fs", Double($0.atMS) / 1000) }
+            switch cut {
+            case .at(let seconds)?:
+                let want = Int((seconds * 1000).rounded())
+                if editor.selectedEditPoint.map({ abs($0.atMS - want) <= 40 }) != true {
+                    wrong.append("picked " + (pickedCut ?? "no cut") + ", and the walk expected the cut at "
+                                 + String(format: "%.2fs", seconds))
+                }
+            case .none?:
+                if let pickedCut { wrong.append("picked \(pickedCut), and the walk expected no cut") }
+            case nil:
+                break
+            }
             if let clips, Set(clips.map { $0.lowercased() }) != Set(reading.clips.map { $0.lowercased() }) {
                 wrong.append("picked " + (reading.clips.isEmpty ? "nothing" : reading.clips.sorted().joined(separator: ", "))
                              + ", and the walk expected " + (clips.isEmpty ? "nothing" : clips.sorted().joined(separator: ", ")))
@@ -2581,7 +2605,8 @@ private final class Run {
             }
             guard wrong.isEmpty else { throw Failure(description: wrong.joined(separator: "; ")) }
             note(number, step.name, "picked " + (reading.clips.isEmpty ? "nothing" : reading.clips.sorted().joined(separator: ", "))
-                 + (reading.rangeOn.isEmpty ? "" : "; a range on \(reading.rangeOn.joined(separator: ", "))"),
+                 + (reading.rangeOn.isEmpty ? "" : "; a range on \(reading.rangeOn.joined(separator: ", "))")
+                 + (pickedCut.map { "; \($0)" } ?? ""),
                  state: describe())
 
         case .expectSoundLine(let clip, let curves, let points, let segments, let follows):
@@ -19887,7 +19912,7 @@ private final class Run {
     /// A real click, or a run of them, posted to the window at `point`, in
     /// the window's own space (`windowClick`).
     private func windowClick(at point: CGPoint, saying: String, count: Int, modifiers: [PlaytestModifier],
-                             number: Int) async throws {
+                             number: Int, still: Bool = false) async throws {
         // A click, or two in a row, posted to the window the way
         // `windowDrag` posts its press, so it lands on whatever SwiftUI
         // view is under the point. Each press carries its place in the
@@ -19903,8 +19928,10 @@ private final class Run {
                 clickCount: clicks, pressure: pressure)
         }
         let front = await takeTheFrontForADrag()
-        if let moved = event(.mouseMoved, clicks: 0, pressure: 0) { NSApp.postEvent(moved, atStart: false) }
-        await sleep(0.15)
+        if !still {
+            if let moved = event(.mouseMoved, clicks: 0, pressure: 0) { NSApp.postEvent(moved, atStart: false) }
+            await sleep(0.15)
+        }
         for click in 1...count {
             guard let down = event(.leftMouseDown, clicks: click, pressure: 1),
                   let up = event(.leftMouseUp, clicks: click, pressure: 0) else { break }

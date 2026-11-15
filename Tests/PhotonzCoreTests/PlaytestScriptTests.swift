@@ -895,6 +895,38 @@ struct PlaytestScriptTests {
         #expect(script.steps[2].name == "windowClick")
     }
 
+    @Test("A hover can rest on a lane at a moment, and a still windowClick clicks where the pointer rests without moving it")
+    func restOnALaneThenClickStill() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "hover", "lane": "V1", "seconds": 40.6 },
+                     { "do": "windowClick", "still": true },
+                     { "do": "windowClick", "still": true, "count": 2, "modifiers": ["shift"] } ] }
+        """)
+        guard case .hover(.point(let at), let window) = script.steps[0],
+              case .windowClickStill(let count, let modifiers) = script.steps[1],
+              case .windowClickStill(let count2, let modifiers2) = script.steps[2] else {
+            Issue.record("rest then still click"); return
+        }
+        #expect(at.space == .lane)
+        #expect(at.lane == PlaytestLaneSpot(lane: "V1", moment: .seconds(40.6)))
+        #expect(window == nil)
+        #expect(count == 1)
+        #expect(modifiers.isEmpty)
+        #expect(count2 == 2)
+        #expect(modifiers2 == [.shift])
+        #expect(script.steps[0].name == "hover")
+        #expect(script.steps[1].name == "windowClick")
+    }
+
+    @Test("A still windowClick says it takes no point")
+    func stillWindowClickRefusesAPoint() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "windowClick", "still": true, "at": [10, 20] } ] }
+            """)
+        }
+    }
+
     @Test("A lane drag says what is wrong with a moment it cannot read")
     func windowDragOnALaneRefusesABadMoment() {
         #expect(throws: (any Error).self) {
@@ -3707,8 +3739,9 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "expectTimelinePick", "clips": ["b-roll", "Talk piece 2"],
                        "rangeOn": ["V1"], "from": 5, "to": 9 } ] }
         """)
-        guard case .expectTimelinePick(let clips, let rangeOn, let from, let to) = script.steps[0]
+        guard case .expectTimelinePick(let clips, let rangeOn, let from, let to, let cut) = script.steps[0]
         else { Issue.record("expectTimelinePick"); return }
+        #expect(cut == nil)
         #expect(clips == ["b-roll", "Talk piece 2"])
         #expect(rangeOn == ["V1"])
         #expect(from == 5)
@@ -3716,6 +3749,21 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectTimelinePick"))
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("dragTracks"))
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectTimelinePick"))
+    }
+
+    @Test("An expectTimelinePick step can claim the cut picked by its moment, or that no cut is")
+    func expectTimelinePickClaimsACut() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectTimelinePick", "cut": 155 },
+                     { "do": "expectTimelinePick", "clips": [], "cut": false } ] }
+        """)
+        guard case .expectTimelinePick(let clips, _, _, _, let cut) = script.steps[0],
+              case .expectTimelinePick(let clips2, _, _, _, let cut2) = script.steps[1]
+        else { Issue.record("expectTimelinePick cut"); return }
+        #expect(clips == nil)
+        #expect(cut == .at(seconds: 155))
+        #expect(clips2 == [])
+        #expect(cut2 == PlaytestCutPick.none)
     }
 
     @Test("An expectKeyValues step claims the key popover and its rows; expectDrawn claims a layer's opacity")

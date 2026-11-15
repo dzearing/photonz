@@ -1,0 +1,71 @@
+{
+  "out": "/tmp/photonz-playtest/a-cut-slid-under-a-still-pointer-walk",
+  "seed": "At Next defaults, no flag set: the 6 minute reference edit, whose V1 track is busy enough that its plain clips and the cuts between them are painted as one layer (the-timeline-of-an-hour-long-edit-scrolls-zooms). A person rests the pointer on a clip, zooms the timeline out with the pointer held still so a cut slides under it, and clicks without moving: the cut is what gets picked, not the clip under it. The edit opens at Fit with the playhead at 0:00, and zooming out from there keeps 0:00 at the left and doubles the time under any point, so the pointer resting at 1:45.25 (the middle of the clip from 1:39.8 to 1:51.9) is over the plain cut at 3:30.5 afterwards.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 6
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "comment": "The pointer comes to rest on V1 at 1:45.25, in the middle of a clip and well clear of the cuts at either end.",
+      "do": "hover",
+      "lane": "V1",
+      "seconds": 105.25
+    },
+    {
+      "do": "snapshot",
+      "name": "0-resting-on-a-clip"
+    },
+    {
+      "comment": "The timeline zooms out with the pointer held still: 0:00 stays at the left and everything halves in width, so the plain cut at 3:30.5 is under the pointer.",
+      "do": "action",
+      "action": "timelineZoomOut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-cut-under-the-pointer"
+    },
+    {
+      "comment": "A real click where the pointer rests, with no move first.",
+      "do": "windowClick",
+      "still": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "comment": "The cut is picked, so no clip is.",
+      "do": "expectTimelinePick",
+      "clips": [],
+      "cut": 210.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-picked",
+      "note": "THE CLICK: the cut at 3:30.5 is picked and no clip is"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-the-cut-picked"
+    }
+  ]
+}

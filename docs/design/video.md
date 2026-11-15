@@ -838,6 +838,32 @@ The rule, for any view added to the editor window:
    header key diamond, Add Key and the held-frame badge watch their answers
    in `PanelPlayhead` (rule 2), where they had rebuilt on every tick of a
    video played with a clip picked.
+8. **A busy lane paints its plain clips and cuts; a clip somebody is working
+   on is its full view again.** A lane builds only what is in sight plus half
+   a window each side (`TimelineSight`). When 24 or more clips are in sight
+   (`TimelinePaint.busyLane`) it paints the plain ones and the cuts between
+   them in two Canvas layers (`TimelinePaintedClips`, `TimelinePaintedCuts`),
+   because a bar per clip was the whole cost of zooming the hour-long edit
+   (570 ms a frame built, 50 painted, 2026-11-14). A clip goes back to its full
+   view when it is picked, in a hand, being trimmed or renamed, or under the
+   pointer, and when it carries anything the painting does not draw (pieces,
+   a still, a badge, keys, a drift, level points, a sound badge, pictures
+   along it); a cut goes back when it is picked, under a grip, under the
+   pointer, holding on black or white, or one of its clips is in a hand. So:
+   - **Everything a clip bar shows is drawn twice**: once in `ClipPiecesBar`
+     and once in the painting. A new thing on a clip either is drawn in
+     `TimelinePaintedClips.paint` too, pixel for pixel, or is added to
+     `TimelinePaint.Clip` so a clip carrying it stays a view. Never only the
+     bar: it would vanish on a busy lane.
+   - **What is under the pointer is read again when the timeline moves**, not
+     only when the pointer does. A pointer held still while the timeline
+     scrolls or zooms is over something new with no move to say so, and a
+     click there must reach the cut or clip now under it
+     (`TimelineTrackRow.readPointer`, `a-cut-slid-under-a-still-pointer-walk`).
+   - A painted clip takes a click, a drag and a right click of its own
+     (`TimelinePaintedHands`), for the click that comes with no pointer move
+     first; a grip, a fade diamond or the level line is reached only on the
+     full view, which the pointer resting there has already brought back.
 
 Measured with these in place (short speed walk, 2026-11-13): a minute of 1x
 play dropped 4 of about 1,820 frames, against 379 before; every transition

@@ -1,0 +1,25 @@
+{
+  "feature": "A click on a cut that slid under a still pointer picks the cut",
+  "epic": "video-perf",
+  "summary": "On a busy track the timeline draws its clips and cuts as one painted layer and brings back the real cut or clip only under the pointer. Until now that only happened when the pointer moved, so after zooming or scrolling with the pointer held still, a click on a cut picked the clip beside it. Now the timeline re-reads what is under the pointer whenever it zooms or scrolls, and the click picks the cut.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit, or any edit with two dozen or more clips on one track.",
+  "switched": {},
+  "try": [
+    { "do": "With the timeline at Fit, rest the pointer in the middle of a clip on V1 and keep your hand off the mouse.", "shot": "2026-11-14-cut-under-still-pointer-0-resting-sc.png" },
+    { "do": "Zoom the timeline out with the keyboard (or pinch, keeping the pointer still) until a cut sits under the pointer.", "shot": "2026-11-14-cut-under-still-pointer-1-zoomed-out-sc.png" },
+    { "do": "Click without moving the pointer.", "shot": "2026-11-14-cut-under-still-pointer-2-cut-picked-sc.png" },
+    { "do": "Check the panel: it shows Edit point with the two clips either side, not a clip's Time section." },
+    { "do": "Zoom in so the track is quiet, rest on a clip, scroll along and click again: it should pick whatever is under the pointer now." }
+  ],
+  "evaluate": [
+    "After a zoom with the pointer still, does the click always pick what you see under the pointer?",
+    "While pinching with the pointer over a busy track, does anything flicker as clips slide under it?",
+    "Is a plain cut on a zoomed-out track easy enough to hit at all, at about two points a second?"
+  ],
+  "rough": [
+    "The walk zooms rather than scrolls: on the 6 minute edit a track is painted only when the whole edit is in view, where there is nothing to scroll along. Both go through the same re-read, and the walk proves it fails without it.",
+    "A transition band shorter than about a second, zoomed to three minutes across, is about 6 points wide and both its end grips cover it, so a click there picks nothing at all. That is how the full band view has always behaved, painted or not; noted in the task log, not filed.",
+    "Walks cannot move SwiftUI's own hover, so the walk's pointer hands its point to the lane's own hover closure through a marker, the same way the harness already does for every other hover. What this proves is everything that follows from the pointer resting there, not SwiftUI's delivery of the move.",
+    "The speed bars of this task are not reached yet (zoom and scroll about 50 ms a frame on the hour-long edit against 8.3, edits 150 to 245 ms against 16); this pass did not change them. No mock covers this behaviour."
+  ]
+}

@@ -23106,3 +23106,11 @@ units.
 - After: 8pt or more between the knob's shadow and either time, resting or lifted; a click lands the knob's centre exactly under the pointer; In/Out marks sit under the knob. Walk `the-scrubber-knob-clears-the-times-walk`.
 - Filed p2 `find-out-why-the-cut-export-test-fails-again-in` (one load-related PieceCopyWriterTests failure in a full run; passes alone).
 - Perf note: composite path untouched.
+
+## 2026-11-14 — A cut that slides under a still pointer is the cut a click picks (the-timeline-of-an-hour-long-edit-scrolls-zooms, pass 3)
+
+- Reproduced the digest's question with a new walk, `a-cut-slid-under-a-still-pointer-walk`: on the 6 minute edit at Fit (V1 painted), rest on a clip at 1:45.25, zoom out with the pointer still so the plain cut at 3:30.5 sits under it, click with no move: it picked Take 1, not the cut.
+- Fix: a busy lane keeps where the pointer rests (unobserved) and reads again what is under it whenever the ruler or lane width changes (`TimelineTrackRow.readPointer`), so the cut under a still pointer is its full view by the time the click lands. Without the two `onChange` lines the walk fails; with them it passes.
+- Harness: no synthesized move reaches SwiftUI's `onContinuousHover` (traced: the lane's pointer stayed nil through `hover`, `windowClick` and a walk with the probe in front), so the lane's hover is now `playtestContinuousHover`, which hangs a marker the walk's pointer hands its point to, as `playtestHover` does. New steps: `hover` on a `lane`/`seconds` spot, `windowClick` with `"still": true`, and `expectTimelinePick` with `"cut"` (seconds, or false).
+- Rule 8 in docs/design/video.md section 8f: when a busy lane paints, what goes back to a full view, and that what is under the pointer is read again when the timeline moves.
+- 12 timeline walks green incl. an-editing-session-walk; Scripts/test.sh green. Perf bars of the task unchanged by this pass. Perf note: composite path untouched.

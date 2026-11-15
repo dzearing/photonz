@@ -744,6 +744,13 @@ public enum PlaytestSpace: String, Hashable, Codable, Sendable {
 /// `Zoom <clip>`, `Keys <layer>` or `Under the tracks`, as `dragTracks` reads
 /// them) at a moment on the ruler, or just inside one end of the lanes on
 /// screen, where a drag held still scrolls the timeline.
+/// The cut an `expectTimelinePick` claims is picked: the one at a moment on
+/// the ruler, or none.
+public enum PlaytestCutPick: Hashable, Sendable {
+    case at(seconds: Double)
+    case none
+}
+
 public struct PlaytestLaneSpot: Hashable, Sendable {
     public enum Moment: Hashable, Sendable {
         case seconds(Double)
@@ -3181,6 +3188,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// walk (`"on"`), wherever it is laid out: a segment of a value graph,
     /// whose place moves with the zoom and the values.
     case windowClickOn(control: String, count: Int, modifiers: [PlaytestModifier])
+    /// A `windowClick` (`"still": true`) where the walk's pointer already
+    /// rests, with no move first: a person who scrolls or pinches the timeline
+    /// with the pointer held still and then clicks. Whatever slid under the
+    /// pointer meanwhile is what a hand reaches.
+    case windowClickStill(count: Int, modifiers: [PlaytestModifier])
     /// A grip on the timeline, found by its name in the app's own register,
     /// pulled `by` points sideways in `steps` real mouse moves posted to the
     /// window, with the grip's drawn position read back after every move
@@ -3272,7 +3284,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// covers, empty for none, with `from` and `to` its ends in seconds. A
     /// gap a click picked is the clip "Gap on <track>", and `from` and `to`
     /// are its ends.
-    case expectTimelinePick(clips: [String]?, rangeOn: [String]?, from: Double?, to: Double?)
+    /// `cut` claims the cut picked, by the moment it falls at, or that no
+    /// cut is (`false`).
+    case expectTimelinePick(clips: [String]?, rangeOn: [String]?, from: Double?, to: Double?,
+                            cut: PlaytestCutPick? = nil)
     /// Which keys are picked, by lane and place counting from one ("Scale 1",
     /// as a key is named on its lane), and FAIL when it is not so: an empty
     /// list for none. `segments` names the picked segments the same way, by
@@ -4936,7 +4951,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dropImage: "dropImage"
         case .dragFile: "dragFile"
         case .windowDrag: "windowDrag"
-        case .windowClick, .windowClickOn: "windowClick"
+        case .windowClick, .windowClickOn, .windowClickStill: "windowClick"
         case .dragGrip: "dragGrip"
         case .dropOnTimeline: "dropOnTimeline"
         case .dropOnLibrary: "dropOnLibrary"
@@ -5240,6 +5255,11 @@ public enum PlaytestStep: Sendable, Equatable {
             let hoverWindow = try f.optionalString("window")
             if fields["label"] != nil {
                 self = .hover(.label(try f.string("label")), window: hoverWindow)
+            } else if fields["lane"] != nil {
+                // A spot on the timeline, worked out where the lane is drawn
+                // when the step runs (`PlaytestLaneSpot`).
+                let spot = PlaytestLaneSpot(lane: try f.string("lane"), moment: .seconds(try f.number("seconds")))
+                self = .hover(.point(PlaytestPoint(lane: spot)), window: hoverWindow)
             } else if fields["at"] != nil {
                 self = .hover(.point(try f.point("at")), window: hoverWindow)
             } else {
@@ -5481,6 +5501,13 @@ public enum PlaytestStep: Sendable, Equatable {
             guard held >= 0, held <= 20 else { throw f.invalid("holdSeconds", "between 0 and 20 seconds") }
             self = .windowDrag(from: from, to: to, steps: max(1, steps), hold: try f.optionalString("hold"),
                                holdSeconds: held)
+        case "windowClick" where (fields["still"] as? Bool) == true:
+            guard fields["at"] == nil, fields["lane"] == nil, fields["on"] == nil else {
+                throw f.invalid("still", "clicks where the pointer already rests, so it takes no \"at\", "
+                    + "\"lane\" or \"on\"; rest it first with a \"hover\" step")
+            }
+            self = .windowClickStill(count: max(1, try f.optionalNumber("count").map { Int($0) } ?? 1),
+                                     modifiers: try f.modifiers())
         case "windowClick" where fields["on"] != nil:
             self = .windowClickOn(control: try f.string("on"),
                                   count: max(1, try f.optionalNumber("count").map { Int($0) } ?? 1),
@@ -5582,12 +5609,22 @@ public enum PlaytestStep: Sendable, Equatable {
         case "expectTimelinePick":
             let clips = f.has("clips") ? try f.optionalStrings("clips") : nil
             let rangeOn = f.has("rangeOn") ? try f.optionalStrings("rangeOn") : nil
-            guard clips != nil || rangeOn != nil else {
-                throw f.invalid("clips", "expectTimelinePick says which clips are picked, or which tracks a range "
-                                + "is on, or both; an empty list means none")
+            var cut: PlaytestCutPick?
+            if let raw = fields["cut"] {
+                if let flag = raw as? Bool, !flag {
+                    cut = PlaytestCutPick.none
+                } else if let seconds = raw as? NSNumber, !(raw is Bool) {
+                    cut = .at(seconds: seconds.doubleValue)
+                } else {
+                    throw f.invalid("cut", "is the moment of the cut picked, in seconds, or false for no cut")
+                }
+            }
+            guard clips != nil || rangeOn != nil || cut != nil else {
+                throw f.invalid("clips", "expectTimelinePick says which clips are picked, which tracks a range "
+                                + "is on, or which cut; an empty list means none")
             }
             self = .expectTimelinePick(clips: clips, rangeOn: rangeOn, from: try f.optionalNumber("from"),
-                                       to: try f.optionalNumber("to"))
+                                       to: try f.optionalNumber("to"), cut: cut)
         case "expectKeyPick":
             guard f.has("keys") else {
                 throw f.invalid("keys", "expectKeyPick names the keys picked, as \"Scale 1\"; an empty list means none")

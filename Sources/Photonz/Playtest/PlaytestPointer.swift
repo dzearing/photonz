@@ -40,11 +40,22 @@ final class HoverTargetView: NSView {
     /// Whether this marker currently thinks the pointer is on it, so the
     /// pointer never enters twice or leaves something it was never on.
     var isInside = false
+    /// For a region that follows the pointer across it
+    /// (`playtestContinuousHover`): the point the pointer rests at, measured
+    /// from the region's top left, or nil once it has left. Told on every
+    /// rest inside it, not only the arrival.
+    var performAt: ((CGPoint?) -> Void)?
 
     init(name: String, perform: @escaping (Bool) -> Void) {
         self.name = name
         self.perform = perform
         super.init(frame: .zero)
+    }
+
+    /// A window point, measured from this region's top left.
+    func fromTopLeft(_ location: CGPoint) -> CGPoint {
+        let point = convert(location, from: nil)
+        return CGPoint(x: point.x, y: isFlipped ? point.y : bounds.height - point.y)
     }
 
     @available(*, unavailable)
@@ -61,6 +72,28 @@ final class HoverTargetView: NSView {
         let box = frameInWindow
         let where_ = "\(Int(box.minX)),\(Int(box.minY)) \(Int(box.width))x\(Int(box.height))"
         return name.isEmpty ? where_ : "\"\(name)\" \(where_)"
+    }
+}
+
+/// The marker behind a `playtestContinuousHover`: it hands a walk's pointer
+/// the same phases the view's own `.onContinuousHover` is given.
+private struct ContinuousHoverAnchor: NSViewRepresentable {
+    let name: String
+    let perform: (HoverPhase) -> Void
+
+    func makeNSView(context: Context) -> HoverTargetView {
+        let view = HoverTargetView(name: name, perform: { _ in })
+        view.performAt = Self.phases(perform)
+        return view
+    }
+
+    func updateNSView(_ view: HoverTargetView, context: Context) {
+        view.name = name
+        view.performAt = Self.phases(perform)
+    }
+
+    static func phases(_ perform: @escaping (HoverPhase) -> Void) -> (CGPoint?) -> Void {
+        { point in perform(point.map { .active($0) } ?? .ended) }
     }
 }
 
@@ -99,6 +132,27 @@ extension View {
         #else
         return onHover(perform: perform)
             .modifier(ShownHover(perform: perform))
+        #endif
+    }
+}
+
+extension View {
+    /// `.onContinuousHover` in the view's own space, and in a probe build also
+    /// a marker a scripted walk's pointer hands its point to, the way
+    /// `playtestHover` does for `.onHover`: no synthesized event reaches
+    /// SwiftUI's hover (measured again on 2026-11-14 for a busy timeline lane,
+    /// whose pointer reading stayed empty through every walk), so a walk runs
+    /// the view's own closure with the point it rests at.
+    func playtestContinuousHover(_ name: String = "", perform: @escaping (HoverPhase) -> Void) -> some View {
+        #if PHOTONZ_PLAYTEST
+        return onContinuousHover(coordinateSpace: .local, perform: perform)
+            .background {
+                if PlaytestMarkers.areHung {
+                    WhileMarkersHang(marker: ContinuousHoverAnchor(name: name, perform: perform))
+                }
+            }
+        #else
+        return onContinuousHover(coordinateSpace: .local, perform: perform)
         #endif
     }
 }
@@ -199,7 +253,15 @@ enum PlaytestPointer {
         let left = inside.filter { old in !over.contains { $0 === old } }
         for region in left {
             region.isInside = false
-            if region.window != nil { region.perform(false) }
+            if region.window != nil {
+                region.perform(false)
+                region.performAt?(nil)
+            }
+        }
+        // A region that follows the pointer across it hears every rest,
+        // where it is now, not only the arrival.
+        for region in over {
+            region.performAt?(region.fromTopLeft(location))
         }
         // Then everything it has arrived on. Nested regions BOTH count, which
         // is what a real pointer does too: a hand over a button inside a row

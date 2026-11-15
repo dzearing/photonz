@@ -40,6 +40,11 @@ struct TimelineTrackRow: View {
     @State private var pointerClipID: UUID?
     /// The edit point under the pointer on a busy lane, drawn as its full view.
     @State private var pointerEditPointID: String?
+    /// Where across the lane the pointer last rested, kept where writing it
+    /// wakes nothing: a pointer held still while the timeline scrolls or
+    /// zooms under it is over something new with no move to say so, and this
+    /// is what is read again then (`readPointer`).
+    @State private var pointerSpot = PointerSpot()
     @FocusState private var isNaming: Bool
     @Environment(\.colorScheme) private var colorScheme
 
@@ -690,16 +695,20 @@ struct TimelineTrackRow: View {
         // On a busy lane the clip under the pointer is drawn as its full bar.
         // Read on the whole lane, so the bar that takes its place under the
         // pointer does not end the hover that put it there.
-        .onContinuousHover(coordinateSpace: .local) { phase in
-            var under: UUID?
-            var cut: String?
+        .playtestContinuousHover("Lane \(track.name)") { phase in
             if case .active(let point) = phase {
-                under = clipUnderPointer(atX: point.x)
-                cut = under == nil ? nil : editPointUnderPointer(atX: point.x)
+                pointerSpot.x = point.x
+            } else {
+                pointerSpot.x = nil
             }
-            if under != pointerClipID { pointerClipID = under }
-            if cut != pointerEditPointID { pointerEditPointID = cut }
+            readPointer()
         }
+        // The pointer held still while the timeline scrolls or zooms under
+        // it: what it is over now is read again, so a cut that slid under it
+        // is the cut's own view by the time the click lands, as it would be
+        // had the pointer moved there.
+        .onChange(of: ruler) { readPointer() }
+        .onChange(of: laneWidth) { readPointer() }
         .coordinateSpace(name: Self.laneSpace(track.id))
         // A track of clips with their own sound dims its pictures alone:
         // hiding the picture leaves the sound playing.
@@ -823,6 +832,20 @@ struct TimelineTrackRow: View {
                                     leadingGrip: ClipTransitionEdgeDrag.canGrab(leadingEdge: true, of: drawn),
                                     trailingGrip: ClipTransitionEdgeDrag.canGrab(leadingEdge: false, of: drawn)))
         }
+    }
+
+    /// What the pointer resting at `pointerSpot` is over on a busy lane: the
+    /// clip and the cut drawn as their full views. Written only when either
+    /// changes, so a pointer gliding along one clip rebuilds nothing.
+    private func readPointer() {
+        var under: UUID?
+        var cut: String?
+        if let x = pointerSpot.x {
+            under = clipUnderPointer(atX: x)
+            cut = under == nil ? nil : editPointUnderPointer(atX: x)
+        }
+        if under != pointerClipID { pointerClipID = under }
+        if cut != pointerEditPointID { pointerEditPointID = cut }
     }
 
     /// The cut within reach of a point across the lane, on a busy lane.
@@ -1894,4 +1917,10 @@ extension TimelineTrackRow: Equatable {
             && a.trackCount == b.trackCount && a.laneWidth == b.laneWidth && a.isBlade == b.isBlade
             && a.rows == b.rows && a.isLifted == b.isLifted
     }
+}
+
+/// Where across a lane the pointer rests, held by reference so that writing
+/// it, on every move of the pointer, wakes no view (`TimelineTrackRow`).
+@MainActor private final class PointerSpot {
+    var x: CGFloat?
 }
