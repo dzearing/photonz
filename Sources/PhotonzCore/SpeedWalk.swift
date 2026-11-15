@@ -646,6 +646,17 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     }
     public static let speeds = ["slow", "medium", "fling"]
     public static let edits = ["trim", "move", "blade", "undo", "transition", "title"]
+    /// Edits a walk may name that change what the ones after it act on, so
+    /// they are never made unless named: `pick` picks the recording under
+    /// the playhead and keeps it picked, as a person editing a clip has it.
+    public static let namedOnlyEdits = ["pick"]
+
+    /// The name an edit's numbers are kept under. Made with a clip picked,
+    /// an edit holds the panel's sections too and costs more, so it is a
+    /// number of its own rather than one that overwrites the other.
+    public static func tallyName(_ edit: String, picked: Bool) -> String {
+        picked && !namedOnlyEdits.contains(edit) ? "\(edit), picked" : edit
+    }
 
     /// How many display frames a hand takes to drag the playhead end to end
     /// at each speed: five seconds, two, and a third of one at 120 Hz.
@@ -688,8 +699,8 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
         if let bad = speeds.first(where: { !Self.speeds.contains($0) }) {
             return ("speeds", "\(bad) is not a speed: they are slow, medium and fling")
         }
-        if let bad = edits.first(where: { !Self.edits.contains($0) }) {
-            return ("edits", "\(bad) is not an edit: they are " + Self.edits.joined(separator: ", "))
+        if let bad = edits.first(where: { !Self.edits.contains($0) && !Self.namedOnlyEdits.contains($0) }) {
+            return ("edits", "\(bad) is not an edit: they are " + (Self.edits + Self.namedOnlyEdits).joined(separator: ", "))
         }
         if let seconds, seconds <= 0 { return ("seconds", "must be more than nothing") }
         if let form, form != "short", form != "long" { return ("form", "is short or long") }

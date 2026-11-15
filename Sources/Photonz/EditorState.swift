@@ -1167,7 +1167,7 @@ final class EditorState {
                 // A piece belongs to the clip it was picked on. Picking
                 // something else lets it go, so ⌫ can never throw away a piece
                 // of a clip nobody is looking at (`EditorState+ClipBar`).
-                if selectedClipPieceIndex != nil { selectedClipPieceIndex = nil }
+                if pickedPieceShown != nil || piecePickOwed != nil { selectedClipPieceIndex = nil }
                 // ...and so does a cut, for the same reason.
                 if selectedClipCutIndex != nil { selectedClipCutIndex = nil }
                 // ...and so does a cut between two clips.
@@ -2065,8 +2065,61 @@ final class EditorState {
     /// Which PIECE of the picked clip is in hand, where the clip is cut into
     /// more than one (`EditorState+ClipBar`). Nil means the clip as a whole:
     /// a recording nobody has cut has no piece to pick.
+    ///
+    /// What every command and check reads. The views watch `pickedPieceShown`
+    /// behind it, which a cut or an undo on a video writes one pass later
+    /// (`pickPieceAPassLater`), so the piece's ring and the panel's rows for
+    /// it are not built in the same frame as the cut itself.
     var selectedClipPieceIndex: Int? {
-        didSet { noteSelectionForHistory() }
+        get {
+            // Read first whatever the owed pick says, so a view that asks is
+            // still told when the pass that hands it over writes it.
+            let shown = pickedPieceShown
+            return piecePickOwed.map(\.index) ?? shown
+        }
+        set {
+            piecePickOwed = nil
+            if pickedPieceShown != newValue { pickedPieceShown = newValue }
+            noteSelectionForHistory()
+        }
+    }
+    /// The piece the views draw as picked (`selectedClipPieceIndex`).
+    private(set) var pickedPieceShown: Int?
+    /// A pick of a piece made but not yet shown: what `selectedClipPieceIndex`
+    /// answers until the next pass writes it into `pickedPieceShown`.
+    private struct OwedPiecePick {
+        let token = UUID()
+        let index: Int?
+    }
+    @ObservationIgnored private var piecePickOwed: OwedPiecePick?
+
+    /// Picks a piece of the clip in hand now for every command (⌫ throws away
+    /// this piece from the next key on) and for the views one pass later, on
+    /// a video. A cut picking the piece before it held the window 42 to 45 ms
+    /// in its own pass with the clip picked and 27 to 29 with the pick a pass
+    /// later, the same as a trim; the undo after it 43 to 46 and 31 to 33
+    /// (6 minute reference edit, 2026-11-15). Anything that picks in between
+    /// wins: the owed pick is let go by any write to `selectedClipPieceIndex`.
+    /// History is told the pick at once, as a pick made now would tell it,
+    /// unless `tellingHistory` is false: an undo has already said what the
+    /// step picked.
+    func pickPieceAPassLater(_ index: Int?, tellingHistory: Bool = true) {
+        // Next's videos only, where the timeline and panel already follow an
+        // edit a pass later (`catchUpOnTheNextPassOnAVideo`).
+        guard documentHasTime, Experiments.shared.panelBuildsWhatYouSeeEnabled else {
+            if selectedClipPieceIndex != index { selectedClipPieceIndex = index }
+            return
+        }
+        guard selectedClipPieceIndex != index else { return }
+        let owed = OwedPiecePick(index: index)
+        piecePickOwed = owed
+        if tellingHistory { noteSelectionForHistory() }
+        Task { @MainActor [weak self] in
+            await NextRunLoopPass.start()
+            guard let self, self.piecePickOwed?.token == owed.token else { return }
+            self.piecePickOwed = nil
+            if self.pickedPieceShown != owed.index { self.pickedPieceShown = owed.index }
+        }
     }
     /// The keys picked on a layer's lanes (`EditorState+KeyLanes`). Picking
     /// keys, or nothing, puts down a row picked by its name.
@@ -5585,12 +5638,18 @@ final class EditorState {
         // undo is the work rather than a re-pick: undo a stack and the two
         // things the band caught are picked again, undo a delete and ⌫
         // removes the same things again.
-        if selectedLayerID != snapshot.picked.primary { selectedLayerID = snapshot.picked.primary }
+        let sameClip = selectedLayerID == snapshot.picked.primary
+        if !sameClip { selectedLayerID = snapshot.picked.primary }
         // ...and the PIECE of a cut clip that was in hand, for the same reason
         // and with the same consequence: ⌫ only drops a piece you explicitly
         // picked, so an undo that left your hand empty made the key answer
         // nothing on the way back (`LayerPick.piece`).
-        if selectedClipPieceIndex != snapshot.picked.piece {
+        // On a video the piece's ring and its rows in the panel follow a pass
+        // later, as they do after a cut (`pickPieceAPassLater`); the history
+        // below is told the whole pick now.
+        if sameClip {
+            pickPieceAPassLater(snapshot.picked.piece, tellingHistory: false)
+        } else if selectedClipPieceIndex != snapshot.picked.piece {
             selectedClipPieceIndex = snapshot.picked.piece
         }
         if multiSelectedLayerIDs != snapshot.picked.multi {

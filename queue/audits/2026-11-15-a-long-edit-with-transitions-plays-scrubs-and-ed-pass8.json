@@ -1,0 +1,26 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 8)",
+  "epic": "video-perf",
+  "summary": "Cutting a clip you have picked (B) now costs about what a trim does: the piece the cut hands you lights up one frame after the cut instead of in the same frame, and ⌫ still throws that piece away straight after. The speed walk now times every edit both with nothing picked and with a clip picked.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "switched": {},
+  "try": [
+    { "do": "Click a clip on V1 so its sections fill the panel, then press Space to play.", "shot": "2026-11-15-long-edit-pass8-after-the-edits-sc.png" },
+    { "do": "While it plays over that clip, press B." },
+    { "do": "Press Delete straight away." },
+    { "do": "Press Command Z twice." },
+    { "do": "Press Space, then B again on the same clip, and watch the ring land on the piece before the cut." }
+  ],
+  "evaluate": [
+    "Does B on a picked clip feel as quick as a trim now?",
+    "After B, does Delete still throw away the piece before the cut, with no click in between?",
+    "Is the one frame between the cut and the ring round its piece something you can see?"
+  ],
+  "rough": [
+    "Bars still not reached on the 6 minute edit, so this task stays open. Worst of three short speed walks: trim 32, blade 77 with nothing picked (its first pick fills the panel), undo 41; with a clip picked, trim 34, blade 32, undo 44, against a bar of 16 ms. Scrub 2 frames behind (bar 1); 1 dropped frame a minute (bar 0).",
+    "Picking a clip still holds the window 38 to 46 ms, and the first pick fills the panel over about 450 ms in passes of 15 to 75 ms, one per section.",
+    "The undo of a cut still costs about 40 ms against about 20 for the undo of a trim: the clip going from two pieces to one. A Time Profiler run shows it spread through SwiftUI's own work, with no view of ours above 2 ms.",
+    "Until now the speed walk charged the edit after a cut for starting play again, which made the undo after a cut look about 20 ms worse than it is. Play now gets a second to start before the next edit is timed.",
+    "No mock covers this. It is speed work, and nothing on screen changed apart from when the piece's ring appears."
+  ]
+}

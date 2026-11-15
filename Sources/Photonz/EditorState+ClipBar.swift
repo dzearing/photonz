@@ -61,7 +61,12 @@ extension EditorState {
 
     /// Pick a piece. Picking one picks its clip too, so the panel and the
     /// timeline are talking about the same thing.
-    func selectClipPiece(layerID: UUID, index: Int?) {
+    ///
+    /// `aPassLater` is for an edit that picks the piece it made (a cut, a
+    /// hold): on a video the piece's ring and its rows in the panel follow a
+    /// pass after the edit, while every command sees the pick at once
+    /// (`pickPieceAPassLater`).
+    func selectClipPiece(layerID: UUID, index: Int?, aPassLater: Bool = false) {
         if selectedLayerID != layerID { selectLayer(layerID) }
         // ...and lets go of a cut picked on the same clip, as picking a cut
         // lets go of the piece. Kept, the panel went on showing the cut's
@@ -69,7 +74,11 @@ extension EditorState {
         if selectedClipCutIndex != nil { selectedClipCutIndex = nil }
         // Written only when it moves: `@Observable` tells every reader about a
         // write whether or not the value changed.
-        if selectedClipPieceIndex != index { selectedClipPieceIndex = index }
+        if aPassLater {
+            pickPieceAPassLater(index)
+        } else if selectedClipPieceIndex != index {
+            selectedClipPieceIndex = index
+        }
     }
 
     /// Put the Trim tool down before cutting, because the two cannot both be
@@ -144,7 +153,7 @@ extension EditorState {
         if let time = document?.layer(id: id)?.time,
            let landed = document?.layer(id: id)?.clipPieces?
                .pieceIndex(atMS: documentTimeMS - time.inMS - 1) {
-            selectClipPiece(layerID: id, index: landed)
+            selectClipPiece(layerID: id, index: landed, aPassLater: true)
         }
         documentMomentChanged()
     }
@@ -203,7 +212,7 @@ extension EditorState {
         perform { $0.holdFrame(id, atMS: documentTimeMS, forMS: length, push: holdPushChoice) }
         if let time = document?.layer(id: id)?.time,
            let held = document?.layer(id: id)?.clipPieces?.pieceIndex(atMS: documentTimeMS - time.inMS) {
-            selectClipPiece(layerID: id, index: held)
+            selectClipPiece(layerID: id, index: held, aPassLater: true)
         }
         documentMomentChanged()
     }

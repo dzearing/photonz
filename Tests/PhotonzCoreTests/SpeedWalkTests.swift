@@ -267,4 +267,24 @@ struct SpeedWalkStepTests {
             #expect(throws: PlaytestScriptError.self) { try PlaytestScript.decode(Data("{\"steps\": [\(bad)]}".utf8)) }
         }
     }
+
+    @Test("A pick is an edit a walk may name, never one it makes unasked, and what follows it is counted apart")
+    func aPickIsNamedNotAssumed() throws {
+        let json = #"{"steps": [{"do": "speed", "measure": "edits", "edits": ["trim", "pick", "trim", "blade", "undo"]}]}"#
+        let script = try PlaytestScript.decode(Data(json.utf8))
+        guard case .speed(let step) = script.steps.first else {
+            Issue.record("not a speed step")
+            return
+        }
+        #expect(step.problem == nil)
+        #expect(step.edits == ["trim", "pick", "trim", "blade", "undo"])
+        // An edits step that names none makes the same six it always has:
+        // a pick changes what every edit after it acts on.
+        #expect(!PlaytestSpeedMeasure.edits.contains("pick"))
+        // The same edit with a clip held is a number of its own, so a
+        // baseline holds both and neither overwrites the other.
+        #expect(PlaytestSpeedMeasure.tallyName("trim", picked: false) == "trim")
+        #expect(PlaytestSpeedMeasure.tallyName("trim", picked: true) == "trim, picked")
+        #expect(PlaytestSpeedMeasure.tallyName("pick", picked: true) == "pick")
+    }
 }

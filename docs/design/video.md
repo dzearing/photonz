@@ -953,6 +953,29 @@ picked still holds the window 47 to 75 ms, and the undo after it 56 to 66,
 against 31 to 44 for a trim, so the extra is the piece the blade picks and
 the undo hands back, not the cut.
 
+**The piece a cut picks follows a pass later** (2026-11-15, pass 8). A cut,
+a hold and an undo that stays on the same clip pick a piece; on Next's videos
+that pick reaches the views (the ring round the piece, its rows in the panel)
+one pass after the edit, while every command reads it at once, so B then ⌫
+still throws away the piece the cut handed you
+(`EditorState.pickPieceAPassLater`: `selectedClipPieceIndex` answers the owed
+pick, `pickedPieceShown` is what views watch). With the recording picked and
+playing, the blade's longest pass went from 42 to 45 ms to 29 to 36 (one run
+44), level with a trim's 28 to 33; the undo after it from 43 to 46 to 38 to
+45. What is left in that undo's own pass, against about 20 for the undo of a
+trim, is the clip going from two pieces to one: a Time Profiler run over six
+of each showed the extra spread through SwiftUI's own graph and layout work
+with no view of ours above 2 ms. A new edit that picks something as it lands
+on a video picks it this way.
+
+The speed walk had been charging the edit after a blade for starting play
+again: the blade stops play, and the next edit was made in the same turn as
+the restart. Play now has a second to get going first (as a person presses
+Space, watches, then edits). That alone took the undo after a blade from 57 to
+61 ms to 38 to 46. Its `pick` edit picks the recording under the playhead,
+and every edit after it is counted again under its own name with ", picked"
+on the end; the short walk makes its trim, blade and undo both ways.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can
