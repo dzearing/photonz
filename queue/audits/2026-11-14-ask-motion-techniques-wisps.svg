@@ -6,32 +6,32 @@
   </defs>
   <g>
     <g clip-path="url(#clip-1)">
-      <g transform="translate(8.769 7)">
-        <g opacity="0">
-          <animate attributeName="opacity" dur="3000ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.133;0.467;1" values="0;1;0;0"/>
+      <g transform="translate(8 6)">
+        <g>
+          <animate attributeName="opacity" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.563;1" values="1;1;1"/>
           <g>
-            <animateTransform attributeName="transform" type="translate" dur="3000ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.467;1" values="0 0;-0.8 -4.8;0 0"/>
-            <path transform="translate(0 1)" d="M0.231 3 C-0.569 1.875 1.031 1.125 0.231 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <animateTransform attributeName="transform" type="translate" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.563;1" values="0 0;0 -11;0 0"/>
+            <path d="M0 4 C0 2.286 1 1.714 1 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
           </g>
         </g>
         <g opacity="0">
-          <animate attributeName="opacity" dur="3000ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.04;0.173;0.507;1" values="0;0;1;0;0"/>
+          <animate attributeName="opacity" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.085;0.469;1" values="0;1;0;0"/>
           <g>
-            <animateTransform attributeName="transform" type="translate" dur="3000ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.04;0.507;1" values="0 0;0 0;0.8 -5.6;0 0"/>
-            <path transform="translate(3 0)" d="M0.231 4 C-0.569 2.4 1.031 1.6 0.231 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <animateTransform attributeName="transform" type="translate" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.125;0.688;1" values="0 0;0 0;0 -4;0 0"/>
+            <path transform="translate(4 0)" d="M0 4 C0 2.286 1 1.714 1 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
           </g>
         </g>
         <g opacity="0">
-          <animate attributeName="opacity" dur="3000ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.08;0.213;0.547;1" values="0;0;1;0;0"/>
+          <animate attributeName="opacity" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.144;0.469;1" values="0;1;0;0"/>
           <g>
-            <animateTransform attributeName="transform" type="translate" dur="3000ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.08;0.547;1" values="0 0;0 0;-0.8 -4.8;0 0"/>
-            <path transform="translate(6 1)" d="M0.231 3 C-0.569 1.875 1.031 1.125 0.231 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <animateTransform attributeName="transform" type="translate" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.25;0.813;1" values="0 0;0 0;0 -4;0 0"/>
+            <path transform="translate(8 0)" d="M0 4 C0 2.286 1 1.714 1 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
           </g>
         </g>
       </g>
-      <path transform="translate(6.5 13)" d="M0 0 L11 0 L11 3 C11 4.657 9.657 6 8 6 L3 6 C1.343 6 0 4.657 0 3 L0 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      <path transform="translate(17.5 13.5)" d="M0 0 L1 0 C1.884 0 2.5 0.616 2.5 1.5 C2.5 2.384 1.884 3.5 1 3.5 L0 3.5" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      <path transform="translate(5.5 21)" d="M0 0 L13 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path transform="translate(5 12)" d="M0 0 L14 0 L13 6 C12.8 7.5 11.5 8 10 8 L4 8 C2.5 8 1.2 7.5 1 6 L0 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path transform="translate(18 13)" d="M1 0 C3 0 3 4 0 4" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path transform="translate(4 21)" d="M0 0 L16 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
     </g>
   </g>
 </svg>

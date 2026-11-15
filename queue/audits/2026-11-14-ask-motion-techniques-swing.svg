@@ -6,17 +6,16 @@
   </defs>
   <g>
     <g clip-path="url(#clip-1)">
-      <g transform="translate(5.5 6)">
-        <path d="M0 16 L0 0 L13 0 L13 16" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-        <path d="M0 0 L13 0" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      </g>
-      <g transform="rotate(0 6.289 14.353)">
-        <animateTransform attributeName="transform" type="rotate" dur="1800ms" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0 0 1 1;0.4 0 1 1;0.4 0 0.2 1;0 0 1 1;0 0 1 1;0.4 0 0.2 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1" keyTimes="0;0.111;0.111;0.167;0.444;0.611;0.611;0.889;0.897;0.905;0.913;0.921;0.929;0.937;0.944;0.952;0.96;0.968;0.976;0.984;0.992;1" values="0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;4 6.289 14.353;-35 6.289 14.353;-35 6.289 14.353;-35 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353;0 6.289 14.353"/>
-        <g transform="translate(6.5 6.5)">
-          <rect x="0" y="0" width="11" height="15.5" rx="1" fill="none" stroke="#1D1D1F" stroke-width="2"/>
-          <ellipse transform="translate(8 7)" cx="1" cy="1" rx="1" ry="1" fill="none" stroke="#1D1D1F" stroke-width="2"/>
+      <rect transform="translate(4.5 3.5)" x="0" y="0" width="15" height="18.5" rx="1" fill="none" stroke="#1D1D1F" stroke-width="2"/>
+      <rect transform="translate(6.5 5)" x="0" y="0" width="11" height="15" fill="#1D1D1F"/>
+      <g transform="rotate(0 6.345 12.69)">
+        <animateTransform attributeName="transform" type="rotate" dur="1400ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 1 1;0 0 0.2 1;0 0 0.2 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1" keyTimes="0;0.107;0.393;0.536;0.556;0.577;0.597;0.617;0.638;0.658;0.679;0.699;0.719;0.74;0.76;0.781;0.801;0.821;0.834;0.847;0.86;0.872;0.885;0.898;0.911;0.923;0.936;0.949;0.962;0.974;0.987;1" values="0 6.345 12.69;3 6.345 12.69;-22 6.345 12.69;-22 6.345 12.69;-15.219 6.345 12.69;-9.949 6.345 12.69;-5.683 6.345 12.69;-2.587 6.345 12.69;-0.31 6.345 12.69;1.117 6.345 12.69;1.929 6.345 12.69;2.198 6.345 12.69;2.069 6.345 12.69;1.665 6.345 12.69;1.14 6.345 12.69;0.588 6.345 12.69;0.174 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69;0 6.345 12.69"/>
+        <g transform="translate(6.5 5)">
+          <rect x="0" y="0" width="11" height="15" fill="#1D1D1F"/>
+          <ellipse transform="translate(7 6.5)" cx="1.25" cy="1.25" rx="1.25" ry="1.25" fill="#FFFFFF"/>
         </g>
       </g>
+      <path transform="translate(4.5 7)" d="M0 0 L0 11.5" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
     </g>
   </g>
 </svg>

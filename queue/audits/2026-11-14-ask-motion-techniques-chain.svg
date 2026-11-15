@@ -6,19 +6,10 @@
   </defs>
   <g>
     <g clip-path="url(#clip-1)">
-      <path transform="translate(5 4)" d="M0 0 L0 18" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      <ellipse transform="translate(4 2)" cx="1" cy="1" rx="1" ry="1" fill="#1D1D1F"/>
-      <g transform="rotate(0 5 8)">
-        <animateTransform attributeName="transform" type="rotate" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.188;0.563;1" values="0 5 8;-4 5 8;0 5 8;0 5 8"/>
-        <path transform="translate(5 5)" d="M0 0 L4 0 L4 6 L0 6 L0 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      </g>
-      <g transform="rotate(0 9 8)">
-        <animateTransform attributeName="transform" type="rotate" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.238;0.613;1" values="0 9 8;-6 9 8;0 9 8;0 9 8"/>
-        <path transform="translate(9 5)" d="M0 0 L4 0 L4 6 L0 6 L0 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      </g>
-      <g transform="rotate(0 13 8)">
-        <animateTransform attributeName="transform" type="rotate" dur="1600ms" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.288;0.663;1" values="0 13 8;-8 13 8;0 13 8;0 13 8"/>
-        <path transform="translate(13 5)" d="M0 0 L4 0 L4 6 L0 6 L0 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path transform="translate(6 3)" d="M0 0 L0 18" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <g transform="rotate(0 6 7)">
+        <animateTransform attributeName="transform" type="rotate" dur="2000ms" repeatCount="indefinite" calcMode="spline" keySplines="0 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" keyTimes="0;0.25;0.5;0.75;1" values="0 6 7;-6 6 7;6 6 7;-6 6 7;0 6 7"/>
+        <path transform="translate(6 4)" d="M0 0 L12 0 L9 3 L12 6 L0 6 L0 0 Z" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
       </g>
     </g>
   </g>
