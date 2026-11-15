@@ -7,8 +7,12 @@ import Foundation
 /// twenty passes on one story, "i want it to be able to draw a thing and
 /// animate something about it. I want it to have techniques for doing that."
 ///
-/// The model names the technique it chose for each moving part in its design
-/// (`AskMotion.designAsk`), so a plan can be read back as choices.
+/// Not in the model's prompt yet. Wired in four ways on 2026-11-14 (the whole
+/// catalogue in the plan; only the techniques the design named; with the look
+/// and a pivot check; with fold and turn told apart), the sealed motion set read
+/// 35.8, 37.3, 34.1 and 32.9 against 38.6 without it, so each was taken out
+/// (docs/design/ask.md, "The techniques it picks from"). `chosen` and
+/// `howToKey` are what the second way used.
 public enum AskMotionTechnique: String, CaseIterable, Sendable {
     case turn, fold, squash, throwArc, shake, pulse, sway, spin, drawsOn, pop, entersOrLeaves, restsBetweenLaps, followThrough
 

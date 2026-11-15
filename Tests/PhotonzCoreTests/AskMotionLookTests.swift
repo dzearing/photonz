@@ -25,19 +25,6 @@ struct AskMotionLookTests {
         return talk
     }
 
-    @Test("The look asks what a person judges in any moving icon, not only a story's beats: the asked part moves the asked way, nothing else moves, a turn stays on its joint, shapes hold, the loop does not jump")
-    func judgedLikeAPerson() {
-        let asked = AskMotionLook.question
-        #expect(asked.contains("the part the words name"))
-        #expect(asked.contains("a part the words did not ask to move"))
-        #expect(asked.contains("comes away from what it is fixed to"))
-        #expect(asked.contains("warps"))
-        #expect(asked.contains("jumps from the last frame to the first"))
-        // Still nothing about any subject.
-        let words = Set(asked.lowercased().split { !$0.isLetter }.map(String.init))
-        for subject in AskMotionTechniquesTests.subjects { #expect(!words.contains(subject), "\(subject)") }
-    }
-
     @Test("The look sends the frames and the request to the planning model, with no tools and no thinking")
     func body() {
         let png = Data([1, 2, 3])

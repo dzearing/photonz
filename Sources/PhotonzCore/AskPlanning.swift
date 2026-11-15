@@ -659,7 +659,7 @@ public struct AskConversation: Sendable {
         ]
         if icon, let iconDesign {
             messages.append(["role": "assistant", "content": .string(iconDesign)])
-            messages.append(["role": "user", "content": .string(drawsMotion ? AskMotion.drawTheDesign(iconDesign) : AskIcon.drawTheDesign)])
+            messages.append(["role": "user", "content": .string(drawsMotion ? AskMotion.drawTheDesign : AskIcon.drawTheDesign)])
         }
         learnNames(components)
     }

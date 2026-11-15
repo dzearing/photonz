@@ -53,38 +53,22 @@ import Testing
 
     @Test("No technique names a subject: each is said by parts, pivots, paths and time")
     func noSubject() {
-        let told = (AskMotionTechnique.catalogue + AskMotion.drawRules + AskMotion.designAsk + AskMotion.keyRules).lowercased()
+        let told = AskMotionTechnique.catalogue.lowercased()
         let words = Set(told.split { !$0.isLetter }.map(String.init))
         for subject in Self.subjects {
             #expect(!words.contains(subject), "\(subject)")
         }
     }
 
-    @Test("The whole catalogue is read where a technique is chosen: the design, and keys on a picture that has no design")
-    func taught() {
-        for technique in AskMotionTechnique.allCases {
-            #expect(AskMotion.keyRules.contains("\(technique.name): "), "\(technique)")
-        }
-        let body = AskMotion.designBody(model: "m", request: "make an animated icon of a thing")
-        let system = body["messages"]?.arrayValue?.first?["content"]?.stringValue ?? ""
-        #expect(system.contains(AskMotionTechnique.catalogue))
-        // The plan that draws a design reads only what the design chose.
-        #expect(!AskMotion.drawRules.contains(AskMotionTechnique.catalogue))
-    }
-
-    @Test("The plan is told how to key the techniques its design named, and only those")
+    @Test("A design's techniques are found by name, and only those are told how to key")
     func chosenOnly() {
         let design = "3) arm: Turn on a pivot, at its top end; marks: pop in or out, then follow-through and stagger."
         #expect(AskMotionTechnique.chosen(in: design) == [.turn, .pop, .followThrough])
-        let told = AskMotion.drawTheDesign(design)
-        #expect(told.hasPrefix(AskMotion.drawTheDesign))
+        let told = AskMotionTechnique.howToKey(AskMotionTechnique.chosen(in: design)) ?? ""
         #expect(told.contains("- turn on a pivot: \(AskMotionTechnique.turn.does)"))
         #expect(told.contains("- pop in or out: "))
         #expect(!told.contains("spin or orbit"))
-        // A design that names none is drawn as before.
-        #expect(AskMotion.drawTheDesign("Parts and beats.") == AskMotion.drawTheDesign)
-        let talk = AskConversation(request: "make an animated icon of a thing", documentRead: #"{"kind":"picture","canvas":{"width":512,"height":512}}"#, iconDesign: design)
-        #expect(talk.messages.last?["content"]?.stringValue == told)
+        #expect(AskMotionTechnique.howToKey(AskMotionTechnique.chosen(in: "Parts and beats.")) == nil)
     }
 
     @Test("A technique named in a model's own words is still found, and a word inside another word is not")
@@ -92,13 +76,6 @@ import Testing
         #expect(AskMotionTechnique.chosen(in: "the blades spin; the body buzzes? no: buzz") == [.shake, .spin])
         #expect(AskMotionTechnique.chosen(in: "it breathes slowly, breathing in") == [.pulse])
         #expect(AskMotionTechnique.chosen(in: "spinning and popping") == [])
-    }
-
-    @Test("The design says which technique it chose for which part, and combines them when the request asks for more than one thing")
-    func designNamesTheTechnique() {
-        #expect(AskMotion.designAsk.contains("technique"))
-        #expect(AskMotion.designAsk.contains("for each part that moves"))
-        #expect(AskMotion.designAsk.contains("more than one"))
     }
 
     @Test("What opens or shuts on a hinge along its edge folds; a turn is only for a part fixed at one point, swinging flat across the picture")

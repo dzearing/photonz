@@ -1389,25 +1389,22 @@ the can and sank back); the model repeated its words and planned worse.
 Twenty passes on one story taught Ask a great deal about that story and little
 about motion. The user, 2026-11-14: "i want it to be able to draw
 a thing and animate something about it. I want it to have techniques for doing
-that." So the model now reads a catalogue of general techniques
-(`AskMotionTechnique`, one line each), and its design names, for each part that
-moves, the technique it chose, as "part: technique, its pivot or its path", two
-or more when the request asks for more than one thing (`AskMotion.designAsk`).
-The design step reads the whole catalogue; the plan that draws the design reads
-only the lines of the techniques it named (`AskMotion.drawTheDesign(_:)`,
-`AskMotionTechnique.chosen`), and keys on a picture, which have no design, read
-it whole (`AskMotion.keyRules`). Read whole by the plan too (pass 1), the
-catalogue lengthened plans and broke three times as many tool calls, and the
-sealed set read 35.8 against 38.6.
+that." So there is now a written catalogue of general techniques, below and in
+code (`AskMotionTechnique`, tested), each said by what it does to parts, pivots,
+paths and time.
 
-Two checks go with it, both true of any subject. The look before a motion lands
-(`AskMotionLook.question`) asks what a person judges in any moving icon, not only
-a story's beats: the part the words name moves the way they say, nothing they did
-not name moves, a turn stays on its joint, a part that should move as one piece
-keeps its shape, the lap does not jump. And a part that swings (less than a whole
-turn) about a point on nothing drawn, well clear of itself and every other part,
-is sent back to turn on its joint (`AskMotionCheck.turnsAboutNothing`): an orbit,
-a whole turn, may go round a centre it never touches.
+**It is not in Ask's prompt.** Four ways of wiring it in were measured on a
+sealed set of sixteen everyday requests, and every one read lower than Ask
+without it, so each was taken out (the table below). On 2026-11-14 the motion
+prompt, the look and its checks are as they were before this work. The tried
+ways, in case a later pass wants them: the whole catalogue in the plan's rules;
+the design naming a technique per part ("part: technique, its pivot or its
+path") with the plan told only how to key those (`AskMotionTechnique.chosen`,
+`howToKey`); a look that asks what a person judges in any motion (the named
+part moves as asked, nothing else moves, a turn stays on its joint, shapes hold,
+no jump at the loop) and a send-back for a swing about a point on nothing drawn;
+and fold told apart from turn ("anything that opens or shuts on a hinge along
+its edge is a fold").
 
 Each technique is said by what it does to parts, pivots, paths and time, never by
 a subject. Every key below is one an animated SVG keeps (`MotionSVG.carried`,
@@ -1450,13 +1447,17 @@ between two runs of the same code):
 | --- | --- | --- |
 | Baseline | Before any of this (93c0cff97) | 38.6 |
 | 1 | The whole catalogue in the plan's rules, the design names a technique per part | 35.8, three times the broken tool calls; its shape taken out |
-| 2 | The plan reads only the techniques the design chose; the look asks what a person judges in any motion; no swing about empty space | 37.3, kept as the form of the catalogue the task asks for |
+| 2 | The plan reads only the techniques the design chose; the look asks what a person judges in any motion; no swing about empty space | 37.3; on its code the six climb stories read 49.4 against 61.0 and 57.9 before. Taken out |
 | 3 | The look sends a plan back only for a beat not seen | 34.1, reverted: the re-plan after a look helps on balance, even though the look sends nearly every plan back |
+| 4 | Pass 2, with fold and turn told apart | 32.9, taken out with pass 2 |
 
-So the catalogue is in, and it has not yet moved the score: on this model the
-drawing and the plan, not the choice of technique, are what the judge marks down
-(its lines on the baseline: clean 4.6, designed 4, did what was asked 4, loops
-6.4).
+So the catalogue has not moved the score on this model. What the judge marks
+down is the drawing and the plan more than the choice of technique (its lines on
+the baseline: clean 4.6, designed 4, did what was asked 4, loops 6.4). Two things
+the traces showed that a later pass can take up: the look ends on All good almost
+never, so it sends nearly every plan back (sending back only a missed beat read
+lower, so the re-plan earns its time); and a burst shorter than the look's frame
+spacing (a 0.2 s buzz in a 2 s lap) reads as still to the look and to the judge.
 
 #### Which of the story passes' rules are general
 
