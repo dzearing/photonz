@@ -101,6 +101,13 @@ import Testing
         #expect(AskMotion.designAsk.contains("more than one"))
     }
 
+    @Test("What opens or shuts on a hinge along its edge folds; a turn is only for a part fixed at one point, swinging flat across the picture")
+    func foldOrTurn() {
+        #expect(AskMotionTechnique.fold.does.contains("anything that opens or shuts on a hinge along its edge is a fold"))
+        #expect(AskMotionTechnique.turn.does.contains("flat across the picture"))
+        #expect(AskMotionTechnique.turn.does.contains("never for a part that opens or shuts on a hinge along its edge"))
+    }
+
     @Test("Squash and stretch is said with the keys that can do it: a fold squeezes one way, scale makes up the bulk")
     func squashIsAFoldAndAScale() {
         let squash = AskMotionTechnique.squash

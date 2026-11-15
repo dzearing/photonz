@@ -36,9 +36,9 @@ public enum AskMotionTechnique: String, CaseIterable, Sendable {
     public var does: String {
         switch self {
         case .turn:
-            "a part fixed at one point swings about it, as far as it could really go and back. rotation, pivot ON the joint at the part's end (never its middle); Ease in out, 300 to 600 ms a swing; lifting is negative rotation when the pivot is at the part's left end, positive at its right end."
+            "a part fixed at one point swings about it flat across the picture, as far as it could really go and back: a part that hangs, a stick or arm seen side on. rotation, pivot ON the joint at the part's end (never its middle); Ease in out, 300 to 600 ms a swing; lifting is negative rotation when the pivot is at the part's left end, positive at its right end. It is never for a part that opens or shuts on a hinge along its edge: that is fold over an edge."
         case .fold:
-            "a flat part hinged along a whole straight edge folds over that edge. rotationX for a level edge, rotationY for an upright one, pivot the middle of that edge, 180 lying open the other side; never rotation, which turns it flat like a clock hand."
+            "a flat part hinged along a whole straight edge, seen from the front, folds over that edge as it opens or shuts: anything that opens or shuts on a hinge along its edge is a fold. rotationX for a level edge (it tips toward or away from you), rotationY for an upright one (it swings toward you like a page), pivot the middle of that edge, 180 lying open the other side; never rotation, which turns it flat like a clock hand."
         case .squash:
             "a soft or springy part keeps its bulk: lower and wider as it lands or presses, taller and narrower as it leaps or pulls, 80 to 150 ms each, then back on Ease out back. Squash: rotationX 30 to 40 with pivot on the middle of its bottom edge, and scale 106 to 110. Stretch: rotationY 25 to 35 with pivot on its upright middle line, and scale 108 to 115."
         case .throwArc:
