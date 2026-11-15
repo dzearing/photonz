@@ -47,7 +47,12 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
+  "status": "resolved",
   "created": "2026-11-15T19:34:12.014Z",
-  "shot": "2026-11-15-ask-motion-next-step-door-marked.png"
+  "shot": "2026-11-15-ask-motion-next-step-door-marked.png",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-11-15T22:51:50.717Z"
+  }
 }

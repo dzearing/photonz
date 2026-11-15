@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-15T21:57:29.887Z",
+  "updated": "2026-11-15T23:01:49.647Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -258,6 +258,34 @@
     {
       "t": "2026-11-15T21:57:29.882Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-15T23:01:23.770Z",
+      "note": "Pass 8 landed 45c1b849e: a cut on a picked clip costs what a trim does (blade picked 42-45 -> 29-36 ms) and the speed walk now times edits both with nothing picked and with a clip picked, without charging an edit for restarting play. Bars not reached (edits ~32-44 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute). Stays open; pass 9 leads above."
+    },
+    {
+      "t": "2026-11-15T23:01:35.276Z",
+      "note": "Pass 8 measured first (6 min edit, playing, new edits walk): the undo after a blade read 57-61 ms only because the speed walk restarted play in the same turn as the undo (a blade stops play). Play now gets 1 s first; that alone took it to 38-46. Speed walk gained a 'pick' edit; edits after it are kept as '<edit>, picked' (PlaytestSpeedMeasure.tallyName, SpeedWalkStepTests). Picked numbers before the fix: trim 31-33, blade 42-45, undo after blade 43-46, pick 38-46."
+    },
+    {
+      "t": "2026-11-15T23:01:35.350Z",
+      "note": "Fix (45c1b849e): on Next's videos the piece a cut, a hold or a same-clip undo picks reaches the views a run loop pass later (EditorState.pickPieceAPassLater; selectedClipPieceIndex is now computed: it returns the owed pick to every command, and pickedPieceShown is what views watch), so B then Delete still takes the right piece. Blade picked 42-45 -> 29-36 (one run 44), level with trim; undo after it 43-46 -> 38-45. New short-6 baseline, worst of 3: trim 32, blade 77, undo 41; pick 46, trim picked 34, blade picked 32, undo picked 44. test.sh green (one PieceCopyWriter flake on the first run, passed alone and on the rerun, logged on find-out-why-the-cut-export-test-fails-again-in); 15 cut/hold/undo/scrub/key walks ok, an-editing-session and keyframe-anything included. Written in docs/design/video.md 8f. Audit queue/audits/2026-11-15-a-long-edit-with-transitions-plays-scrubs-and-ed-pass8.json."
+    },
+    {
+      "t": "2026-11-15T23:01:35.426Z",
+      "note": "Did NOT pay: what is left in the undo of a cut (about 40 ms against about 20 for the undo of a trim) is the clip going from 2 pieces to 1. A Time Profiler run (xctrace --attach over 6 of each; main-thread bursts split at 1.6 ms gaps) shows the extra 12 ms spread through AttributeGraph update and layout (ScrollView/padding sizeThatFits) with no app body above 2 ms. Main was red on the TextRevealUnclipped CI flake (Metal command buffer error on the CI GPU), logged on find-out-why-the-legibility-check-once-read-the."
+    },
+    {
+      "t": "2026-11-15T23:01:35.501Z",
+      "note": "Next for pass 9: (a) a pick itself holds the window 38-46 ms, and the first pick fills the panel over ~450 ms in passes of 15-75 ms, one per section (Appearance and Effects the largest); that tail is the blade-with-nothing-picked 77. (b) the undo of a cut, 2 pieces to 1: try keeping a cut clip's bar views stable across a piece count change. (c) Bars not reached: edits <=16 ms, scrub within 1 frame (2), no dropped frames (1/min). Stays open."
+    },
+    {
+      "t": "2026-11-15T23:01:35.576Z",
+      "note": "Pass 8 landed 45c1b849e: a cut on a picked clip costs what a trim does (blade picked 42-45 -> 29-36 ms), and the speed walk now times edits both with nothing picked and with a clip picked, without charging an edit for restarting play. Bars not reached (edits ~32-44 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute). Stays open; pass 9 leads above."
+    },
+    {
+      "t": "2026-11-15T23:01:49.646Z",
+      "note": "Pass 8 landed 45c1b849e (blade on a picked clip 42-45 -> 29-36 ms; speed walk times edits picked and unpicked, no longer charges an edit for restarting play). Bars not reached: edits 32-44 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute. Pass 9 leads in the log."
     }
   ],
   "started": "2026-11-15T21:57:29.881Z",
