@@ -843,15 +843,19 @@ The rule, for any view added to the editor window:
    video played with a clip picked.
 8. **A busy lane paints its plain clips and cuts; a clip somebody is working
    on is its full view again.** A lane builds only what is in sight plus half
-   a window each side (`TimelineSight`). When 24 or more clips are in sight
-   (`TimelinePaint.busyLane`) it paints the plain ones and the cuts between
+   a window each side (`TimelineSight`). When 24 or more clips are in sight,
+   or its track holds 24 or more in all (`TimelinePaint.busyLane`, so a long
+   track paints at every zoom), it paints the plain ones and the cuts between
    them in two Canvas layers (`TimelinePaintedClips`, `TimelinePaintedCuts`),
    because a bar per clip was the whole cost of zooming the hour-long edit
-   (570 ms a frame built, 50 painted, 2026-11-14). A clip goes back to its full
+   (570 ms a frame built, 50 painted, 2026-11-14). Plain is a picture clip
+   (pictures along it included, read from `ClipFilmstripFrames` and faded in
+   as they land) or a sound of its own on the panel's ground, with its name
+   tag (2026-11-15). A clip goes back to its full
    view when it is picked, in a hand, being trimmed or renamed, or under the
    pointer, and when it carries anything the painting does not draw (pieces,
-   a still, a badge, keys, a drift, level points, a sound badge, pictures
-   along it); a cut goes back when it is picked, under a grip, under the
+   a still, a badge, keys, a drift, level points, a sound badge); a cut goes
+   back when it is picked, under a grip, under the
    pointer, holding on black or white, or one of its clips is in a hand. So:
    - **Everything a clip bar shows is drawn twice**: once in `ClipPiecesBar`
      and once in the painting. A new thing on a clip either is drawn in
@@ -863,6 +867,12 @@ The rule, for any view added to the editor window:
      scrolls or zooms is over something new with no move to say so, and a
      click there must reach the cut or clip now under it
      (`TimelineTrackRow.readPointer`, `a-cut-slid-under-a-still-pointer-walk`).
+   - **The painting is laid on the drawn stretch and slid, not painted
+     again, by a scroll** (`TimelinePaint.Canvas`): it covers every clip and
+     cut on `timelineDrawnMS`, measured from where that starts, and the lane
+     offsets it to a whole pixel. Only a name that can be pushed along by the
+     lane's left edge in this stretch (`TimelinePaint.nameFollowsTheEdge`) is
+     drawn against the window, by `TimelinePaintedNames`, every frame.
    - A painted clip takes a click, a drag and a right click of its own
      (`TimelinePaintedHands`), for the click that comes with no pointer move
      first; a grip, a fade diamond or the level line is reached only on the

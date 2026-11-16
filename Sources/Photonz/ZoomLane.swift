@@ -222,7 +222,10 @@ private struct ZoomBarsView: View {
                 NSCursor.arrow.set()
             }
         }
-        .contextMenu { menu }
+        // Handed the bars this build already worked out: the menu's builder
+        // runs with every build, and working them out again for it was a
+        // third of a Zoom lane's cost on a zoom of the hour-long edit.
+        .contextMenu { menu(bars) }
         .help(hovered.map { ZoomLane.label($0.zoom) } ?? "")
         .clipped()
         .accessibilityElement()
@@ -301,8 +304,8 @@ private struct ZoomBarsView: View {
 
     /// The bar a right click is about: the one it landed on, else the one
     /// under the pointer, else the picked one, else the only one.
-    private var menuBar: ZoomLane.Bar? {
-        if let pressed = rightPressedBar { return pressed }
+    private func menuBar(_ bars: [ZoomLane.Bar]) -> ZoomLane.Bar? {
+        if let pressed = rightPressedBar(bars) { return pressed }
         if let hovered { return hovered }
         let picked = editorState.selectedZoom?.layerID == layerID ? editorState.selectedZoom?.zoomID : nil
         return bars.first { $0.zoom.id == picked } ?? (bars.count == 1 ? bars.first : nil)
@@ -310,17 +313,17 @@ private struct ZoomBarsView: View {
 
     /// The bar under the moment a right click on the tracks just landed on
     /// (`EditorState+TimelinePointing`).
-    private var rightPressedBar: ZoomLane.Bar? {
+    private func rightPressedBar(_ bars: [ZoomLane.Bar]) -> ZoomLane.Bar? {
         guard let ms = editorState.timelineRightPressMS else { return nil }
         let x = laneWidth * editorState.motionStripRuler.fraction(ofMS: Double(ms))
         return ZoomLane.bar(at: x, in: bars)
     }
 
-    @ViewBuilder private var menu: some View {
+    @ViewBuilder private func menu(_ bars: [ZoomLane.Bar]) -> some View {
         // Built afresh for every right click.
         let _ = editorState.timelineRightPresses
-        let pressed = rightPressedBar
-        if let bar = pressed ?? menuBar {
+        let pressed = rightPressedBar(bars)
+        if let bar = pressed ?? menuBar(bars) {
             let ref = ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id)
             // Only a bar the click landed on is picked by it.
             let _ = pressed != nil ? editorState.timelineMenuBuilt(for: .zoom(ref)) : ()

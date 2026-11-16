@@ -28,6 +28,15 @@ extension EditorState {
         return layer.clickMarks(recorded: recordedPointerTrack(ofClip: id)?.clicks)
     }
 
+    /// Whether `clickMarks(ofClip:)` has anything in it, without making the
+    /// marks: the timeline asks it of every clip in sight.
+    func hasClickMarks(ofClip id: UUID) -> Bool {
+        guard let layer = document?.layer(id: id) else { return false }
+        if layer.addedClicks?.isEmpty == false { return true }
+        if let recorded = layer.clickEffect?.recorded { return !recorded.isEmpty }
+        return recordedPointerTrack(ofClip: id)?.clicks.isEmpty == false
+    }
+
     /// Whether the clip has a click an effect could be drawn at.
     func hasClicksToShow(onClip id: UUID) -> Bool {
         guard let layer = document?.layer(id: id) else { return false }

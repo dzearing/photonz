@@ -410,12 +410,22 @@ final class SpeedWalkProbe {
 
         // How many clip bars each frame built, per measure, for the line.
         var barsPerFrame: [String] = []
+        // A zoom's frames by how far in it was, so a slow stretch says where
+        // it is: the median frame at each doubling of the zoom.
+        var byZoom: [String] = []
         func film(_ label: String, moves: Int, _ move: () -> Bool) async -> SpeedWalk.FrameTimes {
             ViewBuildMeter.shared.reset()
             var at: [Double] = []
+            var octaves: [Int: [Double]] = [:]
             defer {
                 let built = ViewBuildMeter.shared.count(.clipBar)
                 barsPerFrame.append(String(format: "%@ %.0f", label, Double(built) / Double(max(1, at.count - 1))))
+                if octaves.count > 1 {
+                    byZoom.append(label + " " + octaves.keys.sorted().map { octave in
+                        let times = (octaves[octave] ?? []).sorted()
+                        return String(format: "%dx %.0fms", 1 << octave, times[times.count / 2])
+                    }.joined(separator: " "))
+                }
             }
             let start = CACurrentMediaTime()
             await frames.next()
@@ -423,8 +433,11 @@ final class SpeedWalkProbe {
             for _ in 0..<moves {
                 // A timeline that cannot keep up is stopped at twenty seconds.
                 guard CACurrentMediaTime() - start < 20, move() else { break }
+                let octave = max(0, Int(log2(max(1, editor.timelineZoom.scale)).rounded(.down)))
                 await frames.next()
-                at.append((CACurrentMediaTime() - start) * 1000)
+                let now = (CACurrentMediaTime() - start) * 1000
+                octaves[octave, default: []].append(now - (at.last ?? 0))
+                at.append(now)
             }
             return SpeedWalk.frameTimes(label, refreshesAtMS: at, refreshMS: frames.refreshInterval * 1000)
         }
@@ -455,7 +468,8 @@ final class SpeedWalkProbe {
         editor.fitTimeline()
         run.timeline = [zoomIn, zoomOut, scroll]
         return "views at fit: \(viewsAtFit); views zoomed in: \(viewsZoomed); clip bars built a frame: "
-            + barsPerFrame.joined(separator: ", ") + "; " + [zoomIn, zoomOut, scroll].map {
+            + barsPerFrame.joined(separator: ", ") + "; by zoom: " + byZoom.joined(separator: "; ") + "; "
+            + [zoomIn, zoomOut, scroll].map {
             String(format: "%@: %d frames, median %.1fms, p95 %.1fms, worst %.0fms, %d late against %.1fms",
                    $0.label, $0.frames, $0.medianMS, $0.p95MS, $0.worstMS, $0.late, $0.refreshMS)
         }.joined(separator: "; ")

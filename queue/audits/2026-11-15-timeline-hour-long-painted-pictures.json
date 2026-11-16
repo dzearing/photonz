@@ -1,0 +1,55 @@
+{
+  "feature": "The timeline of an hour-long edit: clips with pictures and the Music track are painted too",
+  "epic": "video-perf",
+  "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
+  "summary": "On a long edit, clips that show pictures along them and sounds of their own (the Music track) are now painted as one layer per track instead of a view each, and a scroll slides that layer instead of painting it again. Zooming the hour-long edit near the whole-hour view went from about 92 ms a frame to 47, and a fast scroll from 27 ms to 17. The timeline looks the same.",
+  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60 (the 6 minute one shows the same pictures).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 6 minute reference edit, press the zoom-in key four times so about 40 seconds show: the clips on V1 show their pictures, names in dark pills.",
+      "shot": "2026-11-15-painted-pictures-after-sc.png"
+    },
+    {
+      "do": "Compare with the same view on the build before this change: pictures, names, bands and waveforms in the same places.",
+      "shot": "2026-11-15-painted-pictures-before-sc.png"
+    },
+    {
+      "do": "Swipe along the timeline with two fingers: the pictures slide with their clips, and new ones fade in where you stop.",
+      "shot": "2026-11-15-painted-pictures-along-sc.png"
+    },
+    {
+      "do": "Open the 60 minute edit, scroll the tracks down to Music, and pinch the timeline in and out near the whole-hour view."
+    },
+    {
+      "do": "Rest the pointer on a Music clip, then on a V1 clip with pictures: each becomes its full bar under the pointer, grips and fade diamonds live."
+    },
+    {
+      "do": "Click a Music clip without moving the pointer first, then drag it along: it picks and moves like any clip."
+    },
+    {
+      "do": "Press Fit: the whole edit, exactly as before.",
+      "shot": "2026-11-15-painted-pictures-fit-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Does pinching the hour-long edit near the whole-hour view feel noticeably smoother than before?",
+    "When you stop a fast swipe, do the pictures along the clips fill in quickly enough?",
+    "Does the Music track look exactly as it did (name tag, waveform, level line, fade diamonds)?",
+    "Does a picture fading in as it lands look right, or would you rather it simply appeared?"
+  ],
+  "measured": [
+    "Speed walk timeline measure on the 60 minute reference edit (524 clips: 378 on V1, 70 on V2, 53 Music, 22 titles), markers down, 120 Hz. Before is 55839469c, measured today on the same Mac.",
+    "Zoom in: median 41.7 ms a frame before (p95 203), 24.9 after (p95 67). Zoom out: 42.3 (p95 221) before, 24.8 (p95 67) after.",
+    "By zoom (new in the speed walk's line, the median frame at each doubling): near the whole-hour view 1x 92 to 110 ms before, 43 to 47 after; 8x 66 to 75 before, 47 to 51 after; 256x and further in 17 before and after (14 to 17).",
+    "Scroll end to end in three seconds, half a minute on screen: median 41.5 ms (p95 50) before, 17.0 (p95 33) after.",
+    "Edits (longest main thread pass): trim 108 to 64 ms, move 102 to 49, blade 162 to 100, undo 122 to 76, transition 174 to 117, title 84 to 42.",
+    "Playing untouched: 104 to 106 pictures in 3 s, no clip bar built per picture, before and after."
+  ],
+  "rough": [
+    "The bars of the task are still not reached: 8.3 ms a frame for zoom and scroll, 16 ms for an edit. Measured by taking parts out on a throwaway build: what is left near the whole-hour view is mostly the 22 titles (a quiet track, still a view each) and the cuts; all of them out, a zoom frame there is 19 ms and a scroll frame 8.3.",
+    "A painted picture that lands fades in over a fifth of a second like a full bar's, but the name tag over a strip that comes in with a zoom does not fade with it.",
+    "Pixel check against the build before: Fit is identical; zoomed in, about 1 percent of the timeline's pixels differ, at the edges of pictures and the antialiasing of the names. On the older build several pictures had not landed after 3 s where the new one shows them all.",
+    "Found and fixed on the way: a busy lane's sound halves each made an empty item in a list, every clip in sight carried a click tick view with no clicks, and finding whether a clip carries its sound went through the whole track for every clip; each cost a few ms near the whole-hour view."
+  ]
+}

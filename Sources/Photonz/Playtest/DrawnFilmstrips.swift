@@ -10,7 +10,7 @@ import Foundation
 final class DrawnFilmstrips {
     static let shared = DrawnFilmstrips()
 
-    struct Strip {
+    struct Strip: Equatable {
         let keys: [ClipFilmstripFrames.Key]
         let opacity: Double
     }
