@@ -59,3 +59,25 @@ func readingALatePass<Content>(_ build: () -> Content) -> Content {
 func buildingALatePass<Content: View>(@ViewBuilder _ build: () -> Content) -> Content {
     readingALatePass(build)
 }
+
+/// What a clip's bar on the timeline is built inside: every read of the
+/// document in `build` watches only that clip's own `ClipBarWatch`, which
+/// moves on a pass late with the rest of the timeline (`readingALatePass`)
+/// but only for an edit that changed what the bar draws
+/// (`PhotonzDocument.clipBarsChange`). Every bar in sight had been built
+/// again for every edit to any clip: 18 to 20 of them in the timeline's pass
+/// after a trim on the 6 minute reference edit, about 6 ms of its 18
+/// (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 10).
+@MainActor
+func readingForAClipBar<Content>(_ id: UUID, _ build: () -> Content) -> Content {
+    let was = EditorState.readsForClipBar
+    EditorState.readsForClipBar = id
+    defer { EditorState.readsForClipBar = was }
+    return readingALatePass(build)
+}
+
+/// What a clip bar's reads of the document watch (`readingForAClipBar`).
+@Observable @MainActor
+final class ClipBarWatch {
+    var revision = 0
+}

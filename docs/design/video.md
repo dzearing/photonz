@@ -1041,6 +1041,28 @@ the document through `latePassRevision`; a clip bar handed its own values by
 its lane, as rule 7 asks of every view per clip, is what would take that pass
 down next.
 
+**Each clip bar watches its own clip** (2026-11-16, pass 10). A clip bar
+(`ClipPiecesBar`, its pieces, bands and grips) is built inside
+`readingForAClipBar(layerID)`: a read of the document there watches that
+clip's own `ClipBarWatch`, not `latePassRevision`. The watch moves on in the
+same late pass as the rest of the timeline, but only when the edit changed
+what the bar draws (`PhotonzDocument.clipBarsChange(since:)`, tested in
+`ClipBarsChangeTests`): the clip's own values, plus the clips on its track it
+touched before or touches now, since an edit point there may have come or
+gone. Anything else (a clip added, taken away or reordered, a track, a hold
+that pushes the picture alone, which puts drift marks on other bars, anything
+outside the layers) moves every watch. A temporary build with the bars
+watching nothing showed the size of it first: on the 6 minute reference edit
+the timeline's pass after a trim went from 18 ms to 12 with 18 to 20 bars no
+longer built. Shipped, a trim's longest pass went from 18 ms to 13, with a clip
+picked from 18 to 13, and that pass builds 1 or 2 clip bars where it built 18
+to 20.
+
+So, for rule 7: **a view per clip that has to read the document reads it
+inside its clip's scope**, so the document it watches is that clip's, and a
+new thing a bar draws from outside its own clip is added to
+`clipBarsChange` (and its test) in the same change, or it will go stale.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

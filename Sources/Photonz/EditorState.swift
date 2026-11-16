@@ -53,6 +53,46 @@ final class EditorState {
     private(set) var latePassRevision = 0
     /// True while `readingALatePass` runs.
     static var readsALatePass = false
+    /// The clip whose bar is being built (`readingForAClipBar`): a read of
+    /// the document then watches that clip's own `ClipBarWatch` instead of
+    /// `latePassRevision`, so an edit builds again only the bars it changed.
+    static var readsForClipBar: UUID?
+    /// One per clip whose bar has been drawn, moved on with
+    /// `latePassRevision` when the edit changed what that bar draws
+    /// (`ClipBarsChange`). Kept apart from the editor's own properties so a
+    /// write to one wakes only that clip's bar.
+    @ObservationIgnored private var clipBarWatches: [UUID: ClipBarWatch] = [:]
+    /// The document the clip bars' watches last answered for.
+    @ObservationIgnored private var clipBarsSaw: PhotonzDocument?
+
+    private func clipBarWatch(_ id: UUID) -> ClipBarWatch {
+        if let watch = clipBarWatches[id] { return watch }
+        let watch = ClipBarWatch()
+        clipBarWatches[id] = watch
+        return watch
+    }
+
+    /// Moves `latePassRevision` on, and with it the watch of every clip bar
+    /// whose drawing the document's change since the last move reaches.
+    private func moveTheLatePassOn() {
+        latePassRevision &+= 1
+        let now = _history?.current
+        defer { clipBarsSaw = now }
+        guard !clipBarWatches.isEmpty else { return }
+        let change: ClipBarsChange
+        switch (clipBarsSaw, now) {
+        case (nil, nil): return
+        case let (saw?, now?): change = now.clipBarsChange(since: saw)
+        default: change = .every
+        }
+        switch change {
+        case .every:
+            for watch in clipBarWatches.values { watch.revision &+= 1 }
+            if let now { clipBarWatches = clipBarWatches.filter { now.layer(id: $0.key) != nil } }
+        case .only(let ids):
+            for id in ids { clipBarWatches[id]?.revision &+= 1 }
+        }
+    }
     /// Which pictures in the document are one flat colour, by bitmap id, with
     /// the bitmap each answer was read off (`flatColorsRemembered`). Copy
     /// SVG's menu rows ask on every redraw, and a blank canvas is only known
@@ -86,7 +126,7 @@ final class EditorState {
             if later { lookRowsOwed = true } else { lookRowsRevision &+= 1 }
         }
         lookRowsSaw = now
-        if !later { latePassRevision &+= 1 }
+        if !later { moveTheLatePassOn() }
     }
 
     /// Moves on only when what the timeline's ruler reads off the document
@@ -153,7 +193,7 @@ final class EditorState {
                 self.rulerOwed = false
                 self.rulerDocumentRevision &+= 1
             }
-            self.latePassRevision &+= 1
+            self.moveTheLatePassOn()
         }
     }
 
@@ -2610,6 +2650,10 @@ final class EditorState {
         // only when something it could show did (`readingForTheLookRows`).
         if Self.readsForTheLookRows {
             _ = lookRowsRevision
+            return _history?.current
+        }
+        if let clip = Self.readsForClipBar {
+            _ = clipBarWatch(clip).revision
             return _history?.current
         }
         if Self.readsALatePass {

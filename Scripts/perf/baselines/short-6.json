@@ -3,60 +3,60 @@
 
   },
   "composites" : {
-    "askedToShownMedianMS" : 10.630542,
-    "askedToShownWorstMS" : 19.907042,
-    "drawMedianMS" : 10.626125,
-    "drawWorstMS" : 19.902542,
-    "pictures" : 2093
+    "askedToShownMedianMS" : 10.999834,
+    "askedToShownWorstMS" : 21.131417,
+    "drawMedianMS" : 10.9935,
+    "drawWorstMS" : 20.67325,
+    "pictures" : 2128
   },
-  "date" : "2026-11-16T03:48:04Z",
+  "date" : "2026-11-16T08:52:35Z",
   "edits" : [
     {
-      "callMS" : 2.9954167548567057,
+      "callMS" : 3.875749884173274,
       "did" : "half a second off the end of Take 2",
       "edit" : "trim",
-      "longestPassMS" : 18.005708465352654
+      "longestPassMS" : 17.400583485141397
     },
     {
-      "callMS" : 4.424333339557052,
+      "callMS" : 5.4651666432619095,
       "did" : "Take 1 cut at 0:22.4",
       "edit" : "blade",
-      "longestPassMS" : 89.09337501972914
+      "longestPassMS" : 62.14687507599592
     },
     {
-      "callMS" : 1.162458211183548,
+      "callMS" : 1.0841665789484978,
       "did" : "the last edit taken back",
       "edit" : "undo",
-      "longestPassMS" : 36.25070839188993
+      "longestPassMS" : 26.945000048726797
     },
     {
-      "callMS" : 1.9287499599158764,
+      "callMS" : 1.906875055283308,
       "did" : "Take 2 picked",
       "edit" : "pick",
-      "longestPassMS" : 42.56095830351114
+      "longestPassMS" : 40.982124861329794
     },
     {
-      "callMS" : 2.7571667451411486,
+      "callMS" : 2.3898333311080933,
       "did" : "half a second off the end of Take 3",
       "edit" : "trim, picked",
-      "longestPassMS" : 24.295374983921647
+      "longestPassMS" : 18.02337495610118
     },
     {
-      "callMS" : 4.0008751675486565,
-      "did" : "Take 2 cut at 0:31.3",
+      "callMS" : 3.9771250449121,
+      "did" : "Take 2 cut at 0:31.2",
       "edit" : "blade, picked",
-      "longestPassMS" : 46.2936251424253
+      "longestPassMS" : 25.850833393633366
     },
     {
-      "callMS" : 1.184916589409113,
+      "callMS" : 1.260249875485897,
       "did" : "the last edit taken back",
       "edit" : "undo, picked",
-      "longestPassMS" : 28.69504177942872
+      "longestPassMS" : 23.20725005120039
     }
   ],
   "form" : "short",
   "frameStepMS" : 33,
-  "head" : "a6861a6fd+changes (worst of 3)",
+  "head" : "339644da6+changes (worst of 3)",
   "machine" : "Mac16,5, 16 cores, 64GB",
   "minutes" : 6,
   "plays" : [
@@ -65,8 +65,8 @@
       "framesDue" : 1818,
       "framesShown" : 1817,
       "label" : "whole",
-      "seconds" : 60.007687541656196,
-      "worstGapMS" : 68.23445833288133
+      "seconds" : 60.00727350008674,
+      "worstGapMS" : 70.14858350157738
     },
     {
       "dropped" : 0,
@@ -74,7 +74,7 @@
       "framesShown" : 12,
       "label" : "cross dissolve at 0:21.6",
       "seconds" : 0.4,
-      "worstGapMS" : 41.987125063315034
+      "worstGapMS" : 41.68200003914535
     },
     {
       "dropped" : 0,
@@ -82,7 +82,7 @@
       "framesShown" : 12,
       "label" : "push at 0:28.0",
       "seconds" : 0.4,
-      "worstGapMS" : 41.70162510126829
+      "worstGapMS" : 33.791166730225086
     },
     {
       "dropped" : 0,
@@ -90,7 +90,7 @@
       "framesShown" : 12,
       "label" : "cross dissolve at 0:39.0",
       "seconds" : 0.4,
-      "worstGapMS" : 41.685708332806826
+      "worstGapMS" : 41.67450009845197
     },
     {
       "dropped" : 0,
@@ -98,7 +98,7 @@
       "framesShown" : 12,
       "label" : "cross dissolve at 0:50.1",
       "seconds" : 0.4,
-      "worstGapMS" : 41.666291654109955
+      "worstGapMS" : 41.701250011101365
     },
     {
       "dropped" : 0,
@@ -106,7 +106,7 @@
       "framesShown" : 24,
       "label" : "cube at 0:59.8",
       "seconds" : 0.8,
-      "worstGapMS" : 41.679916670545936
+      "worstGapMS" : 41.71654162928462
     },
     {
       "dropped" : 0,
@@ -114,7 +114,7 @@
       "framesShown" : 12,
       "label" : "cross dissolve at 1:08.5",
       "seconds" : 0.4,
-      "worstGapMS" : 41.672083316370845
+      "worstGapMS" : 49.78158348239958
     }
   ],
   "scrubs" : [
@@ -123,9 +123,9 @@
       "lagMedianFrames" : 2,
       "lagWorstFrames" : 4,
       "movesMade" : 242,
-      "seconds" : 2.021404958330095,
+      "seconds" : 2.020846250001341,
       "speed" : "medium",
-      "worstFrameMS" : 22.460541455075145
+      "worstFrameMS" : 16.17920841090381
     }
   ],
   "sound" : {

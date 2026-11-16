@@ -142,7 +142,7 @@ struct ClipPiecesBar: View {
 
     // A pass late for an edit marked to catch up next pass
     // (`readingALatePass`), exactly as before for every other.
-    var body: some View { readingALatePass { lateBody } }
+    var body: some View { readingForAClipBar(layerID) { lateBody } }
 
     private var lateBody: some View {
         #if PHOTONZ_PLAYTEST
@@ -188,14 +188,14 @@ struct ClipPiecesBar: View {
             // A row of a ForEach is built outside this body, so each reads
             // late for itself (`readingALatePass`).
             ForEach(0..<pieces.count, id: \.self) { index in
-                readingALatePass { piece(pieces, index: index, x0: x0, ruler: ruler, drawn: drawn) }
+                readingForAClipBar(layerID) { piece(pieces, index: index, x0: x0, ruler: ruler, drawn: drawn) }
             }
             // The bands over the joins, UNDER the grips: a transition is drawn
             // over the seam because that is what it is, an interval where both
             // pieces are on screen, rather than a third object wedged between
             // them (`docs/design/video-transitions.md`).
             ForEach(shownCuts(pieces), id: \.index) { cut in
-                readingALatePass { band(cut, x0: x0, ruler: ruler) }
+                readingForAClipBar(layerID) { band(cut, x0: x0, ruler: ruler) }
             }
             // Where this bar runs under a hold that pushed the picture alone,
             // and is therefore no longer in step with it (`HoldPush.swift`).
@@ -214,7 +214,7 @@ struct ClipPiecesBar: View {
                 levelLine(pieces, x0: x0, ruler: ruler, drawn: drawn)
             }
             ForEach(0...pieces.count, id: \.self) { edge in
-                readingALatePass { grip(pieces, edge: edge, x0: x0, ruler: ruler) }
+                readingForAClipBar(layerID) { grip(pieces, edge: edge, x0: x0, ruler: ruler) }
             }
             // What the tiles at a join grow out of: a point on the cut, apart
             // from the grip, which is redrawn as the cut is picked.
