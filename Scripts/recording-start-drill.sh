@@ -16,6 +16,8 @@
 # is how every start worked before 2026-10-03. `--still` leaves the square
 # black. `--stop-early` presses Stop 300 ms after Return (with sound, while
 # macOS is still starting the stream) and checks the recording stops and lands.
+# `--macos-writer` lets macOS write the file, as before 2026-11-15, for a
+# before-and-after.
 # `--cancel` presses Escape on the card instead and checks that everything made
 # ready while it was up (the stream, the unseen stop control) is gone.
 # Exits 1 when the median Return-to-first-frame is over
@@ -33,7 +35,7 @@ EXTRA=()
 for a in "$@"; do
   case "$a" in
     --no-build) BUILD=0 ;;
-    --region|--system-audio|--with-microphone|--cold|--still|--stop-early|--cancel) EXTRA+=("$a") ;;
+    --region|--system-audio|--with-microphone|--cold|--still|--stop-early|--cancel|--macos-writer) EXTRA+=("$a") ;;
     *[!0-9]*|"") echo "!! unknown argument: $a" >&2; exit 2 ;;
     *) RUNS="$a" ;;
   esac
@@ -64,7 +66,7 @@ if (d.stopEarly && !d.error) {
   console.log(d.passed ? "==> PASS" : "!! FAIL"); process.exit(d.passed ? 0 : 1);
 }
 
-console.log(`==> ${d.runs} runs, ${d.source}, sound: ${d.audio && d.audio.length ? d.audio.join(" + ") : "none"}, ${d.warm ? "made ready while the card is up" : "cold"}`);
+console.log(`==> ${d.runs} runs, ${d.source}, written by ${d.writer ?? "?"}, sound: ${d.audio && d.audio.length ? d.audio.join(" + ") : "none"}, ${d.warm ? "made ready while the card is up" : "cold"}`);
 console.log("    ms after Return:  start  stop-ctl  content  built  capture  1st-frame  timer  square  | plan     file: 1st square, turn at, clock error, ctl in video");
 for (const r of d.readings || []) {
   console.log(`                     ${f(r.returnToStartCalledMS)} ${f(r.returnToControlsShownMS)}    ${f(r.returnToContentReadyMS)}  ${f(r.returnToStreamBuiltMS)}  ${f(r.returnToCaptureStartedMS)}     ${f(r.returnToFirstFrameMS)}  ${f(r.returnToTimerStartedMS)}  ${f(r.returnToSquareWhiteMS)}  | ${String(r.plan ?? "-").padEnd(8)} ${r.firstFrameSquare || r.error}, ${r.squareTurnedAtFileMS ?? "never"}, ${r.clockErrorMS ?? "-"}, ${r.controlsInVideo}${r.controlsSeenAs ? " (" + r.controlsSeenAs + ")" : ""}`);

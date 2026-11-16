@@ -118,6 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             AudioCaptureDiag.runIfRequested()
             RecordingLatencyDiag.runIfRequested()
             RecordingStartLatencyDiag.runIfRequested()
+            RecordingColourDiag.runIfRequested()
             ShortcutDiag.runIfRequested()
             UpdateCheckerDiag.runIfRequested()
             if let coordinator = AppDelegate.coordinator {

@@ -1,0 +1,19 @@
+{
+  "out": "/tmp/photonz-playtest/recording-quality-in-settings-walk",
+  "seed": "The user, 2026-11-15: recordings came out lighter and banded, and they want them low latency, light on the Mac and as lossless as possible. Recordings are now 10-bit HEVC in the screen's own colours at the encoder's top quality (Best): every gradient as smooth as a screenshot, at the same load, four times macOS's file size while the whole screen moves and smaller than it on a still screen. Smaller files is about half macOS's size with faint bands in dark gradients. At Next defaults with no flag touched, Settings has a Recording section with one row, Quality, reading Best.",
+  "clock": 60,
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "shortcut", "key": ",", "modifiers": ["command"], "menuItem": "Settings…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "reveal", "control": "Recording Quality" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Recording Quality", "present": true },
+    { "do": "describe", "stage": "1-recording-quality", "note": "Settings > Recording at Next defaults: one row, Quality, reading Best" },
+    { "do": "snapshot", "name": "1-recording-quality", "window": "Settings" }
+  ]
+}

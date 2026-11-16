@@ -55,6 +55,11 @@ struct SettingsDialog: View {
                 // Which capture shortcuts really reach Photonz. A key macOS
                 // keeps never does, and its picture misses the clipboard.
                 CaptureShortcutsSettingsSection(rows: shortcuts)
+                // How much of the screen's picture a recording keeps (Next,
+                // `next-a-recording-keeps-the-screens-colours`).
+                if Experiments.shared.recordingKeepsScreenColours {
+                    RecordingSettingsSection()
+                }
                 Section {
                     if rows.isEmpty {
                         emptyRow

@@ -23145,3 +23145,19 @@ units.
 - Edits on a video (key, menu, agent) now draw the picture in their own pass and the timeline and panel in the next, stopped as well as playing (rule 6, `docs/design/video.md` 8f). A stopped trim with a clip picked went from 54-55 ms to 31-44 ms on the 6 minute reference edit.
 - The folded Library at the foot of the panel no longer bounces to its chosen height while a pick's sections arrive (`PanelShelfPane.drawnHeight(lastDrawn:)`, tested).
 - Next: the piece selection a blade makes and an undo hands back (~20-30 ms over a trim), the first pick's 450 ms of section arrivals, and a speed walk edit with a clip picked. Bars (edits <= 16 ms, scrub 1 frame, no dropped frames) still not reached.
+
+## 2026-11-15 — Screen recordings keep the screen's colours and smooth gradients
+
+- Reproduced the user's lighter, banded recordings with a controlled scene
+  (`Scripts/recording-colour-drill.sh`, `RecordingColourDiag`, probe only): sRGB
+  76 played as 86, green as (127,252,87), dark ramps in 3-code-value bands.
+  Causes and the full candidate table: `docs/progress/2026-11-15-recording-colour.md`.
+- Next (`next-a-recording-keeps-the-screens-colours`, on by default): Photonz
+  writes recordings itself (`PhotonzMedia/RecordingFileWriter`), 10-bit HEVC in
+  Display P3, frames tagged P3 / sRGB curve / 601 (the stream's 10-bit matrix),
+  at the encoder's top quality; Settings > Recording > Quality offers Smaller
+  files. Editor playback and the cut-copy writer decode 10-bit files at 10 bits
+  (`MovieDecodeFormat`). Start is faster (median 9.6 ms vs 14.7 silent), stop
+  closes the file in 16 ms, load about the same.
+- Open: the editor shows frames as 8-bit pictures; a moving full screen at
+  Best is ~4x macOS's file size (the audit asks whether Best is the right default).

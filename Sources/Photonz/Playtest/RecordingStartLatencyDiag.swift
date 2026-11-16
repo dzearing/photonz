@@ -69,7 +69,14 @@ enum RecordingStartLatencyDiag {
     private static func run(runs: Int, args: [String]) async {
         var out: [String: Any] = ["runs": runs, "flipAfterMS": flipAfterMS]
         var readings: [[String: Any]] = []
+        // `--macos-writer`: macOS writes the file, as it did before
+        // 2026-11-15, for a before-and-after of the start. Put back after.
+        let colours = FeatureCatalog.recordingKeepsScreenColoursFlag
+        let wasOwnWriter = Experiments.shared.isEnabled(colours)
+        if args.contains("--macos-writer") { Experiments.shared.setEnabled(false, flag: colours, in: .next) }
+        out["writer"] = Experiments.shared.recordingKeepsScreenColours ? "photonz" : "macOS"
         defer {
+            if args.contains("--macos-writer") { Experiments.shared.setEnabled(wasOwnWriter, flag: colours, in: .next) }
             out["readings"] = readings
             if let data = SafeJSON.data(from: out, options: [.prettyPrinted, .sortedKeys]) {
                 try? data.write(to: URL(fileURLWithPath: resultPath))
@@ -362,10 +369,14 @@ enum RecordingStartLatencyDiag {
             let px = base.advanced(by: p.1 * CVPixelBufferGetBytesPerRow(buffer) + p.0 * 4).assumingMemoryBound(to: UInt8.self)
             return (Int(px[0]) + Int(px[1]) + Int(px[2])) / 3
         }
-        // Y'CbCr: the first plane is brightness, one byte a pixel.
+        // Y'CbCr: the first plane is brightness, one byte a pixel, or for a
+        // 10-bit frame two, the value in the top ten bits.
         guard CVPixelBufferIsPlanar(buffer), let base = CVPixelBufferGetBaseAddressOfPlane(buffer, 0) else { return nil }
-        return Int(base.advanced(by: p.1 * CVPixelBufferGetBytesPerRowOfPlane(buffer, 0) + p.0)
-            .assumingMemoryBound(to: UInt8.self).pointee)
+        let row = base.advanced(by: p.1 * CVPixelBufferGetBytesPerRowOfPlane(buffer, 0))
+        if CVPixelBufferGetPixelFormatType(buffer) == kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange {
+            return Int(row.assumingMemoryBound(to: UInt16.self)[p.0] >> 8)
+        }
+        return Int(row.advanced(by: p.0).assumingMemoryBound(to: UInt8.self).pointee)
     }
 
     /// Reads the file's first second and reports what the black square and

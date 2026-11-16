@@ -1,5 +1,6 @@
 #if PHOTONZ_PLAYTEST
 import AppKit
+import AVFoundation
 import PhotonzCore
 import PhotonzMedia
 
@@ -104,8 +105,34 @@ enum PlaytestOpenAtStop {
             throw Failure(description: "the window moved or changed size when the file landed: "
                 + "\(String(describing: opened.windowFrame)) then \(String(describing: frame))")
         }
+        let kept = try await keptTheScreensColours(url)
         return "landed in place: the same window, the clip \(fileMS) ms like its file, "
-            + (editor.isDocumentPlaying ? "playing" : "paused on its last frame")
+            + (editor.isDocumentPlaying ? "playing" : "paused on its last frame") + kept
+    }
+
+    /// With `next-a-recording-keeps-the-screens-colours` on, fail unless the
+    /// file is what `RecordingFileWriter` writes: 10-bit HEVC that says Display
+    /// P3, the sRGB curve and the 601 matrix.
+    private static func keptTheScreensColours(_ url: URL) async throws -> String {
+        guard Experiments.shared.recordingKeepsScreenColours else { return "" }
+        let asset = AVURLAsset(url: url)
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
+              let format = try? await track.load(.formatDescriptions).first
+        else { throw Failure(description: "the recording's file has no pictures to read") }
+        func tag(_ key: CFString) -> String {
+            CMFormatDescriptionGetExtension(format, extensionKey: key) as? String ?? "none"
+        }
+        let codec = CMFormatDescriptionGetMediaSubType(format)
+        let tenBit = MovieDecodeFormat.pixelFormat(for: format) == kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange
+        let tags = [tag(kCMFormatDescriptionExtension_ColorPrimaries), tag(kCMFormatDescriptionExtension_TransferFunction),
+                    tag(kCMFormatDescriptionExtension_YCbCrMatrix)]
+        guard codec == kCMVideoCodecType_HEVC, tenBit,
+              tags == [RecordingPictures.colourPrimaries, RecordingPictures.transferFunction, RecordingPictures.yCbCrMatrix]
+        else {
+            throw Failure(description: "the recording is not 10-bit HEVC in the screen's colours: "
+                + "\(codec == kCMVideoCodecType_HEVC ? "HEVC" : "not HEVC"), \(tenBit ? "10" : "8")-bit, tagged \(tags)")
+        }
+        return "; 10-bit HEVC in Display P3"
     }
 }
 #endif

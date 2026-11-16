@@ -3,6 +3,7 @@ import AppKit
 import CoreImage
 import Foundation
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 import Synchronization
 import VideoToolbox
@@ -379,15 +380,19 @@ enum MovieSweeper {
             start: CMTime(value: CMTimeValue(frames.lowerBound * step), timescale: 1000),
             end: CMTime(value: CMTimeValue((frames.upperBound + 1) * step), timescale: 1000))
         // The decoder's own format: asking for RGB made the pass three times
-        // slower, and only the frames kept are converted.
+        // slower, and only the frames kept are converted. A 10-bit recording
+        // is read at 10 bits (`MovieDecodeFormat`): squeezed to 8 on the way,
+        // its dark gradients banded again.
+        let description = try? await track.load(.formatDescriptions).first
         let format: [String: Any] = [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+            kCVPixelBufferPixelFormatTypeKey as String: description.map(MovieDecodeFormat.pixelFormat(for:))
+                ?? kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
         ]
         // Skipping, the samples come over as they are in the file and are
         // decoded here (`SkippingDecoder`); a track that cannot be decoded
         // that way is read the usual way.
         let skipping: SkippingDecoder?
-        if skipsUnreferenced, let description = try? await track.load(.formatDescriptions).first {
+        if skipsUnreferenced, let description {
             skipping = SkippingDecoder(format: description, attributes: format)
         } else {
             skipping = nil

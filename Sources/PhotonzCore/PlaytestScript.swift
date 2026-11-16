@@ -1284,7 +1284,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Wait for the file `recordAndOpenAtStop` held back to land, and fail
     /// unless the window took it in place: the same window at the same size,
     /// the clip as long as the file, playable, and playing if Play was pressed
-    /// while it landed.
+    /// while it landed. With `next-a-recording-keeps-the-screens-colours` on,
+    /// also fail unless the file is 10-bit HEVC in the screen's Display P3.
     case expectRecordingLandedInPlace
     /// Fail unless the clip in the window has exactly one click added by hand
     /// (`Add Click at Playhead…`), at the playhead's moment of its recording.

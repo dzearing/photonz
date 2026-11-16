@@ -1,0 +1,29 @@
+{
+  "feature": "A screen recording keeps the screen's colours and smooth gradients",
+  "epic": "video-editing",
+  "summary": "Recordings are now written by Photonz in 10-bit, in the screen's own colours, at the encoder's top quality: they look like the screen did, dark gradients stay smooth, they start a little sooner and cost the Mac about the same. Settings > Recording > Quality has Smaller files for anyone who minds the size of a recording where the whole screen moves.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Numbers and how they were measured: docs/progress/2026-11-15-recording-colour.md (Scripts/recording-colour-drill.sh, Scripts/recording-start-drill.sh, Scripts/recording-latency-drill.sh). Walks: a-recording-opens-at-stop-walk (a real recording, fails unless it is 10-bit HEVC in Display P3), recording-quality-in-settings-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Look at your own recording of 2026-10-28 beside the same frame with its darks stretched: those contour bands are what every recording had.", "shot": "2026-11-15-recording-colour-your-recording.png" },
+    { "do": "Record a dark translucent Ghoztty window over your wallpaper with ⇧⌘5, Return, then Stop after a few seconds." },
+    { "do": "Open the recording in QuickTime and hold it beside the live window: the purple panes should be the same colour and smooth.", "shot": "2026-11-15-recording-colour-pane.png" },
+    { "do": "Open the same recording in Photonz and compare the panes with QuickTime's.", "shot": "2026-11-15-recording-colour-ramps.png" },
+    { "do": "Look at the test ramps with their darks stretched eight times, before and after, against a screenshot.", "shot": "2026-11-15-recording-colour-ramps-stretched.png" },
+    { "do": "Open Settings (⌘,) and find Recording > Quality, reading Best; try Smaller files on a recording of a scrolling page and compare the file sizes.", "shot": "2026-11-15-recording-quality-in-settings-sc.png" }
+  ],
+  "evaluate": [
+    "Does a fresh recording of your dark Ghoztty panes look like the panes on screen, with no bands, in QuickTime and in Photonz?",
+    "Is Best the right default, given a recording where the whole screen moves is about four times the old size (a still screen is smaller than before)?",
+    "Does recording still start the instant you press Return, and does the Mac feel as light while it records?",
+    "Is Smaller files the right word for the other choice, and is Settings the right place for it?"
+  ],
+  "rough": [
+    "Best costs about 15 MB a second while the whole screen moves (924 MB a minute on the test scene against 237 before); a still screen is 37 MB a minute against 46 before. Smaller files is 118 and 13, with faint one-code-value bands in dark gradients. Chose Best as the default because the banding was the complaint and the load and start are the same; your call if the size is wrong.",
+    "Photonz's editor shows video frames as 8-bit pictures, so a dark gradient there steps one code value at a time (measured 1.0 to 1.25 with the encoder's noise, against 0.8 in QuickTime). Any 8-bit picture in the editor does the same; left in the task log.",
+    "The processes that record use a little more of the Mac: 13.5 percent of one core against 9.5 (about a quarter of a percent of this Mac), and the whole recording including WindowServer 68 against 63.5 percent of a core. GPU, memory and dropped frames are unchanged.",
+    "With the Mac's sound recorded, the stream's first frame still comes about 70 ms after Return, after the drill's square has turned, as it did before (83 ms then): the start of a recording with sound misses the first 70 ms either way.",
+    "Exports stay sRGB: a Display P3 colour beyond sRGB is clipped in an exported video, as before; colours inside sRGB come out within two code values.",
+    "Current is unchanged: macOS still writes its recordings. No mock covers recording quality; the Settings row follows the Settings window's own system form."
+  ]
+}

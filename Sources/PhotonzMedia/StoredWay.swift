@@ -69,6 +69,23 @@ enum StoredWay {
         }
     }
 
+    /// How many bits each sample of the pictures has: an `hvcC` says it in its
+    /// eighteenth byte (bit depth less 8, in the low three bits); anything
+    /// else is taken as 8.
+    static func bitDepth(of format: CMFormatDescription) -> Int {
+        if let bits = CMFormatDescriptionGetExtension(
+            format, extensionKey: kCMFormatDescriptionExtension_BitsPerComponent) as? Int, bits > 8 {
+            return bits
+        }
+        guard CMFormatDescriptionGetMediaSubType(format) == kCMVideoCodecType_HEVC,
+              let atoms = CMFormatDescriptionGetExtension(
+                format, extensionKey: kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms)
+                as? [String: Any],
+              let hvcC = atoms["hvcC"] as? Data, hvcC.count > 17, hvcC[hvcC.startIndex] == 1
+        else { return 8 }
+        return Int(hvcC[hvcC.startIndex + 17] & 0x07) + 8
+    }
+
     /// An `hvcC` is a version byte, then two bits of profile space, a tier
     /// bit and five bits of profile. The encoder takes no level for HEVC.
     static func hevcProfile(hvcC: Data) -> CFString? {

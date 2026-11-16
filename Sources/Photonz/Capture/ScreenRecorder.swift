@@ -2,10 +2,16 @@ import AppKit
 import AVFoundation
 import os
 import PhotonzCore
+import PhotonzMedia
 import ScreenCaptureKit
 
-/// Records the screen to an MP4 via ScreenCaptureKit's modern `SCRecordingOutput`
-/// (macOS 15+) — no hand-rolled `AVAssetWriter` for the pictures. The stream
+/// Records the screen to an MP4. In Next (`next-a-recording-keeps-the-screens-colours`)
+/// Photonz writes the file itself from the stream's frames (`RecordingFileWriter`):
+/// 10-bit HEVC in the screen's own Display P3 colours, since macOS's writer tags
+/// the stream's pixels as colours they are not (sRGB 76 played as 86, pure
+/// green as 127, 251, 87) and bands every dark gradient
+/// (docs/progress/2026-11-15-recording-colour.md). Otherwise ScreenCaptureKit's
+/// `SCRecordingOutput` (macOS 15+) writes it. The stream
 /// captures video plus (optionally) system audio and a microphone, and writes
 /// the file itself; we just configure, start, and finalize on stop. With the
 /// Mac's sound and the microphone both on, the microphone is heard and mixed
@@ -21,6 +27,9 @@ final class ScreenRecorder: NSObject {
 
     private var stream: SCStream?
     private var recordingOutput: SCRecordingOutput?
+    /// The file Photonz writes itself, and what hears its sound, when it does.
+    private var fileWriter: RecordingFileWriter?
+    private var soundTap: RecordingSoundTap?
     /// Mixes the Mac's sound and the microphone while recording, when both
     /// are chosen (`RecordingSoundMixer`).
     private var soundMixer: RecordingSoundMixer?
@@ -124,6 +133,8 @@ final class ScreenRecorder: NSObject {
         let display: SCDisplay
         let scale: CGFloat
         let screenFrame: CGRect
+        /// Its frames are made for a file Photonz writes itself.
+        let ownFile: Bool
         /// macOS has finished starting it.
         var started = false
         /// A recording was begun on it, so it is no longer the warm-up's.
@@ -132,7 +143,8 @@ final class ScreenRecorder: NSObject {
         var abandoned = false
 
         init(stream: SCStream?, filter: SCContentFilter, clock: FirstFrameClock, config: RecordingConfig,
-             displayID: CGDirectDisplayID, display: SCDisplay, scale: CGFloat, screenFrame: CGRect) {
+             displayID: CGDirectDisplayID, display: SCDisplay, scale: CGFloat, screenFrame: CGRect, ownFile: Bool) {
+            self.ownFile = ownFile
             self.stream = stream
             self.filter = filter
             self.clock = clock
@@ -180,18 +192,28 @@ final class ScreenRecorder: NSObject {
         let filter = SCContentFilter(display: display,
                                      excludingWindows: content.windows.filter { excludedNumbers.contains($0.windowID) })
         let clock = FirstFrameClock()
-        primeTheWriter(filter: filter)
+        // With no sound, a warm stream is only ever begun on without sound.
+        let ownFile = Self.writesItsOwnFile(config, mixesSound: false)
+        if ownFile {
+            Self.primeOwnFile(size: CGSize(width: CGFloat(display.width) * screen.backingScaleFactor,
+                                           height: CGFloat(display.height) * screen.backingScaleFactor))
+        } else {
+            primeTheWriter(filter: filter)
+        }
         guard !config.audio.capturesAnyAudio else {
             warm = Warm(stream: nil, filter: filter, clock: clock, config: config, displayID: id,
-                        display: display, scale: screen.backingScaleFactor, screenFrame: screen.frame)
+                        display: display, scale: screen.backingScaleFactor, screenFrame: screen.frame,
+                        ownFile: ownFile)
             return
         }
-        let streamConfig = Self.streamConfiguration(config, display: display, scale: screen.backingScaleFactor)
+        let streamConfig = Self.streamConfiguration(config, display: display, scale: screen.backingScaleFactor,
+                                                    ownFile: ownFile)
         let stream = SCStream(filter: filter, configuration: streamConfig, delegate: self)
         guard (try? stream.addStreamOutput(clock, type: .screen, sampleHandlerQueue: FirstFrameClock.queue)) != nil
         else { return }
         let warm = Warm(stream: stream, filter: filter, clock: clock, config: config, displayID: id,
-                        display: display, scale: screen.backingScaleFactor, screenFrame: screen.frame)
+                        display: display, scale: screen.backingScaleFactor, screenFrame: screen.frame,
+                        ownFile: ownFile)
         self.warm = warm
         do {
             try await stream.startCapture()
@@ -202,7 +224,8 @@ final class ScreenRecorder: NSObject {
                 // is up, pays it here. (Reframing a second stream instead
                 // killed this one: -3805, connection interrupted.)
                 Self.reframePrimed = true
-                let sliver = Self.streamConfiguration(config, display: display, scale: screen.backingScaleFactor)
+                let sliver = Self.streamConfiguration(config, display: display, scale: screen.backingScaleFactor,
+                                                      ownFile: ownFile)
                 sliver.sourceRect = CGRect(x: 0, y: 0, width: 64, height: 64)
                 sliver.width = 64
                 sliver.height = 64
@@ -263,8 +286,29 @@ final class ScreenRecorder: NSObject {
 
     /// `mixesSound`: the microphone is heard by `RecordingSoundMixer`, not
     /// by the stream, so macOS records the pictures with the Mac's sound only.
+    /// Whether Photonz writes this recording's file itself. Not when the
+    /// Mac's sound and the microphone are both recorded and macOS is to mix
+    /// them (`next-two-sounds-mixed-as-you-record` off): one file has one
+    /// sound track here.
+    static func writesItsOwnFile(_ config: RecordingConfig, mixesSound: Bool) -> Bool {
+        guard Experiments.shared.recordingKeepsScreenColours else { return false }
+        let both = config.audio.capturesSystemAudio && config.audio.capturesMicrophone
+        return !both || mixesSound
+    }
+
+    /// The frames a file Photonz writes is made from: 10-bit 4:2:0 in Display
+    /// P3. The stream encodes 10-bit frames with the 601 matrix whatever it is
+    /// asked (measured 2026-11-15), so it is asked for that, and
+    /// `RecordingFileWriter` tags them so.
+    static func askForTheScreensColours(_ streamConfig: SCStreamConfiguration) {
+        streamConfig.pixelFormat = kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange
+        streamConfig.colorSpaceName = CGColorSpace.displayP3
+        streamConfig.colorMatrix = CGDisplayStream.yCbCrMatrix_ITU_R_601_4
+    }
+
     private static func streamConfiguration(_ config: RecordingConfig, display: SCDisplay,
-                                            scale: CGFloat, mixesSound: Bool = false) -> SCStreamConfiguration {
+                                            scale: CGFloat, mixesSound: Bool = false,
+                                            ownFile: Bool) -> SCStreamConfiguration {
         let displaySize = CGSize(width: display.width, height: display.height)
         let rect = config.source.sourceRect(displaySize: displaySize)
         let streamConfig = SCStreamConfiguration()
@@ -272,7 +316,8 @@ final class ScreenRecorder: NSObject {
         streamConfig.width = Int(rect.width * scale)
         streamConfig.height = Int(rect.height * scale)
         streamConfig.showsCursor = true
-        streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: 60)
+        streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: Self.fps)
+        if ownFile { askForTheScreensColours(streamConfig) }
         streamConfig.capturesAudio = config.audio.capturesSystemAudio
         if mixesSound {
             streamConfig.sampleRate = Int(RecordingSoundMixer.sampleRate)
@@ -282,6 +327,36 @@ final class ScreenRecorder: NSObject {
             streamConfig.microphoneCaptureDeviceID = config.microphoneDeviceID
         }
         return streamConfig
+    }
+
+    nonisolated static let fps: Int32 = 60
+
+    /// Make the file off the main actor: an encoder takes 15 ms or so to
+    /// set up, the first of a launch longer.
+    private static func makeFile(at url: URL, size: CGSize, withSound: Bool) -> Task<RecordingFileWriter, Error> {
+        let quality = Self.quality
+        return Task.detached(priority: .userInitiated) {
+            try RecordingFileWriter(url: url, pixelSize: size, fps: Int(fps), withSound: withSound, quality: quality)
+        }
+    }
+
+    /// Whether this launch has set up a file of its own yet.
+    private static var ownFilePrimed = false
+
+    /// The first encoder of a launch is the slowest to set up; making one
+    /// while the card is up, and throwing it away, pays for that then.
+    private static func primeOwnFile(size: CGSize) {
+        guard !ownFilePrimed else { return }
+        ownFilePrimed = true
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("photonz-warm-\(UUID().uuidString).mp4")
+        Task.detached(priority: .utility) {
+            (try? RecordingFileWriter(url: url, pixelSize: size, fps: Int(fps), withSound: true))?.abandon()
+        }
+    }
+
+    /// Settings > Recording > Quality.
+    static var quality: RecordingQuality {
+        RecordingQuality(stored: UserDefaults.standard.string(forKey: RecordingQuality.settingKey))
     }
 
     private func recordingOutput(to url: URL) -> SCRecordingOutput {
@@ -309,7 +384,10 @@ final class ScreenRecorder: NSObject {
         while warm == nil, findingDisplay, ContinuousClock.now < deadline {
             try? await Task.sleep(for: .milliseconds(2))
         }
-        let plan = RecordingWarmStart.plan(warm: warm?.config, chosen: config,
+        // A stream warmed for the other kind of file is no use (the switch
+        // changed while the card was up).
+        let warmFits = warm.map { $0.ownFile == Self.writesItsOwnFile(config, mixesSound: false) } ?? false
+        let plan = RecordingWarmStart.plan(warm: warmFits ? warm?.config : nil, chosen: config,
                                            sameDisplay: warm != nil && warm?.displayID == Self.displayID(of: screen))
         trace("start: plan \(plan), warm \(warm != nil), started \(warm?.started ?? false)")
         lastStart.plan = plan
@@ -367,15 +445,35 @@ final class ScreenRecorder: NSObject {
             : nil
 
         let scale = screen.backingScaleFactor
+        let ownFile = Self.writesItsOwnFile(config, mixesSound: mixer != nil)
         let streamConfig = Self.streamConfiguration(config, display: display, scale: scale,
-                                                    mixesSound: mixer != nil)
+                                                    mixesSound: mixer != nil, ownFile: ownFile)
         let rect = streamConfig.sourceRect
         recordedSize = CGSize(width: streamConfig.width, height: streamConfig.height)
 
         let stream = SCStream(filter: filter, configuration: streamConfig, delegate: self)
 
-        let recordingOutput = recordingOutput(to: mixer?.pictureURL ?? url)
-        try stream.addRecordingOutput(recordingOutput)
+        var recordingOutput: SCRecordingOutput?
+        var making: Task<RecordingFileWriter, Error>?
+        var tap: RecordingSoundTap?
+        if ownFile {
+            // The one sound the file carries, when the mixer is not making it.
+            let sound: SCStreamOutputType? = mixer != nil ? nil
+                : config.audio.capturesSystemAudio ? .audio
+                : config.audio.capturesMicrophone ? .microphone : nil
+            if let sound {
+                let soundTap = RecordingSoundTap()
+                try stream.addStreamOutput(soundTap, type: sound, sampleHandlerQueue: soundTap.queue)
+                tap = soundTap
+            }
+            // Made while the stream starts; its first frames wait for it.
+            clock.expectFile()
+            making = Self.makeFile(at: mixer?.pictureURL ?? url, size: recordedSize, withSound: sound != nil)
+        } else {
+            let output = self.recordingOutput(to: mixer?.pictureURL ?? url)
+            try stream.addRecordingOutput(output)
+            recordingOutput = output
+        }
         try stream.addStreamOutput(clock, type: .screen, sampleHandlerQueue: FirstFrameClock.queue)
         if let mixer {
             try stream.addStreamOutput(mixer, type: .audio, sampleHandlerQueue: mixer.queue)
@@ -389,18 +487,31 @@ final class ScreenRecorder: NSObject {
         pointerSpace = space
         pointer?.start(space: space)
         lastStart.streamBuilt = PointerTracker.hostNow()
+        var writer: RecordingFileWriter?
         do {
             try await stream.startCapture()
             lastStart.captureStarted = PointerTracker.hostNow()
+            if let making {
+                let made = try await making.value
+                clock.write(to: made)
+                tap?.write(to: made)
+                writer = made
+            }
         } catch {
             pointer?.stop()
             mixer?.abandon()
+            clock.write(to: nil)
+            if let made = try? await making?.value { made.abandon() }
+            try? await stream.stopCapture()
             throw error
         }
 
         self.soundMixer = mixer
         self.stream = stream
         self.recordingOutput = recordingOutput
+        self.fileWriter = writer
+        self.soundTap = tap
+        if writer != nil { lastStart.outputStarted = lastStart.captureStarted }
         self.outputURL = url
         self.isRecording = true
     }
@@ -410,7 +521,8 @@ final class ScreenRecorder: NSObject {
     /// takes, and the first-frame clock starts counting from the same moment.
     private func begin(on warm: Warm, stream: SCStream, config: RecordingConfig, reframe: Bool, to url: URL,
                        pointer: PointerTracker?) async throws {
-        let streamConfig = Self.streamConfiguration(config, display: warm.display, scale: warm.scale)
+        let streamConfig = Self.streamConfiguration(config, display: warm.display, scale: warm.scale,
+                                                    ownFile: warm.ownFile)
         if reframe {
             // Reframing a stream macOS is still starting is not something to
             // rely on; it starts in about 60 ms without sound.
@@ -426,19 +538,40 @@ final class ScreenRecorder: NSObject {
         recordedSize = CGSize(width: streamConfig.width, height: streamConfig.height)
         let space = PointerSpace(displayFrame: warm.screenFrame, sourceRect: rect, pixelSize: recordedSize)
 
-        // A file added to a running stream starts at the first frame taken
-        // after macOS reports it started (measured 2026-10-03: about 20 ms
-        // after it is added), not at the next frame, so the clock waits for
-        // that report before it counts.
-        let recordingOutput = recordingOutput(to: url)
         let clock = warm.clock
-        clock.waitForFile()
-        clockAwaitingFile.withLock { $0 = clock }
-        do {
-            try stream.addRecordingOutput(recordingOutput)
-        } catch {
-            clockAwaitingFile.withLock { $0 = nil }
-            throw error
+        var recordingOutput: SCRecordingOutput?
+        if warm.ownFile {
+            // The file starts at the next frame the stream takes from now,
+            // and the clock counts from the same frame; the frames taken while
+            // the file is made wait for it.
+            clock.waitForFile()
+            clock.expectFile()
+            let now = PointerTracker.hostNow()
+            clock.arm(from: now)
+            lastStart.outputStarted = now
+            do {
+                let writer = try await Self.makeFile(at: url, size: recordedSize, withSound: false).value
+                clock.write(to: writer)
+                fileWriter = writer
+            } catch {
+                clock.write(to: nil)
+                throw error
+            }
+        } else {
+            // A file added to a running stream starts at the first frame taken
+            // after macOS reports it started (measured 2026-10-03: about 20 ms
+            // after it is added), not at the next frame, so the clock waits for
+            // that report before it counts.
+            let output = self.recordingOutput(to: url)
+            clock.waitForFile()
+            clockAwaitingFile.withLock { $0 = clock }
+            do {
+                try stream.addRecordingOutput(output)
+            } catch {
+                clockAwaitingFile.withLock { $0 = nil }
+                throw error
+            }
+            recordingOutput = output
         }
         lastStart.captureStarted = PointerTracker.hostNow()
         warm.taken = true
@@ -464,9 +597,9 @@ final class ScreenRecorder: NSObject {
     /// writer let go of mid-close never says it finished.
     @discardableResult
     func stop() async throws -> URL {
-        guard isRecording, let stream, let output = recordingOutput, let url = outputURL else {
-            throw RecorderError.notRecording
-        }
+        guard isRecording, let stream, let url = outputURL else { throw RecorderError.notRecording }
+        if let writer = fileWriter { return await stopOwnFile(stream: stream, writer: writer, url: url) }
+        guard let output = recordingOutput else { throw RecorderError.notRecording }
         isRecording = false
         lastStop = StopTrace()
         noteFirstHeard()
@@ -494,6 +627,41 @@ final class ScreenRecorder: NSObject {
         }
         closingFiles[key] = nil
         if verdict == .gaveUp { NSLog("Recording file never reported closing; handing it over as it is: \(url.path)") }
+        if let mixer, let soundWritten {
+            let written = await soundWritten.value
+            lastStop?.mixedLive = true
+            lastStop?.soundWritten = Date()
+            lastStop?.joined = await mixer.join(into: url, soundWritten: written)
+            lastStop?.soundJoined = Date()
+        }
+        return url
+    }
+
+    /// Stop a recording whose file Photonz writes: no more frames go to it,
+    /// and it is closed (tens of milliseconds) while the stream stops.
+    private func stopOwnFile(stream: SCStream, writer: RecordingFileWriter, url: URL) async -> URL {
+        isRecording = false
+        lastStop = StopTrace()
+        noteFirstHeard()
+        firstFrame?.write(to: nil)
+        firstFrame?.release()
+        let mixer = soundMixer
+        self.soundMixer = nil
+        self.stream = nil
+        self.fileWriter = nil
+        self.soundTap = nil
+        self.outputURL = nil
+        let soundWritten = mixer.map { mixer in Task { await mixer.finishSound() } }
+        Task {
+            try? await stream.stopCapture()
+            self.lastStop?.stopCaptureReturned = Date()
+        }
+        let closed = await writer.finish()
+        lastStop?.outputFinished = Date()
+        lastStop?.resumed = Date()
+        if !closed {
+            NSLog("Recording file could not be closed: \(writer.failure.map { "\($0)" } ?? "no frames")")
+        }
         if let mixer, let soundWritten {
             let written = await soundWritten.value
             lastStop?.mixedLive = true
@@ -556,6 +724,13 @@ final class ScreenRecorder: NSObject {
         isRecording = false
         soundMixer?.abandon()
         soundMixer = nil
+        // What was written so far is kept, closed and playable.
+        if let writer = fileWriter {
+            firstFrame?.write(to: nil)
+            fileWriter = nil
+            soundTap = nil
+            Task { _ = await writer.finish() }
+        }
     }
 }
 
@@ -624,7 +799,9 @@ extension ScreenRecorder: SCRecordingOutputDelegate {
 /// and the editor show the recording at once (`ClosingRecording`). Nothing
 /// here touches a pixel: it is a pointer swap per frame under a lock, and the
 /// one surface held back is one of the eight the stream keeps by default.
-final class FirstFrameClock: NSObject, SCStreamOutput, Sendable {
+final class FirstFrameClock: NSObject, SCStreamOutput, @unchecked Sendable {
+    // @unchecked: `file`, `expectingFile` and `pending` are only touched on
+    // `queue`, where the stream delivers its frames; everything else is locked.
     static let queue = DispatchQueue(label: "photonz.recording.first-frame", qos: .userInitiated)
     private let first = OSAllocatedUnfairLock<Double?>(initialState: nil)
     private let last = OSAllocatedUnfairLock<RecordedFrame?>(initialState: nil)
@@ -635,6 +812,29 @@ final class FirstFrameClock: NSObject, SCStreamOutput, Sendable {
 
     var seconds: Double? { first.withLock { $0 } }
     var newest: RecordedFrame? { last.withLock { $0 } }
+
+    /// The file Photonz writes, when it does: every frame counted goes to it,
+    /// so the file and the clock start on the same frame. Touched on `queue`
+    /// only. While the file is still being made (`expectFile`), the frames
+    /// counted wait in `pending`, and go to it in order once it is there:
+    /// making it takes 15 ms or so, which Start does not wait for.
+    nonisolated(unsafe) private var file: RecordingFileWriter?
+    nonisolated(unsafe) private var expectingFile = false
+    nonisolated(unsafe) private var pending: [CMSampleBuffer] = []
+
+    /// Hold the frames counted from now until `write(to:)` hands over a file.
+    func expectFile() { Self.queue.sync { expectingFile = true; pending = [] } }
+
+    /// Write every frame counted to `writer` from now, starting with those
+    /// held; nil stops writing and lets go of anything held.
+    func write(to writer: RecordingFileWriter?) {
+        Self.queue.sync {
+            file = writer
+            expectingFile = false
+            if let writer { for sample in pending { writer.append(picture: sample) } }
+            pending = []
+        }
+    }
 
     /// Stop counting until `arm`: the frames from now on may come before the
     /// file's first.
@@ -662,6 +862,14 @@ final class FirstFrameClock: NSObject, SCStreamOutput, Sendable {
         let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
         guard pts.isValid else { return }
         guard pts.seconds >= armedAt.withLock({ $0 }) else { return }
+        if let file {
+            // Tagged here, before anything reads it: the last frame shown at
+            // Stop reads its colours from the same tags.
+            file.append(picture: sampleBuffer)
+        } else if expectingFile, pending.count < 30 {
+            if let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) { RecordingFileWriter.tag(buffer) }
+            pending.append(sampleBuffer)
+        }
         first.withLock { if $0 == nil { $0 = pts.seconds } }
         guard let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         #if PHOTONZ_PLAYTEST
@@ -678,6 +886,24 @@ final class FirstFrameClock: NSObject, SCStreamOutput, Sendable {
 
     /// Lets go of the frame held, so its surface goes back to the stream.
     func release() { last.withLock { $0 = nil } }
+}
+
+/// Hears the one sound a file Photonz writes carries (the Mac's or the
+/// microphone's) and hands it to the file.
+final class RecordingSoundTap: NSObject, SCStreamOutput, Sendable {
+    let queue = DispatchQueue(label: "photonz.recording.sound", qos: .userInitiated)
+    /// Set once the file is made; sound heard before that is before the
+    /// file's first frame, and not the recording's.
+    private let writer = OSAllocatedUnfairLock<RecordingFileWriter?>(initialState: nil)
+
+    func write(to file: RecordingFileWriter) { writer.withLock { $0 = file } }
+
+    func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
+                of type: SCStreamOutputType) {
+        guard type == .audio || type == .microphone, sampleBuffer.isValid,
+              let file = writer.withLock({ $0 }) else { return }
+        file.append(sound: sampleBuffer)
+    }
 }
 
 /// The delegate a primed, never-started file is given: it hears nothing.

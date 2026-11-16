@@ -704,6 +704,12 @@ extension Experiments {
     /// rather than leaving macOS to mix them after Stop.
     var twoSoundsMixedAsYouRecord: Bool { isEnabled(FeatureCatalog.twoSoundsMixedAsYouRecordFlag) }
 
+    /// `next-a-recording-keeps-the-screens-colours`: whether a recording is
+    /// written by Photonz (`RecordingFileWriter`), 10-bit HEVC in the screen's
+    /// Display P3 colours, rather than by macOS's own writer, which tags the
+    /// stream's pixels as colours they are not and bands dark gradients.
+    var recordingKeepsScreenColours: Bool { isEnabled(FeatureCatalog.recordingKeepsScreenColoursFlag) }
+
     /// Whether a sound or a video let go on an editor window lands as a layer,
     /// opens as its own document, or is refused IN WORDS where a yes would have
     /// appeared (`MediaDrop`). Off, all three are one silent no-entry pointer.

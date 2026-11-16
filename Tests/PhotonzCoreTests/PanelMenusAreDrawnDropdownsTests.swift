@@ -44,6 +44,8 @@ struct PanelMenusAreDrawnDropdownsTests {
         // The Settings window's Ask section, a system Form like the rest of
         // Settings.
         "AskSettingsSection.swift",
+        // The Settings window's Recording section, the same system Form.
+        "RecordingSettingsSection.swift",
         // The kit's own fallback for a bar too narrow for its words.
         "SegmentedControl.swift",
     ]

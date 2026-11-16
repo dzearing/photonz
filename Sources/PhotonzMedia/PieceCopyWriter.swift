@@ -309,8 +309,10 @@ public enum PieceCopyWriter {
         let reader = try AVAssetReader(asset: recording.asset)
         reader.timeRange = CMTimeRange(start: recording.timelineTime(from),
                                        end: recording.timelineTime(last + 1))
+        // A 10-bit recording's frames are made again from 10 bits, or the
+        // frames at a cut would band where the rest does not.
         let output = AVAssetReaderTrackOutput(track: recording.track, outputSettings: [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+            kCVPixelBufferPixelFormatTypeKey as String: MovieDecodeFormat.pixelFormat(for: recording.format),
             kCVPixelBufferIOSurfacePropertiesKey as String: [String: Any](),
         ])
         output.alwaysCopiesSampleData = false

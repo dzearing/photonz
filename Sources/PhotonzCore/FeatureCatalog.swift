@@ -286,6 +286,8 @@ public enum FeatureCatalog {
 
     public static let twoSoundsMixedAsYouRecordFlag = "next-two-sounds-mixed-as-you-record"
 
+    public static let recordingKeepsScreenColoursFlag = "next-a-recording-keeps-the-screens-colours"
+
     public static let droppingMediaFlag = "next-dropping-a-sound-or-a-video"
 
     public static let soundOnTheTimelineFlag = "next-sound-on-the-timeline"
@@ -1023,6 +1025,16 @@ public enum FeatureCatalog {
                     name: twoSoundsMixedAsYouRecordFlag,
                     title: "A recording with two sounds plays the moment you stop it",
                     description: "With the Mac's sound and the microphone both on, they are mixed while you record, so the recording plays and copies as soon as you stop. Off means they are mixed after Stop, which takes half the recording's length.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: recordingKeepsScreenColoursFlag,
+                    title: "A recording keeps the screen's colours",
+                    description: "Recordings are written by Photonz in 10-bit with the screen's own colours, so they look like the screen did and dark gradients stay smooth. Off means macOS writes them, a little lighter, greener and with visible bands.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),
