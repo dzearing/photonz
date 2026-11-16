@@ -17577,3 +17577,9 @@
 {"t":"2026-11-16T07:58:27.627Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-16T07:58:27.691Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-16T07:58:27.755Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 5 landed 7df83912c: long tracks paint clips with pictures and Music clips, and a scroll slides the painting. Zoom 41.7 -> 24.9 ms a frame (p95 203 -> 67), scroll 41.5 -> 17.0, edits 84-174 -> 42-117 ms. Bars not reached (8.3 / 16 ms); stays open for titles and cuts near Fit."}
+{"t":"2026-11-16T08:10:50.805Z","ev":"slice_pass","walks":29,"passed":28,"failed":0,"seconds":704,"of":1171,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-16T08:10:50.987Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-16T09:04:34.559Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T09:24:56.096Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T09:24:56.164Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T09:25:19.702Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 10 landed 453089736 and cb47aa27c: an edit rebuilds only the clip bars it changed, and a pick no longer rebuilds every bar through the ruler (worst of 3: trim picked 24 -> 18, blade picked 46 -> 26, undo 36 -> 27, blade 89 -> 62; pick 22 bars -> 9). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 11 leads in the log."}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-16T04:20:05.126Z",
+  "updated": "2026-11-16T09:25:19.701Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -314,9 +314,29 @@
     {
       "t": "2026-11-16T04:20:05.125Z",
       "note": "Pass 9 landed 6d6f87aa1: the timeline's ruler watches only its own facts and a pick carried into the history is no edit, so an edit wakes the timeline a frame later instead of every clip in its own frame (trim 32 -> 18 ms, trim picked 34 -> 24, undo picked 44 -> 29, worst of 3). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 10 leads in the log."
+    },
+    {
+      "t": "2026-11-16T08:10:50.981Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T09:04:34.557Z",
+      "note": "Pass 10 fix 1: each clip bar watches only its own clip (ClipBarWatch via readingForAClipBar; which bars an edit reaches is PhotonzDocument.clipBarsChange, ClipBarsChangeTests). Measured first with a temporary build where bars watched nothing: trim late pass 18 -> 12. Shipped, worst of 3: trim 18 -> 17, blade 89 -> 62, undo 36 -> 27, trim picked 24 -> 18, blade picked 46 -> 26, undo picked 29 -> 23; pick 43 -> 41 unchanged. 20 walks ok (holds, edit points, ripple, fades, cuts, keys, click tick slide, an-editing-session, scrub). test.sh green."
+    },
+    {
+      "t": "2026-11-16T09:24:56.094Z",
+      "note": "Pass 10 fix 2 (cb47aa27c): a pick rebuilt 22 clip bars because the ruler worked out the Source ghost's room by reading selectedLayerID/multiSelectedLayerIDs, so every ruler reader watched the pick. Now EditorState.rulerGhostEndMS (written on a pick and with the late pass, only when a ghost runs past the end); the ruler reads it live only while a hand holds the document (rulerReadsTheHand). Pick builds 9 bars, longest pass 32 (baseline runs 35/36/41). a-retimed-clip-shows-its-source-walk shows the ruler still runs to ~17 s for a 2x ghost on an 8.6 s clip. 6 more walks ok (box picks, clip-click-cost, an-editing-session, keyframe-anything, speed curve). test.sh green. Baseline short-6.json rewritten after fix 1 (worst of 3) and not again after fix 2, which only made the pick faster."
+    },
+    {
+      "t": "2026-11-16T09:24:56.162Z",
+      "note": "Next for pass 11: (a) a pick still holds the window ~32 ms and rebuilds the 5 track lanes and rows (lanes read the pick to decide which clips stay full views, rule 8): hand lanes a per-track pick value; (b) the panel's first fill after a pick, ~450 ms in 15-60 ms passes (blade with nothing picked, 62); (c) undo after a trim/blade 23-27 ms: its late pass rebuilds the panel sections plus lanes; (d) NSWindow _resetDragMargins ~3 ms an edit (pass 9 lead). Bars not reached: edits <=16 ms, scrub 1 frame (2), 0 dropped (1/min). Audit queue/audits/2026-11-16-a-long-edit-with-transitions-plays-scrubs-and-ed-pass10.json. No new follow-up tasks: every cost left is one of this task's own unmet bars."
+    },
+    {
+      "t": "2026-11-16T09:25:19.700Z",
+      "note": "Pass 10 landed 453089736 and cb47aa27c: an edit rebuilds only the clip bars it changed, and a pick no longer rebuilds every bar through the ruler (worst of 3: trim picked 24 -> 18, blade picked 46 -> 26, undo 36 -> 27, blade 89 -> 62; pick 22 bars -> 9). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 11 leads in the log."
     }
   ],
-  "started": "2026-11-16T02:32:36.486Z",
+  "started": "2026-11-16T08:10:50.980Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk",
