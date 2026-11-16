@@ -648,14 +648,19 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     public static let edits = ["trim", "move", "blade", "undo", "transition", "title"]
     /// Edits a walk may name that change what the ones after it act on, so
     /// they are never made unless named: `pick` picks the recording under
-    /// the playhead and keeps it picked, as a person editing a clip has it.
-    public static let namedOnlyEdits = ["pick"]
+    /// the playhead and keeps it picked, as a person editing a clip has it;
+    /// `unpick` picks nothing, so the next `pick` is a click on a clip with
+    /// nothing picked, the one that builds the panel's sections from nothing.
+    public static let namedOnlyEdits = ["pick", "unpick"]
 
     /// The name an edit's numbers are kept under. Made with a clip picked,
     /// an edit holds the panel's sections too and costs more, so it is a
-    /// number of its own rather than one that overwrites the other.
-    public static func tallyName(_ edit: String, picked: Bool) -> String {
-        picked && !namedOnlyEdits.contains(edit) ? "\(edit), picked" : edit
+    /// number of its own rather than one that overwrites the other; so is a
+    /// pick made after `unpick` (`fromNothing`), against one that moves the
+    /// pick from a clip the panel already describes.
+    public static func tallyName(_ edit: String, picked: Bool, fromNothing: Bool = false) -> String {
+        if edit == "pick", fromNothing { return "pick, from nothing" }
+        return picked && !namedOnlyEdits.contains(edit) ? "\(edit), picked" : edit
     }
 
     /// How many display frames a hand takes to drag the playhead end to end

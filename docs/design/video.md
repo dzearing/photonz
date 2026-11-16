@@ -889,6 +889,20 @@ The rule, for any view added to the editor window:
    hour-long reference edit's 126 Zoom lanes were each built on every frame
    of a scroll (2026-11-15). A new row per clip under a track follows the
    same rule.
+10. **A pick wakes the track it left, the track it landed on, and those two
+   clips; nothing else on the timeline reads the selection.** The grid works
+   out each track's share of the pick (`TrackPickShare`: picked on its header,
+   in hand, which of its clips and sounds are picked, the single pick and the
+   layer its header's key diamond keys) and hands it to the row, which is
+   compared for equality, so a track the pick did not reach is not built
+   again. A clip bar asks `EditorState.isClipPicked`, a watch of its own that
+   only the clip the pick leaves and the one it lands on are told about,
+   never `selectedLayerID`. On the 6 minute reference edit (2026-11-16) a
+   pick from one clip to another built all five track rows and lanes and
+   seven to nine clip bars and held the window 36 to 41 ms; with this it
+   builds one row, one lane and one bar and holds it about 31. A new thing
+   on a track row or a clip bar that depends on what is picked reads it from
+   the share or from the clip's watch, or is added to them.
 
 Measured with these in place (short speed walk, 2026-11-13): a minute of 1x
 play dropped 4 of about 1,820 frames, against 379 before; every transition

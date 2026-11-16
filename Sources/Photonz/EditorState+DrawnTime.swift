@@ -61,14 +61,6 @@ extension EditorState {
 
     // MARK: The key diamond on a row's header
 
-    /// The layer a track header's diamond keys: the picked one, where it is on
-    /// this track and the diamond is offered at all.
-    func headerKeyLayerID(onTrackWith clipIDs: [UUID]) -> UUID? {
-        guard Experiments.shared.drawnOnTheTimelineEnabled,
-              let layer = keyLayer, clipIDs.contains(layer.id) else { return nil }
-        return layer.id
-    }
-
     func headerKeyDiamond(_ layerID: UUID) -> KeyDiamond {
         document?.keyMomentDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) ?? .dormant
     }

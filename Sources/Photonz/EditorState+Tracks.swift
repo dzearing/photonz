@@ -363,6 +363,14 @@ extension EditorState {
         return selectedTrackIDs
     }
 
+    /// What the timeline's rows need to hand each track its share of the
+    /// pick (`TrackPickShare`), read once for every row.
+    var timelinePickShares: TimelinePickShares {
+        TimelinePickShares(primary: selectedLayerID, multi: multiSelectedLayerIDs,
+                           pickedTracks: selectedTrackIDs, tracksInHand: tracksInHand,
+                           keyLayer: Experiments.shared.drawnOnTheTimelineEnabled ? keyLayer?.id : nil)
+    }
+
     /// The tracks in hand in the timeline's order, top first.
     var orderedTracksInHand: [UUID] {
         let held = tracksInHand
@@ -704,5 +712,21 @@ extension EditorState {
     /// turned off.
     func isClipLocked(_ layerID: UUID) -> Bool {
         shownDocument?.isClipOnLockedTrack(layerID) ?? false
+    }
+}
+
+/// The pick as the timeline's rows share it out (`TrackPickShare`).
+struct TimelinePickShares {
+    let primary: UUID?
+    let multi: Set<UUID>
+    let pickedTracks: Set<UUID>
+    let tracksInHand: Set<UUID>
+    /// The one picked layer the header's key diamond keys (`keyLayer`).
+    let keyLayer: UUID?
+
+    func share(of row: TimelineTrackRowModel) -> TrackPickShare {
+        TrackPickShare(track: row.track.id, clips: row.clips.map(\.layerID), linked: row.linked.map(\.layerID),
+                       primary: primary, multi: multi, pickedTracks: pickedTracks, tracksInHand: tracksInHand,
+                       keyLayer: keyLayer)
     }
 }

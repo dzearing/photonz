@@ -215,9 +215,13 @@ final class SpeedWalkProbe {
         // clip picked, the way a person editing a clip has it, and counted
         // under names of their own (`PlaytestSpeedMeasure.tallyName`).
         var picked = false
+        // After `unpick` the next pick builds the panel from nothing, and is
+        // counted apart from one that moves the pick between clips.
+        var fromNothing = false
         for named in edits {
-            let edit = PlaytestSpeedMeasure.tallyName(named, picked: picked)
-            if named == "pick" { picked = true }
+            let edit = PlaytestSpeedMeasure.tallyName(named, picked: picked, fromNothing: fromNothing)
+            if named == "pick" { picked = true; fromNothing = false }
+            if named == "unpick" { picked = false; fromNothing = true }
             // A blade stops play. Starting it again is not part of the next
             // edit: a person presses Space, watches, then edits, so play has
             // a second to get going before the edit is counted. Until
@@ -340,6 +344,9 @@ final class SpeedWalkProbe {
             guard editor.canSplitClipAtPlayhead else { throw Failure(description: "\(clip.name) cannot be cut there") }
             editor.splitClipAtPlayhead()
             return "\(clip.name) cut at \(SpeedWalk.clock(editor.documentTimeMS))"
+        case "unpick":
+            editor.selectLayer(nil)
+            return "nothing picked"
         case "undo":
             guard editor.canUndo else { throw Failure(description: "there was nothing to undo") }
             editor.undo()

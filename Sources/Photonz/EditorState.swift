@@ -65,6 +65,28 @@ final class EditorState {
     /// The document the clip bars' watches last answered for.
     @ObservationIgnored private var clipBarsSaw: PhotonzDocument?
 
+    /// One per clip bar that has asked whether its clip is the single pick
+    /// (`isClipPicked`), set when the pick moves onto it or off it.
+    @ObservationIgnored private var clipPickWatches: [UUID: ClipPickWatch] = [:]
+
+    /// Whether this clip is the single pick, watched for this clip alone.
+    /// Every clip bar on the timeline asks; reading `selectedLayerID` for it
+    /// built every full bar in sight again on every pick anywhere, seven to
+    /// nine on the 6 minute reference edit
+    /// (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 11).
+    func isClipPicked(_ id: UUID) -> Bool {
+        if let watch = clipPickWatches[id] { return watch.isPicked }
+        let watch = ClipPickWatch(isPicked: selectedLayerID == id)
+        clipPickWatches[id] = watch
+        return watch.isPicked
+    }
+
+    /// The single pick moved from `old` to `new`: tell the two bars.
+    private func notePickMoved(from old: UUID?, to new: UUID?) {
+        if let old, let watch = clipPickWatches[old], watch.isPicked { watch.isPicked = false }
+        if let new, let watch = clipPickWatches[new], !watch.isPicked { watch.isPicked = true }
+    }
+
     private func clipBarWatch(_ id: UUID) -> ClipBarWatch {
         if let watch = clipBarWatches[id] { return watch }
         let watch = ClipBarWatch()
@@ -1283,6 +1305,7 @@ final class EditorState {
     var selectedLayerID: UUID? {
         didSet {
             if oldValue != selectedLayerID {
+                notePickMoved(from: oldValue, to: selectedLayerID)
                 if !multiSelectedLayerIDs.isEmpty { multiSelectedLayerIDs = [] }
                 // Picking something else is another operation: the transform
                 // values were about the layer that was in hand.

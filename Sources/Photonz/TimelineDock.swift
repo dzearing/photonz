@@ -431,6 +431,10 @@ struct TimelineDock: View {
                             let carry = editorState.trackRowDrag
                             let drawn = editorState.editArrival.showsTrackRows
                                 ? trackRows : []
+                            // What of the pick lands on each track, worked out
+                            // here and handed to its row, so a pick builds only
+                            // the rows it reaches (`TrackPickShare`).
+                            let picks = editorState.timelinePickShares
                             // While captions are being written, their stand-in
                             // row stands where the Captions track will land:
                             // under the picture, over the sound.
@@ -456,7 +460,7 @@ struct TimelineDock: View {
                                                          index: order.firstIndex(of: track.id) ?? 0,
                                                          trackCount: order.count,
                                                          laneWidth: laneWidth, isBlade: isBlade,
-                                                         rows: rows)
+                                                         rows: rows, pick: picks.share(of: track))
                                         .equatable()
                                     }
                                 }
@@ -844,7 +848,8 @@ struct TimelineDock: View {
                                                  index: order.firstIndex(of: track.id) ?? 0,
                                                  trackCount: order.count, laneWidth: laneWidth,
                                                  isBlade: isBlade, rows: editorState.timelineRowZoom,
-                                                 isLifted: true)
+                                                 isLifted: true,
+                                                 pick: editorState.timelinePickShares.share(of: track))
                                .equatable())
         }
     }

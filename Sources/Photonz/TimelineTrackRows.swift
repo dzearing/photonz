@@ -32,6 +32,10 @@ struct TimelineTrackRow: View {
     /// carried (`TrackRowDragSession`). It says nothing about where the track
     /// is: the track itself, standing invisible in its slot, still does.
     var isLifted = false
+    /// What of the pick lands on this track, handed down by the grid
+    /// (`TrackPickShare`). Read here rather than the selection, so a pick
+    /// builds the rows it reaches and leaves every other track alone.
+    var pick: TrackPickShare = .none
 
     @State private var isHovered = false
     @State private var draftName = ""
@@ -91,7 +95,7 @@ struct TimelineTrackRow: View {
             // A picked clip played faster or slower than recorded shows how
             // long it was at 100%, right under it (`ClipSourceLane`). Only the
             // picked clips are asked, so a track of plain clips reads nothing.
-            ForEach(row.clips.filter { editorState.isLayerSelected($0.layerID) }) { clip in
+            ForEach(row.clips.filter { pick.picked.contains($0.layerID) }) { clip in
                 ClipSourceLane(layerID: clip.layerID, laneWidth: laneWidth, indent: indent)
             }
             // A keyed value is a lane of keys, opened and closed by the arrow
@@ -154,7 +158,7 @@ struct TimelineTrackRow: View {
         // cannot draw.
         guard row.isCaptions, row.cuesArePlain, !isHeld else { return [] }
         let carried = editorState.carriedCaptionCueID
-        let picked = editorState.selectedLayerID
+        let picked = pick.primary
         let renaming = editorState.renamingClipID
         let trimming = editorState.trimmingLayerID
         return row.clips.filter { clip in
@@ -200,13 +204,9 @@ struct TimelineTrackRow: View {
 
     /// This track is the thing in hand: picked on its header, nothing else
     /// picked. Its header and lane light up as one, with every clip on it.
-    private var isHeld: Bool { editorState.tracksInHand.contains(track.id) }
+    private var isHeld: Bool { pick.isHeld }
 
-    private var isPicked: Bool {
-        editorState.selectedTrackIDs.contains(track.id)
-            || row.clips.contains { editorState.isLayerSelected($0.layerID) }
-            || row.linked.contains { editorState.isLayerSelected($0.layerID) }
-    }
+    private var isPicked: Bool { pick.isPicked }
 
     // MARK: The header
 
@@ -321,7 +321,9 @@ struct TimelineTrackRow: View {
     /// diamond keys.
     private var keyLayerID: UUID? {
         guard !track.isLocked, editorState.renamingTrackID != track.id else { return nil }
-        return editorState.headerKeyLayerID(onTrackWith: row.clips.map(\.layerID))
+        // Handed down with the pick, so a pick on another track does not
+        // build this row again (`TrackPickShare.key`).
+        return pick.key
     }
 
     // MARK: The arrow that opens the lanes
@@ -505,10 +507,7 @@ struct TimelineTrackRow: View {
     private var keptOutOfSight: Set<UUID> {
         var kept = editorState.clipBarInHandIDs
         if let trimmed = editorState.trimSession?.layerID { kept.insert(trimmed) }
-        for clip in row.clips + row.linked where editorState.isLayerSelected(clip.layerID) {
-            kept.insert(clip.layerID)
-        }
-        return kept
+        return kept.union(pick.picked)
     }
 
     private var lane: some View {
@@ -2007,7 +2006,7 @@ extension TimelineTrackRow: Equatable {
     nonisolated static func == (a: TimelineTrackRow, b: TimelineTrackRow) -> Bool {
         a.row == b.row && a.inGroup == b.inGroup && a.index == b.index
             && a.trackCount == b.trackCount && a.laneWidth == b.laneWidth && a.isBlade == b.isBlade
-            && a.rows == b.rows && a.isLifted == b.isLifted
+            && a.rows == b.rows && a.isLifted == b.isLifted && a.pick == b.pick
     }
 }
 
@@ -2016,3 +2015,4 @@ extension TimelineTrackRow: Equatable {
 @MainActor private final class PointerSpot {
     var x: CGFloat?
 }
+

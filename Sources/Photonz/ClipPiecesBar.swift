@@ -347,7 +347,9 @@ struct ClipPiecesBar: View {
             ?? ClipPieces(single: bar)
     }
 
-    private var isPicked: Bool { editorState.selectedLayerID == layerID }
+    /// Read through this clip's own watch (`EditorState.isClipPicked`), so
+    /// a pick wakes the bar it left and the bar it landed on, not every bar.
+    private var isPicked: Bool { editorState.isClipPicked(layerID) }
     /// Whether this bar is in a drag at all, grabbed or carried along. Asked
     /// FIRST everywhere below, so a bar nobody is dragging never reads the
     /// drag and is not rebuilt at every move of somebody else's.

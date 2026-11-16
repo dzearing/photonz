@@ -287,4 +287,24 @@ struct SpeedWalkStepTests {
         #expect(PlaytestSpeedMeasure.tallyName("trim", picked: true) == "trim, picked")
         #expect(PlaytestSpeedMeasure.tallyName("pick", picked: true) == "pick")
     }
+
+    @Test("Unpick lets a walk time a click on a clip when nothing is picked, under a name of its own")
+    func unpickTimesAPickFromNothing() throws {
+        let json = #"{"steps": [{"do": "speed", "measure": "edits", "edits": ["pick", "unpick", "pick", "trim"]}]}"#
+        let script = try PlaytestScript.decode(Data(json.utf8))
+        guard case .speed(let step) = script.steps.first else {
+            Issue.record("not a speed step")
+            return
+        }
+        #expect(step.problem == nil)
+        // Never made unasked: it changes what every edit after it acts on.
+        #expect(!PlaytestSpeedMeasure.edits.contains("unpick"))
+        #expect(PlaytestSpeedMeasure.tallyName("unpick", picked: true) == "unpick")
+        // The pick after it builds the panel's sections from nothing, which
+        // costs far more than moving a pick between clips, so it is a number
+        // of its own and never overwrites the other.
+        #expect(PlaytestSpeedMeasure.tallyName("pick", picked: false, fromNothing: true) == "pick, from nothing")
+        #expect(PlaytestSpeedMeasure.tallyName("pick", picked: false, fromNothing: false) == "pick")
+        #expect(PlaytestSpeedMeasure.tallyName("trim", picked: false, fromNothing: true) == "trim")
+    }
 }

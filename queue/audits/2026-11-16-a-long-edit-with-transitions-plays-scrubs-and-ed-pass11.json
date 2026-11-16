@@ -1,0 +1,26 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 11)",
+  "epic": "video-perf",
+  "summary": "Picking a clip on the 6 minute edit now redraws only the track you picked on and the clip itself, not every track and every clip in sight. A pick from one clip to another while it plays went from 41 to 32 ms at worst of three. The speed walk now also times the most common click: picking a clip when nothing is picked.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "switched": {},
+  "try": [
+    { "do": "Press Space to play the edit.", "shot": "2026-11-16-long-edit-pass11-after-the-edits-sc.png" },
+    { "do": "While it plays, click a clip on V1, then a different clip on V1." },
+    { "do": "Click a clip on V2, then click an empty part of the timeline." },
+    { "do": "Click a clip on V1 again, with nothing picked before it." },
+    { "do": "Click the V1 track header, then a clip on it." },
+    { "do": "Pick a keyed clip and check the diamond on its track header." }
+  ],
+  "evaluate": [
+    "Does moving the pick from clip to clip while it plays feel instant?",
+    "Does a picked clip still light its track header, and lose it when you pick elsewhere?",
+    "Does clicking a clip with nothing picked still make the picture catch for a moment while the panel fills?"
+  ],
+  "rough": [
+    "Bars still not reached, so this task stays open. Worst of three short speed walks: trim 15, blade 89 with nothing picked (85 to 92 in every run today, 87 before this change), undo 29, pick 32, trim picked 17, blade picked 51 (runs 28, 27, 51; 33 in a fourth), undo picked 23, against 16 ms. Scrub 2 frames behind (bar 1); 1 dropped frame a minute (bar 0).",
+    "Measured for the first time: picking a clip with nothing picked holds the main thread for about 400 ms while the panel's sections and rows arrive, in 15 to 20 passes of 15 to 70 ms each. Letting go of a clip costs about 100 ms over 4 to 6 passes, longest about 39.",
+    "Tried and not kept: bringing all of the panel's waiting sections in one pass instead of one a pass. Busy time for a pick from nothing went from about 370 to 310 ms, but its longest pass went from about 62 to 95.",
+    "No mock covers this. It is speed work, and nothing on screen changed."
+  ]
+}

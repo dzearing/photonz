@@ -76,6 +76,13 @@ func readingForAClipBar<Content>(_ id: UUID, _ build: () -> Content) -> Content 
     return readingALatePass(build)
 }
 
+/// Whether one clip is the single pick (`EditorState.isClipPicked`).
+@Observable @MainActor
+final class ClipPickWatch {
+    var isPicked: Bool
+    init(isPicked: Bool) { self.isPicked = isPicked }
+}
+
 /// What a clip bar's reads of the document watch (`readingForAClipBar`).
 @Observable @MainActor
 final class ClipBarWatch {
