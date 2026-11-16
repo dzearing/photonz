@@ -138,16 +138,40 @@ final class EditorState {
     /// A change the ruler could show came in a pass that follows later.
     @ObservationIgnored private var rulerOwed = false
 
-    /// What the ruler measures, out of `document`, for the pick as it is now.
+    /// What the ruler measures out of `document`, apart from the pick's
+    /// Source ghost (`rulerGhostEndMS`).
     private func rulerFacts(_ document: PhotonzDocument?) -> [Int] {
         guard let document else { return [] }
-        return [document.hasTime ? 1 : 0, document.timelineLengthMS,
-                clipSourceGhostsEndMS(in: document) ?? -1]
+        return [document.hasTime ? 1 : 0, document.timelineLengthMS]
     }
 
     private func noteWhatTheRulerSees(was: PhotonzDocument?) {
-        guard rulerFacts(was) != rulerFacts(history?.current) else { return }
-        if followsAPassLater { rulerOwed = true } else { rulerDocumentRevision &+= 1 }
+        let changed = rulerFacts(was) != rulerFacts(history?.current)
+        // The ghost too follows a pass later, in the catch-up.
+        if followsAPassLater {
+            if changed { rulerOwed = true }
+            return
+        }
+        noteTheRulerGhost()
+        if changed { rulerDocumentRevision &+= 1 }
+    }
+
+    /// Where a picked clip's Source ghost runs past the end of the document,
+    /// or nil where none does: the room the ruler leaves for it
+    /// (`motionStripCycleMSPastAGlide`). Written only when that changes. The
+    /// ruler had read the pick itself to work it out, so every clip bar, cut
+    /// and tick that reads the ruler was built again for every pick of a
+    /// clip: 20 to 22 bars on the 6 minute reference edit
+    /// (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 10).
+    private(set) var rulerGhostEndMS: Int?
+
+    /// Works `rulerGhostEndMS` out again, for the pick and document as they
+    /// are now.
+    func noteTheRulerGhost() {
+        let document = _history?.current
+        let length = max(1, document?.timelineLengthMS ?? 1)
+        let past = sourceGhostsEndMS(in: document).flatMap { $0 > length ? $0 : nil }
+        if rulerGhostEndMS != past { rulerGhostEndMS = past }
     }
 
     /// The document the timeline's ruler measures (`motionStripCycleMS`).
@@ -160,13 +184,18 @@ final class EditorState {
     /// one of them in the frame of every edit: nine reads of the document in
     /// ten made in a trim's own pass on the 6 minute reference edit
     /// (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 9). The
-    /// pick it reads (a Source ghost) is watched as itself.
+    /// room it leaves for a picked clip's Source ghost is watched as
+    /// `rulerGhostEndMS`.
     var rulerDocument: PhotonzDocument? {
-        if trimSession != nil || clipBarDrag != nil || speedStopDrag != nil || captionWordDrag != nil {
-            return shownDocument
-        }
+        if rulerReadsTheHand { return shownDocument }
         _ = rulerDocumentRevision
         return _history?.current
+    }
+
+    /// Whether a hand holds the document the ruler measures: a trim, a clip,
+    /// a speed stop or a caption word.
+    var rulerReadsTheHand: Bool {
+        trimSession != nil || clipBarDrag != nil || speedStopDrag != nil || captionWordDrag != nil
     }
 
     /// Every change to the document in this pass reaches the panel's look
@@ -189,6 +218,7 @@ final class EditorState {
                 self.lookRowsOwed = false
                 self.lookRowsRevision &+= 1
             }
+            self.noteTheRulerGhost()
             if self.rulerOwed {
                 self.rulerOwed = false
                 self.rulerDocumentRevision &+= 1
@@ -1319,6 +1349,8 @@ final class EditorState {
                 // here rather than in its own body: a view cannot remember
                 // anything while SwiftUI is reading it.
                 noteIconPreviewFocus()
+                // A picked clip's Source ghost can lengthen the ruler.
+                noteTheRulerGhost()
             }
             // Selecting anything (or explicitly deselecting) drops the Canvas
             // pseudo-selection; selectCanvas() re-raises the flag afterwards.
@@ -1355,6 +1387,7 @@ final class EditorState {
             let gained = multiSelectedLayerIDs.subtracting(oldValue)
             if !gained.isEmpty { revealInLayersList(gained) }
             if multiSelectedLayerIDs != oldValue, transformBar != nil { transformBar = nil }
+            if multiSelectedLayerIDs != oldValue { noteTheRulerGhost() }
             if !multiSelectedLayerIDs.isEmpty { letGoOfTimelinePicks(keepingRange: true) }
             if !multiSelectedLayerIDs.isEmpty, !selectedTrackIDs.isEmpty { selectedTrackIDs = [] }
             if !multiSelectedLayerIDs.isEmpty, selectedLibraryItemID != nil { selectedLibraryItemID = nil }

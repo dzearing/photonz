@@ -1063,6 +1063,17 @@ inside its clip's scope**, so the document it watches is that clip's, and a
 new thing a bar draws from outside its own clip is added to
 `clipBarsChange` (and its test) in the same change, or it will go stale.
 
+**The ruler does not watch the pick** (2026-11-16, pass 10). The room the
+ruler leaves past the end for a picked clip's Source ghost was worked out
+inside the ruler, which read which clips are picked, so every view that reads
+the ruler (every clip bar, cut, tick and zoom lane) was built again for every
+pick: 22 clip bars for one click on the 6 minute reference edit. It is kept as
+`EditorState.rulerGhostEndMS` now, written on a pick and with the late pass
+only when a ghost really runs past the end, and a pick builds 9 bars. Like
+the history write in pass 9, this is rule 5 again: **a value many views read is
+watched through the answer, never through what the answer was worked out
+from.**
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

@@ -105,8 +105,12 @@ extension EditorState {
         let length = max(1, measured?.timelineLengthMS ?? 1)
         // ...and room for a picked clip's Source ghost where a speed-up left
         // its original length running past the end (`ClipSourceLane`): the
-        // mock's before and after reads only with both ends on screen.
-        return max(length, clipSourceGhostsEndMS(in: measured) ?? 0)
+        // mock's before and after reads only with both ends on screen. Worked
+        // out live while a hand holds the document (`rulerDocument`), and
+        // otherwise read from `rulerGhostEndMS`, so the ruler does not watch
+        // the pick itself.
+        if rulerReadsTheHand { return max(length, clipSourceGhostsEndMS(in: measured) ?? 0) }
+        return max(length, rulerGhostEndMS ?? 0)
     }
 
     /// The Source ghost a picked clip shows under it, nil where its lane stays
@@ -121,7 +125,13 @@ extension EditorState {
 
     /// Where the furthest Source ghost on screen ends, in `document`.
     func clipSourceGhostsEndMS(in document: PhotonzDocument?) -> Int? {
-        guard let document, document.hasTime, clipBarDrag == nil else { return nil }
+        guard clipBarDrag == nil else { return nil }
+        return sourceGhostsEndMS(in: document)
+    }
+
+    /// The same, whether or not a clip is in the hand.
+    func sourceGhostsEndMS(in document: PhotonzDocument?) -> Int? {
+        guard let document, document.hasTime else { return nil }
         let picked = [selectedLayerID].compactMap { $0 } + multiSelectedLayerIDs
         return picked.compactMap { id -> Int? in
             guard let layer = document.layer(id: id), let time = layer.time,
