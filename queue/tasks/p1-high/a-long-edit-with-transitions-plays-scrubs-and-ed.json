@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-15T23:01:49.647Z",
+  "updated": "2026-11-16T04:20:05.126Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -286,9 +286,37 @@
     {
       "t": "2026-11-15T23:01:49.646Z",
       "note": "Pass 8 landed 45c1b849e (blade on a picked clip 42-45 -> 29-36 ms; speed walk times edits picked and unpicked, no longer charges an edit for restarting play). Bars not reached: edits 32-44 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute. Pass 9 leads in the log."
+    },
+    {
+      "t": "2026-11-16T02:32:36.487Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T04:20:04.748Z",
+      "note": "Pass 9 measured first (short speed walk, a6861a6fd): trim 29, blade 58, undo 38, pick 45, trim picked 33, blade picked 31, undo picked 38. Time Profiler over 20 trims (pick then trim/undo, playing): ~34 ms an edit = flush 20 (bodies of the dock, ruler, click ticks, cuts, zoom bars, panel sections, root), window layout 7, drag margins (NSWindow _resetDragMargins walking every hosting view's focus items) 3, CA commit. Tools: a probe-only census writing a stack for every read of the document in an edit's own pass (EditorState.document getter while followsAPassLater), and a withObservationTracking wrapper on TimelineTrackRow.body logging the setter that woke it; both removed."
+    },
+    {
+      "t": "2026-11-16T04:20:04.821Z",
+      "note": "Fix 1 (6d6f87aa1): 9 of 10 document reads in an edit's own pass came through motionStripRuler (shownDocument for length, clipSourceGhostsEndMS for the picked clip), read by every clip bar piece, cut, click tick, zoom lane and the time scroller. The ruler reads rulerDocument now: watched via rulerDocumentRevision (has time, length, ghost end), late for a catch-up edit; the hand's document while a trim/clip/speed stop/caption word drag is on. TimelineEditPointView, ZoomLane, ZoomBarsView, ClickTicksView, DrawnOnItsOwn and ClipPiecesBar's piece/band/grip ForEach rows read late. Reads in the pass: ~9,500 -> ~1,200 over six edits."
+    },
+    {
+      "t": "2026-11-16T04:20:04.893Z",
+      "note": "Fix 2 (6d6f87aa1): flushSelectionToHistory writes the history before perform marks catch-up, and noteWhatTheLookRowsSee moved latePassRevision for it though the document was equal: the first edit after a pick rebuilt the timeline in its own pass (clipBar 36 not 18). Now a history write leaving the document equal moves nothing. First trim of a session 26 -> 13 ms own pass; warm trims own pass ~11, timeline late pass 17-19. New short-6 baseline, worst of 3: trim 18, blade 89, undo 36, pick 43, trim picked 24, blade picked 46 (runs 26/33/46, a 4th run 28; pass 8 29-36 with one 44, read as noise not a regression), undo picked 29. test.sh green twice; 23 walks ok (clicks, zooms, source ghost, speed curve, ripple/trim, cuts, ruler, an-editing-session, keyframe-anything, scrub, captions, speed-walk)."
+    },
+    {
+      "t": "2026-11-16T04:20:04.965Z",
+      "note": "Did NOT pay or not kept: (a) busyLane 24 -> 1 (paint every plain clip): clipBar bodies 36 -> 22, trim 29 -> 26, within noise; reverted. (b) ClickTicksView handed its ticks by the lane as an Equatable view: a-click-tick-is-hidden-and-slid-walk fails at step 16 (tick drag does not slide the click), exactly as on 2026-11-14; reverted to reading for itself inside readingALatePass, walk green. Cause still not found."
+    },
+    {
+      "t": "2026-11-16T04:20:05.041Z",
+      "note": "Next for pass 10: (a) the longest pass is now the timeline's late pass (17-24 ms) where every clip bar in sight (18-20) is built again because each reads the document via latePassRevision: hand ClipPiecesBar its own values from the lane (rule 7) or a per-layer revision so only the edited clips rebuild; (b) NSWindow _resetDragMargins runs after every edit (~3 ms, FocusNavigator walking every focusable item via NSHostingView.acceptsFirstResponder); (c) root body still reads saveAffordance (document) in the edit's own pass; (d) pick 42 ms and its ~450 ms of panel arrivals. Bars not reached: edits <=16 (trim 18, picked 24-29), scrub 2 frames vs 1, 1 dropped a minute. Audit queue/audits/2026-11-15-a-long-edit-with-transitions-plays-scrubs-and-ed-pass9.json."
+    },
+    {
+      "t": "2026-11-16T04:20:05.125Z",
+      "note": "Pass 9 landed 6d6f87aa1: the timeline's ruler watches only its own facts and a pick carried into the history is no edit, so an edit wakes the timeline a frame later instead of every clip in its own frame (trim 32 -> 18 ms, trim picked 34 -> 24, undo picked 44 -> 29, worst of 3). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 10 leads in the log."
     }
   ],
-  "started": "2026-11-15T21:57:29.881Z",
+  "started": "2026-11-16T02:32:36.486Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk",

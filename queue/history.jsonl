@@ -17557,3 +17557,12 @@
 {"t":"2026-11-16T02:05:19.418Z","ev":"task_note","id":"a-screen-recording-keeps-the-desktop-s-colours-a"}
 {"t":"2026-11-16T02:10:36.063Z","ev":"task_note","id":"find-out-why-the-cut-export-test-fails-again-in"}
 {"t":"2026-11-16T02:15:17.470Z","ev":"task_done","id":"a-screen-recording-keeps-the-desktop-s-colours-a","from":"in_progress","note":"Next (on by default): Photonz writes recordings itself, 10-bit HEVC in Display P3 at top quality (RecordingFileWriter), Settings > Recording > Quality offers Smaller files; editor and cut-copy decode 10-bit at 10 bits. Measured on a controlled swatch panel: dE 6.8 -> 0.47 (QuickTime) / 1.04 (editor), ramps 36 bands of 3 code values -> 77/0.76 and 93/0.80 (screenshot 74/0.66, 93/0.65), start 14.7 -> 9.6 ms, load +7.5%, no dropped frames. Tests green; walks a-recording-opens-at-stop (checks the file is 10-bit HEVC P3) and recording-quality-in-settings pass. Commit ce7a9b934. Audit queue/audits/2026-11-15-a-screen-recording-keeps-the-desktop-s-colours-a.json"}
+{"t":"2026-11-16T02:30:32.960Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-16T02:32:36.308Z","ev":"slice_pass","walks":33,"passed":32,"failed":1,"seconds":879,"of":1171,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-16T02:32:36.493Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-16T04:20:04.750Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T04:20:04.823Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T04:20:04.895Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T04:20:04.967Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T04:20:05.043Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T04:20:05.127Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 9 landed 6d6f87aa1: the timeline's ruler watches only its own facts and a pick carried into the history is no edit, so an edit wakes the timeline a frame later instead of every clip in its own frame (trim 32 -> 18 ms, trim picked 34 -> 24, undo picked 44 -> 29, worst of 3). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 10 leads in the log."}
