@@ -23177,3 +23177,7 @@ units.
   undo picked 44 -> 29. Bars (16 ms, scrub 1 frame, 0 dropped) not reached.
   docs/design/video.md 8f has the rule and what is next (clip bars handed
   their own values, so the timeline's late pass stops rebuilding all of them).
+
+## 2026-11-16 — release v0.24.0
+
+Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight in a clean worktree: Scripts/test.sh green, build-app.sh --dmg built. The tag's first Release run failed only in "Build app": the runner could not reach github.com to fetch llama-server (curl exit 28) while all three test slices passed; `gh run rerun --failed` built, notarized and published. Verified: release has Photonz.dmg, latest/download returns 200 (57.9 MB), Deploy site said "announcing 0.24.0", version.json reports 0.24.0. Headlines: recordings in 10-bit HEVC Display P3, playback speed button, long-edit speed, Ask's moving icons (Next).
