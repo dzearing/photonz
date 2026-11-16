@@ -17549,3 +17549,11 @@
 {"t":"2026-11-15T23:01:35.503Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-15T23:01:35.578Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-15T23:01:49.648Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 8 landed 45c1b849e (blade on a picked clip 42-45 -> 29-36 ms; speed walk times edits picked and unpicked, no longer charges an edit for restarting play). Bars not reached: edits 32-44 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute. Pass 9 leads in the log."}
+{"t":"2026-11-15T23:09:42.505Z","ev":"task_started","id":"a-screen-recording-keeps-the-desktop-s-colours-a","title":"A screen recording keeps the desktop's colours and smooth gradients","priority":"p1-high"}
+{"t":"2026-11-16T02:05:19.114Z","ev":"task_walks","id":"a-screen-recording-keeps-the-desktop-s-colours-a","walks":["a-recording-opens-at-stop-walk","recording-quality-in-settings-walk"]}
+{"t":"2026-11-16T02:05:19.191Z","ev":"task_note","id":"a-screen-recording-keeps-the-desktop-s-colours-a"}
+{"t":"2026-11-16T02:05:19.268Z","ev":"task_note","id":"a-screen-recording-keeps-the-desktop-s-colours-a"}
+{"t":"2026-11-16T02:05:19.343Z","ev":"task_note","id":"a-screen-recording-keeps-the-desktop-s-colours-a"}
+{"t":"2026-11-16T02:05:19.418Z","ev":"task_note","id":"a-screen-recording-keeps-the-desktop-s-colours-a"}
+{"t":"2026-11-16T02:10:36.063Z","ev":"task_note","id":"find-out-why-the-cut-export-test-fails-again-in"}
+{"t":"2026-11-16T02:15:17.470Z","ev":"task_done","id":"a-screen-recording-keeps-the-desktop-s-colours-a","from":"in_progress","note":"Next (on by default): Photonz writes recordings itself, 10-bit HEVC in Display P3 at top quality (RecordingFileWriter), Settings > Recording > Quality offers Smaller files; editor and cut-copy decode 10-bit at 10 bits. Measured on a controlled swatch panel: dE 6.8 -> 0.47 (QuickTime) / 1.04 (editor), ramps 36 bands of 3 code values -> 77/0.76 and 93/0.80 (screenshot 74/0.66, 93/0.65), start 14.7 -> 9.6 ms, load +7.5%, no dropped frames. Tests green; walks a-recording-opens-at-stop (checks the file is 10-bit HEVC P3) and recording-quality-in-settings pass. Commit ce7a9b934. Audit queue/audits/2026-11-15-a-screen-recording-keeps-the-desktop-s-colours-a.json"}
