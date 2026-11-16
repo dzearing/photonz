@@ -1,0 +1,53 @@
+{
+  "feature": "The timeline of an hour-long edit: nothing off screen is drawn while it zooms",
+  "epic": "video-perf",
+  "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
+  "summary": "Zooming the hour-long edit no longer redraws the Zoom lanes scrolled out of sight below the tracks, nor full clip bars and cuts just off either side of the window, and the Title track is painted like the others. A zoom frame went from about 25 ms to 15, its slowest frames from 77 to 37, and far in it now keeps up with the 120 Hz display. The timeline looks the same.",
+  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60 (the 6 minute one has a dozen Zoom lanes to scroll through).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 60 minute reference edit and press Fit: the whole hour, titles on the top track, exactly as before.",
+      "shot": "2026-11-16-timeline-pass6-fit-sc.png"
+    },
+    {
+      "do": "Pinch the timeline in from Fit to about a quarter of the hour and back out, slowly.",
+      "shot": "2026-11-16-timeline-pass6-zoomed-sc.png"
+    },
+    {
+      "do": "Compare with the same view on the build before this change: titles, clips, cuts and Zoom lanes in the same places.",
+      "shot": "2026-11-16-timeline-pass6-zoomed-before-sc.png"
+    },
+    {
+      "do": "Scroll the tracks down with two fingers to the Zoom lanes under V1, the Background and Music: each Zoom lane's bars are there as it arrives.",
+      "shot": "2026-11-16-timeline-pass6-zoom-lanes-scrolled-sc.png"
+    },
+    {
+      "do": "Pinch all the way in to a few seconds across and swipe along the hour."
+    },
+    {
+      "do": "Rest the pointer on a title, then click it: it becomes its full bar under the pointer and picks like any clip."
+    }
+  ],
+  "evaluate": [
+    "Does pinching the hour-long edit in and out near the whole-hour view feel smoother than yesterday?",
+    "Zoomed right in, does a pinch now feel as quick on the hour-long edit as on a short one?",
+    "When you scroll the tracks down to a Zoom lane, do its bars ever arrive late or blink in?",
+    "Does the Title track look and behave exactly as it did?"
+  ],
+  "measured": [
+    "Speed walk timeline measure on the 60 minute reference edit (524 clips, 377 cuts, 22 titles, 126 Zoom lanes), markers down, 120 Hz. Before is e9978d40f, measured today on the same Mac.",
+    "Zoom in: median 24.8 ms a frame before (p95 77, worst 112), 14.8 after (p95 37, worst 54). Zoom out: 24.0 (p95 72, worst 123) before, 14.7 (p95 36, worst 43) after.",
+    "By zoom, median frame at each doubling (zoom in): before 1x 46, 2x 43, 4x 57, 8x 53, 16x 43, 32x 32, 64x 25, 128x 23, 256x and further in 13 to 17 ms; after 1x 36, 2x 27, 4x 22, 8x 32, 16x 26, 32x 19, 64x 15, 128x 13, 256x 10, 1024x and further in 8 to 9 ms.",
+    "Scroll end to end in three seconds, half a minute on screen: median 18.4 ms (p95 29) before, 14.7 (p95 19) after.",
+    "Clip bars built per zoom frame: 14 before, 5 after (the five are the painted layers themselves).",
+    "Edits (longest main thread pass, ms, before to after): trim 73 to 73, move 38 to 36, blade 82 to 78, undo 108 to 53, transition 96 to 95, title 42 to 40.",
+    "Playing untouched: 107 to 109 pictures in 3 s, no clip bar built per picture, before and after.",
+    "Where it came from, measured by switching each piece off on one build: the Zoom lanes cost 6 to 10 ms of every zoom frame at every zoom level (far in 17 ms a frame with them, 8 without); full bars and cuts in the lane's margin past the painted stretch were most of the 4x to 8x hump; the titles were 4 to 6 ms near Fit."
+  ],
+  "rough": [
+    "The bars of the task are still not reached: zoom near the whole-hour view is 26 to 36 ms a frame (8.3 is the bar), scroll 15 ms, and an edit's longest pass 36 to 95 ms against 16. Near Fit what is left is the painting itself, done again on every frame of a zoom: working out every painted bar from the document, drawing about 900 clips and cuts, names and waveforms.",
+    "Pixel check against the build before, same build with titles switched back to full bars: Fit is identical; zoomed in, the only differences are picture tiles along V1 that had landed in one shot and not yet in the other.",
+    "A Zoom lane more than a few rows below the bottom of the tracks draws nothing until it is scrolled near; a fast fling down the tracks could show a lane's bars arrive a frame late. Not seen in the walk that scrolls them."
+  ]
+}

@@ -19,7 +19,10 @@ import Foundation
 /// timeline shows never changes. Pictures along a clip are painted too, from
 /// the pictures the timeline has read (2026-11-15).
 ///
-/// A long track paints whatever of it is in sight at any zoom: zoomed to half
+/// A long track paints whatever of it is in sight at any zoom, and so does
+/// every track of a long edit (`longEdit`), its quiet Title track included:
+/// near the whole-hour view the reference edit's 22 titles were a full bar
+/// each, about 8 ms of every frame of a zoom (2026-11-16). Zoomed to half
 /// a minute, a lane of the hour-long edit holds a handful of clips, and each
 /// was a full bar of pictures slid along on every frame of a scroll. A short
 /// track with few clips in sight builds them all, as it always has.
@@ -32,8 +35,25 @@ public enum TimelinePaint {
     /// unless its track holds at least this many clips in all.
     public static let busyLane = 24
 
-    public static func lanePaints(clipsInSight: Int, clipsOnTrack: Int = 0) -> Bool {
-        clipsInSight >= busyLane || clipsOnTrack >= busyLane
+    /// An edit holding at least this many clips across its tracks paints
+    /// every track, however few clips each holds.
+    public static let longEdit = 200
+
+    public static func lanePaints(clipsInSight: Int, clipsOnTrack: Int = 0, clipsInEdit: Int = 0) -> Bool {
+        clipsInSight >= busyLane || clipsOnTrack >= busyLane || clipsInEdit >= longEdit
+    }
+
+    /// Whether a lane builds a view for a clip or cut from `fromMS` to
+    /// `toMS` that is in its sight (`TimelineSight`). A lane that paints
+    /// covers its drawn `stretch` (the window and at least half a window
+    /// either side) and builds nothing past it but what somebody is working
+    /// on: the sight reaches up to half a window past the stretch, and near
+    /// the whole-hour view of the reference edit dozens of full bars and cut
+    /// views were built there, off screen, on every frame of a zoom
+    /// (2026-11-16). A lane that does not paint builds all of its sight.
+    public static func builds(fromMS: Double, toMS: Double, stretch: ClosedRange<Double>, isKept: Bool,
+                              lanePaints: Bool) -> Bool {
+        !lanePaints || isKept || (toMS >= stretch.lowerBound && fromMS <= stretch.upperBound)
     }
 
     /// What a lane's painting is laid on: a canvas as wide as the drawn

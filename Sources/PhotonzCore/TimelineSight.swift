@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 /// The stretch of time the timeline builds views for: the window on screen and
@@ -77,5 +78,22 @@ public struct TimelineSight: Hashable, Sendable {
     /// The gaps that reach into the sight.
     public func gaps(_ gaps: [TimelineGap]) -> [TimelineGap] {
         gaps.filter { reaches(fromMS: Double($0.range.lowerBound), toMS: Double($0.range.upperBound)) }
+    }
+
+    /// How far past the top and foot of the tracks' view a row still shows,
+    /// in points: a few rows' worth, so a row scrolling in has drawn itself
+    /// before it arrives.
+    public static let rowMargin: CGFloat = 120
+
+    /// Whether a row under its track (a clip's Zoom lane), from `minY` to
+    /// `maxY` down the tracks, is in the tracks' `view` or within
+    /// `rowMargin` of it. A row out of it draws nothing and reads nothing,
+    /// so a zoom or a scroll along time leaves it alone: the hour-long
+    /// reference edit has 126 Zoom lanes, a handful on screen, and each was
+    /// drawn again on every frame of a zoom (2026-11-16). With no view to
+    /// measure against, a row shows.
+    public static func rowShows(minY: CGFloat, maxY: CGFloat, in view: ClosedRange<CGFloat>?) -> Bool {
+        guard let view else { return true }
+        return maxY >= view.lowerBound - rowMargin && minY <= view.upperBound + rowMargin
     }
 }

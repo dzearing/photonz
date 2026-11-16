@@ -851,7 +851,10 @@ The rule, for any view added to the editor window:
    (570 ms a frame built, 50 painted, 2026-11-14). Plain is a picture clip
    (pictures along it included, read from `ClipFilmstripFrames` and faded in
    as they land) or a sound of its own on the panel's ground, with its name
-   tag (2026-11-15). A clip goes back to its full
+   tag (2026-11-15), or a title, and every track of a long edit paints,
+   however few clips it holds (200 or more in the edit,
+   `TimelinePaint.longEdit`: the hour-long edit's 22 titles were 4 to 6 ms of
+   a frame near the whole-hour view, 2026-11-16). A clip goes back to its full
    view when it is picked, in a hand, being trimmed or renamed, or under the
    pointer, and when it carries anything the painting does not draw (pieces,
    a still, a badge, keys, a drift, level points, a sound badge); a cut goes
@@ -873,6 +876,11 @@ The rule, for any view added to the editor window:
      offsets it to a whole pixel. Only a name that can be pushed along by the
      lane's left edge in this stretch (`TimelinePaint.nameFollowsTheEdge`) is
      drawn against the window, by `TimelinePaintedNames`, every frame.
+   - **Past the stretch, a painting lane builds nothing but what somebody is
+     working on** (`TimelinePaint.builds`). The sight reaches up to half a
+     window past the stretch either side, all of it off screen, and near the
+     whole-hour view every clip and cut there was built as a full view on
+     every frame of a zoom: 4x went from 58 ms a frame to 22 (2026-11-16).
    - A painted clip takes a click, a drag and a right click of its own
      (`TimelinePaintedHands`), for the click that comes with no pointer move
      first; a grip, a fade diamond or the level line is reached only on the
@@ -887,8 +895,12 @@ The rule, for any view added to the editor window:
    the window and two more either side, moved in steps of two windows and
    more) and reads the window only when something of its own reaches it; the
    hour-long reference edit's 126 Zoom lanes were each built on every frame
-   of a scroll (2026-11-15). A new row per clip under a track follows the
-   same rule.
+   of a scroll (2026-11-15). Scrolled out of the tracks' view (more than a
+   few rows past its top or foot, `TimelineSight.rowShows`), such a row reads
+   and draws nothing at all, so a zoom leaves it alone: the 126 lanes, a
+   handful on screen, still cost 6 to 10 ms of every frame of a zoom at every
+   zoom level until they did (2026-11-16). A new row per clip under a track
+   follows the same rule.
 10. **A pick wakes the track it left, the track it landed on, and those two
    clips; nothing else on the timeline reads the selection.** The grid works
    out each track's share of the pick (`TrackPickShare`: picked on its header,

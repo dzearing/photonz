@@ -143,5 +143,31 @@ struct TimelineSightTests {
         #expect(!sight.reaches(fromMS: 1_800_000, toMS: 1_805_000))
         #expect(!sight.reaches(fromMS: 0, toMS: 5_000))
     }
+
+    // MARK: - Down the tracks (2026-11-16)
+
+    /// A row under its track (a clip's Zoom lane) that is scrolled out of
+    /// the tracks' view draws nothing: the hour-long reference edit has 126
+    /// Zoom lanes, a handful on screen, and each was drawn again on every
+    /// frame of a zoom wherever it was.
+    @Test("A row shows while it is in the tracks' view or within a margin of it")
+    func rowShowsDownTheTracks() {
+        let view: ClosedRange<CGFloat> = 0...200
+        #expect(TimelineSight.rowShows(minY: 50, maxY: 72, in: view))
+        // Half in at either edge.
+        #expect(TimelineSight.rowShows(minY: -10, maxY: 12, in: view))
+        #expect(TimelineSight.rowShows(minY: 190, maxY: 212, in: view))
+        // Just under the foot, within the margin, so it is ready as it scrolls in.
+        #expect(TimelineSight.rowShows(minY: 200 + TimelineSight.rowMargin - 1,
+                                       maxY: 222 + TimelineSight.rowMargin, in: view))
+        // Well under the foot and well over the top.
+        #expect(!TimelineSight.rowShows(minY: 200 + TimelineSight.rowMargin + 1, maxY: 1_000, in: view))
+        #expect(!TimelineSight.rowShows(minY: -500, maxY: -TimelineSight.rowMargin - 1, in: view))
+    }
+
+    @Test("A row with no view to measure against shows")
+    func rowShowsWithNoView() {
+        #expect(TimelineSight.rowShows(minY: 5_000, maxY: 5_022, in: nil))
+    }
 }
 

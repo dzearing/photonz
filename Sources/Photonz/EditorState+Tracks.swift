@@ -84,6 +84,9 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// The clips on this track that have zooms, each with a Zoom lane under
     /// it (`ZoomLane`).
     var zoomedClips: [UUID] = []
+    /// How many clips the whole edit holds, on every track: a long edit
+    /// paints its quiet tracks too (`TimelinePaint.longEdit`).
+    var clipsInEdit = 0
     /// The clips on it with speed stops, whose speed curve opens under them
     /// with the track's arrow (`SpeedCurveLane`); empty while it is closed.
     var rampedClips: [UUID] = []
@@ -182,7 +185,7 @@ extension EditorState {
         let open = expandedGroupIDs
         // A clip's own sound is drawn inside the clip, so its row is read
         // here for its switches and never drawn.
-        return tracks.filter { $0.attachedTo == nil }.map { track in
+        let rows = tracks.filter { $0.attachedTo == nil }.map { track in
             var clips: [MotionStripGroup] = []
             var inner: [MotionStripGroup] = []
             var nesting: [UUID: TimelineRowNesting] = [:]
@@ -260,6 +263,14 @@ extension EditorState {
                     document.layer(id: $0)?.zooms?.isEmpty == false
                 }
             }
+            return row
+        }
+        // How many clips the whole edit holds, which decides whether a quiet
+        // track paints its clips (`TimelinePaint.longEdit`).
+        let inEdit = rows.reduce(0) { $0 + $1.clips.count }
+        return rows.map { row in
+            var row = row
+            row.clipsInEdit = inEdit
             return row
         }
     }

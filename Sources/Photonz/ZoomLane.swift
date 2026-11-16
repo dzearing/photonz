@@ -157,8 +157,28 @@ private struct ZoomBarsView: View {
         editorState.isZoomLit(ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id))
     }
 
+    /// Whether the lane is in the tracks' view, or near enough to scroll in
+    /// (`TimelineSight.rowShows`). Out of it the lane draws and reads
+    /// nothing, so a zoom along time leaves it alone: the hour-long
+    /// reference edit has 126 Zoom lanes, a handful on screen, and every one
+    /// was drawn again on each frame of a zoom, about 8 ms a frame however
+    /// far in (2026-11-16).
+    @State private var showsDownTheTracks = true
+
     /// Its right-click rows read the document: a pass late, with its lane.
-    var body: some View { readingALatePass { lateBody } }
+    var body: some View {
+        Group {
+            if showsDownTheTracks {
+                readingALatePass { lateBody }
+            } else {
+                Color.clear.frame(width: laneWidth, height: ZoomLane.height)
+            }
+        }
+        .onGeometryChange(for: Bool.self) { proxy in
+            let view = proxy.bounds(of: .scrollView).map { $0.minY...max($0.minY, $0.maxY) }
+            return TimelineSight.rowShows(minY: 0, maxY: proxy.size.height, in: view)
+        } action: { showsDownTheTracks = $0 }
+    }
 
     @ViewBuilder private var lateBody: some View {
         let bars = self.bars

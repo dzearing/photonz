@@ -537,6 +537,14 @@ struct TimelineTrackRow: View {
         let canvasX = canvas.offset(in: ruler, laneWidth: laneWidth, scale: displayScale)
         let painting = paintedBars(clipsInSight, linked: linkedInSight, kept: kept, ruler: ruler,
                                    alternates: alternates, stretch: stretch)
+        // Past the stretch the painting covers, a painting lane builds only
+        // what somebody is working on: the sight reaches half a window
+        // further, all of it off screen (`TimelinePaint.builds`).
+        func builds(_ clip: MotionStripGroup) -> Bool {
+            guard let bar = clip.bar else { return true }
+            return TimelinePaint.builds(fromMS: Double(bar.inMS), toMS: Double(bar.outMS), stretch: stretch,
+                                        isKept: kept.contains(clip.layerID), lanePaints: painting.paints)
+        }
         // Each bar nobody is working on is handed the stretch it is drawn
         // across cut to itself, or its whole span when it is no wider than
         // two windows, so a scroll does not build it again
@@ -613,7 +621,7 @@ struct TimelineTrackRow: View {
                 .allowsHitTesting(!track.isLocked)
             }
             let paintedIDs = Set(painted.map(\.id))
-            ForEach(clipsInSight.filter { !paintedIDs.contains($0.id) && !painting.ids.contains($0.id) }) { clip in
+            ForEach(clipsInSight.filter { !paintedIDs.contains($0.id) && !painting.ids.contains($0.id) && builds($0) }) { clip in
                 TimelineClipView(group: clip, laneWidth: laneWidth,
                                  height: pictureHeight(of: clip, carrying: carrying),
                                  half: carriesItsSound(clip, carrying: carrying)
@@ -631,7 +639,7 @@ struct TimelineTrackRow: View {
             // draw: the lane runs once an edit, where a view per clip that read
             // the document was woken for every clip.
             if !row.isCaptions {
-                let marked = clipsInSight.compactMap { clip in
+                let marked = clipsInSight.filter(builds).compactMap { clip in
                     let marks = editorState.timelineChildMarks(of: clip.layerID)
                     return marks.isEmpty ? nil : (clip: clip, marks: marks)
                 }
@@ -647,7 +655,7 @@ struct TimelineTrackRow: View {
                 // Made only for a clip with a click to mark: one for every
                 // clip in sight was five hundred views near the whole-hour
                 // view, each reading the window on every frame of a zoom.
-                ForEach(clipsInSight.filter { editorState.hasClickMarks(ofClip: $0.layerID) }) { clip in
+                ForEach(clipsInSight.filter { builds($0) && editorState.hasClickMarks(ofClip: $0.layerID) }) { clip in
                     ClickTicksView(layerID: clip.layerID, laneWidth: laneWidth,
                                    height: pictureHeight(of: clip, carrying: carrying),
                                    isLocked: track.isLocked)
@@ -673,7 +681,7 @@ struct TimelineTrackRow: View {
             // sound was five hundred empty items laid out near the
             // whole-hour view on every frame of a zoom.
             let tools = (isBlade || isTrackSelect) && !track.isLocked
-            ForEach(tools ? linkedInSight : linkedInSight.filter { !painting.ids.contains($0.id) }) { clip in
+            ForEach(tools ? linkedInSight : linkedInSight.filter { !painting.ids.contains($0.id) && builds($0) }) { clip in
                 if !painting.ids.contains(clip.id) {
                     TimelineClipView(group: clip, laneWidth: laneWidth, height: halves.sound, half: .sound,
                                      isLinkedSound: true, soundNumber: row.soundNumber,
@@ -708,7 +716,10 @@ struct TimelineTrackRow: View {
                         .offset(x: canvasX)
                 }
                 let painted = Set(cuts.map(\.id))
-                ForEach(points.filter { !painted.contains($0.id) }) { point in
+                // Past the stretch, only a cut somebody is working on.
+                let built = painting.paints
+                    ? points.filter { stretch.contains(Double($0.atMS)) || cutIsWorkedOn($0) } : points
+                ForEach(built.filter { !painted.contains($0.id) }) { point in
                     TimelineSpareStrips(point: point, laneWidth: laneWidth, height: laneHeight)
                     TimelineEditPointView(point: point, laneWidth: laneWidth, height: laneHeight)
                         .allowsHitTesting(!track.isLocked)
@@ -772,6 +783,12 @@ struct TimelineTrackRow: View {
 
     // MARK: Painted clips
 
+    /// Whether this lane paints its plain clips (`TimelinePaint.lanePaints`).
+    private func lanePaints(clipsInSight: Int) -> Bool {
+        TimelinePaint.lanePaints(clipsInSight: clipsInSight, clipsOnTrack: row.clips.count,
+                                 clipsInEdit: row.clipsInEdit)
+    }
+
     /// The plain clips in sight on a busy lane, painted as one layer, and
     /// which they are (`TimelinePaint`). Nothing on a quiet lane, a Captions
     /// track (`CaptionCuesLayer` paints its own), a picked or switched off
@@ -779,10 +796,10 @@ struct TimelineTrackRow: View {
     private func paintedBars(_ inSight: [MotionStripGroup], linked linkedInSight: [MotionStripGroup],
                              kept: Set<UUID>, ruler: MotionStripRuler, alternates: Set<MotionStripGroup.ID>,
                              stretch: ClosedRange<Double>)
-        -> (ids: Set<UUID>, bars: [TimelinePaintedClips.Bar]) {
+        -> (paints: Bool, ids: Set<UUID>, bars: [TimelinePaintedClips.Bar]) {
         guard !row.isCaptions, !row.isOff, !isHeld, !row.soundIsMuted, !row.soundIsOff,
-              TimelinePaint.lanePaints(clipsInSight: inSight.count, clipsOnTrack: row.clips.count),
-              let document = editorState.document else { return ([], []) }
+              lanePaints(clipsInSight: inSight.count),
+              let document = editorState.document else { return (false, [], []) }
         // Every clip on the drawn stretch, which is what the canvas covers:
         // cut by the sight instead, the list would change, and the painting
         // with it, four times as often as a scroll moves the stretch.
@@ -821,7 +838,10 @@ struct TimelineTrackRow: View {
             facts.isKept = kept.contains(clip.layerID)
             // A sound of its own, the Music track's, on the panel's ground.
             let ownSound = kind == .audio && clip.isSound && !carries && groundsSounds
-            facts.isPlainKind = ownSound || (kind == .video || kind == .videoAlternate) && !clip.isSound
+            // A title's bar is its colour, edge and name, which the painting
+            // draws as it draws a clip's.
+            let title = kind == .text && !clip.isSound && !carries
+            facts.isPlainKind = ownSound || title || (kind == .video || kind == .videoAlternate) && !clip.isSound
                 && (!carries || sounds[clip.layerID] != nil)
             facts.pieceCount = pieces?.count ?? 0
             facts.isHeld = piece?.isHeld ?? false
@@ -891,7 +911,7 @@ struct TimelineTrackRow: View {
                                                                   leftEdgeMS: leftEdge)))
             if let sound { soundBars.append(sound) }
         }
-        return (ids, pictures + soundBars)
+        return (true, ids, pictures + soundBars)
     }
 
     /// The cuts at rest, which a lane that paints its clips paints too: not
@@ -918,6 +938,15 @@ struct TimelineTrackRow: View {
                                     leadingGrip: ClipTransitionEdgeDrag.canGrab(leadingEdge: true, of: drawn),
                                     trailingGrip: ClipTransitionEdgeDrag.canGrab(leadingEdge: false, of: drawn)))
         }
+    }
+
+    /// A cut picked, under a grip, in a transition's drag, or with a clip of
+    /// it in a hand: kept as its view wherever it is.
+    private func cutIsWorkedOn(_ point: TimelineEditPoint) -> Bool {
+        let place = TimelineCutPlace.edit(outgoing: point.outgoing, incoming: point.incoming)
+        let dragged = editorState.clipBarDrag?.layerID
+        return place == editorState.editPointUnderGrip || place == editorState.clipTransitionDrag?.place
+            || dragged == point.outgoing || dragged == point.incoming || editorState.isEditPointPicked(point)
     }
 
     /// What the pointer resting at `pointerSpot` is over on a busy lane: the
@@ -956,8 +985,7 @@ struct TimelineTrackRow: View {
     /// The clip whose stretch a point across the lane is in, on a busy lane.
     private func clipUnderPointer(atX x: CGFloat) -> UUID? {
         let ruler = editorState.motionStripRuler
-        guard TimelinePaint.lanePaints(clipsInSight: TimelineSight(ruler: ruler).clips(row.clips, keeping: []).count,
-                                       clipsOnTrack: row.clips.count)
+        guard lanePaints(clipsInSight: TimelineSight(ruler: ruler).clips(row.clips, keeping: []).count)
         else { return nil }
         return row.clips.last { clip in
             guard let bar = clip.bar else { return false }

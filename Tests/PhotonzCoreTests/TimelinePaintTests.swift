@@ -25,6 +25,36 @@ import Testing
                                          clipsOnTrack: TimelinePaint.busyLane))
     }
 
+    /// A quiet track of a long edit paints too: the hour-long reference
+    /// edit's 22 titles were each a full bar, about 8 ms of every frame of a
+    /// zoom near the whole-hour view (2026-11-16). A short edit's quiet
+    /// track still builds every clip.
+    @Test func aQuietTrackOfALongEditPaints() {
+        #expect(TimelinePaint.lanePaints(clipsInSight: 2, clipsOnTrack: 22, clipsInEdit: TimelinePaint.longEdit))
+        #expect(TimelinePaint.lanePaints(clipsInSight: 0, clipsOnTrack: 1, clipsInEdit: 524))
+        #expect(!TimelinePaint.lanePaints(clipsInSight: 2, clipsOnTrack: 22, clipsInEdit: TimelinePaint.longEdit - 1))
+        #expect(!TimelinePaint.lanePaints(clipsInSight: 5, clipsOnTrack: 5, clipsInEdit: 60))
+    }
+
+
+    /// On a lane that paints, a clip or cut in the lane's sight but off the
+    /// stretch the painting covers is off screen: it is not built at all,
+    /// unless somebody is working on it. Near the whole-hour view the sight
+    /// reaches up to half a window past the stretch either side, and dozens
+    /// of full bars and cut views were built there on every frame of a zoom
+    /// (2026-11-16).
+    @Test func offTheStretchAPaintingLaneBuildsOnlyWhatIsWorkedOn() {
+        let stretch = 100_000.0...400_000.0
+        // On the stretch: painted or built, as the clip decides.
+        #expect(TimelinePaint.builds(fromMS: 90_000, toMS: 110_000, stretch: stretch, isKept: false, lanePaints: true))
+        #expect(TimelinePaint.builds(fromMS: 390_000, toMS: 500_000, stretch: stretch, isKept: false, lanePaints: true))
+        // Off it: only a clip somebody is working on.
+        #expect(!TimelinePaint.builds(fromMS: 410_000, toMS: 420_000, stretch: stretch, isKept: false, lanePaints: true))
+        #expect(!TimelinePaint.builds(fromMS: 50_000, toMS: 99_000, stretch: stretch, isKept: false, lanePaints: true))
+        #expect(TimelinePaint.builds(fromMS: 410_000, toMS: 420_000, stretch: stretch, isKept: true, lanePaints: true))
+        // A lane that does not paint builds everything in its sight.
+        #expect(TimelinePaint.builds(fromMS: 410_000, toMS: 420_000, stretch: stretch, isKept: false, lanePaints: false))
+    }
 
     @Test func aPlainClipIsPainted() {
         #expect(TimelinePaint.paints(plain))
