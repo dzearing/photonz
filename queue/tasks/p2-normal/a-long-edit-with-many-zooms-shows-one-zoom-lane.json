@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-14T05:52:43.720Z",
-  "updated": "2026-11-14T15:03:50.381Z",
+  "updated": "2026-11-16T06:04:12.472Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-14 by the-timeline-of-an-hour-long-edit-scrolls-zooms: queue/audits/2026-11-14-timeline-hour-long-fit-sc.png shows three Zoom rows under V1 and more below the fold. Cause in code: Sources/Photonz/TimelineTrackRows.swift, TimelineTrackRow.lateBody, `if row.zoomedClips.contains(clip.layerID) { ZoomLane(layerID: clip.layerID, ...) }` inside the per-clip ForEach, so each zoomed clip gets a ZoomLane row (ZoomLane.swift). The reference edit (Scripts/perf/reference-edit.sh 60) carries 126 zooms. They did not show as a cost in a sample of a zoom (ZoomBarsView absent from the top frames), so this is about reading the timeline, not speed. Design question for the runner: one shared Zoom row per track (bars side by side, they never overlap in time on one track?) versus only the picked clip's rows; the mock draws a picked clip's Scale and Centre lanes.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-11-14T15:03:50.380Z",
       "note": "seq 25 -> 30"
+    },
+    {
+      "t": "2026-11-16T06:04:12.471Z",
+      "note": "From the-timeline-of-an-hour-long-edit-scrolls-zooms pass 4 (2026-11-15): the 126 Zoom lanes DID cost speed on a scroll (about 9 ms of a 46 ms frame, each rebuilt every frame); fixed in c0e1a50b1 by culling against EditorState.timelineRowsSight. Whatever this task changes, a Zoom row must keep reading the window only when its zooms reach the rows' sight (docs/design/video.md 8f rule 9)."
     }
   ],
   "walks": [

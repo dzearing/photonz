@@ -17566,3 +17566,9 @@
 {"t":"2026-11-16T04:20:04.967Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-16T04:20:05.043Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-16T04:20:05.127Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 9 landed 6d6f87aa1: the timeline's ruler watches only its own facts and a pick carried into the history is no edit, so an edit wakes the timeline a frame later instead of every clip in its own frame (trim 32 -> 18 ms, trim picked 34 -> 24, undo picked 44 -> 29, worst of 3). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 10 leads in the log."}
+{"t":"2026-11-16T04:24:21.534Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-16T06:04:12.243Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T06:04:12.323Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T06:04:12.399Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T06:04:12.473Z","ev":"task_note","id":"a-long-edit-with-many-zooms-shows-one-zoom-lane"}
+{"t":"2026-11-16T06:04:16.256Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 4 landed c0e1a50b1: a scroll of the 60 min timeline no longer rebuilds the 126 Zoom lanes out of sight or the bars still in view (scroll 46 -> 41 ms a frame, bars built per frame 16 -> 4). Bars not reached (8.3 ms scroll/zoom, 16 ms edits); stays open for painting clips that show pictures."}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-15T13:16:49.892Z",
+  "updated": "2026-11-16T06:04:16.255Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -145,9 +145,29 @@
     {
       "t": "2026-11-15T13:16:49.891Z",
       "note": "seq 50 -> 40"
+    },
+    {
+      "t": "2026-11-16T04:24:21.529Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T06:04:12.241Z",
+      "note": "Pass 4 (2026-11-15). Baseline at ee1b82d1d, 60 min edit, markers down: zoom in 42 ms/frame (p95 199), out 46 (p95 222), scroll 49 (p95 58, 16 clip bars built a frame); edits longest pass 84-178 ms. Floor experiments on the scroll (throwaway switches): as is 46, no Zoom lanes 37, no clip bars 22, bars+Zoom lanes+ticks+cuts out 8.3. Zoom lanes present but reading nothing: 37.5, so their cost was rebuilding (each read the window)."
+    },
+    {
+      "t": "2026-11-16T06:04:12.321Z",
+      "note": "Pass 4 landed c0e1a50b1: (1) a bar is handed the drawn stretch by its lane, cut to the clip, or its whole span when no wider than two windows (TimelineDrawnStretch.cut, tested), so bars in view are not rebuilt as the stretch moves; (2) a Zoom lane reads the window only when one of its zooms reaches EditorState.timelineRowsSight (TimelineSight.rows: window plus two either side, moved in steps of >= two windows, written in the timelineZoom setter, tested). After: scroll 41 ms (p95 50), bars built per scroll frame 4; zoom 42 unchanged; edits unchanged. Rule 9 written into docs/design/video.md 8f (ca51ed36a). 18 timeline/Zoom-lane walks + speed-walk + an-editing-session-walk green; Scripts/test.sh green. Audit queue/audits/2026-11-15-timeline-hour-long-scroll-rebuilds.json."
+    },
+    {
+      "t": "2026-11-16T06:04:12.397Z",
+      "note": "Still open, bars not reached (scroll/zoom ~41 ms vs 8.3, edits 90-180 vs 16). What is left on the scroll: a ten times slower scroll is 25 ms with bars vs 14 without, with 0 bars rebuilt, so ~11 ms/frame is bars SLIDING (profile: ~25% of the main thread in NSHostingView.layout -> ScrollView/StackLayout -> ZStack sizing of the lanes' ForEach items), and the rest of a fast scroll is bars CREATED as they enter sight (~4/frame). Next pass: paint clips that show pictures (ClipFilmstrip tiles drawn from ClipFilmstripFrames.cached, missing ones asked and a repaint on landing, the DrawnFilmstrips playtest report kept) and let a lane of a long edit paint whatever is in sight, not only 24+ clips (TimelinePaint.lanePaints); check pixel parity as pass 2 did. Left rough, not filed (same painting step): edits rebuild every bar in sight (77-157 clipBar bodies an edit) because each bar reads shownDocument(forClip:). Measuring: /tmp/tl60.json = long-60 timeline+idleBuilds+edits (~90 s); a release probe build after an EditorState change takes ~8 min."
+    },
+    {
+      "t": "2026-11-16T06:04:16.254Z",
+      "note": "Pass 4 landed c0e1a50b1: a scroll of the 60 min timeline no longer rebuilds the 126 Zoom lanes out of sight or the bars still in view (scroll 46 -> 41 ms a frame, bars built per frame 16 -> 4). Bars not reached (8.3 ms scroll/zoom, 16 ms edits); stays open for painting clips that show pictures."
     }
   ],
-  "started": "2026-11-14T22:36:46.937Z",
+  "started": "2026-11-16T04:24:21.528Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
