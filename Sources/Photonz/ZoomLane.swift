@@ -60,7 +60,7 @@ struct ZoomLane: View {
                 .accessibilityAddTraits(.isButton)
                 .accessibilityLabel("Pick every zoom")
                 .playtestControl("Zoom lane label", detail: "Timeline")
-            ZoomBarsView(layerID: layerID, bars: bars, laneWidth: laneWidth, isLocked: isLocked)
+            ZoomBarsView(layerID: layerID, laneWidth: laneWidth, isLocked: isLocked)
         }
         .frame(height: Self.height)
         .playtestField("Zoom lane")
@@ -84,11 +84,24 @@ struct ZoomLane: View {
         let easeOut: CGFloat
     }
 
-    private var bars: [Bar] {
+    /// Where each zoom on the clip is across the lane, read where the bars
+    /// are drawn and not in the lane, so the label beside them is not built
+    /// again as the timeline scrolls. A lane none of whose zooms reach the
+    /// rows' sight (`TimelineSight.rows`: the window and two more either
+    /// side) has nothing in the window and does not read the window at all:
+    /// the hour-long reference edit has 126 Zoom lanes, and each was built
+    /// again on every frame of a scroll (2026-11-15).
+    static func bars(_ editorState: EditorState, layerID: UUID, laneWidth: CGFloat) -> [Bar] {
         guard let layer = editorState.document?.layer(id: layerID) else { return [] }
+        let spans = editorState.zoomsShown(onClip: layerID).compactMap { zoom in
+            editorState.spanOnTimeline(zoom, of: layer).map { (zoom: zoom, span: $0) }
+        }
+        if editorState.motionStripMeasuresADocument, let sight = editorState.timelineRowsSight,
+           !spans.contains(where: { sight.reaches(fromMS: Double($0.span.start), toMS: Double($0.span.end)) }) {
+            return []
+        }
         let ruler = editorState.motionStripRuler
-        return editorState.zoomsShown(onClip: layerID).compactMap { zoom in
-            guard let span = editorState.spanOnTimeline(zoom, of: layer) else { return nil }
+        return spans.compactMap { zoom, span in
             let x0 = laneWidth * ruler.fraction(ofMS: Double(span.start))
             let x1 = laneWidth * ruler.fraction(ofMS: Double(span.end))
             guard x1 >= 0, x0 <= laneWidth, x1 > x0 else { return nil }
@@ -128,9 +141,10 @@ struct ZoomLane: View {
 private struct ZoomBarsView: View {
     @Environment(EditorState.self) private var editorState
     let layerID: UUID
-    let bars: [ZoomLane.Bar]
     let laneWidth: CGFloat
     let isLocked: Bool
+
+    private var bars: [ZoomLane.Bar] { ZoomLane.bars(editorState, layerID: layerID, laneWidth: laneWidth) }
 
     @State private var hovered: ZoomLane.Bar?
     @State private var pressed: (bar: ZoomLane.Bar, grab: ZoomGrab)?
@@ -147,6 +161,7 @@ private struct ZoomBarsView: View {
     var body: some View { readingALatePass { lateBody } }
 
     @ViewBuilder private var lateBody: some View {
+        let bars = self.bars
         let picked = Set(bars.filter(isPicked).map(\.zoom.id))
         Canvas { context, _ in
             for bar in bars {

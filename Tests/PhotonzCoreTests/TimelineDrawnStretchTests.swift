@@ -135,4 +135,72 @@ struct TimelineDrawnStretchTests {
     @Test func nothingBetweenTheEdgesIsNothingDrawn() {
         #expect(TimelineSpan.drawn(x: 1000, width: 50, from: 0, to: 600, slack: 0).width == 0)
     }
+
+    // MARK: - A stretch cut to one clip (2026-11-15)
+
+    /// A bar wholly inside the stretch is handed the same stretch however the
+    /// window moves, so a scroll does not build it again: on the hour-long
+    /// reference edit sixteen bars were rebuilt every frame of a scroll.
+    @Test func aClipWhollyInsideIsHandedTheSameStretchWhereverTheWindowIs() {
+        let a = TimelineDrawnStretch.cut(10_000...70_000, toClipFromMS: 30_000, toMS: 37_000)
+        let b = TimelineDrawnStretch.cut(25_000...85_000, toClipFromMS: 30_000, toMS: 37_000)
+        #expect(a == b)
+        #expect(a == 30_000...37_000)
+    }
+
+    @Test func aClipRunningOffAnEdgeKeepsThatEdge() {
+        #expect(TimelineDrawnStretch.cut(10_000...70_000, toClipFromMS: 0, toMS: 37_000) == 10_000...37_000)
+        #expect(TimelineDrawnStretch.cut(10_000...70_000, toClipFromMS: 30_000, toMS: 900_000) == 30_000...70_000)
+        #expect(TimelineDrawnStretch.cut(10_000...70_000, toClipFromMS: 0, toMS: 900_000) == 10_000...70_000)
+    }
+
+    /// A clip that does not reach the stretch at all is handed it whole.
+    @Test func aClipOutsideTheStretchIsHandedItWhole() {
+        #expect(TimelineDrawnStretch.cut(10_000...70_000, toClipFromMS: 0, toMS: 5_000) == 10_000...70_000)
+        #expect(TimelineDrawnStretch.cut(10_000...70_000, toClipFromMS: 80_000, toMS: 90_000) == 10_000...70_000)
+    }
+
+    /// What the bar draws is the same cut or not: every piece of the clip,
+    /// in its own points, is kept to the same span either way.
+    @Test func whatIsDrawnIsTheSameCutOrNot() {
+        let ruler = MotionStripRuler(documentMS: 3_600_000, zoom: TimelineZoom(scale: 120, startMS: 40_000))
+            .measured(fromMS: 30_000)
+        let width: CGFloat = 1_200
+        func points(_ range: ClosedRange<Double>) -> (CGFloat, CGFloat) {
+            (width * CGFloat(ruler.fraction(ofMS: range.lowerBound)),
+             width * CGFloat(ruler.fraction(ofMS: range.upperBound)))
+        }
+        for clip in [(30_000.0, 37_000.0), (0.0, 37_000.0), (30_000.0, 900_000.0), (2_000.0, 9_000.0), (60_000.0, 75_000.0)] {
+            for stretch in [10_000.0...70_000.0, 20_000.0...58_000.0, 31_000.0...36_000.0] {
+                let whole = points(stretch)
+                let cut = points(TimelineDrawnStretch.cut(stretch, toClipFromMS: clip.0, toMS: clip.1))
+                // Each piece of the clip: the whole of it, and its two halves.
+                let mid = (clip.0 + clip.1) / 2
+                for piece in [(clip.0, clip.1), (clip.0, mid), (mid, clip.1)] {
+                    let x = width * CGFloat(ruler.fraction(ofMS: piece.0))
+                    let w = width * CGFloat(ruler.fraction(spanningMS: piece.1 - piece.0))
+                    let a = TimelineSpan.drawn(x: x, width: w, from: whole.0, to: whole.1)
+                    let b = TimelineSpan.drawn(x: x, width: w, from: cut.0, to: cut.1)
+                    #expect(abs(a.x - b.x) < 0.001 && abs(a.width - b.width) < 0.001,
+                            "clip \(clip) stretch \(stretch) piece \(piece)")
+                }
+            }
+        }
+    }
+
+    /// A clip no wider than two windows is handed its own span whole, so it
+    /// is never built again for a scroll at all: its pieces are drawn whole,
+    /// a few hundred points off screen at most.
+    @Test func aClipNoWiderThanTwoWindowsIsHandedItsOwnSpan() {
+        for stretch in [10_000.0...70_000.0, 50_000.0...110_000.0, 200_000.0...260_000.0] {
+            #expect(TimelineDrawnStretch.cut(stretch, toClipFromMS: 30_000, toMS: 37_000, visibleMS: 20_000)
+                == 30_000...37_000)
+            #expect(TimelineDrawnStretch.cut(stretch, toClipFromMS: 30_000, toMS: 70_000, visibleMS: 20_000)
+                == 30_000...70_000)
+        }
+        // Wider than two windows, it is cut as before.
+        #expect(TimelineDrawnStretch.cut(10_000...70_000, toClipFromMS: 0, toMS: 300_000, visibleMS: 20_000)
+            == 10_000...70_000)
+    }
 }
+

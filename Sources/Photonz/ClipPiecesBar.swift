@@ -67,6 +67,11 @@ struct ClipPiecesBar: View {
     var soundIsMuted = false
     /// The sound on this bar is out of the mix, so its waveform is faint.
     var soundIsOff = false
+    /// The stretch the bar is drawn across, cut to the clip by the lane that
+    /// holds it (`TimelineDrawnStretch.cut`), or nil to read the window's own:
+    /// a bar wholly inside the stretch is then handed the same stretch while
+    /// the window scrolls on, and is not built again for it.
+    var drawnMS: ClosedRange<Double>?
 
     /// What a walk and the help call this bar's parts: the clip's name, or
     /// "<clip> sound" for its linked sound, so the two are never confused.
@@ -151,7 +156,7 @@ struct ClipPiecesBar: View {
         // (`timelineDrawnMS`), which moves once the window has gone half its
         // width.
         let ruler = editorState.motionStripRuler(measuredFromMS: Double(bar.inMS))
-        let drawnMS = editorState.timelineDrawnMS
+        let drawnMS = self.drawnMS ?? editorState.timelineDrawnMS
         let drawn: ClosedRange<CGFloat> = laneWidth * CGFloat(ruler.fraction(ofMS: drawnMS.lowerBound))
             ... laneWidth * CGFloat(ruler.fraction(ofMS: drawnMS.upperBound))
         let pieces = shownPieces

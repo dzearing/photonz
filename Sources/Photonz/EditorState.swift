@@ -1843,6 +1843,10 @@ final class EditorState {
             let stretch = TimelineDrawnStretch(windowStartMS: newValue.startMS,
                                                visibleMS: newValue.visibleMS(documentMS: timelineLengthForZoomMS))
             if stretch != timelineDrawnStretch { timelineDrawnStretch = stretch }
+            let window = newValue.clamped(documentMS: timelineLengthForZoomMS)
+            let rows = TimelineSight.rows(windowStartMS: window.startMS,
+                                          visibleMS: window.visibleMS(documentMS: timelineLengthForZoomMS))
+            if rows != timelineRowsSight { timelineRowsSight = rows }
             if !timelineZoomKeepsItsChoice {
                 timelineWholeRecordingScale = newValue.showsWholeDocument ? newValue.scale : nil
             }
@@ -1868,6 +1872,11 @@ final class EditorState {
     /// what a clip's bar is cut down to, so a scroll redraws a bar only that
     /// often and slides it in between (`timelineDrawnMS`).
     private(set) var timelineDrawnStretch = TimelineDrawnStretch(windowStartMS: 0, visibleMS: 1)
+    /// What a row outside the lanes (a clip's Zoom lane) is culled by: a wide
+    /// sight that holds still for windows of a scroll at a time
+    /// (`TimelineSight.rows`). Nil until the window is first written, and
+    /// nothing is culled then.
+    private(set) var timelineRowsSight: TimelineSight?
     /// How tall the timeline's rows are: a pinch grows them with time, ⇧
     /// alone, ⌘-scroll too (`EditorState+TimelineZoom`). Beside the document
     /// like the zoom, never in it.

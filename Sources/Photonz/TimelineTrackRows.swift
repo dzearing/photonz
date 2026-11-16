@@ -524,6 +524,16 @@ struct TimelineTrackRow: View {
         // only for the ones somebody is working on (`TimelinePaint`).
         let painting = paintedBars(clipsInSight, linked: linkedInSight, kept: kept, ruler: ruler,
                                    alternates: alternates)
+        // Each bar nobody is working on is handed the stretch it is drawn
+        // across cut to itself, or its whole span when it is no wider than
+        // two windows, so a scroll does not build it again
+        // (`TimelineDrawnStretch.cut`).
+        let stretch = editorState.timelineDrawnMS
+        func drawn(_ clip: MotionStripGroup) -> ClosedRange<Double>? {
+            guard let bar = clip.bar, !kept.contains(clip.layerID) else { return nil }
+            return TimelineDrawnStretch.cut(stretch, toClipFromMS: Double(bar.inMS), toMS: Double(bar.outMS),
+                                            visibleMS: ruler.spanMS)
+        }
         return ZStack(alignment: .topLeading) {
             // The same wash as the header's, so a picked track reads as one
             // thing from its name to the end of its lane.
@@ -588,7 +598,7 @@ struct TimelineTrackRow: View {
                 TimelineClipView(group: clip, laneWidth: laneWidth, height: pictureHeight(of: clip),
                                  half: carriesItsSound(clip) ? .picture(soundHeight: halves.sound) : .whole,
                                  alternate: alternates.contains(clip.id), isCaptionCue: row.isCaptions,
-                                 soundNumber: row.soundNumber)
+                                 soundNumber: row.soundNumber, drawnMS: drawn(clip))
                     .opacity(row.isOff && !row.linked.isEmpty ? 0.4 : 1)
                     .allowsHitTesting(!track.isLocked)
                     .modifier(TimingName(on: !row.isCaptions, name: "Timing \(clip.layerName)"))
@@ -637,7 +647,8 @@ struct TimelineTrackRow: View {
                 if !painting.ids.contains(clip.id) {
                     TimelineClipView(group: clip, laneWidth: laneWidth, height: halves.sound, half: .sound,
                                      isLinkedSound: true, soundNumber: row.soundNumber,
-                                     soundIsMuted: row.soundIsMuted, soundIsOff: row.soundIsOff)
+                                     soundIsMuted: row.soundIsMuted, soundIsOff: row.soundIsOff,
+                                     drawnMS: drawn(clip))
                         .allowsHitTesting(!track.isLocked)
                         .playtestField("Timing \(clip.layerName) sound")
                         .padding(.top, halves.picture)
@@ -1228,6 +1239,9 @@ struct TimelineClipView: View {
     /// The sound on this bar is muted, or out of the mix for any reason.
     var soundIsMuted = false
     var soundIsOff = false
+    /// The stretch its bar is drawn across, cut to the clip by the lane
+    /// (`ClipPiecesBar.drawnMS`), or nil to read the window's own.
+    var drawnMS: ClosedRange<Double>?
 
     var body: some View {
         let own = isCaptionCue ? .caption : TimelineTrackRow.clipKind(group.trackKind)
@@ -1242,7 +1256,8 @@ struct TimelineClipView: View {
                               bar: bar, laneWidth: laneWidth, isSound: group.isSound,
                               kind: kind, height: height, isLinkedSound: isLinkedSound,
                               soundTint: VideoKit.Palette.soundTrack(soundNumber),
-                              half: half, soundIsMuted: soundIsMuted, soundIsOff: soundIsOff)
+                              half: half, soundIsMuted: soundIsMuted, soundIsOff: soundIsOff,
+                              drawnMS: drawnMS)
             }
         } else {
             // A layer with no times of its own: one clip the length of the

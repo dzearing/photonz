@@ -315,4 +315,23 @@ public struct TimelineDrawnStretch: Hashable, Sendable {
         let edge = leftEdgeMS(visibleMS: visibleMS, documentMS: documentMS)
         return max(0, edge.lowerBound - stepMS)...(edge.upperBound + stepMS + visibleMS)
     }
+
+    /// The stretch as one clip's bar is handed it: cut to the clip's own
+    /// span, which draws exactly what the whole stretch draws (nothing of the
+    /// clip lies outside its span) and stays the same while the stretch moves
+    /// anywhere around it. A bar handed the whole stretch was built again
+    /// each time the stretch moved, which on a fast scroll of the hour-long
+    /// reference edit was every bar in sight in two frames of three
+    /// (2026-11-15). A clip that does not reach the stretch is handed it whole.
+    ///
+    /// Given how much the window shows, a clip no wider than two windows is
+    /// handed its own span whole: drawn whole, at most two windows of it,
+    /// and never built again for a scroll at all.
+    public static func cut(_ stretch: ClosedRange<Double>, toClipFromMS fromMS: Double,
+                           toMS: Double, visibleMS: Double? = nil) -> ClosedRange<Double> {
+        if let visibleMS, toMS >= fromMS, toMS - fromMS <= visibleMS * 2 { return fromMS...toMS }
+        let low = max(stretch.lowerBound, fromMS)
+        let high = min(stretch.upperBound, toMS)
+        return low <= high ? low...high : stretch
+    }
 }

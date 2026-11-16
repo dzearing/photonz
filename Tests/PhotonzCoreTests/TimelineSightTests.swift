@@ -106,4 +106,42 @@ struct TimelineSightTests {
             }
         }
     }
+
+    // MARK: - The rows' sight (2026-11-15)
+
+    /// The sight rows outside a lane (a clip's Zoom lane) are culled by: a
+    /// wide one, kept where the window is written, that holds still for
+    /// whole windows of a scroll, so 126 Zoom lanes are not each built again
+    /// on every frame of one.
+    @Test("The rows' sight covers the window and two windows either side")
+    func rowsSightCovers() {
+        for start in stride(from: 0.0, through: 3_000_000, by: 7_919) {
+            let sight = TimelineSight.rows(windowStartMS: start, visibleMS: 30_000)
+            #expect(sight.fromMS <= start - 60_000)
+            #expect(sight.toMS >= start + 90_000)
+        }
+    }
+
+    @Test("The rows' sight holds still for a window of a scroll at a time")
+    func rowsSightHoldsStill() {
+        var changes = 0
+        var last = TimelineSight.rows(windowStartMS: 0, visibleMS: 30_000)
+        // End to end in 360 frames, a third of a window a frame: the speed
+        // walk's scroll.
+        for frame in 1...360 {
+            let sight = TimelineSight.rows(windowStartMS: Double(frame) * 10_000, visibleMS: 30_000)
+            if sight != last { changes += 1 }
+            last = sight
+        }
+        #expect(changes <= 360 / 6)
+    }
+
+    @Test("A row's reach is read against the rows' sight")
+    func rowsSightReaches() {
+        let sight = TimelineSight.rows(windowStartMS: 600_000, visibleMS: 30_000)
+        #expect(sight.reaches(fromMS: 610_000, toMS: 612_000))
+        #expect(!sight.reaches(fromMS: 1_800_000, toMS: 1_805_000))
+        #expect(!sight.reaches(fromMS: 0, toMS: 5_000))
+    }
 }
+

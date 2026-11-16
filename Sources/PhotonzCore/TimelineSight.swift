@@ -33,6 +33,27 @@ public struct TimelineSight: Hashable, Sendable {
         toMS = ((start + span + span * margin) / step).rounded(.up) * step
     }
 
+    /// The sight a row that is not in a lane is culled by: a clip's Zoom
+    /// lane lives under its track, outside the lane that is built again on
+    /// every frame of a scroll, and the hour-long reference edit has 126 of
+    /// them. Two windows each side and more, moved in steps of at least two
+    /// windows (a power of two milliseconds), so it holds still for two
+    /// windows and more of a scroll and the rows out of it are left alone meanwhile
+    /// (2026-11-15). Worked out where the window is written, from where it
+    /// starts and how much of the document it shows.
+    public static func rows(windowStartMS start: Double, visibleMS: Double) -> TimelineSight {
+        let span = max(1, visibleMS)
+        let step = pow(2, log2(span * 2).rounded(.up))
+        // Both ends hang off one anchor, so they move together, once a step.
+        let anchor = (start / step).rounded(.down) * step
+        return TimelineSight(fromMS: anchor - span * 2, toMS: anchor + step + span * 3)
+    }
+
+    private init(fromMS: Double, toMS: Double) {
+        self.fromMS = fromMS
+        self.toMS = toMS
+    }
+
     /// Whether anything from `fromMS` to `toMS` reaches into the sight.
     public func reaches(fromMS start: Double, toMS end: Double) -> Bool {
         end >= fromMS && start <= toMS
