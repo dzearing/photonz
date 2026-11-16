@@ -18,6 +18,10 @@
 # macOS is still starting the stream) and checks the recording stops and lands.
 # `--macos-writer` lets macOS write the file, as before 2026-11-15, for a
 # before-and-after.
+# `--minute` records for sixty seconds with the square changing on every frame
+# of a 60 Hz clock and counts, from the file alone, its frames and every gap
+# longer than two frames after the first second: dropped frames over a minute,
+# measured without touching the recording code.
 # `--cancel` presses Escape on the card instead and checks that everything made
 # ready while it was up (the stream, the unseen stop control) is gone.
 # Exits 1 when the median Return-to-first-frame is over
@@ -35,7 +39,7 @@ EXTRA=()
 for a in "$@"; do
   case "$a" in
     --no-build) BUILD=0 ;;
-    --region|--system-audio|--with-microphone|--cold|--still|--stop-early|--cancel|--macos-writer) EXTRA+=("$a") ;;
+    --region|--system-audio|--with-microphone|--cold|--still|--stop-early|--cancel|--macos-writer|--minute) EXTRA+=("$a") ;;
     *[!0-9]*|"") echo "!! unknown argument: $a" >&2; exit 2 ;;
     *) RUNS="$a" ;;
   esac
@@ -48,6 +52,7 @@ Scripts/probe-app.sh --quit >/dev/null
 rm -f "$OUT"
 open -g -n "$APP" --args --recording-start-latency-diag "$RUNS" "${EXTRA[@]+"${EXTRA[@]}"}"
 LIMIT=$(( RUNS * 9 + 30 ))
+[[ " ${EXTRA[*]-} " == *" --minute "* ]] && LIMIT=$(( RUNS * 75 + 30 ))
 for ((i = 0; i < LIMIT; i++)); do
   [[ -f "$OUT" ]] && break
   sleep 1
@@ -59,6 +64,10 @@ const d = require(process.argv[1]);
 const f = (v) => v == null ? "  -  " : String(v).padStart(5);
 if (d.cancel && !d.error) {
   for (const r of d.readings) console.log(`    ready while the card was up: ${r.readyWhileCardUp}; Escape taken: ${r.escapeTaken}; card gone: ${r.cardGone}; nothing left after: ${r.nothingLeftAfterCancel}`);
+  console.log(d.passed ? "==> PASS" : "!! FAIL"); process.exit(d.passed ? 0 : 1);
+}
+if (d.minute && !d.error) {
+  for (const r of d.readings) console.log(`    ${r.fileFrames} frames over ${(r.fileSeconds ?? 0).toFixed(1)} s; gaps over two frames after the first second: ${r.gapsOverTwoFrames}; longest gap ${r.longestGapMS} ms; square changed ${r.squareChanges} times, ${r.squareChangesLate} of them late`);
   console.log(d.passed ? "==> PASS" : "!! FAIL"); process.exit(d.passed ? 0 : 1);
 }
 if (d.stopEarly && !d.error) {

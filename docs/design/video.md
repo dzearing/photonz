@@ -247,11 +247,35 @@ streams. Switch: `next-soft-gradients-in-a-recording-play-smooth`, on in Next.
 - Measured on the user's recording (2026-11-16): on screen, 8 px means of the
   sidebar went from a 103 to 137 px longest flat run to 8 to 26 px; GPU about
   +1 ms a full-size 3456 frame, +0.2 ms at half size.
-- What it does not do: the recording file stays a faithful copy, so QuickTime
-  and a High export that copies the file still show the steps. Grain does not
-  survive H.264 at Standard's budget (the file read as banded as one without
-  it, in twice the time), so Standard and Small exports are not smoothed. A
-  smooth file for other players needs a 10-bit export.
+- **A High export writes a banded recording out smoothed instead of copying
+  it** (`SmoothedCopyWriter`, PhotonzMedia; chosen in
+  `EditorState.writeVideoUnswapped` by `ExportSmoothing`). An untouched
+  recording, or an edit that is nothing but cuts, used to be copied byte for
+  byte, steps and all. Now three frames at a quarter size are read first; when
+  the pass would move 0.2% or more of a frame's pixels by a 10-bit code, the
+  recording (or its kept stretches) is decoded at its own depth, passed
+  through the same kernels with no grain, and encoded again as the same kind
+  of file: HEVC Main 10, its own colour tags, the document's mix beside it.
+  Otherwise it is still copied. The sheet says the size as "about" while the
+  switch is on (`RecordingExport.Source.mayBeSmoothed`).
+- The encoder is asked for a quality of 0.9 with spatial adaptive
+  quantisation off. Asked for a rate it wrote a ninth of it and blurred text;
+  asked for a quality with a rate cap it ignored the quality; with adaptive
+  quantisation on it flattened the ramp into 32 px blocks with jumps, and kept
+  or dropped added grain by chance. Grain never reliably survives it, so none
+  is added: the file holds the ramp as steps of one or two 10-bit codes (a
+  quarter to half of the Mac's shade).
+- Measured on the user's 9.3 s recording: 121 MB copied in 0.1 s became
+  32.7 MB written in 4.3 s; down the sidebar 38 levels and steps of at most 2
+  codes against 27 levels and steps of 4, longest flat run 68 px (where the
+  gradient bottoms out; a ramp of 31 to 39 codes over 1300 px averages 33 to
+  42 px a code, so under 40 px everywhere would need grain); terminal text 9
+  codes off at the 99th percentile, the same as a plain re-encode.
+- What it still does not do: the recording file itself stays a faithful copy,
+  so QuickTime playing the recording shows the steps; only an export from
+  Photonz is smoothed. Grain does not survive H.264 at Standard's budget, so
+  Standard and Small exports are not smoothed. A player that rounds 10-bit
+  video to 8 bits without dithering puts most of the steps back.
 
 ## 4. What appears, and on what fact
 

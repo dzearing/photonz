@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import CoreGraphics
 import Foundation
 import PhotonzCore
@@ -67,7 +68,8 @@ extension EditorState {
                                         ? RecordingExport.footageBytesPerSecond(footage, at: canvas)
                                         : nil,
                                       captionedSeconds: document?.captionedSeconds(in: span) ?? 0,
-                                      isCutOnly: copyablePieces(range: range) != nil)
+                                      isCutOnly: copyablePieces(range: range) != nil,
+                                      mayBeSmoothed: RecordingSmoothing.isOn)
     }
 
     /// The stretches of one recording this edit is made of, where it is
@@ -394,6 +396,17 @@ extension EditorState {
            !(size?.shrinks(document.canvasSize) ?? false),
            let movie = document.untouchedRecording,
            let source = MovieLibrary.shared.url(for: movie) {
+            // Unless the Mac drew a soft gradient of it in steps: then it is
+            // written out again with the steps smoothed, at its own depth,
+            // so other players show what Photonz does (`ExportSmoothing`).
+            if await ExportSmoothing.isWorthIt(source, movie: movie, rangesMS: nil) {
+                let mix = AudioMixSegment.windowed(document.audioMix(), to: span)
+                let soundURLs = await SoundLibrary.shared.readyURLs(for: mix)
+                let frames = try await SmoothedCopyWriter.write(
+                    source: source, ranges: nil, mix: mix, soundURLs: soundURLs,
+                    filter: ExportSmoothing.filter, to: url, onProgress: onProgress)
+                return .smoothed(frames: frames, piecesOnly: false)
+            }
             try? FileManager.default.removeItem(at: url)
             try FileManager.default.copyItem(at: source, to: url)
             onProgress?(1)
@@ -411,6 +424,12 @@ extension EditorState {
            let source = MovieLibrary.shared.url(for: pieces.movie) {
             let mix = AudioMixSegment.windowed(document.audioMix(), to: span)
             let soundURLs = await SoundLibrary.shared.readyURLs(for: mix)
+            if await ExportSmoothing.isWorthIt(source, movie: pieces.movie, rangesMS: pieces.sourceRangesMS) {
+                let frames = try await SmoothedCopyWriter.write(
+                    source: source, ranges: pieces.sourceRangesMS, mix: mix, soundURLs: soundURLs,
+                    filter: ExportSmoothing.filter, to: url, onProgress: onProgress)
+                return .smoothed(frames: frames, piecesOnly: true)
+            }
             do {
                 let outcome = try await PieceCopyWriter.write(
                     source: source, ranges: pieces.sourceRangesMS, mix: mix, soundURLs: soundURLs,
@@ -487,8 +506,72 @@ enum VideoWriteRoute: Equatable, Sendable {
     /// An edit that is nothing but cuts, its stretches copied across and only
     /// the frames between a cut and the next key frame encoded again.
     case copiedPieces(copiedFrames: Int, renderedFrames: Int)
+    /// The recording, or the stretches an edit of cuts keeps, written out
+    /// again at its own depth with its soft gradients smoothed
+    /// (`SmoothedCopyWriter`), where a copy would have kept the steps.
+    case smoothed(frames: Int, piecesOnly: Bool)
     /// Every frame drawn and encoded.
     case drawn
+}
+
+/// Whether a top quality export writes a recording out smoothed rather than
+/// copying it, and the pass it writes it with.
+///
+/// A copy is instant and exact, so it stays the answer for a recording the
+/// pass would not change, and for any recording stored at 8 bits, which
+/// would round the ramp straight back into its steps (every recording made
+/// since 2026-11-16 is 10-bit; the tutorial sample, H.264 at 112 kbps, also
+/// read as "changed" on nothing but its encoder's noise). The check reads three frames at a quarter size and
+/// asks how much of each the pass would move by a 10-bit code or more
+/// (`RecordingSmoothing.changedShare`). The user's own recording of a terminal
+/// window moved about 2 per cent of its pixels (the window's sidebar is 4 per
+/// cent of the screen); a page of flat colours and text moves none.
+enum ExportSmoothing {
+
+    /// The pass a smoothed export writes with: no grain, since the file is
+    /// as deep as the recording and the encoder drops grain anyway
+    /// (`SmoothedCopyWriter.quality`).
+    static let filter: SmoothedCopyWriter.Filter = { image in
+        RecordingSmoothing.smoothed(image, reach: RecordingSmoothing.reachInRecordingPixels, grain: false)
+    }
+
+    /// The share of a frame's pixels the pass has to move before a write is
+    /// worth it: one in five hundred.
+    static let worthIt = 0.002
+
+    /// Whether `ranges` of the recording at `url` (all of it when nil) have
+    /// steps worth smoothing. False whenever the switch is off.
+    static func isWorthIt(_ url: URL, movie: MovieRef, rangesMS: [Range<Int>]?) async -> Bool {
+        guard RecordingSmoothing.isOn, RecordingSmoothing.isAvailable,
+              await SmoothedCopyWriter.isDeep(url) else { return false }
+        let ranges = rangesMS ?? [0..<max(1, movie.durationMS)]
+        let total = ranges.reduce(0) { $0 + $1.count }
+        guard total > 0 else { return false }
+        // Three moments spread over what is kept, in the recording's own time.
+        let moments: [Int] = [0.2, 0.5, 0.8].map { share in
+            var left = Int(Double(total) * share)
+            for range in ranges {
+                if left < range.count { return range.lowerBound + left }
+                left -= range.count
+            }
+            return ranges.last.map { max($0.lowerBound, $0.upperBound - 1) } ?? 0
+        }
+        let scale: CGFloat = 0.25
+        let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
+        generator.appliesPreferredTrackTransform = true
+        generator.maximumSize = CGSize(width: max(64, movie.pixelSize.width * scale),
+                                       height: max(64, movie.pixelSize.height * scale))
+        for ms in moments {
+            guard let image = try? await generator.image(
+                at: CMTime(value: CMTimeValue(ms), timescale: 1000)).image else { continue }
+            let read = CGFloat(image.width) / max(1, movie.pixelSize.width)
+            if let share = RecordingSmoothing.changedShare(
+                of: image, reach: RecordingSmoothing.reach(readAt: read)), share >= worthIt {
+                return true
+            }
+        }
+        return false
+    }
 }
 
 /// An export that is running: what it is called and how far along it is.

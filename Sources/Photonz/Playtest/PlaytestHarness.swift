@@ -18483,11 +18483,17 @@ private final class Run {
         case .copiedPieces(let copiedFrames, let renderedFrames):
             facts.append("copied in pieces: \(copiedFrames) frames copied as they were, "
                          + "\(renderedFrames) encoded again at the cuts")
+        case .smoothed(let frames, let piecesOnly):
+            facts.append("written again with its soft gradients smoothed (\(frames) frames"
+                         + (piecesOnly ? ", the kept pieces only)" : ")"))
         case .drawn: facts.append("drawn frame by frame")
         }
         if let piecesCopied {
             let didCopy: Bool
-            if case .copiedPieces = route { didCopy = true } else { didCopy = false }
+            switch route {
+            case .copiedPieces, .smoothed(_, true): didCopy = true
+            default: didCopy = false
+            }
             if piecesCopied != didCopy {
                 wrong.append(piecesCopied
                     ? "this edit is nothing but cuts and should have been copied in pieces, "

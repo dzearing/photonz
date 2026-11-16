@@ -94,6 +94,12 @@ enum RecordingStartLatencyDiag {
         let still = args.contains("--still")
         let stopEarly = args.contains("--stop-early")
         let cancel = args.contains("--cancel")
+        // `--minute`: record for sixty seconds with the square changing on
+        // every frame of a 60 Hz clock, then count the frames the file holds
+        // and every gap in it longer than two of those frames. Read off the
+        // file alone, so nothing in the recording code is touched to measure it.
+        let minute = args.contains("--minute")
+        out["minute"] = minute
         out["cancel"] = cancel
         out["stopEarly"] = stopEarly
         out["still"] = still
@@ -252,7 +258,26 @@ enum RecordingStartLatencyDiag {
             await flipTask.value
             guard coordinator.isRecording else { out["error"] = "run \(run + 1) did not start"; return }
             NSLog("[recording-start-latency-diag] run \(run + 1) recording")
-            try? await Task.sleep(for: .milliseconds(1500))
+            var changes = 0, lateChanges = 0
+            if minute {
+                // A new grey every 1/60 s for a minute, on the host clock so a
+                // late wake does not push every later one.
+                let begin = PointerTracker.hostNow()
+                var last = begin
+                while PointerTracker.hostNow() - begin < 60 {
+                    changes += 1
+                    let next = begin + Double(changes) / 60
+                    while PointerTracker.hostNow() < next { try? await Task.sleep(for: .microseconds(800)) }
+                    let now = PointerTracker.hostNow()
+                    if now - last > 2.0 / 60 { lateChanges += 1 }
+                    last = now
+                    let grey = CGFloat(changes % 2 == 0 ? 0.25 : 0.75)
+                    flip.backgroundColor = NSColor(white: grey, alpha: 1)
+                    flip.display()
+                }
+            } else {
+                try? await Task.sleep(for: .milliseconds(1500))
+            }
             FirstFrameClock.playtestWatch.withLock { $0 = nil }
             let start = coordinator.lastStartTrace
             let recorder = coordinator.lastRecorderStartTrace
@@ -276,6 +301,13 @@ enum RecordingStartLatencyDiag {
                 "plan": recorder.plan.map { "\($0)" + (recorder.reusedWarmFilter ? "+" : "") } as Any,
                 "returnToOutputStartedMS": ms(pressedAt, recorder.outputStarted) as Any,
             ]
+            if minute {
+                reading["squareChanges"] = changes
+                reading["squareChangesLate"] = lateChanges
+                if let entry = landedEntry {
+                    for (k, v) in await frameGaps(of: entry.url) { reading[k] = v }
+                }
+            }
             if let entry = landedEntry {
                 let check = await readFirstSecond(of: entry.url, flip: streamPixel(flipCentre), dot: streamPixel(dot))
                 for (k, v) in check { reading[k] = v }
@@ -312,6 +344,12 @@ enum RecordingStartLatencyDiag {
             }
             return
         }
+        if minute {
+            out["passed"] = readings.count == runs && readings.allSatisfy {
+                ($0["gapsOverTwoFrames"] as? Int).map { $0 == 0 } ?? false
+            }
+            return
+        }
         if stopEarly {
             out["passed"] = readings.count == runs && readings.allSatisfy {
                 $0["stoppedAfterStart"] as? Bool == true && $0["fileLanded"] as? Bool == true
@@ -335,6 +373,35 @@ enum RecordingStartLatencyDiag {
             && RecordingStartBudget.isWithin(readingsMS: firsts)
             && readings.allSatisfy { $0["firstFrameSquare"] as? String == "black" && (still || $0["squareTurnedAtFileMS"] is Double)
                 && $0["controlsInVideo"] as? Bool == false }
+    }
+
+    /// How many pictures `url` holds, and every gap between two of them
+    /// longer than two frames of a 60 Hz clock, past its first second (the
+    /// stream settles there, which the start drill measures on its own).
+    private static func frameGaps(of url: URL) async -> [String: Any] {
+        let asset = AVURLAsset(url: url)
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
+              let reader = try? AVAssetReader(asset: asset) else { return ["gapError": "unreadable"] }
+        let output = AVAssetReaderTrackOutput(track: track, outputSettings: nil)
+        reader.add(output)
+        guard reader.startReading() else { return ["gapError": "unreadable"] }
+        var times: [Double] = []
+        while let sample = output.copyNextSampleBuffer() {
+            if CMSampleBufferGetNumSamples(sample) > 0 {
+                times.append(CMSampleBufferGetPresentationTimeStamp(sample).seconds)
+            }
+        }
+        times.sort()
+        guard let first = times.first else { return ["gapError": "no frames"] }
+        let settled = times.filter { $0 >= first + 1 }
+        let gaps = zip(settled, settled.dropFirst()).map { $1 - $0 }
+        let long = gaps.filter { $0 > 2.0 / 60 + 0.002 }
+        return [
+            "fileFrames": times.count,
+            "fileSeconds": ((times.last ?? first) - first),
+            "gapsOverTwoFrames": long.count,
+            "longestGapMS": ((gaps.max() ?? 0) * 1000).rounded(),
+        ]
     }
 
     /// Writes the file's first frame and the frame the square turns white in,

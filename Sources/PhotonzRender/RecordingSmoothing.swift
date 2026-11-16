@@ -124,13 +124,13 @@ public enum RecordingSmoothing {
     /// on the user's recording). Pictures passed in as `CGImage`s come back
     /// bit for bit wherever the pass leaves them alone.
     public static func smoothed(_ image: CIImage, reach: CGFloat, grain: Bool) -> CIImage {
-        smoothed(image, reach: reach, grain: grain, linear: true)
+        smoothed(image, reach: reach, grain: grain ? 1 : 0, linear: true)
     }
 
     /// The pass. `linear` says the numbers are linear light, which every
     /// comparison and the grain turn into shades of the sRGB curve first;
     /// otherwise they are already the 8-bit picture's own numbers.
-    static func smoothed(_ image: CIImage, reach: CGFloat, grain: Bool, linear: Bool) -> CIImage {
+    static func smoothed(_ image: CIImage, reach: CGFloat, grain: Float, linear: Bool) -> CIImage {
         guard let kernels = compiled(), reach >= 1 else { return image }
         let extent = image.extent
         guard extent.width >= 4, extent.height >= 4, extent.width.isFinite, extent.height.isFinite
@@ -178,7 +178,7 @@ public enum RecordingSmoothing {
                              width: rect.width / factor, height: rect.height / factor).insetBy(dx: -2, dy: -2)
             },
             arguments: [source, blurred.clampedToExtent(), Float(factor), threshold,
-                        grain ? shade : Float(0), curve])
+                        shade * max(0, grain), curve])
         else { return image }
 
         return moved.transformed(by: origin.inverted()).cropped(to: extent)
@@ -205,7 +205,7 @@ public enum RecordingSmoothing {
         let space = picture.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)
         guard let space, space.model == .rgb else { return picture }
         let input = CIImage(cgImage: picture)
-        let out = smoothed(input, reach: reach, grain: true, linear: false)
+        let out = smoothed(input, reach: reach, grain: 1, linear: false)
         // Written as deep as it came: a 10-bit recording's frame comes from
         // the decoder in half floats, and rounded to 8 bits every edge in it
         // would move by up to half a shade.
@@ -221,8 +221,44 @@ public enum RecordingSmoothing {
         let space = picture.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)
         guard let space, space.model == .rgb else { return nil }
         let input = CIImage(cgImage: picture)
-        let out = smoothed(input, reach: reach, grain: false, linear: false)
+        let out = smoothed(input, reach: reach, grain: 0, linear: false)
         return context.createCGImage(out, from: input.extent, format: .RGBA16, colorSpace: space)
+    }
+
+    /// The share of `picture`'s pixels the pass moves by a quarter of a shade
+    /// (one 10-bit code) or more, with no grain. A pixel of a staircase moves
+    /// by up to half a shade, the most at the edge of its band: what a top quality export reads off a few frames to
+    /// decide whether a recording is written out smoothed or copied as it is.
+    /// Nil when the pass cannot run on this Mac.
+    public static func changedShare(of picture: CGImage,
+                                    reach: CGFloat = reachInRecordingPixels) -> Double? {
+        guard let deep = deepPicture(picture, reach: reach) else { return nil }
+        guard let before = greens(picture), let after = greens(deep), before.count == after.count,
+              !before.isEmpty else { return nil }
+        let quarter = 65535.0 / 255 / 4
+        var moved = 0
+        for i in before.indices where abs(Double(before[i]) - Double(after[i])) + 0.5 >= quarter { moved += 1 }
+        return Double(moved) / Double(before.count)
+    }
+
+    /// The green channel of every pixel at 16 bits, in the picture's own
+    /// colours.
+    private static func greens(_ image: CGImage) -> [UInt16]? {
+        let w = image.width, h = image.height
+        guard w > 0, h > 0, let space = image.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB) else {
+            return nil
+        }
+        var raw = [UInt16](repeating: 0, count: w * h * 4)
+        let drawn = raw.withUnsafeMutableBytes { buffer -> Bool in
+            guard let ctx = CGContext(data: buffer.baseAddress, width: w, height: h, bitsPerComponent: 16,
+                                      bytesPerRow: w * 8, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                                        | CGBitmapInfo.byteOrder16Little.rawValue) else { return false }
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+            return true
+        }
+        guard drawn else { return nil }
+        return stride(from: 1, to: raw.count, by: 4).map { raw[$0] }
     }
 
     // MARK: - The kernels

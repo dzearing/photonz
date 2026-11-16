@@ -119,6 +119,22 @@ struct RecordingSmoothingTests {
         #expect(worst <= 2.01)
     }
 
+    /// What a top quality export asks before it writes a recording out again
+    /// rather than copying it: does the pass change anything worth a write?
+    @Test("How much of a picture the pass changes: a staircase a lot, flat or sharp nothing")
+    func changedShare() throws {
+        let stairs = try #require(RecordingSmoothing.changedShare(of: Self.staircase(width: 200)))
+        #expect(stairs > 0.3, "\(stairs)")
+        let flat = Self.picture(width: 400, height: 400) { _, _ in 57 }
+        #expect(RecordingSmoothing.changedShare(of: flat) == 0)
+        // Hard edges only: bright lines and blocks on a flat dark ground.
+        let sharp = Self.picture(width: 400, height: 400) { x, y in
+            (x % 40 < 2 || (y / 50) % 2 == 0 && x > 200) ? 230 : 40
+        }
+        let share = try #require(RecordingSmoothing.changedShare(of: sharp))
+        #expect(share < 0.001, "\(share)")
+    }
+
     @Test("A flat area is left exactly as it was")
     func flatUntouched() throws {
         let flat = Self.picture(width: 200, height: 200) { _, _ in 57 }

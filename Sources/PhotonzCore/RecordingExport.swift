@@ -75,6 +75,11 @@ public enum RecordingExport {
         /// back to back, so the top choice copies them rather than drawing
         /// every frame (`PhotonzDocument.copyablePieces`, `copiesPieces`).
         public var isCutOnly: Bool
+        /// Whether the top choice may write the recording out again with its
+        /// soft gradients smoothed rather than copy it byte for byte: what it
+        /// does when a few of its frames say the Mac drew one in steps. The
+        /// file is then about the copy's size, not exactly it.
+        public var mayBeSmoothed: Bool
 
         public init(sourceDuration: TimeInterval, keptDuration: TimeInterval,
                     sourceSize: CGSize, cropSize: CGSize? = nil,
@@ -83,8 +88,10 @@ public enum RecordingExport {
                     playheadTime: TimeInterval = 0,
                     footageBytesPerSecond: Double? = nil,
                     captionedSeconds: TimeInterval = 0,
-                    isCutOnly: Bool = false) {
+                    isCutOnly: Bool = false,
+                    mayBeSmoothed: Bool = false) {
             self.isCutOnly = isCutOnly
+            self.mayBeSmoothed = mayBeSmoothed
             self.sourceDuration = sourceDuration
             self.keptDuration = keptDuration
             self.sourceSize = sourceSize
@@ -340,7 +347,12 @@ public enum RecordingExport {
             return bytes > 0 ? .exact(bytes) : .unknown
         }
         if copiesVerbatim(format: format, quality: quality, source: source, size: size) {
-            return source.fileBytes > 0 ? .exact(source.fileBytes) : .unknown
+            guard source.fileBytes > 0 else { return .unknown }
+            // Smoothed, the user's recording came out a quarter of the copy
+            // (32 MB against 121, measured 2026-11-16), so the copy's size
+            // is said as about: a smoothed file is written at a quality, and
+            // nothing short of writing it says what that weighs.
+            return source.mayBeSmoothed ? .about(source.fileBytes) : .exact(source.fileBytes)
         }
         // Copied in pieces: what the recording already costs for the seconds
         // kept, and the very file once the sheet has written it to find out.

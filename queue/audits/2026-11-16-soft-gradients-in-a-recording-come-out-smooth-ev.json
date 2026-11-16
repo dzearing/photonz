@@ -1,12 +1,12 @@
 {
   "feature": "Soft gradients in a recording play smooth",
   "epic": "video-editing",
-  "summary": "A recording of a dark soft gradient (a translucent terminal window, a sheet's material) now plays, scrubs and shows in the editor as a smooth ramp instead of visible bands. Words, window edges and lines are left exactly as they were. Recording itself is untouched.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/soft-gradients-in-a-recording-play-smooth-walk.json (banded fixture). Your own file was run through the same walk with its path swapped in.",
+  "summary": "A recording of a dark soft gradient (a translucent terminal window, a sheet's material) now plays, scrubs and shows in the editor as a smooth ramp instead of visible bands, and exporting it at High writes a file that plays smooth in QuickTime and Safari too. Words, window edges and lines are left as they were. Recording itself is untouched.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/soft-gradients-in-a-recording-play-smooth-walk.json (banded fixture, now also exports at High and Standard). Your own file was run through the same walk with its path swapped in.",
   "switched": {},
   "try": [
     {
-      "do": "Open Recording 2026-11-16 at 06.33.31 (the one you sent) from History or with File > Open. The picture here is the banded test recording at Next defaults; yours is shown cropped in the next two steps.",
+      "do": "Open Recording 2026-11-16 at 06.33.31 (the one you sent) from History or with File > Open.",
       "shot": "2026-11-16-soft-gradients-fixture-on-sc.png"
     },
     {
@@ -21,29 +21,34 @@
       "do": "Press Space to play and scrub the playhead: the gradient stays smooth while it moves."
     },
     {
-      "do": "Watch the before and after clip: red square is off, green square is on.",
-      "shot": "2026-11-16-soft-gradients-before-after.mp4"
+      "do": "Choose File > Export, keep MP4 at High, and export. It takes about half the recording's length (4.3 s for your 9.3 s one) instead of copying instantly."
     },
     {
-      "do": "Read some terminal text up close in the frame: it is as sharp as before."
+      "do": "Open the exported file in QuickTime and look at the same sidebar: smooth there too. Left strip is your recording, right is the export, both contrast stretched.",
+      "shot": "2026-11-16-soft-gradients-export-stretched.png"
+    },
+    {
+      "do": "Read some terminal text up close in the export: it should look as sharp as the recording."
     }
   ],
   "evaluate": [
-    "On your display, does the terminal's sidebar read as one smooth gradient now when you play the recording in Photonz?",
-    "Can you see the fine grain in the smoothed areas at normal viewing distance? It is up to one shade either way and only where a band was.",
-    "Does anything that should be sharp (text, a hairline, a window edge) look softer to you?",
-    "Is it fine that exporting at the top quality still copies the file as recorded, with its steps, until exports can be written in 10-bit?"
+    "On your display, does the terminal's sidebar read as one smooth gradient when you play the recording in Photonz, and when you play the High export in QuickTime?",
+    "Is about half the recording's length a fair price for a smooth High export, given it used to be an instant copy (and the file came out a quarter of the size)?",
+    "Does anything that should be sharp (text, a hairline, a window edge) look softer to you, in Photonz or in the export?",
+    "Can you see the fine grain in the smoothed areas while playing in Photonz? It is up to one shade either way and only where a band was."
   ],
   "rough": [
-    "Reproduced on your files before anything changed: the frame at 3 s, x 261, y 740 to 2040, has 27 ten-bit levels with flat runs up to 124 px (11 eight-bit levels, 161 px); the screenshot before it has 11 levels and 164 px. The screen itself is drawn in 8-bit steps.",
+    "Reproduced on your files before anything changed: the frame at 3 s, x 261, y 740 to 2040, has 27 ten-bit levels with flat runs up to 116 to 124 px (11 eight-bit levels, 161 px); the screenshot before it has 11 levels and 164 px. The screen itself is drawn in 8-bit steps.",
     "On screen in Photonz (window capture, 8 px means down that strip): 40 levels, longest flat run 8 to 26 px, against 103 to 137 px with the switch off. The bar was under 40 px and 35 levels: met.",
-    "Unit tests on a controlled 10-shade staircase over 1300 px: deep output under 40 px flat and 35+ levels; 8-bit output's row means pass the same bar; a flat area and every edge pixel come back bit for bit; a one-shade hairline survives.",
-    "Sharp things: terminal text in the same frames, on against off, 0.002% of edge pixels differ, 99th percentile 0 ten-bit codes; mean colours of the sidebar and the text block within 1 ten-bit code (Delta E well under 1).",
-    "Cost: GPU kernel time about +1.0 ms for a full 3456x2234 frame (1.4 against 0.4 ms) and +0.2 ms at half size, median over 37 real frames; readings on this shared Mac swung 2x between runs. Playing the 6 minute reference edit for a minute: 1 frame missed of 1818 both on and off; scrub lag 2 frames median, 4 worst, both ways; time to the first sharp frame of a 3456 recording 1007 to 1072 ms on, 1035 to 1073 ms off.",
-    "Recording is untouched: the capture code is not in the diff. Start drill, 6 runs: median 8.7 ms from Return to first frame (9.6 ms measured this morning before the change). No existing drill counts dropped capture frames over a minute, so that number is not measured here; the 60 s stop drill passes every budget.",
-    "Not done, and why this task stays open: exports. Your file plays smooth only inside Photonz. A High export of an untouched or cut-only recording copies the file (0.1 s), so QuickTime and Safari still show the steps. At Standard the grain does not survive H.264's budget: the file read as banded (94 px against 95 px flat) in twice the time (11.2 s against 5.4 s), so Standard and Small exports are not smoothed (5.4 s, as before). High drawn exports (an edit with titles) are smoothed; an encoder test at High's 55 Mbps kept a 31 px flat run. A smooth file for other players needs a 10-bit export; left in this task's log for the next pass.",
-    "A small recording shown larger than itself (the 1280 wide fixture at 1.5x) smooths less on screen: longest flat run 39 to 41 px against 155 px off, because enlarging blends some of the grain. Your recordings are shown smaller than they were recorded, where it holds well.",
+    "In the High export (read with Apple's decoder, same strip): 38 levels and steps of at most 2 ten-bit codes (half a shade) against 27 levels and steps of 4 (a whole shade). Longest flat run 68 px, where the gradient bottoms out; elsewhere up to 63. The under-40 px bar is not met in the file and cannot be without grain: this strip spans 31 to 39 codes over 1300 px, about 40 px a code on a perfect ramp, and the encoder threw away every grain I tried (it kept half a shade once, by chance, and lost it at a whole shade).",
+    "Sharp things: on screen, terminal text on against off, 0.002% of edge pixels differ. In the export, text is 9 ten-bit codes off at the 99th percentile, exactly what writing the file again with nothing smoothed costs (also 9), and the two look the same at three times the size. A copy was exact; any re-encode is not.",
+    "Export cost on your recording: High was a 0.1 s copy of 121 MB, now 4.3 s writing 32.7 MB (HEVC 10-bit, Display P3, same as the recording). Standard 5.2 s, unchanged and not smoothed: H.264 at its budget wipes the grain. A recording with no soft gradient, or one stored at 8 bits (anything recorded before today's 10-bit change), is still copied instantly.",
+    "The Export sheet now says the High size of a recording as about the recording's size rather than to the byte, since the smoothed file is usually smaller (a quarter, on yours).",
+    "Recording is untouched: the capture code's diff against the commit before this task is empty. A new minute-long drill (Scripts/recording-start-drill.sh --minute) recorded 60 s twice with a square changing every 60 Hz frame: 3192 and 3172 frames, no gap longer than two frames after the first second. Start drill: median 12.9 ms from Return to first frame (8.7 and 9.6 ms earlier today, budget 100), the same code, so a busier machine.",
+    "Cost on screen: GPU about +1.0 ms for a full 3456x2234 frame and +0.2 ms at half size; playing the 6 minute edit for a minute missed 1 frame of 1818 both on and off; time to first sharp frame unchanged (about 1.04 s).",
+    "A player that shows 10-bit video in 8 bits without dithering (some browsers on other platforms) rounds most of the steps back in; Macs show it at 10 bits.",
+    "A small recording shown larger than itself (the 1280 wide fixture at 1.5x) smooths less on screen: longest flat run 39 to 41 px against 155 px off.",
     "No mock covers this; there is no control. The switch lives only in the Experiments window.",
-    "The full window pictures of your recording are kept out of the repository, which is public, because they show your desktop; only gradient crops of the sidebar are committed. The full ones are at /tmp/deband/2026-11-16-soft-gradients-user-recording-on-sc.png and -off-sc.png until the Mac restarts."
+    "The full window pictures of your recording are kept out of the repository, which is public, because they show your desktop; only gradient crops of the sidebar are committed."
   ]
 }

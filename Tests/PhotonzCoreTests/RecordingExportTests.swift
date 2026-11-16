@@ -261,6 +261,19 @@ struct RecordingExportTests {
         #expect(!RecordingExport.copiesVerbatim(format: .gif, quality: .high, source: whole))
     }
 
+    /// A recording the top choice may write out again with its soft
+    /// gradients smoothed rather than copy (the export decides by reading a
+    /// few frames): its size is the copy's, but no longer to the byte.
+    @Test func aCopyThatMayBeSmoothedSaysAbout() {
+        var maybe = whole
+        maybe.mayBeSmoothed = true
+        #expect(RecordingExport.weight(format: .mp4, quality: .high, source: whole) == .exact(whole.fileBytes))
+        #expect(RecordingExport.weight(format: .mp4, quality: .high, source: maybe) == .about(whole.fileBytes))
+        #expect(RecordingExport.sizeLine(format: .mp4, quality: .high, source: maybe).contains("about"))
+        // Still a copy of its picture, at its own size.
+        #expect(RecordingExport.copiesVerbatim(format: .mp4, quality: .high, source: maybe))
+    }
+
     /// What the file is called when the save box opens: the recording's own
     /// name with the chosen format's extension, never the extension it had.
     @Test func theSuggestedNameTakesTheChosenFormatsExtension() {

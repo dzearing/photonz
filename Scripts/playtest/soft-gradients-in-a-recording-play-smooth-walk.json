@@ -1,19 +1,64 @@
 {
   "out": "/tmp/photonz-playtest/soft-gradients-in-a-recording-play-smooth-walk",
-  "seed": "A recording of a dark soft gradient the Mac drew in 8-bit steps (ten flat bands, 80 px each, beside a lighter panel, a bright one-pixel line and a box) opens at Next defaults with no flag set, and the frame on screen has the steps blended into a ramp with half a shade of grain, while the panel's edge, the line and the box stay sharp. Then it plays for a second and is paused: the frames read while playing are smoothed the same way. The recording file itself is never changed.",
+  "seed": "A recording of a dark soft gradient the Mac drew in 8-bit steps (ten flat bands, 80 px each, beside a lighter panel, a bright one-pixel line and a box) opens at Next defaults with no flag set, and the frame on screen has the steps blended into a ramp with half a shade of grain, while the panel's edge, the line and the box stay sharp. Then it plays for a second and is paused: the frames read while playing are smoothed the same way. The recording file itself is never changed. Last it is exported at High and at Standard and both files are kept in the walk's folder: the High one is the recording written out again with its steps smoothed, 10-bit HEVC like the recording, so QuickTime and Safari show the ramp too.",
   "setup": {
-    "forget": ["all"]
+    "forget": [
+      "all"
+    ]
   },
   "steps": [
-    { "do": "open", "file": "fixtures/Banded dark gradient recording 1280x800.mp4", "width": 1440, "height": 900 },
-    { "do": "expectFrameSharp", "within": 3 },
-    { "do": "describe", "stage": "1-opened", "note": "THE TEST: the recording just opened, playhead at 0:00; the left of the frame is a dark gradient the source holds as ten flat bands, and on screen it reads as one smooth ramp, the panel on the right, the line and the box as sharp as in the file" },
-    { "do": "snapshot", "name": "1-opened" },
-    { "do": "key", "key": "space" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "key", "key": "space" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "2-played", "note": "after a second of playing and a pause: the frames the player read while it played are smoothed the same way" },
-    { "do": "snapshot", "name": "2-played" }
+    {
+      "do": "open",
+      "file": "fixtures/Banded dark gradient recording 1280x800.mp4",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "do": "expectFrameSharp",
+      "within": 3
+    },
+    {
+      "do": "describe",
+      "stage": "1-opened",
+      "note": "THE TEST: the recording just opened, playhead at 0:00; the left of the frame is a dark gradient the source holds as ten flat bands, and on screen it reads as one smooth ramp, the panel on the right, the line and the box as sharp as in the file"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-opened"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-played",
+      "note": "after a second of playing and a pause: the frames the player read while it played are smoothed the same way"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-played"
+    },
+    {
+      "do": "action",
+      "action": "exportVideoKept"
+    },
+    {
+      "do": "describe",
+      "stage": "3-exported",
+      "note": "exported-high.mp4 and exported-standard.mp4 are in the walk's folder; the High one is smoothed and 10-bit HEVC"
+    }
   ]
 }
