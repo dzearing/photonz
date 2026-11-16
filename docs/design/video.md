@@ -867,6 +867,18 @@ The rule, for any view added to the editor window:
      (`TimelinePaintedHands`), for the click that comes with no pointer move
      first; a grip, a fade diamond or the level line is reached only on the
      full view, which the pointer resting there has already brought back.
+9. **Nothing per clip reads the window unless it is near it.** A scroll
+   writes the window every frame, so whatever reads it is built again every
+   frame. A clip's bar is handed the stretch it draws across by its lane, cut
+   to the clip, or its whole span when it is no wider than two windows
+   (`TimelineDrawnStretch.cut`), so a bar wholly in view is not built again
+   for a scroll. A row that lives outside the lane (a clip's Zoom lane) first
+   asks the rows' sight (`EditorState.timelineRowsSight`, `TimelineSight.rows`:
+   the window and two more either side, moved in steps of two windows and
+   more) and reads the window only when something of its own reaches it; the
+   hour-long reference edit's 126 Zoom lanes were each built on every frame
+   of a scroll (2026-11-15). A new row per clip under a track follows the
+   same rule.
 
 Measured with these in place (short speed walk, 2026-11-13): a minute of 1x
 play dropped 4 of about 1,820 frames, against 379 before; every transition

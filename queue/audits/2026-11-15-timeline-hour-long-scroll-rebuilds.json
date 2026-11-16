@@ -1,0 +1,32 @@
+{
+  "feature": "The timeline of an hour-long edit: a scroll stops rebuilding what does not move",
+  "epic": "video-perf",
+  "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
+  "summary": "Scrolling the hour-long reference edit's timeline no longer rebuilds the 126 Zoom rows under V1 or the clips that stay in view on every frame. A fast scroll went from about 46 ms a frame to about 41. The timeline looks exactly as before.",
+  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60.",
+  "switched": {},
+  "try": [
+    { "do": "Run Scripts/perf/reference-edit.sh 60 and wait for the edit to open." },
+    { "do": "Pinch the timeline in until about a minute shows, the stretch where clips show their pictures.", "shot": "2026-11-15-timeline-hour-zoomed-scrolled-sc.png" },
+    { "do": "Swipe along the timeline with two fingers, slowly, then flick it from one end to the other." },
+    { "do": "Scroll down to the Zoom rows under V1 and swipe along again: the bars of the zooms come in with their clips." },
+    { "do": "Drag a zoom bar to the lane's right edge and hold it there, so the timeline scrolls under it." }
+  ],
+  "evaluate": [
+    "Does a slow swipe along a zoomed-in hour feel smoother than it did?",
+    "Do the zoom bars in the Zoom rows always show when their clip is in view, including right after a long flick?",
+    "Does anything along the clips (pictures, names, waveforms, fade diamonds) look different from before while you scroll?"
+  ],
+  "measured": [
+    "Speed walk timeline measure on the 60 minute reference edit (524 clips, 126 zooms), markers down, at 120 Hz on this Mac. Before is c0e1a50b1's parent ee1b82d1d, measured today.",
+    "Scroll end to end in three seconds, half a minute on screen: 46 ms a frame median before (p95 56), 41 after (p95 50). Clip bars built per frame: 16 before, 4 after (only the ones coming into view).",
+    "Zoom in and out: 42 to 46 ms median before, 42 after (p95 about 200 ms, the zoomed-in stretch where clips show pictures). Unchanged, as expected.",
+    "Edits while playing (longest main thread pass): trim 107, move 90, blade 165, undo 125, transition 178, title 88 ms, the same as before. Playing untouched: 108 pictures in 3 s, no clip bar built per picture.",
+    "What is left, measured by taking parts out (not shipped): without clip bars a fast scroll is 17 ms; without bars, Zoom rows, click ticks and cuts it is 8.3 ms. A scroll ten times slower is 25 ms with bars and 14 without, so about 11 ms of every frame is bars sliding along (SwiftUI laying the track stack out again) and the rest of a fast scroll is bars made as they come into view."
+  ],
+  "rough": [
+    "The bars are not reached: scroll and zoom are still about 41 ms a frame against 8.3 ms, and edits 90 to 180 ms against 16. The task stays open. The next step is painting clips that show pictures (the film strip) the way plain clips are already painted, on any lane of a long edit and not only one with 24 clips in sight, which takes away both the sliding and the making of bars.",
+    "Edits still rebuild every bar in view (77 to 157 per edit), because each bar reads the document; logged on this task, not filed, as it is part of the same painting step.",
+    "No mock covers this: the change is speed only and the timeline draws as before. The picture is the hour-long edit zoomed to a minute and scrolled along, taken after the change."
+  ]
+}
