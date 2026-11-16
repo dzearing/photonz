@@ -976,6 +976,49 @@ Space, watches, then edits). That alone took the undo after a blade from 57 to
 and every edit after it is counted again under its own name with ", picked"
 on the end; the short walk makes its trim, blade and undo both ways.
 
+**The ruler watches its own facts, and a pick carried into the history is no
+edit** (2026-11-15, pass 9). A census of every read of the document made in an
+edit's own pass (a stack written per read, in a temporary probe build) found
+that about nine reads in ten came through the timeline's ruler: every clip
+bar, its pieces' names, every cut, click tick, zoom lane and the time scroller
+asks `motionStripRuler` where it is, and the ruler read the whole document for
+its length (and, with a clip picked, for the end of its Source ghost). So
+every edit woke every one of them in the edit's own pass, whatever rule 6
+said. The ruler now reads `rulerDocument`: the document as a hand shows it
+while one is in a trim, a clip drag, a speed stop or a caption word, and
+otherwise the stored document watched only through `rulerDocumentRevision`,
+which moves on when the ruler's facts change (has time, length, the furthest
+Source ghost for the pick as it is), a pass late for an edit that follows one.
+The click ticks, a cut's view, a zoom lane, a clip bar's pieces, bands and
+grips (rows of a `ForEach`, built outside the body that holds them) and
+anything drawn on its own (`DrawnOnItsOwn`) read the document late. Handing
+`ClickTicksView` its ticks from the lane as an Equatable view, as rule 7
+asks, stopped the tick drag in `a-click-tick-is-hidden-and-slid-walk` from
+sliding the click, on 2026-11-14 and again on 2026-11-15, cause not found; it
+reads for itself, late, until somebody finds why. Reads in that pass went from about
+9,500 to about 1,200 over the same six edits.
+
+The second find was a write to the history that changed nothing. The first
+edit after a pick carries the pick into the history before it marks itself to
+follow a pass later (`flushSelectionToHistory`), and that write moved
+`latePassRevision` on as if the document had changed: the whole timeline was
+built in the edit's own pass and again in the next. A history write that
+leaves the document equal to what it was moves no revision now. On the 6
+minute edit, trims and undos one after another while it plays: the first trim
+of the session 26 ms in its own pass to 13; the first trim after a pick 31 to
+24 at worst; a run of trims with nothing picked about 11 in their own pass
+and 17 to 19 in the timeline's pass after it.
+
+So two more things to keep, beside rules 1 to 8: **a value many views read
+(the ruler, a length) is worked out from facts that change only when it does,
+and watched through those**, never through the document; and **a write to an
+observed property that leaves its meaning as it was is not a change** (rule 5
+for the history). The longest pass after an edit is now the timeline's own
+late pass, where every clip bar in sight is built again because each reads
+the document through `latePassRevision`; a clip bar handed its own values by
+its lane, as rule 7 asks of every view per clip, is what would take that pass
+down next.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

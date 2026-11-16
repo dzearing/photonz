@@ -515,7 +515,13 @@ struct TimelineEditPointView: View {
 
     private var place: TimelineCutPlace { .edit(outgoing: point.outgoing, incoming: point.incoming) }
 
-    var body: some View {
+    /// What it reads off the document (its clips' names, the transition on
+    /// it) follows an edit a pass later, with the lane that holds it
+    /// (`readingALatePass`): read live, every cut in sight was woken in the
+    /// frame of every edit.
+    var body: some View { readingALatePass { lateBody } }
+
+    @ViewBuilder private var lateBody: some View {
         if let drawn = transitionDrawn {
             ZStack(alignment: .topLeading) {
                 if drawn.holdMS > 0 { held(drawn) }

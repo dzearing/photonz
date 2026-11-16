@@ -15,7 +15,15 @@ struct ClickTicksView: View {
     let height: CGFloat
     var isLocked = false
 
-    var body: some View {
+    /// What it reads off the document follows an edit a pass later, with
+    /// the lane (`readingALatePass`): read live, every clip in sight was
+    /// woken in the frame of every edit, with clicks or without. Handed its
+    /// ticks by the lane as an Equatable view instead, the tick drag in
+    /// `a-click-tick-is-hidden-and-slid-walk` stopped sliding the click
+    /// (twice, 2026-11-14 and 2026-11-15, cause not found).
+    var body: some View { readingALatePass { lateBody } }
+
+    @ViewBuilder private var lateBody: some View {
         let ruler = editorState.motionStripRuler
         let ticks = editorState.clickTicks(ofClip: layerID)
         ForEach(Array(ticks.enumerated()), id: \.element.mark.id) { index, tick in

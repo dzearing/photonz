@@ -23161,3 +23161,19 @@ units.
   closes the file in 16 ms, load about the same.
 - Open: the editor shows frames as 8-bit pictures; a moving full screen at
   Best is ~4x macOS's file size (the audit asks whether Best is the right default).
+
+## 2026-11-15 — long edit speed, pass 9 (`a-long-edit-with-transitions-plays-scrubs-and-ed`)
+
+- A census of every document read in an edit's own pass (temporary probe
+  build) showed nine in ten came through the timeline's ruler, so every clip
+  bar, cut, click tick and zoom lane woke in the edit's frame. The ruler now
+  watches `rulerDocumentRevision` (length, has time, the picked clip's Source
+  ghost end), late with the timeline; cuts, zoom lanes, click ticks, a bar's
+  pieces, bands and grips and `DrawnOnItsOwn` read late.
+- A history write that leaves the document equal (the pick carried into the
+  history before an edit) no longer moves `latePassRevision`: the first edit
+  after a pick had rebuilt the whole timeline in its own pass.
+- Short speed walk, worst of three: trim 32 -> 18 ms, trim picked 34 -> 24,
+  undo picked 44 -> 29. Bars (16 ms, scrub 1 frame, 0 dropped) not reached.
+  docs/design/video.md 8f has the rule and what is next (clip bars handed
+  their own values, so the timeline's late pass stops rebuilding all of them).

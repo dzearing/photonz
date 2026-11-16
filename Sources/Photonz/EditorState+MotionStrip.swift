@@ -96,12 +96,17 @@ extension EditorState {
         if let drag = speedStopDrag { return drag.heldCycleMS }
         // ...and room past the end for a file in the air over the timeline
         // (`EditorState+TimelineDrop`).
-        if let room = timelineDropRoomMS { return max(1, (shownDocument?.timelineLengthMS ?? 0) + room) }
-        let length = max(1, shownDocument?.timelineLengthMS ?? 1)
+        // The document as the ruler measures it, watched only for what the
+        // ruler reads off it (`rulerDocument`): every clip, cut, tick and
+        // zoom bar on the timeline reads the ruler, and watching the whole
+        // document woke all of them in the frame of every edit.
+        let measured = rulerDocument
+        if let room = timelineDropRoomMS { return max(1, (measured?.timelineLengthMS ?? 0) + room) }
+        let length = max(1, measured?.timelineLengthMS ?? 1)
         // ...and room for a picked clip's Source ghost where a speed-up left
         // its original length running past the end (`ClipSourceLane`): the
         // mock's before and after reads only with both ends on screen.
-        return max(length, clipSourceGhostsEndMS ?? 0)
+        return max(length, clipSourceGhostsEndMS(in: measured) ?? 0)
     }
 
     /// The Source ghost a picked clip shows under it, nil where its lane stays
@@ -114,16 +119,20 @@ extension EditorState {
         return ClipSourceGhost(pieces: pieces, startMS: time.inMS)
     }
 
-    /// Where the furthest Source ghost on screen ends.
-    private var clipSourceGhostsEndMS: Int? {
-        guard shownDocument?.hasTime == true else { return nil }
+    /// Where the furthest Source ghost on screen ends, in `document`.
+    func clipSourceGhostsEndMS(in document: PhotonzDocument?) -> Int? {
+        guard let document, document.hasTime, clipBarDrag == nil else { return nil }
         let picked = [selectedLayerID].compactMap { $0 } + multiSelectedLayerIDs
-        return picked.compactMap { clipSourceGhost(for: $0)?.endMS }.max()
+        return picked.compactMap { id -> Int? in
+            guard let layer = document.layer(id: id), let time = layer.time,
+                  let pieces = layer.clipPieces else { return nil }
+            return ClipSourceGhost(pieces: pieces, startMS: time.inMS)?.endMS
+        }.max()
     }
 
     /// Whether this document finishes rather than repeating. A recording has a
     /// last frame; an icon starts over.
-    var motionStripMeasuresADocument: Bool { document?.hasTime ?? false }
+    var motionStripMeasuresADocument: Bool { documentHasTime }
 
     /// The ruler the strip is drawn against.
     ///

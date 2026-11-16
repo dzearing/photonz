@@ -31,6 +31,7 @@ final class EditorState {
             if documentHasTime != hasTime { documentHasTime = hasTime }
             noteWhatTheLookRowsSee()
             noteWhatTheMenuSees()
+            noteWhatTheRulerSees(was: oldValue?.current)
         }
     }
     /// Moves on only when the document changes in a way the panel's look
@@ -72,12 +73,60 @@ final class EditorState {
         let later = followsAPassLater
         switch (lookRowsSaw, now) {
         case (nil, nil): return
+        // A write to the history that left the document as it was (a pick
+        // carried into it before an edit, `flushSelectionToHistory`) is no
+        // change to anything read through `document`. Counted as one, the
+        // first edit after every pick rebuilt the whole timeline in its own
+        // pass, before the edit marked it to follow a pass later: 18 clip
+        // bars and every lane on the 6 minute reference edit
+        // (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 9).
+        case let (saw?, now?) where saw == now: return
         case let (saw?, now?) where saw.sameApartFromPlacementKeys(now): break
         default:
             if later { lookRowsOwed = true } else { lookRowsRevision &+= 1 }
         }
         lookRowsSaw = now
         if !later { latePassRevision &+= 1 }
+    }
+
+    /// Moves on only when what the timeline's ruler reads off the document
+    /// changes: whether it has time, how long it is, and where a picked
+    /// clip's Source ghost ends. A pass late for an edit marked by
+    /// `catchUpOnTheNextPass`, with the rest of the timeline. What
+    /// `rulerDocument` watches instead of the document.
+    private(set) var rulerDocumentRevision = 0
+    /// A change the ruler could show came in a pass that follows later.
+    @ObservationIgnored private var rulerOwed = false
+
+    /// What the ruler measures, out of `document`, for the pick as it is now.
+    private func rulerFacts(_ document: PhotonzDocument?) -> [Int] {
+        guard let document else { return [] }
+        return [document.hasTime ? 1 : 0, document.timelineLengthMS,
+                clipSourceGhostsEndMS(in: document) ?? -1]
+    }
+
+    private func noteWhatTheRulerSees(was: PhotonzDocument?) {
+        guard rulerFacts(was) != rulerFacts(history?.current) else { return }
+        if followsAPassLater { rulerOwed = true } else { rulerDocumentRevision &+= 1 }
+    }
+
+    /// The document the timeline's ruler measures (`motionStripCycleMS`).
+    ///
+    /// The document as a hand is showing it while one is (a trim, a clip, a
+    /// speed stop or a caption word in the hand), watched as a whole as
+    /// before. Otherwise the stored document, watched only through
+    /// `rulerDocumentRevision`: every clip bar, cut, click tick and zoom bar
+    /// reads the ruler, and the ruler reading the whole document woke every
+    /// one of them in the frame of every edit: nine reads of the document in
+    /// ten made in a trim's own pass on the 6 minute reference edit
+    /// (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 9). The
+    /// pick it reads (a Source ghost) is watched as itself.
+    var rulerDocument: PhotonzDocument? {
+        if trimSession != nil || clipBarDrag != nil || speedStopDrag != nil || captionWordDrag != nil {
+            return shownDocument
+        }
+        _ = rulerDocumentRevision
+        return _history?.current
     }
 
     /// Every change to the document in this pass reaches the panel's look
@@ -99,6 +148,10 @@ final class EditorState {
             if self.lookRowsOwed {
                 self.lookRowsOwed = false
                 self.lookRowsRevision &+= 1
+            }
+            if self.rulerOwed {
+                self.rulerOwed = false
+                self.rulerDocumentRevision &+= 1
             }
             self.latePassRevision &+= 1
         }

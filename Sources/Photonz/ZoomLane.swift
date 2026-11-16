@@ -46,7 +46,12 @@ struct ZoomLane: View {
             && zooms.allSatisfy { editorState.isZoomPicked(ClipZoomRef(layerID: layerID, zoomID: $0.id)) }
     }
 
-    var body: some View {
+    /// What it reads off the document (the clip's zooms) follows an edit a
+    /// pass later, with the lanes (`readingALatePass`): read live, every zoom
+    /// lane in sight was woken in the frame of every edit.
+    var body: some View { readingALatePass { lateBody } }
+
+    @ViewBuilder private var lateBody: some View {
         HStack(spacing: TimelineDock.gap) {
             Self.header(indent: indent, isLit: allPicked)
                 .contentShape(Rectangle())
@@ -138,7 +143,10 @@ private struct ZoomBarsView: View {
         editorState.isZoomLit(ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id))
     }
 
-    var body: some View {
+    /// Its right-click rows read the document: a pass late, with its lane.
+    var body: some View { readingALatePass { lateBody } }
+
+    @ViewBuilder private var lateBody: some View {
         let picked = Set(bars.filter(isPicked).map(\.zoom.id))
         Canvas { context, _ in
             for bar in bars {

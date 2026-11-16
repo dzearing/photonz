@@ -1,0 +1,26 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 9)",
+  "epic": "video-perf",
+  "summary": "Trimming or undoing on the 6 minute edit while it plays now holds the window for less time: a trim 32 to 18 ms at worst, a trim on a picked clip 34 to 24, an undo on a picked clip 44 to 29. The first edit after you pick a clip no longer redraws the whole timeline twice. Nothing on screen looks different.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "switched": {},
+  "try": [
+    { "do": "Press Space to play the edit.", "shot": "2026-11-15-long-edit-pass9-after-the-edits-sc.png" },
+    { "do": "While it plays, drag the end of a clip just ahead of the playhead half a second shorter." },
+    { "do": "Press Command Z." },
+    { "do": "Click a clip on V1 so its sections fill the panel, press Space again, and trim it the same way." },
+    { "do": "Press Command Z, then B on the picked clip, then Command Z." }
+  ],
+  "evaluate": [
+    "Does a trim while it plays feel like it lands without the picture catching?",
+    "With a clip picked, does trimming it feel as smooth as trimming one that is not?",
+    "Do the clip bars, cuts and click ticks still follow every trim and undo, one frame after the picture at most?"
+  ],
+  "rough": [
+    "Bars still not reached, so this task stays open. Worst of three short speed walks: trim 18, undo 36, blade 89 with nothing picked (its first pick fills the panel), pick 43; with a clip picked, trim 24, blade 46 (26 and 33 in the other two runs, 28 in a fourth; pass 8 read 29 to 36 with one 44), undo 29, against a bar of 16 ms. Scrub 2 frames behind (bar 1); 1 dropped frame a minute (bar 0).",
+    "The edit's own frame is now about 11 to 19 ms. The longest frame after an edit is the timeline's own redraw a frame later (17 to 24 ms), where every clip bar in sight is built again because each one reads the whole document; handing each bar its own values is the next step.",
+    "Picking a clip still holds the window about 42 ms, and the first pick fills the panel over about half a second, one section a frame.",
+    "The click ticks still read the document themselves, a frame late. Handing them their ticks from the lane broke sliding a tick in a walk, for the second time, and the cause is not found.",
+    "No mock covers this. It is speed work, and nothing on screen changed."
+  ]
+}

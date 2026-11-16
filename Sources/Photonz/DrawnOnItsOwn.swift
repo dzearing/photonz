@@ -13,5 +13,9 @@ import SwiftUI
 struct DrawnOnItsOwn<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
-    var body: some View { content() }
+    /// Every one is on the timeline, so what it reads off the document
+    /// follows an edit a pass later with the rest of the timeline
+    /// (`readingALatePass`). Its content runs outside the body that holds
+    /// it, where that body's late reading does not reach.
+    var body: some View { readingALatePass { content() } }
 }
