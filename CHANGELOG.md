@@ -2,6 +2,20 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.24.0 — 2026-11-16
+
+**Recordings look like your screen.** Photonz now writes screen recordings itself, in 10-bit HEVC and your display's own colours, so they keep the screen's colours and far smoother gradients than before. Recording starts faster than it did, with no dropped frames. If you would rather keep files small, Settings > Recording > Quality has Smaller Files.
+
+**Pick a playback speed.** A speed button beside play offers 0.25x, 0.5x, 1x, 1.5x, 2x, 4x and 8x. Sound keeps its pitch up to 2x. Shift-period and Shift-comma step faster and slower, and J, K and L shuttle the way they do in Premiere.
+
+**Long videos stay quick.** An hour-long edit scrolls and zooms its timeline smoothly, plays at full rate, scrubs at your display's pace and keeps up at 8x. Edits while it plays land right away, and a scrub can no longer freeze the app.
+
+**Ask makes moving icons (Next).** Ask an icon to move, even as a little story of several beats, and Ask draws it, animates it and checks it before it lands. Preview as Web Page shows it playing in a real page, and a picture that moves exports as a GIF. Ask can also put a recording from History on the timeline and find a moment in it, works on whatever you have picked, and always finishes a request within five minutes.
+
+**Icons (Next).** A small square SVG opens as an Icon picture on its own grid, lengths read in its units, and one click gives a glyph the icon set's saved stroke.
+
+**Fixes worth naming.** The play bar's knob no longer covers the times at either end. A recording dragged from History lands on the timeline again. A clip dropped a frame or two short of a cut lands on the cut, and Escape calls off a timeline drag again on macOS 27. Text keeps every word at every zoom, and a redline of a 2x screenshot reads in points.
+
 ## 0.23.0 — 2026-11-02
 
 **Choose the model Ask runs on.** Nothing downloads until you want Ask. The first time you press Ask, one short dialog says what Ask is, which models suit this Mac and how much space they take, with Download and Not Now; once they are down, your request runs without typing it again. Settings > Ask lists every model with one line on what it is good at, the smallest Mac that holds it, and its quality and speed as dots, with Download, Use and Delete right in the row. Macs with 16 to 32 GB of memory are now offered a smaller model that fits them.
