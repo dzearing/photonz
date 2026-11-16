@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-16T10:55:02.058Z",
+  "updated": "2026-11-16T12:55:30.955Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -358,9 +358,37 @@
     {
       "t": "2026-11-16T10:55:02.057Z",
       "note": "Pass 11 landed 929a0f158: a pick on a video rebuilds only the track and clip it reaches (1 row, 1 lane, 1 clip bar, were 5, 5 and 7-9); pick 41 -> 32 ms worst of 3, other edits level. The speed walk now times a pick from nothing (55 ms longest, about 400 ms of panel arrival behind it, the pass 12 lead). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 12 leads in the log."
+    },
+    {
+      "t": "2026-11-16T10:58:56.201Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T12:55:07.679Z",
+      "note": "Pass 12 measured first (short speed walk on 1baebe7ef, within baseline): pick from nothing longest 63 ms, blade (nothing picked) 77, trim 19, undo 30, pick 32. New probe-only tools: the speed walk's pass list now says which piece of the dock landed in each long pass ('landed: section color', 'rows effect 0 settings'; ViewBuildMeter.landed), and the meter leaves a Points of Interest mark per pass of 6 ms or more so a Time Profiler trace (xctrace --instrument os_signpost) is cut into the very same passes: Scripts/perf/trace-bursts.py --passes [--share SYM ...]. Main red on CI run 43839629711 was the known TextRevealUnclipped Metal flake; folded into find-out-why-the-legibility-check-once-read-the."
+    },
+    {
+      "t": "2026-11-16T12:55:07.750Z",
+      "note": "Pass 12 fix: one piece of the panel per run-loop pass, and a quiet pass after rows (PanelLandingTurns in PhotonzCore with PanelLandingTurnsTests; PanelLanding.mayLand in the app; InspectorPanel.catchUp and PanelRowsArrival ask it). Measured with the landed marks: the long passes of a pick from nothing were the ones where a section and another section's late rows landed together (46-89 ms) against 15-36 ms for each piece alone, and with only the one-per-pass gate the next long one was the section landing in the pass after a set of slider rows (SwiftUI's focus/accessibility pass for the new controls). Ten picks from nothing while the 6 min edit plays, interleaved on one build behind a file switch: longest pass median 56 -> 31 ms, worst 89 -> 63; total ~390 -> ~440 ms in more, shorter passes. New short-6 baseline, worst of 3: trim 20, blade 89 -> 53, undo 29, pick 33, trim picked 19, blade picked 51, undo picked 23, unpick 38, pick from nothing 55 -> 70 (one sample a run: runs 70/66/31, a fourth 55; the 10-pick walk is the real measure). docs/design/video.md 8f gained the rule."
+    },
+    {
+      "t": "2026-11-16T12:55:07.823Z",
+      "note": "Pass 12 findings that did NOT pay or were not kept: (a) caching PanelFieldRowLayout's control minimum in the Layout cache (the profile said 6.6% of passes >= 25 ms measure controls at width 0; a test showed SwiftUI calls updateCache on any size change inside the row, so it would be safe) moved nothing in wall time over 10 picks; reverted. (b) the panel in an NSHostingView of its own (sizingOptions []): pick from nothing total ~383 -> ~342 ms (-11%), section passes unchanged (~19 ms), and it cuts the panel off from the window's preferences (tutorial anchors); not kept. (c) hiding the timeline altogether: total -25%, simple section passes 19 -> 14 ms; so ~4-5 ms of each panel pass is the timeline being there, mostly window-wide accessibility/focus work (AccessibilityNode.updateFocus 11%, AccessibilityViewGraph 8.5%, NSWindow _resetDragMargins 4% of passes >= 25 ms), which a host of its own does not avoid."
+    },
+    {
+      "t": "2026-11-16T12:55:07.894Z",
+      "note": "Pass 12 verified: test.sh green (exit 0; 14,807 + split runs); speed-walk ok; walks ok: clip-click-cost, caption-pick-answers-at-once (one 97 ms pass on the first run, 2 of 2 reruns ok), every-section-header-opens, an-editing-session, keyframe-anything, effects-open-into-view, effects-room-for-the-one-you-opened, type-into-an-effects-slider, shadow-distance-keys, scrub-never-blacks-out. section-fold-motion-walk (step 14, inspectorPanel built 2 on a Time press, nothing picked) and opening-a-section-folds-the-near-side-walk (Library never in view) fail the same with the gate switched off; folded into folding-a-section-that-lets-the-panel-fit-again and walks-that-fail-in-the-full-sweep-27. Audit queue/audits/2026-11-16-a-long-edit-with-transitions-plays-scrubs-and-ed-pass12.json."
+    },
+    {
+      "t": "2026-11-16T12:55:07.965Z",
+      "note": "Next for pass 13: (a) Appearance lands whole and the pass after it, with nothing landing, runs up to 55 ms (its controls' focus/accessibility): bring its rows a pass apart as Effects does; (b) the pass after section keys in a blade (31-49 ms, timeline late pass plus Time's follow-up); (c) rows effect 0 settings still 25-52; (d) bars not reached: edits <=16 ms (trim 20, picked 19-51), scrub 1 frame (2), 0 dropped (1/min). No new follow-up tasks: every cost left is one of this task's own unmet bars."
+    },
+    {
+      "t": "2026-11-16T12:55:30.954Z",
+      "note": "Pass 12 landed b9dab2966: the panel fills in one piece per frame with a quiet frame after rows, so a pick from nothing while it plays peaks at 31 ms median (was 56; worst 89 -> 63) and a blade with nothing picked at 53 (was 89). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 13 leads in the log."
     }
   ],
-  "started": "2026-11-16T09:25:51.048Z",
+  "started": "2026-11-16T10:58:56.200Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk",

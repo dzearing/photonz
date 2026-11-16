@@ -17590,3 +17590,13 @@
 {"t":"2026-11-16T10:53:35.049Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-16T10:53:35.122Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-16T10:55:02.059Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 11 landed 929a0f158: a pick on a video rebuilds only the track and clip it reaches (1 row, 1 lane, 1 clip bar, were 5, 5 and 7-9); pick 41 -> 32 ms worst of 3, other edits level. The speed walk now times a pick from nothing (55 ms longest, about 400 ms of panel arrival behind it, the pass 12 lead). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 12 leads in the log."}
+{"t":"2026-11-16T10:58:56.210Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-16T10:59:31.453Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
+{"t":"2026-11-16T12:43:14.056Z","ev":"task_note","id":"folding-a-section-that-lets-the-panel-fit-again"}
+{"t":"2026-11-16T12:43:14.128Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-16T12:55:07.681Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T12:55:07.752Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T12:55:07.825Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T12:55:07.896Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T12:55:07.967Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T12:55:30.956Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 12 landed b9dab2966: the panel fills in one piece per frame with a quiet frame after rows, so a pick from nothing while it plays peaks at 31 ms median (was 56; worst 89 -> 63) and a blade with nothing picked at 53 (was 89). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 13 leads in the log."}
