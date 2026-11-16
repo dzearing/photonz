@@ -1088,6 +1088,37 @@ the history write in pass 9, this is rule 5 again: **a value many views read is
 watched through the answer, never through what the answer was worked out
 from.**
 
+**One piece of the panel per pass, and a rest after rows** (2026-11-16, pass
+12). Picking a clip after nothing was picked fills the panel in about 400 ms
+of passes, a piece at a time: the dock lets in one section a pass
+(`PanelSectionArrival`) and a big section brings its later rows a pass or
+more after itself (`PanelRowsArrival`). Each paced itself and neither knew
+about the other, so a section and another section's rows often landed in the
+same pass, and those were the long ones: 46 to 89 ms against 15 to 36 for any
+piece on its own. Every piece now asks `PanelLanding.mayLand` for its pass
+(`PanelLandingTurns`, tested): one piece a pass, and a set of rows keeps the
+pass after it quiet, because SwiftUI pays for the controls a pass adds a
+second time a pass later (focus and accessibility for each new control; a
+section landing in that pass was the next long one). Ten picks from nothing
+while the 6 minute edit played: longest pass median 56 ms to 31, worst 89 to
+63, at about 13 per cent more passes in all. What is left: a section that
+lands whole and is full of controls (Appearance) is followed by a pass of its
+own of up to 55 ms with nothing landing in it, which only splitting it into
+rows would spread.
+
+How a panel pass was measured: the speed walk names what landed in each long
+pass (`landed: section color`, `rows effect 0 settings`), and the main thread
+meter leaves a Points of Interest mark at the end of each pass, so a Time
+Profiler trace recorded with `--instrument os_signpost` is cut into exactly
+those passes by `Scripts/perf/trace-bursts.py --passes`. In passes of 25 ms or
+more: about half SwiftUI's own graph work, about a quarter focus and
+accessibility (`AccessibilityNode.updateFocus`, the accessibility graph,
+`NSWindow _resetDragMargins`), a seventh layout. Hiding the timeline took a
+quarter off the panel filling in (simple section passes 19 to 14 ms); the
+panel in a SwiftUI host of its own took a tenth off and left section passes
+as they were, so the window-wide part is mostly the focus and accessibility
+walk, which a separate host does not avoid. Not kept, for that reason.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

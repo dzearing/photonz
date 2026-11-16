@@ -1154,7 +1154,28 @@ struct InspectorPanel: View {
             if wait > 0 { catchUp(); return }
             let latest = orderedAvailableSections
             guard arrivals.isWaiting(for: latest) else { return }
+            // A section never lands in the pass another piece of the dock
+            // does, a section's late rows included (`PanelLandingTurns`). It
+            // waits for the run loop to come round, never for the main
+            // queue, which can run again before the pass is over.
+            guard PanelLanding.mayLand() else {
+                arrivals.isCatchingUp = true
+                Task { @MainActor in
+                    await NextRunLoopPass.start()
+                    arrivals.isCatchingUp = false
+                    catchUp()
+                }
+                return
+            }
+            #if PHOTONZ_PLAYTEST
+            let before = Set(arrivals.mounted)
+            #endif
             arrivals.allowNext(latest)
+            #if PHOTONZ_PLAYTEST
+            for id in arrivals.mounted where !before.contains(id) {
+                ViewBuildMeter.shared.landed("section \(id)")
+            }
+            #endif
             arrivalPass &+= 1
             // ...and asks for the next one itself, a turn of the run loop
             // later, rather than trusting `.onChange(of: arrivalPass)` alone.
@@ -2887,6 +2908,9 @@ private struct SectionDrag: Equatable {
 
     /// A catch-up pass is on its way, so a second one is not asked for.
     var isCatchingUp = false
+
+    /// What has been let in so far, by raw id, without noting anything.
+    var mounted: [String] { state.mounted }
 
     /// Let the next section the selection asked for be built on the next pass.
     func allowNext(_ target: [InspectorSectionID]) {

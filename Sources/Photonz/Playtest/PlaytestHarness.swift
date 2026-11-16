@@ -10,6 +10,7 @@
 //    script. The dev app a person works in carries the code but never runs it.
 #if PHOTONZ_PLAYTEST
 import AVFoundation
+import os
 import AppKit
 import UniformTypeIdentifiers
 import ScreenCaptureKit
@@ -21918,6 +21919,7 @@ struct BrushDragReading {
 @MainActor
 final class MainThreadMeter {
     static let shared = MainThreadMeter()
+    private static let marks = OSSignposter(subsystem: "com.dzearing.photonz.probe", category: .pointsOfInterest)
     private var observer: CFRunLoopObserver?
     private var busy: CFTimeInterval = 0
     private var passes = 0
@@ -22135,18 +22137,31 @@ final class MainThreadMeter {
         let startMS: Double
         let ms: Double
         let built: [ViewBuildMeter.Subject: Int]
+        /// The pieces of the dock that landed in it (`ViewBuildMeter.landed`).
+        var landed: [String] = []
     }
     private(set) var longPasses: [LongPass] = []
     private var builtAtLastPass: [ViewBuildMeter.Subject: Int] = [:]
 
     private func notePass(lasting d: CFTimeInterval, endedAt now: CFTimeInterval) {
         let built = ViewBuildMeter.shared.counts
+        let landed = ViewBuildMeter.shared.takeLanded()
+        // A Points of Interest mark at the end of every pass of 6 ms or more,
+        // saying how long it was and what landed in it, so a Time Profiler
+        // trace of a walk can be cut into the very passes this meter reports
+        // (`Scripts/perf/trace-bursts.py --passes`). Ending marks and not
+        // intervals, because a pass is only known once it is over.
+        if d >= 0.006 {
+            let what = landed.joined(separator: ", ")
+            Self.marks.emitEvent("pass", "\(d * 1000, format: .fixed(precision: 1), privacy: .public) \(what, privacy: .public)")
+        }
         if d >= 0.006, longPasses.count < 40 {
             let fresh = built.reduce(into: [ViewBuildMeter.Subject: Int]()) { into, entry in
                 let more = entry.value - (builtAtLastPass[entry.key] ?? 0)
                 if more > 0 { into[entry.key] = more }
             }
-            longPasses.append(LongPass(startMS: (now - d - zeroedAt) * 1000, ms: d * 1000, built: fresh))
+            longPasses.append(LongPass(startMS: (now - d - zeroedAt) * 1000, ms: d * 1000, built: fresh,
+                                       landed: landed))
         }
         builtAtLastPass = built
     }
@@ -22156,7 +22171,9 @@ final class MainThreadMeter {
         longPasses.map { pass in
             let built = pass.built.sorted { $0.key.rawValue < $1.key.rawValue }
                 .map { "\($0.key.rawValue) \($0.value)" }.joined(separator: ", ")
-            return String(format: "%.0fms at %.0f", pass.ms, pass.startMS) + (built.isEmpty ? "" : " (\(built))")
+            let parts = [built, pass.landed.isEmpty ? "" : "landed: " + pass.landed.joined(separator: ", ")]
+                .filter { !$0.isEmpty }.joined(separator: "; ")
+            return String(format: "%.0fms at %.0f", pass.ms, pass.startMS) + (parts.isEmpty ? "" : " (\(parts))")
         }.joined(separator: ", ")
     }
 

@@ -57,7 +57,19 @@ struct PanelRowsArrival<Content: View>: View {
                     .task(id: wanted) {
                         guard wanted else { return }
                         for _ in 0..<after { await NextRunLoopPass.start() }
+                        // Never in the pass another piece of the dock lands
+                        // in: the two together are the long pass that
+                        // arriving in pieces is for (`PanelLandingTurns`).
+                        // Rows are the pieces full of controls, so the pass
+                        // after them is left for SwiftUI's focus and
+                        // accessibility work on those controls.
+                        while !Task.isCancelled, !PanelLanding.mayLand(restAfter: 1) {
+                            await NextRunLoopPass.start()
+                        }
                         guard !Task.isCancelled else { return }
+                        #if PHOTONZ_PLAYTEST
+                        ViewBuildMeter.shared.landed("rows \(remembering)")
+                        #endif
                         isHere = true
                     }
             }

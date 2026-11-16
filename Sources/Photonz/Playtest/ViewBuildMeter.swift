@@ -94,7 +94,22 @@ final class ViewBuildMeter {
 
     var traced: String { trace.isEmpty ? "" : "passes: " + trace.joined(separator: " | ") }
 
-    func reset() { counts.removeAll(); trace.removeAll(); ticks.removeAll() }
+    func reset() { counts.removeAll(); trace.removeAll(); ticks.removeAll(); landed.removeAll() }
+
+    /// What part of the dock landed since the main thread meter last took
+    /// the list: a section let in (`section Effects`) or a set of rows a
+    /// section brings a pass late (`rows effect 0 settings`). The meter
+    /// hangs it on the pass it landed in, so a long pass while the panel
+    /// fills in says which piece made it, which a count of bodies cannot:
+    /// the rows of a section are built without its body running again.
+    private(set) var landed: [String] = []
+
+    func landed(_ piece: String) { if landed.count < 40 { landed.append(piece) } }
+
+    func takeLanded() -> [String] {
+        defer { landed.removeAll() }
+        return landed
+    }
 
     /// When the playback clock moved the playhead on, for how evenly a video
     /// plays: the gaps between ticks, which a busy main thread stretches.

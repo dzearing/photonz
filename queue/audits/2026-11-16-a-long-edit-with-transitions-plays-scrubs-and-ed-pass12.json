@@ -1,0 +1,26 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 12)",
+  "epic": "video-perf",
+  "summary": "Clicking a clip when nothing is picked fills the right panel a piece at a time, and two pieces used to land in the same frame. Now one piece lands per frame, with a quiet frame after the heavy ones, so the longest catch while the 6 minute edit plays went from about 56 ms to about 31 (median of ten clicks; worst 89 to 63). A cut with nothing picked went from 89 to 53 ms at worst of three.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "switched": {},
+  "try": [
+    { "do": "Press Space to play the edit.", "shot": "2026-11-16-long-edit-pass12-after-the-edits-sc.png" },
+    { "do": "While it plays, click an empty part of the timeline so nothing is picked." },
+    { "do": "Click a clip on V1 and watch the picture while the panel fills in." },
+    { "do": "Click empty timeline again, then press B with the playhead over a clip." },
+    { "do": "Pick the clip again and open Effects to check the shadow's sliders are all there." }
+  ],
+  "evaluate": [
+    "Does the picture keep moving smoothly while the panel fills in after you click a clip?",
+    "Does the panel filling in top to bottom over about half a second read as fine, or as slow?",
+    "After a cut with nothing picked, does the cut piece's panel appear without the picture catching?"
+  ],
+  "rough": [
+    "Bars still not reached, so this task stays open. Short speed walk, worst of three: trim 20, blade 53 (was 89), undo 29, pick 33, trim picked 19, blade picked 51, undo picked 23, unpick 38, pick from nothing 70 (one sample a run, runs 70, 66, 31 and 55 in a fourth; over ten clicks in a walk of its own the median was 31 and the worst 63), against 16 ms. Scrub 2 frames behind (bar 1); 1 dropped frame a minute (bar 0).",
+    "The panel now takes about 13 per cent longer in all to fill in after a pick from nothing (about 440 ms against 390), in more, shorter frames.",
+    "Still long: the frame after the Appearance section lands, up to 55 ms, with nothing landing in it. That is SwiftUI working out focus and accessibility for every control Appearance brought; splitting Appearance into rows that arrive a frame apart, as Effects does, is the next lead.",
+    "Tried and not kept: the panel in a drawing host of its own (a tenth off the total, no single frame shorter) and keeping each panel row's narrowest width between layouts (no change you could measure).",
+    "No mock covers this. It is speed work, and nothing on screen changed."
+  ]
+}
