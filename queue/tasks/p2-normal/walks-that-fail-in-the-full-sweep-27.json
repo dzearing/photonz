@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-11-11T03:48:30.958Z",
-  "updated": "2026-11-16T12:43:14.127Z",
+  "updated": "2026-11-16T13:11:05.401Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-14T15:00:23Z DID NOT FINISH (the run was interrupted: whoever was running it went away): it reached 238 of 1164 walks in 170 minutes, of which 236 passed. The walks it never reached are unknown, not passing.\n\nFailing walks (2): a-clip-s-sound-is-linked-under-it-walk, a-transition-is-picked-at-the-cut-walk\n\nThose 2 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: caliper-catches-a-drawn-edge-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nNot run this time and still failing from the last check (16): component-choice-one-step-walk, component-choice-walk, component-instance-walk, component-look-walk, component-override-walk, component-preview-front-walk, component-text-halo-walk, copies-share-choice-walk, copy-own-color-walk, copy-own-number-walk, copy-svg-into-a-code-editor-walk, icon-into-a-component-onto-the-timeline-walk, insert-a-title-before-a-clip-walk, label-grows-walk, library-reveal-walk, tool-and-library-dropdowns-open-on-a-click-walk\nThis run was interrupted before reaching them. They are unread, not fixed.\n\nFull output: queue/sweep/2026-11-14-041041.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-clip-s-own-sound-is-the-bottom-half-of-the-cli: The timeline lanes changed height for every recording with sound; walks aiming at fixed window points outside the sets run by the task may need moving\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -90,6 +90,10 @@
     {
       "t": "2026-11-16T12:43:14.126Z",
       "note": "2026-11-16: opening-a-section-folds-the-near-side-walk still fails (sectionInView(\"Library\") did not happen within 2.0s), 3 of 3 runs on a probe from 1baebe7ef plus a-long-edit pass 12, including one with that pass's change switched off."
+    },
+    {
+      "t": "2026-11-16T13:11:05.400Z",
+      "note": "rotating check 2026-11-16T13:11:05Z, 32 walks run from 1021 onward in the rotation: tool-and-library-dropdowns-open-on-a-click-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
     }
   ],
   "standing": "walk-sweep"

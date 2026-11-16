@@ -4,12 +4,12 @@
   "goal": "With a moderately complex 6 minute video with transitions, performance tanked: playback, scrubbing and editing all slowed. Build a reference edit and a perf harness that measures it the way a person uses it, find where the time goes, and fix the biggest costs until playback, scrubbing and editing meet the video-perf objective's numbers. Then file the remaining costs as follow-up tasks under video-perf, each with its own measured bar.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 30,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-16T12:55:30.955Z",
+  "updated": "2026-11-16T13:17:07.378Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -386,6 +386,14 @@
     {
       "t": "2026-11-16T12:55:30.954Z",
       "note": "Pass 12 landed b9dab2966: the panel fills in one piece per frame with a quiet frame after rows, so a pick from nothing while it plays peaks at 31 ms median (was 56; worst 89 -> 63) and a blade with nothing picked at 53 (was 89). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 13 leads in the log."
+    },
+    {
+      "t": "2026-11-16T13:17:06.921Z",
+      "note": "seq 30 -> 10"
+    },
+    {
+      "t": "2026-11-16T13:17:07.377Z",
+      "note": "digest 2026-11-16: passes 7 to 12 all went to edit and pick costs (trim 32 -> 15-20 ms, blade picked 42 -> 26-51, pick from nothing longest median 56 -> 31), and they paid. But two of the three bars have not moved since pass 7: scrub is still 2 display frames behind (bar 1) and play still drops about 1 frame a minute (bar 0). Dragging the playhead is what a person feels first on a long edit, so before pass 13 takes another panel lead, weigh the scrub bar: say in the log which of the three it works on and why. Also seen in passes 9, 11 and 12: a floor of window-wide work on every pass that adds or moves controls (AccessibilityNode.updateFocus, AccessibilityViewGraph, NSWindow _resetDragMargins, about 4-5 ms a pass, 16-21% of long passes) that no view-level fix reaches; worth one pass of its own rather than a share of each."
     }
   ],
   "started": "2026-11-16T10:58:56.200Z",

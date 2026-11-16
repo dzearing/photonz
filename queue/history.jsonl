@@ -17600,3 +17600,15 @@
 {"t":"2026-11-16T12:55:07.896Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-16T12:55:07.967Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-16T12:55:30.956Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 12 landed b9dab2966: the panel fills in one piece per frame with a quiet frame after rows, so a pick from nothing while it plays peaks at 31 ms median (was 56; worst 89 -> 63) and a blade with nothing picked at 53 (was 89). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 13 leads in the log."}
+{"t":"2026-11-16T13:11:05.402Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-16T13:13:07.775Z","ev":"slice_pass","walks":32,"passed":31,"failed":1,"seconds":702,"of":1171,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-16T13:17:06.923Z","ev":"task_resequenced","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":30,"to":10}
+{"t":"2026-11-16T13:17:06.996Z","ev":"task_resequenced","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":40,"to":20}
+{"t":"2026-11-16T13:17:07.073Z","ev":"task_resequenced","id":"exporting-the-six-minute-reference-edit-takes-no","from":50,"to":30}
+{"t":"2026-11-16T13:17:07.151Z","ev":"task_resequenced","id":"memory-stays-bounded-while-an-hour-long-edit-pla","from":60,"to":40}
+{"t":"2026-11-16T13:17:07.224Z","ev":"task_resequenced","id":"playing-a-five-minute-captioned-recording-never","from":70,"to":50}
+{"t":"2026-11-16T13:17:07.296Z","ev":"task_resequenced","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","from":80,"to":60}
+{"t":"2026-11-16T13:17:07.379Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-16T13:17:07.452Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
+{"t":"2026-11-16T13:17:13.523Z","ev":"triage","summary":"merged 0, dropped 0, moved priority 0, reset 0 (guard clean, no leftovers, no open cards), spot-checked 0 (no new loop-filed p0/p1 bug), renumbered p1 30-80 -> 10-60 (p2 and p3 already clean), logged 2 (scrub and dropped-frame bars unmoved since pass 7 plus the window-wide accessibility floor, on the long edit; three CI reds of the Metal signature, on the legibility task), filed 0"}
+{"t":"2026-11-16T13:18:29.736Z","ev":"digest","file":"2026-11-16.md"}

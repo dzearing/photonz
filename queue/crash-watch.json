@@ -31,7 +31,8 @@
     "Photonz Probe-2026-10-03-071209.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
     "Photonz Probe-2026-10-03-071248.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
     "Photonz Probe-2026-11-11-202247.ips": "runner diagnostic: a-walk-that-pulls-a-library-tile-by-hand-sees-it built the probe with throwaway code in pickUpTile that called NSStringFromClass on every objc_copyClassList class (a non-NSObject root traps in ___forwarding___); never committed. probe|Run.pickUpTile(_:to:number:) < Run.perform(_:number:) < Run.start()",
-    "Photonz Probe-2026-11-13-114048.ips": "probe|DocumentAudioEngine.play(_:fromMS:speed:) < closure #4 in DocumentAudioPlayer.play(_:fromMS:speed:) < closure #1 in DocumentAudioEngine.run(_:)"
+    "Photonz Probe-2026-11-13-114048.ips": "probe|DocumentAudioEngine.play(_:fromMS:speed:) < closure #4 in DocumentAudioPlayer.play(_:fromMS:speed:) < closure #1 in DocumentAudioEngine.run(_:)",
+    "Photonz Probe-2026-11-14-233558.ips": "probe|macos-ax-notify"
   },
   "signatures": {
     "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter",

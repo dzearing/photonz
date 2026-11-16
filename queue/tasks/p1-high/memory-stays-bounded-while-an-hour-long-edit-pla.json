@@ -4,12 +4,12 @@
   "goal": "Playing and scrubbing a long edit keeps decoded frames, thumbnails, waveforms and composited pictures in memory, and if nothing lets go the app grows until the Mac slows down. Make sure that playing and scrubbing the 60 minute reference edit for ten minutes levels off under a ceiling, and keep a check that fails if it ever grows again.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 60,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:40.003Z",
-  "updated": "2026-11-15T13:16:50.047Z",
+  "updated": "2026-11-16T13:17:07.150Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -55,6 +55,10 @@
     {
       "t": "2026-11-15T13:16:50.046Z",
       "note": "seq 70 -> 60"
+    },
+    {
+      "t": "2026-11-16T13:17:07.149Z",
+      "note": "seq 60 -> 40"
     }
   ]
 }
