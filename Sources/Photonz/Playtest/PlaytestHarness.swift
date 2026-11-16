@@ -4719,6 +4719,23 @@ private final class Run {
                  "exported as MP4; the window is \(editor.hasUnsavedChanges ? "STILL edited" : "no longer edited")",
                  state: describe())
 
+        case .action(.exportVideoKept):
+            let editor = try requireEditor()
+            var said: [String] = []
+            for quality in [VideoExportQuality.high, .standard] {
+                let url = out.appendingPathComponent("exported-\(quality.rawValue).mp4")
+                try? FileManager.default.removeItem(at: url)
+                let began = Date()
+                editor.startVideoExport(format: .mp4, quality: quality, to: url)
+                try await poll("the export to land", within: 300) { editor.videoExport == nil }
+                let took = Int(Date().timeIntervalSince(began) * 1000)
+                guard FileManager.default.fileExists(atPath: url.path) else {
+                    throw Failure(description: "the \(quality.rawValue) export finished without writing a file")
+                }
+                said.append("\(url.lastPathComponent) in \(took) ms")
+            }
+            note(number, step.name, "exported and kept " + said.joined(separator: ", "), state: describe())
+
         case .action(.startExportAt1080p):
             let editor = try requireEditor()
             let url = out.appendingPathComponent("started-at-1080p.mp4")
@@ -8605,7 +8622,7 @@ private final class Run {
                     editor.setContentPlacement(id: id, horizontal: .stretch)
                 }
             case .closeDocument, .askToClose, .answerCloseFirst, .exportVideoAsTheSheetDoes,
-                 .startExportAt1080p, .awaitExport, .copyVideo, .copyAsGIF, .awaitCopy,
+                 .exportVideoKept, .startExportAt1080p, .awaitExport, .copyVideo, .copyAsGIF, .awaitCopy,
                  .saveProjectAs, .answerCloseExport, .expectReopenedAsSaved, .expectMissingMedia,
                  .expectWordsFollowTheCurve:
                 break  // handled above, where there is still a window to close

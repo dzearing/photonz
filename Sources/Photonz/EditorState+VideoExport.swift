@@ -434,7 +434,8 @@ extension EditorState {
         // for them in (`MovieFrameStream`).
         let pictures = DocumentFrames(document: document, store: store,
                                       movieURLs: MovieLibrary.shared.urls(in: document),
-                                      size: plan.size, streaming: true)
+                                      size: plan.size, streaming: true,
+                                      smoothsStreamed: quality == .high && format == .mp4)
         let frames: DocumentMovieWriter.FrameSource = { ms in await pictures.frame(atMS: ms) }
         defer { pictures.putTheStoreBack() }
 
@@ -465,9 +466,11 @@ extension EditorState {
         let plan = DocumentVideoExport.plan(range: span, canvasSize: document.canvasSize,
                                             format: .mp4, quality: quality, size: size)
         let mix = AudioMixSegment.windowed(document.audioMix(), to: span)
+        // Weighed with the same frames the write draws, grain and all.
         let pictures = DocumentFrames(document: document, store: store,
                                       movieURLs: MovieLibrary.shared.urls(in: document),
-                                      size: plan.size, streaming: true)
+                                      size: plan.size, streaming: true,
+                                      smoothsStreamed: quality == .high)
         defer { pictures.putTheStoreBack() }
         return try await DocumentMovieWriter.weigh(
             span: span, canvasSize: document.canvasSize, quality: quality, size: size,
@@ -549,6 +552,14 @@ final class DocumentFrames: @unchecked Sendable {
     /// Whether clips are read front to back (`MovieFrameStream`) rather than
     /// sought frame by frame: what a file written from start to end wants.
     private let streaming: Bool
+    /// Whether frames read off a stream get the smoothing the window shows
+    /// them with (`RecordingSmoothing`). Only a top quality file keeps its
+    /// grain: at Standard's budget the encoder wiped it and the file read
+    /// exactly as banded as one written without it, in twice the time
+    /// (measured 2026-11-16 on the user's recording: longest flat run 94 px
+    /// against 95, 11.2 s against 5.4 s). At High's, about 55 Mbps for a
+    /// full-screen Retina recording, it kept a flat run of 31 px against 116.
+    private let smoothsStreamed: Bool
     /// One pass over each recording, made the first time it is asked for.
     private var streams: [UUID: MovieFrameStream] = [:]
     /// Recordings a single pass cannot read the right way up, left to the
@@ -566,11 +577,12 @@ final class DocumentFrames: @unchecked Sendable {
     /// - size: what each picture comes out at, the canvas's own size when left
     ///   out. The document is drawn AT that size, never drawn big and shrunk.
     init(document: PhotonzDocument, store: ImageStore, movieURLs: [UUID: URL],
-         size: CGSize? = nil, streaming: Bool = false) {
+         size: CGSize? = nil, streaming: Bool = false, smoothsStreamed: Bool = false) {
         self.document = document
         self.store = store
         self.movieURLs = movieURLs
         self.streaming = streaming
+        self.smoothsStreamed = smoothsStreamed
         let canvas = document.canvasSize
         if let size, canvas.width > 0, size.width > 0, abs(size.width - canvas.width) >= 1 {
             scale = size.width / canvas.width
@@ -591,7 +603,9 @@ final class DocumentFrames: @unchecked Sendable {
                     unstreamable.insert(id)
                 }
             }
-            if let picture = streams[id]?.frame(atMS: request.sourceMS) { return picture }
+            if let picture = streams[id]?.frame(atMS: request.sourceMS) {
+                return smoothsStreamed ? MovieDecoder.smoothed(picture, of: request.movie) : picture
+            }
         }
         return await MovieDecoder.shared.frame(of: request.movie, at: url,
                                                sourceMS: request.sourceMS)

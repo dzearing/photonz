@@ -288,6 +288,8 @@ public enum FeatureCatalog {
 
     public static let recordingKeepsScreenColoursFlag = "next-a-recording-keeps-the-screens-colours"
 
+    public static let smoothRecordingGradientsFlag = "next-soft-gradients-in-a-recording-play-smooth"
+
     public static let droppingMediaFlag = "next-dropping-a-sound-or-a-video"
 
     public static let soundOnTheTimelineFlag = "next-sound-on-the-timeline"
@@ -1035,6 +1037,16 @@ public enum FeatureCatalog {
                     name: recordingKeepsScreenColoursFlag,
                     title: "A recording keeps the screen's colours",
                     description: "Recordings are written by Photonz in 10-bit with the screen's own colours, so they look like the screen did and dark gradients stay smooth. Off means macOS writes them, a little lighter, greener and with visible bands.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: smoothRecordingGradientsFlag,
+                    title: "Soft gradients in a recording play smooth",
+                    description: "Dark soft gradients the Mac drew in visible steps play and scrub as a smooth ramp; the file stays an exact copy of the screen. Off means the steps show as drawn.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

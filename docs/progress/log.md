@@ -23181,3 +23181,9 @@ units.
 ## 2026-11-16 — release v0.24.0
 
 Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight in a clean worktree: Scripts/test.sh green, build-app.sh --dmg built. The tag's first Release run failed only in "Build app": the runner could not reach github.com to fetch llama-server (curl exit 28) while all three test slices passed; `gh run rerun --failed` built, notarized and published. Verified: release has Photonz.dmg, latest/download returns 200 (57.9 MB), Deploy site said "announcing 0.24.0", version.json reports 0.24.0. Headlines: recordings in 10-bit HEVC Display P3, playback speed button, long-edit speed, Ask's moving icons (Next).
+
+## 2026-11-16 — soft gradients in a recording play smooth (`soft-gradients-in-a-recording-come-out-smooth-ev`)
+
+- `RecordingSmoothing` (PhotonzRender): a GPU deband (shrink, edge-aware disc blur, full-size apply with grain) applied where a recording's frame becomes a picture: play/scrub sweeps, exact seeks, filmstrip, library poster, and High drawn exports. Capture path untouched. Flag `next-soft-gradients-in-a-recording-play-smooth`, on in Next. docs/design/video.md "Soft gradients".
+- Measured on the user's recording: on screen the sidebar's longest flat run (8 px means) 103-137 px -> 8-26 px, 40 levels; text edges unchanged (0.002% of edge pixels differ); colours within 1 10-bit code; GPU ~+1 ms full size, +0.2 ms half; speed walk dropped frames 1/1818 both ways; recording start 8.7 ms median.
+- Open: exports. Copies (High, untouched or cut-only) are the raw file and keep the steps; grain does not survive H.264 at Standard, so only High drawn exports are smoothed. A 10-bit drawn export is the way to a smooth file for other players. No drill counts dropped capture frames over a minute.

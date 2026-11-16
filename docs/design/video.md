@@ -223,6 +223,36 @@ measures each one):
 
 ---
 
+### Soft gradients: smoothed where a frame becomes a picture
+
+The Mac draws a dark translucent window (a terminal's sidebar, a sheet's
+material) in 8-bit steps, so a recording that copies the screen exactly holds
+a staircase: about ten shades over 1300 px, flat bands up to 160 px wide. A
+deeper capture cannot add shades that were never drawn. So the steps are
+blended **where a decoded frame becomes a picture**, never while recording:
+`RecordingSmoothing` (PhotonzRender) runs on the GPU in `MovieSweeper.picture`
+(play and scrub), `MovieDecoder.frame`/`picture` (exact seeks, the clip
+filmstrip, a library poster) and, at High only, on the frames a drawn export
+streams. Switch: `next-soft-gradients-in-a-recording-play-smooth`, on in Next.
+
+- Three passes: an 8x box shrink, a 32-tap edge-aware disc blur on the small
+  copy (reach 128 recording px), and a full-size apply that leaves alone any
+  pixel with a neighbour more than 1.5 shades off, any one-pixel line, and any
+  pixel the blur would move by more than 2.5 shades or less than a tenth.
+- Display and export are both 8-bit, so a smooth ramp alone would round back
+  into the same steps: a moved pixel gets up to a shade of triangular grain.
+- Comparisons happen in steps of the sRGB curve inside the kernels while the
+  numbers stay in linear light; matching to the picture's colours and back
+  through half floats moved a pixel of text edge in ten by a shade.
+- Measured on the user's recording (2026-11-16): on screen, 8 px means of the
+  sidebar went from a 103 to 137 px longest flat run to 8 to 26 px; GPU about
+  +1 ms a full-size 3456 frame, +0.2 ms at half size.
+- What it does not do: the recording file stays a faithful copy, so QuickTime
+  and a High export that copies the file still show the steps. Grain does not
+  survive H.264 at Standard's budget (the file read as banded as one without
+  it, in twice the time), so Standard and Small exports are not smoothed. A
+  smooth file for other players needs a 10-bit export.
+
 ## 4. What appears, and on what fact
 
 One fact — **the document has a duration** — puts three things on screen, and

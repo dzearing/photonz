@@ -61,6 +61,8 @@ final class Experiments {
     /// that is already open (`CompositingSpace`).
     private func applyCompositing() {
         CompositingSetting.shared.space = CompositingSpace.chosen(by: activeSettings)
+        // Read off the main actor wherever a recording's frame is decoded.
+        RecordingSmoothing.isOn = activeSettings.isEnabled(FeatureCatalog.smoothRecordingGradientsFlag)
     }
 
     // MARK: - Reading (the running release)

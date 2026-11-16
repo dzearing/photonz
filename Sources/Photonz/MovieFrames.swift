@@ -199,11 +199,20 @@ actor MovieDecoder {
     func frame(of movie: MovieRef, at url: URL, sourceMS: Int, size: CGSize? = nil) async -> CGImage? {
         let generator = generator(for: movie, at: url, size: size ?? movie.pixelSize)
         let time = CMTime(value: CMTimeValue(sourceMS), timescale: 1000)
-        return await withCheckedContinuation { continuation in
+        let image = await withCheckedContinuation { continuation in
             generator.generateCGImageAsynchronously(for: time) { image, _, _ in
                 continuation.resume(returning: image)
             }
         }
+        return Self.smoothed(image, of: movie)
+    }
+
+    /// A decoded frame with the steps of its soft gradients blended
+    /// (`RecordingSmoothing`), when the switch is on; as decoded otherwise.
+    static func smoothed(_ image: CGImage?, of movie: MovieRef) -> CGImage? {
+        guard let image, RecordingSmoothing.isOn else { return image }
+        let scale = CGFloat(image.width) / max(1, movie.pixelSize.width)
+        return RecordingSmoothing.smoothedPicture(image, reach: RecordingSmoothing.reach(readAt: scale)) ?? image
     }
 
     /// The next generator in line for this recording at this size, made the
@@ -252,11 +261,12 @@ actor MovieDecoder {
         nextPictureLane[movie.id] = (lane + 1) % lanes.count
         let generator = lanes[lane]
         let time = CMTime(value: CMTimeValue(sourceMS), timescale: 1000)
-        return await withCheckedContinuation { continuation in
+        let image = await withCheckedContinuation { continuation in
             generator.generateCGImageAsynchronously(for: time) { image, _, _ in
                 continuation.resume(returning: image)
             }
         }
+        return Self.smoothed(image, of: movie)
     }
 
     private static func makeGenerator(url: URL, size: CGSize) -> AVAssetImageGenerator {
@@ -285,7 +295,6 @@ actor MovieDecoder {
 enum MovieSweeper {
 
     private static let context = CIContext(options: [.cacheIntermediates: false])
-
     /// How many passes may read at once, across every window.
     ///
     /// A pass blocks the thread it runs on in `copyNextSampleBuffer` until the
@@ -533,6 +542,12 @@ enum MovieSweeper {
         let colors = CVBufferCopyAttachments(buffer, .shouldPropagate)
             .flatMap { CVImageBufferCreateColorSpaceFromAttachments($0)?.takeRetainedValue() }
             ?? CGColorSpace(name: CGColorSpace.sRGB)
+        // The steps the Mac drew a soft gradient in, blended as the frame is
+        // made, in the same pass on the GPU (`RecordingSmoothing`).
+        if RecordingSmoothing.isOn {
+            image = RecordingSmoothing.smoothed(image.cropped(to: extent),
+                                               reach: RecordingSmoothing.reach(readAt: scale), grain: true)
+        }
         return context.createCGImage(image, from: extent, format: .RGBA8, colorSpace: colors)
     }
 

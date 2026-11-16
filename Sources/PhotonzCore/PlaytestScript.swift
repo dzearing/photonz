@@ -1063,6 +1063,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// after it run while the card is up, so a walk can photograph the card
     /// and time the window while the file is written.
     case startExportAt1080p
+    /// Export the document as an MP4 at the top quality (`high`) and at
+    /// `standard`, through the path the Export sheet's button runs, and KEEP
+    /// both files in the walk's folder (`exported-high.mp4`,
+    /// `exported-standard.mp4`), saying how long each took and how the file
+    /// was made (copied whole, copied in pieces, or drawn). For judging what
+    /// an exported file looks like in another player.
+    case exportVideoKept
     /// Wait for the export `startExportAt1080p` began to land, and say how long
     /// it took against how long the file runs.
     case awaitExport

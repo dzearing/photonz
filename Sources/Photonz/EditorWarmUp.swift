@@ -1,5 +1,6 @@
 import AppKit
 import PhotonzCore
+import PhotonzRender
 import SwiftUI
 
 /// Builds the editor once, out of sight, while the app launches, so the first
@@ -34,6 +35,10 @@ enum EditorWarmUp {
     static func run(coordinator: AppCoordinator) {
         guard !done else { return }
         done = true
+        // The pass that smooths a recording's soft gradients compiles in about
+        // a second; off the main thread now, so the first recording opened
+        // never waits for it (`RecordingSmoothing`).
+        if RecordingSmoothing.isOn { RecordingSmoothing.prepare() }
         let screen = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
         let frame = NSRect(x: screen.minX, y: screen.minY,
                            width: min(1200, screen.width), height: min(800, screen.height))
