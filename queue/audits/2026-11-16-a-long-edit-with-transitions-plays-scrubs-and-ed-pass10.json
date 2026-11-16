@@ -1,0 +1,26 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 10)",
+  "epic": "video-perf",
+  "summary": "An edit on the 6 minute edit now redraws only the clips it changed instead of every clip in sight, and picking a clip no longer redraws every clip either. Worst of three runs while it plays: a trim on a picked clip 24 to 18 ms, a cut on a picked clip 46 to 26, an undo 36 to 27, a cut with nothing picked 89 to 62. Nothing on screen looks different.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "switched": {},
+  "try": [
+    { "do": "Press Space to play the edit.", "shot": "2026-11-16-long-edit-pass10-after-the-edits-sc.png" },
+    { "do": "While it plays, drag the end of a clip just ahead of the playhead half a second shorter." },
+    { "do": "Press Command Z." },
+    { "do": "Click a clip on V1, then click a different one." },
+    { "do": "Press B on the picked clip, then Command Z." },
+    { "do": "Pick a clip, set its Speed to 2x, and check the ruler still leaves room for its Source lane." }
+  ],
+  "evaluate": [
+    "Does a trim while it plays land without the picture catching?",
+    "Does picking one clip after another feel instant?",
+    "Do the clips either side of a trimmed clip still show their cut correctly, one frame after the picture at most?"
+  ],
+  "rough": [
+    "Bars still not reached, so this task stays open. Worst of three short speed walks: trim 17, blade 62 with nothing picked (the panel fills in a dozen passes), undo 27, pick 41 before the second fix (32 in a run after it), trim picked 18, blade picked 26, undo picked 23, against 16 ms. Scrub 2 frames behind (bar 1); 1 dropped frame a minute (bar 0).",
+    "A pick still holds the window about 32 ms in one pass and builds the five track lanes again; what is left in that pass is layout and drawing, with few views built.",
+    "The first pick of a clip still fills the panel over about half a second, one section a pass, 15 to 60 ms each.",
+    "No mock covers this. It is speed work, and nothing on screen changed."
+  ]
+}
