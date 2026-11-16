@@ -17619,3 +17619,11 @@
 {"t":"2026-11-16T14:34:20.992Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-16T14:34:21.066Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-16T14:34:21.141Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 6 landed c103c62a6: nothing off screen is redrawn while the hour-long timeline zooms (Zoom lanes below the fold, full views past the painted stretch) and titles are painted. Zoom 24.8 -> 14.8 ms a frame (p95 77 -> 37), far in 8-9 ms, scroll 18.4 -> 14.7. Bars not reached (8.3 ms zoom/scroll near Fit, 16 ms edits); stays open for caching painted bars between zoom frames."}
+{"t":"2026-11-16T14:34:55.162Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-16T14:36:23.475Z","ev":"task_created","id":"soft-gradients-in-a-recording-come-out-smooth-ev","priority":"p1-high","title":"Soft gradients in a recording come out smooth, even where the Mac draws them in steps"}
+{"t":"2026-11-16T14:36:23.602Z","ev":"task_resequenced","id":"soft-gradients-in-a-recording-come-out-smooth-ev","from":4010,"to":3e-7}
+{"t":"2026-11-16T15:11:34.620Z","ev":"task_note","id":"soft-gradients-in-a-recording-come-out-smooth-ev"}
+{"t":"2026-11-16T16:44:29.090Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T16:44:29.165Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T16:44:29.236Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T16:44:29.307Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 7 landed 358502609: painted clips and cuts are read off the document once, not every frame. Zoom 16.6 -> 13.3 ms a frame (near Fit 35 -> 27), scroll 15.9 -> 13.2, edits a little faster, look unchanged. Bars not reached (8.3 ms zoom/scroll, 16 ms edits); stays open for painting in fixed pieces of time."}
