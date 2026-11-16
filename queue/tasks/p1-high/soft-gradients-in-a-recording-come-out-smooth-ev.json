@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-16T14:36:23.471Z",
-  "updated": "2026-11-16T15:11:34.619Z",
+  "updated": "2026-11-16T18:36:39.110Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-16, after a-screen-recording-keeps-the-desktop-s-colours-a shipped (ce7a9b934, 10-bit HEVC Display P3, captured as kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange in ScreenRecorder.swift:304): \"there is no way to fix the visible banding in the recordings? see last recording\", with Screenshot 2026-11-16 at 06.33.51.png (the recording playing in Photonz Dev).\n\nMeasured by the intake window, G channel down a 1300 px column of the empty sidebar (x 261, y 740..2040): the macOS screenshot of the screen (06.33.18, before the recording) has 11 levels over 53..63, 16 changes, longest flat run 164 px, max step 1. The recording's frame at 3 s, decoded to 16 bit: 8-bit equivalent 11 levels, longest run 161 px; in 10-bit, 28 levels, longest run 116 px, steps of about 3.5 to 4 codes = one 8-bit shade. Colours match within about 1 code. So the recording is now faithful; the SOURCE is drawn in 8-bit steps by the window server (the window's translucent material), and capturing at 10 bit cannot add shades that were never drawn. Whether the user's display hides those steps (panel dithering) is not confirmed; the user sees them as bands in the recording.\n\nffmpeg deband test on that frame (format=yuv420p10le, deband=1thr=0.004:2thr=0.004:3thr=0.004:range=64:blur=1): 43 levels, longest flat run 35 px. gradfun (8-bit) did not help (10 levels). ffmpeg's CPU deband took 0.6 s wall for 30 frames on 5 cores, far too heavy for 60 fps live, hence the GPU requirement. Smoothing in the player and export instead of at capture keeps recording cheap and the file a faithful copy; smoothing at capture fixes the file for every other player. Measure both. The Smaller files quality setting (Settings > Recording > Quality) must get the same pass.\n\nUser, 2026-11-16, on hearing the first version: \"that sounds slow? i don't want dropped frames or a start delay\". So the pass goes in the display and export path only, never capture. The raw file stays a faithful copy of the screen; other players (QuickTime, Safari) will still show the screen's own steps unless the recording is exported from Photonz. Say that plainly in the audit. A deband on the GPU is a few texture reads a pixel, far below a frame's budget; the CPU timing above was ffmpeg's software filter, not what this will be.",
@@ -33,6 +33,58 @@
     {
       "t": "2026-11-16T15:11:34.618Z",
       "note": "User 2026-11-16: no dropped frames, no start delay. Moved the pass to playback, display and export only; capture path untouched; zero-regression bars on recording and playback."
+    },
+    {
+      "t": "2026-11-16T16:52:33.352Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T17:41:38.356Z",
+      "note": "owns these walks: soft-gradients-in-a-recording-play-smooth-walk"
+    },
+    {
+      "t": "2026-11-16T17:41:38.444Z",
+      "note": "Reproduced on the user's file: frame at 3 s, x 261, y 740-2040, decoded 16-bit: 27 10-bit levels, longest flat 124 px (8-bit 11 levels, 161 px); screenshot 06.33.18: 11 levels, 164 px. Built RecordingSmoothing (PhotonzRender): three Core Image Metal kernels (box shrink by 8, edge-aware 32-tap disc blur, full-size apply with edge/hairline guard and triangular grain). Applied where a recording's frame becomes a picture: MovieSweeper.picture (play/scrub sweeps), MovieDecoder.frame/picture (exact seeks, filmstrip, library poster), DocumentFrames stream frames (drawn export). Capture path untouched. Behind next-soft-gradients-in-a-recording-play-smooth, on by default in Next."
+    },
+    {
+      "t": "2026-11-16T17:41:38.521Z",
+      "note": "Adversarial pass before building: a deband can soften faint real detail (a 1-shade hairline, a 2 px faint line) and halo near window edges; guarded by leaving any pixel with a neighbour >1.5 shades off, any 1-px line standing off both sides, and any pixel the blur would move by >2.5 shades. Display and export are both 8-bit (canvas RGBA8, export H.264 BGRA), so a smooth ramp alone would be rounded back into the same steps: grain is required, added only where the pass moved a pixel (flat areas come back bit for bit). A Premiere/FCP user never sees a setting for this; it is simply how footage plays. No control added, so no placement question."
+    },
+    {
+      "t": "2026-11-16T18:36:23.554Z",
+      "note": "Shipped in 1f7993f11 (display slice). On screen, user's recording, sidebar strip, 8 px means: longest flat run 8-26 px, 40 levels (off: 103-137 px). Controlled staircase unit tests pass the bar deep and in 8-bit. Text block on vs off: 0.002% of edge pixels differ, p99 0 codes; colours within 1 10-bit code. GPU +1.0 ms per full 3456 frame (1.4 vs 0.4 ms median, noisy shared Mac), +0.2 ms at half size. Speed walk: 1/1818 missed on and off, scrub lag 2/4 frames both. First sharp frame of a 3456 recording ~1.04 s on and off. Start drill median 8.7 ms (9.6 earlier today). Audit queue/audits/2026-11-16-soft-gradients-in-a-recording-come-out-smooth-ev.json; walk soft-gradients-in-a-recording-play-smooth-walk (no flags) green."
+    },
+    {
+      "t": "2026-11-16T18:36:23.625Z",
+      "note": "Chose grain (up to a shade, triangular, only where the pass moved a pixel) over handing the canvas 16-bit frames because the canvas and every export round to 8 bits, where a smooth ramp alone falls back into the same steps; rectangular half-shade grain was blended away when the picture is enlarged (fixture at 1.5x: 62 px flat), triangular got 39-41 px."
+    },
+    {
+      "t": "2026-11-16T18:36:23.696Z",
+      "note": "Chose comparisons in sRGB-curve steps inside the kernels with numbers kept in linear light over matching to the picture's colours and back: the round trip through half floats moved 1 text-edge pixel in 10 by a shade; now 1 in 1000. Tried a 'keep the original pixel' pass too: exact, but 5-7 ms GPU a full frame, dropped."
+    },
+    {
+      "t": "2026-11-16T18:36:23.769Z",
+      "note": "Chose to smooth drawn exports at High only: at Standard (H.264, 2.2 Mbps for a 1440 wide file) the grain was wiped and the file read 94 px flat vs 95 unsmoothed, in 11.2 s vs 5.4 s. An encoder test at High's ~55 Mbps kept 31 px flat. Copies (High, untouched or cut-only) stay copies of the file: drawing them instead would re-encode 10-bit P3 HEVC as 8-bit sRGB H.264 and take seconds instead of 0.1 s."
+    },
+    {
+      "t": "2026-11-16T18:36:23.841Z",
+      "note": "LEFT OPEN (why this task stays pending): (1) Exported/copied files for other players are still banded: a High export of an untouched or cut-only recording is the raw file; Standard/Small are unsmoothed. The way through is a 10-bit HEVC drawn export (DocumentMovieWriter writes 8-bit BGRA H.264 today) so the ramp needs no grain, plus deciding whether a High export of a recording draws instead of copying when the pass would change it. (2) No drill counts dropped capture frames over a minute (RecordingFileWriter.frameCounts exists but nothing reads it); capture code is untouched, so only the measurement is missing. (3) GPU bar of 1 ms: +1.0 ms median at full 3456 size, +0.2 at half; borderline at full size on a noisy machine."
+    },
+    {
+      "t": "2026-11-16T18:36:23.925Z",
+      "note": "left rough: a recording shown larger than its own size (1280 wide fixture at 1.5x) smooths less on screen, 39-41 px flat vs 155 off, because enlarging blends grain; user's recordings are shown smaller than recorded, where it holds (8-26 px). Rare case, still a large improvement, so not filed."
+    },
+    {
+      "t": "2026-11-16T18:36:24.008Z",
+      "note": "walks soft-gradients-in-a-recording-play-smooth-walk -> soft-gradients-in-a-recording-play-smooth-walk"
+    },
+    {
+      "t": "2026-11-16T18:36:39.109Z",
+      "note": "Display slice shipped (1f7993f11): recordings play, scrub and show smooth in Photonz at Next defaults, measured on the user's file (flat run 103-137 px -> 8-26 px, text unchanged). Still open: exported/copied files for other players stay banded (needs a 10-bit drawn export and a copy-vs-draw choice at High), the capture dropped-frame count is unmeasured, and the 1 ms GPU bar is borderline at full size. See log."
     }
+  ],
+  "started": "2026-11-16T16:52:33.351Z",
+  "walks": [
+    "soft-gradients-in-a-recording-play-smooth-walk"
   ]
 }

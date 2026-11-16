@@ -17627,3 +17627,15 @@
 {"t":"2026-11-16T16:44:29.165Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-16T16:44:29.236Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-16T16:44:29.307Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 7 landed 358502609: painted clips and cuts are read off the document once, not every frame. Zoom 16.6 -> 13.3 ms a frame (near Fit 35 -> 27), scroll 15.9 -> 13.2, edits a little faster, look unchanged. Bars not reached (8.3 ms zoom/scroll, 16 ms edits); stays open for painting in fixed pieces of time."}
+{"t":"2026-11-16T16:52:33.357Z","ev":"task_started","id":"soft-gradients-in-a-recording-come-out-smooth-ev","title":"Soft gradients in a recording come out smooth, even where the Mac draws them in steps","priority":"p1-high"}
+{"t":"2026-11-16T17:41:38.358Z","ev":"task_walks","id":"soft-gradients-in-a-recording-come-out-smooth-ev","walks":["soft-gradients-in-a-recording-play-smooth-walk"]}
+{"t":"2026-11-16T17:41:38.446Z","ev":"task_note","id":"soft-gradients-in-a-recording-come-out-smooth-ev"}
+{"t":"2026-11-16T17:41:38.523Z","ev":"task_note","id":"soft-gradients-in-a-recording-come-out-smooth-ev"}
+{"t":"2026-11-16T18:36:23.556Z","ev":"task_note","id":"soft-gradients-in-a-recording-come-out-smooth-ev"}
+{"t":"2026-11-16T18:36:23.627Z","ev":"task_note","id":"soft-gradients-in-a-recording-come-out-smooth-ev"}
+{"t":"2026-11-16T18:36:23.698Z","ev":"task_note","id":"soft-gradients-in-a-recording-come-out-smooth-ev"}
+{"t":"2026-11-16T18:36:23.771Z","ev":"task_note","id":"soft-gradients-in-a-recording-come-out-smooth-ev"}
+{"t":"2026-11-16T18:36:23.843Z","ev":"task_note","id":"soft-gradients-in-a-recording-come-out-smooth-ev"}
+{"t":"2026-11-16T18:36:23.927Z","ev":"task_note","id":"soft-gradients-in-a-recording-come-out-smooth-ev"}
+{"t":"2026-11-16T18:36:24.010Z","ev":"task_walks","id":"soft-gradients-in-a-recording-come-out-smooth-ev","walks":["soft-gradients-in-a-recording-play-smooth-walk"]}
+{"t":"2026-11-16T18:36:39.111Z","ev":"task_pending","id":"soft-gradients-in-a-recording-come-out-smooth-ev","from":"in_progress","note":"Display slice shipped (1f7993f11): recordings play, scrub and show smooth in Photonz at Next defaults, measured on the user's file (flat run 103-137 px -> 8-26 px, text unchanged). Still open: exported/copied files for other players stay banded (needs a 10-bit drawn export and a copy-vs-draw choice at High), the capture dropped-frame count is unmeasured, and the 1 ms GPU bar is borderline at full size. See log."}
