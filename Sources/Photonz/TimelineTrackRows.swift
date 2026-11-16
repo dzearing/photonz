@@ -533,16 +533,21 @@ struct TimelineTrackRow: View {
         // (`TimelinePaint.Canvas`): what it paints is every clip reaching the
         // stretch, not only the ones in sight.
         let stretch = editorState.timelineDrawnMS
-        let canvas = TimelinePaint.Canvas(drawnMS: stretch, ruler: ruler, laneWidth: laneWidth)
+        // While the timeline zooms, only the window: every frame of a zoom
+        // paints the canvas again, and the stretch is two and a half windows
+        // (`TimelinePaint.paintedMS`).
+        let paintedMS = TimelinePaint.paintedMS(window: ruler, stretch: stretch,
+                                                isZooming: editorState.timelinePaintsTheWindow)
+        let canvas = TimelinePaint.Canvas(drawnMS: paintedMS, ruler: ruler, laneWidth: laneWidth)
         let canvasX = canvas.offset(in: ruler, laneWidth: laneWidth, scale: displayScale)
         let painting = paintedBars(clipsInSight, linked: linkedInSight, kept: kept, ruler: ruler,
-                                   alternates: alternates, stretch: stretch)
+                                   alternates: alternates, stretch: paintedMS)
         // Past the stretch the painting covers, a painting lane builds only
         // what somebody is working on: the sight reaches half a window
         // further, all of it off screen (`TimelinePaint.builds`).
         func builds(_ clip: MotionStripGroup) -> Bool {
             guard let bar = clip.bar else { return true }
-            return TimelinePaint.builds(fromMS: Double(bar.inMS), toMS: Double(bar.outMS), stretch: stretch,
+            return TimelinePaint.builds(fromMS: Double(bar.inMS), toMS: Double(bar.outMS), stretch: paintedMS,
                                         isKept: kept.contains(clip.layerID), lanePaints: painting.paints)
         }
         // Each bar nobody is working on is handed the stretch it is drawn
@@ -598,7 +603,7 @@ struct TimelineTrackRow: View {
                 }
             }
             if !painting.bars.isEmpty {
-                TimelinePaintedClips(bars: painting.bars, canvas: canvas, drawnMS: stretch,
+                TimelinePaintedClips(bars: painting.bars, canvas: canvas, drawnMS: paintedMS,
                                      laneWidth: laneWidth, laneHeight: laneHeight)
                     .equatable()
                     .offset(x: canvasX)
@@ -708,7 +713,7 @@ struct TimelineTrackRow: View {
                 // On a lane that paints its clips, the cuts at rest are
                 // painted too, every one on the drawn stretch.
                 let cuts = painting.ids.isEmpty ? []
-                    : paintedCuts(all.filter { stretch.contains(Double($0.atMS)) })
+                    : paintedCuts(all.filter { paintedMS.contains(Double($0.atMS)) })
                 if !cuts.isEmpty {
                     TimelinePaintedCuts(marks: cuts.map(\.mark), canvas: canvas, laneWidth: laneWidth,
                                         height: laneHeight)
@@ -718,7 +723,7 @@ struct TimelineTrackRow: View {
                 let painted = Set(cuts.map(\.id))
                 // Past the stretch, only a cut somebody is working on.
                 let built = painting.paints
-                    ? points.filter { stretch.contains(Double($0.atMS)) || cutIsWorkedOn($0) } : points
+                    ? points.filter { paintedMS.contains(Double($0.atMS)) || cutIsWorkedOn($0) } : points
                 ForEach(built.filter { !painted.contains($0.id) }) { point in
                     TimelineSpareStrips(point: point, laneWidth: laneWidth, height: laneHeight)
                     TimelineEditPointView(point: point, laneWidth: laneWidth, height: laneHeight)

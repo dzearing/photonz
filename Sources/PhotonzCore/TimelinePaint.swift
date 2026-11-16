@@ -117,4 +117,28 @@ public enum TimelinePaint {
             && !clip.hasBadge && !clip.hasKeys && !clip.hasDrift
             && !clip.levelHasPoints && !clip.soundHasBadge && !clip.waveformMissing
     }
+
+    // MARK: While the timeline zooms
+
+    /// What a painting lane's canvas covers: the drawn stretch, which a
+    /// scroll slides and paints only when it moves, or while the timeline is
+    /// zooming, the window and a sliver either side.
+    ///
+    /// A zoom paints every lane again on every frame, whatever the canvas
+    /// covers, and near the whole-hour view of the reference edit two and a
+    /// half windows of clips, waveforms and names were painted and laid on
+    /// the screen for every frame of it, more than half of them off screen
+    /// (2026-11-16).
+    public static func paintedMS(window: MotionStripRuler, stretch: ClosedRange<Double>,
+                                 isZooming: Bool) -> ClosedRange<Double> {
+        guard isZooming else { return stretch }
+        let sliver = window.spanMS / 32
+        return (window.startMS - sliver)...(window.startMS + window.spanMS + sliver)
+    }
+
+    /// Whether moving the window from `old` to `new` is a zoom: its scale
+    /// changed. A move along at the same scale is a scroll.
+    public static func isZoom(from old: TimelineZoom, to new: TimelineZoom) -> Bool {
+        old.scale != new.scale
+    }
 }

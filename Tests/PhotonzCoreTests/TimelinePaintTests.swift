@@ -151,4 +151,35 @@ import Testing
         #expect(!TimelinePaint.nameFollowsTheEdge(fromMS: 12_500, toMS: 20_000, leftEdgeMS: edge))
         #expect(!TimelinePaint.nameFollowsTheEdge(fromMS: 2_000, toMS: 9_500, leftEdgeMS: edge))
     }
+
+    // MARK: While the timeline zooms
+
+    /// Every frame of a zoom paints the canvas again, whatever it covers, so
+    /// while the window's scale is changing the canvas is the window and a
+    /// sliver either side, not the stretch two and a half windows wide.
+    @Test func whileItZoomsTheCanvasIsTheWindow() {
+        let window = Self.window(scale: 120, startMS: 600_000)
+        let stretch = TimelineDrawnStretch(windowStartMS: 600_000, visibleMS: window.spanMS)
+            .stretchMS(visibleMS: window.spanMS, documentMS: Double(Self.hour))
+        let painted = TimelinePaint.paintedMS(window: window, stretch: stretch, isZooming: true)
+        #expect(painted.lowerBound <= window.startMS)
+        #expect(painted.upperBound >= window.startMS + window.spanMS)
+        #expect(painted.upperBound - painted.lowerBound <= window.spanMS * 1.1)
+        #expect(painted.upperBound - painted.lowerBound < (stretch.upperBound - stretch.lowerBound) / 2)
+    }
+
+    /// A scroll slides the stretch, which it paints only when it moves.
+    @Test func whileItScrollsTheCanvasIsTheStretch() {
+        let window = Self.window(scale: 120, startMS: 600_000)
+        let stretch = TimelineDrawnStretch(windowStartMS: 600_000, visibleMS: window.spanMS)
+            .stretchMS(visibleMS: window.spanMS, documentMS: Double(Self.hour))
+        #expect(TimelinePaint.paintedMS(window: window, stretch: stretch, isZooming: false) == stretch)
+    }
+
+    /// A change of scale is a zoom; a move along at the same scale is not.
+    @Test func aZoomIsAChangeOfScale() {
+        let at = TimelineZoom(scale: 8, startMS: 10_000)
+        #expect(TimelinePaint.isZoom(from: at, to: TimelineZoom(scale: 8.32, startMS: 9_000)))
+        #expect(!TimelinePaint.isZoom(from: at, to: TimelineZoom(scale: 8, startMS: 19_000)))
+    }
 }

@@ -1937,6 +1937,13 @@ final class EditorState {
     var timelineZoom: TimelineZoom {
         get { TimelineZoom(scale: timelineZoomScale, startMS: timelineZoomStartMS) }
         set {
+            // A change of scale is a zoom, and the painting lanes paint only
+            // the window until the next move along (`TimelinePaint.paintedMS`).
+            if TimelinePaint.isZoom(from: timelineZoom, to: newValue) {
+                if !timelinePaintsTheWindow { timelinePaintsTheWindow = true }
+            } else if newValue.startMS != timelineZoomStartMS, timelinePaintsTheWindow {
+                timelinePaintsTheWindow = false
+            }
             if newValue.scale != timelineZoomScale { timelineZoomScale = newValue.scale }
             if newValue.startMS != timelineZoomStartMS { timelineZoomStartMS = newValue.startMS }
             let stretch = TimelineDrawnStretch(windowStartMS: newValue.startMS,
@@ -1971,6 +1978,11 @@ final class EditorState {
     /// what a clip's bar is cut down to, so a scroll redraws a bar only that
     /// often and slides it in between (`timelineDrawnMS`).
     private(set) var timelineDrawnStretch = TimelineDrawnStretch(windowStartMS: 0, visibleMS: 1)
+    /// Whether the window's last move was a zoom: a painting lane then
+    /// paints only the window, since every frame of a zoom paints it again
+    /// anyway, and goes back to the wide stretch at the next move along
+    /// (`TimelinePaint.paintedMS`).
+    private(set) var timelinePaintsTheWindow = false
     /// What a row outside the lanes (a clip's Zoom lane) is culled by: a wide
     /// sight that holds still for windows of a scroll at a time
     /// (`TimelineSight.rows`). Nil until the window is first written, and

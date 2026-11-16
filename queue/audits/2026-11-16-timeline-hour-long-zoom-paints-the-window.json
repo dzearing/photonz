@@ -1,0 +1,26 @@
+{
+  "feature": "Hour-long timeline: a zoom paints only what is on screen, and a scroll stops repainting",
+  "epic": "video-perf",
+  "summary": "Zooming the timeline of the 60 minute reference edit now paints only the window, not two and a half windows of clips, and clips sliding in with a scroll no longer start a fade that repainted the whole lane every frame. Zoom in 16-18 to about 12 ms a frame, scroll 15-16 to about 12 (p95 25 to 16).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. File > Open the 60 minute reference edit (the speed walk's), or any long edit with hundreds of clips.",
+  "switched": {},
+  "try": [
+    { "do": "Open the hour-long edit and pinch the timeline in from Fit to about 8x, then back out.", "shot": "2026-11-16-timeline-hour-long-after-a-zoom-sc.png" },
+    { "do": "Without zooming, scroll the timeline along quickly with two fingers.", "shot": "2026-11-16-timeline-hour-long-after-a-scroll-sc.png" },
+    { "do": "Zoom in until clips show their pictures, then keep zooming: the pictures on a clip already on screen fade in." },
+    { "do": "Zoom out from far in: clips coming in at the edges arrive with their pictures, no fade." },
+    { "do": "Click a clip and a cut on the busy V1 track right after zooming, with the pointer held still." }
+  ],
+  "evaluate": [
+    "Does a pinch zoom on the hour-long edit feel smoother than yesterday, especially near Fit?",
+    "Does a fast scroll still show every clip's pictures and names where they should be, with nothing blank sliding in?",
+    "Do pictures coming in at the edges during a zoom out look right arriving at once rather than fading?"
+  ],
+  "rough": [
+    "Bars not reached yet: zoom median about 12-13 ms (near Fit 25-28 ms) and scroll about 12 ms against 8.3 ms; the task stays open.",
+    "Numbers, 60 min edit, markers down, same machine. Before (HEAD e873d3762, two runs): zoom in 16.1-18.1 ms median (p95 33.6-34.2), zoom out 14.8-16.3 (p95 33), scroll 14.3-16.4 (p95 23-29, 238-328 of 360 late). Zoom painting only the window: zoom in 11.4-11.8 (1x 25 ms, 128x+ 8), zoom out 14.4-15.0, scroll 15.2-15.8. Plus the strip fade fix: zoom in 13.4-13.5, zoom out 12.9-13.3 (p95 25), scroll 11.7-12.3 (p95 16.2-16.7, 137-159 late). Load average on the Mac was 9-11 during the last runs, from other work, so the far-zoom octaves read 2-3 ms higher than the run before.",
+    "Edits (trim, move, blade, undo) unchanged at 38-99 ms against 16; mostly the inspector, owned by a-long-edit-with-transitions-plays-scrubs-and-ed.",
+    "The same window photographed after a scroll (wide painting) and after a zoom (window only) differs only where pictures were still being read in the first shot and by a pixel on three transition band outlines (a throwaway walk: 60 min edit, three zooms in, one pan along, a zoom in and out back to the same window).",
+    "Tried first and backed out: painting each lane in fixed half-window pieces of time, each its own canvas. Every canvas is a GPU texture of its own and a zoom resized each one every frame: scroll and zoom both went to 25 ms. Written into docs/design/video.md 8f so nobody tries it again."
+  ]
+}

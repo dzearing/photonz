@@ -69,9 +69,27 @@ struct TimelinePaintedClips: View, Equatable {
     /// Pictures that landed or strips that came into view a moment ago, and
     /// when, so each fades in as a full bar's does (`ClipFilmstripTile`).
     @State private var fades: [Fade: TimeInterval] = [:]
-    /// The clips whose strips have been seen, so a strip that comes in with
-    /// a zoom fades in rather than popping.
-    @State private var stripsSeen: Set<UUID>?
+    /// What was painted last time, kept without painting again.
+    @State private var painted = Painted()
+
+    /// The clips painted last time, and which of them showed pictures: a
+    /// strip that comes in with a zoom on a clip already painted fades in
+    /// rather than popping. Kept out of sight of the view's updates: a clip
+    /// sliding in with a scroll or a zoom out brings its strip with it,
+    /// drawn at once, and noting it is no reason to paint again. Each one
+    /// was a fade, which painted the whole canvas on every frame for a
+    /// fifth of a second: on a fast scroll of the hour-long reference edit,
+    /// clips with pictures came onto the stretch every other frame, so the
+    /// painting a scroll only slides was painted on every frame (2026-11-16).
+    private final class Painted {
+        var clips: Set<UUID>?
+        var strips: Set<UUID> = []
+    }
+
+    private struct Showing: Hashable {
+        let clips: Set<UUID>
+        let strips: Set<UUID>
+    }
     /// Bumped each time a picture lands, which paints it.
     @State private var landed = 0
 
@@ -93,8 +111,10 @@ struct TimelinePaintedClips: View, Equatable {
         // fast scroll of the hour-long edit rebuilds the painting every
         // other frame, the order was a sixth of the painted clips' time.
         let wanted = Self.wantedKeys(strips)
-        let seen = stripsSeen
-        let showing = Set(zip(placed, strips).compactMap { $1 == nil ? nil : $0.bar.layerID })
+        let before = painted.clips
+        let seen = painted.strips
+        let showing = Showing(clips: Set(placed.map(\.bar.layerID)),
+                              strips: Set(zip(placed, strips).compactMap { $1 == nil ? nil : $0.bar.layerID }))
         let fades = self.fades
         // Side by side rather than one over the other as an overlay: the
         // painting takes no presses, and a hit-testing switch on a view is
@@ -105,9 +125,12 @@ struct TimelinePaintedClips: View, Equatable {
                 Canvas { context, _ in
                     for (one, strip) in zip(placed, strips) {
                         var alpha: (Fade) -> Double = { _ in 1 }
-                        if !fades.isEmpty || seen != nil {
+                        if !fades.isEmpty || before != nil {
                             alpha = { fade in
-                                if case .strip(let id) = fade, let seen, !seen.contains(id), fades[fade] == nil {
+                                // New on a clip painted last time: clear
+                                // until its fade starts.
+                                if case .strip(let id) = fade, let before, before.contains(id), !seen.contains(id),
+                                   fades[fade] == nil {
                                     return 0
                                 }
                                 return Self.faded(since: fades[fade], now: now)
@@ -122,15 +145,19 @@ struct TimelinePaintedClips: View, Equatable {
             TimelinePaintedHands(placed: placed, canvas: canvas, laneWidth: laneWidth, laneHeight: laneHeight)
         }
         .frame(width: canvas.width, height: laneHeight, alignment: .topLeading)
-        // A strip new to the lane fades in; one already here when the lane
-        // started painting does not.
+        // A strip new on a clip already painted fades in; one already here
+        // when the lane started painting, or one that comes in with its
+        // clip, does not.
         .onChange(of: showing, initial: true) { _, now in
-            guard let seen = stripsSeen else {
-                stripsSeen = now
+            let painted = self.painted
+            guard let clips = painted.clips else {
+                painted.clips = now.clips
+                painted.strips = now.strips
                 return
             }
-            let fresh = now.subtracting(seen)
-            stripsSeen = now
+            let fresh = now.strips.subtracting(painted.strips).intersection(clips)
+            painted.clips = now.clips
+            painted.strips = now.strips
             guard !fresh.isEmpty else { return }
             let at = Date.timeIntervalSinceReferenceDate
             for id in fresh { self.fades[.strip(id)] = at }

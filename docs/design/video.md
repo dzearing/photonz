@@ -930,6 +930,27 @@ The rule, for any view added to the editor window:
      offsets it to a whole pixel. Only a name that can be pushed along by the
      lane's left edge in this stretch (`TimelinePaint.nameFollowsTheEdge`) is
      drawn against the window, by `TimelinePaintedNames`, every frame.
+   - **While the timeline zooms, the painting covers only the window**
+     (`TimelinePaint.paintedMS`, `EditorState.timelinePaintsTheWindow`): a
+     change of scale paints every lane again whatever the canvas covers, so
+     after a zoom the canvas is the window and a thirty-second of it either
+     side, and the first move along at the same scale puts it back on the
+     wide stretch. Zooming the hour-long reference edit painted two and a
+     half windows on every frame until then: 16 to 18 ms a frame, 12 after
+     (2026-11-16). What is built past the painting follows it (`builds`).
+   - **A strip fades in only when it appears on a clip that was already
+     painted**, as a zoom in brings a clip's pictures up. A clip that slides
+     in with a scroll or a zoom out brings its strip with it, drawn at once,
+     and noting it paints nothing (`TimelinePaintedClips.Painted`, kept out of
+     the view's updates). Each such clip was a fade, and a fade paints the
+     whole canvas on every frame for a fifth of a second: on a fast scroll
+     clips came onto the stretch every other frame, so the painting a scroll
+     only slides was painted on every frame (15 ms a frame, 12 after,
+     2026-11-16).
+   - **Fixed pieces of time, each its own canvas, are slower, not faster**:
+     tried on 2026-11-16 with half-window pieces in view only. Each canvas is
+     a texture of its own, and a zoom resized every one of them on every
+     frame: scroll and zoom both went from about 16 ms a frame to 25.
    - **Past the stretch, a painting lane builds nothing but what somebody is
      working on** (`TimelinePaint.builds`). The sight reaches up to half a
      window past the stretch either side, all of it off screen, and near the
