@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-16T09:25:19.701Z",
+  "updated": "2026-11-16T10:55:02.058Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -334,9 +334,33 @@
     {
       "t": "2026-11-16T09:25:19.700Z",
       "note": "Pass 10 landed 453089736 and cb47aa27c: an edit rebuilds only the clip bars it changed, and a pick no longer rebuilds every bar through the ruler (worst of 3: trim picked 24 -> 18, blade picked 46 -> 26, undo 36 -> 27, blade 89 -> 62; pick 22 bars -> 9). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 11 leads in the log."
+    },
+    {
+      "t": "2026-11-16T09:25:51.049Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T10:53:34.901Z",
+      "note": "Pass 11 measured first (short speed walk, e355d5075): trim 13, blade 87, undo 23, pick 36 (clipBar 7, 5 lanes, 5 rows in its own pass), trim picked 22, blade picked 36, undo picked 23. New: the speed walk can 'unpick' (nothing picked) so the next 'pick' is tallied 'pick, from nothing' (SpeedWalk.tallyName fromNothing, SpeedWalkTests). Picking from nothing while playing: 360-500 ms of main thread over 15-19 passes of 15-70 ms (sections, then rows, arriving); unpick ~100 ms over 4-6 passes, longest ~40. Time Profiler over 10 pick/unpick pairs (xctrace --attach, /tmp scripts): of the long bursts layout ~30%, AttributeGraph update ~27%, accessibility and focus (AccessibilityNode.updateFocus walking every responder) ~21%, bodies ~8%."
+    },
+    {
+      "t": "2026-11-16T10:53:34.974Z",
+      "note": "Pass 11 fix (lanes and bars watch only their own pick): the grid hands each TimelineTrackRow its TrackPickShare (PhotonzCore, TrackPickShareTests: header pick, in hand, picked clips and sounds, the single pick, the key-diamond layer) instead of every row, lane and header reading selectedLayerID/tracksInHand/keyLayer; ClipPiecesBar asks EditorState.isClipPicked (a ClipPickWatch per clip, told only when selectedLayerID moves onto or off it). Found with a temporary withObservationTracking logger on the row and lane (callStackSymbols at the willSet; removed): rows were woken by selectLayer, then by keyLayer via headerKeyLayerID (now gone). A pick builds 1 row, 1 lane and 1 clip bar (were 5, 5 and 7-9). New short-6 baseline, worst of 3: trim 15, blade 89, undo 29, pick 32 (was 41), trim picked 17, blade picked 51 (runs 28/27/51, a fourth 33), undo picked 23, unpick 39, pick from nothing 55. Blade with nothing picked read 85-92 in every run today including before the change (87), not this change. docs/design/video.md 8f rule 10."
+    },
+    {
+      "t": "2026-11-16T10:53:35.047Z",
+      "note": "Pass 11 did NOT pay: all waiting panel sections in one pass (DockArrival allowNext looping, A/B by a file switch, reverted): pick from nothing busy ~370 -> ~310 ms but longest ~62 -> ~95, and still 9-12 passes because rows (PanelRowsArrival) and measurements follow. Verified: test.sh green (one PieceCopyWriterTests flake on the first full run, passed alone 6/6 and on the rerun; logged on find-out-why-the-cut-export-test-fails-again-in); 15 walks ok (an-editing-session, keyframe-anything, pick-a-track-and-delete-it, track-header-lifts, three box-pick walks, clip-click-cost, a-retimed-clip-shows-its-source, a-painted-caption-takes-a-click, captions-are-one-layer, a-locked-track-keeps-its-clip, animate-a-property-list, a-keyed-drag-on-a-video, scrub-never-blacks-out); speed-walk ok x5. Audit queue/audits/2026-11-16-a-long-edit-with-transitions-plays-scrubs-and-ed-pass11.json."
+    },
+    {
+      "t": "2026-11-16T10:53:35.120Z",
+      "note": "Next for pass 12: (a) the pick from nothing: ~400 ms of panel arrival, 15-20 window passes each ~15-20 ms even with no body built, so the count of passes is the lever (sections, then PanelRowsArrival rows, then measurement passes; try rows arriving with their section, or measurement without a state write); (b) unpick ~100 ms (sections leaving); (c) AccessibilityNode.updateFocus walks every responder on each pass that adds controls (~16% of those passes); (d) blade with nothing picked 77-92 is (a) again. Bars not reached: edits <=16 ms, scrub 1 frame (2), 0 dropped (1/min). No new follow-up tasks: every cost left is one of this task's own unmet bars."
+    },
+    {
+      "t": "2026-11-16T10:55:02.057Z",
+      "note": "Pass 11 landed 929a0f158: a pick on a video rebuilds only the track and clip it reaches (1 row, 1 lane, 1 clip bar, were 5, 5 and 7-9); pick 41 -> 32 ms worst of 3, other edits level. The speed walk now times a pick from nothing (55 ms longest, about 400 ms of panel arrival behind it, the pass 12 lead). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 12 leads in the log."
     }
   ],
-  "started": "2026-11-16T08:10:50.980Z",
+  "started": "2026-11-16T09:25:51.048Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk",
