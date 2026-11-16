@@ -233,4 +233,61 @@ struct DocumentDerivedTests {
         encoder.outputFormatting = [.sortedKeys]
         #expect(try encoder.encode(asked) == encoder.encode(untouched))
     }
+
+    @Test("Gaps kept per track are the gaps worked out afresh, and go with a write")
+    func gapsKept() throws {
+        var doc = Self.six
+        let tracks = doc.timelineTracks.filter { $0.kind != .captions }
+        for track in tracks {
+            #expect(doc.gaps(onTrack: track.id) == Self.fresh(doc).gaps(onTrack: track.id))
+            #expect(doc.gaps(onTrack: track.id) == Self.fresh(doc).gaps(onTrack: track.id))
+        }
+        #expect(doc.derived.keptGapTracks == Set(tracks.map(\.id)))
+        // Take a clip away: the hole it leaves is a gap at once.
+        let track = try #require(tracks.first { doc.clipIDs(onTrack: $0.id).count > 2 })
+        let middle = doc.clipIDs(onTrack: track.id)[1]
+        let before = doc.gaps(onTrack: track.id)
+        doc.layers.removeAll { $0.id == middle }
+        #expect(doc.derived.keptGapTracks.isEmpty)
+        #expect(doc.gaps(onTrack: track.id) != before)
+        #expect(doc.gaps(onTrack: track.id) == Self.fresh(doc).gaps(onTrack: track.id))
+    }
+
+    @Test("Part marks kept per clip are the marks worked out afresh, and go with a write")
+    func childMarksKept() {
+        var doc = Self.six
+        let clips = doc.timelineTracks.flatMap { doc.clipIDs(onTrack: $0.id) }
+        var marked = 0
+        for id in clips {
+            let asked = doc.timelineChildMarks(of: id)
+            #expect(doc.timelineChildMarks(of: id) == asked)
+            #expect(asked == Self.fresh(doc).timelineChildMarks(of: id))
+            if !asked.isEmpty { marked += 1 }
+        }
+        #expect(doc.derived.keptChildMarkCount == clips.count)
+        doc.layers = Array(doc.layers)
+        #expect(doc.derived.keptChildMarkCount == 0)
+        _ = marked
+    }
+
+    /// The app keeps answers of its own beside a document (the timeline's
+    /// painted bars, `TimelinePaintedFacts`) and needs to know, cheaply,
+    /// whether the document in hand is the one they were read off.
+    @Test("A copy shares its worked-out answers until either has its layers or tracks written")
+    func sharesAnswersUntilWritten() {
+        let doc = Self.six
+        var copy = doc
+        #expect(doc.sharesWorkedOutAnswers(with: copy))
+        #expect(copy.sharesWorkedOutAnswers(with: doc))
+        // Content no answer is read off leaves them shared.
+        copy.camera = nil
+        #expect(doc.sharesWorkedOutAnswers(with: copy))
+        copy.layers = Array(doc.layers)
+        #expect(!doc.sharesWorkedOutAnswers(with: copy))
+        var tracked = doc
+        tracked.tracks = Array(doc.tracks)
+        #expect(!doc.sharesWorkedOutAnswers(with: tracked))
+        // Equal content read afresh is not the same answers.
+        #expect(!doc.sharesWorkedOutAnswers(with: Self.fresh(doc)))
+    }
 }

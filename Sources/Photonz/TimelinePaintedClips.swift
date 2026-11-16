@@ -87,7 +87,12 @@ struct TimelinePaintedClips: View, Equatable {
         let _ = landed
         let placed = bars.compactMap { Self.place($0, ruler: canvas.ruler, drawnMS: drawnMS, laneWidth: laneWidth) }
         let strips = placed.map { Self.strip(of: $0) }
-        let wanted = Self.wanted(strips, middle: canvas.width / 2)
+        // Every picture the strips show, in the order they come, as the key
+        // the asking below is started again by. Put in the order they are
+        // asked for only when the asking runs: sorted on every rebuild, as a
+        // fast scroll of the hour-long edit rebuilds the painting every
+        // other frame, the order was a sixth of the painted clips' time.
+        let wanted = Self.wantedKeys(strips)
         let seen = stripsSeen
         let showing = Set(zip(placed, strips).compactMap { $1 == nil ? nil : $0.bar.layerID })
         let fades = self.fades
@@ -138,7 +143,8 @@ struct TimelinePaintedClips: View, Equatable {
         .task(id: wanted) {
             guard !wanted.isEmpty else { return }
             try? await Task.sleep(for: .milliseconds(40))
-            let missing = wanted.filter { ClipFilmstripFrames.shared.cached($0.key) == nil }
+            let missing = Self.wanted(strips, middle: canvas.width / 2)
+                .filter { ClipFilmstripFrames.shared.cached($0.key) == nil }
             guard !Task.isCancelled, !missing.isEmpty else { return }
             await withTaskGroup(of: ClipFilmstripFrames.Key?.self) { group in
                 for want in missing {
@@ -243,6 +249,16 @@ struct TimelinePaintedClips: View, Equatable {
     /// Every picture the strips show, furthest from the middle of the canvas
     /// first: the newest asked is read first (`ClipFilmstripFrames`), and the
     /// window is in the middle of the drawn stretch, the margins either side.
+    /// Every picture the strips show, once each, in the order they come.
+    private static func wantedKeys(_ strips: [Strip?]) -> [ClipFilmstripFrames.Key] {
+        var seen = Set<ClipFilmstripFrames.Key>()
+        var keys: [ClipFilmstripFrames.Key] = []
+        for strip in strips {
+            for tile in strip?.tiles ?? [] where seen.insert(tile.key).inserted { keys.append(tile.key) }
+        }
+        return keys
+    }
+
     private static func wanted(_ strips: [Strip?], middle: CGFloat) -> [Wanted] {
         var seen = Set<ClipFilmstripFrames.Key>()
         var wanted: [(Wanted, CGFloat)] = []
@@ -432,12 +448,31 @@ struct TimelinePaintedClips: View, Equatable {
     private static var nameWidths: [String: (whole: CGFloat, cut: [CGFloat])] = [:]
     private static var tagWidths: [String: (whole: CGFloat, cut: [CGFloat])] = [:]
 
+    /// Words as set for a canvas, by what decides how they look.
+    private struct SetName: Hashable {
+        let words: String
+        let size: CGFloat
+        let ink: Color
+        let scheme: ColorScheme
+        let scale: CGFloat
+    }
+    private static var setNames: [SetName: GraphicsContext.ResolvedText] = [:]
+
     /// The name as the full bar sets it on one line, as `CaptionCuesLayer.fitted`
     /// sets it, from widths measured once.
     static func fitted(_ name: String, width: CGFloat, size: CGFloat = 9.5, in context: GraphicsContext,
                        ink: Color) -> GraphicsContext.ResolvedText {
+        // Set once per name, cut, ink and screen, and kept: resolving the
+        // same words again on every frame of a zoom was about a twentieth of
+        // the frame on the hour-long edit.
         func resolved(_ words: String) -> GraphicsContext.ResolvedText {
-            context.resolve(Text(words).font(.system(size: size, weight: .semibold)).foregroundStyle(ink))
+            let key = SetName(words: words, size: size, ink: ink, scheme: context.environment.colorScheme,
+                              scale: context.environment.displayScale)
+            if let kept = setNames[key] { return kept }
+            if setNames.count > 4000 { setNames.removeAll() }
+            let made = context.resolve(Text(words).font(.system(size: size, weight: .semibold)).foregroundStyle(ink))
+            setNames[key] = made
+            return made
         }
         let unbounded = CGSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
         let letters = Array(name)
@@ -545,12 +580,14 @@ struct TimelinePaintedClips: View, Equatable {
             fromLayerMS: Int(span * Double(shown.startFraction)),
             toLayerMS: Int(span * Double(shown.endFraction)))
         let outline = SoundLaneShape.outline(heights: heights, width: rect.width, height: rect.height)
-        guard let first = outline.first else { return }
+        guard !outline.isEmpty else { return }
+        // Laid down in one go, already where it is drawn: a point at a time,
+        // each one a write to the path's buffer, the waveforms were a third
+        // of the painted clips' time on a fast scroll of the hour-long edit.
         var path = Path()
-        path.move(to: first)
-        for point in outline.dropFirst() { path.addLine(to: point) }
+        path.addLines(outline.map { CGPoint(x: $0.x + rect.minX, y: $0.y + rect.minY) })
         path.closeSubpath()
-        context.fill(path.offsetBy(dx: rect.minX, dy: rect.minY), with: .color(placed.bar.soundTint.opacity(0.55)))
+        context.fill(path, with: .color(placed.bar.soundTint.opacity(0.55)))
     }
 
     /// The level, across the whole bar, as `SoundLevelLine` draws it at rest.
@@ -563,10 +600,9 @@ struct TimelinePaintedClips: View, Equatable {
                                           fromMS: Int(Double(length) * Double(shown.startFraction)),
                                           toMS: Int(Double(length) * Double(shown.endFraction)),
                                           width: shown.width, height: bar.height)
-        guard let first = points.first else { return }
+        guard !points.isEmpty else { return }
         var path = Path()
-        path.move(to: first)
-        for point in points.dropFirst() { path.addLine(to: point) }
+        path.addLines(points)
         var line = context
         // The bar masks its line to the line's own frame, shadow and all.
         line.clip(to: Path(CGRect(x: shown.x, y: bar.top, width: shown.width, height: bar.height)))

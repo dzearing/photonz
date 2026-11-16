@@ -85,6 +85,10 @@ extension PhotonzDocument {
     /// the row: the faint marks along its bar that say there is timing inside
     /// to open up and change. A part that runs the whole way is not marked.
     public func timelineChildMarks(of id: UUID) -> [LayerTime] {
+        derived.childMarks(of: id) { findingTimelineChildMarks(of: id) }
+    }
+
+    private func findingTimelineChildMarks(of id: UUID) -> [LayerTime] {
         guard let layer = layer(id: id), let whole = layer.time else { return [] }
         if Self.isPlacedTitle(layer) {
             return titlePartTimings(layerID: id).compactMap { part in

@@ -1915,6 +1915,9 @@ final class EditorState {
     /// every track out again.
     @ObservationIgnored var timelineTrackRowsMemo: (document: PhotonzDocument, picked: UUID?,
                                                      open: Set<UUID>, rows: [TimelineTrackRowModel])?
+    /// What the timeline's busy lanes paint, read off the document once and
+    /// kept until it changes (`TimelinePaintedFacts`).
+    @ObservationIgnored let timelinePaintedFacts = TimelinePaintedFacts()
     /// How tall a sound's own lane stands in this window: video-audio.html's
     /// 84, or 72 once the window is 880 wide or narrower
     /// (`SoundLaneShape.height(windowWidth:)`). The editor sets it from the

@@ -90,6 +90,10 @@ extension PhotonzDocument {
 
     /// Every gap on `trackID`, earliest first: where a click picks one.
     public func gaps(onTrack trackID: UUID) -> [TimelineGap] {
+        derived.gaps(onTrack: trackID) { findingGaps(onTrack: trackID) }
+    }
+
+    private func findingGaps(onTrack trackID: UUID) -> [TimelineGap] {
         guard let track = track(id: trackID), track.kind != .captions else { return [] }
         let spans = occupants(onTrack: trackID, layout: trackLayout()).map(\.span)
             .sorted { $0.lowerBound < $1.lowerBound }

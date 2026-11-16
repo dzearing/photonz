@@ -1,0 +1,52 @@
+{
+  "feature": "The timeline of an hour-long edit: what each painted clip is, worked out once",
+  "epic": "video-perf",
+  "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
+  "summary": "Zooming or scrolling the hour-long edit no longer looks every painted clip and cut up in the document again on each frame, and waveforms, names and the film pictures to fetch cost less to draw. A zoom frame went from about 16.5 ms to 13.3 and a scroll frame from 15.9 to 13.2. The timeline looks the same.",
+  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 60 minute reference edit and press Fit: the whole hour, exactly as before.",
+      "shot": "2026-11-16-timeline-pass7-0-fit-sc.png"
+    },
+    {
+      "do": "Pinch the timeline in to about seven minutes across.",
+      "shot": "2026-11-16-timeline-pass7-1-in3-sc.png"
+    },
+    {
+      "do": "Compare with the same view on the build before this change.",
+      "shot": "2026-11-16-timeline-pass7-1-in3-before-sc.png"
+    },
+    {
+      "do": "Pinch in and out between Fit and a minute across, quickly, a few times."
+    },
+    {
+      "do": "Zoomed to half a minute, swipe hard along the hour from start to end."
+    },
+    {
+      "do": "Trim a clip, then add a cross dissolve on a cut: both show on the painted lane straight away."
+    }
+  ],
+  "evaluate": [
+    "Does pinching the hour-long edit near the whole-hour view feel any smoother than this morning?",
+    "Does a hard swipe along the hour still stutter where you can see it?",
+    "After an edit, does every painted clip show its new state (a dissolve, a fade, a badge) at once?",
+    "Do the film pictures along the clips arrive as fast as before when you stop scrolling?"
+  ],
+  "measured": [
+    "Speed walk timeline measure on the 60 minute reference edit (524 clips, 377 cuts, 22 titles, 126 Zoom lanes), markers down, 120 Hz. Before is aa73ceb75 (pass 6), measured today on the same Mac; after is three runs, ranges given.",
+    "Zoom in: median 16.6 ms a frame before (p95 39.6), 13.2 to 13.5 after (p95 27 to 28). Zoom out: 16.5 (p95 35.6) before, 13.7 to 14.7 (p95 30 to 31) after.",
+    "By zoom (zoom in, median frame): before 1x 35, 2x 27, 4x 22, 8x 34, 16x 33, 32x 17 ms; after 1x 26 to 28, 2x 20 to 21, 4x 17 to 22, 8x 18 to 24, 16x 17 to 19, 32x 14 to 17 ms; 256x and further in 8 to 12 ms both.",
+    "Scroll end to end in three seconds, half a minute on screen: median 15.9 ms (p95 25) before, 12.9 to 13.6 (p95 21.5 to 24) after.",
+    "Edits (longest main thread pass, ms, before to after): trim 53 to 48, move 35 to 35, blade 81 to 72, undo 64 to 50, transition 93 to 89, title 45 to 39.",
+    "Playing untouched: 107 and 105 pictures in 3 s, view bodies per picture timeSection 0.01, before and after.",
+    "Where the rest goes, by switching pieces off on one build: with the five track lanes empty every zoom and scroll frame is 8.3 ms (the Zoom lanes and ruler stay), so all of what is left is inside the lanes. Without the painted clips view the scroll is 8.3 ms; with the view but nothing painted, 12.2. Zoom lanes cost about 2 ms a frame (4 ms at 4x to 16x); the ruler 1 to 3 ms."
+  ],
+  "rough": [
+    "The bars of the task are still not reached: zoom near the whole-hour view is 26 to 28 ms a frame (8.3 is the bar), the median zoom and scroll frame about 13 ms, and an edit's longest pass 35 to 89 ms against 16.",
+    "What is left is SwiftUI's own work around the painted lanes, about three quarters of a frame: a fast scroll moves the drawn stretch every couple of frames and each move rebuilds the whole painting of every lane. Painting in fixed pieces of time, so a move only paints the piece coming into view, is the next step for the scroll; the zoom repaints everything on every frame however it is cut.",
+    "Pixel check against the build before, same walk on both: Fit is identical; zoomed in, the only differences are film pictures that had landed in one shot and not yet in the other (more had landed on the new build). Eleven timeline walks compared the same way show only those, panel differences and run-to-run noise.",
+    "No mock covers this: the timeline's look is unchanged."
+  ]
+}

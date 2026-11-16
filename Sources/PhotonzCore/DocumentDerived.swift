@@ -40,6 +40,12 @@ struct DocumentDerived: Hashable, Sendable {
         /// track's id.
         var trackOfLayer: [UUID: UUID]?
         var editPoints: [UUID: [TimelineEditPoint]] = [:]
+        /// The empty stretches on each track, kept per track: every lane of
+        /// the timeline asks for its own on every frame of a zoom.
+        var gaps: [UUID: [TimelineGap]] = [:]
+        /// Where a closed clip's parts have timing of their own, kept per
+        /// clip: every lane asks it of every clip in sight on every frame.
+        var childMarks: [UUID: [LayerTime]] = [:]
         var editPointTransitions: [EditPointTransition]?
         /// Where each layer is in the tree, one index per level, built once
         /// the document has been asked for layers by id a few times
@@ -89,6 +95,11 @@ struct DocumentDerived: Hashable, Sendable {
     var keptAudioMix: [AudioMixSegment]? { store.answers.withLock { $0.audioMix } }
     /// The tree's facts kept, for tests: nil until the document is asked.
     var keptTreeFacts: TreeFacts? { store.answers.withLock { $0.treeFacts } }
+
+    /// Whether two documents carry the very same store: one is a copy of
+    /// the other and neither has had what the answers are read off written
+    /// since.
+    func isSameStore(as other: DocumentDerived) -> Bool { store === other.store }
 
     static func == (lhs: DocumentDerived, rhs: DocumentDerived) -> Bool { true }
     func hash(into hasher: inout Hasher) {}
@@ -143,6 +154,28 @@ struct DocumentDerived: Hashable, Sendable {
         return found
     }
 
+    /// The tracks whose gaps are kept, for tests.
+    var keptGapTracks: Set<UUID> { store.answers.withLock { Set($0.gaps.keys) } }
+
+    /// The gaps on one track, kept per track.
+    func gaps(onTrack id: UUID, _ make: () -> [TimelineGap]) -> [TimelineGap] {
+        if let kept = store.answers.withLock({ $0.gaps[id] }) { return kept }
+        let made = make()
+        store.answers.withLock { $0.gaps[id] = made }
+        return made
+    }
+
+    /// How many clips' part marks are kept, for tests.
+    var keptChildMarkCount: Int { store.answers.withLock { $0.childMarks.count } }
+
+    /// A clip's part marks, kept per clip.
+    func childMarks(of id: UUID, _ make: () -> [LayerTime]) -> [LayerTime] {
+        if let kept = store.answers.withLock({ $0.childMarks[id] }) { return kept }
+        let made = make()
+        store.answers.withLock { $0.childMarks[id] = made }
+        return made
+    }
+
     /// The edit points on one track, kept per track.
     func editPoints(onTrack id: UUID, _ make: () -> [TimelineEditPoint]) -> [TimelineEditPoint] {
         if let kept = store.answers.withLock({ $0.editPoints[id] }) { return kept }
@@ -153,6 +186,16 @@ struct DocumentDerived: Hashable, Sendable {
 }
 
 extension PhotonzDocument {
+    /// Whether `other` is this document, or a copy of it, with nothing any
+    /// kept answer is read off written since: its layers, tracks, duration,
+    /// canvas size and pixel scale all as they were. A check of one pointer,
+    /// so the app can keep answers of its own beside a document (the
+    /// timeline's painted bars) and know on every frame whether they still
+    /// hold. False for a document of equal content read afresh.
+    public func sharesWorkedOutAnswers(with other: PhotonzDocument) -> Bool {
+        derived.isSameStore(as: other.derived)
+    }
+
     /// What the tree holds that drawing a moment has to act on, worked out in
     /// one walk that copies nothing and kept until a layer changes
     /// (`DocumentDerived.TreeFacts`).

@@ -885,6 +885,18 @@ The rule, for any view added to the editor window:
      (`TimelinePaintedHands`), for the click that comes with no pointer move
      first; a grip, a fade diamond or the level line is reached only on the
      full view, which the pointer resting there has already brought back.
+   - **What a clip or cut is, the painting reads off the document once**
+     (`TimelinePaintedFacts`), kept until the document's layers or tracks
+     are written (`PhotonzDocument.sharesWorkedOutAnswers`) or a switch it
+     names flips: its pieces, badges, keys, holds, fades, level, the sound it
+     plays, a cut's band. Only where it is and what the view does to it
+     (picked, under the pointer, how strongly its pictures show, a cleaning
+     in progress) is worked out each frame. Looked up afresh on every frame
+     of a zoom it was a fifth of the frame near the whole-hour view
+     (2026-11-16). A new fact read from anything but the layers and tracks
+     (a library that loads later, an editor setting) is either read each
+     frame beside the cleaning progress or added to its `Switches`, or a
+     painted clip goes on showing the old answer.
 9. **Nothing per clip reads the window unless it is near it.** A scroll
    writes the window every frame, so whatever reads it is built again every
    frame. A clip's bar is handed the stretch it draws across by its lane, cut
