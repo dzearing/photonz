@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 3e-7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-16T14:36:23.471Z",
-  "updated": "2026-11-16T18:36:39.110Z",
+  "updated": "2026-11-16T20:21:27.049Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-16, after a-screen-recording-keeps-the-desktop-s-colours-a shipped (ce7a9b934, 10-bit HEVC Display P3, captured as kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange in ScreenRecorder.swift:304): \"there is no way to fix the visible banding in the recordings? see last recording\", with Screenshot 2026-11-16 at 06.33.51.png (the recording playing in Photonz Dev).\n\nMeasured by the intake window, G channel down a 1300 px column of the empty sidebar (x 261, y 740..2040): the macOS screenshot of the screen (06.33.18, before the recording) has 11 levels over 53..63, 16 changes, longest flat run 164 px, max step 1. The recording's frame at 3 s, decoded to 16 bit: 8-bit equivalent 11 levels, longest run 161 px; in 10-bit, 28 levels, longest run 116 px, steps of about 3.5 to 4 codes = one 8-bit shade. Colours match within about 1 code. So the recording is now faithful; the SOURCE is drawn in 8-bit steps by the window server (the window's translucent material), and capturing at 10 bit cannot add shades that were never drawn. Whether the user's display hides those steps (panel dithering) is not confirmed; the user sees them as bands in the recording.\n\nffmpeg deband test on that frame (format=yuv420p10le, deband=1thr=0.004:2thr=0.004:3thr=0.004:range=64:blur=1): 43 levels, longest flat run 35 px. gradfun (8-bit) did not help (10 levels). ffmpeg's CPU deband took 0.6 s wall for 30 frames on 5 cores, far too heavy for 60 fps live, hence the GPU requirement. Smoothing in the player and export instead of at capture keeps recording cheap and the file a faithful copy; smoothing at capture fixes the file for every other player. Measure both. The Smaller files quality setting (Settings > Recording > Quality) must get the same pass.\n\nUser, 2026-11-16, on hearing the first version: \"that sounds slow? i don't want dropped frames or a start delay\". So the pass goes in the display and export path only, never capture. The raw file stays a faithful copy of the screen; other players (QuickTime, Safari) will still show the screen's own steps unless the recording is exported from Photonz. Say that plainly in the audit. A deband on the GPU is a few texture reads a pixel, far below a frame's budget; the CPU timing above was ffmpeg's software filter, not what this will be.",
@@ -81,10 +81,35 @@
     {
       "t": "2026-11-16T18:36:39.109Z",
       "note": "Display slice shipped (1f7993f11): recordings play, scrub and show smooth in Photonz at Next defaults, measured on the user's file (flat run 103-137 px -> 8-26 px, text unchanged). Still open: exported/copied files for other players stay banded (needs a 10-bit drawn export and a copy-vs-draw choice at High), the capture dropped-frame count is unmeasured, and the 1 ms GPU bar is borderline at full size. See log."
+    },
+    {
+      "t": "2026-11-16T18:52:39.975Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T19:36:19.884Z",
+      "note": "Export slice: SmoothedCopyWriter (PhotonzMedia) writes an untouched or cut-only recording out again at its own depth (HEVC Main 10, own colour tags) through the pass with no grain, when ExportSmoothing reads 3 quarter-size frames and the pass moves >=0.2% of a frame's pixels by a 10-bit code; else still copied. Encoder: quality 0.9, spatial adaptive QP off. Chose that over a rate (wrote 9 of 104 Mbps, text p99 19 codes), a quality with a rate cap (quality ignored), AQ on (32 px blocks with 2-3 code jumps, grain kept by chance: 21 px flat at half a shade, 61-70 at 3/4 and 1), and a QP cap (worse). Chose no grain in the file because the encoder drops it unpredictably."
+    },
+    {
+      "t": "2026-11-16T19:36:19.959Z",
+      "note": "Measured on the user's recording via the probe's High export: 121 MB copied in 0.1 s -> 32.7 MB written in 4.3 s, HEVC Main 10, P3 + sRGB curve kept. Sidebar strip (Apple decoder): 27 -> 38 levels, largest step 4 -> 2 codes, longest flat run 116 -> 68 px (68 is where the gradient bottoms out; the strip spans 31-39 codes over 1300 px, so a grain-free 10-bit ramp averages 33-42 px a code: under 40 px everywhere needs grain, which the encoder drops). Text block: p99 9 codes vs source, identical to a plain re-encode with no filter (9); 3x crops look identical. Standard export 5.2 s (unchanged)."
+    },
+    {
+      "t": "2026-11-16T20:21:21.705Z",
+      "note": "Shipped in e873d3762. The three items left open last pass: (1) exports for other players: done for every recording made since the 10-bit change (8-bit ones still copied, a smooth 8-bit file would need grain the encoder drops); (2) dropped capture frames over a minute: measured with the new --minute drill, 3192/3172 frames, no gap over two 60 Hz frames, capture diff empty; (3) GPU: +1.0 ms full size, at the 1 ms bar, unchanged. In the FILE the strip reads 68 px longest flat / 38 levels / max step 2 codes (bar under 40 px is met on screen, 8-26 px; in a grain-free 10-bit file it is not reachable at this slope, 31-39 codes over 1300 px) and text is 9 codes p99 off the source, the cost of any re-encode (a plain one is also 9). Walks green on the probe: soft-gradients (now exports), an-edited-recording-comes-out-as-a-video, a-cut-recording-copies-its-pieces, a-busy-recording-says-what-it-weighs, a-recording-opens-in-the-editor-at-defaults, export-keeps-to-the-in-and-out, export-card-while-writing, trim-save-send, copy-a-long-captioned-edit. The read-stall guard landed after the last probe build; unit tests cover it and the rotating check will walk it."
+    },
+    {
+      "t": "2026-11-16T20:21:21.777Z",
+      "note": "left rough: the High size on the Export sheet now reads 'about <recording size>' while the switch is on, though a smoothed file came out a quarter of that and an 8-bit recording is still exact; a sheet that weighed the smoothed write would need it run in full first. Small and not misleading in the costly direction, so not filed."
+    },
+    {
+      "t": "2026-11-16T20:21:27.047Z",
+      "note": "Recordings now play smooth in Photonz (shipped earlier, 1f7993f11) and a High export of a banded recording is written out smoothed as 10-bit HEVC so QuickTime and Safari show the ramp too (e873d3762, SmoothedCopyWriter + ExportSmoothing; recordings without soft gradients, or 8-bit ones, are still copied instantly). User's recording: export 0.1 s copy of 121 MB -> 4.3 s, 32.7 MB; strip 27 -> 38 levels, steps 4 -> 2 codes max, flat 116 -> 68 px (on screen 8-26 px, under the 40 px bar; a grain-free 10-bit file cannot get under 40 at this slope); text p99 9 codes, same as any re-encode. Capture untouched (empty diff) and measured: new --minute drill, 3192/3172 frames in 60 s, no gap over two frames. Full test.sh green; 9 export walks green on the probe. Audit updated with the export strips."
     }
   ],
-  "started": "2026-11-16T16:52:33.351Z",
+  "started": "2026-11-16T18:52:39.974Z",
   "walks": [
     "soft-gradients-in-a-recording-play-smooth-walk"
-  ]
+  ],
+  "completed": "2026-11-16T20:21:27.048Z"
 }
