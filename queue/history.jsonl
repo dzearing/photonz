@@ -17572,3 +17572,8 @@
 {"t":"2026-11-16T06:04:12.399Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-16T06:04:12.473Z","ev":"task_note","id":"a-long-edit-with-many-zooms-shows-one-zoom-lane"}
 {"t":"2026-11-16T06:04:16.256Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 4 landed c0e1a50b1: a scroll of the 60 min timeline no longer rebuilds the 126 Zoom lanes out of sight or the bars still in view (scroll 46 -> 41 ms a frame, bars built per frame 16 -> 4). Bars not reached (8.3 ms scroll/zoom, 16 ms edits); stays open for painting clips that show pictures."}
+{"t":"2026-11-16T06:04:45.141Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-16T07:58:27.563Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T07:58:27.627Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T07:58:27.691Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T07:58:27.755Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 5 landed 7df83912c: long tracks paint clips with pictures and Music clips, and a scroll slides the painting. Zoom 41.7 -> 24.9 ms a frame (p95 203 -> 67), scroll 41.5 -> 17.0, edits 84-174 -> 42-117 ms. Bars not reached (8.3 / 16 ms); stays open for titles and cuts near Fit."}

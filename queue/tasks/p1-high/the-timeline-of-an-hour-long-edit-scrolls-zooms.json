@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-16T06:04:16.255Z",
+  "updated": "2026-11-16T07:58:27.754Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -165,9 +165,29 @@
     {
       "t": "2026-11-16T06:04:16.254Z",
       "note": "Pass 4 landed c0e1a50b1: a scroll of the 60 min timeline no longer rebuilds the 126 Zoom lanes out of sight or the bars still in view (scroll 46 -> 41 ms a frame, bars built per frame 16 -> 4). Bars not reached (8.3 ms scroll/zoom, 16 ms edits); stays open for painting clips that show pictures."
+    },
+    {
+      "t": "2026-11-16T06:04:45.136Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T07:58:27.561Z",
+      "note": "Pass 5 (2026-11-15). Baseline at 55839469c, 60 min edit, markers down: zoom in 41.7 ms/frame (p95 203), out 42.3 (p95 221), scroll 41.5 (p95 50), 4 bars built per scroll frame; edits longest pass trim 108 / move 102 / blade 162 / undo 122 / transition 174 / title 84 ms. New: the speed walk line gives the median frame per zoom doubling; that showed the slow end is NEAR FIT (1x-8x 66-110 ms), close in 17 ms."
+    },
+    {
+      "t": "2026-11-16T07:58:27.625Z",
+      "note": "Pass 5 landed 7df83912c: (1) busy lanes paint clips that show pictures (tiles from ClipFilmstripFrames.cached, missing ones asked 40 ms after the stretch settles, keyed by every tile wanted so a landing does not restart the asks; landing and strip-appear fades 0.22 s via TimelineView paused when idle; DrawnFilmstrips reported under piece -1) and sounds of their own on the panel ground (Music: tag, waveform, level line, diamonds); (2) a track of 24+ clips paints at every zoom (TimelinePaint.lanePaints clipsOnTrack); (3) painting laid on the drawn stretch, slid by a pixel-snapped offset (TimelinePaint.Canvas, tested), names a left edge can push drawn live (TimelinePaintedNames); (4) Zoom lane menu reuses its bars, click tick views only for clips with clicks (hasClickMarks), carriesItsSound by set, painted sound halves no longer empty ForEach items, name widths cached. After: zoom 24.9 ms median (p95 67; near Fit 43-47), scroll 17.0 (p95 33), edits trim 64 / move 49 / blade 100 / undo 76 / transition 117 / title 42 ms. Parity: Fit pixel-identical, zoomed ~1% differ at picture/text edges; painted Music vs full view compared on one build. 27 walks green (task walks + click, Zoom lane, reference edit, sound lane, speed-walk, an-editing-session-walk); Scripts/test.sh green. Audit queue/audits/2026-11-15-timeline-hour-long-painted-pictures.json."
+    },
+    {
+      "t": "2026-11-16T07:58:27.689Z",
+      "note": "Still open, bars not reached (8.3 ms zoom/scroll, 16 ms edits). Floor experiment on this pass's build (throwaway file switch): near Fit, without full clip views 50 ms vs 92 (then: 53 Music + 22 titles; Music now painted), without painting 85 (scroll 16.7 vs 26.6), without cuts 76, all out 19 ms / scroll 8.3. Next: paint the Title track's clips (22, a quiet track: the lane rule would need titles counted or a title kind in the painting), then cut views near Fit, then the per-frame lane body (paintedBars runs over every clip on the stretch each frame). Bug found and fixed in my own first version: a .task keyed by the missing tiles restarted on every landing and cancelled the rest, so pictures barely landed at 128x. Left rough, not filed: a name pill over a strip coming in with a zoom does not fade with it. Measuring: /tmp/tl60.json (timeline+idleBuilds+edits, ~90 s); a probe build ~8 min."
+    },
+    {
+      "t": "2026-11-16T07:58:27.753Z",
+      "note": "Pass 5 landed 7df83912c: long tracks paint clips with pictures and Music clips, and a scroll slides the painting. Zoom 41.7 -> 24.9 ms a frame (p95 203 -> 67), scroll 41.5 -> 17.0, edits 84-174 -> 42-117 ms. Bars not reached (8.3 / 16 ms); stays open for titles and cuts near Fit."
     }
   ],
-  "started": "2026-11-16T04:24:21.528Z",
+  "started": "2026-11-16T06:04:45.135Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
