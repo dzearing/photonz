@@ -17612,3 +17612,10 @@
 {"t":"2026-11-16T13:17:07.452Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
 {"t":"2026-11-16T13:17:13.523Z","ev":"triage","summary":"merged 0, dropped 0, moved priority 0, reset 0 (guard clean, no leftovers, no open cards), spot-checked 0 (no new loop-filed p0/p1 bug), renumbered p1 30-80 -> 10-60 (p2 and p3 already clean), logged 2 (scrub and dropped-frame bars unmoved since pass 7 plus the window-wide accessibility floor, on the long edit; three CI reds of the Metal signature, on the legibility task), filed 0"}
 {"t":"2026-11-16T13:18:29.736Z","ev":"digest","file":"2026-11-16.md"}
+{"t":"2026-11-16T13:18:53.368Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-16T13:19:22.479Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T14:27:03.063Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-16T14:34:20.919Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T14:34:20.992Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T14:34:21.066Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-16T14:34:21.141Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 6 landed c103c62a6: nothing off screen is redrawn while the hour-long timeline zooms (Zoom lanes below the fold, full views past the painted stretch) and titles are painted. Zoom 24.8 -> 14.8 ms a frame (p95 77 -> 37), far in 8-9 ms, scroll 18.4 -> 14.7. Bars not reached (8.3 ms zoom/scroll near Fit, 16 ms edits); stays open for caching painted bars between zoom frames."}

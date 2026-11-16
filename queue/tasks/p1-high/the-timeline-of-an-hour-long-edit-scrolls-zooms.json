@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-16T13:17:06.995Z",
+  "updated": "2026-11-16T14:34:21.140Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -189,9 +189,33 @@
     {
       "t": "2026-11-16T13:17:06.994Z",
       "note": "seq 40 -> 20"
+    },
+    {
+      "t": "2026-11-16T13:18:53.364Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T13:19:22.477Z",
+      "note": "Main red at start of pass 6: run 43853115475 slice 2, TextRevealUnclippedTests (command buffer error on the CI GPU); already folded into find-out-why-the-legibility-check-once-read-the by the 2026-11-16 digest. Nothing here touches titles' entrances."
+    },
+    {
+      "t": "2026-11-16T14:34:20.917Z",
+      "note": "Pass 6 (2026-11-16). Baseline at e9978d40f, 60 min edit, markers down: zoom in 24.8 ms/frame (p95 77), out 24.0 (p95 72), by zoom 1x 46 / 4x 57 / 8x 53 / 256x+ 13-17; scroll 18.4 (p95 29); edits longest pass trim 73 / move 38 / blade 82 / undo 108 / transition 96 / title 42. Floor experiments (throwaway file switch, one build): Zoom lanes out took 6-10 ms off EVERY zoom frame (far in 17 -> 8 ms) though only a handful are on screen; full clip views and cut views out took the 4x-8x hump; titles as views were 4-6 ms near Fit. A dump of what a painting lane left unpainted on its stretch showed only the Background clip and a few clips whose waveform had not been read: the full views being built were clips and cuts in the lane's sight but PAST the drawn stretch (the sight reaches up to half a window further), all off screen."
+    },
+    {
+      "t": "2026-11-16T14:34:20.990Z",
+      "note": "Pass 6 landed c103c62a6: (1) a Zoom lane out of the tracks' view by more than a few rows reads and draws nothing (ZoomBarsView keeps showsDownTheTracks from onGeometryChange against bounds(of: .scrollView); TimelineSight.rowShows, tested); (2) a painting lane builds no full bar, sound half, click ticks, part marks or cut view past the drawn stretch unless worked on (TimelinePaint.builds, tested; cutIsWorkedOn); (3) titles are a plain kind for the painting and every track of an edit with 200+ clips paints (TimelinePaint.longEdit, row.clipsInEdit set in timelineTrackRows, tested). After: zoom 14.8 ms (p95 37, worst 54), out 14.7 (p95 36), by zoom 1x 36 / 4x 22 / 8x 32 / 1024x+ 8-9; scroll 14.7 (p95 19); bars built per zoom frame 14 -> 5; edits trim 73 / move 36 / blade 78 / undo 53 / transition 95 / title 40. Titles pixel-identical at Fit against the same build with titles as views; zoomed, only picture tiles landing differ. A Zoom lane scrolled up into view draws its bars (/tmp walk, picture in the audit). 24 walks run: 23 green (task walks, Zoom lane walks, reference edit, an-editing-session-walk); a-transition-is-picked-at-the-cut-walk fails at step 46 (Fade In reads 0.51s), the same failure as the 2026-11-14 sweep before this change, folded into walks-that-fail-in-the-full-sweep-27. Scripts/test.sh green. Rule 8 and 9 extended in docs/design/video.md 8f. Audit queue/audits/2026-11-16-timeline-hour-long-off-screen-rows.json."
+    },
+    {
+      "t": "2026-11-16T14:34:21.064Z",
+      "note": "Still open, bars not reached: zoom near Fit 26-36 ms vs 8.3 (p95 37), scroll 14.7 vs 8.3, edits 36-95 ms vs 16 (mostly the inspector, see a-long-edit-with-transitions-plays-scrubs-and-ed). Profile of the heavy zoom frames now: TimelineTrackRow.lateBody 17.5% (paintedBars 7%: every painted bar worked out from the document again on each zoom frame, layer(id:) 4%), TimelinePaintedClips.paint 15% (names and their fitting ~5%, waveforms ~4%), the rest SwiftUI graph and Core Animation. Next: keep each painted bar's document facts (kind, keys, drift, level, waveform, fades) between frames keyed by document and clip so a zoom frame only places them, and cache fitted names by width step. Left rough, not filed (no one would notice yet): a Zoom lane more than ~5 rows below the fold draws nothing until scrolled near, so a very fast fling down the tracks might show its bars a frame late."
+    },
+    {
+      "t": "2026-11-16T14:34:21.139Z",
+      "note": "Pass 6 landed c103c62a6: nothing off screen is redrawn while the hour-long timeline zooms (Zoom lanes below the fold, full views past the painted stretch) and titles are painted. Zoom 24.8 -> 14.8 ms a frame (p95 77 -> 37), far in 8-9 ms, scroll 18.4 -> 14.7. Bars not reached (8.3 ms zoom/scroll near Fit, 16 ms edits); stays open for caching painted bars between zoom frames."
     }
   ],
-  "started": "2026-11-16T06:04:45.135Z",
+  "started": "2026-11-16T13:18:53.363Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
