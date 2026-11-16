@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-16T16:44:29.306Z",
+  "updated": "2026-11-16T21:42:23.800Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -233,9 +233,37 @@
     {
       "t": "2026-11-16T16:44:29.305Z",
       "note": "Pass 7 landed 358502609: painted clips and cuts are read off the document once, not every frame. Zoom 16.6 -> 13.3 ms a frame (near Fit 35 -> 27), scroll 15.9 -> 13.2, edits a little faster, look unchanged. Bars not reached (8.3 ms zoom/scroll, 16 ms edits); stays open for painting in fixed pieces of time."
+    },
+    {
+      "t": "2026-11-16T20:25:53.897Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T20:26:20.174Z",
+      "note": "Main red at start of pass 8: run 43930690711 slice 2, TextRevealUnclippedTests again (sessionsStage worst.share 0.011), already owned by find-out-why-the-legibility-check-once-read-the. Nothing here touches titles' entrances."
+    },
+    {
+      "t": "2026-11-16T21:42:23.497Z",
+      "note": "Pass 8 (2026-11-16). Baseline at e873d3762, 60 min edit, markers down (two runs): zoom in 16.1-18.1 ms/frame (p95 34), out 14.8-16.3 (p95 33), by zoom 1x 33 / 8x 28 / 256x+ 11-14; scroll 14.3-16.4 (p95 23-29). Profile: zoom near Fit ~21% Canvas display lists + ~12% RenderBox rasterising in the CA commit, both proportional to the canvas (2.5 windows); scroll ~12% canvas + 8% raster."
+    },
+    {
+      "t": "2026-11-16T21:42:23.569Z",
+      "note": "Pass 8 tried first and backed out: each lane painted in fixed half-window pieces of time (power-of-two ms, pixel-exact seams, only pieces in view), each its own Equatable canvas. Scroll 25 ms, zoom 24: each canvas is its own texture and a zoom resized every one each frame (make_texture + SurfacePool ~12%, CA commit 37%). Written into docs/design/video.md 8f."
+    },
+    {
+      "t": "2026-11-16T21:42:23.642Z",
+      "note": "Pass 8 landed 90ffa8b69: (1) after a change of scale a painting lane's canvas is the window and 1/32 either side (TimelinePaint.paintedMS, EditorState.timelinePaintsTheWindow, tested), back to the drawn stretch at the first move along; paintedBars, builds and cut views follow it. (2) a strip fades in only when it appears on a clip already painted; clips sliding in on a scroll or zoom out are noted in a box the view does not observe (TimelinePaintedClips.Painted), so they no longer start a fade that repainted the whole canvas every frame for 0.22 s. After: zoom in 13.4 (11.4 with the Mac quiet), out 13.1 (p95 25), by zoom 1x 27 / 8x 17-19 / 128x+ 9-12; scroll 11.7-12.3 (p95 16.2-16.7, late 137-159 of 360, was 238-328). Same window photographed after a scroll and after a zoom: only pictures still loading and 1 px on three band outlines differ. 17 walks green (task walks, reference edit, Zoom lane, speed-walk, an-editing-session-walk); Scripts/test.sh green. Audit queue/audits/2026-11-16-timeline-hour-long-zoom-paints-the-window.json."
+    },
+    {
+      "t": "2026-11-16T21:42:23.726Z",
+      "note": "Still open, bars not reached: zoom ~13 ms median (near Fit 25-28), scroll ~12 vs 8.3; edits 38-99 vs 16 (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). Next: near Fit the canvas is already the window, so what is left is paint per clip (waveform columns, names) and SwiftUI graph upkeep; on a scroll the stretch move still repaints 2.5 windows every ~1.5 frames of the walk's fling. Left rough, not filed: during a zoom out, clips entering at the edges now arrive with their pictures at once rather than fading (they used to fade off screen in the stretch margin)."
+    },
+    {
+      "t": "2026-11-16T21:42:23.799Z",
+      "note": "Pass 8 landed 90ffa8b69: zoom paints only the window, scroll-ins no longer fade; zoom 16-18 -> ~13 ms, scroll 15-16 -> ~12 (p95 16). Bars of 8.3 ms and 16 ms not reached; stays open."
     }
   ],
-  "started": "2026-11-16T14:34:55.155Z",
+  "started": "2026-11-16T20:25:53.896Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
