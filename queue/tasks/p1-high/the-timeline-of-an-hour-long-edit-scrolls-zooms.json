@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-17T20:49:04.870Z",
+  "updated": "2026-11-17T20:49:33.975Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -293,6 +293,10 @@
     {
       "t": "2026-11-17T20:49:04.869Z",
       "note": "walks open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk -> open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk, a-painted-gap-takes-a-right-click-walk"
+    },
+    {
+      "t": "2026-11-17T20:49:33.974Z",
+      "note": "Pass 9 landed 06d8034f3: busy lanes paint the gaps between clips and build only the gap under the pointer (its press and Ripple Delete menu kept). Near-Fit zoom 22.5 -> 17.4 ms; quiet-Mac zoom 13.2 -> ~9.3 ms median, scroll 10.4 -> 8.3. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open for painted cuts and the clips' paint."
     }
   ],
   "started": "2026-11-17T18:34:36.995Z",
