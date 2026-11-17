@@ -81,20 +81,54 @@ final class SpeedWalkProbe {
         ]
         var looks = 0, silent = 0
         var nextSoundLook = 1.0
+        let audible = editor.audioMix.filter(\.isAudible)
+        var firstQuietMS: Int?
+        // A half second of what actually comes out, at every whole minute
+        // the playhead passes: heard in the room, not just scheduled.
+        var heardAtMinute: [Int: Double] = [:]
+        var listening: Task<Void, Never>?
+        var nextListenMinute = fromMS / 60_000 + (fromMS % 60_000 == 0 ? 0 : 1)
+        var worstClockApartMS = 0
+        var clockAheadMS: [Int] = []
         while CACurrentMediaTime() - start < seconds, editor.isDocumentPlaying {
             await frames.next()
             let now = CACurrentMediaTime() - start
             samples.append(SpeedWalk.PlaySample(wallMS: now * 1000, playheadMS: editor.documentTimeMS,
                                                 shownMS: editor.shownMomentMS))
             if now >= nextSoundLook {
+                // Silent when the engine has stopped, or when a piece the
+                // plan has sounding at the playhead is not on it: the sound
+                // of a long edit going quiet part way while the picture goes
+                // on (task `find-out-whether-a-long-edit-goes-quiet-after-it`).
                 looks += 1
-                if !editor.audioPlayer.isPlaying { silent += 1 }
+                let at = editor.documentTimeMS
+                let held = Set(editor.audioPlayer.scheduledSegments)
+                let missing = audible.filter { $0.contains(ms: at) && !held.contains($0) }
+                if !editor.audioPlayer.isPlaying || !missing.isEmpty { silent += 1 }
+                if !missing.isEmpty, firstQuietMS == nil { firstQuietMS = at }
+                if at >= nextListenMinute * 60_000, listening == nil {
+                    let minute = nextListenMinute
+                    nextListenMinute = at / 60_000 + 1
+                    let player = editor.audioPlayer
+                    listening = Task { @MainActor in
+                        heardAtMinute[minute] = await player.listenForLevel(seconds: 0.5) ?? 0
+                        listening = nil
+                    }
+                }
+                if let clockMS = editor.audioPlayer.engineClockMS {
+                    worstClockApartMS = max(worstClockApartMS, abs(clockMS - at))
+                    clockAheadMS.append(clockMS - at)
+                }
                 nextSoundLook += 1
             }
         }
         samples.append(SpeedWalk.PlaySample(wallMS: (CACurrentMediaTime() - start) * 1000,
                                             playheadMS: editor.documentTimeMS, shownMS: editor.shownMomentMS))
+        await listening?.value
         let leftOut = editor.audioPlayer.droppedSegments
+        let heard = heardAtMinute.keys.sorted()
+            .map { String(format: "%d:%.3f", $0, heardAtMinute[$0] ?? 0) }.joined(separator: " ")
+        let lateSkewMS = editor.audioPlayer.worstLateSkewMS
         let reachedMS = editor.documentTimeMS
         editor.pauseDocument()
         // The renderer's own account of the pictures it drew meanwhile. It
@@ -121,6 +155,11 @@ final class SpeedWalkProbe {
             + (worstCut.map { String(format: ", the worst %@ (%d of %d dropped, gap %.0fms)", $0.label,
                                      $0.dropped, $0.framesDue, $0.worstGapMS) } ?? "")
             + "; sound: \(leftOut) piece(s) left out, silent at \(silent) of \(looks) one-second looks"
+            + (firstQuietMS.map { " (first at \(SpeedWalk.clock($0)))" } ?? "")
+            + (heard.isEmpty ? "" : ", level heard at each minute \(heard)")
+            + String(format: ", pieces put on while playing landed within %.0fms of the press's clock, "
+                     + "which was within %dms of the playhead (%dms ahead of it at the median)",
+                     lateSkewMS, worstClockApartMS, clockAheadMS.sorted().dropFirst(clockAheadMS.count / 2).first ?? 0)
             + String(format: "; the renderer handed the canvas %d pictures, drawn in %.0fms (median) to %.0fms, "
                      + "%.0fms (median) to %.0fms from asked to arrived", pictures,
                      run.composites?.drawMedianMS ?? 0, run.composites?.drawWorstMS ?? 0,

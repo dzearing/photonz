@@ -23217,3 +23217,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Worst pass while opening, first window: 6 min 171 -> 72-80 ms, 20 min 185 -> 71-78, 60 min 230 -> 93-97; 12 MP picture 150 -> 64. New guard `a-twenty-minute-edit-opens-without-a-pause-walk` (120 ms); hour guard tightened to 150.
 - Harness: an `open` step resets the main thread meter (and drops markers in a timedWithoutMarkers walk). `Scripts/perf/trace-bursts.py --process` reads an `--all-processes` trace, the way to catch an opening in a walk's setup.
 - Next: nothing open on this task. Ztabby's accessibility read of a new window (75-80 ms at 20 min) is the slowest opening pass left.
+
+## 2026-11-17 — A long edit's sound plays to its end (task find-out-whether-a-long-edit-goes-quiet-after-it)
+
+- Confirmed: played from 0:00, the 20 and 60 minute reference edits lost every voice at 6:24.9 and the music at 7:06. `DocumentAudioPlayer.play` put the first 48 pieces still to come on the engine and never looked again; the comment said "alive at once", the code counted everything still to come.
+- `AudioScheduleWindow` (PhotonzCore, tested) says what is on the engine: what starts within 20 s of the playhead, budget 48 at once. `DocumentAudioEngine` tops up every 0.5 s on its own queue off a silent clock node, starts late pieces at an exact host time (1 ms from the press's clock), and gives back finished nodes and idle layer mixers.
+- Measured with `Scripts/perf/walks/long-20-sound.json` / `long-60-sound.json` (7.5 min of play from 0:00, per-second "is everything due on the engine", per-minute output level): before 66 of 450 looks silent from 6:24.9; after 0 of 450 on both.
+- Next: `find-out-whether-the-sound-plays-a-fifth-of-a-se`: the engine's clock reads about 180 ms behind the playhead; not yet compared with the picture on screen.

@@ -182,15 +182,30 @@ sound, one mixer per LAYER so the layer's level is one number to move, and an
 — so a piece sped up rises in pitch, exactly as `ClipPiece.soundRatePercent`
 says it should.
 
-- Everything still to come is scheduled against **one engine start**, so two
-  sounds meant to start together do.
+- **Only the stretch just ahead is on the engine** (`AudioScheduleWindow`,
+  PhotonzCore): what starts within twenty seconds of the playhead goes on at
+  the press, the engine tops it up twice a second off its OWN clock (a silent
+  player node started with everything else, never the main thread's clock),
+  and a piece that has finished gives its node back. Until 2026-11-17 the
+  press put the first 48 pieces still to come on the engine and never looked
+  again, so the 20 and 60 minute reference edits played from the start went
+  silent at 6:25 while the picture carried on.
+- Everything at the press is scheduled against **one engine start**, so two
+  sounds meant to start together do; a piece put on later starts at an exact
+  host time worked out from the clock, and lands within a millisecond of where
+  the press would have put it (the speed walk reads this).
 - A scrub mid-play schedules it all again from where the hand put the playhead.
   Nothing is faded: a scrub is somebody looking for a moment.
 - The level is followed on the document's own clock, thirty times a second. A
   duck is a third of a second long, so ten steps make a slide.
-- **`segmentBudget` is 48.** Each piece is an engine node and a decode, and a
-  timeline with more than that alive at once is not one anybody is auditioning
-  by ear. The rest are dropped and `droppedSegments` says how many.
+- **The budget is 48 pieces on the engine AT ONCE** (`AudioScheduleWindow.budget`).
+  Each is an engine node and a decode, and twenty seconds needing more than that
+  is not anybody auditioning by ear. A piece the budget or a stalled top-up kept
+  off is counted, and `droppedSegments` says how many.
+- `Scripts/perf/walks/long-20-sound.json` and `long-60-sound.json` play a
+  reference edit from its start for seven and a half minutes and say, every
+  second, whether each piece due is on the engine and, every minute, how loud
+  the output is.
 
 ---
 

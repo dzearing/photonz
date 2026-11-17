@@ -6939,21 +6939,24 @@ private final class Run {
                     throw Failure(description: "the document is not playing, so nothing can be "
                         + "coming out of it; press play first")
                 }
-                // Everything audible, and everything audible that is still to
-                // come. The engine is loaded once when play starts, so what is
-                // on it is what was still to come THEN — somewhere between the
-                // two, since the playhead has moved since.
+                // What is sounding at the playhead has to be on the engine.
+                // The engine holds only the stretch just ahead
+                // (`AudioScheduleWindow`), so it is never the whole of what
+                // is still to come, and is never more than the mix has.
                 let audible = editor.audioMix.filter(\.isAudible)
-                let stillToCome = audible.filter { $0.endMS > editor.documentTimeMS }.count
+                let now = editor.documentTimeMS
+                let sounding = audible.filter { $0.contains(ms: now) }
                 guard editor.audioPlayer.isPlaying else {
                     throw Failure(description: "the playhead is moving but the sound engine is not "
-                        + "running: \(stillToCome) piece(s) of sound should be playing and none are")
+                        + "running: \(sounding.count) piece(s) of sound should be playing and none are")
                 }
-                let on = editor.audioPlayer.scheduledCount
-                guard on >= max(1, stillToCome), on <= audible.count else {
+                let held = Set(editor.audioPlayer.scheduledSegments)
+                let on = held.count
+                let missing = sounding.filter { !held.contains($0) }
+                guard on <= audible.count, missing.isEmpty else {
                     throw Failure(description: "\(on) piece(s) of sound are on the engine; the mix "
-                        + "has \(audible.count) audible piece(s), \(stillToCome) of them still to "
-                        + "come from \(editor.documentTimeMS) ms")
+                        + "has \(audible.count) audible piece(s), \(sounding.count) of them sounding at "
+                        + "\(now) ms and \(missing.count) of those not on the engine")
                 }
                 note(number, step.name,
                      "sound: the engine is running with \(on) piece(s) of sound scheduled on it",

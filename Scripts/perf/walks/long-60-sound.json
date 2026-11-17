@@ -1,0 +1,24 @@
+{
+  "out": "/tmp/photonz-playtest/speed-long-60-sound",
+  "clock": 1500,
+  "seed": "Plays the 60 minute reference edit from its very start for seven and a half minutes, past the 6 minute 20 second mark where its sound used to stop, and says at every second whether each piece of sound due then is on the engine and at every whole minute how loud the sound coming out is (task find-out-whether-a-long-edit-goes-quiet-after-it). Run by hand: Scripts/playtest.sh Scripts/perf/walks/long-60-sound.json.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 60
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "speed",
+      "measure": "play",
+      "fromMS": 0,
+      "seconds": 450,
+      "form": "long"
+    }
+  ]
+}

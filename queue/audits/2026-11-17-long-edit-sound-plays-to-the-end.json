@@ -1,0 +1,23 @@
+{
+  "feature": "A long edit's sound plays to the end",
+  "epic": "video-perf",
+  "summary": "Played from the start, a 20 or 60 minute edit used to go silent at about 6 minutes 25 seconds while the picture carried on. Now every voice and the music play at their moment for as long as the edit plays.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The edit is the 20 minute reference edit: Scripts/perf/reference-edit.sh 20 opens it in the probe; Scripts/playtest.sh Scripts/perf/walks/long-20-sound.json measures it.",
+  "switched": {},
+  "try": [
+    { "do": "Open a video longer than ten minutes with voices or music all the way through." },
+    { "do": "Press Home, then Space." },
+    { "do": "Leave it playing past the 7 minute mark and listen." },
+    { "do": "Press Space to pause around 8 minutes, click a moment near 15 minutes, press Space again." }
+  ],
+  "evaluate": [
+    "Do you still hear the voices and the music after 6 minutes 30 seconds?",
+    "When a new clip starts mid-play after the first few minutes, is its sound in step with its picture, like the clips at the start?",
+    "Does pressing Space feel as quick as before on a long edit?"
+  ],
+  "rough": [
+    "No pictures: this is about sound, and the walks that measure it photograph nothing. They measure instead: before the fix, 66 of 450 one-second looks found the sound due at the playhead missing from the engine, starting at 6:24.9, and the output level at 7:00 was the music alone (0.018); after it, 0 of 450 on both the 20 and 60 minute edits, and every minute reads voice level (0.023 to 0.042).",
+    "The engine's clock read about 180 ms behind the playhead the whole way through, in both runs, before and after this change. Whether the sound really comes out that late against the picture on screen is not yet measured: find-out-whether-the-sound-plays-a-fifth-of-a-se.",
+    "The two long sound walks take about 16 minutes each, most of it opening the edit, so they are run by hand like the rest of Scripts/perf/walks, never in the walk set."
+  ]
+}
