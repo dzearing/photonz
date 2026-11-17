@@ -23224,3 +23224,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - `AudioScheduleWindow` (PhotonzCore, tested) says what is on the engine: what starts within 20 s of the playhead, budget 48 at once. `DocumentAudioEngine` tops up every 0.5 s on its own queue off a silent clock node, starts late pieces at an exact host time (1 ms from the press's clock), and gives back finished nodes and idle layer mixers.
 - Measured with `Scripts/perf/walks/long-20-sound.json` / `long-60-sound.json` (7.5 min of play from 0:00, per-second "is everything due on the engine", per-minute output level): before 66 of 450 looks silent from 6:24.9; after 0 of 450 on both.
 - Next: `find-out-whether-the-sound-plays-a-fifth-of-a-se`: the engine's clock reads about 180 ms behind the playhead; not yet compared with the picture on screen.
+
+## 2026-11-17 — long edit pass 13 (scrub bar)
+
+- An opaque clip's drop shadow is cast from a white stand-in bitmap, so Core Image keeps the blur across frames: GPU per canvas picture 7.5 -> 2.3 ms, composite 10.8 -> 8.6 ms on the 6 minute reference edit (f87714cbc). Exported stills within a measured tolerance (OpaqueShadowStandInTests).
+- The speed walk's scrub was generous (a nearest-frame stand-in counted as caught up). It now reports the frame lag too and has a "hunt" speed: frame under the hand 5 display frames behind hunting, 35 dragging end to end.
+- Next: per-frame shader compiling (~2 ms), frame uploads and readback; a 0.5 s first read at the start of every hunt; keyframe-only reads while the hand moves fast.

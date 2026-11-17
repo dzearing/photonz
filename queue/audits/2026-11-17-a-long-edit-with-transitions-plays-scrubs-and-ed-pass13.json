@@ -1,0 +1,26 @@
+{
+  "feature": "A long edit scrubs without a stutter (pass 13: the scrub bar)",
+  "epic": "video-perf",
+  "summary": "Each picture of the 6 minute reference edit now costs 8.6 ms to draw instead of 10.8, because a recording's shadow is blurred once and kept rather than blurred again on every frame. The speed walk also now measures the scrub honestly: how far behind the hand the frame really under it is, not just a nearby frame shown in its place.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default. Scripts/perf/reference-edit.sh 6 makes the edit; Scripts/perf/speed-walk.sh measures it.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 6 minute reference edit and press Space: it plays across its dissolves, push and cube.", "shot": "2026-11-17-long-edit-pass13-window-sc.png" },
+    { "do": "Drag the playhead slowly across ten seconds of one take, the way you hunt for a word." },
+    { "do": "Drag the playhead from one end of the edit to the other in about two seconds." },
+    { "do": "Pick a take and look at the corner of the picture under its shadow mid-zoom (0:15): the left half is before, the right half after.", "shot": "2026-11-17-long-edit-pass13-corner-before-after.png" },
+    { "do": "Run Scripts/perf/speed-walk.sh and read the scrub line: two numbers per speed, the picture and the frame under the hand." }
+  ],
+  "evaluate": [
+    "Hunting across ten seconds, does the picture keep up with your hand?",
+    "Dragging end to end in two seconds, does the picture lagging a third of a second behind your hand feel wrong, or is a nearby frame good enough at that speed?",
+    "Mid-zoom, is the slightly crisper corner on the right any change you can see at all?"
+  ],
+  "rough": [
+    "The scrub bar is not reached: the picture still trails the hand by 2 display frames (bar 1). A picture takes 8.6 ms to draw against an 8.3 ms refresh; the GPU's own work is now 2.3 ms, the rest is shader compiling (about 2 ms every frame), handing the frame to the GPU and reading the result back. That is pass 14's lead, in this task's log.",
+    "The old scrub number was generous: it counted the nearest frame already read as caught up. Measured honestly, the frame under the hand trails by 27 to 35 display frames at the median dragging end to end in two seconds, 3 to 5 hunting across ten seconds, and 63 at worst at the start of every hunt (the first frame read takes about half a second).",
+    "Exported pictures changed within a measured tolerance: on five of six moments of the reference edit at most 5 of 7.7 million pixels moved, by one level of 255; at 0:15, mid-zoom, 425 pixels on the clip's own rounded corner moved by up to 21 levels, because the corner is now drawn directly instead of through a resampled copy, so it is crisper.",
+    "Play still drops about 1 frame a minute (bar 0), unchanged by this pass.",
+    "scrub-never-blacks-out-walk fails now and then on timing (the picture 2 frames behind at 1 or 2 of 165 refreshes), on the build without this change as well; it crashed once in an AppKit constraint pass (report Photonz Probe-2026-11-17-024542.ips), not reproduced in 6 more runs. Both are in this task's log."
+  ]
+}
