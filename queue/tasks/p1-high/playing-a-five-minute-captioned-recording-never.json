@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:22:21.058Z",
-  "updated": "2026-11-16T13:17:07.222Z",
+  "updated": "2026-11-17T04:07:56.135Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -262,6 +262,43 @@
     {
       "t": "2026-11-16T13:17:07.221Z",
       "note": "seq 70 -> 50"
+    },
+    {
+      "t": "2026-11-17T03:33:08.702Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-17T04:07:26.709Z",
+      "note": "owns these walks: a-long-captioned-recording-plays-walk"
+    },
+    {
+      "t": "2026-11-17T04:07:41.000Z",
+      "note": "Adversarial review before measuring: a walk keeps the editor window at zero alpha, and a window nobody can see may be drawn less, so a guard read on it says nothing about the window a person watches. Added setup \"shown\" (PlaytestSetup.shown, tested) so the walk keeps the window at full alpha behind the person's windows, the way the old recording window always was. Also: a 20 s play judged only on its LONGEST pass hides how many passes went long, so a guarded wait now also prints how many passes reached its limit (LongPassTally in PhotonzCore, tested, fed by MainThreadMeter)."
+    },
+    {
+      "t": "2026-11-17T04:07:41.000Z",
+      "note": "Measured first, Next defaults, no flags, the five minute talk (openLongTalk) with captions written by Add Captions (captionsWrite: 1140 words in 191 captions). Window invisible: 20 s from the start, longest pass 11.2 ms; 20 s from 10 s before a cut in the middle, longest 18.8 ms; 0 passes over 50 ms in either. Window shown (setup shown, Space to play), four runs: from the start 11.9 / 24.6 / 11.8 / 13.3 ms, across the cut 31.8 / 18.5 / 18.5 ms; 0 passes at or over 50 ms in every run. The 31.8 is the pass Space starts playback in."
+    },
+    {
+      "t": "2026-11-17T04:07:41.000Z",
+      "note": "One outlier: a 71.2 ms pass 19 ms after Space on the first play of an exploratory run that filmed the window (filmWindow sets aside passes while it films, so that run's counting was not like the others). Not seen again in 4 shown runs and 2 hidden ones; noted, not chased."
+    },
+    {
+      "t": "2026-11-17T04:07:41.000Z",
+      "note": "Today's numbers pass, so no app change: the walk is the deliverable. Scripts/playtest/a-long-captioned-recording-plays-walk.json plays 20 s from the start and 20 s across a cut with longestUnderMS 50 on each clock wait and checks the playhead really moved (expectTimeline rate 1). Proved it goes red: the same walk at 10 ms fails, naming the passes ('10 passes at or over 10ms: 31ms at 20104, ...'). Focus drill: clean (0/756 ticks lost, 0 covered). Not a needs-the-Mac walk."
+    },
+    {
+      "t": "2026-11-17T04:07:41.000Z",
+      "note": "Left rough, folded not filed: playback keeps the main thread busy 6.4 to 7.6 s of every 20 s in ~500 passes a second; logged on a-long-edit-with-transitions-plays-scrubs-and-ed, which owns main thread work during playback. Left rough, not filed: a window picture taken while the talk plays takes about 11 s of walk time (harness only; the speed walk task noted the same)."
+    },
+    {
+      "t": "2026-11-17T04:07:56.133Z",
+      "note": "Measured at Next defaults on the five minute captioned talk (191 captions): no main thread pass reached 50 ms while it played, 20 s from the start (longest 11.8 to 24.6 ms) or 20 s across a cut (18.5 to 31.8 ms), window shown, four runs. Nothing to fix; the deliverable is Scripts/playtest/a-long-captioned-recording-plays-walk.json, which fails on any pass of 50 ms or more during playback (proved red at a 10 ms limit), plus setup \"shown\" and a pass count on guarded waits (LongPassTally, tested). playing-a-recording-never-blinks-walk, an-editing-session-walk and a-long-captioned-recording-walk green; focus drill clean; Scripts/test.sh green. Audit queue/audits/2026-11-16-captioned-playback-under-50ms.json. Commit 69ba0fac6."
     }
-  ]
+  ],
+  "started": "2026-11-17T03:33:08.701Z",
+  "walks": [
+    "a-long-captioned-recording-plays-walk"
+  ],
+  "completed": "2026-11-17T04:07:56.134Z"
 }

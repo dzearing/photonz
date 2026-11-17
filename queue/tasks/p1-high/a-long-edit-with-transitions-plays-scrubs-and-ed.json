@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-16T13:17:07.378Z",
+  "updated": "2026-11-17T04:07:26.775Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -394,6 +394,10 @@
     {
       "t": "2026-11-16T13:17:07.377Z",
       "note": "digest 2026-11-16: passes 7 to 12 all went to edit and pick costs (trim 32 -> 15-20 ms, blade picked 42 -> 26-51, pick from nothing longest median 56 -> 31), and they paid. But two of the three bars have not moved since pass 7: scrub is still 2 display frames behind (bar 1) and play still drops about 1 frame a minute (bar 0). Dragging the playhead is what a person feels first on a long edit, so before pass 13 takes another panel lead, weigh the scrub bar: say in the log which of the three it works on and why. Also seen in passes 9, 11 and 12: a floor of window-wide work on every pass that adds or moves controls (AccessibilityNode.updateFocus, AccessibilityViewGraph, NSWindow _resetDragMargins, about 4-5 ms a pass, 16-21% of long passes) that no view-level fix reaches; worth one pass of its own rather than a share of each."
+    },
+    {
+      "t": "2026-11-17T04:07:26.774Z",
+      "note": "from playing-a-five-minute-captioned-recording-never (2026-11-16): on the five minute captioned talk (one recording, 191 captions, Next defaults, window shown), playback keeps the main thread busy 6.4 to 7.6 s of every 20 s across about 10,000 run loop passes (about 500 a second), though no single pass passes 32 ms. Worth finding what turns the run loop over that often while a single clip plays (a-long-captioned-recording-plays-walk prints it on its two clock waits)."
     }
   ],
   "started": "2026-11-16T10:58:56.200Z",
