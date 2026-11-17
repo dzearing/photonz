@@ -473,6 +473,16 @@ final class EditorState {
     /// hand while those are read (`MovieFramesInHand`). What the speed walk's
     /// scrub calls the frame under the hand (`SpeedWalk.ScrubTally`).
     @ObservationIgnored var playtestShownExactMomentMS: Int?
+    /// The frames of recordings the picture on the canvas was drawn from,
+    /// stand-ins and all, kept only while a speed walk's scrub asks
+    /// (`playtestRecordsDrawnFrames`, `SpeedWalk.sightLags`).
+    @ObservationIgnored var playtestShownFrameIDs: Set<UUID>?
+    @ObservationIgnored var playtestRecordsDrawnFrames = false {
+        didSet { playtestDrawnFrameIDs = [:] }
+    }
+    /// ...worked out as each picture is asked for, by its moment, from the
+    /// frames in hand right then.
+    @ObservationIgnored var playtestDrawnFrameIDs: [Int: Set<UUID>] = [:]
     /// Probe only: what Preview found, so a walk can claim it left it so.
     @ObservationIgnored var playtestDocumentBeforePreview: (document: PhotonzDocument, canUndo: Bool, canRedo: Bool)?
     /// Probe only: the Export sheet opens on SVG, because a walk cannot click
@@ -2178,6 +2188,10 @@ final class EditorState {
     /// being read is stood in for from the side it came from.
     @ObservationIgnored var playheadTravel: MovieFramesInHand.Travel = .forward
     @ObservationIgnored var playheadStrideMS = MovieRef.frameStepMS
+    /// How fast a hand on the playhead is moving it, which decides whether the
+    /// frames it crosses are read a stretch at a time or one glimpse at a
+    /// time (`MovieSweep.glimpses`).
+    @ObservationIgnored var playheadPace = MovieSweep.HandPace()
     /// A hand on the playhead that has held still for `MovieSweep.settleMS`,
     /// which is when the frame under it is read sharp; and the wait that
     /// decides it, started again by every move (`EditorState+Time`).
@@ -6513,6 +6527,9 @@ final class EditorState {
                     }
                     #if PHOTONZ_PLAYTEST
                     if frame.tag == Self.drawnFromTheExactFrames { self.playtestShownExactMomentMS = moment }
+                    if self.playtestRecordsDrawnFrames, let moment {
+                        self.playtestShownFrameIDs = self.playtestDrawnFrameIDs[moment]
+                    }
                     #endif
                     if moment != nil {
                         self.recentCompositeTimes.append((frame.drawMS, frame.sinceAskedMS))
@@ -6543,6 +6560,11 @@ final class EditorState {
             .allSatisfy({ pictures.image(for: $0.ref) != nil }) {
             tag = Self.drawnFromTheExactFrames
         }
+        if playtestRecordsDrawnFrames, let pictures {
+            if playtestDrawnFrameIDs.count > 2000 { playtestDrawnFrameIDs = [:] }
+            playtestDrawnFrameIDs[moment] = Set(Self.recordingFrameRefs(in: document)
+                .filter { pictures.image(for: $0) != nil }.map(\.id))
+        }
         #endif
         let asked = tag
         Task {
@@ -6554,6 +6576,24 @@ final class EditorState {
     /// The tag a picture carries when every frame its moment shows was in
     /// hand as it was drawn (`playtestShownExactMomentMS`).
     static let drawnFromTheExactFrames = 1
+
+    #if PHOTONZ_PLAYTEST
+    /// Every frame of a recording a drawn document shows: the pictures of
+    /// the clips on screen at its moment (a drawn document keeps the rest,
+    /// switched off), inside groups and merged clips too.
+    static func recordingFrameRefs(in document: PhotonzDocument) -> [ImageRef] {
+        var ids: [ImageRef] = []
+        func add(_ layers: [Layer]) {
+            for layer in layers where layer.isVisible {
+                if layer.movie != nil, case .image(let ref) = layer.content { ids.append(ref) }
+                add(layer.children)
+            }
+        }
+        add(document.layers)
+        add(document.layersInsideMergedClips)
+        return ids
+    }
+    #endif
 
     /// The colours the canvas is drawn in: the window's own, so a frame goes
     /// up as it is rather than being matched to the screen on the main thread

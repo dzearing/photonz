@@ -1,0 +1,28 @@
+{
+  "feature": "A long edit scrubs without a stutter (pass 14: what a moving hand is shown)",
+  "epic": "video-perf",
+  "summary": "Dragging the playhead fast across the 6 minute edit now shows the recording 4 display frames from your hand at the median, where before the change it was 8 to 22, because a fast hand is shown the key frame nearest it, which decodes on its own. Hunting slowly across a cut no longer shows a stale picture of the next clip for a quarter of a second: the worst moment went from about 214 display frames to 15.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default. Scripts/perf/reference-edit.sh 6 makes the edit; Scripts/perf/speed-walk.sh measures it.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).", "shot": "2026-11-17-a-long-edit-with-transitions-plays-scrubs-and-ed-pass14-1.png" },
+    { "do": "Drag the playhead from one end of the edit to the other in about two seconds and watch the picture." },
+    { "do": "Drag it slowly across ten seconds of the edit that cross a cut, the way you hunt for a moment." },
+    { "do": "Stop the drag anywhere and hold still: the sharp frame follows within a quarter of a second." },
+    { "do": "Run Scripts/perf/speed-walk.sh and read the scrub line: the last number per speed is how far from your hand what it shows of the recording is." }
+  ],
+  "evaluate": [
+    "Dragging end to end fast, does the picture now look like the place your hand is, rather than somewhere it was a moment ago?",
+    "While dragging fast the picture is a key frame (about every two seconds of a recording) rather than the exact frame, as in QuickTime Player. Can you tell, and does it matter at that speed?",
+    "Hunting across a cut, does the next clip's picture appear the moment you cross it?"
+  ],
+  "rough": [
+    "Measured with the new sight lag (how far from the hand, in display refreshes, the recording frames on screen are, along every frame the hand crossed), on one build with this pass's reading switched off and on, two runs each: dragging end to end in 2 s, median 8 to 22 before and 4 to 8 after; hunting 10 s in 2 s, worst 214 to 215 before and 16 to 28 after. Baseline (worst of 3): medium 4 / 67, hunt 2 / 15.",
+    "The older 'frame under the hand' number at medium speed stays at 34 median, 131 worst: a fast hand is now shown key frames on purpose, and that number counts only the exact frame. Hunting, it went from 5 / 63 to 3 / 19.",
+    "The scrub bar (the frame under the pointer within one display frame) is still not reached: what is shown is 2 refreshes from the hand hunting and 4 dragging fast. A hunt's first 0.2 s still shows the frame it started on, the time to decode from the key frame before the hand; that is pass 15's lead, in this task's log.",
+    "Nothing drawn changed: the change is in which frames are read while a hand moves the playhead, not in how a frame is drawn, so the composite path and export are untouched.",
+    "Play still drops 1 to 2 frames a minute (bar 0) and an edit while playing still takes 15 to 46 ms at its longest pass (bar 16), unchanged by this pass.",
+    "clicking-a-timeline-item-moves-the-playhead-walk fails at step 58 (no Add Key row in a clip's right-click menu) on main without this change too; folded into walks-that-fail-in-the-full-sweep-27.",
+    "No mock covers this: nothing on screen changed apart from which frames the picture is drawn from while you drag."
+  ]
+}

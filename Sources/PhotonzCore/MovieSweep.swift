@@ -58,10 +58,20 @@ public enum MovieSweep {
     /// The stretch to start reading for a hand on `handFrame`, or nil when
     /// nothing new needs reading: every frame it is heading for is in hand, or
     /// the stretch already being read (`running`) covers where it is.
+    ///
+    /// A hand moving faster than a stretch can be read (`glimpses`) is given
+    /// the one frame under it instead: by the time a stretch's first frame is
+    /// read the hand has left it, so its frames are a picture of where the
+    /// hand was a moment ago.
     public static func next(handFrame: Int, backward: Bool, movie: MovieRef,
-                            inHand: (Int) -> Bool, running: ClosedRange<Int>?) -> ClosedRange<Int>? {
+                            inHand: (Int) -> Bool, running: ClosedRange<Int>?,
+                            glimpse: Bool = false) -> ClosedRange<Int>? {
         let last = movie.frameIndex(atSourceMS: movie.durationMS)
         let hand = min(max(0, handFrame), last)
+        if glimpse {
+            guard !inHand(hand), running?.contains(hand) != true else { return nil }
+            return hand...hand
+        }
         let reach = lookAheadMS / MovieRef.frameStepMS
         let end = min(max(0, backward ? hand - reach : hand + reach), last)
         let ahead = backward ? Array(stride(from: hand, through: end, by: -1)) : Array(hand...end)
@@ -69,6 +79,76 @@ public enum MovieSweep {
         else { return nil }
         if let running, running.contains(hand) || running.contains(missing) { return nil }
         return window(from: missing, backward: backward, movie: movie)
+    }
+
+    /// Whether a frame a stretch reads is worth turning into a picture for a
+    /// hand on `hand`: not once the hand has passed it by more than
+    /// `behindMS`. Every frame is still decoded, since each is decoded from
+    /// the one before, but making the picture is most of a frame's cost, and
+    /// a hand hunting forwards at five times the speed it plays stays a few
+    /// frames ahead of a stretch that makes every one (2026-11-17: 150 frames
+    /// a second against about 150 made).
+    public static func worthShowing(frame: Int, hand: Int, backward: Bool) -> Bool {
+        let slack = behindMS / MovieRef.frameStepMS
+        return backward ? frame <= hand + slack : frame >= hand - slack
+    }
+
+    // MARK: A hand faster than a stretch can follow
+
+    /// The pace, in milliseconds of the edit a second, past which a hand is
+    /// given the frame under it alone (`next(glimpse:)`): ten times the speed
+    /// it plays. A stretch reads about seven times as fast as a recording
+    /// plays (a 60 frame a second Retina screen recording, 2026-11-17), and a
+    /// hand hunting for a moment moves at about five; a drag from one end of
+    /// a six minute edit to the other in two seconds moves at 180.
+    public static let glimpsePace: Double = 10_000
+
+    public static func glimpses(pace: Double) -> Bool { pace > glimpsePace }
+
+    /// How far ahead of a hunting hand, in milliseconds of the edit, clips it
+    /// is about to cross into are looked for: what it covers in a quarter of
+    /// a second, the time a stretch takes to bring its first frame with
+    /// another read beside it (50 to 100ms alone, 2026-11-17), never more
+    /// than four seconds of the edit.
+    public static func cutReachMS(pace: Double) -> Int {
+        min(4000, max(0, Int(pace * 0.25)))
+    }
+
+    /// ...a tenth of a second of the edit at a time: a clip shorter than that
+    /// is crossed before it could be read anyway.
+    public static let cutStepMS = 100
+
+    /// How fast a hand is moving the playhead, from its moves over the last
+    /// tenth of a second.
+    public struct HandPace: Equatable, Sendable {
+        /// How far back moves count.
+        public static let windowMS: Double = 100
+        /// The shortest time a pace is worked out over, so two moves that
+        /// arrive together do not read as a burst of speed.
+        public static let shortestMS: Double = 16
+
+        private struct Move: Equatable, Sendable {
+            let atMS: Double
+            let momentMS: Int
+        }
+        private var moves: [Move] = []
+
+        public init() {}
+
+        public mutating func moved(toMS moment: Int, atMS time: Double) {
+            moves.append(Move(atMS: time, momentMS: moment))
+            moves.removeAll { $0.atMS < time - Self.windowMS }
+        }
+
+        public mutating func reset() { moves = [] }
+
+        /// Milliseconds of the edit crossed a second; 0 until there are two
+        /// moves to tell it from.
+        public var editMSPerSecond: Double {
+            guard let first = moves.first, let last = moves.last, moves.count > 1 else { return 0 }
+            let span = max(Self.shortestMS, last.atMS - first.atMS)
+            return Double(abs(last.momentMS - first.momentMS)) / span * 1000
+        }
     }
 
     /// How big to keep a frame read in passing, for a canvas that shows it

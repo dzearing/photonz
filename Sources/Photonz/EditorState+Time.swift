@@ -92,6 +92,7 @@ extension EditorState {
         // (`ScrubAudition.swift`). Does nothing unless a drag is in hand.
         auditionScrub()
         if playheadInHand {
+            playheadPace.moved(toMS: landing, atMS: CACurrentMediaTime() * 1000)
             // A moving hand is shown frames read in passing, small; holding
             // still is what earns the sharp one (`MovieSweep`).
             playheadSettled = false
@@ -124,6 +125,8 @@ extension EditorState {
     /// A hand took hold of the playhead.
     func beginPlayheadDrag() {
         playheadInHand = true
+        playheadPace.reset()
+        playheadPace.moved(toMS: documentTimeMS, atMS: CACurrentMediaTime() * 1000)
         beginScrubAudition()
     }
 
@@ -430,16 +433,34 @@ extension EditorState {
             // frame it is about to reach already read. A hand reads a few
             // moves ahead at the stride it is moving at; a clock reads a
             // quarter second ahead.
+            // A hand too fast for a stretch is read one glimpse at a time, of
+            // the frame under it alone (`MovieSweep.glimpses`).
             let way = playheadTravel == .backward ? -1 : 1
+            let glimpsing = playheadInHand && !playheadSettled
+                && MovieSweep.glimpses(pace: playheadPace.editMSPerSecond)
             let (count, stride) = isDocumentPlaying
                 ? (MovieFrameFetcher.playAheadFrames, MovieRef.frameStepMS)
-                : (playheadInHand && !playheadSettled ? MovieFrameFetcher.scrubAheadMoves : 0,
+                : (playheadInHand && !playheadSettled && !glimpsing ? MovieFrameFetcher.scrubAheadMoves : 0,
                    playheadStrideMS)
+            let underHand = wanted.count
             if count > 0 {
                 for step in 1...count {
                     let ahead = documentTimeMS + way * step * stride
                     guard ahead >= 0, ahead <= lastDocumentTimeMS else { break }
                     wanted += document.movieFrames(atTimeMS: ahead)
+                }
+            }
+            // A hand hunting is also read a quarter second of its own pace
+            // ahead, a tenth of a second of the edit at a time, so a clip it
+            // is about to cross into is being read when it gets there: three
+            // moves ahead is 25ms of a hand, and the first frame of a read
+            // takes 50 to 100ms to come (`MovieSweep.cutReachMS`).
+            if playheadInHand, !playheadSettled, !glimpsing {
+                let reach = MovieSweep.cutReachMS(pace: playheadPace.editMSPerSecond)
+                for ahead in Swift.stride(from: MovieSweep.cutStepMS, through: reach, by: MovieSweep.cutStepMS) {
+                    let moment = documentTimeMS + way * ahead
+                    guard moment >= 0, moment <= lastDocumentTimeMS else { break }
+                    wanted += document.movieFrames(atTimeMS: moment)
                 }
             }
             // A hand still moving is fed the stretch it is heading into, read
@@ -459,7 +480,9 @@ extension EditorState {
                 document.moviePlayBackPlaces(atTimeMS: documentTimeMS, speed: $0)
             } ?? []
             movieFrames.fetch(wanted, size: movieDecodeSize(in: document),
-                              handMoving: handMoving, backward: playheadTravel == .backward,
+                              handMoving: handMoving, handPace: playheadPace.editMSPerSecond,
+                              underHand: underHand,
+                              backward: playheadTravel == .backward,
                               playing: playing,
                               playingSpeed: isDocumentPlaying ? abs(documentPlaybackRate) : 1,
                               playingBackward: playingBackward, backPlaces: backPlaces)

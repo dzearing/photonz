@@ -116,4 +116,100 @@ struct MovieSweepTests {
         #expect(rough.height == (1396 * MovieSweep.roughWidth / 2160).rounded())
         #expect(MovieSweep.roughSize(for: CGSize(width: 640, height: 400)) == CGSize(width: 640, height: 400))
     }
+
+    // MARK: A hand faster than a stretch can follow
+
+    @Test("A hand's pace is the edit it crossed over its last tenth of a second")
+    func handPace() {
+        var pace = MovieSweep.HandPace()
+        #expect(pace.editMSPerSecond == 0)
+        pace.moved(toMS: 1000, atMS: 0)
+        #expect(pace.editMSPerSecond == 0)
+        // Five seconds of edit a second, the way a person hunts.
+        for step in 1...12 { pace.moved(toMS: 1000 + step * 42, atMS: Double(step) * 8.33) }
+        #expect(abs(pace.editMSPerSecond - 5000) < 100)
+        #expect(!MovieSweep.glimpses(pace: pace.editMSPerSecond))
+        // Three minutes of edit a second: no stretch keeps up with that.
+        for step in 13...24 { pace.moved(toMS: 1504 + (step - 12) * 1500, atMS: Double(step) * 8.33) }
+        #expect(MovieSweep.glimpses(pace: pace.editMSPerSecond))
+        // Moves that arrive together are not read as a burst of speed.
+        var burst = MovieSweep.HandPace()
+        burst.moved(toMS: 0, atMS: 0)
+        burst.moved(toMS: 40, atMS: 0.5)
+        #expect(!MovieSweep.glimpses(pace: burst.editMSPerSecond))
+        burst.reset()
+        #expect(burst.editMSPerSecond == 0)
+    }
+
+    @Test("A hunting hand looks a quarter second of its pace ahead for clips coming up")
+    func cutReach() {
+        #expect(MovieSweep.cutReachMS(pace: 5000) == 1250)
+        #expect(MovieSweep.cutReachMS(pace: 0) == 0)
+        #expect(MovieSweep.cutReachMS(pace: 9000) <= 4000)
+        #expect(MovieSweep.cutReachMS(pace: 100_000) == 4000)
+    }
+
+    @Test("A hand too fast to follow reads only the frame under it, once")
+    func glimpse() {
+        let next = MovieSweep.next(handFrame: 50, backward: false, movie: movie,
+                                   inHand: { _ in false }, running: nil, glimpse: true)
+        #expect(next == 50...50)
+        // ...nothing when it is in hand already, or being read.
+        #expect(MovieSweep.next(handFrame: 50, backward: false, movie: movie,
+                                inHand: { $0 == 50 }, running: nil, glimpse: true) == nil)
+        #expect(MovieSweep.next(handFrame: 50, backward: false, movie: movie,
+                                inHand: { _ in false }, running: 50...50, glimpse: true) == nil)
+        // A stretch running where the hand is still covers it.
+        #expect(MovieSweep.next(handFrame: 50, backward: false, movie: movie,
+                                inHand: { _ in false }, running: 40...88, glimpse: true) == nil)
+    }
+
+    @Test("A stretch turns into pictures only the frames the hand has not passed")
+    func worthShowing() {
+        let slack = MovieSweep.behindMS / MovieRef.frameStepMS
+        #expect(MovieSweep.worthShowing(frame: 60, hand: 60, backward: false))
+        #expect(MovieSweep.worthShowing(frame: 60 - slack, hand: 60, backward: false))
+        #expect(!MovieSweep.worthShowing(frame: 60 - slack - 1, hand: 60, backward: false))
+        #expect(MovieSweep.worthShowing(frame: 90, hand: 60, backward: false))
+        #expect(MovieSweep.worthShowing(frame: 60 + slack, hand: 60, backward: true))
+        #expect(!MovieSweep.worthShowing(frame: 60 + slack + 1, hand: 60, backward: true))
+        #expect(MovieSweep.worthShowing(frame: 20, hand: 60, backward: true))
+    }
+}
+
+/// A hand too fast for a stretch is shown the key frame nearest it, which
+/// decodes on its own: at three minutes of edit a second, a key frame a
+/// second of film away was under the hand less than a refresh ago.
+@Suite("The key frame nearest a fast hand")
+struct MovieKeyFramesTests {
+
+    @Test("The nearest key frame either side, a tie going to the one behind")
+    func nearest() {
+        let step = MovieRef.frameStepMS
+        let keys = MovieKeyFrames(sourceMS: [0, 59 * step, 118 * step, 177 * step])
+        #expect(keys.nearest(to: 0)?.frame == 0)
+        #expect(keys.nearest(to: 20)?.frame == 0)
+        #expect(keys.nearest(to: 40)?.frame == 59)
+        #expect(keys.nearest(to: 59)?.frame == 59)
+        #expect(keys.nearest(to: 90)?.frame == 118)
+        #expect(keys.nearest(to: 300)?.frame == 177)
+        #expect(MovieKeyFrames(sourceMS: [10 * step, 20 * step]).nearest(to: 15)?.frame == 10)
+        #expect(MovieKeyFrames(sourceMS: []).nearest(to: 15) == nil)
+    }
+
+    @Test("A key frame is asked for at exactly its moment, not its grid frame's")
+    func exactMoment() {
+        // A 60 frame a second recording's key frame at 1.9667s is on grid
+        // frame 59, whose moment (1947ms) is a frame before it.
+        let keys = MovieKeyFrames(sourceMS: [1967, 0])
+        #expect(keys.frames == [0, 59])
+        #expect(keys.nearest(to: 58)?.sourceMS == 1967)
+        #expect(keys.sourceMS == [0, 1967])
+    }
+
+    @Test("Key frames are kept in order, once each")
+    func ordered() {
+        let keys = MovieKeyFrames(sourceMS: [118, 0, 59, 59])
+        #expect(keys.sourceMS == [0, 59, 118])
+    }
 }

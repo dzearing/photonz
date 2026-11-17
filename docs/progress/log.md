@@ -23230,3 +23230,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - An opaque clip's drop shadow is cast from a white stand-in bitmap, so Core Image keeps the blur across frames: GPU per canvas picture 7.5 -> 2.3 ms, composite 10.8 -> 8.6 ms on the 6 minute reference edit (f87714cbc). Exported stills within a measured tolerance (OpaqueShadowStandInTests).
 - The speed walk's scrub was generous (a nearest-frame stand-in counted as caught up). It now reports the frame lag too and has a "hunt" speed: frame under the hand 5 display frames behind hunting, 35 dragging end to end.
 - Next: per-frame shader compiling (~2 ms), frame uploads and readback; a 0.5 s first read at the start of every hunt; keyframe-only reads while the hand moves fast.
+
+## 2026-11-17 — Long edit pass 14: what a moving hand is shown
+
+- Traced the scrub's reads: at medium speed up to 8 stretch reads piled into the decoder (200-600 ms to a first frame each); hunting, a read for a recording the hand had left and pictures made of frames the hand had passed kept the first half second on stand-ins.
+- New speed-walk measure, sight lag (`SpeedWalk.sightLags`, `handPath`): how far from the hand the recording frames on screen are. Now the scrub bar's number.
+- Fast drags show the nearest key frame, read at its exact moment, one at a time (`MovieKeyFrames`); stretches skip frames the hand passed; reads for recordings left behind stop; hunting looks ahead for coming cuts. Sight lag medium 8-22 -> 4-8 median, hunt worst ~214 -> 15-28. Baseline rewritten. Rule in docs/design/video.md 8e.
+- Next: a hunt's first 0.2 s, key frame tables read at open; bars still open (scrub 1 frame, 0 dropped, edits 16 ms).

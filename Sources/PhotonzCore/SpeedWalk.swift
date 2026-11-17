@@ -207,6 +207,14 @@ public enum SpeedWalk {
         /// before 2026-11-17, which does not judge it.
         public var frameLagMedianFrames: Int?
         public var frameLagWorstFrames: Int?
+        /// How many display frames behind the hand the recording on screen
+        /// is, stand-ins and all: the refreshes since the hand was on the
+        /// frames the picture is actually drawn from (`sightLags`). What a
+        /// person sees: a stand-in one frame off reads as nearly caught up,
+        /// one from a second of film away as far behind. Nil in a baseline
+        /// written before 2026-11-17's second pass, which does not judge it.
+        public var sightLagMedianFrames: Int?
+        public var sightLagWorstFrames: Int?
         /// The longest wait between two display refreshes during the drag.
         public var worstFrameMS: Double
         /// How many looks the app answered over the drag, one per refresh it
@@ -233,6 +241,71 @@ public enum SpeedWalk {
         guard !lags.isEmpty else { return (0, 0) }
         let sorted = lags.sorted()
         return (sorted[sorted.count / 2], sorted[sorted.count - 1])
+    }
+
+    /// How far the recording on screen was from the hand at each look, in
+    /// display refreshes, by the frames the picture is drawn from: the time
+    /// between the look and the nearest moment of the drag the hand was on a
+    /// frame, before the look or after it (a stand-in from just ahead of the
+    /// hand, read before it got there, is as near as one just behind), the
+    /// farthest of them when a picture is drawn from several. A frame the
+    /// hand was never on during the drag (a stand-in left from before it) is
+    /// as far away as the drag is long so far. A look whose picture holds no
+    /// frame of a recording (`drawn[i]` nil or empty) judges nothing and is
+    /// left out.
+    ///
+    /// `needed[i]` is the frames the hand's moment needed before look `i`,
+    /// `handAtMS[i]` when the hand was put there, `atMS[i]` when the look was
+    /// taken and `drawn[i]` the frames the picture on screen then was drawn
+    /// from.
+    public static func sightLags(needed: [[UUID]], handAtMS: [Double], drawn: [Set<UUID>?], atMS: [Double],
+                                 refreshMS: Double) -> [Int] {
+        var when: [UUID: [Double]] = [:]
+        for index in needed.indices where index < handAtMS.count {
+            for frame in needed[index] { when[frame, default: []].append(handAtMS[index]) }
+        }
+        var lags: [Int] = []
+        let interval = max(0.001, refreshMS)
+        let first = handAtMS.first ?? 0
+        for index in drawn.indices where index < atMS.count {
+            guard let frames = drawn[index], !frames.isEmpty else { continue }
+            let now = atMS[index]
+            var apart: Double = 0
+            for frame in frames {
+                let visits = when[frame] ?? []
+                let nearest = visits.map { abs(now - $0) }.min() ?? (now - first)
+                apart = max(apart, nearest)
+            }
+            lags.append(max(0, Int((apart / interval).rounded())))
+        }
+        return lags
+    }
+
+    /// Every grid moment a hand crossed on its way through `hand` (where it
+    /// put the playhead at each look, `handAtMS` when), each timed in
+    /// proportion between the two moves either side of it, so a frame it
+    /// passed over between two refreshes has a time too (`sightLags`). Each
+    /// move's own moment is kept as it was; a move that stays put adds one.
+    public static func handPath(hand: [Int], handAtMS: [Double], stepMS: Int) -> [(momentMS: Int, atMS: Double)] {
+        let count = min(hand.count, handAtMS.count)
+        guard count > 0 else { return [] }
+        var path: [(momentMS: Int, atMS: Double)] = [(hand[0], handAtMS[0])]
+        let step = max(1, stepMS)
+        for index in 1..<max(1, count) where index < count {
+            let from = hand[index - 1], to = hand[index]
+            let fromAt = handAtMS[index - 1], toAt = handAtMS[index]
+            if from != to {
+                let way = to > from ? step : -step
+                var moment = from + way
+                while (way > 0 && moment < to) || (way < 0 && moment > to) {
+                    let share = Double(moment - from) / Double(to - from)
+                    path.append((moment, fromAt + share * (toAt - fromAt)))
+                    moment += way
+                }
+            }
+            path.append((to, toAt))
+        }
+        return path
     }
 
     /// How many display frames behind the picture was at each look: the
@@ -568,6 +641,10 @@ public struct SpeedRun: Codable, Equatable, Sendable {
                 out.append(Metric(key: "scrub \(scrub.speed): frame lag median", value: Double(median), unit: .frames))
                 out.append(Metric(key: "scrub \(scrub.speed): frame lag worst", value: Double(worst), unit: .frames))
             }
+            if let median = scrub.sightLagMedianFrames, let worst = scrub.sightLagWorstFrames {
+                out.append(Metric(key: "scrub \(scrub.speed): sight lag median", value: Double(median), unit: .frames))
+                out.append(Metric(key: "scrub \(scrub.speed): sight lag worst", value: Double(worst), unit: .frames))
+            }
             out.append(Metric(key: "scrub \(scrub.speed): time", value: scrub.seconds, unit: .seconds))
         }
         for edit in edits where edit.made != false {
@@ -633,6 +710,12 @@ extension SpeedRun {
                     }
                     if let worst = scrub.frameLagWorstFrames {
                         out.scrubs[i].frameLagWorstFrames = max(out.scrubs[i].frameLagWorstFrames ?? 0, worst)
+                    }
+                    if let median = scrub.sightLagMedianFrames {
+                        out.scrubs[i].sightLagMedianFrames = max(out.scrubs[i].sightLagMedianFrames ?? 0, median)
+                    }
+                    if let worst = scrub.sightLagWorstFrames {
+                        out.scrubs[i].sightLagWorstFrames = max(out.scrubs[i].sightLagWorstFrames ?? 0, worst)
                     }
                     out.scrubs[i].seconds = max(out.scrubs[i].seconds, scrub.seconds)
                     out.scrubs[i].worstFrameMS = max(out.scrubs[i].worstFrameMS, scrub.worstFrameMS)

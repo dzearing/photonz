@@ -185,6 +185,8 @@ actor MovieDecoder {
         }
         pictureGenerators[movie] = nil
         nextPictureLane[movie] = nil
+        glimpseGenerators[movie] = nil
+        keyFrameTables[movie] = nil
     }
 
     /// One frame of one recording, or nil where the file will not give it up.
@@ -237,6 +239,52 @@ actor MovieDecoder {
         let lane = nextLane[key, default: 0]
         nextLane[key] = (lane + 1) % lanes.count
         return lanes[lane]
+    }
+
+    // MARK: Key frames for a hand too fast to follow
+
+    private var keyFrameTables: [UUID: MovieKeyFrames] = [:]
+    /// One reader per recording for key frames, small, apart from the
+    /// playhead's lanes so a fast drag never throws away the generators the
+    /// sharp frame is read with when the hand stops.
+    private var glimpseGenerators: [UUID: (width: Int, generator: AVAssetImageGenerator)] = [:]
+
+    /// Which grid frames of a recording are key frames, from the file's own
+    /// table of samples: nothing is decoded. Nil where the file cannot say.
+    func keyFrames(of movie: MovieRef, at url: URL) async -> MovieKeyFrames? {
+        if let known = keyFrameTables[movie.id] { return known }
+        let asset = AVURLAsset(url: url)
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
+              (try? await track.load(.canProvideSampleCursors)) == true,
+              let cursor = track.makeSampleCursorAtFirstSampleInDecodeOrder() else { return nil }
+        var moments: [Int] = []
+        repeat {
+            if cursor.currentSampleSyncInfo.sampleIsFullSync.boolValue {
+                moments.append(Int((cursor.presentationTimeStamp.seconds * 1000).rounded()))
+            }
+        } while cursor.stepInDecodeOrder(byCount: 1) == 1
+        let keys = MovieKeyFrames(sourceMS: moments)
+        keyFrameTables[movie.id] = keys
+        return keys
+    }
+
+    /// One key frame of a recording, at most `size` big: a single decode.
+    func keyFrame(of movie: MovieRef, at url: URL, sourceMS: Int, size: CGSize) async -> CGImage? {
+        let width = Int(size.width.rounded())
+        let generator: AVAssetImageGenerator
+        if let kept = glimpseGenerators[movie.id], kept.width == width {
+            generator = kept.generator
+        } else {
+            generator = Self.makeGenerator(url: url, size: size)
+            glimpseGenerators[movie.id] = (width, generator)
+        }
+        let time = CMTime(value: CMTimeValue(sourceMS), timescale: 1000)
+        let image = await withCheckedContinuation { continuation in
+            generator.generateCGImageAsynchronously(for: time) { image, _, _ in
+                continuation.resume(returning: image)
+            }
+        }
+        return Self.smoothed(image, of: movie)
     }
 
     // MARK: Pictures along a clip
@@ -608,8 +656,46 @@ final class MovieFrameFetcher {
         let token: UUID
         let frames: ClosedRange<Int>
         let task: Task<Void, Never>
+        /// Where the hand is, shared with the pass as it reads off the main
+        /// actor, so it makes pictures only of frames the hand has not
+        /// passed (`MovieSweep.worthShowing`).
+        let hand: HandMark
+        /// A glimpse for a hand too fast for a stretch: the key frame nearest
+        /// it (`MovieKeyFrames`), or the frame under it until the recording's
+        /// key frames are known (`MovieSweep.next(glimpse:)`). Left to finish
+        /// rather than replaced by the next one: a read stops only between
+        /// frames, and replacing a stretch read at every move piled reads up
+        /// in the decoder, eight at a time, each taking 200 to 600ms to show
+        /// anything (2026-11-17).
+        let glimpse: Bool
     }
     private var sweeps: [UUID: Sweep] = [:]
+    /// The glimpses being read, across every recording: a hand that fast is
+    /// in a different clip, often a different recording, on nearly every
+    /// refresh.
+    private var glimpseRunning = Set<UUID>()
+    /// How many glimpses read at once. Two made no difference to how far
+    /// behind a fast drag the picture was (2026-11-17), and one leaves the
+    /// decoder to the sharp frame the moment the hand stops.
+    static let glimpsesAtOnce = 1
+    /// The glimpses to read once it lands: the newest place the hand asked
+    /// for in each recording while it ran. The one asked for last goes next,
+    /// since that is the recording the hand is in now.
+    private var glimpseNext: [(movie: UUID, start: () -> Void)] = []
+    /// Each recording's key frames, once read (`MovieKeyFrames`).
+    private var keyFrames: [UUID: MovieKeyFrames] = [:]
+    private var keyFramesAsked = Set<UUID>()
+
+    /// The frame a hand is on, for a pass reading off the main actor.
+    final class HandMark: Sendable {
+        private let frame: Mutex<Int?>
+        init(_ frame: Int?) { self.frame = Mutex(frame) }
+        /// Nil until the hand is on the recording.
+        var value: Int? {
+            get { frame.withLock { $0 } }
+            set { frame.withLock { $0 = newValue } }
+        }
+    }
     /// Recordings a one-pass read cannot turn the right way up, which a moving
     /// hand reads frame by frame as before.
     private var unsweepable = Set<UUID>()
@@ -766,7 +852,8 @@ final class MovieFrameFetcher {
     /// the far side of a cut it is about to cross (`backPlaces`,
     /// `MoviePlayBackward`). Any other call stops those blocks.
     func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize,
-               handMoving: Bool = false, backward: Bool = false, playing: MoviePlayPoints? = nil,
+               handMoving: Bool = false, handPace: Double = 0, underHand: Int = .max, backward: Bool = false,
+               playing: MoviePlayPoints? = nil,
                playingSpeed: Double = 1,
                playingBackward: Double? = nil, backPlaces: [MovieBackPlace] = []) {
         if !handMoving { stopSweeps() }
@@ -786,7 +873,7 @@ final class MovieFrameFetcher {
         var wanted: [Read] = []
         var asked = Set<UUID>()
         var focused = Set<UUID>()
-        for request in requests where asked.insert(request.ref.id).inserted {
+        for (place, request) in requests.enumerated() where asked.insert(request.ref.id).inserted {
             let width = size(request)
             guard let url = MovieLibrary.shared.url(for: request.movie) else { continue }
             // The first frame asked of a recording is where its playhead is,
@@ -796,6 +883,7 @@ final class MovieFrameFetcher {
                 focus[request.movie.id] = [frame]
                 if handMoving, !unsweepable.contains(request.movie.id) {
                     sweep(request.movie, url: url, around: frame, backward: backward,
+                          glimpse: MovieSweep.glimpses(pace: handPace), underHand: place < underHand,
                           size: MovieSweep.roughSize(for: width))
                 }
                 if playsAhead, let playing, !unsweepable.contains(request.movie.id) {
@@ -827,6 +915,18 @@ final class MovieFrameFetcher {
             }
             if handMoving, has(request.ref) { continue }
             wanted.append(Read(request: request, size: width, url: url))
+        }
+        // A recording the hand has moved off (the far side of a dissolve it
+        // has left) stops being read: that pass shares the decoder with the
+        // one under the hand, and on 2026-11-17 kept the first half second of
+        // a hunt on stand-ins. A glimpse is left to land: it stops only
+        // between frames, and its first frame is the one it was opened for.
+        if handMoving {
+            for (id, sweep) in sweeps where !focused.contains(id) && !sweep.glimpse {
+                sweep.task.cancel()
+                sweeps[id] = nil
+            }
+            glimpseNext.removeAll { !focused.contains($0.movie) }
         }
         // A recording not on screen yet but about to come on (a clip that
         // starts in a moment) is opened too.
@@ -874,11 +974,48 @@ final class MovieFrameFetcher {
 
     /// Start reading the stretch a hand on `frame` is heading into, unless
     /// it is in hand already or being read (`MovieSweep.next`).
-    private func sweep(_ movie: MovieRef, url: URL, around frame: Int, backward: Bool, size: CGSize) {
+    ///
+    /// A hand too fast for a stretch (`glimpse`) is shown the key frame
+    /// nearest it instead (`MovieKeyFrames`), one read at a time, the newest
+    /// place it asked for once the last lands.
+    ///
+    /// A recording read ahead of the hand (`underHand` false: a clip it is
+    /// about to cross into) has every frame of its stretch made, since the
+    /// hand has not passed any of them yet.
+    private func sweep(_ movie: MovieRef, url: URL, around frame: Int, backward: Bool, glimpse: Bool,
+                       underHand: Bool = true, size: CGSize) {
+        if underHand { sweeps[movie.id]?.hand.value = frame }
+        if glimpse, glimpseRunning.count >= Self.glimpsesAtOnce {
+            glimpseNext.removeAll { $0.movie == movie.id }
+            if sweeps[movie.id]?.frames.contains(frame) == true { return }
+            glimpseNext.append((movie.id, { [weak self] in
+                self?.sweep(movie, url: url, around: frame, backward: backward, glimpse: glimpse,
+                            underHand: underHand, size: size)
+            }))
+            return
+        }
+        if sweeps[movie.id]?.glimpse == true { return }
+        // ...the key frame nearest it, once the recording's key frames are
+        // known (`MovieKeyFrames`); until then, the frame under it.
+        if glimpse, let (key, keyMS) = keyFrame(near: frame, of: movie, url: url) {
+            guard !has(movie.frameRef(atSourceMS: key * MovieRef.frameStepMS)) else { return }
+            sweeps[movie.id]?.task.cancel()
+            let token = UUID()
+            glimpseRunning.insert(token)
+            let task = Task { @MainActor [weak self] in
+                let image = await MovieDecoder.shared.keyFrame(of: movie, at: url, sourceMS: keyMS, size: size)
+                guard let self else { return }
+                if let image { fileRough(image, movie: movie, frameIndex: key) }
+                glimpseLanded(token, of: movie.id)
+            }
+            sweeps[movie.id] = Sweep(token: token, frames: key...key, task: task, hand: HandMark(frame),
+                                     glimpse: true)
+            return
+        }
         guard let frames = MovieSweep.next(
             handFrame: frame, backward: backward, movie: movie,
             inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) },
-            running: sweeps[movie.id]?.frames)
+            running: sweeps[movie.id]?.frames, glimpse: glimpse)
         else { return }
         sweeps[movie.id]?.task.cancel()
         let token = UUID()
@@ -888,15 +1025,44 @@ final class MovieFrameFetcher {
         let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
             guard let self else { return }
             if !swept { unsweepable.insert(movie.id) }
-            if sweeps[movie.id]?.token == token { sweeps[movie.id] = nil }
+            glimpseLanded(token, of: movie.id)
+        }
+        let hand = HandMark(underHand ? frame : nil)
+        let keeps: (@Sendable (Int) -> Bool)? = glimpse ? nil : { @Sendable index in
+            hand.value.map { MovieSweep.worthShowing(frame: index, hand: $0, backward: backward) } ?? true
         }
         let task = Task.detached(priority: .userInitiated) {
-            let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size) { index, image in
+            let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size,
+                                                 keeps: keeps) { index, image in
                 Task { @MainActor in file(index, image) }
             }
             await finished(swept)
         }
-        sweeps[movie.id] = Sweep(token: token, frames: frames, task: task)
+        sweeps[movie.id] = Sweep(token: token, frames: frames, task: task, hand: hand, glimpse: glimpse)
+        if glimpse { glimpseRunning.insert(token) }
+    }
+
+    /// A one-pass read or a key frame finished: free its place, and start the
+    /// newest glimpse waiting if it was the glimpse running.
+    private func glimpseLanded(_ token: UUID, of movie: UUID) {
+        if glimpseRunning.remove(token) != nil {
+            if let newest = glimpseNext.popLast() { newest.start() }
+        }
+        if sweeps[movie]?.token == token { sweeps[movie] = nil }
+    }
+
+    /// The key frame nearest `frame` of a recording, or nil while its key
+    /// frames are not known yet (asked for the first time this is) or where
+    /// it has none to tell.
+    private func keyFrame(near frame: Int, of movie: MovieRef, url: URL) -> (frame: Int, sourceMS: Int)? {
+        if let keys = keyFrames[movie.id] { return keys.nearest(to: frame) }
+        if keyFramesAsked.insert(movie.id).inserted {
+            Task { @MainActor [weak self] in
+                let keys = await MovieDecoder.shared.keyFrames(of: movie, at: url)
+                self?.keyFrames[movie.id] = keys ?? MovieKeyFrames(sourceMS: [])
+            }
+        }
+        return nil
     }
 
     /// Stop every one-pass read: the hand holds still, or let go, or the clock
@@ -904,6 +1070,8 @@ final class MovieFrameFetcher {
     private func stopSweeps() {
         for sweep in sweeps.values { sweep.task.cancel() }
         sweeps.removeAll()
+        glimpseNext.removeAll()
+        glimpseRunning.removeAll()
     }
 
     // MARK: Reading ahead of a playing playhead

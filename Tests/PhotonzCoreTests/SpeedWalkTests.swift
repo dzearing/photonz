@@ -171,6 +171,64 @@ struct SpeedWalkTests {
         #expect(SpeedCompare.regressions(baseline: then, run: run, marginPercent: 0).isEmpty)
     }
 
+    @Test("A scrub's sight lag is how far, in refreshes, the hand was from the frames the picture is drawn from")
+    func scrubSightLag() throws {
+        let a = UUID(), b = UUID(), c = UUID(), d = UUID(), old = UUID()
+        // The hand needs a, then b, then c, then d (a dissolve: c and d).
+        let needed: [[UUID]] = [[a], [b], [c, d], [d]]
+        // Drawn: a on time; a again as a stand-in for b; b standing in for c
+        // and d; then a frame from before the drag, which the hand never
+        // needed, and a picture with no frames of a recording at all.
+        let drawn: [Set<UUID>?] = [[a], [a], [b], [old]]
+        let lags = SpeedWalk.sightLags(needed: needed, handAtMS: [0, 10, 20, 30], drawn: drawn,
+                                       atMS: [10, 20, 30, 40], refreshMS: 10)
+        // On time; a was under the hand two refreshes back; b one before
+        // that; and a frame never under the hand is as far behind as the drag.
+        #expect(lags == [1, 2, 2, 4])
+        // A picture drawn from two frames is as far behind as its older one.
+        let mixed = SpeedWalk.sightLags(needed: [[a], [b], [c, d]], handAtMS: [0, 10, 20],
+                                        drawn: [[a], [b], [a, d]], atMS: [10, 20, 30], refreshMS: 10)
+        #expect(mixed == [1, 1, 3])
+        // A look with nothing drawn yet, or nothing of a recording in it,
+        // judges nothing: a still part of the edit has no frame to be behind.
+        // A stand-in from just ahead of the hand, read before it got there,
+        // is as near as one just behind it.
+        let ahead = SpeedWalk.sightLags(needed: [[a], [b], [c]], handAtMS: [0, 10, 20],
+                                        drawn: [[b], [b], [b]], atMS: [10, 20, 30], refreshMS: 10)
+        #expect(ahead == [0, 1, 2])
+        // A recording used twice in the edit: the nearer visit counts.
+        let twice = SpeedWalk.sightLags(needed: [[a], [b], [c], [a]], handAtMS: [0, 10, 20, 30],
+                                        drawn: [[a], [a], [a], [a]], atMS: [10, 20, 30, 40], refreshMS: 10)
+        #expect(twice == [1, 1, 0, 1])
+        let still = SpeedWalk.sightLags(needed: [[], [a]], handAtMS: [0, 10], drawn: [nil, []],
+                                        atMS: [10, 20], refreshMS: 10)
+        #expect(still.isEmpty)
+        var tally = SpeedWalk.ScrubTally(speed: "hunt", frames: 240, lagMedianFrames: 1, lagWorstFrames: 2,
+                                         worstFrameMS: 9)
+        tally.sightLagMedianFrames = 3
+        tally.sightLagWorstFrames = 7
+        var run = Self.run(dropped: 0, gap: 40, peak: 1000)
+        run.scrubs = [tally]
+        let keys = run.metrics.map(\.key)
+        #expect(keys.contains("scrub hunt: sight lag median"))
+        #expect(keys.contains("scrub hunt: sight lag worst"))
+        var other = run
+        other.scrubs[0].sightLagWorstFrames = 9
+        let both = try #require(SpeedRun.envelope(of: [run, other]))
+        #expect(both.scrubs[0].sightLagWorstFrames == 9)
+        #expect(both.scrubs[0].sightLagMedianFrames == 3)
+    }
+
+    @Test("A hand's path is every grid moment it crossed, timed in proportion between its moves")
+    func handPath() {
+        let path = SpeedWalk.handPath(hand: [0, 100, 100, 40], handAtMS: [0, 10, 20, 30], stepMS: 33)
+        #expect(path.map(\.momentMS) == [0, 33, 66, 99, 100, 100, 67, 40])
+        let times = [0, 3.3, 6.6, 9.9, 10, 20, 25.5, 30]
+        #expect(zip(path.map(\.atMS), times).allSatisfy { abs($0 - $1) < 0.001 })
+        #expect(SpeedWalk.handPath(hand: [], handAtMS: [], stepMS: 33).isEmpty)
+        #expect(SpeedWalk.handPath(hand: [5], handAtMS: [1], stepMS: 33).map(\.momentMS) == [5])
+    }
+
     @Test("A hunting hand drags ten seconds of the edit across two, the way a person looks for a moment")
     func huntingScrub() {
         #expect(PlaytestSpeedMeasure.speeds.contains("hunt"))

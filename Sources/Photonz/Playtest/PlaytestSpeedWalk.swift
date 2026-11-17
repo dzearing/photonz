@@ -194,6 +194,10 @@ final class SpeedWalkProbe {
             editor.beginPlayheadDrag()
             var hand: [Int] = [], handAt: [Double] = [], shown: [Int?] = [], at: [Double] = []
             var exact: [Int?] = []
+            var needed: [[UUID]] = [], neededAt: [Double] = [], drawn: [Set<UUID>?] = []
+            editor.playtestRecordsDrawnFrames = true
+            editor.playtestShownFrameIDs = nil
+            defer { editor.playtestRecordsDrawnFrames = false }
             // The hand moves by the clock, as a person's does: it takes
             // `count` refreshes of the display to cross, and where it is at
             // each look is where the time says, however long the app took to
@@ -217,6 +221,7 @@ final class SpeedWalkProbe {
                 at.append((CACurrentMediaTime() - start) * 1000)
                 shown.append(editor.shownMomentMS)
                 exact.append(editor.playtestShownExactMomentMS)
+                drawn.append(editor.playtestShownFrameIDs)
                 // Past the end, it waits for the picture to arrive where the
                 // hand stopped.
                 if along >= 1, editor.shownMomentMS == editor.documentTimeMS,
@@ -238,12 +243,27 @@ final class SpeedWalkProbe {
                                              movesMade: made, seconds: took)
             tally.frameLagMedianFrames = frameStats.median
             tally.frameLagWorstFrames = frameStats.worst
+            // Every frame the hand crossed, not only where it was at each
+            // look: going fast it crosses a second of film between two
+            // refreshes, and a key frame shown from inside that second was
+            // under it less than a refresh ago (`MovieKeyFrames`).
+            if let document = editor.document {
+                for (moment, time) in SpeedWalk.handPath(hand: hand, handAtMS: handAt, stepMS: MovieRef.frameStepMS) {
+                    needed.append(document.movieFrames(atTimeMS: moment).map(\.ref.id))
+                    neededAt.append(time)
+                }
+            }
+            let sightStats = SpeedWalk.lagStats(SpeedWalk.sightLags(needed: needed, handAtMS: neededAt, drawn: drawn,
+                                                                    atMS: at, refreshMS: refresh))
+            tally.sightLagMedianFrames = sightStats.median
+            tally.sightLagWorstFrames = sightStats.worst
             run.scrubs.append(tally)
             lines.append(String(format: "%@ (%d looks against %d refreshes, %.1fs against %.1fs at the display's pace): the picture "
                                 + "trailed the hand by %d display frames in the middle, %d at worst, and the frame under "
-                                + "the hand by %d in the middle, %d at worst; longest refresh %.0fms",
+                                + "the hand by %d in the middle, %d at worst, and what it shows of the recording by %d "
+                                + "in the middle, %d at worst; longest refresh %.0fms",
                                 speed, made, count, took, Double(count) * refresh / 1000, stats.median, stats.worst,
-                                frameStats.median, frameStats.worst, times.worstMS))
+                                frameStats.median, frameStats.worst, sightStats.median, sightStats.worst, times.worstMS))
         }
         return "scrubbed end to end: " + lines.joined(separator: "; ")
     }

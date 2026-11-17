@@ -788,8 +788,15 @@ write every number into one `speed.json`:
   cut, even with no look inside it), what the sound engine left out, and how
   long the renderer took to draw each picture it was asked for.
 - **scrub**: the playhead dragged end to end in 5 s, 2 s and a third of a
-  second. The hand moves by the clock, as a person's does, so a stall shows as
-  the picture trailing the hand, in display refreshes.
+  second, and hunted across 10 s of the edit in 2 s. The hand moves by the
+  clock, as a person's does, so a stall shows as the picture trailing the
+  hand, in display refreshes, three ways: **lag** (the moment the picture is
+  stamped with; a stand-in counts as caught up), **frame lag** (only a picture
+  drawn from the very frames under the hand counts) and **sight lag** (what a
+  person sees: how many refreshes from the hand the recording frames the
+  picture is drawn from are, along every frame the hand crossed, stand-ins
+  and key frames included; `SpeedWalk.sightLags`, `SpeedWalk.handPath`).
+  Sight lag is the scrub bar's number.
 - **edits**: trim, move, blade, undo, a transition and a title's words, each
   made just ahead of the playhead while it plays, with the longest main thread
   pass from the edit to 1.5 s after.
@@ -816,6 +823,29 @@ last seconds one run differs from the next by half again (the whole run's
 worst gap read 17 to 28 s across four runs of one build on 2026-11-12). The long form (`Scripts/perf/speed-walk.sh --long 6 20 60`, walks in
 `Scripts/perf/walks/`) is a command and never in a sweep;
 `Scripts/perf/compare.sh before.json after.json` sets two runs side by side.
+
+### What a hand on the playhead is shown (2026-11-17)
+
+A recording keeps a whole picture only every so often (about every two seconds
+in a Mac screen recording); any other frame is decoded from the key frame
+before it. So the frames a moving hand is shown depend on how fast it moves
+(`MovieSweep`, `MovieKeyFrames`, `MovieFrameFetcher.sweep`):
+
+1. **Hunting** (under ten seconds of the edit a second, `MovieSweep.glimpses`):
+   the stretch it is heading into is read in one pass, small. Only frames the
+   hand has not passed are made into pictures (`MovieSweep.worthShowing`):
+   making the picture is most of a frame's cost, and a hand at five times
+   playing speed kept pace with a stretch that made every one. Clips it is
+   about to cross into are looked for a quarter second of its pace ahead
+   (`MovieSweep.cutReachMS`), and a read for a recording the hand has left
+   stops, since it shares the decoder.
+2. **Dragging fast** (over ten seconds a second): the key frame nearest the
+   hand, read on its own at exactly its moment in the file, one read at a
+   time, the newest place next. At three minutes of the edit a second a key
+   frame a second of film away was under the hand less than a refresh ago; a
+   stretch started at every move instead piled eight reads into the decoder,
+   each taking 200 to 600 ms to show anything. QuickTime Player does the same.
+3. **Holding still** for 30 ms: the frame under the hand, sharp.
 
 ## 8f. Who may watch the playhead
 
