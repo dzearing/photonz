@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T05:48:39.928Z",
-  "updated": "2026-11-16T13:17:07.295Z",
+  "updated": "2026-11-17T06:11:41.639Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-12 with the reference edit (task a-long-reference-edit-opens-in-the-probe-in-one). Command: Scripts/playtest.sh <copy of Scripts/playtest/reference-edit-opens-walk.json with setup referenceEdit 20 or 60 and expectTimeline lengthMS to match> --no-build. Output, the walk's log: 20 min (177 clips, 125 cuts): 'wait 2.0s, never went quiet ... mainBusy 18286.5ms over 883 passes, longest 13841.7ms from 48ms in'. 60 min (524 clips, 377 cuts): setup's open took ~140 s ('written in 145s', the write itself is under a second), then 'wait 2.0s ... mainBusy 181522.3ms over 3223 passes, longest 134942.9ms from 144ms in', walk ran out of time after 180s. 6 min (55 clips): longest pass on open 2.9 s. Likely suspects to confirm with a profile, not assume: the core's track layout is recomputed per call (trackLayout(), editPoints(onTrack:), editPointCut) and many callers ask per clip or per cut, so work grows with the square of the clip count. In the builder at 60 minutes, landing one clip with PhotonzDocument.land cost ~40 ms and setting one transition with setTransition(at: .edit) ~100 ms, so ReferenceEdit.Builder bypasses them; the timeline's views likely do the same per-clip asking.",
@@ -46,9 +46,55 @@
     {
       "t": "2026-11-16T13:17:07.294Z",
       "note": "seq 80 -> 60"
+    },
+    {
+      "t": "2026-11-17T04:08:45.246Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-17T06:10:39.622Z",
+      "note": "walks reference-edit-opens-walk -> reference-edit-opens-walk, an-hour-long-edit-opens-without-a-freeze-walk"
+    },
+    {
+      "t": "2026-11-17T06:11:11.341Z",
+      "note": "Reproduced 2026-11-16 on HEAD 16426c87f with copies of reference-edit-opens-walk at 6/20/60 (first wait 2 s): longest pass 706 / 1561 / 4004 ms, mainBusy at 60 min 6751 ms. Better than the 2026-11-12 numbers (earlier perf commits) but still over every bar."
+    },
+    {
+      "t": "2026-11-17T06:11:11.406Z",
+      "note": "Cause 1 (the 4 s): bisected with switches (dock, panel, lanes, gaps, points, clips). A painting lane refused to paint any clip whose sound shape was not read yet (TimelinePaint waveformMissing), so at open V1 and Music built a full bar for every clip (378 clips + 378 sounds + 53 music) plus a view per cut, then threw them away when the shapes landed. Fix: such a clip is painted flat and the lane asks SoundLibrary for the shape (TimelinePaint.paints, TimelineTrackRow.paintedBars). Test: TimelinePaintTests.aSoundNotReadYetIsStillPainted. 60 min: 4004 -> 639 ms."
+    },
+    {
+      "t": "2026-11-17T06:11:11.470Z",
+      "note": "Cause 2: Ztabby (the user's window switcher) reads every new window's accessibility tree; SwiftUI then walks every focus responder per node, asking each AppKit-backed view for its focus item (94% of the read; xctrace --all-processes). The window had 2913 NSViews, 837 of the 947 hosted ones the walk's own markers (PanelTargetView 308, HoverTargetView 254, HelpAnchorView 146, ReadoutAnchorView 129), hung even with timedWithoutMarkers because the reference edit opens in setup. Harness: setup now takes markers down before opening the reference edit when timedWithoutMarkers is set; a guarded first wait keeps them down."
+    },
+    {
+      "t": "2026-11-17T06:11:11.539Z",
+      "note": "Cause 3: the hour edit's 126 Zoom rows were all built. ZoomLane now builds its contents only within a screen's height of the visible tracks (BuiltNearSight in ZoomLane.swift), an empty row of the same height otherwise; its frame for box picks is still reported. Build pass 554 -> ~460, accessibility read 640 -> ~325 with markers up."
+    },
+    {
+      "t": "2026-11-17T06:11:11.603Z",
+      "note": "Cause 4: a video opening straight into Edit built ruler, rows and panel in one pass. openInItsMode now starts the arrival at .timeline; the rows come a pass after the grid appears (arriveAfterTheWindowDraws, with a 0.5 s fallback when the grid never shows), then the panel sections a pass each, as View to Edit already did. Shared timeline code, so Current gets it too: a perf change with no visible difference beyond rows landing a pass late."
+    },
+    {
+      "t": "2026-11-17T06:11:11.668Z",
+      "note": "After, markers down (what a person's app does): worst pass 60 min 228-239 ms (bar 250, met), 20 min 184-185 (bar 100, NOT met), 6 min 171 (bar 100, NOT met); the window answers clicks well within 2 s. Markers up: 327 / 1168 / 404. What is left at 6 and 20 is the editor window's own first build (a 12 MP png opens with a 143 ms pass), so meeting 100 ms means making every editor window open cheaper. New guard walk an-hour-long-edit-opens-without-a-freeze-walk (60 min, markers down, first wait under 300 ms; measured 230)."
+    },
+    {
+      "t": "2026-11-17T06:11:11.733Z",
+      "note": "Checked: Scripts/test.sh green (exit 0). Walks ok: an-hour-long-edit-opens-without-a-freeze-walk, reference-edit-opens-walk, painted-clips-take-a-hand-walk, timeline-right-click-menus-walk, a-zoom-follows-the-cursor-walk, box-over-zooms-and-keys-keeps-both-walk, right-click-keeps-the-playhead-walk, zoom-bar-scrolls-at-the-edge-walk, pick-several-zooms-walk, box-picks-everything-it-touches-walk, a-sound-s-waveform-follows-its-level-walk, and 9 of 10 sampled recording walks; a-transition-is-picked-at-the-cut-walk failed at step 46 (Fade In 0.51s), already failing in the last sweep and owned by walks-that-fail-in-the-full-sweep-27. Audit: queue/audits/2026-11-16-an-hour-long-edit-opens-in-a-few-seconds-not-two.json."
+    },
+    {
+      "t": "2026-11-17T06:11:11.798Z",
+      "note": "Left rough, not filed: with markers up, Ztabby's accessibility read of the 20 min edit still costs about 1 s; with markers down no such pass appears in a 5 s wait, so a person should not see it. Gaps between clips are still a view each (about 100 ms of the accessibility read at 60 min)."
+    },
+    {
+      "t": "2026-11-17T06:11:41.638Z",
+      "note": "60 min bar met (worst pass 4004 -> ~230 ms, fe7326e96); 6 and 20 min still 171 and 185 ms against 100 ms: what is left is the editor window's own first build. Open for that."
     }
   ],
   "walks": [
-    "reference-edit-opens-walk"
-  ]
+    "reference-edit-opens-walk",
+    "an-hour-long-edit-opens-without-a-freeze-walk"
+  ],
+  "started": "2026-11-17T04:08:45.245Z"
 }

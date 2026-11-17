@@ -23202,3 +23202,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Fix: a wrap is dropped once its store no longer holds that picture under its ref (`letGoOfWrapsTheStoreDropped`, `ContentCacheTests`). After: levels 1093-1240 MB, +7% minute 2 to 10, peak 2100 MB.
 - Checks: `Scripts/perf/speed-walk.sh --memory` (ceiling 2500 MB, growth 10%, seeded scrub places, 10 Hz sampler keeping each second's max); every speed walk writes the app's peak before its export and the export's own peak, both in `short-6.json`. docs/design/memory.md "Playing a long video".
 - Open: an export holds ~4 GB whatever its length (`find-out-why-exporting-a-video-holds-about-4-gb`, p2).
+
+## 2026-11-16 — long edits open without the big freeze (task an-hour-long-edit-opens-in-a-few-seconds-not-two)
+
+- Painting lanes now paint clips whose waveform is not read yet (flat until it lands) instead of building a full bar each; Zoom rows build only near the visible tracks; a video opening in Edit brings its rows and panel in a pass after the window; the reference-edit setup honours timedWithoutMarkers.
+- Worst pass while opening (markers down): 60 min 4004 -> ~230 ms, 20 min 1561 -> 185, 6 min 706 -> 171. Commit fe7326e96. New walk an-hour-long-edit-opens-without-a-freeze-walk.
+- Next: the 6 and 20 minute bars (100 ms) need the editor window's own first build to get cheaper (a plain picture opens with a 143 ms pass). Open question: Ztabby's accessibility read of a new window is costly when the walk's markers are hung; with them down it did not show.

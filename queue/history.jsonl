@@ -17673,3 +17673,14 @@
 {"t":"2026-11-17T04:07:26.711Z","ev":"task_walks","id":"playing-a-five-minute-captioned-recording-never","walks":["a-long-captioned-recording-plays-walk"]}
 {"t":"2026-11-17T04:07:26.776Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-17T04:07:56.136Z","ev":"task_done","id":"playing-a-five-minute-captioned-recording-never","from":"in_progress","note":"Measured at Next defaults on the five minute captioned talk (191 captions): no main thread pass reached 50 ms while it played, 20 s from the start (longest 11.8 to 24.6 ms) or 20 s across a cut (18.5 to 31.8 ms), window shown, four runs. Nothing to fix; the deliverable is Scripts/playtest/a-long-captioned-recording-plays-walk.json, which fails on any pass of 50 ms or more during playback (proved red at a 10 ms limit), plus setup \"shown\" and a pass count on guarded waits (LongPassTally, tested). playing-a-recording-never-blinks-walk, an-editing-session-walk and a-long-captioned-recording-walk green; focus drill clean; Scripts/test.sh green. Audit queue/audits/2026-11-16-captioned-playback-under-50ms.json. Commit 69ba0fac6."}
+{"t":"2026-11-17T04:08:45.251Z","ev":"task_started","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","title":"An hour-long edit opens in a few seconds, not two minutes of a frozen app","priority":"p1-high"}
+{"t":"2026-11-17T06:10:39.624Z","ev":"task_walks","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","walks":["reference-edit-opens-walk","an-hour-long-edit-opens-without-a-freeze-walk"]}
+{"t":"2026-11-17T06:11:11.343Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T06:11:11.408Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T06:11:11.472Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T06:11:11.541Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T06:11:11.605Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T06:11:11.670Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T06:11:11.735Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T06:11:11.800Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T06:11:41.640Z","ev":"task_pending","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","from":"in_progress","note":"60 min bar met (worst pass 4004 -> ~230 ms, fe7326e96); 6 and 20 min still 171 and 185 ms against 100 ms: what is left is the editor window's own first build. Open for that."}
