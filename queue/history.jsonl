@@ -17872,3 +17872,12 @@
 {"t":"2026-11-17T20:49:04.793Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-17T20:49:04.871Z","ev":"task_walks","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","walks":["open-out-the-timeline-walk","timeline-pinch-both-ways-walk","first-long-jump-when-zoomed-in-walk","clip-pictures-when-zoomed-in-walk","cut-on-the-timeline-walk","key-lanes-walk","transitions-where-clips-meet-walk","speed-walk","painted-clips-take-a-hand-walk","a-cut-slid-under-a-still-pointer-walk","a-painted-gap-takes-a-right-click-walk"]}
 {"t":"2026-11-17T20:49:33.976Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 9 landed 06d8034f3: busy lanes paint the gaps between clips and build only the gap under the pointer (its press and Ripple Delete menu kept). Near-Fit zoom 22.5 -> 17.4 ms; quiet-Mac zoom 13.2 -> ~9.3 ms median, scroll 10.4 -> 8.3. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open for painted cuts and the clips' paint."}
+{"t":"2026-11-17T20:50:06.565Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-17T22:28:14.536Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T22:28:14.614Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
+{"t":"2026-11-17T22:28:14.687Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-17T22:28:14.767Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-17T22:28:14.843Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-17T22:28:14.920Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-17T22:28:15.016Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-17T22:28:35.126Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 10 landed 940443e11: per-frame answers (alternate shading, cut ids, waveform points, band layers) no longer worked out on every zoom frame. Near Fit 17.1 -> 16.1 ms mean, zoom in 14.8 -> 14.0, scroll 11.3 -> 10.5; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: lanes drawn outside SwiftUI's per-frame graph)."}
