@@ -56,6 +56,18 @@ import Testing
         #expect(TimelinePaint.builds(fromMS: 410_000, toMS: 420_000, stretch: stretch, isKept: false, lanePaints: false))
     }
 
+    /// A sound whose shape has not been read yet is painted all the same,
+    /// as the flat bar a full view draws while it waits, and the lane asks
+    /// for the shape. Keeping such a clip a view was every clip of a long
+    /// edit at the moment it opens: the 60 minute reference edit built about
+    /// 430 bars and as many cuts, held the main thread for four seconds, and
+    /// threw them all away when the shapes landed (2026-11-16).
+    @Test func aSoundNotReadYetIsStillPainted() {
+        var waiting = plain
+        waiting.waveformMissing = true
+        #expect(TimelinePaint.paints(waiting))
+    }
+
     @Test func aPlainClipIsPainted() {
         #expect(TimelinePaint.paints(plain))
     }
@@ -79,7 +91,6 @@ import Testing
             { $0.hasDrift = true },
             { $0.levelHasPoints = true },
             { $0.soundHasBadge = true },
-            { $0.waveformMissing = true },
         ]
         for change in changes {
             var clip = plain

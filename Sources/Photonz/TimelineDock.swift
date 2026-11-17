@@ -577,6 +577,7 @@ struct TimelineDock: View {
                     .frame(height: Self.scrollerStrip, alignment: .bottom)
             }
             .panelReadout(editorState.timelineRowsReading)
+            .onAppear { editorState.arriveAfterTheWindowDraws() }
         } }
         } else {
             Color.clear

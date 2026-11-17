@@ -106,7 +106,10 @@ public enum TimelinePaint {
         public var levelHasPoints = false
         /// A gain, a cleaned sound or a cleaning in progress, as a badge.
         public var soundHasBadge = false
-        /// Its sound's shape is not read yet: the bar asks for it.
+        /// Its sound's shape is not read yet. It is painted all the same, as
+        /// the flat bar a full view draws while it waits, and the lane asks
+        /// for the shape: keeping it a view made every clip of a long edit a
+        /// view at the moment it opened (2026-11-16).
         public var waveformMissing = false
 
         public init() {}
@@ -115,7 +118,7 @@ public enum TimelinePaint {
     public static func paints(_ clip: Clip) -> Bool {
         !clip.isKept && clip.isPlainKind && clip.pieceCount == 1 && !clip.isHeld && !clip.pictureHidden
             && !clip.hasBadge && !clip.hasKeys && !clip.hasDrift
-            && !clip.levelHasPoints && !clip.soundHasBadge && !clip.waveformMissing
+            && !clip.levelHasPoints && !clip.soundHasBadge
     }
 
     // MARK: While the timeline zooms

@@ -1847,6 +1847,29 @@ final class EditorState {
         if viewEditMode == .view, document.hasTime {
             editArrival = .start
             advanceEditArrivalOnceTheSlideLands()
+        } else if document.hasTime {
+            // Opening straight into Edit, the window comes up with its ruler
+            // and tool bar, and the tracks' rows and the panel's sections
+            // follow a pass each once it has drawn (`arriveAfterTheWindowDraws`):
+            // built in the one pass, the hour-long reference edit held the
+            // main thread about 400ms before its window showed (2026-11-16).
+            editArrival = .timeline
+            // A window whose tracks are tucked away never builds the grid
+            // that says it has drawn: the rest comes in regardless.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.arriveAfterTheWindowDraws()
+            }
+        }
+    }
+
+    /// Called once the timeline's grid has been built in a window that
+    /// opened straight into Edit: the rows come in on a pass of their own,
+    /// and the panel's sections a pass each after them.
+    func arriveAfterTheWindowDraws() {
+        guard !isWatching, editArrival == .timeline else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
+            guard let self, !self.isWatching, self.editArrival == .timeline else { return }
+            self.advanceEditArrival()
         }
     }
 

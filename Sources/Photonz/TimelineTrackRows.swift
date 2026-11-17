@@ -869,6 +869,9 @@ struct TimelineTrackRow: View {
                 if let played = known.playedSound {
                     wave = SoundLibrary.shared.waveform(for: played)
                     facts.waveformMissing = wave == nil
+                    // Painted flat until the shape lands, and asked for
+                    // here, since no bar of its own is built to ask.
+                    if wave == nil { SoundLibrary.shared.loadWaveform(for: played) }
                 }
                 guard TimelinePaint.paints(facts) else { continue }
                 ids.insert(clip.layerID)
@@ -889,6 +892,9 @@ struct TimelineTrackRow: View {
                 if group.isSound, let played = known.playedSound {
                     wave = SoundLibrary.shared.waveform(for: played)
                     facts.waveformMissing = wave == nil
+                    // Painted flat until the shape lands, and asked for
+                    // here, since no bar of its own is built to ask.
+                    if wave == nil { SoundLibrary.shared.loadWaveform(for: played) }
                 }
                 sound = TimelinePaintedClips.Bar(
                     layerID: clip.layerID, name: group.layerName, bar: soundTime,

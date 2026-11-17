@@ -52,6 +52,26 @@ struct ZoomLane: View {
     var body: some View { readingALatePass { lateBody } }
 
     @ViewBuilder private var lateBody: some View {
+        // Built only near the part of the tracks on screen: the hour-long
+        // reference edit has 126 Zoom lanes, and a header, bars and grips for
+        // every one of them held the main thread for a fifth of a second as
+        // the window opened, and twice that again the first time anything
+        // read the window's accessibility (2026-11-16). Out of sight it is an
+        // empty row of the same height, so nothing below it moves.
+        BuiltNearSight(height: Self.height) {
+            lane.playtestField("Zoom lane")
+        }
+        // Where the lane is down the tracks, for a box drawn over them
+        // (`EditorState+TrackRange`), built or not.
+        .onGeometryChange(for: CGRect.self) { proxy in
+            proxy.frame(in: .named(TimelineDock.tracksSpace))
+        } action: { frame in
+            if !isLifted { editorState.zoomLaneRows[layerID] = frame.minY...frame.maxY }
+        }
+        .onDisappear { if !isLifted { editorState.zoomLaneRows[layerID] = nil } }
+    }
+
+    private var lane: some View {
         HStack(spacing: TimelineDock.gap) {
             Self.header(indent: indent, isLit: allPicked)
                 .contentShape(Rectangle())
@@ -62,16 +82,6 @@ struct ZoomLane: View {
                 .playtestControl("Zoom lane label", detail: "Timeline")
             ZoomBarsView(layerID: layerID, laneWidth: laneWidth, isLocked: isLocked)
         }
-        .frame(height: Self.height)
-        .playtestField("Zoom lane")
-        // Where the lane is down the tracks, for a box drawn over them
-        // (`EditorState+TrackRange`).
-        .onGeometryChange(for: CGRect.self) { proxy in
-            proxy.frame(in: .named(TimelineDock.tracksSpace))
-        } action: { frame in
-            if !isLifted { editorState.zoomLaneRows[layerID] = frame.minY...frame.maxY }
-        }
-        .onDisappear { if !isLifted { editorState.zoomLaneRows[layerID] = nil } }
     }
 
     // MARK: Where the bars go
@@ -349,5 +359,34 @@ private struct ZoomBarsView: View {
             let _ = pressed != nil ? editorState.timelineMenuBuilt(for: .zoom(ref)) : ()
             MenuRowsView(rows: editorState.zoomMenuRows(ref))
         }
+    }
+}
+
+/// A row of the timeline's tracks built only while it is within a screen's
+/// height of the part of the tracks on screen, and an empty row of the same
+/// height the rest of the time, so a long edit's rows far down the list cost
+/// nothing to open, lay out or read aloud. Outside a scroller it is always
+/// built.
+struct BuiltNearSight<Content: View>: View {
+    let height: CGFloat
+    @ViewBuilder let content: () -> Content
+    @State private var isNear = false
+
+    var body: some View {
+        Group {
+            if isNear { content() } else { Color.clear }
+        }
+        .frame(height: height)
+        .onGeometryChange(for: Bool.self) { proxy in
+            guard let shown = proxy.bounds(of: .scrollView) else { return true }
+            return Self.isNear(CGRect(origin: .zero, size: proxy.size), shown: shown)
+        } action: { isNear = $0 }
+    }
+
+    /// Whether a row at `row` is within a screen's height of `shown`, the
+    /// scroller's visible stretch, both in the row's own space.
+    static func isNear(_ row: CGRect, shown: CGRect) -> Bool {
+        let reach = max(shown.height, 1)
+        return row.maxY >= shown.minY - reach && row.minY <= shown.maxY + reach
     }
 }

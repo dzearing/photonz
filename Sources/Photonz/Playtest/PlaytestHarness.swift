@@ -546,6 +546,14 @@ private final class Run {
         }
         // The reference edit, written fresh and open before step one.
         if let minutes = script.setup.referenceEdit {
+            // Timed without markers, the edit opens with them down, and a
+            // guarded wait as the first step keeps them down while it reads
+            // the opening: hung, the walk's own markers were 837 of the 947
+            // views AppKit hosted in the window of the 20 minute edit, and
+            // building them, and reading them for accessibility, was most of
+            // what opening it cost in a walk (2026-11-16). A person's window
+            // has none of them.
+            if timesWithoutMarkers { await takeTheMarkersDownForATimedStep() }
             do {
                 note(0, "setup", try await openReferenceEdit(minutes: minutes))
             } catch {
