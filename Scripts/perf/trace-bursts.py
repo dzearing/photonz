@@ -9,6 +9,9 @@
 #       [--focus 'SymbolSubstring']   only bursts holding a frame with that in its name
 #       [--list]                      one line per long burst, in time order
 #       [--passes]                    cut by the probe's own pass marks instead of by gaps
+#       [--process Photonz]           only that process: for a trace recorded with
+#                                     --all-processes instead of --attach, which is how
+#                                     to catch a window's opening in a walk's setup
 #
 # --passes needs the trace recorded with the os_signpost instrument as well
 # (`--instrument os_signpost` after the template): the probe's main thread
@@ -33,6 +36,7 @@ ap.add_argument('--top', type=int, default=25)
 ap.add_argument('--focus', default=None)
 ap.add_argument('--list', action='store_true')
 ap.add_argument('--passes', action='store_true')
+ap.add_argument('--process', default=None, help='only this process (a trace recorded with --all-processes), e.g. Photonz')
 ap.add_argument('--share', nargs='*', default=[], help='say what share of the long passes has each of these in its stack')
 args = ap.parse_args()
 
@@ -84,6 +88,9 @@ samples = []  # (time ns, weight ms, [frame names leaf first])
 for row in root.iter('row'):
     th = row.find('thread')
     if th is None or 'Main Thread' not in (resolve(th).get('fmt') or ''): continue
+    if args.process:
+        pr = row.find('process')
+        if pr is None or args.process not in (resolve(pr).get('fmt') or ''): continue
     t = row.find('sample-time')
     if t is None: continue
     t = int(resolve(t).text)

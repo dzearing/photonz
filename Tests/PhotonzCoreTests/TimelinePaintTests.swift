@@ -36,6 +36,15 @@ import Testing
         #expect(!TimelinePaint.lanePaints(clipsInSight: 5, clipsOnTrack: 5, clipsInEdit: 60))
     }
 
+    /// The 20 minute reference edit (177 clips) is a long edit: built as a
+    /// full bar each, the clips of its quiet tracks made the pass its rows
+    /// arrived in 120 to 135 ms, against about 55 painted (2026-11-16).
+    @Test func theTwentyMinuteReferenceEditPaintsItsQuietTracks() {
+        #expect(TimelinePaint.lanePaints(clipsInSight: 6, clipsOnTrack: 9, clipsInEdit: 177))
+        #expect(TimelinePaint.lanePaints(clipsInSight: 4, clipsOnTrack: 4, clipsInEdit: 100))
+        #expect(!TimelinePaint.lanePaints(clipsInSight: 4, clipsOnTrack: 4, clipsInEdit: 99))
+    }
+
 
     /// On a lane that paints, a clip or cut in the lane's sight but off the
     /// stretch the painting covers is off screen: it is not built at all,

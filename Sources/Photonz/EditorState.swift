@@ -1672,7 +1672,7 @@ final class EditorState {
     /// Settled whenever nothing is arriving.
     private(set) var editArrival: EditModeArrival = .settled
     /// One pass on. Called by the editor view once the last stage has drawn.
-    func advanceEditArrival() {
+    func advanceEditArrival(animated: Bool = true) {
         guard let next = editArrival.next else { return }
         if isWatching {
             // Behind View nothing is on screen to slide, and a pass while the
@@ -1699,6 +1699,7 @@ final class EditorState {
         }
         // On the same curve as the switch, so the tool bar that comes in
         // here slides up after the rest rather than appearing.
+        guard animated else { editArrival = next; return }
         withAnimation(.viewEditMode) { editArrival = next }
     }
     /// Edit's pieces (the tool bar, the tracks, and the panel where
@@ -1806,6 +1807,7 @@ final class EditorState {
         // Built behind View already, it simply slides in; and leaving for
         // View keeps it, out of sight, for the next time.
         var startArriving = false
+        arrivesFromOpening = false
         if mode == .edit {
             editSlideLands = Date(timeIntervalSinceNow: ViewEditMode.transitionSeconds)
             if editPiecesAsleep { editPiecesAsleep = false }
@@ -1835,6 +1837,7 @@ final class EditorState {
         forgetPreview()
         pickedBeforeView = nil
         editArrival = .settled
+        arrivesFromOpening = false
         isEditorKeptBehindView = false
         timelineTracksShown = true
         viewEditMode = Self.walkOpensRecordingsInEdit
@@ -1848,28 +1851,57 @@ final class EditorState {
             editArrival = .start
             advanceEditArrivalOnceTheSlideLands()
         } else if document.hasTime {
-            // Opening straight into Edit, the window comes up with its ruler
-            // and tool bar, and the tracks' rows and the panel's sections
-            // follow a pass each once it has drawn (`arriveAfterTheWindowDraws`):
-            // built in the one pass, the hour-long reference edit held the
-            // main thread about 400ms before its window showed (2026-11-16).
-            editArrival = .timeline
+            // Opening straight into Edit, the window comes up with its canvas,
+            // the dock's bar and the panel's frame, and the ruler with the
+            // tool bar, the tracks' rows and the panel's sections follow a
+            // pass each once it has drawn (`arriveAfterTheWindowDraws`).
+            // Built in the one pass, the hour-long reference edit held the
+            // main thread about 400ms before its window showed; with the
+            // ruler and tool bar in it too, the 6 and 20 minute edits' first
+            // pass was 110 to 140ms against 50 to 65 without (2026-11-16).
+            editArrival = .start
+            arrivesFromOpening = true
             // A window whose tracks are tucked away never builds the grid
             // that says it has drawn: the rest comes in regardless.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.arriveAfterTheWindowDraws()
+            for wait in [0.5, 1.0] {
+                DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in
+                    self?.arriveAfterTheWindowDraws()
+                }
             }
         }
+        // The timeline holds the keyboard from the moment it shows, so a
+        // recording plays on L at once (`TimelineKeyboard`). Taken here, as
+        // the document lands, rather than by the dock's key catcher as it
+        // joins the window: changed there, in the middle of SwiftUI putting
+        // the window's views in, it set off a whole update of the window
+        // nested inside that one, about 36ms of the 20 minute edit's
+        // opening (2026-11-16).
+        if document.hasTime, !timelineHasKeyboard { timelineHasKeyboard = true }
     }
 
-    /// Called once the timeline's grid has been built in a window that
-    /// opened straight into Edit: the rows come in on a pass of their own,
-    /// and the panel's sections a pass each after them.
+    /// Whether the arrival under way is a window that opened straight into
+    /// Edit, which goes on from its first stage once the window has drawn
+    /// rather than once a slide lands (`arriveAfterTheWindowDraws`).
+    @ObservationIgnored private var arrivesFromOpening = false
+
+    /// A window made to open a file, until the file has landed in it: it is
+    /// laid out empty and out of sight first, and the file comes a turn later
+    /// (`ImageEditorRootView`, `OpeningVeil`).
+    @ObservationIgnored var awaitsAFile = false
+
+    /// Called once the timeline's dock has been built in a window that
+    /// opened straight into Edit: the ruler and the tool bar come in on a
+    /// pass of their own, the rows on the next, and the panel's sections a
+    /// pass each after them.
     func arriveAfterTheWindowDraws() {
-        guard !isWatching, editArrival == .timeline else { return }
+        let from = editArrival
+        guard !isWatching, from == .timeline || (from == .start && arrivesFromOpening) else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
-            guard let self, !self.isWatching, self.editArrival == .timeline else { return }
-            self.advanceEditArrival()
+            guard let self, !self.isWatching, self.editArrival == from else { return }
+            // Opening, the tool bar is simply there when the window shows:
+            // nothing slides, since nothing was on screen before.
+            self.advanceEditArrival(animated: !(from == .start && self.arrivesFromOpening))
+            if self.editArrival.next == nil { self.arrivesFromOpening = false }
         }
     }
 

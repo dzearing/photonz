@@ -36,8 +36,11 @@ public enum TimelinePaint {
     public static let busyLane = 24
 
     /// An edit holding at least this many clips across its tracks paints
-    /// every track, however few clips each holds.
-    public static let longEdit = 200
+    /// every track, however few clips each holds. 200 until 2026-11-16, when
+    /// the 20 minute reference edit (177 clips) built every clip of its quiet
+    /// tracks as a full bar and the pass its rows arrived in took 120 to 135
+    /// ms; painted, about 55.
+    public static let longEdit = 100
 
     public static func lanePaints(clipsInSight: Int, clipsOnTrack: Int = 0, clipsInEdit: Int = 0) -> Bool {
         clipsInSight >= busyLane || clipsOnTrack >= busyLane || clipsInEdit >= longEdit

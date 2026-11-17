@@ -23208,3 +23208,12 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Painting lanes now paint clips whose waveform is not read yet (flat until it lands) instead of building a full bar each; Zoom rows build only near the visible tracks; a video opening in Edit brings its rows and panel in a pass after the window; the reference-edit setup honours timedWithoutMarkers.
 - Worst pass while opening (markers down): 60 min 4004 -> ~230 ms, 20 min 1561 -> 185, 6 min 706 -> 171. Commit fe7326e96. New walk an-hour-long-edit-opens-without-a-freeze-walk.
 - Next: the 6 and 20 minute bars (100 ms) need the editor window's own first build to get cheaper (a plain picture opens with a 143 ms pass). Open question: Ztabby's accessibility read of a new window is costly when the walk's markers are hung; with them down it did not show.
+
+## 2026-11-16 — long edits open under 100 ms a pass (`an-hour-long-edit-opens-in-a-few-seconds-not-two`)
+
+- A window opening a file is made hidden (`OpeningVeil`, `EditorState.awaitsAFile`) and the file lands a run-loop turn later, so making the window and building the document are two main thread passes; the canvas's hide-until-sized reveals it as before.
+- Opening a video into Edit starts at `EditModeArrival.keyPass`: ruler and tool bar come a pass after the dock draws, without a slide. The timeline takes the keyboard in `openInItsMode` (written from `CatcherView.viewDidMoveToWindow` it set off a nested whole-window update).
+- `TimelinePaint.longEdit` 200 -> 100, so the 20 minute reference edit paints its quiet tracks.
+- Worst pass while opening, first window: 6 min 171 -> 72-80 ms, 20 min 185 -> 71-78, 60 min 230 -> 93-97; 12 MP picture 150 -> 64. New guard `a-twenty-minute-edit-opens-without-a-pause-walk` (120 ms); hour guard tightened to 150.
+- Harness: an `open` step resets the main thread meter (and drops markers in a timedWithoutMarkers walk). `Scripts/perf/trace-bursts.py --process` reads an `--all-processes` trace, the way to catch an opening in a walk's setup.
+- Next: nothing open on this task. Ztabby's accessibility read of a new window (75-80 ms at 20 min) is the slowest opening pass left.

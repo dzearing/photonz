@@ -580,7 +580,10 @@ struct TimelineDock: View {
             .onAppear { editorState.arriveAfterTheWindowDraws() }
         } }
         } else {
+            // A window that opened straight into Edit draws this empty
+            // first, and the ruler and rows come in once it has.
             Color.clear
+                .onAppear { editorState.arriveAfterTheWindowDraws() }
         }
         }
         .frame(height: bodyHeight)

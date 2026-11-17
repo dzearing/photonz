@@ -1,27 +1,28 @@
 {
   "feature": "A long edit opens without freezing",
   "epic": "video-perf",
-  "summary": "The hour-long reference edit opens with its longest main thread pause at about 230 ms, down from 4 s today and 135 s on 2026-11-12. The 20 minute edit's worst pause is about 185 ms and the 6 minute edit's about 170 ms. Those two are still above their 100 ms bar, so the task stays open.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. The hour-long edit is Scripts/perf/reference-edit.sh 60 (it writes and opens the project).",
+  "summary": "The 6, 20 and 60 minute reference edits now open with no main thread pause over 100 ms, as the first window of a run. Worst pauses at the start of this task were 171, 185 and 230 ms; at the start of the whole task (2026-11-12) 2.9 s, 14 s and 135 s.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Scripts/perf/reference-edit.sh 6, 20 or 60 writes and opens the project.",
   "switched": {},
   "try": [
-    { "do": "Run Scripts/perf/reference-edit.sh 60 --no-open, then open the project it prints with File > Open.", "shot": "2026-11-16-hour-edit-opens-1.png" },
+    { "do": "Run Scripts/perf/reference-edit.sh 20 and watch the window appear.", "shot": "2026-11-16-twenty-min-edit-opens.png" },
     { "do": "Click a clip on V1 as soon as the window appears." },
-    { "do": "Scroll the tracks down past the first Zoom rows, then back up." },
-    { "do": "Open the 6 minute edit the same way (reference-edit.sh 6) and watch the tracks and the panel come in.", "shot": "2026-11-16-hour-edit-opens-6min.png" },
-    { "do": "Press Space to play, and Space again to stop." }
+    { "do": "Run Scripts/perf/reference-edit.sh 60 and click the ruler at 30:00 the moment it shows.", "shot": "2026-11-16-hour-edit-opens-2.png" },
+    { "do": "Open a large screenshot with File > Open and check the window comes up already sized to it." },
+    { "do": "Open a 6 minute edit (reference-edit.sh 6), press Space to play and Space to stop." }
   ],
   "evaluate": [
-    "Does the hour-long edit's window answer your first click straight away?",
-    "When the window opens, do you notice the track rows or the panel sections landing a moment after the ruler?",
-    "Scrolling the tracks quickly, do you ever see a Zoom row empty before its bars draw?",
-    "Do V1's waveforms appear within a second or so of opening?"
+    "Does each window appear in one go, already sized and drawn, with no empty frame or jump in size?",
+    "Does the tool bar under the picture simply sit there when the window shows, rather than sliding up?",
+    "On the 20 minute edit, do the quiet tracks (V2 to V4, titles) look the same as before now that their clips are painted rather than built one by one?",
+    "Does the first click land straight away on all three edits?"
   ],
   "rough": [
-    "Measured with the walk's markers down, as a person's app has none (worst pass, ms; before is today's build at the start of this task with markers up, the only way it could be measured then): 60 min 4004 -> 228 to 239; 20 min 1561 -> 184 to 185; 6 min 706 -> 171. With the markers up as before: 60 min 327, 20 min 1168, 6 min 404, most of which is the walk's own 837 hidden marker views being read for accessibility.",
-    "The 6 and 20 minute edits are still over the 100 ms bar. What is left is the window's first build (ruler, tool bar, canvas, empty panel); a plain screenshot opens with a 143 ms pass, so getting there means making every editor window cheaper to open. This task (an-hour-long-edit-opens-in-a-few-seconds-not-two) stays open for it.",
-    "Ztabby, running on this Mac, reads every new window's accessibility tree; on the hour edit that read cost 640 ms when every zoom row was built. With the zoom rows built only near the screen and the walk markers down, no such pass shows up in a 5 second wait.",
-    "Opening straight into Edit now brings the tracks' rows in a pass after the ruler, and the panel's sections a pass each after that, as switching from View to Edit already did. A video opened in Current gets the same, since the timeline files are shared.",
-    "No mock covers opening speed; nothing on screen differs from before once the window has opened."
+    "Worst main thread pass while opening, first window of a run, walk markers down (ms, before -> after): 6 min 171 -> 72 to 80; 20 min 185 -> 71 to 78; 60 min 228-239 -> 93 to 97. A second window opened beside one already open: 20 min 105 -> 58 to 76. A 12 megapixel picture: 150 -> 64.",
+    "What changed: a window opening a file is made and laid out hidden first, and the file lands in it a turn later, so making the window and building the document are two passes instead of one; it is shown, as before, once it has been sized to what it holds. A video opening into Edit now brings the ruler and tool bar a pass after the window draws (no slide), and an edit of 100 clips or more paints its quiet tracks' clips instead of building a bar for each (was 200).",
+    "The timeline takes the keyboard as the document lands, not when its key catcher joins the window: changed there, it set off a whole update of the window inside SwiftUI's own, about 36 ms of the 20 minute edit's opening.",
+    "Ztabby, the window switcher on this Mac, still reads each new window's accessibility tree a moment after it opens; that read is now 75 to 80 ms on the 20 minute edit (was about 92) and it is the slowest pass left on the 6 minute one.",
+    "The window opening shared code, so Current gets the same opening; nothing on screen differs once the window is open. No mock covers opening speed.",
+    "Guards: an-hour-long-edit-opens-without-a-freeze-walk now fails at 150 ms (was 300), and the new a-twenty-minute-edit-opens-without-a-pause-walk at 120 ms."
   ]
 }

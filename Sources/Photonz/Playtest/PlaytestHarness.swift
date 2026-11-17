@@ -1148,6 +1148,15 @@ private final class Run {
 
         case .open(let file, let size):
             let url = try fileURL(file)
+            // An open is timed like a click: the wait after it reads what
+            // opening this file cost, not everything since the walk began,
+            // and in a walk that says so the markers are down while the new
+            // window builds, the way the reference edit opens in setup. Before
+            // 2026-11-16 a second open's wait read the first window's passes.
+            await takeTheMarkersDownForATimedStep()
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
             try await open(url, size: size, number: number)
 
         case .wait(let seconds, let onTheClock, let longestUnderMS, let busyUnderMS):

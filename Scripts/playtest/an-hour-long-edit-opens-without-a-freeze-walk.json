@@ -1,14 +1,27 @@
 {
   "out": "/tmp/photonz-playtest/an-hour-long-edit-opens-without-a-freeze-walk",
-  "seed": "The hour-long reference edit (524 clips, 377 cuts, 126 zooms) opens without freezing the app, exactly as a person running Next gets it with no flag touched. Setup writes the 60 minute edit and opens it with the walk's own markers down (timedWithoutMarkers: hung, they were 837 of the window's 947 AppKit views and most of what opening cost in a walk), and the first wait reads every main thread pass of the opening: none may reach 300 ms. On 2026-11-12 the longest pass was 135 s; on 2026-11-16 before this walk's fix 4.0 s, because every clip with a sound not read yet was built as a full bar; after it about 230 ms. The task's bar is 250 ms; the guard sits at 300 so a busy Mac does not turn it red. The timeline then holds the hour and the window is photographed.",
+  "seed": "The hour-long reference edit (524 clips, 377 cuts, 126 zooms) opens without freezing the app, exactly as a person running Next gets it with no flag touched. Setup writes the 60 minute edit and opens it with the walk's own markers down (timedWithoutMarkers: hung, they were 837 of the window's 947 AppKit views and most of what opening cost in a walk), and the first wait reads every main thread pass of the opening: none may reach 150 ms. On 2026-11-12 the longest pass was 135 s; on 2026-11-16 4.0 s, then 230 ms once clips waiting for their sound's shape were painted, then 97 ms once the window was made a pass before the file landed in it and the ruler and tool bar came a pass after it drew. The task's bar is 250 ms; the guard sits at 150 so a busy Mac does not turn it red. The timeline then holds the hour and the window is photographed.",
   "setup": {
-    "forget": ["all"],
+    "forget": [
+      "all"
+    ],
     "referenceEdit": 60,
     "timedWithoutMarkers": true
   },
   "steps": [
-    { "do": "wait", "seconds": 3, "longestUnderMS": 300 },
-    { "do": "expectTimeline", "lengthMS": 3600000, "playheadMS": 0 },
-    { "do": "snapshot", "name": "1-opened" }
+    {
+      "do": "wait",
+      "seconds": 3,
+      "longestUnderMS": 150
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 3600000,
+      "playheadMS": 0
+    },
+    {
+      "do": "snapshot",
+      "name": "1-opened"
+    }
   ]
 }

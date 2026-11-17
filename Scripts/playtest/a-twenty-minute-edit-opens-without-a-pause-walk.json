@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/a-twenty-minute-edit-opens-without-a-pause-walk",
+  "seed": "The 20 minute reference edit (177 clips, 125 cuts) opens with no main thread pass a person would feel, at Next defaults with no flag touched, as the first window of the run. Setup writes it and opens it with the walk's markers down (timedWithoutMarkers), and the first wait reads every pass of the opening. On 2026-11-12 the longest was 14 s, on 2026-11-16 184 ms, then 74 to 78 ms once the window was made a pass before the file landed in it, the ruler and tool bar came a pass after it drew, and its quiet tracks painted their clips instead of building a bar each. The task's bar is 100 ms; the guard sits at 120 so a busy Mac does not turn it red.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 20,
+    "timedWithoutMarkers": true
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 3,
+      "longestUnderMS": 120
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 1200000,
+      "playheadMS": 0
+    },
+    {
+      "do": "snapshot",
+      "name": "1-opened"
+    }
+  ]
+}

@@ -12,7 +12,14 @@ import SwiftUI
 struct ImageEditorRootView: View {
     let windowID: EditorWindowID?
     @Environment(AppCoordinator.self) private var coordinator
-    @State private var editorState = EditorState()
+    @State private var editorState: EditorState
+
+    init(windowID: EditorWindowID?) {
+        self.windowID = windowID
+        let editor = EditorState()
+        if case .file = windowID { editor.awaitsAFile = true }
+        _editorState = State(initialValue: editor)
+    }
 
     /// Whether this window is the New window File ▸ New opens: a fresh window, in a
     /// release that has one.
@@ -42,6 +49,7 @@ struct ImageEditorRootView: View {
             // Standard document behavior: confirm before closing with unsaved
             // edits, and show the edited dot in the close button meanwhile.
             .background(WindowCloseGuard(editorState: editorState))
+            .background(OpeningVeil(editorState: editorState))
             .onChange(of: editorState.hasUnsavedChanges) { _, dirty in
                 editorState.hostWindow?.isDocumentEdited = dirty
             }
@@ -83,7 +91,17 @@ struct ImageEditorRootView: View {
                             editorState.hostWindow?.close()
                         }
                     }
+                    // A file lands a turn after its window is made, so making
+                    // the window (laid out empty, out of sight) and building
+                    // the document into it are two passes of the main thread
+                    // rather than one: in one, the 20 minute reference edit
+                    // held it 135 to 145ms before its window showed, and a
+                    // 12 megapixel picture about 150ms; in two, neither
+                    // passes 85ms (2026-11-16). The window stays hidden until
+                    // it has been sized to what it holds (`OpeningVeil`).
+                    if editorState.awaitsAFile { try? await Task.sleep(for: .milliseconds(1)) }
                     editorState.seed(from: windowID, capture: coordinator.capture)
+                    editorState.awaitsAFile = false
                     // A window a guide opened for itself starts that guide as
                     // soon as its sample picture is in it, so picking the
                     // tutorial off the menu is one step, not two.
@@ -143,5 +161,41 @@ struct VideoEditorRootView: View {
                 guard ready else { return }
                 TutorialLauncher.startPendingGuide(in: state)
             }
+    }
+}
+
+/// Keeps a window that is opening a file out of sight from the moment it is
+/// made until the file has landed in it, been sized to it and drawn
+/// (`EditorState.awaitsAFile`). The file lands a turn after the window is
+/// made, and without this the empty editor would show for that turn at
+/// SwiftUI's default size before the window jumped to the picture's. Once the
+/// canvas is in the window the editor's own hide-until-sized takes over
+/// (`EditorState.canvasDidMoveToWindow`), with the same safety net: a window
+/// still hidden after a moment is shown whatever has happened.
+struct OpeningVeil: NSViewRepresentable {
+    let editorState: EditorState
+
+    func makeNSView(context: Context) -> VeilView {
+        let view = VeilView()
+        view.editorState = editorState
+        return view
+    }
+
+    func updateNSView(_ nsView: VeilView, context: Context) {}
+
+    final class VeilView: NSView {
+        weak var editorState: EditorState?
+        private var veiled = false
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard !veiled, let window, editorState?.awaitsAFile == true else { return }
+            veiled = true
+            window.alphaValue = 0
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak window] in
+                guard let window, window.alphaValue < 1 else { return }
+                window.alphaValue = 1
+            }
+        }
     }
 }
