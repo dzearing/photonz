@@ -17684,3 +17684,11 @@
 {"t":"2026-11-17T06:11:11.735Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
 {"t":"2026-11-17T06:11:11.800Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
 {"t":"2026-11-17T06:11:41.640Z","ev":"task_pending","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","from":"in_progress","note":"60 min bar met (worst pass 4004 -> ~230 ms, fe7326e96); 6 and 20 min still 171 and 185 ms against 100 ms: what is left is the editor window's own first build. Open for that."}
+{"t":"2026-11-17T06:24:09.944Z","ev":"slice_pass","walks":31,"passed":31,"failed":0,"seconds":590,"of":1174,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-17T06:24:10.130Z","ev":"task_started","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","title":"An hour-long edit opens in a few seconds, not two minutes of a frozen app","priority":"p1-high"}
+{"t":"2026-11-17T07:45:33.328Z","ev":"task_walks","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","walks":["reference-edit-opens-walk","an-hour-long-edit-opens-without-a-freeze-walk","a-twenty-minute-edit-opens-without-a-pause-walk"]}
+{"t":"2026-11-17T07:45:33.403Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T07:45:33.471Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T07:45:33.538Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T07:45:33.607Z","ev":"task_note","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two"}
+{"t":"2026-11-17T07:46:03.380Z","ev":"task_done","id":"an-hour-long-edit-opens-in-a-few-seconds-not-two","from":"in_progress","note":"All three edits open with no main thread pass over 100 ms as the first window of a run (6 min 72-80, 20 min 71-78, 60 min 93-97; were 171/185/230 at the start of this run, 2.9 s/14 s/135 s on 2026-11-12). The file lands a pass after its hidden window is made, the ruler and tool bar a pass after the dock, the 20 min edit paints its quiet tracks, and the keyboard is taken as the document lands. Commit 27c069202; guards an-hour-long-edit-opens-without-a-freeze-walk (150 ms) and a-twenty-minute-edit-opens-without-a-pause-walk (120 ms); 20 walks ok; Scripts/test.sh green. Audit queue/audits/2026-11-16-an-hour-long-edit-opens-in-a-few-seconds-not-two.json."}

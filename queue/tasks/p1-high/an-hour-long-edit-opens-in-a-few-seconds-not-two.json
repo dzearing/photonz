@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T05:48:39.928Z",
-  "updated": "2026-11-17T06:11:41.639Z",
+  "updated": "2026-11-17T07:46:03.379Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-12 with the reference edit (task a-long-reference-edit-opens-in-the-probe-in-one). Command: Scripts/playtest.sh <copy of Scripts/playtest/reference-edit-opens-walk.json with setup referenceEdit 20 or 60 and expectTimeline lengthMS to match> --no-build. Output, the walk's log: 20 min (177 clips, 125 cuts): 'wait 2.0s, never went quiet ... mainBusy 18286.5ms over 883 passes, longest 13841.7ms from 48ms in'. 60 min (524 clips, 377 cuts): setup's open took ~140 s ('written in 145s', the write itself is under a second), then 'wait 2.0s ... mainBusy 181522.3ms over 3223 passes, longest 134942.9ms from 144ms in', walk ran out of time after 180s. 6 min (55 clips): longest pass on open 2.9 s. Likely suspects to confirm with a profile, not assume: the core's track layout is recomputed per call (trackLayout(), editPoints(onTrack:), editPointCut) and many callers ask per clip or per cut, so work grows with the square of the clip count. In the builder at 60 minutes, landing one clip with PhotonzDocument.land cost ~40 ms and setting one transition with setTransition(at: .edit) ~100 ms, so ReferenceEdit.Builder bypasses them; the timeline's views likely do the same per-clip asking.",
@@ -90,11 +90,41 @@
     {
       "t": "2026-11-17T06:11:41.638Z",
       "note": "60 min bar met (worst pass 4004 -> ~230 ms, fe7326e96); 6 and 20 min still 171 and 185 ms against 100 ms: what is left is the editor window's own first build. Open for that."
+    },
+    {
+      "t": "2026-11-17T06:24:10.125Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-17T07:45:33.326Z",
+      "note": "walks reference-edit-opens-walk, an-hour-long-edit-opens-without-a-freeze-walk -> reference-edit-opens-walk, an-hour-long-edit-opens-without-a-freeze-walk, a-twenty-minute-edit-opens-without-a-pause-walk"
+    },
+    {
+      "t": "2026-11-17T07:45:33.401Z",
+      "note": "Profiled (xctrace --all-processes; Scripts/perf/trace-bursts.py now takes --process) the opening passes left at 6/20 min. Three causes: (1) making the window, reading the package and SwiftUI building the document ran in one run-loop pass; ImageEditorRootView now marks a .file window awaitsAFile, OpeningVeil keeps it at alpha 0 from its first mount, and the seed waits 1 ms so it lands a pass later (the canvas's own hide-until-sized then reveals it as before). (2) Opening into Edit now starts at keyPass: the ruler and tool bar come a pass after the dock draws (arriveAfterTheWindowDraws, no animation on that step). (3) The 20 min edit's quiet tracks built a full bar per clip (rows pass 120-135 ms); TimelinePaint.longEdit 200 -> 100 (test theTwentyMinuteReferenceEditPaintsItsQuietTracks). Also the timeline takes the keyboard in openInItsMode, not in CatcherView.viewDidMoveToWindow, where the write set off a nested whole-window update (~36 ms)."
+    },
+    {
+      "t": "2026-11-17T07:45:33.469Z",
+      "note": "Chose deferring the file a pass (window hidden meanwhile) over also holding the tool bar back until the document: with both, the tool bar's first build landed cold in the document's pass and read 135 ms; deferring alone, 72-80. Harness: an open step now resets the main thread meter and, in a timedWithoutMarkers walk, takes the markers down, so the wait after a second open reads that open."
+    },
+    {
+      "t": "2026-11-17T07:45:33.536Z",
+      "note": "After (first window of a run, markers down, worst pass): 6 min 72-80 ms, 20 min 71-78, 60 min 93-97; second window 58-76; 12 MP png 150 -> 64. Guards: hour walk 300 -> 150 ms, new a-twenty-minute-edit-opens-without-a-pause-walk at 120. Walks ok: both guards, reference-edit-opens, playback-speed-on-the-reference-edit, a-fitted-picture-clears-the-tool-bar, a-small-svg-opens-big-enough, a-saved-icon-opens-as-an-icon, a-recording-that-opens-into-edit-fits-above-the-timeline, a-recording-opens-in-the-editor-at-defaults, a-project-whose-files-moved, a-saved-looping-turn-plays-at-defaults, a-video-edit-saves-as-a-project, command-s-saves-a-video-project, front-door-recent-documents, motion-pivot-reads-once, close-a-trimmed-recording, view-mode-and-edit-mode, view-to-edit-on-a-long-recording, timeline-right-click-menus, painted-clips-take-a-hand, an-editing-session. Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-17T07:45:33.605Z",
+      "note": "Left rough, not filed: Ztabby's accessibility read of a new window is now the slowest opening pass left (75-80 ms at 20 min); under the bar; SwiftUI visits every focus responder per node."
+    },
+    {
+      "t": "2026-11-17T07:46:03.377Z",
+      "note": "All three edits open with no main thread pass over 100 ms as the first window of a run (6 min 72-80, 20 min 71-78, 60 min 93-97; were 171/185/230 at the start of this run, 2.9 s/14 s/135 s on 2026-11-12). The file lands a pass after its hidden window is made, the ruler and tool bar a pass after the dock, the 20 min edit paints its quiet tracks, and the keyboard is taken as the document lands. Commit 27c069202; guards an-hour-long-edit-opens-without-a-freeze-walk (150 ms) and a-twenty-minute-edit-opens-without-a-pause-walk (120 ms); 20 walks ok; Scripts/test.sh green. Audit queue/audits/2026-11-16-an-hour-long-edit-opens-in-a-few-seconds-not-two.json."
     }
   ],
   "walks": [
     "reference-edit-opens-walk",
-    "an-hour-long-edit-opens-without-a-freeze-walk"
+    "an-hour-long-edit-opens-without-a-freeze-walk",
+    "a-twenty-minute-edit-opens-without-a-pause-walk"
   ],
-  "started": "2026-11-17T04:08:45.245Z"
+  "started": "2026-11-17T06:24:10.124Z",
+  "completed": "2026-11-17T07:46:03.378Z"
 }
