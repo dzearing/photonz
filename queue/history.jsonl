@@ -17861,3 +17861,4 @@
 {"t":"2026-11-17T18:21:55.283Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-17T18:21:55.355Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
 {"t":"2026-11-17T18:22:12.368Z","ev":"task_walks","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","walks":["speed-walk","scrub-never-blacks-out-walk"]}
+{"t":"2026-11-17T18:22:28.459Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 15 landed 45bd07794: the reference edit's recordings no longer share frame ids (scrub numbers before were flattered), and a fast drag shows each clip its own key frame where the hand is going: medium drag 2 refreshes behind in the middle, 34 at worst (honest before: 4 and 163); a hunt from rest moves from its first frame. Bars not reached (scrub 1 refresh: 2 dragging, 3 hunting; 0 dropped: 1 a minute; edits 16 ms: 16-43). Stays open; pass 16 leads in the log."}

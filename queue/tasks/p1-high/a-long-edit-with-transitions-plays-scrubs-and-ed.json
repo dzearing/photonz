@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-17T18:22:12.367Z",
+  "updated": "2026-11-17T18:22:28.458Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -498,6 +498,10 @@
     {
       "t": "2026-11-17T18:22:12.366Z",
       "note": "walks speed-walk, scrub-never-blacks-out-walk, keyframe-anything-walk -> speed-walk, scrub-never-blacks-out-walk"
+    },
+    {
+      "t": "2026-11-17T18:22:28.457Z",
+      "note": "Pass 15 landed 45bd07794: the reference edit's recordings no longer share frame ids (scrub numbers before were flattered), and a fast drag shows each clip its own key frame where the hand is going: medium drag 2 refreshes behind in the middle, 34 at worst (honest before: 4 and 163); a hunt from rest moves from its first frame. Bars not reached (scrub 1 refresh: 2 dragging, 3 hunting; 0 dropped: 1 a minute; edits 16 ms: 16-43). Stays open; pass 16 leads in the log."
     }
   ],
   "started": "2026-11-17T15:40:48.533Z",
