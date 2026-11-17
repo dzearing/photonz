@@ -17699,3 +17699,17 @@
 {"t":"2026-11-17T11:04:32.252Z","ev":"task_walks","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","walks":["speed-walk","scrub-never-blacks-out-walk","keyframe-anything-walk"]}
 {"t":"2026-11-17T11:04:32.320Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 13 landed f87714cbc: an opaque clip's shadow is blurred once instead of every frame (composite 10.8 -> 8.6 ms, GPU 7.5 -> 2.3 ms), and the speed walk now measures the frame really under the hand: 5 display frames hunting, 35 dragging end to end. Bars not reached (scrub 1 frame: picture 2; 0 dropped: 1 a minute; edits 16 ms). Stays open; pass 14 leads in the log."}
 {"t":"2026-11-17T11:05:07.929Z","ev":"task_created","id":"the-app-crashed-in-nsapplication-photonz-nexteve","priority":"p1-high","title":"The app crashed in NSApplication.photonz_nextEvent"}
+{"t":"2026-11-17T11:23:53.287Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T11:23:53.322Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-17T11:23:53.356Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-17T11:25:56.598Z","ev":"slice_pass","walks":31,"passed":28,"failed":3,"seconds":582,"of":1175,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-17T11:25:56.779Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-17T11:26:44.842Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
+{"t":"2026-11-17T14:30:14.663Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-17T14:56:34.494Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T14:56:34.562Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T14:56:34.628Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T14:56:34.693Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T14:56:34.759Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T14:56:34.829Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T14:56:56.020Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 14 landed eac64b97e: a fast drag of the playhead now shows the key frame nearest the hand and a hunt reads only what the hand has not passed; what is on screen is 4 refreshes from the hand dragging fast (was 8-22) and 15-28 at worst hunting across a cut (was ~214). Bars not reached (scrub 1 frame: 2 hunting, 4 fast; 0 dropped: 1-2 a minute; edits 16 ms: 15-46). Stays open; pass 15 leads in the log."}

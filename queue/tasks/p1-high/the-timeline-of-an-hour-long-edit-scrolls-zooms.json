@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-16T21:42:23.800Z",
+  "updated": "2026-11-17T11:23:53.321Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -261,6 +261,10 @@
     {
       "t": "2026-11-16T21:42:23.799Z",
       "note": "Pass 8 landed 90ffa8b69: zoom paints only the window, scroll-ins no longer fade; zoom 16-18 -> ~13 ms, scroll 15-16 -> ~12 (p95 16). Bars of 8.3 ms and 16 ms not reached; stays open."
+    },
+    {
+      "t": "2026-11-17T11:23:53.320Z",
+      "note": "rotating check 2026-11-17T11:23:53Z, 31 walks run from 1124 onward in the rotation: speed-walk (its script changed since the last check) failing."
     }
   ],
   "started": "2026-11-16T20:25:53.896Z",

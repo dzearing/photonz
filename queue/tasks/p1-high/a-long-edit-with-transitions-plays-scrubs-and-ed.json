@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-17T11:04:32.319Z",
+  "updated": "2026-11-17T14:56:56.019Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -434,9 +434,45 @@
     {
       "t": "2026-11-17T11:04:32.318Z",
       "note": "Pass 13 landed f87714cbc: an opaque clip's shadow is blurred once instead of every frame (composite 10.8 -> 8.6 ms, GPU 7.5 -> 2.3 ms), and the speed walk now measures the frame really under the hand: 5 display frames hunting, 35 dragging end to end. Bars not reached (scrub 1 frame: picture 2; 0 dropped: 1 a minute; edits 16 ms). Stays open; pass 14 leads in the log."
+    },
+    {
+      "t": "2026-11-17T11:23:53.285Z",
+      "note": "rotating check 2026-11-17T11:23:53Z, 31 walks run from 1124 onward in the rotation: speed-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-11-17T11:25:56.773Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-17T14:56:34.492Z",
+      "note": "Pass 14 measured first (28d6e1cf8): the rotating check's speed-walk failure (medium frame lag 73 vs 35, gate 56) was this measure's noise: 41 on a rerun, 16-21 warm. Traced the scrub reads (temporary timers, removed): at medium speed up to 8 stretch reads ran at once, each 225-640 ms to its first frame, most cancelled before delivering; hunting, a read for the far side of a dissolve the hand had left kept the decoder 419 ms, and a stretch made pictures (3 ms each, 150-240 of a read's 190-250 ms) at the hand's own pace, so the first ~0.5 s of a hunt showed stand-ins."
+    },
+    {
+      "t": "2026-11-17T14:56:34.560Z",
+      "note": "Pass 14 new measure: sight lag (SpeedWalk.sightLags + handPath, SpeedWalkTests): refreshes between a look and the nearest time the hand was on the recording frames the picture is drawn from (frames in hand when drawn, stand-ins and key frames counted), along every grid moment the hand crossed. The exact-frame number cannot credit a key frame or a stand-in a frame off; sight lag is what a person sees and is now the scrub bar's number (docs/design/video.md 8e)."
+    },
+    {
+      "t": "2026-11-17T14:56:34.626Z",
+      "note": "Pass 14 fix (MovieFrames.swift, MovieSweep.swift, MovieKeyFrames.swift; MovieSweepTests, MovieKeyFramesTests): (1) a hand over 10 s of edit a second is shown the key frame nearest it, read at its exact moment from the file's sample table, one read at a time, newest next (~20 ms each; reading at the grid frame's moment missed the key frame and cost 100 ms); (2) a stretch makes pictures only of frames the hand has not passed (MovieSweep.worthShowing); (3) reads for a recording the hand left stop; (4) hunting looks a quarter second of its pace ahead for clips it will cross into (cutReachMS). A/B on one build, 2 runs each, sight lag median/worst: medium 8-22/54-95 -> 4-8/69-95; hunt 3/214-215 -> 2-3/16-28. Baseline short-6.json rewritten (worst of 3): medium sight 4/67, exact 34/131; hunt sight 2/15, exact 3/19 (was 5/63). Two glimpses at once did not pay (reverted to one)."
+    },
+    {
+      "t": "2026-11-17T14:56:34.691Z",
+      "note": "Chose showing key frames while the hand drags faster than 10 s of edit a second over exact frames, because at that pace the key frame was under the hand less than a refresh ago and an exact frame arrives 200-600 ms late; QuickTime Player does the same. The exact-frame number at medium speed is therefore no longer a target."
+    },
+    {
+      "t": "2026-11-17T14:56:34.757Z",
+      "note": "Pass 14 verified: test.sh exit 0 (14,864 + split runs); speed-walk ok x4 (1 vs old baseline, 3 for the new one); walks ok: scrub-never-blacks-out, scrubbing-shows-the-zoom, hear-the-scrub, nudge-stays-sharp, a-recording-opens-sharp, the-scrubber-knob-clears-the-times. clicking-a-timeline-item-moves-the-playhead-walk fails at step 58 on main without the change too (stash-checked); folded into walks-that-fail-in-the-full-sweep-27. Main red on CI 44052911633 was the TextRevealUnclipped flake; folded into find-out-why-the-legibility-check-once-read-the. Composite path untouched (no perf note needed). Audit queue/audits/2026-11-17-a-long-edit-with-transitions-plays-scrubs-and-ed-pass14.json."
+    },
+    {
+      "t": "2026-11-17T14:56:34.827Z",
+      "note": "Next for pass 15: (a) a hunt's first ~0.2 s shows the frame it started on (decode from the key frame before the hand); start the stretch when the hand takes hold, before it moves, and show the nearest key frame meanwhile; (b) medium worst 67: spikes when the hand enters a recording whose key frame table is not read yet, so read every recording's table when the edit opens; (c) bars not reached: scrub within 1 refresh (sight 2 hunting, 4 dragging fast), 0 dropped (1-2 a minute), edits <=16 ms (15-46). Left rough, not filed: none beyond these, all this task's own bars."
+    },
+    {
+      "t": "2026-11-17T14:56:56.018Z",
+      "note": "Pass 14 landed eac64b97e: a fast drag of the playhead now shows the key frame nearest the hand and a hunt reads only what the hand has not passed; what is on screen is 4 refreshes from the hand dragging fast (was 8-22) and 15-28 at worst hunting across a cut (was ~214). Bars not reached (scrub 1 frame: 2 hunting, 4 fast; 0 dropped: 1-2 a minute; edits 16 ms: 15-46). Stays open; pass 15 leads in the log."
     }
   ],
-  "started": "2026-11-17T09:09:36.452Z",
+  "started": "2026-11-17T11:25:56.772Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk",
