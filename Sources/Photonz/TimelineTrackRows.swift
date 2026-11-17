@@ -737,11 +737,11 @@ struct TimelineTrackRow: View {
                         .equatable()
                         .offset(x: canvasX)
                 }
-                let painted = Set(cuts.map(\.id))
+                let painted = Set(cuts.map(\.key))
                 // Past the stretch, only a cut somebody is working on.
                 let built = painting.paints
                     ? points.filter { paintedMS.contains(Double($0.atMS)) || cutIsWorkedOn($0) } : points
-                ForEach(built.filter { !painted.contains($0.id) }) { point in
+                ForEach(built.filter { !painted.contains(TimelineCutKey($0)) }) { point in
                     TimelineSpareStrips(point: point, laneWidth: laneWidth, height: laneHeight)
                     TimelineEditPointView(point: point, laneWidth: laneWidth, height: laneHeight)
                         .allowsHitTesting(!track.isLocked)
@@ -983,7 +983,7 @@ struct TimelineTrackRow: View {
     /// The cuts at rest, which a lane that paints its clips paints too: not
     /// picked or under a grip, neither clip in a hand, no hold on black or
     /// white, and not under the pointer.
-    private func paintedCuts(_ points: [TimelineEditPoint]) -> [(id: String, mark: TimelinePaintedCuts.Mark)] {
+    private func paintedCuts(_ points: [TimelineEditPoint]) -> [(key: TimelineCutKey, mark: TimelinePaintedCuts.Mark)] {
         guard let document = editorState.document else { return [] }
         let dragged = editorState.clipBarDrag?.layerID
         let underGrip = editorState.editPointUnderGrip
@@ -991,14 +991,17 @@ struct TimelineTrackRow: View {
         let session = editorState.clipTransitionDrag?.place
         let memo = editorState.timelinePaintedFacts
         let switches = paintedFactsSwitches
+        let pointer = pointerEditPointID
+        let picked = editorState.selectedEditPoint.map(TimelineCutKey.init)
         return points.compactMap { point in
+            let key = TimelineCutKey(point)
             let place = TimelineCutPlace.edit(outgoing: point.outgoing, incoming: point.incoming)
-            guard point.id != pointerEditPointID, place != underGrip, place != session,
+            guard pointer == nil || point.id != pointer, place != underGrip, place != session,
                   dragged != point.outgoing, dragged != point.incoming,
-                  !editorState.isEditPointPicked(point) else { return nil }
+                  key != picked else { return nil }
             // Not in a transition's drag (the guard above), so the band is the
             // one written down, kept with the document (`TimelinePaintedFacts`).
-            let mark = memo.cut(point.id, in: document, switches) {
+            let mark = memo.cut(key, in: document, switches) {
                 guard transitions, let cut = document.documentCut(at: place)?.cut,
                       let drawn = cut.drawnTransition else {
                     return .seam(atMS: point.atMS)
@@ -1009,7 +1012,7 @@ struct TimelineTrackRow: View {
                              leadingGrip: ClipTransitionEdgeDrag.canGrab(leadingEdge: true, of: drawn),
                              trailingGrip: ClipTransitionEdgeDrag.canGrab(leadingEdge: false, of: drawn))
             }
-            return mark.map { (point.id, $0) }
+            return mark.map { (key, $0) }
         }
     }
 
@@ -1085,15 +1088,9 @@ struct TimelineTrackRow: View {
     /// mock's second clip colour (`.clip.v2`) so two clips that meet read as
     /// two clips.
     private var alternateClips: Set<MotionStripGroup.ID> {
-        let clips = row.clips
-        // The clips almost always come left to right already: asked on every
-        // frame of a zoom by every lane, sorting two hundred of them each time
-        // was a sixtieth of the frame.
-        let inOrder = zip(clips, clips.dropFirst()).allSatisfy { ($0.bar?.inMS ?? 0) <= ($1.bar?.inMS ?? 0) }
-        let order = inOrder ? clips : clips.sorted { ($0.bar?.inMS ?? 0) < ($1.bar?.inMS ?? 0) }
-        var alternates = Set<MotionStripGroup.ID>(minimumCapacity: order.count / 2 + 1)
-        for index in stride(from: 1, to: order.count, by: 2) { alternates.insert(order[index].id) }
-        return alternates
+        // Worked out with the row, once per document
+        // (`TimelineTrackRowModel.alternates`).
+        return row.alternates
     }
 
     /// A locked track's lane is striped, the way a locked track reads in every

@@ -1,0 +1,27 @@
+{
+  "feature": "The hour-long timeline stops working out the same answers on every frame",
+  "epic": "video-perf",
+  "summary": "Zooming and scrolling the 60 minute reference edit's timeline is about 1 ms a frame quicker: which clips are shaded apart, which cuts are painted and each waveform's points are no longer worked out again on every frame, and a transition band casts its shadow without a layer of its own. Nothing on screen changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit. The timeline opens at Fit.", "shot": "2026-11-17-timeline-hour-long-pass10-fit-sc.png" },
+    { "do": "Pinch or press Command = a few times to zoom in near the whole hour, then back out.", "shot": "2026-11-17-timeline-hour-long-pass10-zoomed-sc.png" },
+    { "do": "Scroll the timeline along with two fingers, end to end." },
+    { "do": "Compare the Fit view with the build before this change: top is before, middle after, bottom the difference made 16 times brighter.", "shot": "2026-11-17-timeline-hour-long-pass10-head-vs-new.png" },
+    { "do": "Click a cut on V1 to pick it, then click a clip: the cut's own view comes and goes as before." }
+  ],
+  "evaluate": [
+    "Does zooming in and out near the whole-hour view feel any smoother than this morning?",
+    "Do the transition bands and their shadows look the same as before, at Fit and zoomed in?",
+    "Does picking a cut still show it picked straight away?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, mean frame (median, p95). Before, same build with the old paths switched back on (two runs): near Fit (Fit to 8x and back six times) 17.1 ms (16.5, 24), zoom in 14.8-14.9, zoom out 13.0-13.1, scroll 11.3. After (two runs): near Fit 16.1-16.2 ms (15.6-15.8, 22), zoom in 13.9-14.1, zoom out 12.2-12.4, scroll 10.4-10.6. A later run with the Mac quieter: near Fit 15.5 (median 14.9), zoom in 12.5, zoom out 11.9, scroll 9.9 (median 9.5, p95 13.7, 41 of 360 late).",
+    "Bars of the task not reached: 95 percent of zoom and scroll frames under 8.3 ms and none over 16, and edits inside 16 ms (trim 63, move 36, blade 75, undo 67, transition 98, title 42 ms longest pass; mostly the inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). The task stays open.",
+    "Measured what each part of the painting costs by switching it off alone near Fit: waveforms 0.4 ms, level lines 0.3, names, clipping, shadows, fade diamonds each under 0.3; transition bands 0.9, seams 0.25; all clip paint off together 1.7. What is left near Fit is spread thin: rasterising the lanes about 3 ms, SwiftUI's own upkeep most of the rest.",
+    "The band shadows differ from before by at most 15 of 255 in brightness, along V1's top and bottom edges (the bottom strip of the comparison). Chose to keep it because side by side at full size no difference can be seen.",
+    "The speed walk failed twice of three runs on scrub numbers (sight lag worst 107 against at most 54, then frame lag 37 against at most 36) and passed the third: scrub, not the timeline, folded into a-long-edit-with-transitions-plays-scrubs-and-ed.",
+    "No mock covers the timeline's speed; nothing about the timeline's look changed."
+  ]
+}

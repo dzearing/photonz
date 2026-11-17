@@ -61,7 +61,7 @@ final class TimelinePaintedFacts {
     private var document: PhotonzDocument?
     private var switches: Switches?
     private var clips: [UUID: Clip?] = [:]
-    private var cuts: [String: Cut] = [:]
+    private var cuts: [TimelineCutKey: Cut] = [:]
 
     /// The facts are kept for `document` under `switches`: anything kept for
     /// another document, or under other switches, is let go.
@@ -86,11 +86,25 @@ final class TimelinePaintedFacts {
     }
 
     /// The cut's mark in `document`, worked out by `make` the first time.
-    func cut(_ id: String, in document: PhotonzDocument, _ switches: Switches, make: () -> Cut) -> Cut {
+    func cut(_ id: TimelineCutKey, in document: PhotonzDocument, _ switches: Switches, make: () -> Cut) -> Cut {
         keep(for: document, switches)
         if let kept = cuts[id] { return kept }
         let made = make()
         cuts[id] = .some(made)
         return made
+    }
+}
+
+/// A cut told by the two clips that meet there. A cut's own `id` is text made
+/// from both clips' ids each time it is read, and the busy lanes read it for
+/// every cut on every frame of a zoom: about a third of the time the painted
+/// cuts took near the whole-hour view (2026-11-17).
+struct TimelineCutKey: Hashable {
+    let outgoing: UUID
+    let incoming: UUID
+
+    init(_ point: TimelineEditPoint) {
+        outgoing = point.outgoing
+        incoming = point.incoming
     }
 }

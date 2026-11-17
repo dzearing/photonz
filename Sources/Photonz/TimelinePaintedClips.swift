@@ -698,9 +698,20 @@ struct TimelinePaintedClips: View, Equatable {
         // each one a write to the path's buffer, the waveforms were a third
         // of the painted clips' time on a fast scroll of the hour-long edit.
         var path = Path()
-        path.addLines(outline.map { CGPoint(x: $0.x + rect.minX, y: $0.y + rect.minY) })
+        path.addLines(Self.moved(outline, byX: rect.minX, y: rect.minY))
         path.closeSubpath()
         context.fill(path, with: .color(placed.bar.soundTint.opacity(0.55)))
+    }
+
+    /// `points` moved across by `x` and down by `y`. A plain loop, off the
+    /// main actor: the same move as a closure handed to `map` inside the
+    /// view checked it was on the main thread once a point, a third of the
+    /// waveforms' time near the whole-hour view (2026-11-17).
+    nonisolated static func moved(_ points: [CGPoint], byX x: CGFloat, y: CGFloat) -> [CGPoint] {
+        var moved = [CGPoint]()
+        moved.reserveCapacity(points.count)
+        for point in points { moved.append(CGPoint(x: point.x + x, y: point.y + y)) }
+        return moved
     }
 
     /// The level, across the whole bar, as `SoundLevelLine` draws it at rest.
@@ -974,17 +985,20 @@ struct TimelinePaintedCuts: View, Equatable {
             context.stroke(shape.inset(by: 0.5).path(in: rect), with: .color(.white.opacity(0.6)),
                            style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
         } else {
+            // The shadow is cast by the band's base alone: the base is
+            // opaque and the wash and edge lie inside it, so it is the same
+            // shadow the whole band would cast, without a layer drawn on its
+            // own for every band, three hundred of them near the whole-hour
+            // view of the hour-long reference edit (2026-11-17).
+            let outline = shape.path(in: rect)
             var shadowed = context
             shadowed.addFilter(.shadow(color: .black.opacity(0.4), radius: 5, x: 0, y: 4))
-            shadowed.drawLayer { layer in
-                let outline = shape.path(in: rect)
-                layer.fill(outline, with: .color(VideoKit.Palette.transitionBase.color(scheme)))
-                layer.fill(outline, with: .linearGradient(
-                    Gradient(colors: [VideoKit.Palette.transitionFrom.color(scheme),
-                                      VideoKit.Palette.transitionTo.color(scheme)]),
-                    startPoint: CGPoint(x: rect.minX, y: rect.midY), endPoint: CGPoint(x: rect.maxX, y: rect.midY)))
-                layer.stroke(shape.inset(by: 0.5).path(in: rect), with: .color(.white.opacity(0.55)), lineWidth: 1)
-            }
+            shadowed.fill(outline, with: .color(VideoKit.Palette.transitionBase.color(scheme)))
+            context.fill(outline, with: .linearGradient(
+                Gradient(colors: [VideoKit.Palette.transitionFrom.color(scheme),
+                                  VideoKit.Palette.transitionTo.color(scheme)]),
+                startPoint: CGPoint(x: rect.minX, y: rect.midY), endPoint: CGPoint(x: rect.maxX, y: rect.midY)))
+            context.stroke(shape.inset(by: 0.5).path(in: rect), with: .color(.white.opacity(0.55)), lineWidth: 1)
         }
         let glyph = VideoKit.TransitionGlyph().path(in: CGRect(x: rect.midX - 6, y: rect.midY - 6, width: 12, height: 12))
         if isDip {

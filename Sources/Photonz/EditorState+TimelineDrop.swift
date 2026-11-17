@@ -284,6 +284,10 @@ extension EditorState {
 
     /// Whether this cut is the picked one and still there.
     func isEditPointPicked(_ point: TimelineEditPoint) -> Bool {
-        selectedEditPoint?.id == point.id
+        // The two clips, not the cut's `id`: that is text made from both
+        // clips' ids every time it is read, and a busy lane asks this of every
+        // cut in sight on every frame of a zoom.
+        guard let picked = selectedEditPoint else { return false }
+        return picked.outgoing == point.outgoing && picked.incoming == point.incoming
     }
 }

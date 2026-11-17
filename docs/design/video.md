@@ -1041,6 +1041,20 @@ The rule, for any view added to the editor window:
      gap carries its dashes on from one edge into the next. A painted gap
      runs off the window's edge as a painted clip does, where a gap's view is
      cut at the edge.
+   - **Nothing a painting lane reads on every frame is worked out again from
+     the clips.** Which clips are shaded as alternates is part of the row
+     (`TimelineTrackRowModel.alternates`), made with the rows once per
+     document; a cut is told by its two clips (`TimelineCutKey`), never by
+     its `id`, which builds text out of both clip ids each time it is read;
+     a closure handed to `map` or `sort` inside a view's paint checks it is
+     on the main thread once an element, so a loop over points is a plain
+     loop in a `nonisolated` helper. A band's shadow is cast by its opaque
+     base, not by a layer of its own. Together about 1 ms of a 16 ms frame
+     near the whole-hour view and of an 11 ms scroll frame (2026-11-17).
+     What is left near Fit is spread thin: the paint of every clip is about
+     2 ms, rasterising the lanes about 3, SwiftUI's own upkeep the rest; no
+     single element of the paint (waveforms, level lines, names, clipping,
+     shadows) was worth more than 0.5 ms switched off on its own.
 9. **Nothing per clip reads the window unless it is near it.** A scroll
    writes the window every frame, so whatever reads it is built again every
    frame. A clip's bar is handed the stretch it draws across by its lane, cut

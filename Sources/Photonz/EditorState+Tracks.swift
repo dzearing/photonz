@@ -96,6 +96,20 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// How each row in `inner` sits: how far in, and whether it wears an
     /// arrow (`TimelineChildRows.swift`).
     var nesting: [UUID: TimelineRowNesting] = [:]
+    /// Every other clip from the left, shaded a little apart from its
+    /// neighbours (`TimelineTrackRow.alternateClips`): worked out with the
+    /// rows, once per document, where every lane sorted its clips on every
+    /// frame of a zoom (2026-11-17).
+    var alternates: Set<MotionStripGroup.ID> = []
+
+    /// The clips of `clips` that are second, fourth and so on from the left.
+    static func alternates(of clips: [MotionStripGroup]) -> Set<MotionStripGroup.ID> {
+        let inOrder = zip(clips, clips.dropFirst()).allSatisfy { ($0.bar?.inMS ?? 0) <= ($1.bar?.inMS ?? 0) }
+        let order = inOrder ? clips : clips.sorted { ($0.bar?.inMS ?? 0) < ($1.bar?.inMS ?? 0) }
+        var alternates = Set<MotionStripGroup.ID>(minimumCapacity: order.count / 2 + 1)
+        for index in stride(from: 1, to: order.count, by: 2) { alternates.insert(order[index].id) }
+        return alternates
+    }
 
     var id: UUID { track.id }
 
@@ -196,6 +210,7 @@ extension EditorState {
                 let isOff = track.isHidden || (soloPicture && !track.isSolo)
                 var row = TimelineTrackRowModel(track: track, clips: cues, inner: [], isOff: isOff)
                 row.cuesArePlain = !document.hasPictureOnlyHolds
+                row.alternates = TimelineTrackRowModel.alternates(of: cues)
                 return row
             }
             for id in document.clipIDs(onTrack: track.id) {
@@ -248,6 +263,7 @@ extension EditorState {
             var row = TimelineTrackRowModel(track: track, clips: clips, inner: inner, isOff: isOff,
                                             linked: linked)
             row.nesting = nesting
+            row.alternates = TimelineTrackRowModel.alternates(of: clips)
             row.soundLaneHeight = timelineSoundLaneHeight
             row.soundNumber = tracks.soundTrackNumber(of: soundRows.first?.id ?? track.id) ?? 0
             row.soundIsMuted = soundRows.contains(where: \.isMuted)

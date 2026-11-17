@@ -489,6 +489,10 @@ final class SpeedWalkProbe {
         // A zoom's frames by how far in it was, so a slow stretch says where
         // it is: the median frame at each doubling of the zoom.
         var byZoom: [String] = []
+        // The mean frame, beside the median: frames come in whole refreshes,
+        // so a median sits on 16.7 ms until a change takes a whole refresh
+        // off, and the mean shows a change smaller than that.
+        var means: [String] = []
         func film(_ label: String, moves: Int, _ move: () -> Bool) async -> SpeedWalk.FrameTimes {
             ViewBuildMeter.shared.reset()
             var at: [Double] = []
@@ -515,6 +519,9 @@ final class SpeedWalkProbe {
                 octaves[octave, default: []].append(now - (at.last ?? 0))
                 at.append(now)
             }
+            if at.count > 1, let last = at.last {
+                means.append(String(format: "%@ %.2fms", label, last / Double(at.count - 1)))
+            }
             return SpeedWalk.frameTimes(label, refreshesAtMS: at, refreshMS: frames.refreshInterval * 1000)
         }
         // In from the whole edit to as close as it goes, and back out.
@@ -526,6 +533,19 @@ final class SpeedWalkProbe {
         let zoomOut = await film("zoom out", moves: max(1, zoomIn.frames)) {
             guard editor.isTimelineOpenedOut else { return false }
             editor.zoomTimeline(by: 1 / 1.04, anchorMS: length / 2)
+            return true
+        }
+        // Near the whole edit, where every clip is on screen at once and the
+        // frames are the slowest: Fit to 8x and back, six times over. Said in
+        // the line, not kept as a bar of the run (2026-11-17).
+        editor.fitTimeline()
+        await settle(editor, frames: frames)
+        var nearFitIn = true
+        let nearFit = await film("near fit", moves: 6 * 2 * 54) {
+            let scale = editor.timelineZoom.scale
+            if nearFitIn, scale >= 8 { nearFitIn = false }
+            if !nearFitIn, scale <= 1.0001 { nearFitIn = true }
+            editor.zoomTimeline(by: nearFitIn ? 1.04 : 1 / 1.04, anchorMS: length / 2)
             return true
         }
         // Along it, end to end, half a minute on screen, in three seconds.
@@ -544,8 +564,8 @@ final class SpeedWalkProbe {
         editor.fitTimeline()
         run.timeline = [zoomIn, zoomOut, scroll]
         return "views at fit: \(viewsAtFit); views zoomed in: \(viewsZoomed); clip bars built a frame: "
-            + barsPerFrame.joined(separator: ", ") + "; by zoom: " + byZoom.joined(separator: "; ") + "; "
-            + [zoomIn, zoomOut, scroll].map {
+            + barsPerFrame.joined(separator: ", ") + "; by zoom: " + byZoom.joined(separator: "; ") + "; mean frame: " + means.joined(separator: ", ") + "; "
+            + [zoomIn, zoomOut, nearFit, scroll].map {
             String(format: "%@: %d frames, median %.1fms, p95 %.1fms, worst %.0fms, %d late against %.1fms",
                    $0.label, $0.frames, $0.medianMS, $0.p95MS, $0.worstMS, $0.late, $0.refreshMS)
         }.joined(separator: "; ")
