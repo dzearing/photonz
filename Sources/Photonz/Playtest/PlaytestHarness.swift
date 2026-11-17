@@ -343,6 +343,10 @@ private final class Run {
     private var expectNoControl: Set<String> = []
     /// `setup.front`: the probe is the active app for the whole walk.
     private var holdsTheFront = false
+    /// `setup.shown`: the editor's window stays at full alpha for the whole
+    /// walk, behind the person's windows, so a walk timing playback times a
+    /// window that is really being drawn.
+    private var keepsTheWindowShown = false
     /// `setup.timedWithoutMarkers`: a timed press or action takes the walk's
     /// markers down for its own length.
     private var timesWithoutMarkers = false
@@ -521,6 +525,11 @@ private final class Run {
         expectNoControl = Set(script.setup.expectNoControl)
         holdsTheFront = script.setup.front
         if holdsTheFront { note(0, "setup", "the probe holds the front for this walk (setup front)") }
+        keepsTheWindowShown = script.setup.shown
+        if keepsTheWindowShown {
+            note(0, "setup", "the editor's window stays shown for this walk, behind the person's windows, "
+                 + "so the main thread is timed drawing a window on screen (setup shown)")
+        }
         PlaytestFrontLook.startWalk(keepingTheBackgroundLook: script.setup.behindLook)
         if script.setup.behindLook {
             note(0, "setup", "pictures show the window's background look, the way it looks behind another app (setup behindLook)")
@@ -1155,14 +1164,20 @@ private final class Run {
             }
             // A guarded wait also says what was rebuilt, so a freeze names
             // the views that cost it rather than only its length.
-            note(number, step.name, "\(said); \(MainThreadMeter.shared.report)"
+            // It also says how many passes ran past its limit, which over a
+            // stretch of playback is the difference between one hitch and a
+            // stutter (`LongPassTally`).
+            let over = longestUnderMS.map {
+                "; " + MainThreadMeter.shared.tally.summary(atOrOverMS: $0, listing: 5)
+            } ?? ""
+            note(number, step.name, "\(said); \(MainThreadMeter.shared.report)" + over
                  + (markersUpCost.isEmpty ? "" : "; " + markersUpCost)
                  + (longestUnderMS == nil ? "" : "; \(ViewBuildMeter.shared.report)"))
             if let longestUnderMS, MainThreadMeter.shared.longestMS >= longestUnderMS {
                 throw Failure(description: String(
                     format: "the main thread froze for %.1fms in one pass, and this walk allows under %.0fms: "
                         + "a pass that long is a frame the app did not draw while somebody waited on it",
-                    MainThreadMeter.shared.longestMS, longestUnderMS))
+                    MainThreadMeter.shared.longestMS, longestUnderMS) + " (" + over.dropFirst(2) + ")")
             }
 
         case .key(let key, let modifiers):
@@ -17475,8 +17490,10 @@ private final class Run {
         guard let window = opened.hostWindow else { throw Failure(description: "the editor lost its window") }
         // Let the open-time sizing reveal the window, then hide it for the
         // whole run: it stays on screen for AppKit but invisible to a person.
+        // A walk timing playback keeps it shown instead (`setup.shown`),
+        // always behind whatever the person has in front.
         _ = try? await poll("reveal", within: 2) { window.alphaValue >= 1 }
-        window.alphaValue = 0
+        window.alphaValue = keepsTheWindowShown ? 1 : 0
         if let size {
             let screen = window.screen ?? NSScreen.main
             let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1600, height: 1000)
@@ -21978,10 +21995,11 @@ final class MainThreadMeter {
         fileprivate let passes: Int
         fileprivate let longest: CFTimeInterval
         fileprivate let longestEndedAt: CFTimeInterval
+        fileprivate let tally: LongPassTally
     }
 
     func mark() -> Mark {
-        Mark(busy: busy, passes: passes, longest: longest, longestEndedAt: longestEndedAt)
+        Mark(busy: busy, passes: passes, longest: longest, longestEndedAt: longestEndedAt, tally: tally)
     }
 
     /// What the meter has counted since `mark`: the time, and the longest
@@ -21999,6 +22017,7 @@ final class MainThreadMeter {
         passes = mark.passes
         longest = mark.longest
         longestEndedAt = mark.longestEndedAt
+        tally = mark.tally
     }
 
     /// What the menu bar spent on a walk's mouse-downs since the meter was
@@ -22131,6 +22150,7 @@ final class MainThreadMeter {
             passes += 1
             passesSinceAsked += 1
             notePass(lasting: d, endedAt: now)
+            tally.record(ms: d * 1000, atMS: (now - d - zeroedAt) * 1000)
             if d > longest {
                 longest = d
                 longestEndedAt = now
@@ -22164,6 +22184,10 @@ final class MainThreadMeter {
         var landed: [String] = []
     }
     private(set) var longPasses: [LongPass] = []
+    /// Every pass of 6 ms or more since the meter was zeroed, counted however
+    /// many there are, so a guarded wait over a stretch of playback says how
+    /// many ran past its limit and not only the longest (`LongPassTally`).
+    private(set) var tally = LongPassTally()
     private var builtAtLastPass: [ViewBuildMeter.Subject: Int] = [:]
 
     private func notePass(lasting d: CFTimeInterval, endedAt now: CFTimeInterval) {
@@ -22202,6 +22226,7 @@ final class MainThreadMeter {
 
     func reset() {
         longPasses = []
+        tally.reset()
         builtAtLastPass = ViewBuildMeter.shared.counts
         busy = 0; passes = 0; longest = 0; menuBarLeftOut = 0
         zeroedAt = CACurrentMediaTime()

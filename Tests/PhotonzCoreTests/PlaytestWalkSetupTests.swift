@@ -326,6 +326,51 @@ struct PlaytestBehindLookSetupTests {
     }
 }
 
+/// A walk that times the app while a video plays keeps the editor's window
+/// SHOWN for the whole walk, behind the person's own windows, so what it
+/// measures is what a window on screen costs rather than one at zero alpha
+/// (`playing-a-five-minute-captioned-recording-never`).
+@Suite("A walk can keep the editor's window shown")
+struct PlaytestShownSetupTests {
+
+    @Test("it reads a yes")
+    func reads() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "shown": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.shown == true)
+        #expect(PlaytestSetup(shown: true).isEmpty == false)
+    }
+
+    @Test("saying nothing keeps the window invisible, as every walk always has")
+    func unsaid() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.shown == false)
+        #expect(PlaytestSetup().isEmpty)
+    }
+
+    @Test("it is a yes or a no")
+    func onlyABool() {
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "shown": "yes please" }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+    }
+
+    @Test("the walk timing playback of the long captioned talk keeps its window shown, with no switch changed")
+    func playbackWalkSaysSo() throws {
+        let folder = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("../../Scripts/playtest").standardized
+        let script = try PlaytestScript.decode(Data(contentsOf: folder.appendingPathComponent(
+            "a-long-captioned-recording-plays-walk.json")))
+        #expect(script.setup.shown)
+        #expect(script.setup.flags.isEmpty)
+    }
+}
+
 /// A stopwatch walk times what a person gets: the probe's walk markers, about
 /// half the window's views, come down for the length of each timed click and
 /// go back up before the walk looks for anything again.

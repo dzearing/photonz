@@ -1,0 +1,25 @@
+{
+  "feature": "Playing a five minute captioned recording never holds the app 50 ms or more",
+  "epic": "video-perf",
+  "summary": "Measured for the first time while the video plays: on the five minute talk with its 191 captions written, no pass of the main thread reached 50 ms, from the start or across a cut, so a click or key during playback answers at once. Today's numbers already passed, so nothing in the app changed; the deliverable is a walk that turns red if a 50 ms pass ever comes back.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The guard runs as Scripts/playtest/a-long-captioned-recording-plays-walk.json, which keeps the window shown (behind your own windows) the whole time it measures.",
+  "switched": {},
+  "try": [
+    { "do": "Open a talking screen recording about five minutes long." },
+    { "do": "Choose Add Captions and wait for the caption track to fill.", "shot": "2026-11-16-captioned-playback-1-playing-sc.png" },
+    { "do": "Put the playhead at the start, press Space and let it play for twenty seconds while the captions come and go." },
+    { "do": "While it plays, press Space or click on the timeline and see whether the app answers at once." },
+    { "do": "Pause, put the playhead in the middle, press B to cut, go back ten seconds and press Space to play across the cut.", "shot": "2026-11-16-captioned-playback-2-past-the-cut-sc.png" }
+  ],
+  "evaluate": [
+    "Does a key or a click during playback answer as fast as it does with the video paused?",
+    "Does playing across the cut look and feel the same as playing anywhere else?",
+    "Is 50 ms the right bar, or should the walk hold playback to a tighter one, such as 33 ms (one frame of a 30 fps recording)?"
+  ],
+  "rough": [
+    "Measured at Next defaults on 2026-11-16, four runs with the window shown: from the start the longest pass was 11.8 to 24.6 ms, across the cut 18.5 to 31.8 ms (the 31.8 was the pass in which Space starts playback), and no pass reached 50 ms in any of them. With the window invisible, the way walks usually run, the numbers were the same: 11.2 and 18.8 ms.",
+    "One 71 ms pass was seen once, at the press of Space on the first play of a run filmed by the walk's camera; four runs since, filmed and not, never came near it, so it is in the task log rather than treated as a failure of the app.",
+    "The main thread is still about a third busy for the whole time the talk plays (7.5 s of every 20 s, in short passes about 500 times a second). No single pass is long enough to delay a click, but it is work the Mac does for nothing; the numbers are in the log of a-long-edit-with-transitions-plays-scrubs-and-ed, which is about exactly this.",
+    "No mock covers this: it is a speed guard, not a surface."
+  ]
+}

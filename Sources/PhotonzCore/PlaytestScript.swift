@@ -223,6 +223,13 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// about that look itself, such as a button that must stay readable
     /// behind; its pictures carry `PlaytestCaptureLedger.behindLabel`.
     public var behindLook: Bool
+    /// The editor's window stays SHOWN for the whole walk, behind the
+    /// person's own windows, instead of sitting at zero alpha between
+    /// pictures. For a walk timing the main thread while a video plays: a
+    /// window nobody can see is a window AppKit and SwiftUI may draw less of,
+    /// so a guard read on one says nothing about the window a person watches
+    /// (`a-long-captioned-recording-plays-walk`, 2026-11-16).
+    public var shown: Bool
     /// A generated capture folder of this many captures, one in three of them
     /// a recording, in place of the person's own Screenshots folder, for the
     /// length of the walk. For a walk about how history copes with a big
@@ -285,7 +292,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
                 flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, timelineRoom: Bool = false,
-                front: Bool = false, behindLook: Bool = false,
+                front: Bool = false, behindLook: Bool = false, shown: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
                 askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false, askMac: Int? = nil,
                 askSearch: Int? = nil, askReplies: [String] = [], askSeconds: Int? = nil,
@@ -305,6 +312,7 @@ public struct PlaytestSetup: Sendable, Equatable {
         self.timelineRoom = timelineRoom
         self.front = front
         self.behindLook = behindLook
+        self.shown = shown
         self.forget = forget
         self.captures = captures
         self.scratch = scratch
@@ -314,7 +322,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
-            && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && !behindLook && history == nil && !timedWithoutMarkers
+            && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && !behindLook && !shown && history == nil && !timedWithoutMarkers
             && !askModelMissing && askModelsOnly == nil && !offline && !agentHome && askMac == nil && askSearch == nil && askReplies.isEmpty
             && askSeconds == nil && referenceEdit == nil
     }
@@ -326,7 +334,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "askSeconds", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "referenceEdit", "scratch",
+    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "askSeconds", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "referenceEdit", "scratch", "shown",
                             "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -434,6 +442,7 @@ public struct PlaytestSetup: Sendable, Equatable {
                   timelineRoom: try Self.yesOrNo(fields["timelineRoom"], field: "timelineRoom") ?? false,
                   front: try Self.yesOrNo(fields["front"], field: "front") ?? false,
                   behindLook: try Self.yesOrNo(fields["behindLook"], field: "behindLook") ?? false,
+                  shown: try Self.yesOrNo(fields["shown"], field: "shown") ?? false,
                   history: try Self.count(fields["history"], field: "history"),
                   timedWithoutMarkers: try Self.yesOrNo(fields["timedWithoutMarkers"],
                                                         field: "timedWithoutMarkers") ?? false,

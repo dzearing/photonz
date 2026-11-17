@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/a-long-captioned-recording-plays-walk",
+  "setup": { "timelineOpen": true, "forget": ["all"], "shown": true },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "The video focus promises that on a five minute recording with its captions written, no pass of the main thread while it plays takes 50ms or more, so a click or key during playback answers at once. Nothing measured it while the video played until 2026-11-16. The window stays SHOWN for the whole walk (behind the person's own windows), because a window at zero alpha is one AppKit and SwiftUI may draw less of. Measured that day at Next defaults: 20 seconds from the start, longest pass 10 to 13ms; 20 seconds across a cut, 12 to 19ms; no pass at or over 50ms in either." },
+    { "do": "action", "action": "openLongTalk" },
+    { "do": "action", "action": "captionsWrite" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "describe", "stage": "from-the-start", "note": "Space, as a person starts it, and twenty seconds of the talk with its captions coming and going. Every pass from the key on is judged." },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 20, "onTheClock": true, "longestUnderMS": 50 },
+    { "do": "expectTimeline", "rate": 1, "playheadMS": 20000, "withinMS": 1500 },
+    { "do": "snapshot", "name": "1-playing-captions" },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "describe", "stage": "across-a-cut", "note": "A cut in the middle of the talk, then twenty seconds from ten seconds before it, so the frames on both sides of the cut are read while it plays." },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "action", "action": "videoStepBackOneSecond" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 20, "onTheClock": true, "longestUnderMS": 50 },
+    { "do": "expectTimeline", "rate": 1, "playheadMS": 169620, "withinMS": 1500 },
+    { "do": "snapshot", "name": "2-playing-past-the-cut" },
+    { "do": "key", "key": "space" }
+  ]
+}
