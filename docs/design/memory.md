@@ -79,10 +79,55 @@ observation). Each was emptied when its window closed, so they cost almost
 nothing; the quick guard allows one, the long session three, and the footprint
 checks are what hold the memory.
 
+## Playing a long video
+
+Measured on the probe with the 60 minute reference edit (4 Retina recordings,
+524 clips, 126 zooms): a minute of playing, then ten of playing with a hand
+taking the playhead somewhere else every half minute, the same places every
+run (`SpeedWalk.memoryScrubPlaces`), memory read ten times a second and kept as
+each second's highest (the before run read once a second, so its peak is if
+anything low: 150 second runs of that build read ten times a second peaked at
+2555 to 2808 MB). Chart: `queue/audits/2026-11-16-memory-60-before-after.png`.
+
+Memory does not climb: where it sits each minute (the minute's median) holds
+level after the first. What it did was spike, for a second or two, every time a
+zoom or a scrub read frames bigger than the canvas shows them: 1.3 GB at rest,
+2.8 GB at the spikes (2026-11-16). `vmmap` at a spike put the extra in Core
+Image's own memory, 24 to 27 frames at the recordings' full Retina size
+(29.5 MB each) where the frame cache keeps at most 16 to 31 frames of any size,
+with their copies on the GPU beside them. They were held by the renderer's
+cache of pictures it has wrapped for Core Image, the last 32 of them whatever
+the image store had let go. A wrap is now let go as soon as the store no
+longer holds its picture under its ref (`DocumentRenderer.letGoOfWrapsTheStoreDropped`,
+`ContentCacheTests`).
+
+| | at rest (median, minute 2 to 10) | peak |
+| --- | --- | --- |
+| before | 1269 to 1389 MB | 2826 MB |
+| after | 1093 to 1240 MB | 2100 MB (2207 MB on a run with random places) |
+| the 6 minute edit, short speed walk (open, play, scrub, edit) | | 1734 MB, and 3944 MB once it exports 30 seconds |
+
+What is left in a spike is what the frame cache is meant to hold (up to 31
+frames, full size under a zoom) and the decoders' own surfaces while a scrub
+starts several reads at once.
+
+The check: `Scripts/perf/speed-walk.sh --memory` (about 13 minutes, never part
+of the walk set) fails when the peak reaches the ceiling its walk names
+(`Scripts/perf/walks/long-60-memory.json`, `ceilingMB`, 2500 MB: about 15
+percent over the peaks measured after the fix, under every spike before it) or
+when the last minute sits more than 10 percent above the second
+(`growthPercent`, `SpeedWalk.memoryProblems`). Every speed walk also writes
+the app's peak since launch, up to its export (`walkPeakFootprintMB`) and after
+it (`export.peakFootprintMB`), so the short walk on every rotating check fails
+on a jump past its baseline (`Scripts/perf/baselines/short-6.json`). The two
+are apart because an export costs about twice what playing does and would hide
+a jump in it; why it does is its own question
+(`find-out-why-exporting-a-video-holds-about-4-gb`).
+
 ## Caches
 
 The renderer's caches are capped by count (32 rasters, 32 wraps, an 8 MP mask
-budget). When the Mac runs short of memory (`DispatchSource` memory pressure,
+budget), and a wrap goes as soon as the image store lets its picture go. When the Mac runs short of memory (`DispatchSource` memory pressure,
 `MemoryRelief`) Photonz empties Core Image's shared caches and every open
 editor's renderer caches and thumbnails, and hands freed pages back.
 

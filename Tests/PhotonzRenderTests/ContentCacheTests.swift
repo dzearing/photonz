@@ -154,4 +154,50 @@ struct ContentCacheTests {
         }
         #expect(renderer.contentCacheCount <= 64, "cache grew without bound: \(renderer.contentCacheCount)")
     }
+
+    /// A picture the store has let go is let go by the renderer too. A
+    /// recording's frames come and go from the store as the playhead moves,
+    /// and the wrap cache kept the last 32 of them alive whatever the store
+    /// did: on the hour-long edit, 32 frames at a zoom's full Retina size
+    /// were about a gigabyte more than the store held (2026-11-16).
+    @Test func aPictureTheStoreLetGoIsNotKept() throws {
+        let store = ImageStore()
+        let old = solidImage(width: 64, height: 64, r: 255, g: 0, b: 0)
+        let first = store.register(old)
+        let renderer = DocumentRenderer()
+        _ = try #require(renderer.render(PhotonzDocument.withBaseImage(first), store: store))
+        #expect(renderer.wrapCacheHolds(old), "the first render never wrapped the picture")
+
+        store.remove(first)
+        let next = store.register(solidImage(width: 64, height: 64, r: 0, g: 0, b: 255))
+        _ = try #require(renderer.render(PhotonzDocument.withBaseImage(next), store: store))
+        #expect(!renderer.wrapCacheHolds(old), "the renderer kept a picture the store let go")
+    }
+
+    /// The same when new pixels land under the same reference: the old ones
+    /// are nobody's any more.
+    @Test func aPictureReplacedUnderItsRefIsNotKept() throws {
+        let store = ImageStore()
+        let old = solidImage(width: 64, height: 64, r: 255, g: 0, b: 0)
+        let ref = store.register(old)
+        let doc = PhotonzDocument.withBaseImage(ref)
+        let renderer = DocumentRenderer()
+        _ = try #require(renderer.render(doc, store: store))
+        store.register(solidImage(width: 64, height: 64, r: 0, g: 0, b: 255), as: ref)
+        _ = try #require(renderer.render(doc, store: store))
+        #expect(!renderer.wrapCacheHolds(old), "the renderer kept pixels replaced under their ref")
+    }
+
+    /// Pictures the store still holds stay wrapped across renders of
+    /// different documents, so going back to one costs no new upload.
+    @Test func aPictureTheStoreStillHoldsStaysWrapped() throws {
+        let store = ImageStore()
+        let kept = solidImage(width: 64, height: 64, r: 255, g: 0, b: 0)
+        let first = store.register(kept)
+        let second = store.register(solidImage(width: 64, height: 64, r: 0, g: 0, b: 255))
+        let renderer = DocumentRenderer()
+        _ = try #require(renderer.render(PhotonzDocument.withBaseImage(first), store: store))
+        _ = try #require(renderer.render(PhotonzDocument.withBaseImage(second), store: store))
+        #expect(renderer.wrapCacheHolds(kept))
+    }
 }

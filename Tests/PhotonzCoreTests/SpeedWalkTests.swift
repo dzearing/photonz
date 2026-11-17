@@ -358,3 +358,134 @@ struct SpeedWalkStepTests {
         #expect(PlaytestSpeedMeasure.tallyName("trim", picked: false, fromNothing: true) == "trim")
     }
 }
+
+@Suite("Memory over a long play and scrub")
+struct SpeedWalkMemoryTests {
+
+    /// Ten minutes of readings, one a second: `level(minute)` each second,
+    /// with a spike of `spike` MB every half minute.
+    static func tally(minutes: Int = 10, spike: Double = 0, level: (Int) -> Double) -> SpeedWalk.MemoryTally {
+        var footprint: [Double] = []
+        var at: [Double] = []
+        for second in 1...(minutes * 60) {
+            let minute = (second - 1) / 60 + 1
+            footprint.append(level(minute) + (second % 30 == 0 ? spike : 0))
+            at.append(Double(second))
+        }
+        return SpeedWalk.MemoryTally(during: "test", footprintMB: footprint, residentMB: footprint, atSeconds: at)
+    }
+
+    @Test("A minute's level is where memory sits most of it, so a spike of a second or two does not move it")
+    func levelIgnoresSpikes() {
+        let flat = Self.tally(spike: 1500) { _ in 1200 }
+        #expect(flat.levelMB(minute: 2) == 1200)
+        #expect(flat.levelMB(minute: 10) == 1200)
+        #expect(flat.levelMB(minute: 11) == nil)
+        #expect(flat.peakFootprintMB == 2700)
+        #expect(flat.growthPercent == 0)
+    }
+
+    @Test("Growth is from minute 2 to the last whole minute, the first minute being the warm-up")
+    func growthFromMinuteTwo() throws {
+        let climbing = Self.tally { minute in minute == 1 ? 600 : 1000 + Double(minute - 2) * 25 }
+        // Minute 2 sits at 1000, minute 10 at 1200: 20 percent.
+        #expect(abs(try #require(climbing.growthPercent) - 20) < 0.01)
+        // Two whole minutes say nothing about levelling off.
+        #expect(Self.tally(minutes: 2) { _ in 1000 }.growthPercent == nil)
+        // Readings with no times (a file written before they were kept) are one a second.
+        let untimed = SpeedWalk.MemoryTally(during: "test", footprintMB: climbing.footprintMB,
+                                            residentMB: climbing.residentMB)
+        #expect(untimed.levelMB(minute: 10) == climbing.levelMB(minute: 10))
+    }
+
+    @Test("A memory run is held to a ceiling for its peak and to levelling off after the first minute")
+    func verdict() {
+        let calm = Self.tally(spike: 800) { _ in 1200 }
+        #expect(SpeedWalk.memoryProblems(calm, ceilingMB: 2500, growthPercent: 10).isEmpty)
+        let tall = SpeedWalk.memoryProblems(calm, ceilingMB: 1800, growthPercent: 10)
+        #expect(tall.count == 1)
+        #expect(tall.first?.contains("2000 MB") == true)
+        #expect(tall.first?.contains("1800 MB") == true)
+        let climbing = Self.tally { minute in 1000 + Double(minute) * 40 }
+        let grows = SpeedWalk.memoryProblems(climbing, ceilingMB: nil, growthPercent: 10)
+        #expect(grows.count == 1)
+        #expect(grows.first?.contains("minute 2") == true)
+        // Too short a run to say whether it levels off is never failed for it.
+        #expect(SpeedWalk.memoryProblems(Self.tally(minutes: 2) { $0 == 1 ? 100 : 5000 },
+                                         ceilingMB: nil, growthPercent: 10).isEmpty)
+    }
+
+    @Test("The whole walk's peak is a number of its own, judged against the baseline and kept worst-of in an envelope")
+    func walkPeak() throws {
+        var base = SpeedRun(minutes: 6, form: "short", head: "a", date: "2026-11-16", machine: "test", frameStepMS: 33)
+        #expect(!base.metrics.contains { $0.key == SpeedRun.walkPeakKey })
+        base.walkPeakFootprintMB = 1000
+        #expect(base.metrics.contains { $0.key == SpeedRun.walkPeakKey && $0.value == 1000 && $0.unit == .megabytes })
+        var run = base
+        run.walkPeakFootprintMB = 1700
+        let worse = SpeedCompare.regressions(baseline: base, run: run, marginPercent: 50)
+        #expect(worse.count == 1)
+        #expect(worse.first?.hasPrefix(SpeedRun.walkPeakKey) == true)
+        run.walkPeakFootprintMB = 1600
+        #expect(SpeedCompare.regressions(baseline: base, run: run, marginPercent: 50).isEmpty)
+        let both = try #require(SpeedRun.envelope(of: [base, run]))
+        #expect(both.walkPeakFootprintMB == 1600)
+        let data = try JSONEncoder().encode(run)
+        #expect(try JSONDecoder().decode(SpeedRun.self, from: data).walkPeakFootprintMB == 1600)
+    }
+
+    @Test("An export's peak memory is a number of its own, so an export's cost never hides a jump while playing")
+    func exportPeak() throws {
+        var base = SpeedRun(minutes: 6, form: "short", head: "a", date: "2026-11-16", machine: "test", frameStepMS: 33)
+        base.walkPeakFootprintMB = 1700
+        base.export = SpeedWalk.ExportTally(settings: "MP4, Standard, Full", seconds: 14, megabytes: 54, route: "drawn")
+        #expect(!base.metrics.contains { $0.key == SpeedRun.exportPeakKey })
+        base.export?.peakFootprintMB = 3900
+        #expect(base.metrics.contains { $0.key == SpeedRun.exportPeakKey && $0.value == 3900 })
+        var run = base
+        run.walkPeakFootprintMB = 2900
+        let worse = SpeedCompare.regressions(baseline: base, run: run, marginPercent: 50)
+        #expect(worse.count == 1 && worse.first?.hasPrefix(SpeedRun.walkPeakKey) == true)
+        run = base
+        run.export?.peakFootprintMB = 6500
+        #expect(SpeedCompare.regressions(baseline: base, run: run, marginPercent: 50).first?.hasPrefix(SpeedRun.exportPeakKey) == true)
+        // The worst of several runs keeps the highest export peak, whichever run took longest.
+        var quick = base
+        quick.export?.seconds = 10
+        quick.export?.peakFootprintMB = 4200
+        let both = try #require(SpeedRun.envelope(of: [base, quick]))
+        #expect(both.export?.seconds == 14 && both.export?.peakFootprintMB == 4200)
+    }
+
+    @Test("A memory step carries its ceiling and its growth limit; other steps may not")
+    func stepFields() throws {
+        let json = #"{"steps": [{"do": "speed", "measure": "memory", "seconds": 600, "ceilingMB": 2600, "growthPercent": 10}]}"#
+        let script = try PlaytestScript.decode(Data(json.utf8))
+        guard case .speed(let memory) = script.steps[0] else {
+            Issue.record("not a speed step")
+            return
+        }
+        #expect(memory.ceilingMB == 2600 && memory.growthPercent == 10)
+        for bad in [#"{"do": "speed", "measure": "play", "ceilingMB": 2000}"#,
+                    #"{"do": "speed", "measure": "memory", "growthPercent": -1}"#,
+                    #"{"do": "speed", "measure": "memory", "ceilingMB": 0}"#] {
+            #expect(throws: PlaytestScriptError.self) { try PlaytestScript.decode(Data("{\"steps\": [\(bad)]}".utf8)) }
+        }
+    }
+}
+
+@Suite("Where the memory walk's hand takes the playhead")
+struct SpeedWalkScrubPlacesTests {
+
+    @Test("The same places every run, so two runs of the memory walk play and scrub the same parts of the edit")
+    func samePlacesEveryRun() {
+        let length = 3_600_000
+        let a = SpeedWalk.memoryScrubPlaces(count: 20, lengthMS: length)
+        #expect(a == SpeedWalk.memoryScrubPlaces(count: 20, lengthMS: length))
+        #expect(a.count == 20)
+        #expect(a.allSatisfy { (0...(length - 30_000)).contains($0) })
+        // Spread over the edit, not bunched at one end.
+        #expect(Set(a.map { $0 * 4 / length }).count >= 3)
+        #expect(SpeedWalk.memoryScrubPlaces(count: 3, lengthMS: 10_000).allSatisfy { (0...1).contains($0) })
+    }
+}

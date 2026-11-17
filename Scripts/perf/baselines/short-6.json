@@ -69,6 +69,7 @@
   "export" : {
     "longestMainPassMS" : 0.9766668081283569,
     "megabytes" : 54.281142234802246,
+    "peakFootprintMB" : 3944.0805740356445,
     "route" : "drawn",
     "seconds" : 14.672310250112787,
     "settings" : "MP4, Standard, Full",
@@ -155,5 +156,6 @@
   },
   "timeline" : [
 
-  ]
+  ],
+  "walkPeakFootprintMB" : 1734.033790588379
 }

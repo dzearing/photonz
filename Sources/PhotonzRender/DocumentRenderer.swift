@@ -165,7 +165,17 @@ public final class DocumentRenderer: @unchecked Sendable {
     // recording's frame was decoded onto holds the surface and not the
     // picture, and a new frame's picture landing at a freed one's address
     // drew the old frame (caught 2026-11-16 by comparing exports).
-    private var wrapCache: [ObjectIdentifier: (source: CGImage, image: CIImage)] = [:]
+    //
+    // Each entry also says which store holds its picture, under which ref,
+    // so an entry whose picture the store has let go (or replaced) is let go
+    // here too (`letGoOfWrapsTheStoreDropped`).
+    private struct Wrap {
+        let source: CGImage
+        let image: CIImage
+        let ref: ImageRef?
+        weak var store: ImageStore?
+    }
+    private var wrapCache: [ObjectIdentifier: Wrap] = [:]
     private var wrapOrder: [ObjectIdentifier] = []
     private let cacheLock = NSLock()
     /// Test hooks: how often content was served from / added to the cache.
@@ -234,7 +244,11 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// (`ImageStore.register(_:as:surface:)`): read directly, it costs no
     /// upload of the picture's bytes at all. It is read in the picture's own
     /// colour space, so the two draw the same.
-    private func wrapped(_ cg: CGImage, surface: CVPixelBuffer? = nil) -> CIImage {
+    ///
+    /// `ref` and `store` say where the picture came from, so the wrap is let
+    /// go once the store no longer holds it there.
+    private func wrapped(_ cg: CGImage, surface: CVPixelBuffer? = nil,
+                         ref: ImageRef? = nil, store: ImageStore? = nil) -> CIImage {
         let key = ObjectIdentifier(cg)
         cacheLock.lock()
         defer { cacheLock.unlock() }
@@ -261,13 +275,41 @@ public final class DocumentRenderer: @unchecked Sendable {
             plain = CIImage(cgImage: cg)
         }
         let image = plain.clampedToExtent().cropped(to: plain.extent)
+        letGoOfWrapsTheStoreDropped()
         if wrapCache[key] != nil { wrapOrder.removeAll { $0 == key } }
-        wrapCache[key] = (cg, image)
+        wrapCache[key] = Wrap(source: cg, image: image, ref: ref, store: store)
         wrapOrder.append(key)
         if wrapOrder.count > Self.cacheCapacity {
             wrapCache[wrapOrder.removeFirst()] = nil
         }
         return image
+    }
+
+    /// Drops every wrap whose picture its store no longer holds under its
+    /// ref. A recording's frames come and go from the store as the playhead
+    /// moves, and without this the last 32 wrapped stayed alive whatever the
+    /// store let go: at a zoom on the hour-long reference edit, 32 frames at
+    /// the recording's full Retina size, a gigabyte the store had already
+    /// given up, with their copies on the GPU beside them (2026-11-16). Runs
+    /// on every miss, which is every new frame while a video plays. Caller
+    /// holds `cacheLock`.
+    private func letGoOfWrapsTheStoreDropped() {
+        let gone = wrapOrder.filter { key in
+            guard let wrap = wrapCache[key], let ref = wrap.ref else { return false }
+            guard let store = wrap.store else { return true }
+            return store.image(for: ref) !== wrap.source
+        }
+        guard !gone.isEmpty else { return }
+        let dropped = Set(gone)
+        for key in gone { wrapCache[key] = nil }
+        wrapOrder.removeAll { dropped.contains($0) }
+    }
+
+    /// Whether the wrap cache is holding `image` alive (tests).
+    func wrapCacheHolds(_ image: CGImage) -> Bool {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        return wrapCache[ObjectIdentifier(image)]?.source === image
     }
 
     /// The cached rasterization of value-typed content at `size`, produced by
@@ -1338,7 +1380,7 @@ public final class DocumentRenderer: @unchecked Sendable {
                 break
             }
             guard let cg = store.image(for: ref) else { return nil }
-            image = magnified(wrapped(cg, surface: store.surface(for: ref, standingFor: cg)),
+            image = magnified(wrapped(cg, surface: store.surface(for: ref, standingFor: cg), ref: ref, store: store),
                               nearest: magnifyNearest, scale: contentScale)
             // A bitmap asked to cover more than it has pixels for gets the
             // better resampler, whatever put it in that position: a canvas

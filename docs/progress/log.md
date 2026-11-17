@@ -23195,3 +23195,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - User's recording: High export 0.1 s copy of 121 MB -> 4.3 s, 32.7 MB; sidebar 27 -> 38 levels, steps 4 -> 2 codes max, longest flat 116 -> 68 px (the gradient's minimum; under 40 px needs grain at that slope); text p99 9 codes, same as a plain re-encode.
 - `Scripts/recording-start-drill.sh --minute`: 60 s recordings counted from the file, 3192 and 3172 frames, no gap over two 60 Hz frames. Start median 12.9 ms. Capture code diff empty.
 - Next: nothing open on this task beyond the user's read of the audit. 8-bit recordings (before today's 10-bit change) are still copied with their steps.
+
+## 2026-11-16 — memory stays level while the hour-long edit plays and scrubs (`memory-stays-bounded-while-an-hour-long-edit-pla`)
+
+- Measured first: 10 minutes of play and scrub on the 60 minute reference edit no longer climbs (minute levels 1269-1389 MB) but spiked to 2826 MB. vmmap at a spike: full-Retina frames read for zooms, kept alive by `DocumentRenderer`'s wrap cache (last 32 CGImages wrapped, whatever the store had dropped) with their GPU uploads.
+- Fix: a wrap is dropped once its store no longer holds that picture under its ref (`letGoOfWrapsTheStoreDropped`, `ContentCacheTests`). After: levels 1093-1240 MB, +7% minute 2 to 10, peak 2100 MB.
+- Checks: `Scripts/perf/speed-walk.sh --memory` (ceiling 2500 MB, growth 10%, seeded scrub places, 10 Hz sampler keeping each second's max); every speed walk writes the app's peak before its export and the export's own peak, both in `short-6.json`. docs/design/memory.md "Playing a long video".
+- Open: an export holds ~4 GB whatever its length (`find-out-why-exporting-a-video-holds-about-4-gb`, p2).

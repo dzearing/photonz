@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/speed-long-60-memory",
   "clock": 3600,
-  "seed": "Long form of the speed walk on the 60 minute reference edit, part two: a minute played at 1x across its transitions, then ten minutes of playing with a hand taking the playhead somewhere else every half minute, memory read once a second on a timer of its own (the main thread let a reading through once every five minutes on 2026-11-13). Run by Scripts/perf/speed-walk.sh --long.",
+  "seed": "Long form of the speed walk on the 60 minute reference edit, part two: a minute played at 1x across its transitions, then ten minutes of playing with a hand taking the playhead somewhere else every half minute, the same places every run, memory read ten times a second on a timer of its own and kept as each second's highest (the main thread let a reading through once every five minutes on 2026-11-13). Fails when the peak reaches ceilingMB or the last minute sits more than growthPercent above the second; both set from the measurement on 2026-11-16 (docs/design/memory.md, Playing a long video). Run by Scripts/perf/speed-walk.sh --memory or --long.",
   "setup": {
     "forget": [
       "all"
@@ -23,7 +23,9 @@
     {
       "do": "speed",
       "measure": "memory",
-      "seconds": 600
+      "seconds": 600,
+      "ceilingMB": 2500,
+      "growthPercent": 10
     }
   ]
 }

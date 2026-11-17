@@ -44,7 +44,7 @@ final class SpeedWalkProbe {
         case .edits: return try await edits(editor, step.edits, fromMS: step.fromMS)
         case .idleBuilds: return try await idleBuilds(editor, seconds: step.seconds ?? 3, fromMS: step.fromMS)
         case .timeline: return try await timeline(editor)
-        case .memory: return try await memory(editor, seconds: step.seconds ?? 600)
+        case .memory: return try await memory(editor, step)
         case .export: return try await export(editor, step)
         case .compare: return try compare(step)
         case nil: throw Failure(description: "\(step.rawMeasure) is not a measure")
@@ -500,11 +500,12 @@ final class SpeedWalkProbe {
 
     // MARK: - Memory
 
-    private func memory(_ editor: EditorState, seconds: Double) async throws -> String {
+    private func memory(_ editor: EditorState, _ step: PlaytestSpeedMeasure) async throws -> String {
+        let seconds = step.seconds ?? 600
         let frames = try frames(editor)
         defer { frames.invalidate() }
         let length = editor.documentLengthMS
-        var generator = SystemRandomNumberGenerator()
+        var places = SpeedWalk.memoryScrubPlaces(count: Int(seconds / 30) + 1, lengthMS: length)[...]
         editor.pauseDocument()
         editor.scrubDocument(toMS: 0)
         await settle(editor, frames: frames)
@@ -527,7 +528,7 @@ final class SpeedWalkProbe {
                 editor.pauseDocument()
                 editor.beginPlayheadDrag()
                 let from = editor.documentTimeMS
-                let to = Int.random(in: 0...max(1, length - 30_000), using: &generator)
+                let to = places.popFirst() ?? 0
                 let scrubStart = CACurrentMediaTime()
                 for index in 0...240 where CACurrentMediaTime() - scrubStart < 10 {
                     editor.dragPlayhead(toMS: from + (to - from) * index / 240)
@@ -546,16 +547,32 @@ final class SpeedWalkProbe {
                                           footprintMB: taken.map(\.footprint), residentMB: taken.map(\.resident),
                                           atSeconds: taken.map(\.at))
         run.memory = tally
-        return String(format: "%@: %d readings, footprint from %.0fMB to %.0fMB, peak %.0fMB; resident peak %.0fMB",
-                      tally.during, taken.count, taken.first?.footprint ?? 0, taken.last?.footprint ?? 0,
-                      tally.peakFootprintMB, tally.peakResidentMB)
+        var said = String(format: "%@: %d readings, footprint from %.0fMB to %.0fMB, peak %.0fMB; resident peak %.0fMB",
+                          tally.during, taken.count, taken.first?.footprint ?? 0, taken.last?.footprint ?? 0,
+                          tally.peakFootprintMB, tally.peakResidentMB)
+        if let grew = tally.growthPercent, let from = tally.levelMB(minute: 2),
+           let to = tally.levelMB(minute: tally.wholeMinutes) {
+            said += String(format: "; sat at %.0fMB in minute 2 and %.0fMB in minute %d (%+.0f%%)",
+                           from, to, tally.wholeMinutes, grew)
+        }
+        let problems = SpeedWalk.memoryProblems(tally, ceilingMB: step.ceilingMB, growthPercent: step.growthPercent)
+        guard problems.isEmpty else {
+            write()
+            throw Failure(description: said + ". " + problems.joined(separator: "; "))
+        }
+        if let ceiling = step.ceilingMB { said += String(format: ", under its %.0fMB ceiling", ceiling) }
+        return said
     }
 
-    /// Memory read once a second on a queue of its own.
+    /// Memory read ten times a second on a queue of its own, and kept as one
+    /// reading a second: the most that second reached, so a spike that comes
+    /// and goes inside a second is still counted.
     private final class MemoryReadings: @unchecked Sendable {
         struct Reading { let at: Double; let footprint: Double; let resident: Double }
         private let lock = NSLock()
         private var kept: [Reading] = []
+        private var second: Reading?
+        private var ticks = 0
         private var timer: DispatchSourceTimer?
         private let began = CACurrentMediaTime()
 
@@ -563,13 +580,20 @@ final class SpeedWalkProbe {
 
         func start() {
             let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
-            timer.schedule(deadline: .now() + 1, repeating: 1)
+            timer.schedule(deadline: .now() + .milliseconds(100), repeating: .milliseconds(100))
             timer.setEventHandler { [weak self] in
                 guard let self else { return }
                 let reading = SpeedWalkProbe.memoryReading()
                 let now = CACurrentMediaTime() - self.began
                 self.lock.withLock {
-                    self.kept.append(Reading(at: now, footprint: reading.footprint, resident: reading.resident))
+                    let last = self.second
+                    self.second = Reading(at: now, footprint: max(last?.footprint ?? 0, reading.footprint),
+                                          resident: max(last?.resident ?? 0, reading.resident))
+                    self.ticks += 1
+                    if self.ticks % 10 == 0, let full = self.second {
+                        self.kept.append(full)
+                        self.second = nil
+                    }
                 }
             }
             timer.resume()
@@ -582,6 +606,21 @@ final class SpeedWalkProbe {
                 timer = nil
             }
         }
+    }
+
+    /// The most memory the app has used since it was launched, the way
+    /// Activity Monitor counts it: a walk launches the probe afresh, so this
+    /// is the walk's own peak, spikes between readings included.
+    nonisolated static func lifetimePeakMB() -> Double? {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        guard result == KERN_SUCCESS, info.ledger_phys_footprint_peak > 0 else { return nil }
+        return Double(info.ledger_phys_footprint_peak) / (1024 * 1024)
     }
 
     nonisolated static func memoryReading() -> (footprint: Double, resident: Double) {
@@ -635,12 +674,14 @@ final class SpeedWalkProbe {
         let taken = CACurrentMediaTime() - start
         let longest = MainThreadMeter.shared.longestMS
         let bytes = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
-        let tally = SpeedWalk.ExportTally(settings: "MP4, Standard, Full", seconds: taken,
+        var tally = SpeedWalk.ExportTally(settings: "MP4, Standard, Full", seconds: taken,
                                           megabytes: Double(bytes) / 1_048_576, route: "\(route)",
                                           videoSeconds: length, longestMainPassMS: longest)
+        tally.peakFootprintMB = Self.lifetimePeakMB()
         run.export = tally
-        return String(format: "exported %.0fs of video at the sheet's defaults in %.1fs (%.2fx real time), %.0fMB, %@, longest main thread pass %.0fms",
-                      length, taken, taken / max(0.001, length), tally.megabytes, tally.route, longest)
+        return String(format: "exported %.0fs of video at the sheet's defaults in %.1fs (%.2fx real time), %.0fMB, %@, longest main thread pass %.0fms, memory peak %.0fMB",
+                      length, taken, taken / max(0.001, length), tally.megabytes, tally.route, longest,
+                      tally.peakFootprintMB ?? 0)
     }
 
     // MARK: - Against a baseline
@@ -656,6 +697,7 @@ final class SpeedWalkProbe {
         do { baseline = try JSONDecoder().decode(SpeedRun.self, from: data) } catch {
             throw Failure(description: "the baseline at \(url.path) does not read: \(error)")
         }
+        if run.export == nil { run.walkPeakFootprintMB = Self.lifetimePeakMB() }
         let worse = SpeedCompare.regressions(baseline: baseline, run: run, marginPercent: step.marginPercent)
         write()
         guard worse.isEmpty else {
@@ -671,6 +713,9 @@ final class SpeedWalkProbe {
     // MARK: - The file
 
     private func write() {
+        // The peak playing and editing is read up to the export; after it the
+        // export's own peak is what grew (`ExportTally.peakFootprintMB`).
+        if run.export == nil { run.walkPeakFootprintMB = Self.lifetimePeakMB() }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         guard let data = try? encoder.encode(run) else { return }

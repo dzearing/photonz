@@ -298,6 +298,36 @@ public enum SpeedWalk {
 
     // MARK: - Editing, memory, export, sound
 
+    /// Where the memory walk's hand takes the playhead, once every half
+    /// minute: the same places on every run, so two runs play and scrub the
+    /// same parts of the edit and their memory can be set side by side. Each
+    /// is far enough from the end to play on for half a minute. Picked at
+    /// random by every run until 2026-11-16, when one run's second minute sat
+    /// 5 percent under the next run's for no reason but where it had been.
+    public static func memoryScrubPlaces(count: Int, lengthMS: Int) -> [Int] {
+        var random = SplitMix(seed: 0x6D65_6D6F_7279)
+        let last = max(1, lengthMS - 30_000)
+        return (0..<max(0, count)).map { _ in random.int(in: 0...last) }
+    }
+
+    /// What a long play and scrub broke of what memory is held to, one line
+    /// each, or nothing: its peak under `ceilingMB`, and memory levelling off
+    /// after the first minute, no more than `growthPercent` higher in the
+    /// last whole minute than in the second (`MemoryTally.growthPercent`).
+    public static func memoryProblems(_ tally: MemoryTally, ceilingMB: Double?, growthPercent: Double?) -> [String] {
+        var out: [String] = []
+        if let ceilingMB, tally.peakFootprintMB >= ceilingMB {
+            out.append("memory peaked at \(Int(tally.peakFootprintMB.rounded())) MB, and the ceiling is "
+                + "\(Int(ceilingMB.rounded())) MB")
+        }
+        if let allowed = growthPercent, let grew = tally.growthPercent, grew > allowed,
+           let from = tally.levelMB(minute: 2), let to = tally.levelMB(minute: tally.wholeMinutes) {
+            out.append(String(format: "memory kept growing: it sat at %.0f MB in minute 2 and %.0f MB in minute %d, "
+                + "%.0f%% higher, and at most %.0f%% is allowed", from, to, tally.wholeMinutes, grew, allowed))
+        }
+        return out
+    }
+
     /// One edit made while the document played.
     public struct EditTally: Codable, Equatable, Sendable {
         /// "trim", "move", "blade", "undo", "transition" or "title".
@@ -345,6 +375,39 @@ public enum SpeedWalk {
             peakFootprintMB = footprintMB.max() ?? 0
             peakResidentMB = residentMB.max() ?? 0
         }
+
+        /// Where memory sat through minute `minute` (from 1): the median of
+        /// that minute's readings, so a spike of a second or two, which comes
+        /// and goes whenever a zoom or a scrub reads bigger frames, does not
+        /// move it. Nil when the run did not last the whole minute.
+        public func levelMB(minute: Int) -> Double? {
+            guard minute >= 1 else { return nil }
+            let at = atSeconds ?? footprintMB.indices.map { Double($0 + 1) }
+            guard let last = at.last, last >= Double(minute * 60) - 1 else { return nil }
+            let from = Double((minute - 1) * 60), to = Double(minute * 60)
+            let inside = zip(at, footprintMB).filter { $0.0 > from && $0.0 <= to }.map(\.1).sorted()
+            guard !inside.isEmpty else { return nil }
+            let middle = inside.count / 2
+            return inside.count % 2 == 1 ? inside[middle] : (inside[middle - 1] + inside[middle]) / 2
+        }
+
+        /// The last minute the run lasted the whole of.
+        public var wholeMinutes: Int {
+            let at = atSeconds ?? footprintMB.indices.map { Double($0 + 1) }
+            return Int(((at.last ?? 0) + 1) / 60)
+        }
+
+        /// How much higher memory sits in the last whole minute than in the
+        /// second, in percent. The first minute is the warm-up (the edit's
+        /// first frames, fonts, the timeline's pictures) and is left out. Nil
+        /// with fewer than three whole minutes, too short to say whether
+        /// memory levels off.
+        public var growthPercent: Double? {
+            let last = wholeMinutes
+            guard last >= 3, let second = levelMB(minute: 2), second > 0,
+                  let end = levelMB(minute: last) else { return nil }
+            return (end - second) / second * 100
+        }
     }
 
     public struct ExportTally: Codable, Equatable, Sendable {
@@ -359,6 +422,10 @@ public enum SpeedWalk {
         /// The longest the main thread was held while the export ran: the app
         /// stays usable while it writes, or it does not.
         public var longestMainPassMS: Double?
+        /// The most memory the app had used by the time the file was
+        /// written, since launch: what the export cost on top of the rest.
+        /// Nil in a file written before it was kept.
+        public var peakFootprintMB: Double?
 
         public init(settings: String, seconds: Double, megabytes: Double, route: String,
                     videoSeconds: Double? = nil, longestMainPassMS: Double? = nil) {
@@ -439,7 +506,21 @@ public struct SpeedRun: Codable, Equatable, Sendable {
     public var bodiesPerFrame: [String: Double] = [:]
     public var timeline: [SpeedWalk.FrameTimes] = []
     public var memory: SpeedWalk.MemoryTally?
+    /// The most memory the app used from its launch until the walk's export
+    /// (to its end, in a walk with none), counted the way Activity Monitor
+    /// counts it and including spikes no reading a second would catch: the
+    /// peak while the edit opens, plays, is scrubbed and edited. Every walk
+    /// records it, so the short walk shows a jump on every rotating check.
+    /// An export has a peak of its own (`ExportTally.peakFootprintMB`): at
+    /// about twice this on 2026-11-16, it would hide a jump here. Nil in a
+    /// file written before it was kept.
+    public var walkPeakFootprintMB: Double?
     public var export: SpeedWalk.ExportTally?
+
+    /// The name the walk's peak before its export is compared under.
+    public static let walkPeakKey = "memory: peak playing and editing"
+    /// The name an export's peak is compared under.
+    public static let exportPeakKey = "export: peak memory"
 
     public init(minutes: Int?, form: String, head: String, date: String, machine: String, frameStepMS: Int) {
         self.minutes = minutes
@@ -489,10 +570,16 @@ public struct SpeedRun: Codable, Equatable, Sendable {
         if let memory {
             out.append(Metric(key: "memory: peak footprint", value: memory.peakFootprintMB, unit: .megabytes))
         }
+        if let walkPeakFootprintMB {
+            out.append(Metric(key: Self.walkPeakKey, value: walkPeakFootprintMB, unit: .megabytes))
+        }
         if let export {
             out.append(Metric(key: "export: time", value: export.seconds, unit: .seconds))
             if let pass = export.longestMainPassMS {
                 out.append(Metric(key: "export: longest main pass", value: pass, unit: .ms))
+            }
+            if let peak = export.peakFootprintMB {
+                out.append(Metric(key: Self.exportPeakKey, value: peak, unit: .megabytes))
             }
         }
         return out
@@ -555,7 +642,10 @@ extension SpeedRun {
             if let memory = run.memory, memory.peakFootprintMB > (out.memory?.peakFootprintMB ?? -1) {
                 out.memory = memory
             }
+            if let peak = run.walkPeakFootprintMB { out.walkPeakFootprintMB = max(out.walkPeakFootprintMB ?? 0, peak) }
+            let exportPeak = [out.export?.peakFootprintMB, run.export?.peakFootprintMB].compactMap { $0 }.max()
             if let export = run.export, export.seconds > (out.export?.seconds ?? -1) { out.export = export }
+            if exportPeak != nil { out.export?.peakFootprintMB = exportPeak }
         }
         return out
     }
@@ -653,7 +743,7 @@ public enum SpeedCompare {
 /// {"do": "speed", "measure": "edits", "edits": ["trim", "move", "blade", "undo", "transition", "title"]}
 /// {"do": "speed", "measure": "idleBuilds", "seconds": 3}
 /// {"do": "speed", "measure": "timeline"}
-/// {"do": "speed", "measure": "memory", "seconds": 600}
+/// {"do": "speed", "measure": "memory", "seconds": 600, "ceilingMB": 2600, "growthPercent": 10}
 /// {"do": "speed", "measure": "export"}
 /// {"do": "speed", "measure": "compare", "baseline": "../perf/baselines/short-6.json", "marginPercent": 50}
 /// ```
@@ -708,10 +798,18 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     /// made into a picture, read back off the GPU and drawn again into the
     /// encoder's buffer. Only for comparing the pictures the two make.
     public var throughPictures: Bool
+    /// A memory step's ceiling for its peak footprint, in megabytes.
+    public var ceilingMB: Double?
+    /// A memory step's limit on growth from minute 2 to its last whole
+    /// minute, in percent (`SpeedWalk.memoryProblems`).
+    public var growthPercent: Double?
 
     public init(measure: String, seconds: Double? = nil, fromMS: Int? = nil, speeds: [String] = [],
                 edits: [String] = [], form: String? = nil, baseline: String? = nil, marginPercent: Double? = nil,
-                keep: String? = nil, throughPictures: Bool = false) {
+                keep: String? = nil, throughPictures: Bool = false, ceilingMB: Double? = nil,
+                growthPercent: Double? = nil) {
+        self.ceilingMB = ceilingMB
+        self.growthPercent = growthPercent
         self.keep = keep
         self.throughPictures = throughPictures
         rawMeasure = measure
@@ -743,6 +841,11 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
         if let keep, keep.isEmpty || keep.contains("/") {
             return ("keep", "is a file name in the walk's own folder")
         }
+        if measure != .memory, ceilingMB != nil || growthPercent != nil {
+            return (ceilingMB != nil ? "ceilingMB" : "growthPercent", "is for a memory step")
+        }
+        if let ceilingMB, ceilingMB <= 0 { return ("ceilingMB", "must be more than nothing") }
+        if let growthPercent, growthPercent < 0 { return ("growthPercent", "cannot be less than nothing") }
         if measure != .export, keep != nil || throughPictures {
             return (keep != nil ? "keep" : "throughPictures", "is for an export")
         }

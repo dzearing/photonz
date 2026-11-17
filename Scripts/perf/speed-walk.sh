@@ -7,6 +7,10 @@
 #
 #   Scripts/perf/speed-walk.sh [--no-build]                 the short form (the walk set's)
 #   Scripts/perf/speed-walk.sh --long [6] [20] [60] [--no-build]
+#   Scripts/perf/speed-walk.sh --memory [--no-build]        the memory check alone: ten minutes
+#                                                           of playing and scrubbing the 60 minute
+#                                                           edit, failed over its ceiling or if it
+#                                                           keeps growing (about 13 minutes)
 #   Scripts/perf/speed-walk.sh --baseline [N] [--no-build]  N short runs (3 by default), their
 #                                                           worst written as the short walk's baseline
 #
@@ -20,7 +24,7 @@
 # margin. The long form (Scripts/perf/walks/) plays the 6 minute edit whole,
 # scrubs at three speeds, makes six edits while it plays, zooms and scrolls
 # the timeline, exports, and on the 60 minute edit plays and scrubs for ten
-# minutes reading memory each second. On 2026-11-12 that took about 12
+# minutes reading memory ten times a second. On 2026-11-12 that took about 12
 # minutes plus a 33 minute export for the 6 minute edit, 15 minutes for the
 # 20 and well over an hour for the 60, because every look waits for a main
 # thread that is busy for seconds (a minute and more at an hour long); each
@@ -38,17 +42,19 @@ set -uo pipefail
 cd "$(dirname "$0")/../.."
 
 LONG=0
+MEMORY=0
 BUILD=1
 BASELINE=0
 LENGTHS=()
 for arg in "$@"; do
   case "$arg" in
     --long) LONG=1 ;;
+    --memory) MEMORY=1 ;;
     --baseline) BASELINE=3 ;;
     --no-build) BUILD=0 ;;
     6|20|60) LENGTHS+=("$arg") ;;
-    [1-9]) (( BASELINE )) && BASELINE="$arg" || { echo "usage: $0 [--long [6] [20] [60]] [--baseline [N]] [--no-build]" >&2; exit 2; } ;;
-    *) echo "usage: $0 [--long [6] [20] [60]] [--baseline [N]] [--no-build]" >&2; exit 2 ;;
+    [1-9]) (( BASELINE )) && BASELINE="$arg" || { echo "usage: $0 [--long [6] [20] [60]] [--memory] [--baseline [N]] [--no-build]" >&2; exit 2; } ;;
+    *) echo "usage: $0 [--long [6] [20] [60]] [--memory] [--baseline [N]] [--no-build]" >&2; exit 2 ;;
   esac
 done
 (( LONG )) && (( ${#LENGTHS[@]} == 0 )) && LENGTHS=(6 20 60)
@@ -111,6 +117,28 @@ if (( BASELINE )); then
   "$(swift build --show-bin-path)/ReferenceEditTool" envelope Scripts/perf/baselines/short-6.json "${runs[@]}"
   Scripts/probe-app.sh --quit >/dev/null 2>&1 || true
   exit 0
+fi
+
+# The memory check: memory over ten minutes of the 60 minute edit, held to
+# the ceiling and the growth limit its walk names (Scripts/perf/walks/
+# long-60-memory.json, set from the measurement in
+# queue/audits/2026-11-16-memory-stays-bounded.json). The walk fails when
+# either is broken, and so does this.
+if (( MEMORY )); then
+  script=Scripts/perf/walks/long-60-memory.json
+  flags=()
+  (( BUILD )) || flags+=(--no-build)
+  Scripts/playtest.sh "$script" "${flags[@]+"${flags[@]}"}" >&2
+  status=$?
+  out="$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).out)' "$script")"
+  if [[ -f "$out/speed.json" ]]; then
+    merge "$RESULTS/$STAMP-$HEAD-memory-60.json" "$out/speed.json"
+    node -e 'for (const e of JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")))
+      if (/playing and scrubbing/.test(e.note || "")) console.error("    " + e.note)' "$out/log.json" || true
+  fi
+  Scripts/probe-app.sh --quit >/dev/null 2>&1 || true
+  if (( status == 0 )); then echo "==> Memory check passed"; else echo "!! Memory check FAILED (walk exit $status)"; fi
+  exit "$status"
 fi
 
 if (( ! LONG )); then

@@ -1,0 +1,32 @@
+{
+  "feature": "Memory stays level while an hour-long edit plays and scrubs",
+  "epic": "video-perf",
+  "summary": "Playing and scrubbing the 60 minute reference edit for ten minutes now sits at about 1.1 to 1.2 GB and peaks at 2.1 GB, where it sat at 1.3 GB and spiked to 2.8 GB. Memory does not climb over the ten minutes, and a check now fails if it ever does or if the peak passes 2.5 GB.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The hour-long edit is the speed walk's reference edit: Scripts/perf/reference-edit.sh 60 opens it.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 60 minute reference edit and open Activity Monitor beside it on the Memory tab.",
+      "shot": "2026-11-16-memory-60-before-after.png"
+    },
+    { "do": "Press Space and let it play for a minute across its dissolves, cubes and zooms." },
+    { "do": "Every half minute, drag the playhead somewhere far away and let it play on from there." },
+    { "do": "After ten minutes, read Photonz's Memory column: about 1.1 to 1.3 GB, never above about 2 GB." },
+    { "do": "Play through a zoomed-in stretch and watch the column: it rises for a second or two and comes back down." }
+  ],
+  "evaluate": [
+    "Does Photonz's memory in Activity Monitor stay where you would expect a video editor's to while you work through a long edit?",
+    "Is a peak of about 2 GB on an hour of Retina recordings acceptable, or should the next pass aim lower?",
+    "Does anything look or play differently through zooms and transitions now that the renderer lets go of frames sooner?"
+  ],
+  "rough": [
+    "The chart is the measurement, not a picture of the window: the memory walk takes no window pictures. Top half before, bottom half after, same scale, the red line is the new 2500 MB ceiling. No mock covers memory.",
+    "Before (HEAD b524c75af, Scripts/perf/walks/long-60-memory.json): per-minute level 1269 to 1389 MB from minute 2 to 10, +7% from minute 2 to 10, peak 2826 MB, resident peak 3140 MB. It did not climb; it spiked by 1.0 to 1.5 GB for a second or two about twice a minute. (The task's note from 2026-11-12 of steps that never came back down no longer happens: earlier speed work fixed it.)",
+    "What the spikes were: vmmap at a spike showed Core Image's memory going from 330 MB to 1.0 GB, 24 to 27 recording frames at full Retina size (29.5 MB each), read that big for a zoom. The frame cache had already let most of them go; the renderer kept its own list of the last 32 pictures it had handed to Core Image, whatever the store had let go, and their GPU copies with them. Fixed: a renderer lets a picture go as soon as the store no longer holds it (tested in ContentCacheTests, red before, green after).",
+    "After: per-minute level 1093 to 1240 MB, +7% from minute 2 to 10 (+11% on an earlier run whose scrubs went to random places; the walk now scrubs to the same places every run so runs compare), peak 2100 MB, resident 2341 MB. vmmap at minute 2 and minute 9 of the same run: 989 MB and 1.0 GB, malloc up 11 MB, nothing growing.",
+    "What is left in a spike (about 800 MB over rest) is what the frame cache is meant to hold, up to 31 frames that are full size under a zoom, and the decoders' surfaces while a scrub starts several reads. Making the frame cache count bytes as well as frames would cut it further but risks dropped frames at a zoomed cut; left in this task's log, not filed.",
+    "Checked and not holding memory: thumbnails along clips (capped near 60 MB), sound shapes, undo history (holds references, not pictures), frames waiting for the main thread (none queued at any spike), how many recordings are read at once (no match with the spikes).",
+    "The 6 minute edit's peak, from the short speed walk on every rotating check: 1734 MB while it opens, plays, scrubs and edits, and 3944 MB once it exports 30 seconds. An export holds about 4 GB whatever its length (4376 MB for the whole 6 minutes): filed as find-out-why-exporting-a-video-holds-about-4-gb (p2), not part of play and scrub.",
+    "The checks: Scripts/perf/speed-walk.sh --memory (about 13 minutes, run when away from the Mac) fails over 2500 MB or when minute 10 sits more than 10% above minute 2. The short speed walk now records both peaks and fails on a jump of more than 50% plus 150 MB over its baseline."
+  ]
+}
