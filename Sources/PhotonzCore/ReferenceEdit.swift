@@ -95,9 +95,17 @@ public enum ReferenceEdit {
 
     /// A fixed id per file, so the same recording is the same id in every
     /// build of the edit and on every machine.
+    ///
+    /// The file's number is in the FIRST eight bytes. A frame's picture id is
+    /// its recording's id with the frame's number folded into the last eight
+    /// (`MovieRef.frameID`), so with the number at the very end, as it was
+    /// until 2026-11-17, the recordings shared picture ids (frame 2 of the
+    /// first was frame 3 of the second) and the edit drew one recording's
+    /// frame where another's belonged.
     static func mediaID(_ index: Int) -> UUID {
-        UUID(uuid: (0x52, 0x45, 0x46, 0x45, 0x44, 0x49, 0x54, UInt8(truncatingIfNeeded: recipeVersion),
-                    0x40, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, UInt8(truncatingIfNeeded: index)))
+        UUID(uuid: (0x52, 0x45, 0x46, 0x45, 0x44, UInt8(truncatingIfNeeded: index), 0x54,
+                    UInt8(truncatingIfNeeded: recipeVersion),
+                    0x40, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00))
     }
 
     // MARK: - Building it

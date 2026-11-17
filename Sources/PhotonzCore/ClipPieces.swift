@@ -991,6 +991,27 @@ extension Layer {
         return cuts ?? ClipPieces(single: time)
     }
 
+    /// The stretch of its recording this clip plays, in file milliseconds:
+    /// from the first moment any piece reads to the last. Nil for a layer
+    /// that does not occupy time.
+    public var playedSourceSpanMS: ClosedRange<Int>? {
+        guard let pieces = clipPieces else { return nil }
+        var low = Int.max, high = Int.min
+        for piece in pieces.playback {
+            low = min(low, piece.sourceInMS)
+            high = max(high, piece.sourceInMS + max(0, piece.sourceLengthMS))
+        }
+        return low <= high ? low...high : nil
+    }
+
+    /// ...the same, in its recording's grid frames (`MovieRef.frameIndex`):
+    /// where a stand-in for a frame not yet read is looked for first
+    /// (`MovieFramesInHand.frameIndexToShow`).
+    public var playedSourceFrames: ClosedRange<Int>? {
+        guard let movie, let span = playedSourceSpanMS else { return nil }
+        return movie.frameIndex(atSourceMS: span.lowerBound)...movie.frameIndex(atSourceMS: span.upperBound)
+    }
+
     /// Put new pieces on the layer, keeping its stretch in step.
     ///
     /// The pieces are the truth about what plays; `time` is where the row sits

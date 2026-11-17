@@ -128,6 +128,11 @@ extension EditorState {
         playheadPace.reset()
         playheadPace.moved(toMS: documentTimeMS, atMS: CACurrentMediaTime() * 1000)
         beginScrubAudition()
+        if let document = shownDocument {
+            var seen = Set<UUID>()
+            let movies = document.allLayers.compactMap(\.movie).filter { seen.insert($0.id).inserted }
+            movieFrames.learnKeyFrames(of: movies)
+        }
     }
 
     /// ...and moved it. The same landing as any other scrub, so the canvas,
@@ -438,11 +443,25 @@ extension EditorState {
             let way = playheadTravel == .backward ? -1 : 1
             let glimpsing = playheadInHand && !playheadSettled
                 && MovieSweep.glimpses(pace: playheadPace.editMSPerSecond)
+            // ...aimed where the hand will be when it lands, so a clip it is
+            // about to cross into is read before it gets there
+            // (`MovieSweep.glimpseLeadMS`).
+            // The frames under it now come after, read for nothing but kept:
+            // they are what is on screen until the key frames land.
+            var underHand = wanted.count
+            if glimpsing {
+                let lead = MovieSweep.glimpseLeadMS(pace: playheadPace.editMSPerSecond)
+                let there = document.movieFrames(
+                    atTimeMS: min(lastDocumentTimeMS, max(0, documentTimeMS + way * lead)))
+                if !there.isEmpty {
+                    wanted = there + wanted
+                    underHand = there.count
+                }
+            }
             let (count, stride) = isDocumentPlaying
                 ? (MovieFrameFetcher.playAheadFrames, MovieRef.frameStepMS)
                 : (playheadInHand && !playheadSettled && !glimpsing ? MovieFrameFetcher.scrubAheadMoves : 0,
                    playheadStrideMS)
-            let underHand = wanted.count
             if count > 0 {
                 for step in 1...count {
                     let ahead = documentTimeMS + way * step * stride
@@ -481,6 +500,12 @@ extension EditorState {
             } ?? []
             movieFrames.fetch(wanted, size: movieDecodeSize(in: document),
                               handMoving: handMoving, handPace: playheadPace.editMSPerSecond,
+                              played: { request in
+                                  document.layer(id: request.layerID)?.playedSourceSpanMS.map {
+                                      request.movie.frameIndex(atSourceMS: $0.lowerBound)
+                                          ... request.movie.frameIndex(atSourceMS: $0.upperBound)
+                                  }
+                              },
                               underHand: underHand,
                               backward: playheadTravel == .backward,
                               playing: playing,

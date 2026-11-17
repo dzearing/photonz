@@ -32,6 +32,28 @@ public struct MovieKeyFrames: Equatable, Sendable {
         self.frames = sorted.map { $0 / MovieRef.frameStepMS }
     }
 
+    /// The key frame nearest `frame` inside `within` (grid frames: the
+    /// stretch of the recording a clip plays, `Layer.playedSourceSpanMS`),
+    /// or the nearest at all where none is inside it. The nearest at all can
+    /// be one the clip never plays, just before its first frame or after its
+    /// last: a picture the edit never shows, from a part of the recording the
+    /// hand was nowhere near (2026-11-17).
+    public func nearest(to frame: Int, within: ClosedRange<Int>?) -> (frame: Int, sourceMS: Int)? {
+        guard let within else { return nearest(to: frame) }
+        let clamped = min(max(frame, within.lowerBound), within.upperBound)
+        // The first key frame after the clamped frame, and the one before.
+        var low = 0, high = frames.count
+        while low < high {
+            let mid = (low + high) / 2
+            if frames[mid] <= clamped { low = mid + 1 } else { high = mid }
+        }
+        let inside = [low - 1, low].filter { frames.indices.contains($0) && within.contains(frames[$0]) }
+        guard let best = inside.min(by: { abs(frames[$0] - frame) < abs(frames[$1] - frame) }) else {
+            return nearest(to: frame)
+        }
+        return (frames[best], sourceMS[best])
+    }
+
     /// The key frame nearest `frame`, either side; a tie goes to the one
     /// behind. Nil for a recording with none.
     public func nearest(to frame: Int) -> (frame: Int, sourceMS: Int)? {

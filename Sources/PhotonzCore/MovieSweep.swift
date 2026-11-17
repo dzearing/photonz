@@ -43,6 +43,29 @@ public enum MovieSweep {
     /// How many small frames one window keeps: a stretch and a half.
     public static let roughBudget = 64
 
+    /// How much of a recording around a playhead at rest is read small once
+    /// its sharp frame is in hand, so a hand that takes it and hunts has
+    /// frames to show from its first move. Without them the first fifth of a
+    /// second of a hunt showed the frame it started on while the decoder
+    /// worked forward from the key frame before it (2026-11-17). More ahead
+    /// than behind, since most hunts go forward.
+    public static let restAheadMS = 1000
+    public static let restBehindMS = 500
+
+    /// The grid frames read around a playhead at rest on `frame`, one of
+    /// `places` resting at once (two recordings on screen, say): together
+    /// they fit in three quarters of the small frames' budget, or each let
+    /// the others' go as they landed (2026-11-17).
+    public static func restingWindow(around frame: Int, movie: MovieRef, places: Int = 1) -> ClosedRange<Int> {
+        let whole = (restAheadMS + restBehindMS) / MovieRef.frameStepMS + 1
+        let share = min(1, Double(roughBudget * 3 / 4) / Double(max(1, places) * whole))
+        let ahead = Int(Double(restAheadMS / MovieRef.frameStepMS) * share)
+        let behind = Int(Double(restBehindMS / MovieRef.frameStepMS) * share)
+        let last = movie.frameIndex(atSourceMS: movie.durationMS)
+        let low = min(max(0, frame - behind), last)
+        return low...max(low, min(last, frame + ahead))
+    }
+
     /// The grid frames to read for a hand whose first missing frame is `frame`,
     /// going `backward` or forward, inside the recording.
     public static func window(from frame: Int, backward: Bool, movie: MovieRef) -> ClosedRange<Int> {
@@ -112,6 +135,22 @@ public enum MovieSweep {
     /// than four seconds of the edit.
     public static func cutReachMS(pace: Double) -> Int {
         min(4000, max(0, Int(pace * 0.25)))
+    }
+
+    /// How long a key frame takes to come for a hand too fast to follow: a
+    /// read of about 17ms, after waiting up to a refresh for the one before it
+    /// (one at a time, 2026-11-17).
+    public static let glimpseLandsMS: Double = 25
+
+    /// How far ahead of a hand too fast to follow, in milliseconds of the
+    /// edit, its key frames are aimed: where it will be when the read lands.
+    /// Aimed where it was, each landed about four seconds of a six minute
+    /// drag behind it, and a clip it crossed into showed whatever frame of
+    /// that recording was in hand, often twenty seconds away, until the first
+    /// one did (2026-11-17). Nothing for a slower hand, which is read in
+    /// stretches.
+    public static func glimpseLeadMS(pace: Double) -> Int {
+        glimpses(pace: pace) ? Int((pace * glimpseLandsMS / 1000).rounded()) : 0
     }
 
     /// ...a tenth of a second of the edit at a time: a clip shorter than that

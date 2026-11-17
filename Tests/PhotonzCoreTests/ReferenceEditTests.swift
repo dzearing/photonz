@@ -151,6 +151,30 @@ struct ReferenceEditTests {
         #expect(ReferenceEdit.footageFolderName.contains("\(ReferenceEdit.recipeVersion)"))
     }
 
+    /// A frame's picture id is its recording's id with the frame's number
+    /// folded into the last eight bytes (`MovieRef.frameID`), so two
+    /// recordings whose ids differ only there share picture ids: frame 2 of
+    /// one was frame 3 of the next, and a scrub of the reference edit drew
+    /// one recording's frame where another's belonged (2026-11-17).
+    @Test("Every frame of every recording has a picture id of its own")
+    func framesNeverShareAnId() {
+        var seen = Set<UUID>()
+        var total = 0
+        for footage in ReferenceEdit.footage {
+            let movie = footage.movie
+            for frame in 0...(movie.durationMS / MovieRef.frameStepMS) {
+                seen.insert(movie.frameRef(atSourceMS: frame * MovieRef.frameStepMS).id)
+                total += 1
+            }
+        }
+        #expect(seen.count == total)
+        for footage in ReferenceEdit.footage {
+            let first = footage.movie.frameRef(atSourceMS: 0).id
+            let others = ReferenceEdit.footage.filter { $0.index != footage.index }
+            #expect(others.allSatisfy { $0.movie.frameIndex(ofFrameID: first) == nil })
+        }
+    }
+
     @Test("A walk asks for it by length, and only a length it is kept at")
     func aWalkAsksForIt() throws {
         #expect(try PlaytestSetup(fields: ["referenceEdit": 6]).referenceEdit == 6)

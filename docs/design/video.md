@@ -841,11 +841,37 @@ before it. So the frames a moving hand is shown depend on how fast it moves
    stops, since it shares the decoder.
 2. **Dragging fast** (over ten seconds a second): the key frame nearest the
    hand, read on its own at exactly its moment in the file, one read at a
-   time, the newest place next. At three minutes of the edit a second a key
-   frame a second of film away was under the hand less than a refresh ago; a
-   stretch started at every move instead piled eight reads into the decoder,
-   each taking 200 to 600 ms to show anything. QuickTime Player does the same.
-3. **Holding still** for 30 ms: the frame under the hand, sharp.
+   time. At three minutes of the edit a second a key frame a second of film
+   away was under the hand less than a refresh ago; a stretch started at every
+   move instead piled eight reads into the decoder, each taking 200 to 600 ms
+   to show anything. QuickTime Player does the same. Since pass 15:
+   - aimed where the hand will be when the read lands, 25 ms of its pace
+     ahead (`MovieSweep.glimpseLeadMS`), so a clip it is about to cross into
+     is read before it gets there;
+   - the nearest key frame the clip PLAYS (`MovieKeyFrames.nearest(to:within:)`,
+     `Layer.playedSourceSpanMS`): the nearest at all is often just before the
+     clip's first frame, a picture the edit never shows;
+   - one per clip on screen, not per recording, the clip that waited longest
+     next: two takes of one recording in a dissolve each need their own;
+   - every recording's key frame table is read when a hand takes the
+     playhead, not when it first meets the recording.
+3. **Holding still** for 30 ms: the frame under the hand, sharp. Once the
+   sharp frames are in, the second around it is read small and filed quietly
+   (`MovieSweep.restingWindow`, `MovieFrameFetcher.readAroundRest`), so a hunt
+   from rest has a picture for its first move instead of the frame it started
+   on for a fifth of a second.
+
+Every frame a recording shows on screen at once counts as where its playhead is
+for the small frames' budget (`MovieFrameFetcher.focus`): kept to the first,
+the second take in a dissolve had each key frame let go the moment it landed.
+
+**The reference edit's recordings need ids that differ in their first eight
+bytes.** A frame's picture id is its recording's id with the frame number
+folded into the last eight (`MovieRef.frameID`). Until 2026-11-17 the
+reference recordings differed only in their last byte, so they shared picture
+ids, a scrub drew one recording's frame where another's belonged, and every
+scrub number before pass 15 was measured on frames shared between recordings
+(honestly measured, the medium drag's worst sight lag was 163, not 67).
 
 ## 8f. Who may watch the playhead
 

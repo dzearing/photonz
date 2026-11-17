@@ -1,0 +1,28 @@
+{
+  "feature": "Dragging the playhead fast across a long edit (pass 15)",
+  "epic": "video-perf",
+  "summary": "A fast drag of the playhead now shows each clip's own picture almost as the hand reaches it: on the 6 minute reference edit the picture is 2 refreshes behind in the middle and 34 at worst (honestly measured before this pass: 4 and 163). A slow hunt that starts from rest shows a picture from its first move.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open ~/Library/Caches/Photonz Reference Edit/Reference Edit 6 min.photonz (Scripts/perf/reference-edit.sh 6 writes it).",
+  "switched": {},
+  "try": [
+    { "do": "Open Reference Edit 6 min.photonz and press Home.", "shot": "2026-11-17-long-edit-pass15-sc.png" },
+    { "do": "Drag the playhead from one end of the timeline to the other in about two seconds." },
+    { "do": "Watch each cut you cross: the picture should be that clip's, never a frame from somewhere else in the recording." },
+    { "do": "Drag across a dissolve between two takes: both sides should show their own picture." },
+    { "do": "Let go, wait a moment, then hunt slowly forward across a few seconds." },
+    { "do": "Note how quickly the first move shows a new picture." }
+  ],
+  "evaluate": [
+    "Does a fast drag ever flash a picture that is not in the clip under the playhead?",
+    "Does a slow hunt from rest start moving the picture with your hand straight away?",
+    "When you stop a fast drag dead, is the wait for the sharp frame (about a tenth of a second) noticeable?",
+    "Does playback at 1x still feel unchanged?"
+  ],
+  "rough": [
+    "Not at the bar yet: scrubbing shows the frame under the hand 2 refreshes behind dragging fast and 3 hunting (bar: 1). The steady 2 to 3 is the picture's own drawing time (8.6 ms against an 8.3 ms refresh), the next lead for this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "A hunt still stalls for about a tenth of a second once the frames read at rest run out, while the decoder works forward from the key frame before the hand; this task's next lead (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Stopping a fast drag dead waits about 15 refreshes for the sharp frame; a real hand slows down first, the walk's does not.",
+    "Every scrub number before this pass was measured on a reference edit whose recordings shared picture ids, so frames of one recording were drawn for another. Fixed; the honest numbers are the ones above, and the baseline is rewritten from them.",
+    "No mock covers this: it is how fast the picture follows the hand."
+  ]
+}

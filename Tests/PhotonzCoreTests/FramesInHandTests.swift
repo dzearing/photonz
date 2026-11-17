@@ -97,6 +97,40 @@ struct FramesInHandTests {
         #expect(shown != landed)
     }
 
+    /// A stand-in from past a clip's last frame (or before its first) is a
+    /// picture the edit never shows: often another scene of the recording,
+    /// left in hand by another clip of it. On 2026-11-17 a fast drag of the
+    /// reference edit showed one at nearly every cut it crossed.
+    @Test("A stand-in comes from the stretch the clip plays when one is in hand there")
+    func standInInsideTheClip() {
+        let movie = Self.movie()
+        var inHand = MovieFramesInHand()
+        inHand.nearest = true
+        for index in [45, 62, 80] { inHand.insert(movie: movie.id, frameIndex: index) }
+        // The clip plays frames 40 to 60: 62 is nearer 58, but past the end.
+        #expect(inHand.frameIndexToShow(58, of: movie.id, within: 40...60) == 45)
+        #expect(inHand.frameIndexToShow(58, of: movie.id) == 62)
+        // Nothing inside: the nearest at all beats a blank.
+        #expect(inHand.frameIndexToShow(70, of: movie.id, within: 65...75) == 62)
+        // ...and a clock keeps its own rule inside the stretch.
+        inHand.nearest = false
+        #expect(inHand.frameIndexToShow(58, of: movie.id, within: 40...60) == 45)
+    }
+
+    @Test("A clip trimmed to part of a recording draws a stand-in from that part")
+    func drawnStandInInsideTheClip() throws {
+        let movie = Self.movie()
+        var document = PhotonzDocument.recording(movie, name: "Take 1")
+        // Trimmed to play frames 40 to 60 of the recording, from the start.
+        document.layers[0].time = LayerTime(inMS: 0, outMS: Self.ms(20), sourceInMS: Self.ms(40),
+                                            sourceLengthMS: Self.ms(20))
+        var inHand = MovieFramesInHand()
+        inHand.nearest = true
+        for index in [45, 62] { inHand.insert(movie: movie.id, frameIndex: index) }
+        let shown = document.drawn(atTimeMS: Self.ms(18) + 5, framesInHand: inHand)
+        #expect(Self.clipRef(shown) == movie.frameRef(atSourceMS: Self.ms(45)))
+    }
+
     @Test("Without frames in hand the document asks for exactly the frame at the moment")
     func withoutInHandNothingChanges() {
         let movie = Self.movie()

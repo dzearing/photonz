@@ -141,12 +141,43 @@ struct MovieSweepTests {
         #expect(burst.editMSPerSecond == 0)
     }
 
+    @Test("A playhead at rest has the second around it read small, more of it ahead than behind")
+    func restingWindow() {
+        // 3.6s of recording, 109 grid frames.
+        let step = MovieRef.frameStepMS
+        let around = MovieSweep.restingWindow(around: 60, movie: movie)
+        #expect(around.contains(60))
+        #expect(around.lowerBound == 60 - MovieSweep.restBehindMS / step)
+        #expect(around.upperBound == 60 + MovieSweep.restAheadMS / step)
+        #expect(around.count <= MovieSweep.roughBudget)
+        // ...kept inside the recording at either end.
+        #expect(MovieSweep.restingWindow(around: 2, movie: movie).lowerBound == 0)
+        let last = movie.frameIndex(atSourceMS: movie.durationMS)
+        #expect(MovieSweep.restingWindow(around: last - 1, movie: movie).upperBound == last)
+        // Two at rest at once fit the small frames' budget together, still
+        // more ahead than behind.
+        let two = MovieSweep.restingWindow(around: 60, movie: movie, places: 2)
+        #expect(two.count * 2 <= MovieSweep.roughBudget * 3 / 4 + 2)
+        #expect(two.upperBound - 60 > 60 - two.lowerBound)
+    }
+
     @Test("A hunting hand looks a quarter second of its pace ahead for clips coming up")
     func cutReach() {
         #expect(MovieSweep.cutReachMS(pace: 5000) == 1250)
         #expect(MovieSweep.cutReachMS(pace: 0) == 0)
         #expect(MovieSweep.cutReachMS(pace: 9000) <= 4000)
         #expect(MovieSweep.cutReachMS(pace: 100_000) == 4000)
+    }
+
+    @Test("A key frame for a hand too fast to follow is read for where the hand will be when it lands")
+    func glimpseLead() {
+        // A key frame takes about 17ms to read and waits up to a refresh for
+        // the one before it: 25ms of a hand crossing six minutes in two
+        // seconds (180s of edit a second) is four and a half seconds.
+        #expect(MovieSweep.glimpseLeadMS(pace: 180_000) == 4500)
+        // Nothing ahead of a hand slow enough to be read in stretches.
+        #expect(MovieSweep.glimpseLeadMS(pace: 5000) == 0)
+        #expect(MovieSweep.glimpseLeadMS(pace: 0) == 0)
     }
 
     @Test("A hand too fast to follow reads only the frame under it, once")
@@ -195,6 +226,43 @@ struct MovieKeyFramesTests {
         #expect(keys.nearest(to: 300)?.frame == 177)
         #expect(MovieKeyFrames(sourceMS: [10 * step, 20 * step]).nearest(to: 15)?.frame == 10)
         #expect(MovieKeyFrames(sourceMS: []).nearest(to: 15) == nil)
+    }
+
+    /// The key frame nearest a hand can be one its clip never plays: just
+    /// before the clip's first frame, or after its last. Shown, it is a
+    /// picture the edit never shows, from a part of the recording the hand
+    /// was nowhere near (2026-11-17).
+    @Test("The nearest key frame the clip plays, or the nearest at all where it plays none")
+    func nearestWithin() {
+        let step = MovieRef.frameStepMS
+        let keys = MovieKeyFrames(sourceMS: [0, 59 * step, 118 * step, 177 * step])
+        #expect(keys.nearest(to: 65, within: 60...150)?.frame == 118)
+        #expect(keys.nearest(to: 170, within: 60...150)?.frame == 118)
+        #expect(keys.nearest(to: 100, within: 60...150)?.frame == 118)
+        #expect(keys.nearest(to: 65, within: nil)?.frame == 59)
+        // Two inside: the one nearer the hand, never the outside one beyond.
+        let close = MovieKeyFrames(sourceMS: [59 * step, 118 * step, 160 * step, 177 * step])
+        #expect(close.nearest(to: 172, within: 60...170)?.frame == 160)
+        #expect(close.nearest(to: 120, within: 60...170)?.frame == 118)
+        // A clip shorter than the gap between two key frames has none of its
+        // own: the nearest at all, as before.
+        #expect(keys.nearest(to: 65, within: 60...100)?.frame == 59)
+        #expect(MovieKeyFrames(sourceMS: []).nearest(to: 15, within: 0...30) == nil)
+    }
+
+    @Test("A clip says the stretch of its recording it plays, cut pieces and all")
+    func playedSpan() {
+        var layer = Layer(name: "Screen recording",
+                          content: .annotation(AnnotationContent(shape: .rectangle, colorHex: "#0C0E14")),
+                          frame: CGRect(x: 0, y: 0, width: 160, height: 90))
+        #expect(layer.playedSourceSpanMS == nil)
+        layer.time = LayerTime(inMS: 500, outMS: 4500, sourceInMS: 2000, sourceLengthMS: 4000)
+        #expect(layer.playedSourceSpanMS == 2000...6000)
+        var pieces = layer.clipPieces ?? ClipPieces(single: LayerTime(inMS: 0, outMS: 1))
+        _ = pieces.split(atMS: 1000)
+        _ = pieces.remove(at: 0)
+        layer.setClipPieces(pieces)
+        #expect(layer.playedSourceSpanMS == 3000...6000)
     }
 
     @Test("A key frame is asked for at exactly its moment, not its grid frame's")

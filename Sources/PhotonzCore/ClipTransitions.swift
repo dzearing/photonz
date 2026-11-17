@@ -713,7 +713,8 @@ extension Layer {
             // different-shaped picture.
             let over = drawn.transitionPartner(standingFor: id,
                                                showing: .image(movie.frameRef(atSourceMS: incoming,
-                                                                              holding: framesInHand)))
+                                                                              holding: framesInHand,
+                                                                              within: playedSourceFrames)))
             let pictures = Layer.transitionDrawn(kind, progress: moment.progress,
                                                  outgoing: drawn, incoming: over, direction: moment.direction)
             guard moment.motionBlur, let projection else { return pictures }

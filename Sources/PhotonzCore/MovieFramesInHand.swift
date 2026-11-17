@@ -60,9 +60,23 @@ public struct MovieFramesInHand: Equatable, Sendable {
     /// playhead came from (the one just shown), and only failing that the
     /// nearest on the other side. Moved by a hand (`nearest`), it is simply the
     /// nearest, with a tie going to the side the hand came from.
-    public func frameIndexToShow(_ wanted: Int, of movie: UUID) -> Int? {
+    ///
+    /// `within` is the stretch of the recording the clip plays, in grid
+    /// frames (`Layer.playedSourceSpanMS`): a stand-in comes from inside it
+    /// whenever one is in hand there. One from past the clip's last frame or
+    /// before its first is a picture the edit never shows, often another
+    /// scene of the recording left in hand by another clip of it (2026-11-17).
+    public func frameIndexToShow(_ wanted: Int, of movie: UUID, within: ClosedRange<Int>? = nil) -> Int? {
         guard let held = frames[movie], !held.isEmpty else { return nil }
         if held.contains(wanted) { return wanted }
+        if let within {
+            let inside = held.filter { within.contains($0) }
+            if !inside.isEmpty { return standIn(for: wanted, among: inside) }
+        }
+        return standIn(for: wanted, among: held)
+    }
+
+    private func standIn(for wanted: Int, among held: Set<Int>) -> Int? {
         let before = held.filter { $0 < wanted }.max()
         let after = held.filter { $0 > wanted }.min()
         let (behind, ahead) = travel == .forward ? (before, after) : (after, before)
@@ -78,9 +92,14 @@ extension MovieRef {
     ///
     /// With no hand at all this is exactly `frameRef(atSourceMS:)`: that is
     /// what an export asks for, because it waits for every frame it writes.
-    public func frameRef(atSourceMS ms: Int, holding inHand: MovieFramesInHand?) -> ImageRef {
+    /// `within`: the clip's played stretch in grid frames, so a stand-in
+    /// comes from inside it (`frameIndexToShow`).
+    public func frameRef(atSourceMS ms: Int, holding inHand: MovieFramesInHand?,
+                         within: @autoclosure () -> ClosedRange<Int>? = nil) -> ImageRef {
         let wanted = frameIndex(atSourceMS: ms)
-        guard let inHand, let shown = inHand.frameIndexToShow(wanted, of: id) else {
+        guard let inHand,
+              let shown = inHand.contains(movie: id, frameIndex: wanted)
+                ? wanted : inHand.frameIndexToShow(wanted, of: id, within: within()) else {
             return frameRef(atSourceMS: ms)
         }
         return ImageRef(id: MovieRef.frameID(movie: id, frameIndex: shown), pixelSize: pixelSize)

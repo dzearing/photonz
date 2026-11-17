@@ -23237,3 +23237,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - New speed-walk measure, sight lag (`SpeedWalk.sightLags`, `handPath`): how far from the hand the recording frames on screen are. Now the scrub bar's number.
 - Fast drags show the nearest key frame, read at its exact moment, one at a time (`MovieKeyFrames`); stretches skip frames the hand passed; reads for recordings left behind stop; hunting looks ahead for coming cuts. Sight lag medium 8-22 -> 4-8 median, hunt worst ~214 -> 15-28. Baseline rewritten. Rule in docs/design/video.md 8e.
 - Next: a hunt's first 0.2 s, key frame tables read at open; bars still open (scrub 1 frame, 0 dropped, edits 16 ms).
+
+## 2026-11-17 — Long edit pass 15: honest frames, and key frames where the hand will be
+
+- The reference edit's recordings shared picture ids (ids differed only in the last byte, which `MovieRef.frameID` folds frame numbers into), so scrubs drew one recording's frame for another and every scrub number before this pass was flattered. Fixed in `ReferenceEdit.mediaID`; honest medium sight lag was 4/163, not 4/67.
+- Fast drags: key frames aimed where the hand will be when the read lands, chosen inside the clip's played stretch, one slot per clip on screen (two reads at once), every on-screen place kept by the frame budget, stand-ins taken from inside the clip. A still playhead has the second around it read small, so a hunt from rest shows a picture from its first move.
+- Short walk baseline rewritten: medium sight lag 2/34 (honest before 4/163), hunt 3/19. Rules in docs/design/video.md 8e.
+- Next: composite under one refresh (shader compile, uploads, readback), continue the rest pass into a hunt instead of re-decoding from the key frame, the stop-dead wait for the sharp frame.

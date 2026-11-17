@@ -212,7 +212,7 @@ extension Layer {
         guard let request = movieFrameRequest(atTimeMS: ms) else { return self }
         var shown = self
         shown.content = .image(request.movie.frameRef(atSourceMS: request.sourceMS,
-                                                      holding: framesInHand))
+                                                      holding: framesInHand, within: playedSourceFrames))
         return shown
     }
 }

@@ -339,7 +339,8 @@ extension PhotonzDocument {
                   let other = shown.layers.first(where: { $0.id == moment.borrowed }) else { continue }
             var content = other.content
             if let source = moment.borrowedSourceMS, let movie = other.movie {
-                content = .image(movie.frameRef(atSourceMS: source, holding: framesInHand))
+                content = .image(movie.frameRef(atSourceMS: source, holding: framesInHand,
+                                                within: other.playedSourceFrames))
             } else if let source = moment.borrowedSourceMS, other.merged != nil {
                 content = other.mergedContent(atInnerMS: source, canvasSize: canvasSize,
                                               pixelScale: pixelScale, framesInHand: framesInHand)
