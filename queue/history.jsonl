@@ -17852,3 +17852,12 @@
 {"t":"2026-11-17T15:39:14.900Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
 {"t":"2026-11-17T15:40:30.991Z","ev":"triage","summary":"merged 0, dropped 0, moved priority 1 (crash-watch p1 unreproduced -> p2, retitled as open question, re-tagged video-perf), reset 0 (guard clean, no leftovers, no open cards), folded 1 (new CI red: SmoothedCopyWriter stall into the CI graphics task, widened), filed 1 (the-long-reference-edits-open-in-photonz-dev-fro), renumbered p2 10-700; open 72 -> 73"}
 {"t":"2026-11-17T15:40:31.015Z","ev":"digest","file":"2026-11-17.md"}
+{"t":"2026-11-17T15:40:48.539Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-17T15:41:14.036Z","ev":"task_note","id":"find-out-why-the-legibility-check-once-read-the"}
+{"t":"2026-11-17T18:21:54.990Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T18:21:55.064Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T18:21:55.136Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T18:21:55.210Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T18:21:55.283Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T18:21:55.355Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-17T18:22:12.368Z","ev":"task_walks","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","walks":["speed-walk","scrub-never-blacks-out-walk"]}

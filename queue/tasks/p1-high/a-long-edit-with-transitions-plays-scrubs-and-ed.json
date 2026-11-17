@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-17T14:56:56.019Z",
+  "updated": "2026-11-17T18:22:12.367Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -470,12 +470,39 @@
     {
       "t": "2026-11-17T14:56:56.018Z",
       "note": "Pass 14 landed eac64b97e: a fast drag of the playhead now shows the key frame nearest the hand and a hunt reads only what the hand has not passed; what is on screen is 4 refreshes from the hand dragging fast (was 8-22) and 15-28 at worst hunting across a cut (was ~214). Bars not reached (scrub 1 frame: 2 hunting, 4 fast; 0 dropped: 1-2 a minute; edits 16 ms: 15-46). Stays open; pass 15 leads in the log."
+    },
+    {
+      "t": "2026-11-17T15:40:48.534Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-17T18:21:54.988Z",
+      "note": "Pass 15 found the reference edit measured on borrowed frames: its recordings' ids differed only in the last byte and a frame's picture id folds the frame number into the last 8 bytes (MovieRef.frameID), so the 6 recordings' 7,276 frames had 1,820 ids and a scrub drew one recording's frame for another. Fixed in ReferenceEdit.mediaID (number in the first 8 bytes; test 'Every frame of every recording has a picture id of its own'). Honest numbers on cd0ab3c60 with the fix: medium sight lag 4/163 (was reported 4/67), hunt 3/15."
+    },
+    {
+      "t": "2026-11-17T18:21:55.062Z",
+      "note": "Pass 15 fixes (a temporary per-look dump of hand, drawn and needed frames plus a decoder timing log found each): (1) a fast hand's key frames are aimed 25 ms of its pace ahead, where it will be when the read lands (MovieSweep.glimpseLeadMS); (2) the nearest key frame the clip plays, not one before its first frame (MovieKeyFrames.nearest(to:within:), Layer.playedSourceSpanMS/playedSourceFrames); (3) one key frame slot per clip on screen, least recently served next, two reads at once (was one per recording; two at once paid only once slots were per clip: medium worst 105 -> 34); (4) a recording's focus for the frame budget holds every place it is on screen (a dissolve's second take had its key frame evicted the moment it landed); (5) a stand-in comes from inside the clip's played stretch when one is in hand (MovieFramesInHand.frameIndexToShow(within:); export never uses stand-ins so drawn output is unchanged); (6) once a still playhead's sharp frames are in, the second around it is read small and filed quietly (MovieSweep.restingWindow, readAroundRest); (7) key frame tables are read for every recording when a hand takes the playhead."
+    },
+    {
+      "t": "2026-11-17T18:21:55.134Z",
+      "note": "Pass 15 result, short speed walk, baseline rewritten (worst of 3, short-6.json): scrub medium sight lag 4/163 honest -> 2/34, exact 65/129 -> 43/125; hunt sight 3/15 -> 3/19 (its start now 2 refreshes for the first ~100 ms, was 15; a mid-hunt stall when rest frames run out remains); play 1 dropped a minute, worst gap 69 ms; edits trim 17, blade 43, undo 28 ms; composite 8.6 ms. Bars not reached: scrub within 1 refresh (2 dragging, 3 hunting: composite-bound), 0 dropped (1 a minute), edits <=16 ms (16-43)."
+    },
+    {
+      "t": "2026-11-17T18:21:55.208Z",
+      "note": "Pass 15 verified: test.sh exit 0; speed-walk ok x3 (baseline run) plus 5 runs during the work; walks ok: hear-the-scrub, opening-title-dissolve, playing-a-recording-never-blinks, reference-edit-opens, scrubbing-shows-the-zoom, the-scrubber-knob-clears-the-times, scrub-never-blacks-out (first run lost its 3 window captures to ScreenCaptureKit error -3811, ok on rerun). shorten-the-cut-for-a-dissolve-walk fails at step 34 (no 'Spare before strip' field) twice; last ok in the 2026-11-05 sweep, timeline painting changed since in other tasks, this diff touches no timeline code; not rebuilt without the change; folded into walks-that-fail-in-the-full-sweep-27. Main red CI (SmoothedCopyWriterTests readerStalled) folded into find-out-why-the-legibility-check-once-read-the. Audit queue/audits/2026-11-17-a-long-edit-with-transitions-plays-scrubs-and-ed-pass15.json."
+    },
+    {
+      "t": "2026-11-17T18:21:55.281Z",
+      "note": "Next for pass 16: (a) the steady 2-3 refreshes is the composite (8.6 ms vs an 8.3 ms refresh): ~2 ms shader compile per frame and CGImage uploads/readback (render into an IOSurface the layer shows); (b) a hunt stalls ~0.1 s when the rest frames run out because the next stretch re-decodes from the key frame before it: continue the rest pass instead of restarting; (c) a fast drag stopped dead waits ~15 refreshes for the sharp frame. Gotcha: the probe build after a PhotonzCore change takes ~10 min, so run Scripts/probe-app.sh --build-only on its own and speed-walk.sh --no-build after, never both in one 10 minute call. Left rough, not filed: none beyond this task's own bars."
+    },
+    {
+      "t": "2026-11-17T18:22:12.366Z",
+      "note": "walks speed-walk, scrub-never-blacks-out-walk, keyframe-anything-walk -> speed-walk, scrub-never-blacks-out-walk"
     }
   ],
-  "started": "2026-11-17T11:25:56.772Z",
+  "started": "2026-11-17T15:40:48.533Z",
   "walks": [
     "speed-walk",
-    "scrub-never-blacks-out-walk",
-    "keyframe-anything-walk"
+    "scrub-never-blacks-out-walk"
   ]
 }
