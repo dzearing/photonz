@@ -468,6 +468,11 @@ final class EditorState {
     /// the playhead, so a walk can read what the picture was given (a zoom's
     /// window at a frame) rather than working it out again.
     @ObservationIgnored var playtestLastDrawn: PhotonzDocument?
+    /// Probe only: the moment of the newest picture on the canvas drawn from
+    /// the very frames that moment shows, rather than the nearest ones in
+    /// hand while those are read (`MovieFramesInHand`). What the speed walk's
+    /// scrub calls the frame under the hand (`SpeedWalk.ScrubTally`).
+    @ObservationIgnored var playtestShownExactMomentMS: Int?
     /// Probe only: what Preview found, so a walk can claim it left it so.
     @ObservationIgnored var playtestDocumentBeforePreview: (document: PhotonzDocument, canUndo: Bool, canRedo: Bool)?
     /// Probe only: the Export sheet opens on SVG, because a walk cannot click
@@ -6506,6 +6511,9 @@ final class EditorState {
                         self.typeInOnceShown = nil
                         self.askToTypeIn(pending.layerID)
                     }
+                    #if PHOTONZ_PLAYTEST
+                    if frame.tag == Self.drawnFromTheExactFrames { self.playtestShownExactMomentMS = moment }
+                    #endif
                     if moment != nil {
                         self.recentCompositeTimes.append((frame.drawMS, frame.sinceAskedMS))
                         if self.recentCompositeTimes.count > 400 { self.recentCompositeTimes.removeFirst(100) }
@@ -6526,11 +6534,26 @@ final class EditorState {
         // as nothing (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
         let pictures = document.hasTime ? store.snapshot() : nil
         let colors = canvasColorSpace
+        var tag = 0
+        #if PHOTONZ_PLAYTEST
+        // Whether this picture is of the frames under the playhead or of
+        // stand-ins for some of them: every frame the moment shows is in the
+        // pictures the render draws from.
+        if let pictures, submitted.movieFrames(atTimeMS: moment)
+            .allSatisfy({ pictures.image(for: $0.ref) != nil }) {
+            tag = Self.drawnFromTheExactFrames
+        }
+        #endif
+        let asked = tag
         Task {
             await scheduler.submit(document, store: pictures, stamp: moment, contentScale: contentScale,
-                                   colorSpace: colors)
+                                   colorSpace: colors, tag: asked)
         }
     }
+
+    /// The tag a picture carries when every frame its moment shows was in
+    /// hand as it was drawn (`playtestShownExactMomentMS`).
+    static let drawnFromTheExactFrames = 1
 
     /// The colours the canvas is drawn in: the window's own, so a frame goes
     /// up as it is rather than being matched to the screen on the main thread

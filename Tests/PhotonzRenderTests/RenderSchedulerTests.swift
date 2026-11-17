@@ -58,6 +58,25 @@ struct RenderSchedulerTests {
         }
     }
 
+    /// What the canvas is told about a picture it did not draw itself: a
+    /// speed walk counts a scrubbed picture as caught up only when it was
+    /// drawn from the frames under the hand, and the tag is how that fact
+    /// rides along with the picture it is about.
+    @Test("A picture comes back with the tag it was asked for with")
+    func tagRidesAlong() async {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 8, height: 8, r: 255, g: 0, b: 0))
+        let doc = PhotonzDocument.withBaseImage(base)
+        actor Tags { var seen: [Int] = []; func add(_ tag: Int) { seen.append(tag) } }
+        let tags = Tags()
+        let scheduler = RenderScheduler(store: store, onDelivery: { await tags.add($0.tag) })
+        await scheduler.submit(doc, stamp: 5, tag: 1)
+        await scheduler.waitUntilIdle()
+        await scheduler.submit(doc, stamp: 6)
+        await scheduler.waitUntilIdle()
+        #expect(await tags.seen == [1, 0])
+    }
+
     @Test func stressMutating100xEndsWithCorrectFinalFrame() async {
         let store = ImageStore()
         let base = store.register(solidImage(width: 100, height: 100, r: 255, g: 0, b: 0))

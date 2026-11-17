@@ -183,15 +183,17 @@ final class SpeedWalkProbe {
         defer { frames.invalidate() }
         let length = editor.documentLengthMS
         guard length > 0 else { throw Failure(description: "there is nothing to scrub") }
-        let low = length / 50, high = length - length / 50
         var lines: [String] = []
         for speed in speeds {
+            let span = PlaytestSpeedMeasure.scrubSpan(speed, lengthMS: length)
+            let low = span.lowerBound, high = min(span.upperBound, length)
             let count = PlaytestSpeedMeasure.scrubFrames(speed)
             editor.pauseDocument()
             editor.scrubDocument(toMS: low)
             await settle(editor, frames: frames)
             editor.beginPlayheadDrag()
             var hand: [Int] = [], handAt: [Double] = [], shown: [Int?] = [], at: [Double] = []
+            var exact: [Int?] = []
             // The hand moves by the clock, as a person's does: it takes
             // `count` refreshes of the display to cross, and where it is at
             // each look is where the time says, however long the app took to
@@ -214,26 +216,34 @@ final class SpeedWalkProbe {
                 looks += 1
                 at.append((CACurrentMediaTime() - start) * 1000)
                 shown.append(editor.shownMomentMS)
+                exact.append(editor.playtestShownExactMomentMS)
                 // Past the end, it waits for the picture to arrive where the
                 // hand stopped.
-                if along >= 1, editor.shownMomentMS == editor.documentTimeMS { break }
+                if along >= 1, editor.shownMomentMS == editor.documentTimeMS,
+                   editor.playtestShownExactMomentMS == editor.documentTimeMS { break }
             }
             editor.endPlayheadDrag()
             let refresh = frames.refreshInterval * 1000
             let lags = SpeedWalk.scrubLags(hand: hand, handAtMS: handAt, shown: shown, atMS: at,
                                                 refreshMS: refresh)
             let stats = SpeedWalk.lagStats(lags)
+            let frameStats = SpeedWalk.lagStats(SpeedWalk.scrubLags(hand: hand, handAtMS: handAt, shown: exact,
+                                                                    atMS: at, refreshMS: refresh))
             let times = SpeedWalk.frameTimes(speed, refreshesAtMS: at, refreshMS: refresh)
             run.scrubs.removeAll { $0.speed == speed }
             let made = looks
             let took = (at.last ?? 0) / 1000
-            run.scrubs.append(SpeedWalk.ScrubTally(speed: speed, frames: count, lagMedianFrames: stats.median,
-                                                   lagWorstFrames: stats.worst, worstFrameMS: times.worstMS,
-                                                   movesMade: made, seconds: took))
+            var tally = SpeedWalk.ScrubTally(speed: speed, frames: count, lagMedianFrames: stats.median,
+                                             lagWorstFrames: stats.worst, worstFrameMS: times.worstMS,
+                                             movesMade: made, seconds: took)
+            tally.frameLagMedianFrames = frameStats.median
+            tally.frameLagWorstFrames = frameStats.worst
+            run.scrubs.append(tally)
             lines.append(String(format: "%@ (%d looks against %d refreshes, %.1fs against %.1fs at the display's pace): the picture "
-                                + "trailed the hand by %d display frames in the middle, %d at worst; longest refresh %.0fms",
+                                + "trailed the hand by %d display frames in the middle, %d at worst, and the frame under "
+                                + "the hand by %d in the middle, %d at worst; longest refresh %.0fms",
                                 speed, made, count, took, Double(count) * refresh / 1000, stats.median, stats.worst,
-                                times.worstMS))
+                                frameStats.median, frameStats.worst, times.worstMS))
         }
         return "scrubbed end to end: " + lines.joined(separator: "; ")
     }

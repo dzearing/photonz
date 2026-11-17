@@ -16,6 +16,10 @@ public actor RenderScheduler {
         public let image: CGImage?
         public let document: PhotonzDocument
         public let stamp: Int
+        /// Whatever the asker handed in with the document, back with its
+        /// picture: the canvas marks a recording's picture drawn from the very
+        /// frames its moment shows, which a speed walk reads.
+        public let tag: Int
         /// How long the composite itself took, and how long from the ask to
         /// the picture, waiting its turn included. What a perf note is
         /// written from.
@@ -29,6 +33,7 @@ public actor RenderScheduler {
         let contentScale: CGFloat
         let colorSpace: CGColorSpace?
         let stamp: Int
+        let tag: Int
         let asked: ContinuousClock.Instant
     }
 
@@ -66,9 +71,9 @@ public actor RenderScheduler {
     /// (`DocumentRenderer.renderInteractive`), and `colorSpace` the colours
     /// the frame is written in: the window's own, so it goes up as it is.
     public func submit(_ document: PhotonzDocument, store: ImageStore? = nil, stamp: Int = 0,
-                       contentScale: CGFloat = 1, colorSpace: CGColorSpace? = nil) {
+                       contentScale: CGFloat = 1, colorSpace: CGColorSpace? = nil, tag: Int = 0) {
         pending = Job(document: document, store: store, contentScale: contentScale,
-                      colorSpace: colorSpace, stamp: stamp, asked: .now)
+                      colorSpace: colorSpace, stamp: stamp, tag: tag, asked: .now)
         guard drainTask == nil else { return }
         drainTask = Task { await drain() }
     }
@@ -93,7 +98,7 @@ public actor RenderScheduler {
                                                    contentScale: job.contentScale,
                                                    colorSpace: job.colorSpace)
             let done = ContinuousClock.now
-            await onFrame(Frame(image: image, document: job.document, stamp: job.stamp,
+            await onFrame(Frame(image: image, document: job.document, stamp: job.stamp, tag: job.tag,
                                 drawMS: Self.ms(done - began), sinceAskedMS: Self.ms(done - job.asked)))
         }
         drainTask = nil

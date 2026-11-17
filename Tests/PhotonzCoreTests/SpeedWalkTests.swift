@@ -136,6 +136,52 @@ struct SpeedWalkTests {
         #expect(SpeedWalk.lagStats([]) == (0, 0))
     }
 
+    @Test("A scrub's frame lag counts a picture only once it is drawn from the frames under the hand")
+    func scrubFrameLag() throws {
+        // The canvas answers every move at once with the frame nearest in
+        // hand, stamped with the hand's moment, so the plain lag reads one
+        // refresh; the frame really under the hand lands two refreshes later.
+        let hand = [100, 200, 300]
+        let exact: [Int?] = [nil, 100, 200]
+        let lags = SpeedWalk.scrubLags(hand: hand, handAtMS: [0, 10, 20], shown: exact,
+                                       atMS: [10, 20, 30], refreshMS: 10)
+        #expect(lags == [1, 2, 2])
+        var tally = SpeedWalk.ScrubTally(speed: "medium", frames: 240, lagMedianFrames: 1, lagWorstFrames: 2,
+                                         worstFrameMS: 9)
+        tally.frameLagMedianFrames = 3
+        tally.frameLagWorstFrames = 7
+        var run = Self.run(dropped: 0, gap: 40, peak: 1000)
+        run.scrubs = [tally]
+        let keys = run.metrics.map(\.key)
+        #expect(keys.contains("scrub medium: frame lag median"))
+        #expect(keys.contains("scrub medium: frame lag worst"))
+        // Kept worst-of in a baseline, like every other number.
+        var other = run
+        other.scrubs[0].frameLagWorstFrames = 9
+        let both = try #require(SpeedRun.envelope(of: [run, other]))
+        #expect(both.scrubs[0].frameLagWorstFrames == 9)
+        #expect(both.scrubs[0].frameLagMedianFrames == 3)
+        // A baseline written before the number existed still reads, and does
+        // not judge it.
+        let old = #"{"speed":"medium","frames":240,"lagMedianFrames":2,"lagWorstFrames":4,"worstFrameMS":20,"movesMade":241,"seconds":2}"#
+        let read = try JSONDecoder().decode(SpeedWalk.ScrubTally.self, from: Data(old.utf8))
+        #expect(read.frameLagMedianFrames == nil)
+        var then = run
+        then.scrubs = [read]
+        #expect(SpeedCompare.regressions(baseline: then, run: run, marginPercent: 0).isEmpty)
+    }
+
+    @Test("A hunting hand drags ten seconds of the edit across two, the way a person looks for a moment")
+    func huntingScrub() {
+        #expect(PlaytestSpeedMeasure.speeds.contains("hunt"))
+        #expect(PlaytestSpeedMeasure.scrubFrames("hunt") == 240)
+        // The end to end speeds cross the whole edit, a fiftieth in from each end.
+        #expect(PlaytestSpeedMeasure.scrubSpan("medium", lengthMS: 360_000) == 7_200...352_800)
+        // A hunt crosses ten seconds from a minute in, or what there is of it.
+        #expect(PlaytestSpeedMeasure.scrubSpan("hunt", lengthMS: 360_000) == 60_000...70_000)
+        #expect(PlaytestSpeedMeasure.scrubSpan("hunt", lengthMS: 30_000) == 600...10_600)
+    }
+
     @Test("Frame times read the gaps between refreshes against the display's interval")
     func frameTimesRead() {
         var at: [Double] = stride(from: 0.0, through: 800, by: 8.33).map { $0 }

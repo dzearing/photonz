@@ -20,6 +20,11 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
     private let source: Source
 
+    /// Whether an opaque picture's shadow is cast from a stand-in for it
+    /// (`opaqueCastStandIn`). Off only for a test that draws the same
+    /// picture both ways.
+    var castsOpaqueShadowsFromAStandIn = true
+
     /// Where this renderer mixes see-through paint right now.
     public var compositing: CompositingSpace {
         switch source {
@@ -177,6 +182,9 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
     private var wrapCache: [ObjectIdentifier: Wrap] = [:]
     private var wrapOrder: [ObjectIdentifier] = []
+    /// A plain white bitmap per picture size, wrapped as a picture is: what
+    /// an opaque picture's shadow is cast from (`opaqueCastStandIn`).
+    private var standIns: [Int: CIImage] = [:]
     private let cacheLock = NSLock()
     /// Test hooks: how often content was served from / added to the cache.
     private(set) var contentCacheHits = 0
@@ -1327,7 +1335,8 @@ public final class DocumentRenderer: @unchecked Sendable {
                          onDesignedSurface: Bool,
                          contentScale: CGFloat, magnifyNearest: Bool,
                          space: SpacePlacement? = nil,
-                         projection: Projection3D? = nil) -> CIImage? {
+                         projection: Projection3D? = nil,
+                         castStandIn: Bool = false) -> CIImage? {
         if let group = layer.group {
             return groupImage(layer, group: group, origin: origin, in: document,
                               store: store, backdrop: backdrop,
@@ -1380,8 +1389,12 @@ public final class DocumentRenderer: @unchecked Sendable {
                 break
             }
             guard let cg = store.image(for: ref) else { return nil }
-            image = magnified(wrapped(cg, surface: store.surface(for: ref, standingFor: cg), ref: ref, store: store),
-                              nearest: magnifyNearest, scale: contentScale)
+            // What an opaque picture's shadow is cast from: the same box, all
+            // of it covered (`opaqueCastStandIn`).
+            let picture = castStandIn
+                ? standIn(width: cg.width, height: cg.height)
+                : wrapped(cg, surface: store.surface(for: ref, standingFor: cg), ref: ref, store: store)
+            image = magnified(picture, nearest: magnifyNearest, scale: contentScale)
             // A bitmap asked to cover more than it has pixels for gets the
             // better resampler, whatever put it in that position: a canvas
             // zoomed past 1:1, an export at 2x, or a clip PUNCHED IN ON, where
@@ -1819,12 +1832,35 @@ public final class DocumentRenderer: @unchecked Sendable {
             image = placed
         }
 
+        // The stand-in stops here: all it is for is the shape a shadow falls
+        // from.
+        if castStandIn { return image }
+
         // Style: shadow, then opacity last so it fades content, border and
         // shadow together. Text on a designed surface leaves its contrast halo
         // undrawn: a label on a control is not a caption over a screenshot.
         let silhouette = image
-        image = shadowed(image, glows: layer.style.paintedGlows,
-                         shadows: Self.castShadows(of: layer, onDesignedSurface: onDesignedSurface, space: space))
+        let shadows = Self.castShadows(of: layer, onDesignedSurface: onDesignedSurface, space: space)
+        let glows = layer.style.paintedGlows
+        // A picture with nothing see-through in it casts the shadow of its
+        // box, whatever it shows, so the shadow is cast from a stand-in that
+        // is the same on every frame. Cast from the frame itself, a clip's
+        // shadow was blurred afresh for every frame of a recording: about 4
+        // of the 10 million pixels, and 5 of the 7.5ms on the GPU, that each
+        // frame of the 6 minute reference edit drew. Core Image keeps the
+        // stand-in's blur from one frame to the next, and the shadow is the
+        // same within a level of 255 on a few edge pixels, because every step
+        // on the way here treats coverage the same whatever colour it covers.
+        let castFrom: CIImage? = (shadows + glows.filter(\.paints).map(\.asShadow))
+            .contains(where: { $0.paints && $0.kind == .drop })
+            ? opaqueCastStandIn(for: layer, store: store).flatMap { _ in
+                ciImage(for: layer, origin: origin, in: document, store: store, backdrop: backdrop,
+                        onDesignedSurface: onDesignedSurface, contentScale: contentScale,
+                        magnifyNearest: magnifyNearest, space: space, projection: projection,
+                        castStandIn: true)
+            }
+            : nil
+        image = shadowed(image, glows: glows, shadows: shadows, castFrom: castFrom)
         let finished = glazed(faded(image, opacity: layer.style.opacity), silhouette: silhouette,
                               backdrop: backdrop, radius: layer.style.backgroundBlurRadius,
                               zoom: layer.style.backgroundBlurZoom)
@@ -2958,6 +2994,52 @@ public final class DocumentRenderer: @unchecked Sendable {
         return CIImage(cgImage: cg)
     }
 
+    /// A white bitmap the size of a picture, wrapped the way `wrapped` wraps
+    /// the picture itself. A bitmap and not a colour: Core Image works a
+    /// crop and a clamp of a plain colour out as a hard edge, while a bitmap
+    /// cut on a part pixel (a clip mid-zoom) keeps that edge pixel part
+    /// covered, so a colour cast a shadow up to 21 levels apart from the
+    /// frame's on the corners of a zoomed clip.
+    private func standIn(width: Int, height: Int) -> CIImage {
+        let key = width &* 100_003 &+ height
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        if let hit = standIns[key] { return hit }
+        let bounds = CGRect(x: 0, y: 0, width: width, height: height)
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: width * 4, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else {
+            return CIImage(color: .white).cropped(to: bounds)
+        }
+        context.setFillColor(gray: 1, alpha: 1)
+        context.fill(bounds)
+        guard let white = context.makeImage() else { return CIImage(color: .white).cropped(to: bounds) }
+        let plain = CIImage(cgImage: white)
+        let image = plain.clampedToExtent().cropped(to: plain.extent)
+        // A canvas and an export at most, and a size or two in between.
+        if standIns.count >= 3 { standIns.removeAll() }
+        standIns[key] = image
+        return image
+    }
+
+    /// Whether a layer's shadow can be cast from a stand-in for its picture:
+    /// a bitmap (not a drawing, not a grained one) with nothing see-through
+    /// in it. Every frame of a recording is: the frames a clip shows are
+    /// decoded 4:2:0, which has no alpha (`MovieDecodeFormat`), and a bitmap
+    /// stored without alpha says so itself. Nil when it cannot.
+    private func opaqueCastStandIn(for layer: Layer, store: ImageStore) -> CGImage? {
+        guard castsOpaqueShadowsFromAStandIn,
+              case .image(let ref) = layer.content, layer.style.grain == nil,
+              store.vector(for: ref) == nil, let cg = store.image(for: ref) else { return nil }
+        let opaque: Bool
+        switch cg.alphaInfo {
+        case .none, .noneSkipFirst, .noneSkipLast: opaque = true
+        default: opaque = layer.movie != nil
+        }
+        return opaque ? cg : nil
+    }
+
     /// Every shadow the layer throws, in the order the Appearance list holds
     /// them: index 0 is the top of the list and therefore the one nearest the
     /// eye, so it is composited over the ones below it.
@@ -2967,7 +3049,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// into it (`docs/design/shape-parts.md`, "How the list grows"). A list of
     /// one drop shadow paints exactly what one shadow always painted.
     private func shadowed(_ image: CIImage, glows: [GlowEffect] = [],
-                          shadows: [ShadowStyle]) -> CIImage {
+                          shadows: [ShadowStyle], castFrom: CIImage? = nil) -> CIImage {
         // A glow IS a shadow with nowhere to fall, so it is drawn down this
         // same path rather than through a second halo engine that would have
         // to be kept in step with the first (`GlowEffect.asShadow`).
@@ -2997,11 +3079,15 @@ public final class DocumentRenderer: @unchecked Sendable {
         // The glows go down before the shadows, which puts a halo in FRONT of
         // the shadow the same shape throws: a shadow is the thing furthest
         // back, and a glow buried under one is a glow you cannot see.
+        // `castFrom` is the layer's shape when it has nothing see-through in
+        // it: the same coverage as `image`, from a picture that does not
+        // change frame to frame.
+        let caster = castFrom ?? image
         for glow in lit where glow.kind == .drop {
-            result = result.composited(over: cast(image, shadow: glow))
+            result = result.composited(over: cast(caster, shadow: glow))
         }
         for shadow in painted where shadow.kind == .drop {
-            result = result.composited(over: cast(image, shadow: shadow))
+            result = result.composited(over: cast(caster, shadow: shadow))
         }
         return result
     }

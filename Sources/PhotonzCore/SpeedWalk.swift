@@ -190,7 +190,8 @@ public enum SpeedWalk {
 
     /// A hand dragging the playhead end to end at one speed.
     public struct ScrubTally: Codable, Equatable, Sendable {
-        /// "slow", "medium" or "fling".
+        /// "slow", "medium" or "fling", end to end, or "hunt", ten seconds of
+        /// it (`PlaytestSpeedMeasure.scrubSpan`).
         public var speed: String
         /// How many display frames the drag took.
         public var frames: Int
@@ -198,6 +199,14 @@ public enum SpeedWalk {
         /// look and the worst.
         public var lagMedianFrames: Int
         public var lagWorstFrames: Int
+        /// The same, counting a picture only once it is drawn from the very
+        /// frames the moment under the hand shows. The canvas answers a move
+        /// at once with the frame nearest in hand while the right one is read
+        /// (`MovieFramesInHand`), and that picture carries the hand's moment,
+        /// so the lag above counts it as caught up. Nil in a baseline written
+        /// before 2026-11-17, which does not judge it.
+        public var frameLagMedianFrames: Int?
+        public var frameLagWorstFrames: Int?
         /// The longest wait between two display refreshes during the drag.
         public var worstFrameMS: Double
         /// How many looks the app answered over the drag, one per refresh it
@@ -555,6 +564,10 @@ public struct SpeedRun: Codable, Equatable, Sendable {
         for scrub in scrubs {
             out.append(Metric(key: "scrub \(scrub.speed): lag median", value: Double(scrub.lagMedianFrames), unit: .frames))
             out.append(Metric(key: "scrub \(scrub.speed): lag worst", value: Double(scrub.lagWorstFrames), unit: .frames))
+            if let median = scrub.frameLagMedianFrames, let worst = scrub.frameLagWorstFrames {
+                out.append(Metric(key: "scrub \(scrub.speed): frame lag median", value: Double(median), unit: .frames))
+                out.append(Metric(key: "scrub \(scrub.speed): frame lag worst", value: Double(worst), unit: .frames))
+            }
             out.append(Metric(key: "scrub \(scrub.speed): time", value: scrub.seconds, unit: .seconds))
         }
         for edit in edits where edit.made != false {
@@ -615,6 +628,12 @@ extension SpeedRun {
                 if let i = out.scrubs.firstIndex(where: { $0.speed == scrub.speed }) {
                     out.scrubs[i].lagMedianFrames = max(out.scrubs[i].lagMedianFrames, scrub.lagMedianFrames)
                     out.scrubs[i].lagWorstFrames = max(out.scrubs[i].lagWorstFrames, scrub.lagWorstFrames)
+                    if let median = scrub.frameLagMedianFrames {
+                        out.scrubs[i].frameLagMedianFrames = max(out.scrubs[i].frameLagMedianFrames ?? 0, median)
+                    }
+                    if let worst = scrub.frameLagWorstFrames {
+                        out.scrubs[i].frameLagWorstFrames = max(out.scrubs[i].frameLagWorstFrames ?? 0, worst)
+                    }
                     out.scrubs[i].seconds = max(out.scrubs[i].seconds, scrub.seconds)
                     out.scrubs[i].worstFrameMS = max(out.scrubs[i].worstFrameMS, scrub.worstFrameMS)
                 } else {
@@ -753,7 +772,7 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     public enum Measure: String, CaseIterable, Sendable {
         case play, scrub, edits, idleBuilds, timeline, memory, export, compare
     }
-    public static let speeds = ["slow", "medium", "fling"]
+    public static let speeds = ["slow", "medium", "fling", "hunt"]
     public static let edits = ["trim", "move", "blade", "undo", "transition", "title"]
     /// Edits a walk may name that change what the ones after it act on, so
     /// they are never made unless named: `pick` picks the recording under
@@ -772,8 +791,23 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
         return picked && !namedOnlyEdits.contains(edit) ? "\(edit), picked" : edit
     }
 
-    /// How many display frames a hand takes to drag the playhead end to end
-    /// at each speed: five seconds, two, and a third of one at 120 Hz.
+    /// Where a hand drags the playhead from and to at each speed. The three
+    /// end to end speeds cross the whole edit, a fiftieth in from each end:
+    /// a person travelling. A hunt crosses ten seconds from a minute in, at
+    /// five times the speed it plays: a person looking for a word or a cut,
+    /// which is where the frame under the hand matters most. Every end to end
+    /// drag moves the playhead the better part of a second of film each
+    /// refresh, so each look is a fresh seek.
+    public static func scrubSpan(_ speed: String, lengthMS: Int) -> ClosedRange<Int> {
+        let low = lengthMS / 50
+        guard speed == "hunt" else { return low...max(low, lengthMS - lengthMS / 50) }
+        let from = lengthMS >= 70_000 ? 60_000 : low
+        return from...(from + 10_000)
+    }
+
+    /// How many display frames a hand takes to drag the playhead across its
+    /// span at each speed: five seconds, two, and a third of one at 120 Hz;
+    /// a hunt takes two.
     public static func scrubFrames(_ speed: String) -> Int {
         switch speed {
         case "slow": 600
