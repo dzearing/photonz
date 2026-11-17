@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.881Z",
-  "updated": "2026-11-16T13:17:07.072Z",
+  "updated": "2026-11-17T00:32:29.634Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -55,6 +55,37 @@
     {
       "t": "2026-11-16T13:17:07.071Z",
       "note": "seq 50 -> 30"
+    },
+    {
+      "t": "2026-11-16T21:42:55.646Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-16T21:57:50.704Z",
+      "note": "Baseline 2026-11-16 13:44, HEAD 358e10858 (probe, Next defaults, long-6-export walk): 6 min reference edit exported in 459.7 s (1.28x real time), 657 MB, route drawn. Profile (sample, 20 s mid-export, export thread busy ~92%): 65% Core Image render of which ~40% uploading each decoded recording frame as a texture from a CGImage (texture_for_CGImage/replaceRegion), ~11% reading the composite back to a CGImage, ~8% waiting on the GPU; 25% CGContextDrawImage redrawing that CGImage into the encoder's pixel buffer on the CPU (colour conversion); decoding and encoding are off this thread and small."
+    },
+    {
+      "t": "2026-11-17T00:03:11.309Z",
+      "note": "After (probe, Next defaults, whole edit at the sheet's defaults): 6 min edit 117.6 s, 117.6 s, 117.6 s (0.33x real time, 657 MB, slowest 117.6 s against 459.7 s / 434.9 s before); 20 min edit 393.1 s (0.33x, 2240 MB). Longest main thread pass during an export 1-4 ms. Pictures: ReferenceEditTool frames 6 before.mp4 after.mp4 at 20 moments (8 mid-dissolve, cube x2, flip x2, push, title x3, zoom, b-roll, two plain): worst mean 0.052 levels, worst 99th percentile 2 levels, largest single pixel 11; every moment but the dissolves identical to the bit."
+    },
+    {
+      "t": "2026-11-17T00:26:52.711Z",
+      "note": "owns these walks: speed-walk, export-a-video-at-1080p-walk, an-editing-session-walk"
+    },
+    {
+      "t": "2026-11-17T00:32:29.545Z",
+      "note": "Shared export code (not release-forked), so Current gets the speed too; nothing in Releases/ changed. Walks: all 40 walks that write video or a frame pass on the new build (incl. export-a-video-at-1080p-walk, an-editing-session-walk); Scripts/test.sh green; short speed walk rebaselined (--baseline 3) with its new 30 s export (worst 14.7 s). Chose to keep a user-initiated ProcessInfo activity around every export over leaving it out because a long export left running should not stop for idle sleep; it did not change the measured time. Nothing left rough that clears the follow-up bar."
+    },
+    {
+      "t": "2026-11-17T00:32:29.632Z",
+      "note": "6 min reference edit exports in 117.6 s (3 of 3 runs; was 459.7/434.9 s), 20 min in 393.1 s, main thread at most 4 ms; pictures at 20 moments within mean 0.05 / p99 2 levels of the old path. GPU-direct frames into the encoder buffer, decoder surfaces read directly, one decoder pass per clip starting where asked, wrap-cache fix. Commit 19721ee12; audit queue/audits/2026-11-16-exporting-the-six-minute-reference-edit-takes-no.json"
     }
-  ]
+  ],
+  "started": "2026-11-16T21:42:55.645Z",
+  "walks": [
+    "speed-walk",
+    "export-a-video-at-1080p-walk",
+    "an-editing-session-walk"
+  ],
+  "completed": "2026-11-17T00:32:29.633Z"
 }
