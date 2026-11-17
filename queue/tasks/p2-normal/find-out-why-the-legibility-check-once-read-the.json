@@ -1,22 +1,23 @@
 {
   "id": "find-out-why-the-legibility-check-once-read-the",
-  "title": "Find out why main’s checks sometimes see a title’s words as not drawn, then pass on the same code",
-  "goal": "Three times in a day main’s tests went red on CI because a check that looks at drawn words found them missing: twice the title entrance check saw most of a title’s words off screen, and once the legibility check read a dark caption preview as grey text on the same grey. Each time the next run on the same app code passed, and the tests pass on this Mac. Find out whether the words really are sometimes drawn late or blank on a busy machine, or the checks look too early, and fix whichever it is so main stays green.",
+  "title": "Find out why main's checks fail now and then on the check machine's graphics, then pass on the same code",
+  "goal": "Three times in a day main’s tests went red on CI because a check that looks at drawn words found them missing: twice the title entrance check saw most of a title’s words off screen, and once the legibility check read a dark caption preview as grey text on the same grey. Each time the next run on the same app code passed, and the tests pass on this Mac. Find out whether the words really are sometimes drawn late or blank on a busy machine, or the checks look too early, and fix whichever it is so main stays green. Since 17 November a second kind does the same: the test that writes a smoothed copy of a recording stalled reading its frames on the check machine for 70 seconds and failed, where it takes a fifth of a second on this Mac. Both point at the check machine's stand-in graphics and video hardware under load, so they are one question.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 60,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T05:49:07.555Z",
-  "updated": "2026-11-17T11:26:44.841Z",
+  "updated": "2026-11-17T15:39:14.899Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/43367299841 (commit 610f1dc95), Test slice 1 of 3, step Run tests, after all 5535 tests passed: 'legibility: 1546 words and icons measured on 122 specimens, light and dark, in 43s' then 'legibility: UNREADABLE (the user: no white on white or black on black, ever): Caption preview, Lower third, still, dark: 1.00:1, #232323 on #232323, at 10,10 (caption-preview-lower-third-still-dark.png)' and exit 1. The next CI run, 43368952566 on b20245458 (a queue-only commit, same app code), passed. Not reproduced locally; the check lives in Scripts/test.sh (grep photonz-legibility). Filed by a-long-reference-edit-opens-in-the-probe-in-one, which does not touch captions. Epic is video-perf only because the queue requires a now-staged epic; it is a test-health item.",
   "acceptance": [
     "The cause is named with evidence for both checks: a reproduction of the missing words (for example the suite run under load, or on a CI runner), or the check’s timing shown to be the cause.",
     "Whichever it is is fixed, and TextRevealUnclippedTests and the legibility check on the caption previews each pass 10 runs in a row under the same parallel load CI uses (Scripts/test.sh --shard K/3).",
-    "If the cause is in the app (words drawn blank when the machine is busy), a person playing or exporting a title never sees a frame with its words missing, and a test holds that."
+    "If the cause is in the app (words drawn blank when the machine is busy), a person playing or exporting a title never sees a frame with its words missing, and a test holds that.",
+    "The smoothed copy test ('the stretches an edit keeps, back to back', SmoothedCopyWriterTests) passes 10 runs in a row under the same load, or the stall is shown to be the check machine's video decoder and the test is made to wait for it or skip it there with that reason written beside it"
   ],
   "log": [
     {
@@ -78,6 +79,18 @@
     {
       "t": "2026-11-17T11:26:44.840Z",
       "note": "Again on CI run 44052911633 (commit 51275c719, 2026-11-17 09:37, slice 2): TextRevealUnclippedTests 10 issues, worst.share 0.0-0.20 vs 0.998 across keynote, softGlass, editorial, terminal, glass, lightLeak, stacked, splitWipe and tiltSettle; the same commit's code passed on 44041273155 an hour and a half before. The shared transitions-in-depth perf lines in that slice read a 1080p yardstick at 20-31 ms against its own 3.3 ms, so the runner was heavily loaded at the time."
+    },
+    {
+      "t": "2026-11-17T15:36:40.563Z",
+      "note": "seq 60 -> 80"
+    },
+    {
+      "t": "2026-11-17T15:37:31.650Z",
+      "note": "seq 80 -> 90"
+    },
+    {
+      "t": "2026-11-17T15:39:14.898Z",
+      "note": "Digest 2026-11-17: a second kind of red on main, folded in here rather than filed. CI run 44108815173 (45300a822, slice 1): SmoothedCopyWriterTests 'the stretches an edit keeps, back to back' threw readerStalled after 70.5 s (a stalled read, retried once with a fresh reader, stalled again); the log shows IOServiceMatchingfailed for AppleM2ScalerParavirtDriver, the VM's stand-in scaler. The test landed in e873d3762 and passed on the 7 CI runs before this one. On this Mac: Scripts/test.sh --filter SmoothedCopyWriterTests, 7 of 7 pass, that test in 0.2 s. CI's day: 3 red of 12 finished runs (43930690711 and 44052911633 title words, 44108815173 the stall). Title, goal and checklist widened to cover both."
     }
   ],
   "walks": []

@@ -4,12 +4,12 @@
   "goal": "While Photonz exports the 6 minute reference edit it uses about 4.4 GB of memory, and 3.9 GB for a 30 second piece of the same edit, where playing and editing the edit peaks at 1.7 GB. Find out what an export holds and whether it can hold much less, so exporting on a smaller Mac does not push it short of memory.",
   "epic": "video-perf",
   "priority": "p2-normal",
-  "seq": 55,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-17T03:08:47.259Z",
-  "updated": "2026-11-17T03:08:47.262Z",
+  "updated": "2026-11-17T15:36:40.367Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by memory-stays-bounded-while-an-hour-long-edit-pla (2026-11-16). The speed walk now records the app's peak since launch (task_vm_info ledger_phys_footprint_peak) before the export (walkPeakFootprintMB) and after it (export.peakFootprintMB). Reproduced: `Scripts/playtest.sh Scripts/playtest/speed-walk.json` three runs: walk peak 1731 / 1696 / 1734 MB, export (30 s, MP4 Standard Full) peak 3944 / 3889 / 3921 MB ('[6 speed] exported 30s of video at the sheet's defaults in 14.0s (0.47x real time), 54MB, drawn, longest main thread pass 4ms, memory peak 3944MB'). The same walk with the export step removed: 1728 MB. `Scripts/playtest.sh Scripts/perf/walks/long-6-export.json` (the whole 6 minutes): 4376 MB. So it is mostly a fixed cost, not a climb with length. Not looked into: likely the per-clip decoder passes the export opens (one AVAssetReader per clip since 19721ee12) and the GPU drawing into the encoder's pool. A 16 GB Mac is where it would matter.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-11-17T03:08:47.261Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-17T15:36:40.366Z",
+      "note": "seq 55 -> 50"
     }
   ]
 }

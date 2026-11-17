@@ -4,12 +4,12 @@
   "goal": "Ask has two places to type: the composer over the canvas and the field in the Agent panel. The composer now says 1 selected, but the panel field acts on the same picked layers without saying so, and the agent-edit mock prints 1 selected in the Agent panel header. Show the same scope there.",
   "epic": "agent-ask",
   "priority": "p2-normal",
-  "seq": 580,
+  "seq": 610,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-07T13:08:47.309Z",
-  "updated": "2026-11-15T13:16:54.473Z",
+  "updated": "2026-11-17T15:37:35.121Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-works-on-what-you-have-picked-so-make-this-b, which put the scope in the composer as its checklist said (AskViews.swift, AskPicked.scope, editor.pickedForAsk). Mock: docs/design/mocks/pages/agent-edit.html line 179, span.cnt.val beside the Agent title, and its placeholder Ask for a change to the selection where ours reads Ask, or type / for a command. Not built in that task: the held-out run was already going on the probe, and a rebuild would have replaced the app under it.",
@@ -46,6 +46,14 @@
     {
       "t": "2026-11-15T13:16:54.472Z",
       "note": "seq 570 -> 580"
+    },
+    {
+      "t": "2026-11-17T15:36:44.068Z",
+      "note": "seq 580 -> 600"
+    },
+    {
+      "t": "2026-11-17T15:37:35.120Z",
+      "note": "seq 600 -> 610"
     }
   ]
 }

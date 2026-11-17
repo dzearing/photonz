@@ -4,12 +4,12 @@
   "goal": "The loop's test copy of the app crashed once on 13 November just as a video's sound started to play. That copy was built from work that had not been finished yet, so the crash may never have been in the app as shipped. Find out which, and fix it if a person could hit it.",
   "epic": "video-perf",
   "priority": "p2-normal",
-  "seq": 40,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T20:35:06.151Z",
-  "updated": "2026-11-14T15:03:50.461Z",
+  "updated": "2026-11-17T15:36:40.233Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-13-114048.ips\nException: EXC_CRASH SIGABRT\nMessages: \nStack (app frames):\nDocumentAudioEngine.play(_:fromMS:speed:) (DocumentAudioPlayer.swift:275)\nclosure #4 in DocumentAudioPlayer.play(_:fromMS:speed:) (DocumentAudioPlayer.swift:85)\nclosure #1 in DocumentAudioEngine.run(_:) (DocumentAudioPlayer.swift:178)",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-14T15:03:50.460Z",
       "note": "seq 4010 -> 40"
+    },
+    {
+      "t": "2026-11-17T15:36:40.232Z",
+      "note": "seq 40 -> 30"
     }
   ]
 }

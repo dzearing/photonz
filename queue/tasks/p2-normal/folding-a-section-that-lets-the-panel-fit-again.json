@@ -4,12 +4,12 @@
   "goal": "When a person folds or opens a section and the rest of the right panel goes from too tall to fitting (or back), the whole panel redraws in one pass of 21 to 29ms, a frame the app does not draw. Folding should feel instant whatever it does to the panel.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 480,
+  "seq": 510,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T22:20:10.881Z",
-  "updated": "2026-11-16T12:43:14.055Z",
+  "updated": "2026-11-17T15:37:34.463Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-24 (task opening-a-folded-section-of-the-panel-leaves-the): Scripts/playtest.sh Scripts/playtest/section-fold-motion-walk.json, three runs: [88 press] pressing \"Transitions section\" held the main thread for 28.2ms / 25.4ms / 21.4ms in one pass, starting 5-9ms after the click; note says inspectorPanel bodies 1. The shut path is unchanged code (PanelOpenRoom only runs on an open); what changed is the fold state: the open-room rule now folds the audio sections when Captions/Audio Gain reopen in a 670pt panel, so shutting the 541pt Transitions takes the pick from overflowing to fitting. InspectorPanel.checkFoldBudget sees the ceilings change (Appearance squeezed 145 -> natural 171) and bumps foldBudgetPass, which redraws the whole panel (about the 23ms pick floor measured 2026-09-17). Before the rule the walk kept everything open, the pick overflowed before and after, the ceilings never changed and the shut cost 8-13ms. Same cost is reachable by hand without the rule: fold those sections yourself and shut Transitions. Likely fix: hand each section its ceiling through its own cell (like PanelSectionFoldStore does for folds) so a ceiling change redraws only the sections whose ceiling moved. The reopen measured 27.9ms / 25.6ms the same way (fits -> too tall).",
@@ -98,6 +98,14 @@
     {
       "t": "2026-11-16T12:43:14.054Z",
       "note": "2026-11-16 (seen by a-long-edit pass 12): section-fold-motion-walk now fails earlier, at step 14 (expectBuilds inspectorPanel at most 0): pressing 'Time section' on the sample recording with nothing picked builds the panel twice. Reproduced 3 times, twice with pass 12's change and once with it switched off by a file flag on the same build (Scripts/playtest.sh Scripts/playtest/section-fold-motion-walk.json -> '[14 expectBuilds] FAILED: \"inspectorPanel\" built 2 times since the step before this one'), so it predates that change."
+    },
+    {
+      "t": "2026-11-17T15:36:43.407Z",
+      "note": "seq 480 -> 500"
+    },
+    {
+      "t": "2026-11-17T15:37:34.462Z",
+      "note": "seq 500 -> 510"
     }
   ],
   "walks": [

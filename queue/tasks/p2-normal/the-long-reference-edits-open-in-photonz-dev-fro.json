@@ -1,0 +1,31 @@
+{
+  "id": "the-long-reference-edits-open-in-photonz-dev-fro",
+  "title": "The long reference edits open in Photonz Dev from a try step you can follow",
+  "goal": "Every speed audit this week tells you to try the 6, 20 or 60 minute reference edit by running a script, and that script opens it in the loop's test copy of the app, not the Photonz Dev you review in. So the focus feature cannot be tried from its own audit. The edits are already on this Mac; a try step should open them in Photonz Dev by a menu or a file you can click.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-17T15:37:26.539Z",
+  "updated": "2026-11-17T15:37:31.585Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen by the digests of 2026-11-16 and 2026-11-17. Scripts/perf/reference-edit.sh opens with Scripts/probe-app.sh. The files: ~/Library/Caches/Photonz Reference Edit/Reference Edit 6 min.photonz (also 20, 60). The Dev app must never be rebuilt by a runner (CLAUDE.md, Three bundles); opening a file in it is fine.",
+  "acceptance": [
+    "A person can open each reference edit in Photonz Dev with no terminal: either File > Open on a path the audit names, or a script option that opens it in Photonz Dev without rebuilding or quitting the Dev app",
+    "The try steps of the open long-edit and timeline tasks' latest audits (2026-11-17 pass 13 and 14, 2026-11-16 timeline and opening audits) say how to open the edit in Photonz Dev, in one step each",
+    "The audit guidance in queue/bin/runner-prompt.md says a try step names a menu, key, gesture or file, never a script to run, and how to reach the reference edits"
+  ],
+  "log": [
+    {
+      "t": "2026-11-17T15:37:26.541Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-17T15:37:31.584Z",
+      "note": "seq 75 -> 80"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "One check of exporting a cut recording failed once in a full test run on unchanged media code and passed on its own straight after, two weeks after the same failure was fixed. A red run that is not a real failure makes every runner run the whole suite twice.",
   "epic": "video-perf",
   "priority": "p2-normal",
-  "seq": 50,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T15:41:32.523Z",
-  "updated": "2026-11-16T10:44:36.334Z",
+  "updated": "2026-11-17T15:36:40.301Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-14 ~07:30 by the runner on the-play-bar-s-scrubber-knob-never-covers-the-ti (a transport scrubber change; nothing under media touched). Command: Scripts/test.sh (full, four processes). Output: '✘ Test \"Cuts between key frames keep exactly the frames the timeline shows\" recorded an issue at PieceCopyWriterTests.swift:69:6: Caught error: .notCopyable(\"the encoder will not store frames the way the recording does\")', failed after 39.260 seconds; 'Test run with 1399 tests in 221 suites failed'. Then PHOTONZ_TEST_ONE_RUN=1 Scripts/test.sh --filter PieceCopyWriterTests passed, that test in 2.343 s; the next full Scripts/test.sh exited 0. uptime around then: load averages 13.81 24.15 17.54. Full log kept at /tmp/photonz-piececopy-flake-2026-11-14.log (temporary). History: the-full-test-suite-stays-green-on-a-busy-mac-wh (done 2026-11-09) fixed this family and logged that PieceCopyWriterTests failed notCopyable in every process with 8 media test processes at once; one recurrence, so p2 until it is seen again.",
@@ -37,6 +37,10 @@
     {
       "t": "2026-11-16T10:44:36.333Z",
       "note": "2026-11-16 (long edit speed task, pass 11): failed again in a full Scripts/test.sh run (PieceCopyWriterTests 'The mix rides under the copied pictures, as long as the edit', .notCopyable('the encoder will not store frames the way the recording does') after 64.8 s), passed alone (Scripts/test.sh --filter PieceCopyWriterTests, 6 of 6 in 2.1 s). The change under test touched only timeline views."
+    },
+    {
+      "t": "2026-11-17T15:36:40.300Z",
+      "note": "seq 50 -> 40"
     }
   ]
 }

@@ -1,0 +1,39 @@
+{
+  "id": "the-app-crashed-in-nsapplication-photonz-nexteve",
+  "title": "Find out whether the 17 November crash while scrubbing a long edit can happen in the shipped app",
+  "goal": "The loop's test copy of the app crashed once on 17 November while a runner was scrubbing the long reference edit. The Mac stopped the app inside a window layout pass, not in a Photonz step, and the same walk ran 14 more times without crashing. Find out whether a person scrubbing a long edit could hit it, and fix it if they could.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-17T11:05:07.925Z",
+  "updated": "2026-11-17T15:36:40.499Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-17-024542.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nNSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) (HeldDragKeys.swift:111)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)\n\nDigest spot check 2026-11-17: the report's top frames are AppKit's, +[NSApplication _crashOnException:] under -[NSView updateConstraintsForSubtreeIfNeeded] in the display cycle; photonz_nextEvent is only the event pump it was called from. The long-edit pass 13 runner saw this crash once in 6 runs of scrub-never-blacks-out-walk with its change in, and 0 in 9 more runs (its log, 2026-11-17T11:04Z): it names -[NSWindow _postWindowNeedsUpdateConstraints] from NSHostingView.updateWindowContentSizeExtremaIfNecessary. That change has since landed (f87714cbc), so this cannot be put down to unfinished source. Command to try: Scripts/playtest.sh Scripts/playtest/scrub-never-blacks-out-walk.json, repeated.",
+  "acceptance": [
+    "The scrub walk on the long edit (Scripts/playtest.sh Scripts/playtest/scrub-never-blacks-out-walk.json) is run at least 20 times on a probe built from main, and crash-watch is read after: the count of crashes is written in the log",
+    "If it crashes again: the AppKit exception message is captured (it is missing from the 17 November report), the cause is fixed in Photonz code, and a test or walk fails before and passes after",
+    "If it does not: closed with the run count as evidence, and crash-watch marks the report as seen once and not reproduced"
+  ],
+  "log": [
+    {
+      "t": "2026-11-17T11:05:07.927Z",
+      "note": "created (crash-watch)"
+    },
+    {
+      "t": "2026-11-17T15:36:28.412Z",
+      "note": "priority p1-high -> p2-normal"
+    },
+    {
+      "t": "2026-11-17T15:36:28.478Z",
+      "note": "Digest spot check 2026-11-17: no reproduction command in the notes, only the crash report, so it does not hold the top of p1. I read the report: an AppKit exception in a window constraint update pass, caught by _crashOnException, with the Photonz event pump below it. The pass 13 runner had already met it once in 15 runs of scrub-never-blacks-out-walk and could not repeat it. Moved p1 to p2, retitled as the open question, re-tagged unmanned-loop to video-perf (a crash while scrubbing is a playback fault), and wrote the command to try into its notes and checklist. I did not run the walk 20 times here: that is the task."
+    },
+    {
+      "t": "2026-11-17T15:36:40.498Z",
+      "note": "seq 4010 -> 70"
+    }
+  ]
+}
