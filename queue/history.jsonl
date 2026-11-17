@@ -17689,3 +17689,13 @@
 {"t":"2026-11-17T09:08:41.925Z","ev":"task_walks","id":"find-out-whether-a-long-edit-goes-quiet-after-it","walks":["long-20-sound","long-60-sound"]}
 {"t":"2026-11-17T09:08:41.991Z","ev":"task_note","id":"find-out-whether-a-long-edit-goes-quiet-after-it"}
 {"t":"2026-11-17T09:08:57.914Z","ev":"task_done","id":"find-out-whether-a-long-edit-goes-quiet-after-it","from":"in_progress","note":"Yes, it went quiet: played from 0:00 the 20 and 60 min edits lost every voice at 6:24.9 (66 of 450 looks silent). Fixed in DocumentAudioPlayer with a rolling 20 s window (AudioScheduleWindow, PhotonzCore, tested over both edits whole) topped up off the engine's own clock. Measured after with Scripts/perf/walks/long-20-sound.json and long-60-sound.json: 0 left out, 0 of 450 silent, voice level every minute, late pieces within 1 ms. Suite green, 9 sound/speed walks ok, short speed walk inside its baseline. Audit queue/audits/2026-11-17-long-edit-sound-plays-to-the-end.json."}
+{"t":"2026-11-17T09:09:36.457Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-17T09:09:56.694Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T11:04:31.912Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T11:04:31.980Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T11:04:32.049Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T11:04:32.121Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T11:04:32.185Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-17T11:04:32.252Z","ev":"task_walks","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","walks":["speed-walk","scrub-never-blacks-out-walk","keyframe-anything-walk"]}
+{"t":"2026-11-17T11:04:32.320Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 13 landed f87714cbc: an opaque clip's shadow is blurred once instead of every frame (composite 10.8 -> 8.6 ms, GPU 7.5 -> 2.3 ms), and the speed walk now measures the frame really under the hand: 5 display frames hunting, 35 dragging end to end. Bars not reached (scrub 1 frame: picture 2; 0 dropped: 1 a minute; edits 16 ms). Stays open; pass 14 leads in the log."}
+{"t":"2026-11-17T11:05:07.929Z","ev":"task_created","id":"the-app-crashed-in-nsapplication-photonz-nexteve","priority":"p1-high","title":"The app crashed in NSApplication.photonz_nextEvent"}

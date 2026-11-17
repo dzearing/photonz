@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-17T04:07:26.775Z",
+  "updated": "2026-11-17T11:04:32.319Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -398,9 +398,45 @@
     {
       "t": "2026-11-17T04:07:26.774Z",
       "note": "from playing-a-five-minute-captioned-recording-never (2026-11-16): on the five minute captioned talk (one recording, 191 captions, Next defaults, window shown), playback keeps the main thread busy 6.4 to 7.6 s of every 20 s across about 10,000 run loop passes (about 500 a second), though no single pass passes 32 ms. Worth finding what turns the run loop over that often while a single clip plays (a-long-captioned-recording-plays-walk prints it on its two clock waits)."
+    },
+    {
+      "t": "2026-11-17T09:09:36.453Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-17T09:09:56.692Z",
+      "note": "Pass 13 works on the scrub bar (2 display frames behind vs 1): it has not moved since pass 3, dragging the playhead is what a person feels first on a long edit (digest 2026-11-16), and passes 7-12 already took the edit/pick leads."
+    },
+    {
+      "t": "2026-11-17T11:04:31.910Z",
+      "note": "Pass 13 measured first (51275c719): scrub 2/4 display frames, composite 10.8 ms median. Split with temporary timers in renderLocked: graph build 0.3 ms, CIContext.render 10.5 ms, copy 0.04 ms; CIRenderInfo: 7.5 ms of GPU kernels over 5 passes and 10.1 M pixels for a 1.9 M pixel canvas, ~2 ms of shader compiling every frame, the rest uploads and readback. Cutting the moving background at shown size paid nothing (Core Image already pushes the shrink down; reverted)."
+    },
+    {
+      "t": "2026-11-17T11:04:31.978Z",
+      "note": "Pass 13 fix (f87714cbc): an opaque picture's drop shadow is cast from a white stand-in bitmap of the same size taken through the same steps (DocumentRenderer.opaqueCastStandIn), so Core Image keeps the blur across frames. GPU 7.5 -> 2.3 ms, passes 5 -> 3, pixels 10.1 -> 5.8 M; composite median 10.8 -> 8.6 ms (worst of 3). Exported stills at 6 moments, off vs on: 5 moments at most 5 px by 1 level; 0:15 mid-zoom 425 of 7.7 M px by up to 21 on the clip's own corner, crisper (it is no longer drawn through an intermediate shared with the shadow). A CIImage(color:) stand-in gave the same; the bitmap is kept anyway so crop/clamp algebra matches a frame's."
+    },
+    {
+      "t": "2026-11-17T11:04:32.047Z",
+      "note": "Pass 13 found the scrub measure generous: the canvas answers a move with the nearest frame in hand (MovieFramesInHand) stamped with the hand's moment, and the lag counted it as caught up. The speed walk now also reports the frame lag (picture drawn from the frames the moment shows; RenderScheduler tag, playtestShownExactMomentMS) and a 'hunt' speed (10 s of edit across 2 s). Baseline worst of 3: medium lag 2/5, frame lag 35/133; hunt lag 2/4, frame lag 5/63. Slow end to end (scratch run): frame lag 31/121."
+    },
+    {
+      "t": "2026-11-17T11:04:32.119Z",
+      "note": "Pass 13 verified: test.sh green (exit 0); speed-walk ok x3 and baseline rewritten; walks ok: an-editing-session, keyframe-anything, a-captured-window-s-shadow-is-light-and-editable, glow-effect, keys-on-a-later-shadow, a-title-reads-over-a-video, appearance-list. scrub-never-blacks-out-walk: with the change 1 crash, 1 timing fail (2 of 165 frames over one) and 4 ok in 6 runs; without it 1 timing fail and 4 ok in 5, so the timing miss is pre-existing. The crash (Photonz Probe-2026-11-17-024542.ips) is an AppKit exception in -[NSWindow _postWindowNeedsUpdateConstraints] from NSHostingView.updateWindowContentSizeExtremaIfNecessary, under HeldDragKeys' nextEvent; seen once, not reproduced in 9 more runs, left to the crash watch (left rough, not filed: unreproduced)."
+    },
+    {
+      "t": "2026-11-17T11:04:32.183Z",
+      "note": "Next for pass 14: (a) the picture lag 2 vs bar 1: composite 8.6 ms against an 8.3 ms refresh; GPU is 2.3 of it, ~2 ms is shader compiling every frame (CIRenderInfo compileTime: find what changes the graph's shape per frame), then the CGImage frame uploads and the readback (render into an IOSurface the layer shows directly); (b) the frame lag: 63 frames at the start of every hunt (the first read ~0.5 s) and 27-35 at the median end to end, where reading only keyframes while the hand moves fast is the Premiere-like answer; (c) play 1 dropped a minute. Audit queue/audits/2026-11-17-a-long-edit-with-transitions-plays-scrubs-and-ed-pass13.json. No new follow-up tasks: every cost left is one of this task's own unmet bars."
+    },
+    {
+      "t": "2026-11-17T11:04:32.250Z",
+      "note": "walks speed-walk, scrub-never-blacks-out-walk, keyframe-anything-walk -> speed-walk, scrub-never-blacks-out-walk, keyframe-anything-walk"
+    },
+    {
+      "t": "2026-11-17T11:04:32.318Z",
+      "note": "Pass 13 landed f87714cbc: an opaque clip's shadow is blurred once instead of every frame (composite 10.8 -> 8.6 ms, GPU 7.5 -> 2.3 ms), and the speed walk now measures the frame really under the hand: 5 display frames hunting, 35 dragging end to end. Bars not reached (scrub 1 frame: picture 2; 0 dropped: 1 a minute; edits 16 ms). Stays open; pass 14 leads in the log."
     }
   ],
-  "started": "2026-11-16T10:58:56.200Z",
+  "started": "2026-11-17T09:09:36.452Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk",
