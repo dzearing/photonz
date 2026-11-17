@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:40.003Z",
-  "updated": "2026-11-16T13:17:07.150Z",
+  "updated": "2026-11-17T03:32:28.981Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -59,6 +59,46 @@
     {
       "t": "2026-11-16T13:17:07.149Z",
       "note": "seq 60 -> 40"
+    },
+    {
+      "t": "2026-11-17T00:44:55.079Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-17T03:31:50.350Z",
+      "note": "Measured first (b524c75af, long-60-memory walk): footprint level 1269-1389 MB per minute from minute 2 to 10 (+7%), peak 2826 MB, resident 3140 MB. No climb any more; spikes of 1.0-1.5 GB for 1-2 s about twice a minute. vmmap at a spike: Core Image region 330 MB -> 1.0 GB, 24-27 frames at full Retina size (29.5 MB) read for zooms. Ruled out by instrumenting: frame cache contents (118-593 MB), frames queued for the main thread (0 at every spike), recordings read at once (no match)."
+    },
+    {
+      "t": "2026-11-17T03:31:50.422Z",
+      "note": "Cause: DocumentRenderer's wrap cache kept the last 32 CGImages it wrapped (and their GPU uploads) whatever the ImageStore had let go. Fix: each wrap remembers its store (weak) and ref, and on every miss wraps whose store no longer holds that picture under that ref are dropped (letGoOfWrapsTheStoreDropped). Tests: ContentCacheTests aPictureTheStoreLetGoIsNotKept / aPictureReplacedUnderItsRefIsNotKept (red without the fix) / aPictureTheStoreStillHoldsStaysWrapped."
+    },
+    {
+      "t": "2026-11-17T03:31:50.492Z",
+      "note": "After: level 1093-1240 MB, +7% minute 2 -> 10 on the seeded run (+11% on an unseeded one; scrub places are now seeded, SpeedWalk.memoryScrubPlaces), peak 2100 MB (2207 unseeded). vmmap minute 2 vs 9 of the seeded run: 989 MB vs 1.0 GB, malloc +11 MB. Ceiling set at 2500 MB in long-60-memory.json, growthPercent 10. Sampler now reads 10x a second and keeps each second's max."
+    },
+    {
+      "t": "2026-11-17T03:31:50.562Z",
+      "note": "Short walk now records walkPeakFootprintMB (lifetime phys_footprint peak before the export) and export.peakFootprintMB; baseline short-6.json gets the worst of 3 runs: 1734 MB and 3944 MB. Export peak (4376 MB for the whole 6 min) filed as find-out-why-exporting-a-video-holds-about-4-gb (p2)."
+    },
+    {
+      "t": "2026-11-17T03:31:50.644Z",
+      "note": "left rough: spikes still reach ~800 MB over rest under a zoom, the frame cache's own up-to-31 full-size frames plus decoder surfaces. A byte budget on the sharp frame cache (MovieFrameFetcher.keepInsideBudget) would cut it but risks dropped frames at zoomed cuts; not filed, no person-visible problem at 2.1 GB."
+    },
+    {
+      "t": "2026-11-17T03:31:50.719Z",
+      "note": "owns these walks: scrub-never-blacks-out-walk, an-editing-session-walk, playing-a-recording-never-blinks-walk, speed-walk"
+    },
+    {
+      "t": "2026-11-17T03:32:28.979Z",
+      "note": "Playing and scrubbing the 60 min edit for 10 min: levels 1093-1240 MB, +7% minute 2 to 10, peak 2100-2108 MB (was 2826). Cause: DocumentRenderer's wrap cache kept the last 32 frames (full Retina under zooms) after the store let them go; now dropped once the store does (ContentCacheTests). Check: Scripts/perf/speed-walk.sh --memory (ceiling 2500 MB, growth 10%) ran green; short speed walk records peak before export (1734 MB) and export peak (3944 MB) against its baseline. Playback/scrub walks green (9), Scripts/test.sh green. Audit queue/audits/2026-11-16-memory-stays-bounded.json. Export's 4 GB filed as find-out-why-exporting-a-video-holds-about-4-gb."
     }
-  ]
+  ],
+  "started": "2026-11-17T00:44:55.078Z",
+  "walks": [
+    "scrub-never-blacks-out-walk",
+    "an-editing-session-walk",
+    "playing-a-recording-never-blinks-walk",
+    "speed-walk"
+  ],
+  "completed": "2026-11-17T03:32:28.980Z"
 }
