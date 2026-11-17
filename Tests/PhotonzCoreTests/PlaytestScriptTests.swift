@@ -918,6 +918,24 @@ struct PlaytestScriptTests {
         #expect(script.steps[1].name == "windowClick")
     }
 
+    @Test("A rightClick can aim at a lane at a moment, as a hover rests on one")
+    func rightClickOnALane() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "hover", "lane": "V2", "seconds": 61 },
+                     { "do": "rightClick", "lane": "V2", "seconds": 61, "first": "Ripple Delete" } ] }
+        """)
+        guard case .rightClick(let on, let at, _, _, _, _, _, _, let first, _, _, _, _) = script.steps[1] else {
+            Issue.record("right click on a lane"); return
+        }
+        #expect(on == nil)
+        #expect(at?.space == .lane)
+        #expect(at?.lane == PlaytestLaneSpot(lane: "V2", moment: .seconds(61)))
+        #expect(first == "Ripple Delete")
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "rightClick", "lane": "V2" } ] }"#)
+        }
+    }
+
     @Test("A still windowClick says it takes no point")
     func stillWindowClickRefusesAPoint() {
         #expect(throws: (any Error).self) {

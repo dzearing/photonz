@@ -59,6 +59,32 @@ public enum TimelinePaint {
         !lanePaints || isKept || (toMS >= stretch.lowerBound && fromMS <= stretch.upperBound)
     }
 
+    // MARK: Gaps
+
+    /// The gaps that are views of their own on a lane. A lane that paints
+    /// paints its gaps too, and builds a view only for the gap under the
+    /// pointer (`pointerGapMS`, where it starts), which carries the gap's
+    /// press and right-click menu: near the whole-hour view of the hour-long
+    /// reference edit about seventy gaps were each a striped canvas, a dashed
+    /// edge, a press and a menu, rebuilt on every frame of a zoom, about 5 ms
+    /// of it (2026-11-17). A lane that does not paint builds them all.
+    public static func gapViews(_ gaps: [TimelineGap], lanePaints: Bool, pointerGapMS: Int?) -> [TimelineGap] {
+        guard lanePaints else { return gaps }
+        guard let pointerGapMS else { return [] }
+        return gaps.filter { $0.range.lowerBound == pointerGapMS }
+    }
+
+    /// The gaps a painting lane paints: every one reaching the drawn
+    /// `stretch`, as every clip on it is.
+    public static func paintedGaps(_ gaps: [TimelineGap], stretch: ClosedRange<Double>) -> [TimelineGap] {
+        gaps.filter { Double($0.range.upperBound) >= stretch.lowerBound && Double($0.range.lowerBound) <= stretch.upperBound }
+    }
+
+    /// The gap `ms` along the lane is in, either end included.
+    public static func gap(atMS ms: Double, in gaps: [TimelineGap]) -> TimelineGap? {
+        gaps.last { Double($0.range.lowerBound) <= ms && ms <= Double($0.range.upperBound) }
+    }
+
     /// What a lane's painting is laid on: a canvas as wide as the drawn
     /// stretch, measured from where the stretch starts, so it stays the same
     /// for every frame of a scroll inside one stretch and is slid into place

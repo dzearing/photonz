@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-17T11:23:53.321Z",
+  "updated": "2026-11-17T20:49:04.870Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -265,9 +265,37 @@
     {
       "t": "2026-11-17T11:23:53.320Z",
       "note": "rotating check 2026-11-17T11:23:53Z, 31 walks run from 1124 onward in the rotation: speed-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-11-17T18:34:36.996Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-17T20:49:04.489Z",
+      "note": "Pass 9 (2026-11-17). Rotating check at 03:14 had speed-walk failing on scrub medium frame lag (73 vs at most 56): scrub, not the timeline, from before the long-edit task's pass 15 landed (45bd07794, speed-walk ok x3 there). This pass: speed-walk ok twice; one run during a 15 load average failed on scrub hunt sight lag worst 32 vs at most 32, ok on rerun. Not mine; nothing filed."
+    },
+    {
+      "t": "2026-11-17T20:49:04.567Z",
+      "note": "Pass 9 baseline at 45bd07794, 60 min edit: zoom in 13.2 ms (p95 32.4), out 11.4 (25.7), scroll 10.4 (15.3, 120 of 360 late), near Fit 1x 32 / 2x 29 / 4x 26; edits trim 75 / move 52 / blade 76 / undo 72 / transition 96 / title 42. Near-Fit loop (1x to 8x and back, 6 times) with throwaway file switches on one build: base 22.5, no gaps 17.5, no painted clips 16.3, no painted cuts 18.7, no Zoom bars 20.7, no gridlines 22.1; inside the paint (clip, shadows, waveforms, names, level line) all off only 19.5; Canvas rendersAsynchronously 20.6; band shadows off no change. SwiftUI trace: ~118 canvases rebuilt a frame, ~110 of them gap stripes (one Canvas per gap)."
+    },
+    {
+      "t": "2026-11-17T20:49:04.641Z",
+      "note": "Pass 9 change: a painting lane paints its gaps under its clips (TimelinePaintedClips.paintGaps: one clip and one fill for every stripe, each stripe cut to its own gap; each dashed edge stroked alone because one dashed path carried its dashes from gap to gap) and builds a gap view only under the pointer, without a look, for its press and right-click menu (TimelinePaint.gapViews/paintedGaps/gap(atMS:), tested; readPointer finds it). rightClick takes lane+seconds (PlaytestScript, tested). hasClickMarks copies one layer not two; soundCleaningProgress returns at once when nothing is being cleaned. New walk a-painted-gap-takes-a-right-click-walk: Ripple Delete first with the hover; without the hover step the same right click gets the lane menu (proven both ways). Near-Fit loop 22.5 -> 17.4."
+    },
+    {
+      "t": "2026-11-17T20:49:04.715Z",
+      "note": "Pass 9 results: first after-build (12:00) zoom in 9.2-9.4 (p95 24-25), out 8.8-9.0 (17-18), scroll 8.3 (12, 14-18 late), near Fit 1x 24-25 / 2x 15-18 / 4x 16-17; final build (12:45, Mac busier, far zoom 9-12 where it read 8) zoom 12.0-12.5, scroll 11.5-11.8. Pictures vs a HEAD build made the same hour: Fit identical but for single pixels on gap edges; zoomed, pictures landing and the dash phase along wide gaps' top edges (Chose to keep it over another build cycle because no person would see dashes a few points along). Chose to let a painted gap run off the window's edge as a painted clip does over the view's cut-at-the-edge slot because clamping would break sliding the canvas on a scroll. 16 walks green (task walks, gap walks, an-editing-session, reference-edit-opens); Scripts/test.sh green. Rule added to docs/design/video.md 8f. Audit queue/audits/2026-11-17-timeline-hour-long-painted-gaps.json."
+    },
+    {
+      "t": "2026-11-17T20:49:04.791Z",
+      "note": "Still open, bars not reached: zoom near Fit 17 ms vs 8.3, scroll p95 12 vs 8.3, edits 31-96 vs 16 (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). Next: painted cuts (~3 ms near Fit, not their shadows: the seam capsules, the cut canvas and paintedCuts each frame), then the clips' paint (~2 ms: waveforms the largest), then SwiftUI upkeep. Left rough, not filed: probe-only costs in measures (window watcher 0.27 ms every 20 ms, accessibility graph ~6%). Gotcha: git stash refused twice mid-pass (untracked path, then 'could not write index' while something else held the index); copy files aside instead. A probe build after a PhotonzCore change takes 8-11 min, past the 600 s foreground limit."
+    },
+    {
+      "t": "2026-11-17T20:49:04.869Z",
+      "note": "walks open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk -> open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk, a-painted-gap-takes-a-right-click-walk"
     }
   ],
-  "started": "2026-11-16T20:25:53.896Z",
+  "started": "2026-11-17T18:34:36.995Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
@@ -278,6 +306,7 @@
     "transitions-where-clips-meet-walk",
     "speed-walk",
     "painted-clips-take-a-hand-walk",
-    "a-cut-slid-under-a-still-pointer-walk"
+    "a-cut-slid-under-a-still-pointer-walk",
+    "a-painted-gap-takes-a-right-click-walk"
   ]
 }

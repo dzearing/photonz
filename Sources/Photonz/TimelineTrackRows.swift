@@ -44,6 +44,10 @@ struct TimelineTrackRow: View {
     @State private var pointerClipID: UUID?
     /// The edit point under the pointer on a busy lane, drawn as its full view.
     @State private var pointerEditPointID: String?
+    /// Where the gap under the pointer starts, on a busy lane: the one gap
+    /// built as a view, for its press and right-click menu
+    /// (`TimelinePaint.gapViews`).
+    @State private var pointerGapMS: Int?
     /// Where across the lane the pointer last rested, kept where writing it
     /// wakes nothing: a pointer held still while the timeline scrolls or
     /// zooms under it is over something new with no move to say so, and this
@@ -554,6 +558,9 @@ struct TimelineTrackRow: View {
         // across cut to itself, or its whole span when it is no wider than
         // two windows, so a scroll does not build it again
         // (`TimelineDrawnStretch.cut`).
+        let gaps = editorState.timelineGaps(onTrack: track)
+        // Painted with the clips, on the same canvas, whenever there is one.
+        let paintsGaps = painting.paints && !painting.bars.isEmpty
         func drawn(_ clip: MotionStripGroup) -> ClosedRange<Double>? {
             guard let bar = clip.bar, !kept.contains(clip.layerID) else { return nil }
             return TimelineDrawnStretch.cut(stretch, toClipFromMS: Double(bar.inMS), toMS: Double(bar.outMS),
@@ -583,15 +590,21 @@ struct TimelineTrackRow: View {
             // right-click menu that leads with Ripple Delete, as Premiere's
             // does (`EditorState+TimelineGap`). The press is read in the
             // lane's space, so a click or a box starting here is the lane's.
-            ForEach(sight.gaps(editorState.timelineGaps(onTrack: track)), id: \.range.lowerBound) { gap in
+            // A lane that paints its clips paints its gaps with them, and
+            // builds only the gap under the pointer, without a look of its
+            // own, for its press and menu (`TimelinePaint.gapViews`).
+            ForEach(TimelinePaint.gapViews(sight.gaps(gaps), lanePaints: paintsGaps, pointerGapMS: pointerGapMS),
+                    id: \.range.lowerBound) { gap in
                 let x0 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.lowerBound))), 1)
                 let x1 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.upperBound))), 1)
                 if x1 - x0 >= 1 {
                     // Drawn as an empty slot the height of a clip, so a hole
                     // left by a lift or a trim is plain to see.
-                    TimelineGapSlot()
-                        .frame(width: x1 - x0, height: laneHeight)
-                        .offset(x: x0)
+                    if !paintsGaps {
+                        TimelineGapSlot()
+                            .frame(width: x1 - x0, height: laneHeight)
+                            .offset(x: x0)
+                    }
                     Color.clear
                         .contentShape(Rectangle())
                         .frame(width: x1 - x0, height: laneHeight)
@@ -603,7 +616,11 @@ struct TimelineTrackRow: View {
                 }
             }
             if !painting.bars.isEmpty {
-                TimelinePaintedClips(bars: painting.bars, canvas: canvas, drawnMS: paintedMS,
+                TimelinePaintedClips(bars: painting.bars,
+                                     gaps: TimelinePaint.paintedGaps(gaps, stretch: paintedMS).map(\.range),
+                                     gapInk: .init(stripe: TimelineGapSlot.stripeTone.color(colorScheme),
+                                                   edge: TimelineGapSlot.edgeTone.color(colorScheme)),
+                                     canvas: canvas, drawnMS: paintedMS,
                                      laneWidth: laneWidth, laneHeight: laneHeight)
                     .equatable()
                     .offset(x: canvasX)
@@ -1011,12 +1028,25 @@ struct TimelineTrackRow: View {
     private func readPointer() {
         var under: UUID?
         var cut: String?
+        var gap: Int?
         if let x = pointerSpot.x {
             under = clipUnderPointer(atX: x)
             cut = under == nil ? nil : editPointUnderPointer(atX: x)
+            gap = under == nil ? gapUnderPointer(atX: x) : nil
         }
         if under != pointerClipID { pointerClipID = under }
         if cut != pointerEditPointID { pointerEditPointID = cut }
+        if gap != pointerGapMS { pointerGapMS = gap }
+    }
+
+    /// Where the gap under a point across the lane starts, on a busy lane.
+    private func gapUnderPointer(atX x: CGFloat) -> Int? {
+        let ruler = editorState.motionStripRuler
+        guard laneWidth > 0,
+              lanePaints(clipsInSight: TimelineSight(ruler: ruler).clips(row.clips, keeping: []).count)
+        else { return nil }
+        return TimelinePaint.gap(atMS: ruler.ms(atFraction: Double(x / laneWidth)),
+                                 in: editorState.timelineGaps(onTrack: track))?.range.lowerBound
     }
 
     /// The cut within reach of a point across the lane, on a busy lane.

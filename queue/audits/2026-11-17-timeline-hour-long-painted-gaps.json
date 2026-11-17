@@ -1,0 +1,26 @@
+{
+  "feature": "The hour-long timeline paints the gaps between clips",
+  "epic": "video-perf",
+  "summary": "On a long edit the empty spaces between clips (the striped, dashed slots on the Title and V2 tracks) are painted with the clips instead of being two views each, so zooming near the whole-hour view takes about 17 ms a frame instead of 22, and a scroll misses far fewer refreshes. A right click on a gap still offers Ripple Delete first.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit, or the walk a-painted-gap-takes-a-right-click-walk).",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit. The timeline opens at Fit with gaps striped on Title and V2.", "shot": "2026-11-17-timeline-hour-long-painted-gaps-fit-sc.png" },
+    { "do": "Pinch or press Command = a few times to zoom the timeline in from Fit, then back out.", "shot": "2026-11-17-timeline-hour-long-painted-gaps-zoomed-sc.png" },
+    { "do": "Scroll the timeline along with two fingers, end to end." },
+    { "do": "Rest the pointer in the gap on V2 before the first B-roll and right click: Ripple Delete is the first row." },
+    { "do": "Compare the gaps with today's build: top is before, middle is after, bottom marks the pixels that differ.", "shot": "2026-11-17-timeline-hour-long-gaps-head-vs-painted.png" }
+  ],
+  "evaluate": [
+    "Does zooming in and out near the whole-hour view feel smoother than before?",
+    "Do the gaps look the same as before, at Fit and zoomed in?",
+    "Does a right click in a gap still bring up its own menu straight away?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, median frame (p95). Before this pass (HEAD 45bd07794, 10:45): zoom in 13.2 ms (32.4), zoom out 11.4 (25.7), scroll 10.4 (15.3), 120 of 360 scroll frames late; near Fit 1x 32, 2x 29, 4x 26. After, first build (12:00, two runs): zoom in 9.2-9.4 (24-25), out 8.8-9.0 (17-18), scroll 8.3 (12), 14-18 late; near Fit 1x 24-25, 2x 15-18, 4x 16-17. After, final build (12:45, three runs, the Mac busier: far zoom frames read 9-12 ms where they read a flat 8 at 12:00): zoom in 12.0-12.5, out 12.1-12.4, scroll 11.5-11.8. Near Fit measured on one build with gaps switched on and off: 22.5 to 17.4 ms a frame.",
+    "Bars of the task not reached: 95 percent of zoom and scroll frames under 8.3 ms and none over 16, and edits inside 16 ms (trim 42-64, move 31-37, blade 63-78, undo 43-53, transition 63-96, title 34-43 ms longest pass; mostly the inspector). The task stays open.",
+    "The dashes along the top of a wide gap fall a few points further along than before (same dash, colour, stripes and corners; the bottom picture of the comparison). Chose to leave it: matching SwiftUI's own dash start costs another build cycle for no difference a person would see.",
+    "A gap that runs off the window's edge now runs off it like a clip does; before, its slot was cut at the window edge with a rounded, dashed end there.",
+    "No mock covers the timeline's speed; the gap slot's look is the cut walkthrough's #theGap, unchanged."
+  ]
+}

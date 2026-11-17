@@ -538,7 +538,11 @@ extension EditorState {
     /// How far along the cleaned copy of this layer's sound is, or nil where
     /// none is being made: the mark on its segment.
     func soundCleaningProgress(of id: UUID) -> Double? {
-        guard let sound = document?.layer(id: id)?.sound else { return nil }
+        // Nothing being cleaned is the usual answer, and asked for every
+        // painted sound on every frame of a zoom, finding the clip first
+        // copied a layer each time (2026-11-17).
+        guard !SoundLibrary.shared.cleaningProgress.isEmpty,
+              let sound = document?.layer(id: id)?.sound else { return nil }
         return SoundLibrary.shared.cleaningProgress(ofSource: sound.sourceID)
     }
 

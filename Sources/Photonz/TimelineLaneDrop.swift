@@ -343,9 +343,15 @@ struct TimelineStripes: View {
 /// transparent 5px, panel-2 5px 10px)` inside, so a hole left by a lift or a
 /// trim reads as one.
 struct TimelineGapSlot: View {
+    /// The stripes' width and tones, which a painting lane paints a gap in
+    /// too (`TimelinePaintedClips`).
+    static let stripeWidth: CGFloat = 5
+    static let stripeTone = VideoKit.Palette.panel2
+    static let edgeTone = VideoKit.Palette.lineStrong
+
     var body: some View {
         TimelineEmptySlot(cornerRadius: VideoKit.Metrics.clipCornerRadius, readout: "gap slot",
-                          stripeWidth: 5, stripeTone: VideoKit.Palette.panel2, stripeOpacity: 1)
+                          stripeWidth: Self.stripeWidth, stripeTone: Self.stripeTone, stripeOpacity: 1)
     }
 }
 

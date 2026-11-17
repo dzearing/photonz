@@ -1028,6 +1028,19 @@ The rule, for any view added to the editor window:
      (a library that loads later, an editor setting) is either read each
      frame beside the cleaning progress or added to its `Switches`, or a
      painted clip goes on showing the old answer.
+   - **A lane that paints its clips paints its gaps too**, under the clips on
+     the same canvas, and builds a view for one gap only: the one under the
+     pointer, with no look of its own, carrying the gap's press and its
+     right-click menu (`TimelinePaint.gapViews`, read again with the pointer
+     by `readPointer`, `a-painted-gap-takes-a-right-click-walk`). Each gap
+     was a striped Canvas, a dashed edge, a press and a menu: near the
+     whole-hour view the Title and V2 lanes held about seventy, rebuilt and
+     drawn as separate layers on every frame of a zoom, 5 ms of a 22 ms
+     frame (2026-11-17). Their stripes are one clip and one fill per lane;
+     each edge is stroked on its own, because one dashed path through every
+     gap carries its dashes on from one edge into the next. A painted gap
+     runs off the window's edge as a painted clip does, where a gap's view is
+     cut at the edge.
 9. **Nothing per clip reads the window unless it is near it.** A scroll
    writes the window every frame, so whatever reads it is built again every
    frame. A clip's bar is handed the stretch it draws across by its lane, cut

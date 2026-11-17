@@ -56,6 +56,12 @@ struct TimelinePaintedClips: View, Equatable {
     }
 
     let bars: [Bar]
+    /// The gaps between clips on the drawn stretch, painted under the clips
+    /// as `TimelineGapSlot` draws one: the lane builds a view only for the
+    /// gap under the pointer, for its press and menu (`TimelinePaint.gapViews`).
+    var gaps: [Range<Int>] = []
+    /// The gap's stripes and dashed edge, in the lane's own scheme.
+    var gapInk = GapInk(stripe: .clear, edge: .clear)
     /// What it is painted on: the drawn stretch, measured from where it
     /// starts, which a scroll inside one stretch leaves alone. The lane
     /// slides it into place (`TimelinePaint.Canvas`).
@@ -98,11 +104,21 @@ struct TimelinePaintedClips: View, Equatable {
         case strip(UUID)
     }
 
+    struct GapInk: Equatable {
+        let stripe: Color
+        let edge: Color
+    }
+
     var body: some View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.clipBar)
         #endif
         let _ = landed
+        let gaps = self.gaps
+        let gapInk = self.gapInk
+        let ruler = canvas.ruler
+        let laneWidth = self.laneWidth
+        let laneHeight = self.laneHeight
         let placed = bars.compactMap { Self.place($0, ruler: canvas.ruler, drawnMS: drawnMS, laneWidth: laneWidth) }
         let strips = placed.map { Self.strip(of: $0) }
         // Every picture the strips show, in the order they come, as the key
@@ -123,6 +139,8 @@ struct TimelinePaintedClips: View, Equatable {
             TimelineView(.animation(minimumInterval: nil, paused: fades.isEmpty)) { timeline in
                 let now = timeline.date.timeIntervalSinceReferenceDate
                 Canvas { context, _ in
+                    Self.paintGaps(gaps, ruler: ruler, laneWidth: laneWidth, height: laneHeight, ink: gapInk,
+                                   in: &context)
                     for (one, strip) in zip(placed, strips) {
                         var alpha: (Fade) -> Double = { _ in 1 }
                         if !fades.isEmpty || before != nil {
@@ -202,7 +220,7 @@ struct TimelinePaintedClips: View, Equatable {
 
     nonisolated static func == (a: TimelinePaintedClips, b: TimelinePaintedClips) -> Bool {
         a.bars == b.bars && a.canvas == b.canvas && a.drawnMS == b.drawnMS && a.laneWidth == b.laneWidth
-            && a.laneHeight == b.laneHeight
+            && a.laneHeight == b.laneHeight && a.gaps == b.gaps && a.gapInk == b.gapInk
     }
 
     // MARK: Pictures along a clip
@@ -403,6 +421,74 @@ struct TimelinePaintedClips: View, Equatable {
             paintSoundTag(placed, off: 0, in: &context)
         }
         paintPictureFades(placed, in: &context)
+    }
+
+    /// The gaps between clips as `TimelineGapSlot` draws each: stripes five
+    /// points across inside the clip's corner, under a dashed edge. All of a
+    /// lane's stripes are one clip and one fill; each edge is stroked on its
+    /// own, since one dashed path through every gap carries its dashes on
+    /// from one edge to the next where a gap's own starts afresh. Near the
+    /// whole-hour view of the hour-long reference edit about seventy gaps
+    /// were each a striped canvas, an edge, a press and a menu, about 5 ms
+    /// of every frame of a zoom (2026-11-17).
+    private static func paintGaps(_ gaps: [Range<Int>], ruler: MotionStripRuler, laneWidth: CGFloat,
+                                  height: CGFloat, ink: GapInk, in context: inout GraphicsContext) {
+        guard !gaps.isEmpty else { return }
+        let scale = context.environment.displayScale
+        let corner = RoundedRectangle(cornerRadius: radius)
+        let edge = corner.inset(by: 0.5)
+        // `TimelineStripes`: across the stripes is 45 degrees, so along the
+        // lane a stripe and its gap each take its width times root 2.
+        let step = TimelineGapSlot.stripeWidth * 2.squareRoot()
+        var slots = Path()
+        var edges: [Path] = []
+        var stripes = Path()
+        for gap in gaps {
+            let x0 = laneWidth * ruler.fraction(ofMS: Double(gap.lowerBound))
+            let x1 = laneWidth * ruler.fraction(ofMS: Double(gap.upperBound))
+            guard x1 - x0 >= 1 else { continue }
+            let rect = snapped(CGRect(x: x0, y: 0, width: x1 - x0, height: height), scale: scale)
+            slots.addPath(corner.path(in: rect))
+            edges.append(edge.path(in: rect))
+            // Each stripe cut to its own gap's ends, so under the one clip
+            // a stripe never reaches into the gap beside it.
+            var x = rect.minX - rect.height
+            while x < rect.maxX {
+                let stripe = Self.cut([CGPoint(x: x, y: rect.minY), CGPoint(x: x + step, y: rect.minY),
+                                       CGPoint(x: x + step + rect.height, y: rect.maxY),
+                                       CGPoint(x: x + rect.height, y: rect.maxY)],
+                                      fromX: rect.minX, toX: rect.maxX)
+                if stripe.count > 2 {
+                    stripes.addLines(stripe)
+                    stripes.closeSubpath()
+                }
+                x += step * 2
+            }
+        }
+        var inside = context
+        inside.clip(to: slots)
+        inside.fill(stripes, with: .color(ink.stripe))
+        let dashed = StrokeStyle(lineWidth: 1, dash: [4, 3])
+        for one in edges { context.stroke(one, with: .color(ink.edge), style: dashed) }
+    }
+
+    /// A shape cut to the stretch from `fromX` to `toX` across.
+    static func cut(_ points: [CGPoint], fromX: CGFloat, toX: CGFloat) -> [CGPoint] {
+        func keep(_ points: [CGPoint], inside: (CGPoint) -> Bool, edge: CGFloat) -> [CGPoint] {
+            guard let last = points.last else { return [] }
+            var kept: [CGPoint] = []
+            var before = last
+            for point in points {
+                if inside(point) != inside(before) {
+                    let t = (edge - before.x) / (point.x - before.x)
+                    kept.append(CGPoint(x: edge, y: before.y + t * (point.y - before.y)))
+                }
+                if inside(point) { kept.append(point) }
+                before = point
+            }
+            return kept
+        }
+        return keep(keep(points, inside: { $0.x >= fromX }, edge: fromX), inside: { $0.x <= toX }, edge: toX)
     }
 
     /// A sound's name, in a dark tag at the top left of the clip over its

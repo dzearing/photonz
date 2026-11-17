@@ -5821,7 +5821,12 @@ public enum PlaytestStep: Sendable, Equatable {
                               at: try f.faceSpots("at", besides: "clicking"))
         case "rightClick":
             let onRow = try f.optionalString("on")
-            let onCanvas = fields["at"] == nil ? nil : try f.point("at")
+            // A spot on the timeline, worked out where the lane is drawn when
+            // the step runs, as a hover's is (`PlaytestLaneSpot`).
+            let onCanvas = fields["lane"] != nil
+                ? PlaytestPoint(lane: PlaytestLaneSpot(lane: try f.string("lane"),
+                                                       moment: .seconds(try f.number("seconds"))))
+                : fields["at"] == nil ? nil : try f.point("at")
             guard onRow != nil || onCanvas != nil else {
                 throw f.invalid("on", "must name a row, or the step must name a spot "
                               + "on the picture with \"at\": [x, y]")

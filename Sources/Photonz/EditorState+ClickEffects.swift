@@ -34,7 +34,10 @@ extension EditorState {
         guard let layer = document?.layer(id: id) else { return false }
         if layer.addedClicks?.isEmpty == false { return true }
         if let recorded = layer.clickEffect?.recorded { return !recorded.isEmpty }
-        return recordedPointerTrack(ofClip: id)?.clicks.isEmpty == false
+        // From the layer already found: asked for every clip in sight on
+        // every frame of a zoom, finding it again copied a second layer.
+        guard let movie = layer.movie else { return false }
+        return MovieLibrary.shared.pointerTrack(for: movie)?.clicks.isEmpty == false
     }
 
     /// Whether the clip has a click an effect could be drawn at.

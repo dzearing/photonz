@@ -23244,3 +23244,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Fast drags: key frames aimed where the hand will be when the read lands, chosen inside the clip's played stretch, one slot per clip on screen (two reads at once), every on-screen place kept by the frame budget, stand-ins taken from inside the clip. A still playhead has the second around it read small, so a hunt from rest shows a picture from its first move.
 - Short walk baseline rewritten: medium sight lag 2/34 (honest before 4/163), hunt 3/19. Rules in docs/design/video.md 8e.
 - Next: composite under one refresh (shader compile, uploads, readback), continue the rest pass into a hunt instead of re-decoding from the key frame, the stop-dead wait for the sharp frame.
+
+## 2026-11-17 — hour-long timeline pass 9: busy lanes paint their gaps (task the-timeline-of-an-hour-long-edit-scrolls-zooms)
+
+- Near-Fit experiments on one build: gaps were 5 ms of a 22 ms zoom frame (each gap a striped Canvas, a dashed edge, a press and a menu; ~110 canvases a frame). A painting lane now paints its gaps under its clips and builds a clear gap view only under the pointer for its press and menu (`TimelinePaint.gapViews`). Near Fit 22.5 -> 17.4 ms; on a quiet Mac zoom 13.2 -> ~9.3 ms median, scroll 10.4 -> 8.3 (late frames 120 -> ~16 of 360).
+- `rightClick` steps take `lane` + `seconds`; new walk `a-painted-gap-takes-a-right-click-walk`.
+- Next: painted cuts (~3 ms near Fit), the clips' paint (~2 ms), edits (inspector, other task). Bars not reached; the task stays open.

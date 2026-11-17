@@ -1,3 +1,4 @@
+import Foundation
 import CoreGraphics
 import Testing
 @testable import PhotonzCore
@@ -201,5 +202,47 @@ import Testing
         let at = TimelineZoom(scale: 8, startMS: 10_000)
         #expect(TimelinePaint.isZoom(from: at, to: TimelineZoom(scale: 8.32, startMS: 9_000)))
         #expect(!TimelinePaint.isZoom(from: at, to: TimelineZoom(scale: 8, startMS: 19_000)))
+    }
+
+    // MARK: Gaps
+
+    /// A painting lane paints its gaps and builds a view only for the gap
+    /// under the pointer, for its press and right-click menu: near the
+    /// whole-hour view of the reference edit about seventy gaps were each a
+    /// striped canvas, a dashed edge, a press and a menu, rebuilt on every
+    /// frame of a zoom, about 5 ms of it (2026-11-17).
+    @Test func aPaintingLaneBuildsOnlyTheGapUnderThePointer() {
+        let track = UUID()
+        let gaps = [TimelineGap(trackID: track, range: 0..<1_000),
+                    TimelineGap(trackID: track, range: 5_000..<6_000),
+                    TimelineGap(trackID: track, range: 9_000..<9_500)]
+        #expect(TimelinePaint.gapViews(gaps, lanePaints: false, pointerGapMS: nil) == gaps)
+        #expect(TimelinePaint.gapViews(gaps, lanePaints: false, pointerGapMS: 5_000) == gaps)
+        #expect(TimelinePaint.gapViews(gaps, lanePaints: true, pointerGapMS: nil).isEmpty)
+        #expect(TimelinePaint.gapViews(gaps, lanePaints: true, pointerGapMS: 5_000) == [gaps[1]])
+        // A gap that closed under the pointer builds nothing.
+        #expect(TimelinePaint.gapViews(gaps, lanePaints: true, pointerGapMS: 7_000).isEmpty)
+    }
+
+    /// Every gap reaching the drawn stretch is painted, as every clip is.
+    @Test func aPaintingLanePaintsEveryGapOnTheStretch() {
+        let track = UUID()
+        let gaps = [TimelineGap(trackID: track, range: 0..<1_000),
+                    TimelineGap(trackID: track, range: 5_000..<6_000),
+                    TimelineGap(trackID: track, range: 9_000..<9_500)]
+        #expect(TimelinePaint.paintedGaps(gaps, stretch: 900...5_000) == [gaps[0], gaps[1]])
+        #expect(TimelinePaint.paintedGaps(gaps, stretch: 1_200...4_800).isEmpty)
+        #expect(TimelinePaint.paintedGaps(gaps, stretch: 0...10_000) == gaps)
+    }
+
+    /// The gap a point along the lane is in, ends included.
+    @Test func theGapUnderAPoint() {
+        let track = UUID()
+        let gaps = [TimelineGap(trackID: track, range: 0..<1_000),
+                    TimelineGap(trackID: track, range: 5_000..<6_000)]
+        #expect(TimelinePaint.gap(atMS: 500, in: gaps) == gaps[0])
+        #expect(TimelinePaint.gap(atMS: 6_000, in: gaps) == gaps[1])
+        #expect(TimelinePaint.gap(atMS: 5_000, in: gaps) == gaps[1])
+        #expect(TimelinePaint.gap(atMS: 3_000, in: gaps) == nil)
     }
 }

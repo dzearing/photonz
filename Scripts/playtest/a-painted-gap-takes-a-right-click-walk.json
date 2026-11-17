@@ -1,0 +1,50 @@
+{
+  "out": "/tmp/photonz-playtest/a-painted-gap-takes-a-right-click-walk",
+  "seed": "At Next defaults, no flag set: the 60 minute reference edit, long enough that every track paints its clips, its cuts and the gaps between its clips as one layer (the-timeline-of-an-hour-long-edit-scrolls-zooms). V2's first B-roll starts twenty to thirty seconds in, so 0:10 on V2 is always a gap. A person rests the pointer in that gap and right clicks it: the gap's own menu comes up, Ripple Delete first, exactly as on a quiet lane where every gap is a view of its own.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 60
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "0-the-painted-gaps"
+    },
+    {
+      "comment": "The pointer comes to rest in the gap on V2 at 0:10, before the first B-roll.",
+      "do": "hover",
+      "lane": "V2",
+      "seconds": 10
+    },
+    {
+      "comment": "A right click where it rests offers the gap's own rows, Ripple Delete first.",
+      "do": "rightClick",
+      "lane": "V2",
+      "seconds": 10,
+      "first": "Ripple Delete"
+    },
+    {
+      "do": "describe",
+      "stage": "1-gap-menu",
+      "note": "THE RIGHT CLICK: the painted gap at 0:10 on V2 offers Ripple Delete first"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-after-the-right-click"
+    }
+  ]
+}
