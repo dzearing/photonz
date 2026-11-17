@@ -351,6 +351,9 @@ extension EditorState {
     /// pictures are, a snapshot of the window's store when one had it.
     /// `mayCopyPieces` false draws an edit that could have been copied, which
     /// only a walk timing the two against each other asks for.
+    /// `throughPictures` draws every frame as a picture first, read back off
+    /// the GPU and drawn again into the encoder's buffer, the way every export
+    /// did before 2026-11-16: only a walk comparing the two asks for it.
     @discardableResult
     static func writeVideo(of document: PhotonzDocument, pictures store: ImageStore,
                            format: RecordingFormat, quality: VideoExportQuality,
@@ -358,16 +361,23 @@ extension EditorState {
                            captions: CaptionExport = .burnedIn,
                            range: VideoExportRange = .marked,
                            mayCopyPieces: Bool = true,
+                           throughPictures: Bool = false,
                            onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> VideoWriteRoute {
+        // Work a person asked for and is waiting on, said so to the system,
+        // so a long export left running while they step away is neither
+        // napped nor stopped half way by the Mac going to sleep.
+        let activity = ProcessInfo.processInfo.beginActivity(
+            options: .userInitiated, reason: "Writing a video")
+        defer { ProcessInfo.processInfo.endActivity(activity) }
         // Written beside `url` and swapped in whole: `url` may be the very
         // recording this plays (the save box offers the recording's own name),
         // and every route below starts by removing its destination
         // (`FileSwap`).
-        try await FileSwap.write(to: url) { scratch in
+        return try await FileSwap.write(to: url) { scratch in
             try await writeVideoUnswapped(
                 of: document, pictures: store, format: format, quality: quality, size: size,
                 to: scratch, captions: captions, range: range, mayCopyPieces: mayCopyPieces,
-                onProgress: onProgress)
+                throughPictures: throughPictures, onProgress: onProgress)
         }
     }
 
@@ -376,6 +386,7 @@ extension EditorState {
                                             size: VideoExportSize?, to url: URL,
                                             captions: CaptionExport, range: VideoExportRange,
                                             mayCopyPieces: Bool,
+                                            throughPictures: Bool,
                                             onProgress: (@Sendable (Double) -> Void)?) async throws -> VideoWriteRoute {
         let document = document.forExport(captions: captions)
         guard document.hasTime else { throw CocoaError(.fileNoSuchFile) }
@@ -454,13 +465,19 @@ extension EditorState {
         let pictures = DocumentFrames(document: document, store: store,
                                       movieURLs: MovieLibrary.shared.urls(in: document),
                                       size: plan.size, streaming: true,
-                                      smoothsStreamed: quality == .high && format == .mp4)
+                                      smoothsStreamed: quality == .high && format == .mp4,
+                                      readsSurfaces: !throughPictures)
         let frames: DocumentMovieWriter.FrameSource = { ms in await pictures.frame(atMS: ms) }
         defer { pictures.putTheStoreBack() }
 
         if format == .mp4 {
+            // Each frame drawn on the GPU straight into the buffer the encoder
+            // reads (`DocumentFrames.draw(atMS:into:)`).
+            let drawn: DocumentMovieWriter.Pictures = throughPictures ? .images(frames) : .drawnInto { ms, buffer in
+                await pictures.draw(atMS: ms, into: buffer)
+            }
             try await DocumentMovieWriter.write(plan: plan, mix: mix, soundURLs: soundURLs,
-                                                to: url, frames: frames, onProgress: onProgress)
+                                                to: url, pictures: drawn, onProgress: onProgress)
         } else {
             try await DocumentMovieWriter.writeAnimated(plan: plan, format: format, to: url,
                                                         frames: frames, onProgress: onProgress)
@@ -494,7 +511,7 @@ extension EditorState {
         return try await DocumentMovieWriter.weigh(
             span: span, canvasSize: document.canvasSize, quality: quality, size: size,
             mix: mix, soundURLs: await SoundLibrary.shared.readyURLs(for: mix),
-            frames: { ms in await pictures.frame(atMS: ms) },
+            pictures: .drawnInto { ms, buffer in await pictures.draw(atMS: ms, into: buffer) },
             onProgress: onProgress)
     }
 }
@@ -643,7 +660,19 @@ final class DocumentFrames: @unchecked Sendable {
     /// against 95, 11.2 s against 5.4 s). At High's, about 55 Mbps for a
     /// full-screen Retina recording, it kept a flat run of 31 px against 116.
     private let smoothsStreamed: Bool
-    /// One pass over each recording, made the first time it is asked for.
+    /// Whether a frame read off a stream is handed to the renderer on the
+    /// surface it was decoded onto (`ImageStore.register(_:as:surface:)`).
+    private let readsSurfaces: Bool
+    /// One pass per CLIP, keyed by the clip's layer, made the first time it
+    /// is asked for and closed once the clip is off screen.
+    ///
+    /// Not one per recording: an edit cuts the same recording into many
+    /// clips, and two of them are on screen at once in a dissolve between two
+    /// pieces of one take, or with a clip of it as B-roll over another. Shared,
+    /// the one pass was asked for two moments in turn and started again from
+    /// the nearest key frame every time: 385 passes for 30 seconds of the
+    /// reference edit, most of the export spent waiting on the decoder
+    /// (measured 2026-11-16).
     private var streams: [UUID: MovieFrameStream] = [:]
     /// Recordings a single pass cannot read the right way up, left to the
     /// image generator.
@@ -660,7 +689,9 @@ final class DocumentFrames: @unchecked Sendable {
     /// - size: what each picture comes out at, the canvas's own size when left
     ///   out. The document is drawn AT that size, never drawn big and shrunk.
     init(document: PhotonzDocument, store: ImageStore, movieURLs: [UUID: URL],
-         size: CGSize? = nil, streaming: Bool = false, smoothsStreamed: Bool = false) {
+         size: CGSize? = nil, streaming: Bool = false, smoothsStreamed: Bool = false,
+         readsSurfaces: Bool = true) {
+        self.readsSurfaces = readsSurfaces
         self.document = document
         self.store = store
         self.movieURLs = movieURLs
@@ -676,42 +707,37 @@ final class DocumentFrames: @unchecked Sendable {
 
     /// The recording's frame at a moment of it, off one pass through the file
     /// where that can be had, and sought on its own otherwise.
-    private func decode(_ request: MovieFrameRequest, at url: URL) async -> CGImage? {
+    ///
+    /// A frame read off a stream comes with the surface it was decoded onto,
+    /// which a render reads straight off the GPU, unless it is smoothed: then
+    /// the picture is a new one the surface does not hold.
+    private func decode(_ request: MovieFrameRequest, at url: URL) async
+        -> (image: CGImage, surface: CVPixelBuffer?)? {
         let id = request.movie.id
         if streaming, !unstreamable.contains(id) {
-            if streams[id] == nil {
+            let clip = request.layerID
+            if streams[clip] == nil {
                 if let stream = await MovieFrameStream(url: url) {
-                    streams[id] = stream
+                    streams[clip] = stream
                 } else {
                     unstreamable.insert(id)
                 }
             }
-            if let picture = streams[id]?.frame(atMS: request.sourceMS) {
-                return smoothsStreamed ? MovieDecoder.smoothed(picture, of: request.movie) : picture
+            if let read = streams[clip]?.frameAndSurface(atMS: request.sourceMS) {
+                if smoothsStreamed {
+                    return MovieDecoder.smoothed(read.image, of: request.movie).map { ($0, nil) }
+                }
+                return (read.image, read.surface)
             }
         }
         return await MovieDecoder.shared.frame(of: request.movie, at: url,
-                                               sourceMS: request.sourceMS)
+                                               sourceMS: request.sourceMS).map { ($0, nil) }
     }
 
     /// What the document looks like at a moment, with every frame it needs
     /// fetched first.
     func frame(atMS ms: Int) async -> CGImage? {
-        for request in document.movieFrames(atTimeMS: ms) {
-            // The window reads frames at the size it SHOWS them, so one it is
-            // holding may be smaller than the recording: a file is written
-            // from the recording's own size, never from the preview.
-            let filed = store.image(for: request.ref)
-            if let filed, CGFloat(filed.width) >= request.movie.pixelSize.width - 1 { continue }
-            guard let url = movieURLs[request.movie.id],
-                  let picture = await decode(request, at: url)
-            else { continue }
-            store.register(picture, as: request.ref)
-            // One the window already held stays the window's, now sharper;
-            // only a frame this export brought in is taken back out.
-            if filed == nil { borrowed.append(request.ref) }
-        }
-        let shown = document.drawn(atTimeMS: ms)
+        let shown = await fetched(atMS: ms)
         // Nothing on screen at this moment is a PICTURE — an empty one — not a
         // frame that could not be made. A document whose music runs past its
         // last clip ends in darkness, which is what the window shows, rather
@@ -720,6 +746,52 @@ final class DocumentFrames: @unchecked Sendable {
                                   : renderer.render(shown, store: store, scale: scale)) ?? blank()
         dropOldFrames()
         return picture
+    }
+
+    /// What the document looks like at a moment, drawn straight into `buffer`
+    /// (a 32BGRA buffer the size the pictures come out at) rather than handed
+    /// back as a picture: what an MP4 is written from, so the frame never
+    /// leaves the GPU between being drawn and being encoded
+    /// (`DocumentRenderer.render(_:store:scale:into:)`). The same pixels
+    /// `frame(atMS:)` makes, laid on black.
+    func draw(atMS ms: Int, into buffer: CVPixelBuffer) async -> Bool {
+        let shown = await fetched(atMS: ms)
+        let drawn = renderer.render(shown, store: store, scale: scale, into: buffer)
+        dropOldFrames()
+        return drawn
+    }
+
+    /// The document at a moment, with every recording frame it needs fetched
+    /// into the store first.
+    private func fetched(atMS ms: Int) async -> PhotonzDocument {
+        let requests = document.movieFrames(atTimeMS: ms)
+        // A clip off screen at this moment is done with until the write comes
+        // back round to it, and its pass holds decoded frames: let it go.
+        if !streams.isEmpty {
+            let onScreen = Set(requests.map(\.layerID))
+            for clip in streams.keys where !onScreen.contains(clip) {
+                streams[clip] = nil
+            }
+        }
+        for request in requests {
+            // The window reads frames at the size it SHOWS them, so one it is
+            // holding may be smaller than the recording: a file is written
+            // from the recording's own size, never from the preview.
+            let filed = store.image(for: request.ref)
+            if let filed, CGFloat(filed.width) >= request.movie.pixelSize.width - 1 { continue }
+            guard let url = movieURLs[request.movie.id],
+                  let read = await decode(request, at: url)
+            else { continue }
+            if readsSurfaces, let surface = read.surface {
+                store.register(read.image, as: request.ref, surface: surface)
+            } else {
+                store.register(read.image, as: request.ref)
+            }
+            // One the window already held stays the window's, now sharper;
+            // only a frame this export brought in is taken back out.
+            if filed == nil { borrowed.append(request.ref) }
+        }
+        return document.drawn(atTimeMS: ms)
     }
 
     /// One frame as the bytes of a PNG file, made and encoded off the main

@@ -1,0 +1,42 @@
+{
+  "feature": "Exporting a long video edit takes a third of its running time",
+  "epic": "video-perf",
+  "summary": "The 6 minute reference edit, with its dissolves, 3D transitions, titles, zooms and b-roll, now exports at the sheet's defaults in 118 seconds instead of 435 to 460. The 20 minute edit takes 393 seconds. The pictures in the file are the same as before, and the app stays responsive while it writes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any edit made of screen recordings with transitions (the speed walk's 6 minute reference edit: Scripts/perf/reference-edit.sh 6).",
+  "switched": {},
+  "try": [
+    {
+      "do": "File > Export, choose MP4, Full and Standard, press Export and pick a place.",
+      "shot": "2026-11-16-export-sheet-sc.png"
+    },
+    {
+      "do": "Watch the progress card: a 6 minute edit finishes in about two minutes on this Mac."
+    },
+    {
+      "do": "While it writes, scrub the playhead and pick clips on the timeline: nothing should stutter."
+    },
+    {
+      "do": "Play the file in QuickTime through a dissolve, the cube and a title: it should look exactly like Photonz.",
+      "shot": "2026-11-16-export-before-after.png"
+    },
+    {
+      "do": "Export the same edit at 1080p: smaller and quicker still."
+    }
+  ],
+  "evaluate": [
+    "Does a 6 minute export finishing in about two minutes feel quick enough next to Final Cut?",
+    "Does anything in the written file look different from the canvas: a dissolve, a 3D turn, a title, a zoom, the corner b-roll?",
+    "Can you keep editing comfortably while an export runs?"
+  ],
+  "rough": [
+    "Numbers, 6 minute reference edit, whole video at MP4 Standard Full, probe on this Mac. Before (HEAD 358e10858): 459.7 s and 434.9 s (the 1984 s recorded on 2026-11-12 predates other speed work). After: 117.6 s three runs out of three, 0.33x real time, 657 MB as before. 20 minute edit: 393.1 s. Longest main thread pass during an export: 1 to 4 ms.",
+    "Where the time went before (a 20 second profile mid-export): 65% Core Image, most of it uploading every decoded recording frame to the GPU again from a picture and reading the finished frame back; 25% redrawing that frame on the CPU into the encoder's buffer. Fixed by drawing each frame on the GPU straight into the encoder's buffer and reading recordings straight off the surface the decoder wrote.",
+    "That uncovered a second cost: clips cut from one recording shared one decoder, which restarted from a key frame every time a dissolve or the b-roll asked it for another moment (385 restarts in 30 seconds), and a new pass always began at the recording's start (one 10 second stall per clip). Now each clip has its own pass, starting where it is first asked.",
+    "Pictures compared at 20 moments of the whole file, old way against new (ReferenceEditTool frames 6): 12 moments identical to the bit, the 8 mid-dissolve ones differ by a mean of 0.05 of a level at most, 99th percentile 2 levels, largest single pixel 11. Tolerance set: mean under 0.1 level, 99th percentile at most 2.",
+    "The before and after strip is frames read out of the two exported files (old way on the left, new on the right) at a dissolve with a name card, the cube, a zoom and the b-roll, not a picture of the window.",
+    "The comparison caught a bug on the way: a frame read off its surface could draw a frame from two frames earlier (the renderer's cache let a freed picture's address be reused). Fixed and tested before the numbers above were taken.",
+    "The short speed walk now exports 30 seconds of the edit (0:50 to 1:20) and fails if that gets 50% slower than its baseline.",
+    "The export now tells macOS it is work a person is waiting on, so a long export left running is not napped and the Mac does not idle to sleep half way.",
+    "No mock covers export speed; the sheet itself is unchanged."
+  ]
+}

@@ -353,12 +353,28 @@ public enum SpeedWalk {
         public var seconds: Double
         public var megabytes: Double
         public var route: String
+        /// How long the video written runs: the whole edit, or the stretch a
+        /// short walk writes. Nil in a file written before it was kept.
+        public var videoSeconds: Double?
+        /// The longest the main thread was held while the export ran: the app
+        /// stays usable while it writes, or it does not.
+        public var longestMainPassMS: Double?
 
-        public init(settings: String, seconds: Double, megabytes: Double, route: String) {
+        public init(settings: String, seconds: Double, megabytes: Double, route: String,
+                    videoSeconds: Double? = nil, longestMainPassMS: Double? = nil) {
             self.settings = settings
             self.seconds = seconds
             self.megabytes = megabytes
             self.route = route
+            self.videoSeconds = videoSeconds
+            self.longestMainPassMS = longestMainPassMS
+        }
+
+        /// The time taken against the video's own length: under 1 writes it
+        /// faster than it plays.
+        public var timesRealTime: Double? {
+            guard let videoSeconds, videoSeconds > 0 else { return nil }
+            return seconds / videoSeconds
         }
     }
 
@@ -475,6 +491,9 @@ public struct SpeedRun: Codable, Equatable, Sendable {
         }
         if let export {
             out.append(Metric(key: "export: time", value: export.seconds, unit: .seconds))
+            if let pass = export.longestMainPassMS {
+                out.append(Metric(key: "export: longest main pass", value: pass, unit: .ms))
+            }
         }
         return out
     }
@@ -682,9 +701,19 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     public var form: String?
     public var baseline: String?
     public var marginPercent: Double
+    /// An export's file kept under this name in the walk's own folder, where
+    /// it is otherwise thrown away: what two exports are compared by.
+    public var keep: String?
+    /// An export drawn the way every export was before 2026-11-16: each frame
+    /// made into a picture, read back off the GPU and drawn again into the
+    /// encoder's buffer. Only for comparing the pictures the two make.
+    public var throughPictures: Bool
 
     public init(measure: String, seconds: Double? = nil, fromMS: Int? = nil, speeds: [String] = [],
-                edits: [String] = [], form: String? = nil, baseline: String? = nil, marginPercent: Double? = nil) {
+                edits: [String] = [], form: String? = nil, baseline: String? = nil, marginPercent: Double? = nil,
+                keep: String? = nil, throughPictures: Bool = false) {
+        self.keep = keep
+        self.throughPictures = throughPictures
         rawMeasure = measure
         self.measure = Measure(rawValue: measure)
         self.seconds = seconds
@@ -711,6 +740,12 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
         if let form, form != "short", form != "long" { return ("form", "is short or long") }
         if measure == .compare, baseline == nil { return ("baseline", "names the results file to compare with") }
         if marginPercent < 0 { return ("marginPercent", "cannot be less than nothing") }
+        if let keep, keep.isEmpty || keep.contains("/") {
+            return ("keep", "is a file name in the walk's own folder")
+        }
+        if measure != .export, keep != nil || throughPictures {
+            return (keep != nil ? "keep" : "throughPictures", "is for an export")
+        }
         return nil
     }
 }

@@ -543,6 +543,11 @@ extension ReferenceEdit {
     public struct Moment: Hashable, Sendable {
         public let ms: Int
         public let what: String
+
+        public init(ms: Int, what: String) {
+            self.ms = ms
+            self.what = what
+        }
     }
 
     /// Twelve moments that show what the edit is made of: the opening title,

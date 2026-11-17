@@ -70,6 +70,37 @@ struct MovieFrameStreamTests {
         }
     }
 
+    @Test("A new stream first asked for a moment deep in the file starts reading there, not at its start")
+    func startsWhereFirstAsked() async throws {
+        let dir = TestClip.makeScratchDirectory()
+        defer { TestClip.cleanUp(dir) }
+        let url = dir.appendingPathComponent("six-seconds.mp4")
+        try await TestClip.write(to: url, seconds: 6)
+
+        // A clip cut from late in a recording: its own pass begins at its
+        // first moment. Until 2026-11-16 every pass began at nought, and a
+        // clip from 45 seconds into a Retina recording decoded 45 seconds of
+        // frames before its first one (ten seconds of the export, each time).
+        let stream = try #require(await MovieFrameStream(url: url))
+        let code = try #require(stream.frame(atMS: 5_000).flatMap(TestClip.frameCode(of:)))
+        #expect(code.index == Self.nearestFrame(toMS: 5_000))
+        #expect(stream.framesRead < 10, "read \(stream.framesRead) frames to reach 5s")
+    }
+
+    @Test("A frame comes with the surface it was decoded onto, at the recording's size")
+    func surface() async throws {
+        let dir = TestClip.makeScratchDirectory()
+        defer { TestClip.cleanUp(dir) }
+        let url = dir.appendingPathComponent("sized.mp4")
+        try await TestClip.write(to: url, seconds: 1, size: CGSize(width: 320, height: 200))
+
+        let stream = try #require(await MovieFrameStream(url: url))
+        let read = try #require(stream.frameAndSurface(atMS: 330))
+        #expect(CVPixelBufferGetWidth(read.surface) == 320 && CVPixelBufferGetHeight(read.surface) == 200)
+        #expect(CVPixelBufferGetIOSurface(read.surface) != nil)
+        #expect(TestClip.frameCode(of: read.image)?.index == 10)
+    }
+
     @Test("Past the end of the recording is its last frame")
     func pastTheEnd() async throws {
         let dir = TestClip.makeScratchDirectory()

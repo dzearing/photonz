@@ -83,6 +83,100 @@ if arguments.first == "compare" {
     }
     exit(0)
 }
+// `frames <minutes> <before.mp4> <after.mp4>`: two exports of the reference
+// edit compared picture by picture at twenty moments: the twelve of its
+// contact sheet (a title, a zoom, the b-roll, a push, a cube, a flip) and the
+// middles of more transitions. Prints, per moment, how far apart the two
+// frames are in 8-bit levels: the mean, the 99th percentile and the largest
+// difference in any channel. For a change to the export that must not change
+// the picture (`Scripts/perf/speed-walk.sh`, the export's `keep`).
+if arguments.first == "frames", arguments.count == 4, let minutes = Int(arguments[1]) {
+    let document = ReferenceEdit.build(minutes: minutes)
+    var moments = ReferenceEdit.sheetMoments(of: document)
+    let byID = Dictionary(document.timelineClipLayers.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+    var middles: [ReferenceEdit.Moment] = []
+    for track in document.timelineTracks where track.kind == .video {
+        for point in document.editPoints(onTrack: track.id) {
+            guard let transition = byID[point.incoming]?.arrivalTransition else { continue }
+            let half = transition.lengthMS / 2
+            let mid: Int
+            switch transition.alignment {
+            case .before: mid = point.atMS - half
+            case .across: mid = point.atMS
+            case .after: mid = point.atMS + half
+            }
+            middles.append(ReferenceEdit.Moment(ms: mid, what: "mid-\(transition.kind.title.lowercased())"))
+        }
+    }
+    middles.sort { $0.ms < $1.ms }
+    // Middles spread over the whole edit, until there are twenty moments.
+    var step = max(1, middles.count / max(1, 20 - moments.count))
+    while moments.count < 20, step >= 1 {
+        for moment in stride(from: 0, to: middles.count, by: step).map({ middles[$0] })
+        where moments.count < 20 && !moments.contains(where: { abs($0.ms - moment.ms) < 500 }) {
+            moments.append(moment)
+        }
+        step = step == 1 ? 0 : max(1, step / 2)
+    }
+    moments.sort { $0.ms < $1.ms }
+    func generator(_ path: String) -> AVAssetImageGenerator {
+        let generator = AVAssetImageGenerator(asset: AVURLAsset(url: URL(fileURLWithPath: path)))
+        generator.requestedTimeToleranceBefore = .zero
+        generator.requestedTimeToleranceAfter = .zero
+        return generator
+    }
+    /// The picture's bytes as 8-bit sRGB, four to a pixel.
+    func bytes(_ image: CGImage) -> [UInt8] {
+        var out = [UInt8](repeating: 0, count: image.width * image.height * 4)
+        out.withUnsafeMutableBytes { raw in
+            guard let context = CGContext(data: raw.baseAddress, width: image.width, height: image.height,
+                                          bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                                          space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        }
+        return out
+    }
+    let before = generator(arguments[2]), after = generator(arguments[3])
+    var worstMean = 0.0, worstP99 = 0, worstMax = 0
+    func padded(_ text: String, _ width: Int) -> String {
+        text.count >= width ? text : text + String(repeating: " ", count: width - text.count)
+    }
+    func clock(_ ms: Int) -> String { String(format: "%d:%04.1f", ms / 60_000, Double(ms % 60_000) / 1000) }
+    print(padded("moment", 9) + padded("what", 30) + "    mean   p99   max")
+    for moment in moments {
+        let at = CMTime(value: CMTimeValue(moment.ms), timescale: 1000)
+        guard let a = try? await before.image(at: at).image, let b = try? await after.image(at: at).image,
+              a.width == b.width, a.height == b.height else {
+            print("\(moment.ms)ms: no frame to compare in one of them, or their sizes differ")
+            exit(1)
+        }
+        let pa = bytes(a), pb = bytes(b)
+        var histogram = [Int](repeating: 0, count: 256)
+        var total = 0
+        for index in stride(from: 0, to: pa.count, by: 4) {
+            for channel in 0..<3 {
+                let d = abs(Int(pa[index + channel]) - Int(pb[index + channel]))
+                histogram[d] += 1
+                total += d
+            }
+        }
+        let count = pa.count / 4 * 3
+        var seen = 0, p99 = 0
+        for (level, n) in histogram.enumerated() {
+            seen += n
+            if seen >= count * 99 / 100 { p99 = level; break }
+        }
+        let largest = histogram.lastIndex(where: { $0 > 0 }) ?? 0
+        let mean = Double(total) / Double(max(1, count))
+        worstMean = max(worstMean, mean); worstP99 = max(worstP99, p99); worstMax = max(worstMax, largest)
+        print(padded(clock(moment.ms), 9) + padded(moment.what, 30) + String(format: "%8.3f %5d %5d", mean, p99, largest))
+    }
+    print(String(format: "==> %d moments: worst mean %.3f levels, worst 99th percentile %d, largest %d",
+                 moments.count, worstMean, worstP99, worstMax))
+    exit(0)
+}
+
 var folder = ReferenceFootage.defaultFolder
 var seed = ReferenceEdit.defaultSeed
 var minutes: Int?

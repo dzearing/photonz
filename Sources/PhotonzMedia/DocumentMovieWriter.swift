@@ -41,6 +41,40 @@ public enum DocumentMovieWriter {
     /// be made, and the one before it stands in rather than a hole appearing.
     public typealias FrameSource = @Sendable (Int) async -> CGImage?
 
+    /// A moment of the document drawn straight into the buffer the encoder
+    /// reads (32BGRA, the plan's size). False means it could not be drawn,
+    /// and the frame before it stands in.
+    public typealias FrameDrawer = @Sendable (Int, CVPixelBuffer) async -> Bool
+
+    /// Where the pictures of an MP4 come from.
+    public enum Pictures: Sendable {
+        /// Each moment as a picture, drawn into the encoder's buffer here.
+        case images(FrameSource)
+        /// Each moment drawn into the encoder's buffer by the caller, so a
+        /// picture made on the GPU never comes back to the CPU between being
+        /// drawn and being encoded: on a Retina recording that round trip was
+        /// a third of every frame (measured 2026-11-16).
+        case drawnInto(FrameDrawer)
+
+        /// The same pictures on a clock that runs on from nought through
+        /// `stretches`, one after another, each moment read from the stretch
+        /// it falls in.
+        func joined(_ stretches: [Range<Int>]) -> Pictures {
+            @Sendable func at(_ ms: Int) -> Int {
+                var start = 0
+                for stretch in stretches {
+                    if ms < start + stretch.count { return stretch.lowerBound + ms - start }
+                    start += stretch.count
+                }
+                return (stretches.last?.upperBound ?? 1) - 1
+            }
+            switch self {
+            case .images(let frames): return .images { ms in await frames(at(ms)) }
+            case .drawnInto(let draw): return .drawnInto { ms, buffer in await draw(at(ms), buffer) }
+            }
+        }
+    }
+
     public enum WriteError: Error {
         /// A plan with nothing in it: a document with no time.
         case nothingToWrite
@@ -70,6 +104,15 @@ public enum DocumentMovieWriter {
     public static func write(plan: VideoFramePlan, mix: [AudioMixSegment],
                              soundURLs: [UUID: URL], to destination: URL,
                              frames: @escaping FrameSource,
+                             onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
+        try await write(plan: plan, mix: mix, soundURLs: soundURLs, to: destination,
+                        pictures: .images(frames), onProgress: onProgress)
+    }
+
+    /// The same, with the pictures drawn however `pictures` says.
+    public static func write(plan: VideoFramePlan, mix: [AudioMixSegment],
+                             soundURLs: [UUID: URL], to destination: URL,
+                             pictures frames: Pictures,
                              onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
         guard !plan.isEmpty else { throw WriteError.nothingToWrite }
         // Weighing the stretches is the first twentieth of the bar, so a long
@@ -124,6 +167,17 @@ public enum DocumentMovieWriter {
                              mix: [AudioMixSegment] = [], soundURLs: [UUID: URL] = [:],
                              frames: @escaping FrameSource,
                              onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> Int {
+        try await weigh(span: span, canvasSize: canvasSize, quality: quality, size: size,
+                        mix: mix, soundURLs: soundURLs, pictures: .images(frames),
+                        onProgress: onProgress)
+    }
+
+    /// The same, with the pictures drawn however `pictures` says.
+    public static func weigh(span: Range<Int>, canvasSize: CGSize,
+                             quality: VideoExportQuality, size: VideoExportSize? = nil,
+                             mix: [AudioMixSegment] = [], soundURLs: [UUID: URL] = [:],
+                             pictures frames: Pictures,
+                             onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> Int {
         let plan = DocumentVideoExport.plan(range: span, canvasSize: canvasSize, format: .mp4,
                                             quality: quality, size: size)
         guard !plan.isEmpty else { return 0 }
@@ -158,7 +212,7 @@ public enum DocumentMovieWriter {
     /// Whether this write should be held to its budget: only where its
     /// stretches, written unheld, say the picture would overshoot it
     /// (`VideoExportSample.holdsToBudget`).
-    private static func holdsToBudget(plan: VideoFramePlan, frames: @escaping FrameSource,
+    private static func holdsToBudget(plan: VideoFramePlan, frames: Pictures,
                                       onProgress: (@Sendable (Double) -> Void)?) async throws
         -> Bool {
         guard plan.videoBitsPerSecond > 0 else { return false }
@@ -171,7 +225,7 @@ public enum DocumentMovieWriter {
     /// What the picture of the whole plan would come to, from its stretches
     /// written one after another behind a warm-up
     /// (`VideoExportSample.writingOrder`).
-    private static func pictureEstimate(plan: VideoFramePlan, frames: @escaping FrameSource,
+    private static func pictureEstimate(plan: VideoFramePlan, frames: Pictures,
                                         holdsToBudget: Bool,
                                         onProgress: (@Sendable (Double) -> Void)?) async throws
         -> Int {
@@ -191,17 +245,7 @@ public enum DocumentMovieWriter {
             // Every stretch one after another in one file, behind the warm-up:
             // the file's own clock runs on from nought, and each moment of it
             // is read from the stretch it falls in.
-            let stretches = order.stretches
-            let joined: FrameSource = { ms in
-                var start = 0
-                for stretch in stretches {
-                    if ms < start + stretch.count {
-                        return await frames(stretch.lowerBound + ms - start)
-                    }
-                    start += stretch.count
-                }
-                return await frames((stretches.last?.upperBound ?? 1) - 1)
-            }
+            let joined = frames.joined(order.stretches)
             let run = VideoFramePlan(
                 frameCount: max(1, Int((Double(written) / 1000 * plan.fps).rounded())),
                 fps: plan.fps, size: plan.size, durationMS: written,
@@ -220,7 +264,7 @@ public enum DocumentMovieWriter {
     /// The document photographed at every moment of the plan, with no sound on
     /// it yet.
     private static func writeSilentMovie(plan: VideoFramePlan, to destination: URL,
-                                         frames: FrameSource, holdsToBudget: Bool,
+                                         frames: Pictures, holdsToBudget: Bool,
                                          onProgress: (@Sendable (Double) -> Void)?) async throws {
         // On the hardware encoder, waiting for it when the Mac's sessions are
         // all taken: the software one does not keep to the budget
@@ -240,6 +284,10 @@ public enum DocumentMovieWriter {
                     kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
                     kCVPixelBufferWidthKey as String: Int(plan.size.width),
                     kCVPixelBufferHeightKey as String: Int(plan.size.height),
+                    // On a surface the GPU can draw into, so a frame drawn
+                    // there is handed to the encoder without a copy.
+                    kCVPixelBufferIOSurfacePropertiesKey as String: [String: Any](),
+                    kCVPixelBufferMetalCompatibilityKey as String: true,
                 ])
             guard writer.canAdd(input) else {
                 throw WriteError.writerFailed("the file will not take a picture track")
@@ -355,7 +403,7 @@ public enum DocumentMovieWriter {
 
     // MARK: - The picture
 
-    private static func writePictures(plan: VideoFramePlan, frames: FrameSource,
+    private static func writePictures(plan: VideoFramePlan, frames: Pictures,
                                       writer: AVAssetWriter,
                                       input: AVAssetWriterInput,
                                       adaptor: AVAssetWriterInputPixelBufferAdaptor,
@@ -363,28 +411,38 @@ public enum DocumentMovieWriter {
         let width = Int(plan.size.width), height = Int(plan.size.height)
         var wroteAny = false
         var last: CGImage?
+        var lastBuffer: CVPixelBuffer?
         for index in 0..<plan.frameCount {
             try Task.checkCancellation()
             // The document's moment, which is the file's own counted on from
             // the In where the export keeps to the marks.
-            let picture = await frames(plan.documentTimeMS(at: index)) ?? last
-            guard let picture else { continue }
-            last = picture
-            while !input.isReadyForMoreMediaData {
-                try Task.checkCancellation()
-                // A writer that has given up never becomes hungry again, so
-                // without this the export waits for it forever with nothing on
-                // screen moving. Say what it said instead.
-                guard writer.status == .writing else {
-                    throw WriteError.writerFailed(
-                        writer.error.map(String.init(describing:))
-                            ?? "it stopped taking pictures")
+            let ms = plan.documentTimeMS(at: index)
+            let buffer: CVPixelBuffer
+            switch frames {
+            case .images(let source):
+                let picture = await source(ms) ?? last
+                guard let picture else { continue }
+                last = picture
+                try await waitUntilHungry(input, writer: writer)
+                guard let pool = adaptor.pixelBufferPool,
+                      let drawn = pixelBuffer(from: picture, pool: pool, width: width, height: height)
+                else { continue }
+                buffer = drawn
+            case .drawnInto(let draw):
+                // Drawn before waiting on the encoder, so the two overlap.
+                guard let pool = adaptor.pixelBufferPool else { continue }
+                var fresh: CVPixelBuffer?
+                CVPixelBufferPoolCreatePixelBuffer(nil, pool, &fresh)
+                if let fresh, await draw(ms, fresh) {
+                    buffer = fresh
+                    lastBuffer = fresh
+                } else if let lastBuffer {
+                    buffer = lastBuffer
+                } else {
+                    continue
                 }
-                try? await Task.sleep(for: .milliseconds(5))
+                try await waitUntilHungry(input, writer: writer)
             }
-            guard let pool = adaptor.pixelBufferPool,
-                  let buffer = pixelBuffer(from: picture, pool: pool, width: width, height: height)
-            else { continue }
             // Where the picture sits on the file's own clock. Milliseconds,
             // because the document's clock is milliseconds and rounding it into
             // a frame-rate timebase is how a long export drifts.
@@ -397,6 +455,23 @@ public enum DocumentMovieWriter {
         // The last picture is on screen until the document ends, so the file
         // runs as long as the document rather than stopping a frame early.
         input.markAsFinished()
+    }
+
+    /// Waits for the encoder to take another picture.
+    private static func waitUntilHungry(_ input: AVAssetWriterInput,
+                                        writer: AVAssetWriter) async throws {
+        while !input.isReadyForMoreMediaData {
+            try Task.checkCancellation()
+            // A writer that has given up never becomes hungry again, so
+            // without this the export waits for it forever with nothing on
+            // screen moving. Say what it said instead.
+            guard writer.status == .writing else {
+                throw WriteError.writerFailed(
+                    writer.error.map(String.init(describing:))
+                        ?? "it stopped taking pictures")
+            }
+            try? await Task.sleep(for: .milliseconds(5))
+        }
     }
 
     /// What the encoder is asked for. The budget comes from the plan rather

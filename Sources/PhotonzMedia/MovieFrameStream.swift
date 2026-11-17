@@ -44,6 +44,10 @@ public final class MovieFrameStream {
     private var current: Sample?
     private var pending: Sample?
     private var exhausted = false
+    /// The moment the current pass was asked to start at.
+    private var passFromMS = 0
+    /// How many decoded frames the passes have handed over, used or not.
+    public private(set) var framesRead = 0
 
     /// A stream over the recording at `url`, or nil where it has no picture a
     /// single pass can hand over the right way up (a track turned by anything
@@ -61,9 +65,21 @@ public final class MovieFrameStream {
 
     /// The frame of the recording nearest `ms`, or nil where there is none.
     public func frame(atMS ms: Int) -> CGImage? {
+        frameAndSurface(atMS: ms)?.image
+    }
+
+    /// The same frame, with the surface it was decoded onto: a render reads
+    /// that straight off the GPU (`ImageStore.register(_:as:surface:)`), where
+    /// the picture alone has to be uploaded again every frame.
+    public func frameAndSurface(atMS ms: Int) -> (image: CGImage, surface: CVPixelBuffer)? {
         let wanted = Double(ms)
-        if let current, wanted < current.ms - Double(Self.halfFrameMS)
-            || wanted > current.ms + Double(Self.jumpAheadMS) {
+        // Where the pass stands: the frame last handed over, or where it was
+        // started when it has handed over none yet. A clip cut from late in
+        // a recording opens its pass at nought and is then asked for its first
+        // moment, which is a jump like any other: without the second case it
+        // decoded every frame of the recording up to there.
+        let at = current?.ms ?? Double(passFromMS)
+        if wanted < at - Double(Self.halfFrameMS) || wanted > at + Double(Self.jumpAheadMS) {
             guard start(atMS: ms) else { return nil }
         }
         if current == nil { current = next() }
@@ -83,7 +99,8 @@ public final class MovieFrameStream {
             shown.image = image
             current = shown
         }
-        return shown.image
+        guard let image = shown.image else { return nil }
+        return (image, shown.buffer)
     }
 
     /// Half a frame at the rate the document keeps: a moment behind the frame
@@ -100,6 +117,7 @@ public final class MovieFrameStream {
         current = nil
         pending = nil
         exhausted = false
+        passFromMS = ms
         guard let reader = try? AVAssetReader(asset: asset) else { return false }
         let from = max(0, ms - 50)
         reader.timeRange = CMTimeRange(start: CMTime(value: CMTimeValue(from), timescale: 1000),
@@ -128,6 +146,7 @@ public final class MovieFrameStream {
             guard let buffer = CMSampleBufferGetImageBuffer(sample) else { continue }
             let ms = CMSampleBufferGetPresentationTimeStamp(sample).seconds * 1000
             guard ms.isFinite else { continue }
+            framesRead += 1
             return Sample(ms: ms, buffer: buffer, image: nil)
         }
         exhausted = true

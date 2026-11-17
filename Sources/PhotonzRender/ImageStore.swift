@@ -1,4 +1,5 @@
 import CoreGraphics
+import CoreVideo
 import Foundation
 import PhotonzCore
 
@@ -10,6 +11,11 @@ public final class ImageStore: @unchecked Sendable {
     /// sharp at any size (`VectorArt`). Each also has a picture in `images`,
     /// at its own size, for everything that reads pixels.
     private var vectors: [UUID: VectorArt] = [:]
+    /// Frames of a recording decoded onto a surface the GPU reads directly,
+    /// beside the picture made of them (`register(_:as:surface:)`). Each is
+    /// kept with the picture it stands for and only answers while that very
+    /// picture is still the one held.
+    private var surfaces: [UUID: (image: CGImage, buffer: CVPixelBuffer)] = [:]
     private let lock = NSLock()
 
     public init() {}
@@ -30,7 +36,30 @@ public final class ImageStore: @unchecked Sendable {
         lock.lock()
         images[ref.id] = image
         vectors[ref.id] = nil
+        surfaces[ref.id] = nil
         lock.unlock()
+    }
+
+    /// Registers a decoded video frame together with the surface it was
+    /// decoded onto, so a render reads the surface straight off the GPU rather
+    /// than uploading the picture's bytes again: on a Retina recording that
+    /// upload was a third of every exported frame (measured 2026-11-16). The
+    /// picture is what everything else reads, and the two hold the same pixels.
+    public func register(_ image: CGImage, as ref: ImageRef, surface: CVPixelBuffer) {
+        lock.lock()
+        images[ref.id] = image
+        vectors[ref.id] = nil
+        surfaces[ref.id] = (image, surface)
+        lock.unlock()
+    }
+
+    /// The surface `image` was decoded onto, where it was registered with one
+    /// and is still the picture held under `ref`.
+    public func surface(for ref: ImageRef, standingFor image: CGImage) -> CVPixelBuffer? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let held = surfaces[ref.id], held.image === image else { return nil }
+        return held.buffer
     }
 
     /// Keeps a drawing, with a picture of it at its own size beside it. Nil
@@ -78,6 +107,7 @@ public final class ImageStore: @unchecked Sendable {
         lock.lock()
         copy.images = images
         copy.vectors = vectors
+        copy.surfaces = surfaces
         lock.unlock()
         return copy
     }
@@ -104,6 +134,7 @@ public final class ImageStore: @unchecked Sendable {
         lock.lock()
         images.removeAll()
         vectors.removeAll()
+        surfaces.removeAll()
         lock.unlock()
     }
 
@@ -111,6 +142,7 @@ public final class ImageStore: @unchecked Sendable {
         lock.lock()
         images[ref.id] = nil
         vectors[ref.id] = nil
+        surfaces[ref.id] = nil
         lock.unlock()
     }
 }

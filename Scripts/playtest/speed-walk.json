@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/speed-walk",
   "clock": 300,
-  "seed": "The short form of the speed walk, exactly as a person running Next gets it with no flag touched: the 6 minute reference edit opens, plays a minute at 1x across its transitions (frames due against frames shown, the worst gap between two new pictures, the same per transition, and what the sound engine left out), the playhead is dragged end to end at a medium speed (how many display frames the picture trails the hand), and a trim, a blade and an undo are made while it plays (the longest main thread pass each causes), first with nothing picked and then again with the recording under the playhead picked, the way a person editing a clip has it (its ten panel sections built), and last the clip is let go and picked again from nothing picked, the click that builds the panel's sections from nothing. Every number goes into speed.json and the run fails on any number worse than the baseline in Scripts/perf/baselines/short-6.json by more than its margin (50 per cent: since the long edit stopped stalling on 2026-11-13 one run differs from the next by about a fifth; the baseline is the worst of three runs) plus a small floor. The long form, on the 6, 20 and 60 minute edits, is Scripts/perf/speed-walk.sh --long and never runs in the walk set.",
+  "seed": "The short form of the speed walk, exactly as a person running Next gets it with no flag touched: the 6 minute reference edit opens, plays a minute at 1x across its transitions (frames due against frames shown, the worst gap between two new pictures, the same per transition, and what the sound engine left out), the playhead is dragged end to end at a medium speed (how many display frames the picture trails the hand), and a trim, a blade and an undo are made while it plays (the longest main thread pass each causes), first with nothing picked and then again with the recording under the playhead picked, the way a person editing a clip has it (its ten panel sections built), and last the clip is let go and picked again from nothing picked, the click that builds the panel's sections from nothing. Then thirty seconds of it from 0:50, a cube and three dissolves, are exported at the sheet's defaults (MP4, Standard, Full), timed with the longest main thread pass while it writes. Every number goes into speed.json and the run fails on any number worse than the baseline in Scripts/perf/baselines/short-6.json by more than its margin (50 per cent: since the long edit stopped stalling on 2026-11-13 one run differs from the next by about a fifth; the baseline is the worst of three runs) plus a small floor. The long form, on the 6, 20 and 60 minute edits, is Scripts/perf/speed-walk.sh --long and never runs in the walk set.",
   "setup": {
     "forget": [
       "all"
@@ -45,6 +45,12 @@
         "unpick",
         "pick"
       ]
+    },
+    {
+      "do": "speed",
+      "measure": "export",
+      "fromMS": 50000,
+      "seconds": 30
     },
     {
       "do": "speed",

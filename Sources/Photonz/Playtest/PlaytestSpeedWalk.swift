@@ -45,7 +45,7 @@ final class SpeedWalkProbe {
         case .idleBuilds: return try await idleBuilds(editor, seconds: step.seconds ?? 3, fromMS: step.fromMS)
         case .timeline: return try await timeline(editor)
         case .memory: return try await memory(editor, seconds: step.seconds ?? 600)
-        case .export: return try await export(editor)
+        case .export: return try await export(editor, step)
         case .compare: return try compare(step)
         case nil: throw Failure(description: "\(step.rawMeasure) is not a measure")
         }
@@ -599,23 +599,48 @@ final class SpeedWalkProbe {
 
     // MARK: - Export
 
-    private func export(_ editor: EditorState) async throws -> String {
+    /// The export sheet's defaults (MP4, Standard, Full) written out and
+    /// timed. The whole video, unless `seconds` names a stretch from `fromMS`
+    /// (nought when left out): what a short walk times, as the sheet's In to
+    /// Out writes it.
+    /// `keep` keeps the file in the walk's folder under that name, and
+    /// `throughPictures` draws it the way exports did before 2026-11-16, so
+    /// the pictures the two make can be compared.
+    private func export(_ editor: EditorState, _ step: PlaytestSpeedMeasure) async throws -> String {
+        let fromMS = step.fromMS, seconds = step.seconds
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("photonz-speed-walk-export.mp4")
         try? FileManager.default.removeItem(at: url)
-        defer { try? FileManager.default.removeItem(at: url) }
+        defer {
+            if let keep = step.keep {
+                let kept = out.appendingPathComponent(keep)
+                try? FileManager.default.removeItem(at: kept)
+                try? FileManager.default.moveItem(at: url, to: kept)
+            }
+            try? FileManager.default.removeItem(at: url)
+        }
         editor.pauseDocument()
+        guard var document = editor.document else { throw Failure(description: "no document to export") }
+        if let seconds {
+            let start = max(0, fromMS ?? 0)
+            document.setMarkIn(atMS: start)
+            document.setMarkOut(atMS: min(document.documentDurationMS, start + Int(seconds * 1000)))
+        }
+        let length = Double(document.exportRangeMS(.marked).count) / 1000
+        MainThreadMeter.shared.reset()
         let start = CACurrentMediaTime()
-        // The export sheet's defaults: MP4, Standard, Full, the whole video
-        // (the reference edit has no marks).
-        let route = try await editor.writeVideo(format: .mp4, quality: .standard, size: .full, to: url)
-        let seconds = CACurrentMediaTime() - start
+        let route = try await EditorState.writeVideo(of: document, pictures: editor.store, format: .mp4,
+                                                     quality: .standard, size: .full, to: url,
+                                                     range: seconds == nil ? .whole : .marked,
+                                                     throughPictures: step.throughPictures)
+        let taken = CACurrentMediaTime() - start
+        let longest = MainThreadMeter.shared.longestMS
         let bytes = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
-        let tally = SpeedWalk.ExportTally(settings: "MP4, Standard, Full", seconds: seconds,
-                                          megabytes: Double(bytes) / 1_048_576, route: "\(route)")
+        let tally = SpeedWalk.ExportTally(settings: "MP4, Standard, Full", seconds: taken,
+                                          megabytes: Double(bytes) / 1_048_576, route: "\(route)",
+                                          videoSeconds: length, longestMainPassMS: longest)
         run.export = tally
-        let length = Double(editor.documentLengthMS) / 1000
-        return String(format: "exported %.0fs of video at the sheet's defaults in %.1fs (%.2fx real time), %.0fMB, %@",
-                      length, seconds, seconds / max(1, length), tally.megabytes, tally.route)
+        return String(format: "exported %.0fs of video at the sheet's defaults in %.1fs (%.2fx real time), %.0fMB, %@, longest main thread pass %.0fms",
+                      length, taken, taken / max(0.001, length), tally.megabytes, tally.route, longest)
     }
 
     // MARK: - Against a baseline

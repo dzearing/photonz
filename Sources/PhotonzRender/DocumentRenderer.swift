@@ -1,5 +1,6 @@
 import CoreGraphics
 import CoreImage
+import CoreVideo
 import CoreImage.CIFilterBuiltins
 import Foundation
 import PhotonzCore
@@ -159,9 +160,12 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
     private var reachCache: [ReachKey: CGFloat] = [:]
     private var reachOrder: [ReachKey] = []
-    // The CIImage retains its CGImage, so identities can't be reused while
-    // an entry lives.
-    private var wrapCache: [ObjectIdentifier: CIImage] = [:]
+    // Each entry holds its CGImage, so an identity can't be reused while the
+    // entry lives. The CIImage alone does not: one read off the surface a
+    // recording's frame was decoded onto holds the surface and not the
+    // picture, and a new frame's picture landing at a freed one's address
+    // drew the old frame (caught 2026-11-16 by comparing exports).
+    private var wrapCache: [ObjectIdentifier: (source: CGImage, image: CIImage)] = [:]
     private var wrapOrder: [ObjectIdentifier] = []
     private let cacheLock = NSLock()
     /// Test hooks: how often content was served from / added to the cache.
@@ -225,13 +229,18 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
 
     /// The cached CIImage wrap of a stored bitmap (keyed by object identity).
-    private func wrapped(_ cg: CGImage) -> CIImage {
+    ///
+    /// `surface` is the GPU surface `cg` was decoded onto, where it has one
+    /// (`ImageStore.register(_:as:surface:)`): read directly, it costs no
+    /// upload of the picture's bytes at all. It is read in the picture's own
+    /// colour space, so the two draw the same.
+    private func wrapped(_ cg: CGImage, surface: CVPixelBuffer? = nil) -> CIImage {
         let key = ObjectIdentifier(cg)
         cacheLock.lock()
         defer { cacheLock.unlock() }
-        if let hit = wrapCache[key] {
+        if let hit = wrapCache[key], hit.source === cg {
             contentCacheHits += 1
-            return hit
+            return hit.image
         }
         contentCacheMisses += 1
         // The edge held and cut back to the same size. Wherever a turn, a
@@ -243,9 +252,17 @@ public final class DocumentRenderer: @unchecked Sendable {
         // the edge comes out darker than either side: a white layer on white
         // drew a thin grey outline (reported by the user, 2026-11-03). On whole
         // pixels nothing is resampled, so what is drawn does not change.
-        let plain = CIImage(cgImage: cg)
+        let plain: CIImage
+        if let surface {
+            var options: [CIImageOption: Any] = [:]
+            if let space = cg.colorSpace { options[.colorSpace] = space }
+            plain = CIImage(cvPixelBuffer: surface, options: options)
+        } else {
+            plain = CIImage(cgImage: cg)
+        }
         let image = plain.clampedToExtent().cropped(to: plain.extent)
-        wrapCache[key] = image
+        if wrapCache[key] != nil { wrapOrder.removeAll { $0 == key } }
+        wrapCache[key] = (cg, image)
         wrapOrder.append(key)
         if wrapOrder.count > Self.cacheCapacity {
             wrapCache[wrapOrder.removeFirst()] = nil
@@ -681,6 +698,52 @@ public final class DocumentRenderer: @unchecked Sendable {
         magnified.canvasSize = extent.size
         guard let output = compositeImage(magnified, store: store, contentScale: scale) else { return nil }
         return context.createCGImage(output.cropped(to: extent), from: extent)
+    }
+
+    /// The composite at `scale` drawn straight into `buffer`, over black and
+    /// in sRGB: one frame of a video file, written where the encoder reads it.
+    ///
+    /// The same picture `render(_:store:scale:)` makes, laid on black the way
+    /// a movie, which has no transparency, shows it: written with no alpha, so
+    /// a see-through pixel keeps the colour it has over black and says it is
+    /// solid, exactly what drawing the CGImage over a black fill made. Going through a CGImage
+    /// read the whole frame back off the GPU and then drew it again on the CPU
+    /// into the encoder's buffer, and on a Retina recording those two copies
+    /// were a third of every exported frame (measured 2026-11-16); written
+    /// here, it never leaves the GPU. A buffer a pixel off the picture's size
+    /// (a movie's sides are rounded to even) gets the picture fitted to it.
+    /// False where there is nothing to draw or the buffer will not take it.
+    @discardableResult
+    public func render(_ document: PhotonzDocument, store: ImageStore, scale: CGFloat,
+                       into buffer: CVPixelBuffer) -> Bool {
+        guard scale > 0, scale.isFinite else { return false }
+        let extent = CGRect(x: 0, y: 0,
+                            width: (document.canvasSize.width * scale).rounded(),
+                            height: (document.canvasSize.height * scale).rounded())
+        guard extent.width >= 1, extent.height >= 1 else { return false }
+        let composite: CIImage?
+        if scale == 1 {
+            composite = compositeImage(document, store: store)
+        } else {
+            var magnified = document.magnified(by: scale)
+            magnified.canvasSize = extent.size
+            composite = compositeImage(magnified, store: store, contentScale: scale)?.cropped(to: extent)
+        }
+        let target = CGRect(x: 0, y: 0, width: CVPixelBufferGetWidth(buffer),
+                            height: CVPixelBufferGetHeight(buffer))
+        guard target.width >= 1, target.height >= 1 else { return false }
+        var picture = composite ?? CIImage(color: .clear).cropped(to: extent)
+        if target.size != extent.size {
+            picture = picture.transformed(by: CGAffineTransform(
+                scaleX: target.width / extent.width, y: target.height / extent.height))
+        }
+        let destination = CIRenderDestination(pixelBuffer: buffer)
+        destination.colorSpace = Self.srgb
+        destination.alphaMode = .none
+        guard let task = try? context.startTask(toRender: picture.cropped(to: target), to: destination)
+        else { return false }
+        _ = try? task.waitUntilCompleted()
+        return true
     }
 
     /// A patch of the composite drawn at `scale` output pixels per document
@@ -1275,7 +1338,8 @@ public final class DocumentRenderer: @unchecked Sendable {
                 break
             }
             guard let cg = store.image(for: ref) else { return nil }
-            image = magnified(wrapped(cg), nearest: magnifyNearest, scale: contentScale)
+            image = magnified(wrapped(cg, surface: store.surface(for: ref, standingFor: cg)),
+                              nearest: magnifyNearest, scale: contentScale)
             // A bitmap asked to cover more than it has pixels for gets the
             // better resampler, whatever put it in that position: a canvas
             // zoomed past 1:1, an export at 2x, or a clip PUNCHED IN ON, where

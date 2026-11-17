@@ -234,6 +234,32 @@ struct SpeedWalkTests {
         let data = try JSONEncoder().encode(b)
         #expect(try JSONDecoder().decode(SpeedRun.self, from: data) == b)
     }
+
+    @Test("An export says how long the video it wrote runs, how many times real time that is, and its longest main thread pass")
+    func exportPaceAndMainThread() throws {
+        var run = Self.run(dropped: 0, gap: 10, peak: 100)
+        run.export = SpeedWalk.ExportTally(settings: "MP4, Standard, Full", seconds: 30, megabytes: 40,
+                                           route: "drawn", videoSeconds: 60, longestMainPassMS: 22)
+        #expect(run.export?.timesRealTime == 0.5)
+        let keys = run.metrics.map(\.key)
+        #expect(keys.contains("export: time"))
+        #expect(keys.contains("export: longest main pass"))
+        // A slower export, or one that holds the main thread, is named.
+        var slower = run
+        slower.export?.seconds = 60
+        slower.export?.longestMainPassMS = 400
+        let worse = SpeedCompare.regressions(baseline: run, run: slower, marginPercent: 50)
+        #expect(worse.contains { $0.contains("export: time") })
+        #expect(worse.contains { $0.contains("export: longest main pass") })
+    }
+
+    @Test("A results file written before an export said its length still reads back")
+    func oldExportReadsBack() throws {
+        let json = #"{"settings": "MP4, Standard, Full", "seconds": 1984, "megabytes": 668.7, "route": "drawn"}"#
+        let tally = try JSONDecoder().decode(SpeedWalk.ExportTally.self, from: Data(json.utf8))
+        #expect(tally.seconds == 1984)
+        #expect(tally.videoSeconds == nil && tally.longestMainPassMS == nil && tally.timesRealTime == nil)
+    }
 }
 
 @Suite("The speed walk's step")
@@ -264,6 +290,30 @@ struct SpeedWalkStepTests {
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("speed"))
         for bad in [#"{"do": "speed", "measure": "dance"}"#, #"{"do": "speed", "measure": "scrub", "speeds": ["warp"]}"#,
                     #"{"do": "speed", "measure": "compare"}"#] {
+            #expect(throws: PlaytestScriptError.self) { try PlaytestScript.decode(Data("{\"steps\": [\(bad)]}".utf8)) }
+        }
+    }
+
+    @Test("An export step can time a stretch, keep its file, and draw the way exports did before they drew on the GPU")
+    func exportOptions() throws {
+        let json = """
+        {"steps": [
+          {"do": "speed", "measure": "export", "fromMS": 50000, "seconds": 30, "keep": "after.mp4"},
+          {"do": "speed", "measure": "export", "keep": "before.mp4", "throughPictures": true},
+          {"do": "speed", "measure": "export"}
+        ]}
+        """
+        let script = try PlaytestScript.decode(Data(json.utf8))
+        guard case .speed(let stretch) = script.steps[0], case .speed(let before) = script.steps[1],
+              case .speed(let plain) = script.steps[2] else {
+            Issue.record("not speed steps")
+            return
+        }
+        #expect(stretch.fromMS == 50000 && stretch.seconds == 30 && stretch.keep == "after.mp4" && !stretch.throughPictures)
+        #expect(before.keep == "before.mp4" && before.throughPictures)
+        #expect(plain.keep == nil && !plain.throughPictures)
+        for bad in [#"{"do": "speed", "measure": "export", "keep": "../out.mp4"}"#,
+                    #"{"do": "speed", "measure": "play", "throughPictures": true}"#] {
             #expect(throws: PlaytestScriptError.self) { try PlaytestScript.decode(Data("{\"steps\": [\(bad)]}".utf8)) }
         }
     }
