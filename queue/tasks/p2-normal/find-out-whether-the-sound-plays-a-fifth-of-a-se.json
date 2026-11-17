@@ -1,0 +1,30 @@
+{
+  "id": "find-out-whether-the-sound-plays-a-fifth-of-a-se",
+  "title": "Find out whether the sound plays a fifth of a second behind the picture",
+  "goal": "Playing the reference edits, the sound engine's own clock read about 180 ms behind the playhead the whole way through. If the sound really comes out that late against the picture on screen, people talking in a recording look out of sync. Find out whether it does, and if so start the sound where the picture already is.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 57.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-17T08:59:14.689Z",
+  "updated": "2026-11-17T08:59:14.692Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-11-17 by Scripts/perf/walks/long-60-sound.json (and long-20-sound.json), the speed walk's play measure: 'pieces put on while playing landed within 1ms of the press's clock, which was within 200ms of the playhead (-183ms ahead of it at the median)'. engineClockMS = clockFromMS + (silent clock node's player seconds - 80 ms lead); it is compared with editor.documentTimeMS at each one-second look. Hypothesis, not confirmed: the document clock starts at the press on the main thread, while the engine (DocumentAudioEngine.play on its queue) stops, attaches, opens files, prepares and starts the engine and then hangs everything 80 ms ahead, and nothing moves fromMS on by that time. Not yet compared with editor.shownMomentMS or the output node's presentationLatency, so the picture may lag the playhead by a similar amount and the two may be in step. Code: Sources/Photonz/DocumentAudioPlayer.swift play(_:fromMS:speed:), Sources/Photonz/Playtest/PlaytestSpeedWalk.swift play().",
+  "acceptance": [
+    "Say, with a measurement against the picture actually on screen (not the playhead), how far behind or ahead the sound comes out, including the output's own latency",
+    "If it is more than 45 ms late or 125 ms early, the sound is started where the picture is and the same measurement reads within those limits on the 6 and 20 minute edits"
+  ],
+  "log": [
+    {
+      "t": "2026-11-17T08:59:14.691Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "long-20-sound",
+    "long-60-sound"
+  ]
+}

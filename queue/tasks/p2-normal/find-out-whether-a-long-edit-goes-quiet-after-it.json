@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T08:28:07.437Z",
-  "updated": "2026-11-13T14:15:34.055Z",
+  "updated": "2026-11-17T09:08:57.913Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the speed walk (task a-speed-walk-measures-the-long-reference-edit-th), 2026-11-13 00:14: Scripts/perf/speed-walk.sh --long 20 printed for the play step: \"sound: 95 piece(s) left out, silent at 0 of 2 one-second looks\" (DocumentAudioPlayer.droppedSegments). The 6 minute edit reads 0 left out. Code read, not yet heard: DocumentAudioPlayer.play keeps live.prefix(segmentBudget = 48) sorted by start and nothing reschedules later pieces (followAudio -> follow only sets levels). The silent-look count is not evidence either way: the main thread let the walk look only twice in a minute. Unconfirmed by ear, hence p2.",
@@ -26,6 +26,36 @@
     {
       "t": "2026-11-13T14:15:34.054Z",
       "note": "seq 137.5 -> 10"
+    },
+    {
+      "t": "2026-11-17T07:46:37.446Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-17T07:50:29.994Z",
+      "note": "Measured (scratch core test over ReferenceEdit.build + audioMix, then what play() keeps = first 48 by start): 20 min edit has 144 audible pieces, at most 3 alive at any moment; played from 0 the engine holds pieces only up to 385 s. Per minute (audible at mm:30 / on the engine): 0-5 all present, 6: 2/1, 7-19: 2/0. 60 min edit: 431 pieces, last scheduled ends 380 s, minutes 7-59 have 0 on the engine. So yes: from the start, all sound stops at about 6:25 and never comes back. The 'more alive than the budget' comment is wrong: play() counts every piece still to come, not those alive at once. Adversarial: fix must not depend on the main thread (it stalled for seconds on long edits), so the top-up runs on the engine's own queue off the audio clock; late nodes must land in step with nodes scheduled at the press, so their delay is read off a silent clock node that has played since the press."
+    },
+    {
+      "t": "2026-11-17T08:20:40.254Z",
+      "note": "Reproduced in the probe on today's engine (shim exposing what play() scheduled): Scripts/playtest.sh Scripts/perf/walks/long-20-sound.json, 20 min edit played from 0:00 for 450 s: 'sound: 96 piece(s) left out, silent at 66 of 450 one-second looks (first at 6:24.9), level heard at each minute 0:0.036 1:0.031 2:0.022 3:0.035 4:0.045 5:0.039 6:0.033 7:0.018'. Minute 7's 0.018 is the music alone: one 78 s music piece from 5:48 to 7:06 was among the 48; every voice was gone from 6:25 and the music too from 7:06."
+    },
+    {
+      "t": "2026-11-17T09:08:41.923Z",
+      "note": "owns these walks: long-20-sound, long-60-sound"
+    },
+    {
+      "t": "2026-11-17T09:08:41.989Z",
+      "note": "Fixed: the engine holds only what starts within 20 s of the playhead (AudioScheduleWindow, PhotonzCore, 9 tests incl. both reference edits simulated whole), tops it up every 0.5 s on its own queue off a silent clock node, gives back finished nodes and idle layer mixers; budget is now 48 at once. Late pieces start at an exact host time (first try anchored at the next render landed 43 ms off; host-time anchoring reads 1 ms). After, same walk: 20 min 'sound: 0 piece(s) left out, silent at 0 of 450 one-second looks, level heard at each minute 0:0.037 1:0.031 2:0.030 3:0.040 4:0.041 5:0.039 6:0.032 7:0.034'; 60 min (long-60-sound.json) '0 left out, silent at 0 of 450, 0:0.034 ... 6:0.023 7:0.042, late pieces within 1ms'. Short speed walk: 32 numbers within baseline, sound 0/0 of 60. Acceptance 3 is read off long-20-sound.json, which is the speed walk's own play measure on the 20 min edit from 0:00 for 450 s; the full long-20 speed walk (play from 0:15 for 60 s, inside the old 48 anyway) was not re-run. Also fixed in passing: a playthrough whose first sound is more than 20 s after the press still starts its clock (test aSoundLongAfterThePressIsPutOnWhenItComesUp). soundExpectPlaying now checks every piece sounding at the playhead is on the engine. Walks: 8 of 9 sound/speed walks ok first time, playback-speed-on-the-reference-edit-walk failed once on picture lag (4 frames behind at one look) and passed on re-run, not sound related, left in this log. Filed find-out-whether-the-sound-plays-a-fifth-of-a-se (engine clock ~183 ms behind the playhead at the median, unconfirmed against the shown picture, p2). Audit: queue/audits/2026-11-17-long-edit-sound-plays-to-the-end.json."
+    },
+    {
+      "t": "2026-11-17T09:08:57.911Z",
+      "note": "Yes, it went quiet: played from 0:00 the 20 and 60 min edits lost every voice at 6:24.9 (66 of 450 looks silent). Fixed in DocumentAudioPlayer with a rolling 20 s window (AudioScheduleWindow, PhotonzCore, tested over both edits whole) topped up off the engine's own clock. Measured after with Scripts/perf/walks/long-20-sound.json and long-60-sound.json: 0 left out, 0 of 450 silent, voice level every minute, late pieces within 1 ms. Suite green, 9 sound/speed walks ok, short speed walk inside its baseline. Audit queue/audits/2026-11-17-long-edit-sound-plays-to-the-end.json."
     }
-  ]
+  ],
+  "started": "2026-11-17T07:46:37.445Z",
+  "walks": [
+    "long-20-sound",
+    "long-60-sound"
+  ],
+  "completed": "2026-11-17T09:08:57.912Z"
 }
