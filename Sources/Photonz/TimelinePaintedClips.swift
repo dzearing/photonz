@@ -71,6 +71,12 @@ struct TimelinePaintedClips: View, Equatable {
     let drawnMS: ClosedRange<Double>
     let laneWidth: CGFloat
     let laneHeight: CGFloat
+    /// Where the lane's gridlines fall on the drawn stretch, and their ink
+    /// in the lane's scheme: drawn first, under everything, so a scroll
+    /// slides them with the clips rather than drawing a layer of lines
+    /// again on every frame (`MotionStripRuler.secondTickMS(across:)`).
+    var gridlines: [Double] = []
+    var gridInk: Color = .clear
 
     /// Pictures that landed or strips that came into view a moment ago, and
     /// when, so each fades in as a full bar's does (`ClipFilmstripTile`).
@@ -119,6 +125,8 @@ struct TimelinePaintedClips: View, Equatable {
         let ruler = canvas.ruler
         let laneWidth = self.laneWidth
         let laneHeight = self.laneHeight
+        let gridlines = self.gridlines
+        let gridInk = self.gridInk
         let placed = bars.compactMap { Self.place($0, ruler: canvas.ruler, drawnMS: drawnMS, laneWidth: laneWidth) }
         let strips = placed.map { Self.strip(of: $0) }
         // Every picture the strips show, in the order they come, as the key
@@ -139,6 +147,8 @@ struct TimelinePaintedClips: View, Equatable {
             TimelineView(.animation(minimumInterval: nil, paused: fades.isEmpty)) { timeline in
                 let now = timeline.date.timeIntervalSinceReferenceDate
                 Canvas { context, _ in
+                    Self.paintGridlines(gridlines, ruler: ruler, laneWidth: laneWidth, height: laneHeight,
+                                        ink: gridInk, in: &context)
                     Self.paintGaps(gaps, ruler: ruler, laneWidth: laneWidth, height: laneHeight, ink: gapInk,
                                    in: &context)
                     for (one, strip) in zip(placed, strips) {
@@ -221,6 +231,7 @@ struct TimelinePaintedClips: View, Equatable {
     nonisolated static func == (a: TimelinePaintedClips, b: TimelinePaintedClips) -> Bool {
         a.bars == b.bars && a.canvas == b.canvas && a.drawnMS == b.drawnMS && a.laneWidth == b.laneWidth
             && a.laneHeight == b.laneHeight && a.gaps == b.gaps && a.gapInk == b.gapInk
+            && a.gridlines == b.gridlines && a.gridInk == b.gridInk
     }
 
     // MARK: Pictures along a clip
@@ -421,6 +432,18 @@ struct TimelinePaintedClips: View, Equatable {
             paintSoundTag(placed, off: 0, in: &context)
         }
         paintPictureFades(placed, in: &context)
+    }
+
+    /// A one point line down the whole lane at each gridline, as
+    /// `TimelineGridlines` draws them on a lane that does not paint.
+    private static func paintGridlines(_ lines: [Double], ruler: MotionStripRuler, laneWidth: CGFloat,
+                                       height: CGFloat, ink: Color, in context: inout GraphicsContext) {
+        guard !lines.isEmpty else { return }
+        var path = Path()
+        for ms in lines {
+            path.addRect(CGRect(x: laneWidth * ruler.fraction(ofMS: ms), y: 0, width: 1, height: height))
+        }
+        context.fill(path, with: .color(ink))
     }
 
     /// The gaps between clips as `TimelineGapSlot` draws each: stripes five

@@ -1055,6 +1055,33 @@ The rule, for any view added to the editor window:
      2 ms, rasterising the lanes about 3, SwiftUI's own upkeep the rest; no
      single element of the paint (waveforms, level lines, names, clipping,
      shadows) was worth more than 0.5 ms switched off on its own.
+   - **A lane that paints its clips draws its gridlines on the same
+     canvas**, first, under the gaps and clips, across the whole drawn
+     stretch at the window's step (`MotionStripRuler.secondTickMS(across:)`,
+     `TimelinePaintedClips.gridlines`), so a scroll slides them with the
+     clips. As a shape of their own they were drawn again on every frame of
+     a scroll and a zoom, for about six lines a lane: 0.1 to 0.5 ms of a
+     near-Fit zoom frame and of a scroll frame on the hour-long edit, in
+     four paired runs (2026-11-17). A lane with nothing painted keeps
+     `TimelineGridlines`.
+   - **Where a near-Fit zoom frame goes**, measured on the hour-long edit by
+     switching parts off (2026-11-17, about 17 ms a frame then): with every
+     lane empty the window takes 8.4 ms a frame (p95 8.9), at the display's
+     120 Hz; the lanes' views without their canvases add 2.5; the canvases'
+     views, drawing nothing, 1.6; what the canvases draw, 4.5 (the clips'
+     fills alone about 1.5; the rest a thousand small fills and strokes, no
+     one of them worth half a millisecond). So the window outside the lanes
+     is already at the bar, and what is left is the lanes' own drawing and
+     SwiftUI's upkeep of them, spread thin.
+   - **Tried and left out** (2026-11-17): painting each lane's cuts on the
+     clips' canvas, one layer rasterised a frame instead of two, saved
+     0.35 ms near Fit, but only with the cuts drawn over the click ticks,
+     which a full lane draws over its bands; keeping the bands over the
+     ticks meant reading where every tick falls on every frame, which cost
+     what the merge saved. Rendering the canvases asynchronously saved about
+     0.4 ms; it was not kept because such a canvas may present what it drew
+     after the frame that moved it, which on a scroll would be a jump of a
+     whole stretch for a frame (not watched for, only reasoned).
 9. **Nothing per clip reads the window unless it is near it.** A scroll
    writes the window every frame, so whatever reads it is built again every
    frame. A clip's bar is handed the stretch it draws across by its lane, cut

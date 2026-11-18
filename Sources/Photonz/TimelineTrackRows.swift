@@ -570,7 +570,11 @@ struct TimelineTrackRow: View {
             // The same wash as the header's, so a picked track reads as one
             // thing from its name to the end of its lane.
             if isHeld { heldFill.allowsHitTesting(false) }
-            TimelineGridlines(ruler: ruler, laneWidth: laneWidth, height: laneHeight)
+            // A lane that paints its clips draws its gridlines on the same
+            // canvas, under them (`TimelinePaintedClips.gridlines`).
+            if painting.bars.isEmpty {
+                TimelineGridlines(ruler: ruler, laneWidth: laneWidth, height: laneHeight)
+            }
             // An empty track says where a clip goes before anything is
             // carried (`TimelineEmptySlot`). A carried clip lights the whole
             // lane instead, as the mock swaps `.lane.empty` for `.lane.drop`.
@@ -621,7 +625,9 @@ struct TimelineTrackRow: View {
                                      gapInk: .init(stripe: TimelineGapSlot.stripeTone.color(colorScheme),
                                                    edge: TimelineGapSlot.edgeTone.color(colorScheme)),
                                      canvas: canvas, drawnMS: paintedMS,
-                                     laneWidth: laneWidth, laneHeight: laneHeight)
+                                     laneWidth: laneWidth, laneHeight: laneHeight,
+                                     gridlines: ruler.secondTickMS(across: paintedMS),
+                                     gridInk: VideoKit.Palette.edgeLo.color(colorScheme))
                     .equatable()
                     .offset(x: canvasX)
                     .allowsHitTesting(!track.isLocked)

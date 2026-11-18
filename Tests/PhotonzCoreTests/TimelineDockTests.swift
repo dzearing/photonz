@@ -103,6 +103,19 @@ struct TimelineDockTests {
         #expect(ruler.secondTicks.map(\.ms) == [0, 3000, 6000, 9000, 12_000, 15_000])
     }
 
+    /// A lane that paints its clips draws its gridlines on the same canvas,
+    /// across the whole drawn stretch, at the window's own step: the window's
+    /// lines where the stretch is the window, and the same lines carried on
+    /// either side of it (2026-11-17).
+    @Test("Gridlines across a stretch keep the window's step")
+    func gridlinesAcrossAStretchKeepTheWindowsStep() {
+        let ruler = MotionStripRuler(documentMS: 15_000)
+        #expect(ruler.secondTickMS(across: 0...15_000) == ruler.secondTicks.map(\.ms))
+        #expect(ruler.secondTickMS(across: 1_000...20_000) == [3000, 6000, 9000, 12_000, 15_000, 18_000])
+        #expect(ruler.secondTickMS(across: -7_000...2_000) == [-6000, -3000, 0])
+        #expect(ruler.secondTickMS(across: 3_500...5_900).isEmpty)
+    }
+
     @Test("Eight seconds steps in twos")
     func eightSecondsStepsInTwos() {
         let ruler = MotionStripRuler(documentMS: 8000)

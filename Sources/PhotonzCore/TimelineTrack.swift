@@ -58,6 +58,22 @@ extension MotionStripRuler {
         }
     }
 
+    /// Where the gridlines fall across `stretch`, at the step this window's
+    /// own numbers take (`secondTicks`): a lane that paints its clips draws
+    /// them on the same canvas, which covers the drawn stretch either side of
+    /// the window and is slid, not drawn again, by a scroll.
+    public func secondTickMS(across stretch: ClosedRange<Double>) -> [Double] {
+        let step = Self.secondStep(for: spanMS)
+        var values: [Double] = []
+        var ms = (stretch.lowerBound / step).rounded(.down) * step
+        if ms < stretch.lowerBound - 0.001 { ms += step }
+        while ms <= stretch.upperBound + 0.001 {
+            values.append(ms)
+            ms += step
+        }
+        return values
+    }
+
     /// A step a video editor would say out loud: tenths and halves below a
     /// second, then 1, 2, 3, 5, 10, 15, 30 seconds, then whole minutes. The
     /// threes and fifteens are what make a fifteen second ruler read in threes,

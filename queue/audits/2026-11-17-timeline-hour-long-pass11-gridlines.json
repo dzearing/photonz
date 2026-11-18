@@ -1,0 +1,27 @@
+{
+  "feature": "The hour-long timeline's gridlines ride on the painted clips",
+  "epic": "video-perf",
+  "summary": "On a busy lane the faint second lines behind the clips are now drawn on the same layer as the clips, so a scroll slides them instead of drawing them again on every frame. Zooming and scrolling the 60 minute reference edit is about 0.2 ms a frame quicker; nothing on screen changes. This pass also measured where the rest of a near-Fit zoom frame goes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit. The timeline opens at Fit; the faint lines at 0:00, 2:00, 4:00 run down every track.", "shot": "2026-11-17-timeline-hour-long-pass11-fit-sc.png" },
+    { "do": "Press Command = three times to zoom in.", "shot": "2026-11-17-timeline-hour-long-pass11-zoomed-sc.png" },
+    { "do": "Scroll the timeline along with two fingers: the lines move with the clips." },
+    { "do": "Compare the zoomed tracks with the old way: top is the lines as a layer of their own, middle on the clips' layer, bottom the difference made 16 times brighter (only pictures still loading, and the lines' edges by 1 to 3 levels of 255).", "shot": "2026-11-17-timeline-hour-long-pass11-before-after.png" },
+    { "do": "Pinch in and out near the whole hour, then click a clip and a cut: both pick as before." }
+  ],
+  "evaluate": [
+    "Do the gridlines look the same as before at Fit and zoomed in?",
+    "Do they stay put against the clips while you scroll fast?",
+    "Does zooming near the whole-hour view still feel short of smooth to you? It is still about 15 ms a frame against the 8.3 ms a 120 Hz display gives."
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, mean frame, four paired runs on one build with the old gridlines switched back on for 'before': near Fit 15.12-15.33 ms before, 14.84-15.10 after; scroll 9.39-9.60 before, 9.14-9.39 after (late frames 25-34 of 360 before, 24-35 after); zoom in 12.36-12.81 before, 12.50-12.84 after; zoom out 11.11-11.48 before, 10.84-11.22 after. A quiet Mac at the start of the pass read 16.9-17.0 near Fit on the build before this change; the drop to about 15.1 by the paired runs is the Mac getting quieter, not code.",
+    "Where a near-Fit zoom frame goes, by switching parts off on one build: every lane empty 8.4 ms a frame (p95 8.9, already at 120 Hz); the lanes' views without their canvases add 2.5 ms; the canvases' views drawing nothing 1.6; what the canvases draw 4.5 (clip fills about 1.5, the rest a thousand small fills and strokes, none worth half a millisecond alone). Written into docs/design/video.md 8f.",
+    "Tried and left out: drawing each lane's cuts on the clips' layer saved 0.35 ms near Fit but put the click ticks over the transition bands, which a lane of full bars never does; keeping the bands over the ticks cost what it saved. Rendering the canvases off the main thread saved about 0.4 ms and was not kept, because its pictures may land a frame after the canvas moves.",
+    "Bars of the task not reached: 95 percent of zoom and scroll frames on time (near Fit about 15 ms a frame, scroll p95 about 13), none over 16 ms, and edits within 16 ms (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). The task stays open.",
+    "The short speed walk failed on scrub hunt's worst frame lag (42 and 40 against at most 36) twice with this change; the same walk on the build before it is in the task log. Scrubbing is a-long-edit-with-transitions-plays-scrubs-and-ed's.",
+    "No mock covers the timeline's speed; nothing about the timeline's look changed."
+  ]
+}
