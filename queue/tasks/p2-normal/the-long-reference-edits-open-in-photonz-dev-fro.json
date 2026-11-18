@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-17T15:37:26.539Z",
-  "updated": "2026-11-18T18:56:48.536Z",
+  "updated": "2026-11-18T19:26:59.430Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the digests of 2026-11-16 and 2026-11-17. Scripts/perf/reference-edit.sh opens with Scripts/probe-app.sh. The files: ~/Library/Caches/Photonz Reference Edit/Reference Edit 6 min.photonz (also 20, 60). The Dev app must never be rebuilt by a runner (CLAUDE.md, Three bundles); opening a file in it is fine.",
@@ -34,12 +34,20 @@
     {
       "t": "2026-11-18T18:56:48.535Z",
       "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-11-18T19:26:52.056Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T19:26:59.429Z",
+      "note": "runner failed (exit 1, attempt 2): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
     }
   ],
-  "started": "2026-11-18T18:56:41.081Z",
-  "failures": 1,
+  "started": "2026-11-18T19:26:52.055Z",
+  "failures": 2,
   "lastError": {
-    "at": "2026-11-18T18:56:48.534Z",
+    "at": "2026-11-18T19:26:59.428Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
   }
