@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-11-18T05:41:09.874Z",
+  "updated": "2026-11-18T12:24:29.922Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -322,10 +322,24 @@
     {
       "t": "2026-11-18T05:41:09.873Z",
       "note": "Bars not reached (2: walk film 35ms on HEAD, median 35 over 24 filmed switches; 3: busy ~600-760ms of 0.8s). Every slide frame is a ~14ms SwiftUI render on the main thread; two experiments (empty panel shell behind View, accessibility hidden during the slide) gave no measurable gain and were reverted. Next step in the log: take the frames off the main thread, canvas first (2-3ms a frame). Tools committed 64bd14f1a."
+    },
+    {
+      "t": "2026-11-18T12:24:22.777Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T12:24:29.921Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
     }
   ],
   "walks": [
     "view-to-edit-on-a-long-recording-walk"
   ],
-  "started": "2026-11-18T04:22:17.805Z"
+  "started": "2026-11-18T12:24:22.776Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-11-18T12:24:29.920Z",
+    "exit": 1,
+    "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+  }
 }
