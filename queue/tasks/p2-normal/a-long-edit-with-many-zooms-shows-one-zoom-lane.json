@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T05:52:43.720Z",
-  "updated": "2026-11-17T15:36:40.155Z",
+  "updated": "2026-11-18T06:58:49.139Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-14 by the-timeline-of-an-hour-long-edit-scrolls-zooms: queue/audits/2026-11-14-timeline-hour-long-fit-sc.png shows three Zoom rows under V1 and more below the fold. Cause in code: Sources/Photonz/TimelineTrackRows.swift, TimelineTrackRow.lateBody, `if row.zoomedClips.contains(clip.layerID) { ZoomLane(layerID: clip.layerID, ...) }` inside the per-clip ForEach, so each zoomed clip gets a ZoomLane row (ZoomLane.swift). The reference edit (Scripts/perf/reference-edit.sh 60) carries 126 zooms. They did not show as a cost in a sample of a zoom (ZoomBarsView absent from the top frames), so this is about reading the timeline, not speed. Design question for the runner: one shared Zoom row per track (bars side by side, they never overlap in time on one track?) versus only the picked clip's rows; the mock draws a picked clip's Scale and Centre lanes.",
@@ -34,10 +34,37 @@
     {
       "t": "2026-11-17T15:36:40.154Z",
       "note": "seq 30 -> 20"
+    },
+    {
+      "t": "2026-11-18T05:58:22.378Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T06:58:39.629Z",
+      "note": "walks pick-several-zooms-walk, zoom-bar-scrolls-at-the-edge-walk -> a-long-edit-has-one-zoom-lane-per-track-walk, pick-several-zooms-walk, zoom-bar-scrolls-at-the-edge-walk"
+    },
+    {
+      "t": "2026-11-18T06:58:39.696Z",
+      "note": "Adversarial pass: chose one shared Zoom row per track over showing only the picked clip's row, because a clip's zooms stay inside the clip and clips on a track sit side by side, so the bars never stack, and every zoom stays reachable without picking its clip first (the picked-only option would hide 125 of 126 zooms). Consequences handled: the label picks every zoom on the track (across clips, as a box already could), and Shift/Command click on a bar of another clip on the same row adds it to the pick instead of starting over, keeping the first clip in hand. zoomLaneRows stays keyed by clip (each zoomed clip on a track names the lane's row), so box picks, right clicks and walk lookups by 'Zoom <clip>' work unchanged; walks may also say 'Zoom <track>'."
+    },
+    {
+      "t": "2026-11-18T06:58:39.764Z",
+      "note": "Verified: new walk a-long-edit-has-one-zoom-lane-per-track-walk (60 min reference edit, no flags): '126 zooms on 126 clips share one Zoom lane under V1', a click on a bar picks it with its box up, Shift click on a bar of another clip adds it, the label picks all 126 (panel reads Mixed). 21 other zoom-touching walks run: 19 ok; clicking-a-timeline-item-moves-the-playhead-walk and a-transition-is-picked-at-the-cut-walk fail identically on plain main (stashed run), folded into walks-that-fail-in-the-full-sweep-27. Scripts/test.sh green. Pictures looked at: whole hour (one Zoom row, Background and Music in sight), first minute (150% and 190% bars of two clips side by side), one picked (box on picture, panel Zoom 150%), two clips picked, all picked."
+    },
+    {
+      "t": "2026-11-18T06:58:39.832Z",
+      "note": "left rough: on the hour-long edit the panel takes ~1 s to show a picked zoom's rows (empty at 0.5 s); belongs to the-timeline-of-an-hour-long-edit-scrolls-zooms' speed work, not filed. At the whole-hour view zoom bars are faint 3 pt slivers; noted in the audit rough for the user."
+    },
+    {
+      "t": "2026-11-18T06:58:49.137Z",
+      "note": "One Zoom lane per track (ZoomLane takes the track's zoomed clips); the 60 min reference edit shows 1 Zoom row under V1, not 126. Label picks every zoom on the track, Shift click adds bars from other clips. Verified by new a-long-edit-has-one-zoom-lane-per-track-walk (no flags, 5 real pictures), 19 of 21 other zoom walks ok (2 fail identically on plain main, folded into walks-that-fail-in-the-full-sweep-27), Scripts/test.sh green. Audit queue/audits/2026-11-18-one-zoom-lane-per-track.json."
     }
   ],
   "walks": [
+    "a-long-edit-has-one-zoom-lane-per-track-walk",
     "pick-several-zooms-walk",
     "zoom-bar-scrolls-at-the-edge-walk"
-  ]
+  ],
+  "started": "2026-11-18T05:58:22.377Z",
+  "completed": "2026-11-18T06:58:49.138Z"
 }
