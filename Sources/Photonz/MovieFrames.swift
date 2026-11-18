@@ -420,7 +420,7 @@ enum MovieSweeper {
                       waitsAt: (@Sendable (Int) -> Bool)? = nil,
                       keeps: (@Sendable (Int) -> Bool)? = nil,
                       skipsUnreferenced: Bool = false,
-                      deliver: @escaping @Sendable (Int, CGImage) -> Void) async -> Bool {
+                      deliver: @escaping @Sendable (Int, SurfaceFrame) -> Void) async -> Bool {
         // Only a few read at once (`SweepGate`); one asked to stop while it
         // waited for its turn reads nothing.
         await gate.enter()
@@ -580,9 +580,11 @@ enum MovieSweeper {
     }
 
     /// One decoded frame, turned the way the recording is shown and at most
-    /// `size` big, in the recording's own colours.
+    /// `size` big, in the recording's own colours, kept on a GPU surface of its
+    /// own (`FrameOnASurface`): read back into a bitmap, every composite that
+    /// drew it uploaded it to the GPU again.
     private static func picture(of buffer: CVPixelBuffer, orientation: CGImagePropertyOrientation,
-                                size: CGSize) -> CGImage? {
+                                size: CGSize) -> SurfaceFrame? {
         var image = CIImage(cvPixelBuffer: buffer).oriented(orientation)
         let scale = min(1, size.width / max(1, image.extent.width))
         image = image.samplingLinear().transformed(by: CGAffineTransform(scaleX: scale, y: scale))
@@ -596,7 +598,8 @@ enum MovieSweeper {
             image = RecordingSmoothing.smoothed(image.cropped(to: extent),
                                                reach: RecordingSmoothing.reach(readAt: scale), grain: true)
         }
-        return context.createCGImage(image, from: extent, format: .RGBA8, colorSpace: colors)
+        guard let colors else { return nil }
+        return FrameOnASurface.draw(image, from: extent, colorSpace: colors, context: context)
     }
 
     /// The four right-angle turns a recording's track can carry, and nil for
@@ -1018,7 +1021,7 @@ final class MovieFrameFetcher {
             guard window.contains(where: { !has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) })
             else { continue }
             let token = UUID()
-            let file: @MainActor @Sendable (Int, CGImage) -> Void = { [weak self] index, image in
+            let file: @MainActor @Sendable (Int, SurfaceFrame) -> Void = { [weak self] index, image in
                 self?.fileRough(image, movie: movie, frameIndex: index, quiet: true)
             }
             let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
@@ -1090,7 +1093,7 @@ final class MovieFrameFetcher {
         else { return }
         sweeps[movie.id]?.task.cancel()
         let token = UUID()
-        let file: @MainActor @Sendable (Int, CGImage) -> Void = { [weak self] index, image in
+        let file: @MainActor @Sendable (Int, SurfaceFrame) -> Void = { [weak self] index, image in
             self?.fileRough(image, movie: movie, frameIndex: index)
         }
         let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
@@ -1256,7 +1259,7 @@ final class MovieFrameFetcher {
         let frames = MoviePlayPass.window(from: aim.playhead, movie: movie)
         let token = UUID()
         let mark = PlayMark(aim)
-        let file: @MainActor @Sendable (Int, CGImage) -> Void = { [weak self] index, image in
+        let file: @MainActor @Sendable (Int, SurfaceFrame) -> Void = { [weak self] index, image in
             self?.filePlayed(image, movie: movie, frameIndex: index)
         }
         let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
@@ -1331,7 +1334,7 @@ final class MovieFrameFetcher {
     private func openBack(_ movie: MovieRef, url: URL, frames: ClosedRange<Int>, speed: Double,
                           size: CGSize) -> BackBlock {
         let token = UUID()
-        let file: @MainActor @Sendable (Int, CGImage) -> Void = { [weak self] index, image in
+        let file: @MainActor @Sendable (Int, SurfaceFrame) -> Void = { [weak self] index, image in
             self?.filePlayed(image, movie: movie, frameIndex: index, backward: true)
         }
         let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
@@ -1381,11 +1384,11 @@ final class MovieFrameFetcher {
     ///
     /// Played `backward`, the frames gone by are the ones above the playhead,
     /// so it is one at or above it that redraws.
-    private func filePlayed(_ image: CGImage, movie: MovieRef, frameIndex: Int, backward: Bool = false) {
+    private func filePlayed(_ frame: SurfaceFrame, movie: MovieRef, frameIndex: Int, backward: Bool = false) {
         let ref = movie.frameRef(atSourceMS: frameIndex * MovieRef.frameStepMS)
-        if let filed = filedWidth(ref), filed >= CGFloat(image.width) - 1 { return }
+        if let filed = filedWidth(ref), filed >= CGFloat(frame.image.width) - 1 { return }
         let first = !resident.contains { $0.movie == movie.id }
-        store.register(image, as: ref)
+        store.register(frame.image, as: ref, surface: frame.surface)
         resident.removeAll { $0.ref.id == ref.id }
         resident.append(Resident(ref: ref, movie: movie.id, frameIndex: frameIndex))
         keepInsideBudget()
@@ -1402,10 +1405,19 @@ final class MovieFrameFetcher {
     /// farthest from the playhead.
     /// `quiet` for a frame nobody is looking at yet (`readAroundRest`): a
     /// landing redraws the canvas and every clip's row in the layers list.
-    private func fileRough(_ image: CGImage, movie: MovieRef, frameIndex: Int, quiet: Bool = false) {
+    private func fileRough(_ frame: SurfaceFrame, movie: MovieRef, frameIndex: Int, quiet: Bool = false) {
+        fileRough(frame.image, surface: frame.surface, movie: movie, frameIndex: frameIndex, quiet: quiet)
+    }
+
+    private func fileRough(_ image: CGImage, surface: CVPixelBuffer? = nil, movie: MovieRef, frameIndex: Int,
+                           quiet: Bool = false) {
         let ref = movie.frameRef(atSourceMS: frameIndex * MovieRef.frameStepMS)
         if let filed = filedWidth(ref), filed >= CGFloat(image.width) { return }
-        store.register(image, as: ref)
+        if let surface {
+            store.register(image, as: ref, surface: surface)
+        } else {
+            store.register(image, as: ref)
+        }
         resident.removeAll { $0.ref.id == ref.id }
         resident.append(Resident(ref: ref, movie: movie.id, frameIndex: frameIndex, rough: true))
         keepInsideBudget()

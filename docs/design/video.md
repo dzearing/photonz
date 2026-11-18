@@ -873,6 +873,24 @@ ids, a scrub drew one recording's frame where another's belonged, and every
 scrub number before pass 15 was measured on frames shared between recordings
 (honestly measured, the medium drag's worst sight lag was 163, not 67).
 
+### What a composite may hold between frames (2026-11-18)
+
+**Anything drawn on more than one frame lives on a GPU surface, never in a
+plain bitmap.** Core Image copies a bitmap's bytes into GPU memory on every
+render that draws it, however long the CIImage made of it is kept; a surface
+(`IOSurface` behind a `CVPixelBuffer`) it reads where it is. Two such copies
+were most of the composite's time on the 6 minute edit: every decoded frame
+was read back off the GPU into a bitmap and copied in again by each composite
+that drew it, and the moving background's full-frame mask (3456 x 2234,
+30 MB) was copied in on every frame. Now a decoded frame is drawn onto a
+surface of its own and registered with it (`FrameOnASurface.draw`,
+`ImageStore.register(_:as:surface:)`), and a kept raster of 512 x 512 pixels
+or more is copied onto one once (`FrameOnASurface.keep`), with the same
+pixels exactly. Composite median 8.6 -> 5.5 ms. To find the next one: attach
+lldb to the probe, break on `CI::MetalContext::bind_cgimage` and print `x1`:
+a pointer that comes back on every frame is a bitmap being copied in every
+frame.
+
 ## 8f. Who may watch the playhead
 
 While a video plays the playhead moves thirty times a second, and everything

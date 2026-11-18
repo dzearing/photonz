@@ -25,6 +25,10 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// picture both ways.
     var castsOpaqueShadowsFromAStandIn = true
 
+    /// Whether a big raster is kept on a GPU surface (`FrameOnASurface.keep`).
+    /// Off only for a test that draws the same document both ways.
+    var keepsBigRastersOnASurface = true
+
     /// Where this renderer mixes see-through paint right now.
     public var compositing: CompositingSpace {
         switch source {
@@ -149,6 +153,9 @@ public final class DocumentRenderer: @unchecked Sendable {
     private static let crispRasterCap: CGFloat = 16_000_000
     /// Per-cache cap; the two caches together stay within 64 entries.
     private static let cacheCapacity = 32
+    /// How many pixels a kept raster has before it is kept on a GPU surface
+    /// rather than as a bitmap Core Image copies in on every render.
+    static let keptOnASurfaceFrom = 512 * 512
     private var rasterCache: [RasterKey: CIImage] = [:]
     private var rasterOrder: [RasterKey] = []
     /// Texts' pieces for their reveals (`TextRevealRasterizer.swift`).
@@ -430,7 +437,13 @@ public final class DocumentRenderer: @unchecked Sendable {
         cacheLock.unlock()
         // Rasterize outside the lock — it's the expensive part.
         guard let cg = rasterize() else { return nil }
-        let image = CIImage(cgImage: cg)
+        // A big one is copied onto a GPU surface once, where Core Image
+        // reads it from then on. Left a bitmap, it is copied into GPU memory
+        // again by every render that draws it: a full-frame moving
+        // background's mask was 30 MB a frame (`FrameOnASurface.keep`).
+        let big = keepsBigRastersOnASurface && cg.width * cg.height >= Self.keptOnASurfaceFrom
+        let image = (big ? FrameOnASurface.keep(cg) : nil)
+            ?? CIImage(cgImage: cg)
         cacheLock.lock()
         if rasterCache[key] == nil {
             rasterCache[key] = image
