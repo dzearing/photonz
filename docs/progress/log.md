@@ -23257,3 +23257,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Landed 746e282ae: a painting lane's gridlines are drawn on the clips' canvas (`MotionStripRuler.secondTickMS(across:)`), so a scroll slides them: about -0.2 ms near Fit and on a scroll, look unchanged.
 - Tried and left out: cuts on the clips' canvas (gain lost once the bands stay over click ticks), asynchronous canvases (may present a frame late).
 - Next: draw far less per zoom frame (stretch the last painting between repaints, filmed first) or lanes outside SwiftUI. Bars not reached; the task stays open. Short speed walk's scrub hunt worst fails on HEAD too (scrub task's).
+
+## 2026-11-17 — View to Edit on a long recording: the slide's last frames, and two harness faults (task edit-mode-s-contents-come-in-with-the-slide-not)
+
+- Measured on HEAD first: no main-thread pass reached 100 ms in 9 runs of the walk (max 89 ms), so the freeze the task was retitled for did not show; what fails is the filmed slide, 31 to 61 ms stills at two places: 90 to 130 ms after the key, and at the slide's end.
+- The end: the panel's first section and the pieces coming back within reach both fired at exactly 0.25 s, on the slide's last frames. They now wait for `ViewEditMode.landedSeconds` (0.33 s). Old 2 of 6 switches stalled there (33, 51 ms), new 1 of 6 (34 ms).
+- Harness: a failed `filmWindow` was retried after its key had gone in and passed on nothing (now `FailedAfterActing`); the key step's state report and the half-megabyte log write no longer run while the camera rolls (4 to 9 ms in the slide's first frames).
+- Left: the start stall is a 29 ms key pass then 28 and 16 ms frames, nearly all SwiftUI layout, accessibility properties and the focus walk, app code under 5%; steady slide frames are 9 to 10 ms with the main thread full for 270 ms, which is also why the busy-under-half bar cannot be met. Meeting both means the slide moving as layers rather than re-laying out the window each frame. Bars not reached; the task stays open. WindowServer sat at ~45% CPU from another app all session, so films were noisy.
