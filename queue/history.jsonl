@@ -17933,3 +17933,13 @@
 {"t":"2026-11-18T08:16:44.401Z","ev":"task_note","id":"find-out-why-the-cut-export-test-fails-again-in"}
 {"t":"2026-11-18T08:53:19.035Z","ev":"task_note","id":"find-out-why-the-cut-export-test-fails-again-in"}
 {"t":"2026-11-18T08:53:27.570Z","ev":"task_done","id":"find-out-why-the-cut-export-test-fails-again-in","from":"in_progress","note":"Cause named: not CPU load but the rest of the suite holding all 32 hardware H.264 sessions; hardware and software encoders write different parameter sets, so a recording made on one cannot be copied with frames made on the other. Both halves reproduced by holding every session and fixed: TestClip.write waits for hardware (ad4e2f4af, test-only); the app's PieceCopyWriter now gets its session from HardwareEncoder.compressionSession, which waits up to 30 s for hardware (ff1766f41), so a cut export on a busy Mac still copies instead of falling to the drawn path. Two new HardwareEncoderTests cases fail notCopyable without the fixes. Ten full Scripts/test.sh runs in a row exit 0 on ff1766f41."}
+{"t":"2026-11-18T08:57:33.287Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-18T10:26:42.890Z","ev":"task_walks","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","walks":["speed-walk","scrub-never-blacks-out-walk"]}
+{"t":"2026-11-18T10:27:04.111Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-18T10:27:04.189Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-18T10:27:04.264Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-18T10:27:04.342Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-18T10:27:04.419Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-18T10:27:04.497Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-18T10:27:04.574Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-18T10:27:11.663Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 16 landed e15fa62e2 (composite 8.6 -> 5.5 ms, drawn output unchanged); bars not reached (scrub 2 refreshes in most runs vs 1, 1 dropped frame a minute vs 0, edits 14-57 ms vs 16). Pass 17 leads in the log."}

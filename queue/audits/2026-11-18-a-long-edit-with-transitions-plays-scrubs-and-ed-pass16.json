@@ -1,0 +1,25 @@
+{
+  "feature": "Each picture of a long edit drawn in two thirds of the time (pass 16)",
+  "epic": "video-perf",
+  "summary": "Each picture of the 6 minute reference edit now takes about 5.5 ms to draw, down from 8.6, because recording frames and the moving background stay in the graphics chip's memory instead of being copied there again for every picture. Nothing drawn changed. Dragging the playhead is sometimes 1 refresh behind the hand now (bar: 1), but still 2 in most runs.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open ~/Library/Caches/Photonz Reference Edit/Reference Edit 6 min.photonz (Scripts/perf/reference-edit.sh 6 writes it).",
+  "switched": {},
+  "try": [
+    { "do": "Open Reference Edit 6 min.photonz and press Home.", "shot": "2026-11-18-long-edit-pass16-sc.png" },
+    { "do": "Press Space and let it play through the first minute, across the dissolves and the cube." },
+    { "do": "Drag the playhead from one end of the timeline to the other in about two seconds." },
+    { "do": "Hunt slowly back and forth across a few seconds around a cut." },
+    { "do": "Pick a title or the moving background and compare its look with yesterday's build." }
+  ],
+  "evaluate": [
+    "Does the picture keep up with your hand more closely than before when you drag the playhead?",
+    "Do the recording's colours and the moving background look exactly as they did?",
+    "Does playback at 1x still look smooth through the dissolves and the cube?"
+  ],
+  "rough": [
+    "Not at the bar yet: dragging the playhead shows the picture 2 refreshes behind the hand in most runs (1 in one run of 3) and 2 while hunting (bar: 1). What is left in each picture: copying the finished frame back out of the graphics chip (about 1.3 ms) and waiting on the chip (about 2 ms). The next lead is to hand the canvas the frame where it was drawn (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Playback still drops about 1 frame a minute (bar: 0), and edits while playing still take 14 to 57 ms on the main thread (bar: 16); this pass did not touch either (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Dragging fast, the worst moment's picture is sometimes 90 refreshes behind the hand. It came in 2 of 4 runs today and once before this change (105 on 2026-11-17), so the baseline now allows it rather than turning the walk set red (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "No mock covers this: it is how fast the picture is drawn."
+  ]
+}
