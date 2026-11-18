@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T20:35:06.151Z",
-  "updated": "2026-11-17T15:36:40.233Z",
+  "updated": "2026-11-18T07:08:03.704Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-13-114048.ips\nException: EXC_CRASH SIGABRT\nMessages: \nStack (app frames):\nDocumentAudioEngine.play(_:fromMS:speed:) (DocumentAudioPlayer.swift:275)\nclosure #4 in DocumentAudioPlayer.play(_:fromMS:speed:) (DocumentAudioPlayer.swift:85)\nclosure #1 in DocumentAudioEngine.run(_:) (DocumentAudioPlayer.swift:178)",
@@ -38,6 +38,33 @@
     {
       "t": "2026-11-17T15:36:40.232Z",
       "note": "seq 40 -> 30"
+    },
+    {
+      "t": "2026-11-18T06:59:31.453Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T07:07:53.740Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-18T07:07:53.811Z",
+      "note": "Evidence it came from unfinished source: the playback-speed runner (claimed 11:14 -0800, committed 0c0b3edf8 at 12:34) hit this crash itself; its transcript in queue/loop.log just before the crash-watch line says 'The probe crashed in the new sound path at a non-1x speed ... the time-pitch unit has one input, and a second voice replaced the first. Fix: gather the voices in a mixer'. The exception is NSException out of AVAudioPlayerNodeImpl::StartImpl (a player node playing while disconnected). The landed code has the gathering mixer and says why in the comment on DocumentAudioEngine.stretch."
+    },
+    {
+      "t": "2026-11-18T07:07:53.881Z",
+      "note": "Did not reproduce on HEAD 49195d265 (probe rebuilt, screen unlocked, Screen Recording granted): playback-speed-walk 3/3 ok (plays at 0.5x, 1.5x and 4x through the time stretch), a-long-captioned-recording-walk 3/3 ok, a-long-captioned-recording-plays-walk 3/3 ok (the older captioned walk never presses play, so added the one that does). No new Photonz Probe .ips in ~/Library/Logs/DiagnosticReports after the runs (newest still 2026-11-17 02:45, a different crash). Marked the report a runner diagnostic in queue/crash-watch.json, as with the-app-crashed-in-run-pickuptile."
+    },
+    {
+      "t": "2026-11-18T07:07:53.950Z",
+      "note": "Second runner-diagnostic crash in a week, so the deferred idea from the pickuptile task cleared the bar: filed a-crash-in-a-runner-s-own-half-built-probe-is-lo (p2) to have crash-watch log a crash from an uncommitted-build probe on its running task instead of filing it. No app code changed, so no test and no audit."
+    },
+    {
+      "t": "2026-11-18T07:08:03.702Z",
+      "note": "Not in shipped code: the probe that crashed at 11:40 on 13 Nov was the playback-speed runner's half-built one (two voices wired straight into a one-input time pitch unit); that runner hit the crash, fixed it with a gathering mixer and only then committed 0c0b3edf8. On HEAD 49195d265 playback-speed-walk, a-long-captioned-recording-walk and a-long-captioned-recording-plays-walk each ran 3 of 3 ok with no new crash report. crash-watch.json marks the report a runner diagnostic; filed a-crash-in-a-runner-s-own-half-built-probe-is-lo so the next one is not filed as an app crash."
     }
-  ]
+  ],
+  "started": "2026-11-18T06:59:31.452Z",
+  "walks": [],
+  "completed": "2026-11-18T07:08:03.703Z"
 }

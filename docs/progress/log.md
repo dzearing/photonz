@@ -23278,3 +23278,8 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Every slide frame is a whole SwiftUI render on the main thread, median 13.5 to 14.3 ms against a 16.7 ms frame, back to back: AttributeGraph ~31%, hosting view layout ~28%, accessibility and the window's drag regions ~19%, Core Animation commit ~12%, app code ~0. Switching off the canvas's picture move took the median to 11.4 ms, so that move costs 2 to 3 ms a frame.
 - Tried and reverted, no gain over 24 filmed switches: the panel's empty shell kept behind View so the key inserts nothing; the sliding window hidden from accessibility for the slide (median 34.5 vs 35, and it costs VoiceOver its place).
 - Next: frames must leave the main thread, starting with the canvas animating its own layer, then the panel and dock. The busy-under-half bar cannot be met while the frames are SwiftUI renders and the panel fills in the same 0.8 s. `Scripts/perf/trace-bursts.py` gained `--from`, `--to`, `--at` and `--dump`. WindowServer sat at 44 to 46% CPU from another app all session.
+
+## 2026-11-17 (go loop, the-app-crashed-in-documentaudioengine-play)
+
+- The 13 Nov probe crash in `DocumentAudioEngine.play` was the playback-speed runner's unfinished build (voices wired straight into a one-input `AVAudioUnitTimePitch`), fixed before 0c0b3edf8 landed. Nine walk runs on HEAD (playback speed, long captioned recording, its plays walk) are clean with no new crash report. Report marked a runner diagnostic in `queue/crash-watch.json`.
+- Filed `a-crash-in-a-runner-s-own-half-built-probe-is-lo` (p2): second such false crash task in a week, so crash-watch should log a dirty-build probe crash on its running task instead of filing it.
