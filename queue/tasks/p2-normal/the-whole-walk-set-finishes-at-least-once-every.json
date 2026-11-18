@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-11T16:15:21.510Z",
-  "updated": "2026-11-17T15:37:31.714Z",
+  "updated": "2026-11-18T21:57:54.105Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence (digest 2026-11-11): grep '\"sweep_pass\"' queue/history.jsonl | tail -6 -> complete:true on 11-02, 11-03, 11-04 (24,883 to 25,469 s each); then 11-05 interrupted at 951/1096, 11-08 at 854/1134, 11-11 at 620/1141 (began 11:38Z, i.e. 03:38 local, stopped 08:08 local when the user came back). queue/bin/sweep-resume.mjs only resumes a stopped run when nothing a walk runs has changed since; the loop lands app code several times a day, so in practice the resume never applies and the 72 hour floor then pushes the next try three more days out. Ideas, not decisions: let a stopped run's unanswered walks run first next time even on new code, and count the set complete when every walk has an answer inside one 72 hour window; or start the whole set early enough in the person's quiet hours to fit seven hours; or order the set so the walks least recently answered go first. Whatever the change, sweep.sh status and the dashboard should say how many days since every walk last had an answer.",
@@ -60,6 +60,21 @@
     {
       "t": "2026-11-17T15:37:31.713Z",
       "note": "seq 90 -> 100"
+    },
+    {
+      "t": "2026-11-18T21:57:47.452Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T21:57:54.104Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
     }
-  ]
+  ],
+  "started": "2026-11-18T21:57:47.451Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-11-18T21:57:54.103Z",
+    "exit": 1,
+    "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+  }
 }
