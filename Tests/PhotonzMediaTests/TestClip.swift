@@ -1,6 +1,7 @@
 import AVFoundation
 import CoreGraphics
 import Foundation
+@testable import PhotonzMedia
 
 /// Synthesizes small, real MP4s so the media tests can assert on actual assets
 /// (duration, pixel size) instead of on bookkeeping. Written at 30fps by
@@ -50,34 +51,44 @@ enum TestClip {
     /// `profile` is the H.264 profile it is stored in: the Mac's own screen
     /// recorder (`SCRecordingOutput`) writes Main, which is not what an
     /// encoder asked for nothing in particular picks.
+    ///
+    /// It is written on the hardware encoder, waiting for a session when the
+    /// rest of the suite has all 32 (`HardwareEncoder.start`), the way the
+    /// Mac's recorder writes one. A clip made on the software encoder carries
+    /// other parameter sets, so cutting it by copying (`PieceCopyWriter`)
+    /// would fail `notCopyable` only in a full run.
     static func write(to url: URL, seconds: Double, size: CGSize = CGSize(width: 160, height: 120),
                       likeAScreenRecording: Bool = false,
                       profile: String = AVVideoProfileLevelH264HighAutoLevel) async throws {
-        try? FileManager.default.removeItem(at: url)
-        let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
-        var settings: [String: Any] = [
-            AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: Int(size.width),
-            AVVideoHeightKey: Int(size.height),
-        ]
-        if likeAScreenRecording {
-            settings[AVVideoCompressionPropertiesKey] = [
-                AVVideoAllowFrameReorderingKey: true,
-                AVVideoMaxKeyFrameIntervalDurationKey: 1,
-                AVVideoProfileLevelKey: profile,
-            ] as [String: Any]
+        let (writer, (input, adaptor)) = try await HardwareEncoder.start(
+            at: url, wouldNotStart: { $0 ?? CocoaError(.fileWriteUnknown) }
+        ) { hardware in
+            let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
+            var settings: [String: Any] = [
+                AVVideoCodecKey: AVVideoCodecType.h264,
+                AVVideoWidthKey: Int(size.width),
+                AVVideoHeightKey: Int(size.height),
+            ]
+            if hardware { settings[AVVideoEncoderSpecificationKey] = HardwareEncoder.required }
+            if likeAScreenRecording {
+                settings[AVVideoCompressionPropertiesKey] = [
+                    AVVideoAllowFrameReorderingKey: true,
+                    AVVideoMaxKeyFrameIntervalDurationKey: 1,
+                    AVVideoProfileLevelKey: profile,
+                ] as [String: Any]
+            }
+            let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+            input.expectsMediaDataInRealTime = false
+            let adaptor = AVAssetWriterInputPixelBufferAdaptor(
+                assetWriterInput: input,
+                sourcePixelBufferAttributes: [
+                    kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA),
+                    kCVPixelBufferWidthKey as String: Int(size.width),
+                    kCVPixelBufferHeightKey as String: Int(size.height),
+                ])
+            writer.add(input)
+            return (writer, (input, adaptor))
         }
-        let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
-        input.expectsMediaDataInRealTime = false
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
-            assetWriterInput: input,
-            sourcePixelBufferAttributes: [
-                kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA),
-                kCVPixelBufferWidthKey as String: Int(size.width),
-                kCVPixelBufferHeightKey as String: Int(size.height),
-            ])
-        writer.add(input)
-        writer.startWriting()
         writer.startSession(atSourceTime: .zero)
 
         let frames = max(1, Int((seconds * Double(fps)).rounded()))

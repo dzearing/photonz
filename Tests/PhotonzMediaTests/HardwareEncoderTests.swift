@@ -125,6 +125,35 @@ struct HardwareEncoderTests {
                 "a recording exported while the encoder was taken landed \(busyExport), quietly \(quietExport)")
     }
 
+    /// The cut export tests' recordings are made the way the Mac's recorder
+    /// makes one, on the hardware encoder, even when the rest of the suite
+    /// has it full. One made on the software encoder stores its pictures
+    /// with other parameter sets than the hardware encoder writes, so a cut
+    /// of it copied on a hardware session is `notCopyable`: that is the
+    /// `PieceCopyWriterTests` failure seen in full runs on 2026-11-14, -15
+    /// and -16 and never alone (reproduced 2026-11-18 by holding every
+    /// session while the recording was written: notCopyable every time).
+    @Test("A test recording written while every hardware session is taken still cuts by copying")
+    func aTestRecordingWaitsForTheHardwareEncoder() async throws {
+        let dir = TestClip.makeScratchDirectory()
+        defer { TestClip.cleanUp(dir) }
+        let source = dir.appendingPathComponent("recording.mp4")
+        let held = HeldEncoders()
+        try #require(!held.sessions.isEmpty, "no hardware encoder session could be taken")
+        let recording = Task {
+            try await TestClip.write(to: source, seconds: 8, size: CGSize(width: 1280, height: 720),
+                                     likeAScreenRecording: true)
+        }
+        try await Task.sleep(for: .milliseconds(1500))
+        held.release()
+        try await recording.value
+        let out = dir.appendingPathComponent("edit.mp4")
+        let outcome = try await PieceCopyWriter.write(source: source, ranges: [450..<2_017, 5_210..<7_300],
+                                                      mix: [], soundURLs: [:], to: out)
+        #expect(outcome.copiedFrames > 0)
+        #expect(outcome.renderedFrames > 0)
+    }
+
     @Test("Only a busy encoder is waited for: the error a full hardware encoder gives is told apart")
     func busyIsToldApart() {
         let busy = NSError(domain: AVFoundationErrorDomain, code: -11800, userInfo: [
