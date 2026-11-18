@@ -9,6 +9,11 @@
 #       [--focus 'SymbolSubstring']   only bursts holding a frame with that in its name
 #       [--list]                      one line per long burst, in time order
 #       [--passes]                    cut by the probe's own pass marks instead of by gaps
+#       [--from S] [--to S]           only passes starting in that window, seconds from
+#                                     the first main thread sample
+#       [--at S S ...]                only the passes starting within 3 ms of each time
+#                                     (the second pass after each key, say, read off --list)
+#       [--dump 'Symbol']             the stacks around that frame, heaviest first
 #       [--process Photonz]           only that process: for a trace recorded with
 #                                     --all-processes instead of --attach, which is how
 #                                     to catch a window's opening in a walk's setup
@@ -38,6 +43,10 @@ ap.add_argument('--list', action='store_true')
 ap.add_argument('--passes', action='store_true')
 ap.add_argument('--process', default=None, help='only this process (a trace recorded with --all-processes), e.g. Photonz')
 ap.add_argument('--share', nargs='*', default=[], help='say what share of the long passes has each of these in its stack')
+ap.add_argument('--from', dest='frm', type=float, default=None, help='only passes starting at or after this, s')
+ap.add_argument('--to', type=float, default=None, help='only passes starting at or before this, s')
+ap.add_argument('--at', type=float, nargs='*', default=None, help='only passes starting within 3 ms of these, s')
+ap.add_argument('--dump', default=None, help='print the stacks around this frame')
 args = ap.parse_args()
 
 def export(trace, schema):
@@ -141,7 +150,11 @@ def bucket(names):
 def dur(b):
     if id(b) in landed_in: return landed_in[id(b)][0]
     return (b[-1][0] - b[0][0]) / 1e6 + b[-1][1]
-long = [b for b in bursts if dur(b) >= args.min]
+T0 = samples[0][0] if samples else 0
+def starts_at(b): return (b[0][0] - T0) / 1e9
+long = [b for b in bursts if dur(b) >= args.min
+        and (args.frm is None or starts_at(b) >= args.frm) and (args.to is None or starts_at(b) <= args.to)
+        and (args.at is None or any(abs(starts_at(b) - a) < 0.003 for a in args.at))]
 if args.focus:
     long = [b for b in long if any(args.focus in n for s in b for n in s[2])]
 print(f'{len(samples)} main thread samples, {len(bursts)} bursts, {len(long)} of {args.min:.0f} ms or more'
@@ -178,3 +191,14 @@ for sym in args.share:
     print(f'  share {hit/total*100:5.1f}%  {sym}')
 print('leaf:')
 for n, v in leaf.most_common(10): print(f'  {v/total*100:5.1f}%  {n}')
+if args.dump:
+    stacks = collections.Counter()
+    for b in long:
+        for t, ms, names in b:
+            outer = list(reversed(names))
+            hits = [j for j, n in enumerate(outer) if args.dump in n]
+            if hits:
+                i = hits[-1]
+                stacks[' > '.join(n[:60] for n in outer[max(0, i - 6):i + 8])] += ms
+    print(f'stacks through {args.dump}:')
+    for st, v in stacks.most_common(8): print(f'{v:6.1f} ms  {st}\n')

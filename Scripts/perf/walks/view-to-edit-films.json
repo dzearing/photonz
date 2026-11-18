@@ -1,0 +1,259 @@
+{
+ "out": "/tmp/photonz-playtest/view-to-edit-films",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "describe",
+   "stage": "why",
+   "note": "Eight filmed switches from View to Edit on the five minute captioned recording, none failing on a still, so two builds can be compared on 24 or more switches rather than on one walk's single film (one film's longest still ran 19 to 50ms on the same build on 2026-11-17, with WindowServer busy). Read each f<N>.json's longestStillMS: Scripts/playtest.sh Scripts/perf/walks/view-to-edit-films.json, three times per build."
+  },
+  {
+   "do": "action",
+   "action": "openLongRetinaTalk"
+  },
+  {
+   "do": "action",
+   "action": "captionsWriteQuietly"
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "filmWindow",
+   "name": "f0",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ],
+   "seconds": 0.35,
+   "withinMS": 400
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "1",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "filmWindow",
+   "name": "f1",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ],
+   "seconds": 0.35,
+   "withinMS": 400
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "1",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "filmWindow",
+   "name": "f2",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ],
+   "seconds": 0.35,
+   "withinMS": 400
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "1",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "filmWindow",
+   "name": "f3",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ],
+   "seconds": 0.35,
+   "withinMS": 400
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "1",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "filmWindow",
+   "name": "f4",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ],
+   "seconds": 0.35,
+   "withinMS": 400
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "1",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "filmWindow",
+   "name": "f5",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ],
+   "seconds": 0.35,
+   "withinMS": 400
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "1",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "filmWindow",
+   "name": "f6",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ],
+   "seconds": 0.35,
+   "withinMS": 400
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "1",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "filmWindow",
+   "name": "f7",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ],
+   "seconds": 0.35,
+   "withinMS": 400
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "1",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  }
+ ]
+}
