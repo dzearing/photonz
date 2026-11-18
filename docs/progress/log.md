@@ -23283,3 +23283,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 
 - The 13 Nov probe crash in `DocumentAudioEngine.play` was the playback-speed runner's unfinished build (voices wired straight into a one-input `AVAudioUnitTimePitch`), fixed before 0c0b3edf8 landed. Nine walk runs on HEAD (playback speed, long captioned recording, its plays walk) are clean with no new crash report. Report marked a runner diagnostic in `queue/crash-watch.json`.
 - Filed `a-crash-in-a-runner-s-own-half-built-probe-is-lo` (p2): second such false crash task in a week, so crash-watch should log a dirty-build probe crash on its running task instead of filing it.
+
+## 2026-11-18 (go loop, find-out-why-the-cut-export-test-fails-again-in)
+
+- Cause of the `PieceCopyWriterTests` `notCopyable` failures seen only in full runs: the Mac's 32 hardware H.264 sessions, held by the other parallel video suites. The hardware and software encoders write different parameter sets (measured at 1280x720, Main and High, both ways), and a frame made on one can never be stored the way a recording made on the other is. Two halves, both reproduced on demand by holding every session: the test's own recording (`TestClip.write`) could land on software, and the cut writer's re-encode session could land on software.
+- Fixes: `TestClip.write` goes through `HardwareEncoder.start` (ad4e2f4af); the app's `PieceCopyWriter` asks for its session through the new `HardwareEncoder.compressionSession`, which requires hardware, waits up to 30 s (a full encoder refuses at once with -12903) and then takes any encoder (ff1766f41). Two new `HardwareEncoderTests` cases fail `notCopyable` without the fixes.
+- Verified: ten full `Scripts/test.sh` runs in a row exit 0 on ff1766f41. Before the second fix, one of 14 runs still failed this way, and one failed on the moving icon preview budget (folded into its own task).
+- Gotcha: a writer's hardware session is let go a moment after its file finishes, so a test that takes "every session" straight after writing one gets 31 and the code under test takes the 32nd. Take them again half a second later.
