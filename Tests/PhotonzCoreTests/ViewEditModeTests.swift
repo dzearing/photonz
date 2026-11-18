@@ -195,3 +195,30 @@ struct TimelineToggleTests {
         }
     }
 }
+
+// What waits for the slide into Edit waits for it to be DRAWN, not for its
+// curve to end: the slide's first frame comes a pass or two after the key, so
+// its last ones were still on their way at 0.25s, and the panel's first
+// section and the pieces coming back within reach landed on them, a 15 to
+// 27ms pass each in the slide's last frames (task
+// edit-mode-s-contents-come-in-with-the-slide-not, 2026-11-17).
+@Suite("When the slide into Edit has landed")
+struct ViewEditModeLandingTests {
+
+    @Test("the slide has landed a little after its curve ends")
+    func landsAfterTheCurve() {
+        #expect(ViewEditMode.landedSeconds > ViewEditMode.transitionSeconds)
+    }
+
+    @Test("it allows the slide's last frames, about two passes late, and no more")
+    func allowsTheLateFrames() {
+        let late = ViewEditMode.landedSeconds - ViewEditMode.transitionSeconds
+        #expect(late >= 0.05)
+        #expect(late <= 0.1)
+    }
+
+    @Test("the panel still follows just after the slide, well inside a third of a second")
+    func panelStillFollowsSoon() {
+        #expect(ViewEditMode.landedSeconds < 0.35)
+    }
+}

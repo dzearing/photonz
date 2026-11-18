@@ -70,6 +70,15 @@ public enum ViewEditMode: String, CaseIterable, Hashable, Codable, Sendable {
     /// never be waited on, slow enough to be seen leaving.
     public static let transitionSeconds: Double = 0.25
 
+    /// When what waits for the slide into Edit may come in: the panel's
+    /// sections, and the editing pieces coming back within reach. The slide's
+    /// curve ends at `transitionSeconds`, but its first frame is drawn a pass
+    /// or two after the key, so on a five minute captioned recording its last
+    /// frames were still being drawn then, and the 15 to 27ms passes that
+    /// landed at 0.25s held them (2026-11-17). Two passes more lets the slide
+    /// finish first.
+    public static let landedSeconds: Double = transitionSeconds + 0.08
+
     /// Whether `document` offers the two modes at all. Only a document with
     /// time: a picture is always the editor, and has no switch.
     public static func applies(to document: PhotonzDocument) -> Bool {

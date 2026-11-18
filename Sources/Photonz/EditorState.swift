@@ -1743,7 +1743,11 @@ final class EditorState {
     private func putEditPiecesInReachOnceTheSlideLands() {
         outOfReachWait &+= 1
         let wait = outOfReachWait
-        DispatchQueue.main.asyncAfter(deadline: .now() + ViewEditMode.transitionSeconds) { [weak self] in
+        // Once the slide is drawn, not as its curve ends: coming within reach
+        // has the panel, the tracks and the tool bar update themselves for
+        // accessibility, a 15 to 27ms pass that held the slide's last frames
+        // when it came at 0.25s (`ViewEditMode.landedSeconds`).
+        DispatchQueue.main.asyncAfter(deadline: .now() + ViewEditMode.landedSeconds) { [weak self] in
             guard let self, self.outOfReachWait == wait else { return }
             let out = self.isWatching
             if self.editPiecesOutOfReach != out { self.editPiecesOutOfReach = out }
@@ -1765,7 +1769,7 @@ final class EditorState {
     func advanceEditArrivalOnceTheSlideLands() {
         editArrivalWait &+= 1
         let wait = editArrivalWait
-        let delay = isWatching ? Self.buildBehindViewDelay : ViewEditMode.transitionSeconds
+        let delay = isWatching ? Self.buildBehindViewDelay : ViewEditMode.landedSeconds
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self, self.editArrivalWait == wait, self.editArrival.nextWaitsForTheSlide else { return }
             if self.isWatching, !self.isEditorKeptBehindView {
@@ -1824,7 +1828,7 @@ final class EditorState {
         var startArriving = false
         arrivesFromOpening = false
         if mode == .edit {
-            editSlideLands = Date(timeIntervalSinceNow: ViewEditMode.transitionSeconds)
+            editSlideLands = Date(timeIntervalSinceNow: ViewEditMode.landedSeconds)
             if editPiecesAsleep { editPiecesAsleep = false }
             let switching = EditModeArrival.switchingToEdit(hasTime: documentHasTime,
                                                             keptBehindView: isEditorKeptBehindView,

@@ -774,8 +774,20 @@ private final class Run {
         if let state { entry["state"] = state }
         log.append(entry)
         NSLog("PLAYTEST [\(step) \(name)] \(text)")
-        write(json: log, to: "log.json")
+        // Written whole on every note, the log is half a megabyte by the time
+        // a walk films a slide, and writing it in the slide's first frames
+        // held one of them: the film's own note writes it once the camera
+        // has stopped (`filming`).
+        if !filming { write(json: log, to: "log.json") }
     }
+
+    /// Whether a `filmWindow` step's camera is rolling. While it is, a step
+    /// the film sets off (its key) neither describes the editor nor writes
+    /// the log: on a five minute captioned recording the two together were 4
+    /// to 9ms of the main thread 50 to 80ms after Cmd-2, right where the slide
+    /// into Edit draws its first frames, and no person's app does either
+    /// (2026-11-17). The film notes the state once it has stopped.
+    private var filming = false
 
     private func finish(status: String, steps: Int, error: String?) {
         // A screen that locked WHILE the walk ran takes the answer with it,
@@ -12906,6 +12918,9 @@ private final class Run {
         let camera = PlaytestWindowFilm(crop: crop)
         try await camera.start(scWindow, size: CGSize(width: frame.width * scale, height: frame.height * scale))
         await sleep(0.15)
+        // Until the film returns; its own note, after, writes the log.
+        filming = true
+        defer { filming = false }
         var keyAt = PlaytestWindowFilm.hostNow
         switch film.trigger {
         case .key(let key, let modifiers):
@@ -12957,7 +12972,10 @@ private final class Run {
             return cadence
         }
         if let ceiling = film.longestStillUnderMS, cadence.pictures > 0, cadence.longestStillMS >= ceiling {
-            throw Failure(description: String(format: "the window sat still for %.0fms in the middle of the slide, "
+            // The key has gone in, so this is never looked at again with the
+            // dock built out: the second go pressed Cmd-2 in a window already
+            // in Edit, filmed nothing, and passed (2026-11-17).
+            throw FailedAfterActing(description: String(format: "the window sat still for %.0fms in the middle of the slide, "
                 + "past the %.0fms this walk allows: ", cadence.longestStillMS, ceiling) + cadence.summary)
         }
         return cadence.summary
@@ -21348,6 +21366,7 @@ private final class Run {
     /// else can see afterwards, like what the grid did between two nudges of a
     /// pinch. It is merged over the state, so a step can name its own evidence.
     private func describe(extra: [String: Any] = [:]) -> [String: Any] {
+        if filming { return extra }
         var state = describeState()
         for (key, value) in extra { state[key] = value }
         return state
