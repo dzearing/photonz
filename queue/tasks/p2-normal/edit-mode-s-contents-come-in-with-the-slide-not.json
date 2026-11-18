@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-11-18T02:24:49.577Z",
+  "updated": "2026-11-18T04:21:35.598Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -274,10 +274,30 @@
     {
       "t": "2026-11-18T02:24:49.576Z",
       "note": "Bars not reached: the slide's end no longer stalls on the panel (78370cea2) and the walk's film now fails honestly, but the slide's first frames still sit still 39-41ms against 30, and the main thread is busy 600-720ms of 0.8s. Next step in the log: move the slide as layers."
+    },
+    {
+      "t": "2026-11-18T02:35:37.738Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T04:21:35.360Z",
+      "note": "Landed 7ac3afa83: into Edit from View the window is laid out as Edit once and the picture, dock and panel slide home as geometry effects on one keyframe curve started in the key pass (ViewEditSlide, ViewEditSlideEffects). Twelve filmed switches per build, one machine state: longest still median 41ms old (2 of 12 at or under 30) vs 33.5ms new (5 of 12); old mid-slide stalls (140-190ms) mostly gone."
+    },
+    {
+      "t": "2026-11-18T04:21:35.436Z",
+      "note": "Where it stands after 7ac3afa83: (1) tool bar and rows come with the slide, panel sections after it: met. (2) not met: final build's walk 42, 32, 25ms (1 of 3); no main-thread pass near 100ms (max ~60ms). (3) not met: main thread busy 600-760ms of 0.8s. The stall left is the 2-3 passes after the key (~22, 25, 15ms): SwiftUI's update of the window for Edit, a quarter of the second its focus-responder walk after the panel's shell goes in, plus accessibility and the window's drag regions; app code a few ms. Ideas not tried: keep the empty panel shell mounted behind View (no insertion at the key, so no responder-tree change; earlier passes measured a FULL panel behind View as worse, the empty shell was not), and Cmd-1 as layers too (its frames are 17-30ms). Audit queue/audits/2026-11-17-view-to-edit-layered-slide.json."
+    },
+    {
+      "t": "2026-11-18T04:21:35.516Z",
+      "note": "left rough (under the bar, no task): video-tool-bar-walk fails step 68 (lens tool) on main too, already on walks-that-fail-in-the-full-sweep-27. Chose a keyframe animator over an animated state value because it starts in the key pass; chose clipping the canvas at the panel's moving edge over painting a backing under the panel because the backing read 5 grey levels darker than the panel at rest."
+    },
+    {
+      "t": "2026-11-18T04:21:35.597Z",
+      "note": "Slide into Edit now moves as layers (7ac3afa83), median longest still 41 -> 33.5ms; the 30ms film bar (1 of 3 runs) and the busy-under-half bar are not reached, next steps in the log"
     }
   ],
   "walks": [
     "view-to-edit-on-a-long-recording-walk"
   ],
-  "started": "2026-11-18T01:20:32.296Z"
+  "started": "2026-11-18T02:35:37.737Z"
 }

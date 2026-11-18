@@ -17898,3 +17898,8 @@
 {"t":"2026-11-18T02:24:49.427Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
 {"t":"2026-11-18T02:24:49.502Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
 {"t":"2026-11-18T02:24:49.578Z","ev":"task_pending","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":"in_progress","note":"Bars not reached: the slide's end no longer stalls on the panel (78370cea2) and the walk's film now fails honestly, but the slide's first frames still sit still 39-41ms against 30, and the main thread is busy 600-720ms of 0.8s. Next step in the log: move the slide as layers."}
+{"t":"2026-11-18T02:35:37.744Z","ev":"task_started","id":"edit-mode-s-contents-come-in-with-the-slide-not","title":"Switching a long recording to Edit never freezes the app, and its tool bar arrives with the slide","priority":"p2-normal"}
+{"t":"2026-11-18T04:21:35.362Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T04:21:35.438Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T04:21:35.518Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T04:21:35.599Z","ev":"task_pending","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":"in_progress","note":"Slide into Edit now moves as layers (7ac3afa83), median longest still 41 -> 33.5ms; the 30ms film bar (1 of 3 runs) and the busy-under-half bar are not reached, next steps in the log"}
