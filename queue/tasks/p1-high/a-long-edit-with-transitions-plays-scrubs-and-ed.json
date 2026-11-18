@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-18T11:31:11.693Z",
+  "updated": "2026-11-18T11:31:54.167Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,21 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-18T11:31:11.692Z",
-      "note": "... 15 earlier entries elided",
-      "elided": 15
-    },
-    {
-      "t": "2026-11-14T18:50:22.056Z",
-      "note": "Pass 5 (8133a45ee): bisected the edit's own pass on the 6 min edit by hiding regions behind file switches. Trim/blade/undo longest pass: whole window 30/53-58/59-62 ms; no timeline 12-17/25-33/31-34; no panel 17-28/36-39/35; neither 7-9/12-13/7-12; empty lanes 18-21/35-40/39-42. Changed nothing measurable: no clip bar rebuilds (36 -> 2 bodies, 32 -> 29 ms), no click ticks, the panel body not run in the edit's pass, the thumbnail caches not rewritten. So the edit's pass costs about as much as the window has views, whichever it touches (AttributeGraph propagate_dirty + UpdateStack::update + hosting view layout, almost no app code). Written into docs/design/video.md 8f."
-    },
-    {
-      "t": "2026-11-14T18:50:22.133Z",
-      "note": "Pass 5 landed two real wastes, neither of which moved the numbers: (1) rerender pruned the three thumbnail caches whenever the cache count differed from the top-level layer count (every edit on a video), rewriting three watched caches and copying every layer; now Dictionary.withoutDead writes only when something died (CachePruningTests). (2) documentHasTime is a stored answer beside hasDocument, so the panel body no longer runs in the frame of every trim. Plus the speed walk's edit line now lists every pass >= 6 ms after the edit with the views it built (MainThreadMeter.longPasses). test.sh green (16,463 tests); speed-walk within baseline (trim 29, blade 88, undo 58-61); walks ok: scrub-never-blacks-out, an-editing-session, layer-row-lifts-by-pointer, timeline-sub-layer-rows, a-flat-line-keeps-its-thumbnail, layers-thumbnail-window, what-a-separation-left-behind."
-    },
-    {
-      "t": "2026-11-14T18:50:22.212Z",
-      "note": "Next for this task (pass 6), from what pass 5 measured: (a) blade's longest pass is not the cut (55 ms) but the panel building the picked piece's sections ~110 ms later (81 ms, appearanceSection + inspectorPanel 5), and more 20-80 ms section passes follow for half a second; (b) every edit is followed by a ~20 ms pass with no body run at all, which disappears with timeline and panel hidden; find its trigger (no EditorState property changes in it); (c) to move the edit's own pass, either fewer views in the lanes (paint what nobody touches on every lane, cut marks and click ticks too, not just plain clips) or the tracks in a hosting view of their own so the edit's pass does not walk them. Tools that worked: withObservationTracking on each EditorState stored property during one edit (lists what an edit writes and when); a body watcher whose onChange logs Thread.callStackSymbols (names the setter that woke a view); lldb on setters did not work on the probe."
+      "t": "2026-11-18T11:31:54.166Z",
+      "note": "... 18 earlier entries elided",
+      "elided": 18
     },
     {
       "t": "2026-11-14T18:50:22.293Z",
@@ -507,16 +495,28 @@
     {
       "t": "2026-11-18T11:31:11.691Z",
       "note": "ran out of turn with 10 file(s) still changed: Sources/Photonz/EditorState+Time.swift, Sources/Photonz/EditorState.swift, Sources/Photonz/Playtest/PlaytestSpeedWalk.swift, Sources/PhotonzRender/RenderScheduler.swift, Tests/PhotonzRenderTests/PlaybackNeverBlinksTests.swift, Tests/PhotonzRenderTests/RenderSchedulerTests.swift, Tests/PhotonzRenderTests/ShownSizeCompositeTests.swift, Sources/Photonz/Pass17Timing.swift, Sources/PhotonzCore/ScrubPictureAsks.swift, Tests/PhotonzCoreTests/ScrubPictureAsksTests.swift. Put aside so the next task started clean; restore with `git stash apply ce7ea1d5454a77742f9def9fe5db1565cf690214` before carrying on."
+    },
+    {
+      "t": "2026-11-18T11:31:45.834Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T11:31:45.839Z",
+      "note": "a previous attempt at this task left 10 file(s) changed; they are set aside. Restore them with `git stash apply ce7ea1d5454a77742f9def9fe5db1565cf690214` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-11-18T11:31:54.165Z",
+      "note": "runner failed (exit 1, attempt 2): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
     }
   ],
-  "started": "2026-11-18T10:38:51.488Z",
+  "started": "2026-11-18T11:31:45.833Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
   ],
-  "failures": 1,
+  "failures": 2,
   "lastError": {
-    "at": "2026-11-18T11:31:11.007Z",
+    "at": "2026-11-18T11:31:54.164Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
   }
