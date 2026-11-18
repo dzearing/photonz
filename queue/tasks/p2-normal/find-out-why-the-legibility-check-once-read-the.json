@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T05:49:07.555Z",
-  "updated": "2026-11-17T22:28:14.613Z",
+  "updated": "2026-11-18T20:27:23.871Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/43367299841 (commit 610f1dc95), Test slice 1 of 3, step Run tests, after all 5535 tests passed: 'legibility: 1546 words and icons measured on 122 specimens, light and dark, in 43s' then 'legibility: UNREADABLE (the user: no white on white or black on black, ever): Caption preview, Lower third, still, dark: 1.00:1, #232323 on #232323, at 10,10 (caption-preview-lower-third-still-dark.png)' and exit 1. The next CI run, 43368952566 on b20245458 (a queue-only commit, same app code), passed. Not reproduced locally; the check lives in Scripts/test.sh (grep photonz-legibility). Filed by a-long-reference-edit-opens-in-the-probe-in-one, which does not touch captions. Epic is video-perf only because the queue requires a now-staged epic; it is a test-health item.",
@@ -99,7 +99,22 @@
     {
       "t": "2026-11-17T22:28:14.612Z",
       "note": "also seen 2026-11-17 locally: SmoothedCopyWriterTests 'the stretches an edit keeps, back to back' threw .readerStalled after 64 s in a full Scripts/test.sh run, passed alone in 2 s and in the next full run; the change under test was app-layer only."
+    },
+    {
+      "t": "2026-11-18T20:27:15.748Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T20:27:23.870Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-11-18T20:27:15.747Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-11-18T20:27:23.869Z",
+    "exit": 1,
+    "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+  }
 }
