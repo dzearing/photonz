@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-14T15:41:32.523Z",
-  "updated": "2026-11-17T15:36:40.301Z",
+  "updated": "2026-11-18T08:53:27.569Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-14 ~07:30 by the runner on the-play-bar-s-scrubber-knob-never-covers-the-ti (a transport scrubber change; nothing under media touched). Command: Scripts/test.sh (full, four processes). Output: '✘ Test \"Cuts between key frames keep exactly the frames the timeline shows\" recorded an issue at PieceCopyWriterTests.swift:69:6: Caught error: .notCopyable(\"the encoder will not store frames the way the recording does\")', failed after 39.260 seconds; 'Test run with 1399 tests in 221 suites failed'. Then PHOTONZ_TEST_ONE_RUN=1 Scripts/test.sh --filter PieceCopyWriterTests passed, that test in 2.343 s; the next full Scripts/test.sh exited 0. uptime around then: load averages 13.81 24.15 17.54. Full log kept at /tmp/photonz-piececopy-flake-2026-11-14.log (temporary). History: the-full-test-suite-stays-green-on-a-busy-mac-wh (done 2026-11-09) fixed this family and logged that PieceCopyWriterTests failed notCopyable in every process with 8 media test processes at once; one recurrence, so p2 until it is seen again.",
@@ -41,6 +41,37 @@
     {
       "t": "2026-11-17T15:36:40.300Z",
       "note": "seq 50 -> 40"
+    },
+    {
+      "t": "2026-11-18T07:08:24.309Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T07:13:46.966Z",
+      "note": "Cause found and reproduced 2026-11-18: the test's own source recording (TestClip.write) took the default encoder, so when the rest of the suite held all 32 hardware H.264 sessions it was written on the SOFTWARE encoder, whose parameter sets (avcC) differ from what a hardware session writes; PieceCopyWriter then re-encoded the cut frames on a freed hardware session and sameWay threw notCopyable. Repro: hold every hardware session (HardwareEncoderTests.HeldEncoders) while TestClip.write runs, release, copy -> notCopyable 3 of 3; source on hardware and copy while all held (software) -> copies fine 3 of 3. So: something the rest of the suite does (holds the encoder), not CPU load as such, and not app code: a real screen recording is made on the hardware encoder. Fix: TestClip.write goes through HardwareEncoder.start (waits up to 30 s for a session, as every app writer does). New test HardwareEncoderTests 'A test recording written while every hardware session is taken still cuts by copying' failed notCopyable before the fix, passes after."
+    },
+    {
+      "t": "2026-11-18T07:13:47.035Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-18T07:39:01.586Z",
+      "note": "Full Scripts/test.sh after the fix: runs 1-6 exit 0; run 7 exit 1 on IconPreviewRenderTests moving-strip speed budget (20.6 vs 20.5ms, unrelated, folded into the-moving-icon-preview-speed-check-passes-on-a); PieceCopyWriterTests passed in all 7. Restarting the count of ten."
+    },
+    {
+      "t": "2026-11-18T08:16:44.399Z",
+      "note": "Second half found: run 14 of the streak failed again ('stored one way', High, notCopyable at 22.9 s, not a 30 s fallback). Measured every combination (1280x720, Main and High): a hardware recording only matches frames made on hardware and a software one only matches software, both ways (avcC: hw High SPS 11 bytes, sw 21 bytes with VUI). PieceCopyWriter made its session with no encoder specification, so when the hardware was full it was silently handed software. Reproduced with a new test that holds all 32 sessions (plus the one the recording's writer frees late) while the cut runs: notCopyable 2 of 2. Fix in the app: HardwareEncoder.compressionSession requires hardware, waits up to 30 s (a full encoder refuses at once with -12903), then takes whatever there is; PieceCopyWriter uses it. Earlier 'source on hardware, copy while held copies fine' was a false read: the recording's own session was still being released and the cut took that slot."
+    },
+    {
+      "t": "2026-11-18T08:53:19.033Z",
+      "note": "Ten full Scripts/test.sh runs in a row exit 0 on ff1766f41 (b1-b10, 201-226 s each). Left rough (not filed, a person would not notice): (1) the 'Copying the pieces' suite sometimes finishes ~170 s into its process instead of ~20 s, parked behind other work in that process; process totals are unchanged from before (180-198 s), so no wall-clock cost. (2) A recording made on the software encoder could be copied by asking for the software encoder, but the cut writer now always prefers hardware, so such a cut takes the drawn path as it did before."
+    },
+    {
+      "t": "2026-11-18T08:53:27.567Z",
+      "note": "Cause named: not CPU load but the rest of the suite holding all 32 hardware H.264 sessions; hardware and software encoders write different parameter sets, so a recording made on one cannot be copied with frames made on the other. Both halves reproduced by holding every session and fixed: TestClip.write waits for hardware (ad4e2f4af, test-only); the app's PieceCopyWriter now gets its session from HardwareEncoder.compressionSession, which waits up to 30 s for hardware (ff1766f41), so a cut export on a busy Mac still copies instead of falling to the drawn path. Two new HardwareEncoderTests cases fail notCopyable without the fixes. Ten full Scripts/test.sh runs in a row exit 0 on ff1766f41."
     }
-  ]
+  ],
+  "started": "2026-11-18T07:08:24.308Z",
+  "walks": [],
+  "completed": "2026-11-18T08:53:27.568Z"
 }
