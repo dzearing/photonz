@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-17T08:59:14.689Z",
-  "updated": "2026-11-18T16:25:48.903Z",
+  "updated": "2026-11-18T16:55:59.862Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-17 by Scripts/perf/walks/long-60-sound.json (and long-20-sound.json), the speed walk's play measure: 'pieces put on while playing landed within 1ms of the press's clock, which was within 200ms of the playhead (-183ms ahead of it at the median)'. engineClockMS = clockFromMS + (silent clock node's player seconds - 80 ms lead); it is compared with editor.documentTimeMS at each one-second look. Hypothesis, not confirmed: the document clock starts at the press on the main thread, while the engine (DocumentAudioEngine.play on its queue) stops, attaches, opens files, prepares and starts the engine and then hangs everything 80 ms ahead, and nothing moves fromMS on by that time. Not yet compared with editor.shownMomentMS or the output node's presentationLatency, so the picture may lag the playhead by a similar amount and the two may be in step. Code: Sources/Photonz/DocumentAudioPlayer.swift play(_:fromMS:speed:), Sources/Photonz/Playtest/PlaytestSpeedWalk.swift play().",
@@ -41,16 +41,24 @@
     {
       "t": "2026-11-18T16:25:48.902Z",
       "note": "runner failed (exit 1, attempt 2): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-11-18T16:55:52.729Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T16:55:59.861Z",
+      "note": "runner failed (exit 1, attempt 3): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
     }
   ],
   "walks": [
     "long-20-sound",
     "long-60-sound"
   ],
-  "started": "2026-11-18T16:25:40.014Z",
-  "failures": 2,
+  "started": "2026-11-18T16:55:52.728Z",
+  "failures": 3,
   "lastError": {
-    "at": "2026-11-18T16:25:48.901Z",
+    "at": "2026-11-18T16:55:59.860Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
   }
