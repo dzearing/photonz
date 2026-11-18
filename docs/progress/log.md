@@ -23250,3 +23250,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Near-Fit experiments on one build: gaps were 5 ms of a 22 ms zoom frame (each gap a striped Canvas, a dashed edge, a press and a menu; ~110 canvases a frame). A painting lane now paints its gaps under its clips and builds a clear gap view only under the pointer for its press and menu (`TimelinePaint.gapViews`). Near Fit 22.5 -> 17.4 ms; on a quiet Mac zoom 13.2 -> ~9.3 ms median, scroll 10.4 -> 8.3 (late frames 120 -> ~16 of 360).
 - `rightClick` steps take `lane` + `seconds`; new walk `a-painted-gap-takes-a-right-click-walk`.
 - Next: painted cuts (~3 ms near Fit), the clips' paint (~2 ms), edits (inspector, other task). Bars not reached; the task stays open.
+
+## 2026-11-17 — hour-long timeline pass 11: gridlines on the painted layer, and where a near-Fit frame goes (task the-timeline-of-an-hour-long-edit-scrolls-zooms)
+
+- Measured by switching parts off near Fit on the 60 minute edit: lanes empty 8.4 ms a frame (already 120 Hz), lane views +2.5, canvas views +1.6, canvas drawing +4.5 (spread over ~1000 fills and strokes). Written into docs/design/video.md 8f.
+- Landed 746e282ae: a painting lane's gridlines are drawn on the clips' canvas (`MotionStripRuler.secondTickMS(across:)`), so a scroll slides them: about -0.2 ms near Fit and on a scroll, look unchanged.
+- Tried and left out: cuts on the clips' canvas (gain lost once the bands stay over click ticks), asynchronous canvases (may present a frame late).
+- Next: draw far less per zoom frame (stretch the last painting between repaints, filmed first) or lanes outside SwiftUI. Bars not reached; the task stays open. Short speed walk's scrub hunt worst fails on HEAD too (scrub task's).
