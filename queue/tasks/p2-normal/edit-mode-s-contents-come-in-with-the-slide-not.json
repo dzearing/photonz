@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-11-17T15:36:40.088Z",
+  "updated": "2026-11-18T02:24:49.577Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -250,10 +250,34 @@
     {
       "t": "2026-11-17T15:36:40.087Z",
       "note": "seq 20 -> 10"
+    },
+    {
+      "t": "2026-11-18T01:20:32.297Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T01:56:32.080Z",
+      "note": "Measured first on HEAD acaad755 (2026-11-17): the walk ran 3 times; no main-thread pass reached 100ms (longest 46, 66, 89ms), but the filmed slide's longest still was 34, 19 (a false pass, see below) and 31ms against 30. A six-switch film walk: 32-43ms stills on every switch, at two places: 90-130ms after the key (the first slide frames, a 29ms key pass then 28 and 16ms passes) and 300-320ms (the panel's first section and the pieces coming back within reach, both timed at exactly 0.25s, landing on the slide's last frames). Into-Edit main thread busy 700-800ms of 0.8s."
+    },
+    {
+      "t": "2026-11-18T02:24:49.348Z",
+      "note": "Landed 78370cea2: what waited for the slide (the panel's first section, the pieces coming back within reach) now waits for ViewEditMode.landedSeconds (0.33s) instead of 0.25s, when the slide's last frames were still being drawn. Six filmed switches on one machine state: old code stalled at the slide's end in 2 of 6 (33, 51ms), new in 1 of 6 (34ms). Harness: a failed filmWindow is FailedAfterActing (its retry pressed Cmd-2 in Edit, filmed nothing and passed: that was the 19ms 'pass' this morning), and while the camera rolls the key step no longer describes the editor or rewrites the 500KB log (4-9ms in the slide's first frames)."
+    },
+    {
+      "t": "2026-11-18T02:24:49.425Z",
+      "note": "Where it stands (2026-11-17, after 78370cea2, 3 walk runs): (2) still fails, longest still 39-41ms, all at 90-130ms after the key; no main-thread pass near 100ms (max 58ms in those runs, 89ms in 12 runs today). (1) tool bar and rows come with the slide; panel sections now start ~0.33s. (3) into Edit the main thread is busy 600-720ms of 0.8s. Start stall anatomy (xctrace all processes): key pass ~29ms, then 28 and 16ms frames before the steady 9-10ms ones; extra over a steady frame is SwiftUI accessibility property application, the focus responder walk and NSWindow drag-region recompute, app code under 5%. Tried and dropped: keeping Edit's pieces awake behind View (no change, 32-40ms). Next step for whoever takes this: the slide re-lays out the whole window every frame (main thread full for 270ms), so both bars need the slide to move as layers (end-state layout once, motion by Core Animation) rather than a SwiftUI frame animation; film it against today's. WindowServer was ~45% CPU from another app all session, so films were noisy."
+    },
+    {
+      "t": "2026-11-18T02:24:49.500Z",
+      "note": "left rough: section-fold-motion-walk fails step 14 (inspectorPanel built 2 times) on the old code too (probe rebuilt at acaad755, same failure), so not this change; it is owned by opening-a-folded-section-of-the-panel-leaves-the."
+    },
+    {
+      "t": "2026-11-18T02:24:49.576Z",
+      "note": "Bars not reached: the slide's end no longer stalls on the panel (78370cea2) and the walk's film now fails honestly, but the slide's first frames still sit still 39-41ms against 30, and the main thread is busy 600-720ms of 0.8s. Next step in the log: move the slide as layers."
     }
   ],
   "walks": [
     "view-to-edit-on-a-long-recording-walk"
   ],
-  "started": "2026-10-02T08:05:45.474Z"
+  "started": "2026-11-18T01:20:32.296Z"
 }

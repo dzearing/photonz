@@ -17890,3 +17890,11 @@
 {"t":"2026-11-18T01:04:53.954Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-18T01:04:54.031Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-18T01:05:16.644Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 11 landed 746e282ae: a busy lane's gridlines ride on the painted clips' canvas (near Fit -0.2 ms, scroll -0.25 in four pairs; look unchanged), and where a near-Fit frame goes is measured: lanes empty 8.4 ms, lane views 2.5, canvas views 1.6, canvas drawing 4.5. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: draw far less per zoom frame)."}
+{"t":"2026-11-18T01:18:26.963Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-18T01:20:32.103Z","ev":"slice_pass","walks":32,"passed":30,"failed":2,"seconds":749,"of":1176,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-18T01:20:32.303Z","ev":"task_started","id":"edit-mode-s-contents-come-in-with-the-slide-not","title":"Switching a long recording to Edit never freezes the app, and its tool bar arrives with the slide","priority":"p2-normal"}
+{"t":"2026-11-18T01:56:32.082Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T02:24:49.350Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T02:24:49.427Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T02:24:49.502Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T02:24:49.578Z","ev":"task_pending","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":"in_progress","note":"Bars not reached: the slide's end no longer stalls on the panel (78370cea2) and the walk's film now fails honestly, but the slide's first frames still sit still 39-41ms against 30, and the main thread is busy 600-720ms of 0.8s. Next step in the log: move the slide as layers."}
