@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-17T22:28:14.535Z",
+  "updated": "2026-11-18T01:04:41.949Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,12 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-13T18:51:25.699Z",
-      "note": "Pass 3, scrub: with nothing in the window watching the playhead a medium scrub was answered at 242 of 240 refreshes (today 73-82). Bisect: the timeline line + time scroller mark alone cost ~85 looks, the transport time + scrub bar ~120; a held-frame badge nothing. SwiftUI views in hosts of their own did NOT help (61, then 94-108): a host that draws again is laid out again and pulls the window's host into the layout pass (lldb: AppKitWindowHostingView.layout once per move). Fix: VideoKit.LayerIsland draws those four with Core Animation layers it moves itself, watching its value outside SwiftUI; plus the panel's playhead answers wait for the hand to hold still 30 ms (catchUpPanelPlayhead) since a quick scrub crosses a clip on nearly every move. Result 232-241 looks, lag median 2 / worst 4-5 frames (was 8/21). 23 walks around the ruler, scrub bar, ranges, menus, panel Time section ok."
-    },
-    {
-      "t": "2026-11-13T19:11:11.898Z",
-      "note": "Landed 142d6420d: VideoKit.LayerIsland (Core Animation layers that watch the playhead outside SwiftUI) for the timeline playhead line, time scroller mark, scrub bar fill+knob and transport time; panel playhead answers wait while a hand scrubs (catchUpPanelPlayhead at settle/let go). Short walk baseline rewritten (worst of 3): play 10 -> 4 dropped a minute, transitions all 0, scrub medium 8/21 -> 2/4 display frames behind. Rule rewritten in docs/design/video.md 8f rule 1. test.sh green (14,672 + split runs); 23 walks ok."
+      "t": "2026-11-18T01:04:41.948Z",
+      "note": "... 2 earlier entries elided",
+      "elided": 2
     },
     {
       "t": "2026-11-13T19:11:11.972Z",
@@ -506,6 +503,10 @@
     {
       "t": "2026-11-17T22:28:14.534Z",
       "note": "2026-11-17 (timeline pass 10): speed-walk failed 2 of 3 runs on scrub numbers at the edge of their ceilings (scrub medium sight lag worst 107 vs at most 54; scrub hunt frame lag worst 37 vs at most 36), ok on the third; nothing in that pass touched scrubbing (timeline paint only)."
+    },
+    {
+      "t": "2026-11-18T01:04:41.947Z",
+      "note": "2026-11-17 (timeline pass 11): short speed-walk failed on scrub hunt frame lag worst 45 against at most 36 on a clean HEAD build (1dc3bae08, 16:53), and 42/40 with the timeline gridline change; same metric at the edge as pass 10 saw. Reproducible this evening under a ~5 load average."
     }
   ],
   "started": "2026-11-17T15:40:48.533Z",

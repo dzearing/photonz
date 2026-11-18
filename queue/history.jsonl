@@ -17881,3 +17881,12 @@
 {"t":"2026-11-17T22:28:14.920Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-17T22:28:15.016Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-17T22:28:35.126Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 10 landed 940443e11: per-frame answers (alternate shading, cut ids, waveform points, band layers) no longer worked out on every zoom frame. Near Fit 17.1 -> 16.1 ms mean, zoom in 14.8 -> 14.0, scroll 11.3 -> 10.5; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: lanes drawn outside SwiftUI's per-frame graph)."}
+{"t":"2026-11-17T22:29:11.878Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-18T01:04:41.950Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-18T01:04:53.635Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-18T01:04:53.713Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-18T01:04:53.789Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-18T01:04:53.877Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-18T01:04:53.954Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-18T01:04:54.031Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-18T01:05:16.644Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 11 landed 746e282ae: a busy lane's gridlines ride on the painted clips' canvas (near Fit -0.2 ms, scroll -0.25 in four pairs; look unchanged), and where a near-Fit frame goes is measured: lanes empty 8.4 ms, lane views 2.5, canvas views 1.6, canvas drawing 4.5. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: draw far less per zoom frame)."}
