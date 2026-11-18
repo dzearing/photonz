@@ -81,4 +81,46 @@ enum HardwareEncoder {
         guard made.0.startWriting() else { throw wouldNotStart(made.0.error) }
         return made
     }
+
+    /// A compression session on the hardware encoder, waiting up to
+    /// `patience` for one to come free, then one on whichever encoder the Mac
+    /// hands out. Blocks while it waits, so it is called off the shared pool;
+    /// `stopped` is asked between tries and throws `CancellationError` when
+    /// it says so. Nil when no session can be made at all.
+    ///
+    /// Where the frames made must match a hardware recording byte for byte
+    /// (`PieceCopyWriter`), this is the difference between a copy and the
+    /// slow path: a session asked for nothing in particular while the
+    /// hardware is full is handed the software encoder, whose parameter sets
+    /// are not the hardware's (measured 2026-11-18, Main and High). A full
+    /// hardware encoder refuses a session that requires it at once
+    /// (`kVTInvalidSessionErr`), which is what the wait listens for.
+    static func compressionSession(width: Int32, height: Int32, codec: CMVideoCodecType,
+                                   patience: Duration = HardwareEncoder.patience,
+                                   stopped: () -> Bool = { false }) throws -> VTCompressionSession? {
+        let clock = ContinuousClock()
+        let giveUp = clock.now.advanced(by: patience)
+        let requireHardware = required as CFDictionary
+        while true {
+            var made: VTCompressionSession?
+            let status = VTCompressionSessionCreate(
+                allocator: nil, width: width, height: height, codecType: codec,
+                encoderSpecification: requireHardware, imageBufferAttributes: nil,
+                compressedDataAllocator: nil, outputCallback: nil, refcon: nil,
+                compressionSessionOut: &made)
+            if status == noErr, let made { return made }
+            guard status == kVTInvalidSessionErr || status == kVTVideoEncoderNotAvailableNowErr,
+                  clock.now < giveUp else { break }
+            if stopped() { throw CancellationError() }
+            let pause = retryEvery.components
+            Thread.sleep(forTimeInterval: Double(pause.seconds) + Double(pause.attoseconds) / 1e18)
+        }
+        var made: VTCompressionSession?
+        guard VTCompressionSessionCreate(
+            allocator: nil, width: width, height: height, codecType: codec,
+            encoderSpecification: nil, imageBufferAttributes: nil,
+            compressedDataAllocator: nil, outputCallback: nil, refcon: nil,
+            compressionSessionOut: &made) == noErr else { return nil }
+        return made
+    }
 }

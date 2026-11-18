@@ -262,7 +262,7 @@ public enum PieceCopyWriter {
                         try append(sample, as: placed)
                     }
                 case .render(let group, let frames):
-                    for (sample, placed) in try render(recording, group: group, frames: frames) {
+                    for (sample, placed) in try render(recording, group: group, frames: frames, stop: stop) {
                         try append(sample, as: placed)
                     }
                 }
@@ -302,7 +302,7 @@ public enum PieceCopyWriter {
     /// a second of frames at most, so it costs nothing worth weighing, and a
     /// join is never a visible step down in sharpness.
     private static func render(_ recording: Recording, group: Range<Int>,
-                               frames: [CutCopyPlan.Placed]) throws -> [(CMSampleBuffer, CutCopyPlan.Placed)] {
+                               frames: [CutCopyPlan.Placed], stop: StopFlag) throws -> [(CMSampleBuffer, CutCopyPlan.Placed)] {
         let wanted = Set(frames.map { recording.frames[$0.index].showsAt })
         let shows = group.map { recording.frames[$0].showsAt }
         guard let from = shows.min(), let last = shows.max(), !wanted.isEmpty else { return [] }
@@ -323,13 +323,11 @@ public enum PieceCopyWriter {
 
         let size = CMVideoFormatDescriptionGetDimensions(recording.format)
         let codec = CMFormatDescriptionGetMediaSubType(recording.format)
-        var made: VTCompressionSession?
-        guard VTCompressionSessionCreate(allocator: nil, width: size.width, height: size.height,
-                                         codecType: codec, encoderSpecification: nil,
-                                         imageBufferAttributes: nil, compressedDataAllocator: nil,
-                                         outputCallback: nil, refcon: nil,
-                                         compressionSessionOut: &made) == noErr,
-              let session = made
+        // On the hardware encoder, waiting for a session when it is full: the
+        // recording was made on it, and frames made on the software encoder
+        // carry other parameter sets, so they could not be stored its way.
+        guard let session = try HardwareEncoder.compressionSession(
+            width: size.width, height: size.height, codec: codec, stopped: { stop.isRaised })
         else { throw CopyError.failed("no encoder for its frames") }
         defer { VTCompressionSessionInvalidate(session) }
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_RealTime, value: kCFBooleanFalse)

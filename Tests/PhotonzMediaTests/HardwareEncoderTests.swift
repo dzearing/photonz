@@ -154,6 +154,41 @@ struct HardwareEncoderTests {
         #expect(outcome.renderedFrames > 0)
     }
 
+    /// The frames a cut export makes again at a cut are made on the hardware
+    /// encoder too, waiting for a session the way the file writers do. Made
+    /// on the software encoder, which a session asked for nothing in
+    /// particular is handed when the hardware is full, they carry other
+    /// parameter sets than a recording made on the hardware (measured
+    /// 2026-11-18, both ways, Main and High), so the cut could not be copied
+    /// and took the slow path: `PieceCopyWriterTests` failing `notCopyable`
+    /// in a full run with the test's recording on the hardware.
+    @Test("A cut started while every hardware session is taken still copies")
+    func aCutWaitsForTheHardwareEncoder() async throws {
+        let dir = TestClip.makeScratchDirectory()
+        defer { TestClip.cleanUp(dir) }
+        let source = dir.appendingPathComponent("recording.mp4")
+        try await TestClip.write(to: source, seconds: 8, size: CGSize(width: 1280, height: 720),
+                                 likeAScreenRecording: true)
+        let out = dir.appendingPathComponent("edit.mp4")
+        let held = HeldEncoders()
+        try #require(!held.sessions.isEmpty, "no hardware encoder session could be taken")
+        // The recording's own session is let go a moment after its file is
+        // finished; that one is taken too, or the cut is simply handed it.
+        try await Task.sleep(for: .milliseconds(500))
+        let late = HeldEncoders()
+        defer { late.release() }
+        let cut = Task {
+            try await PieceCopyWriter.write(source: source, ranges: [450..<2_017, 5_210..<7_300],
+                                            mix: [], soundURLs: [:], to: out)
+        }
+        try await Task.sleep(for: .milliseconds(1500))
+        held.release()
+        late.release()
+        let outcome = try await cut.value
+        #expect(outcome.copiedFrames > 0)
+        #expect(outcome.renderedFrames > 0)
+    }
+
     @Test("Only a busy encoder is waited for: the error a full hardware encoder gives is told apart")
     func busyIsToldApart() {
         let busy = NSError(domain: AVFoundationErrorDomain, code: -11800, userInfo: [
