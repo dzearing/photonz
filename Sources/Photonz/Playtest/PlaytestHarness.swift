@@ -6264,7 +6264,7 @@ private final class Run {
             case .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
                  .expectThreeZoomsPicked, .expectPickedZoomsEaseInAlike, .expectFourZooms, .expectTwoZoomsLeft,
-                 .expectEveryZoomPicked, .expectNoZooms,
+                 .expectEveryZoomPicked, .expectNoZooms, .expectOneZoomLanePerTrack,
                  .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
                  .curveDrawOnZoom, .expectZoomFollowsCurve, .expectDissolveFollowsCurve,
                  .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture,
@@ -6283,6 +6283,7 @@ private final class Run {
                     case .expectFourZooms: try PlaytestZoom.expectCount(editor, 4)
                     case .expectEveryZoomPicked: try PlaytestZoom.expectEveryPicked(editor)
                     case .expectNoZooms: try PlaytestZoom.expectCount(editor, 0, nonePicked: true)
+                    case .expectOneZoomLanePerTrack: try PlaytestZoom.expectOneLanePerTrack(editor)
                     case .expectTwoZoomsLeft: try PlaytestZoom.expectCount(editor, 2, nonePicked: true)
                     case .expectZoomBoxDown: try PlaytestZoom.expectBoxDown(editor)
                     case .expectZoomScrubMatchesExport: try await PlaytestZoom.expectScrubMatchesExport(editor)
@@ -7942,7 +7943,7 @@ private final class Run {
                  .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
                  .expectThreeZoomsPicked, .expectPickedZoomsEaseInAlike, .expectFourZooms, .expectTwoZoomsLeft,
-                 .expectEveryZoomPicked, .expectNoZooms,
+                 .expectEveryZoomPicked, .expectNoZooms, .expectOneZoomLanePerTrack,
                  .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
                  .curveDrawOnZoom, .expectZoomFollowsCurve, .expectDissolveFollowsCurve,
                  .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture,
@@ -20806,13 +20807,17 @@ private final class Run {
             guard let bottom = bottoms.max() else { throw Failure(description: "no tracks are on screen") }
             return bottom + TimelineDock.rowSpacing + TimelineAddTrackRow.height * (0.5 + lean)
         }
-        // A clip's Zoom lane, as "Zoom <clip>".
+        // A track's Zoom lane, as "Zoom <clip>" for any zoomed clip on it or
+        // "Zoom <track>": the track's zoomed clips share the one lane.
         if name.lowercased().hasPrefix("zoom ") {
             let clip = String(name.dropFirst(5))
-            guard let id = editor.document?.layers.first(where: {
+            let named = (editor.document?.layers ?? []).filter {
                 $0.name.compare(clip, options: .caseInsensitive) == .orderedSame
-            })?.id, let row = editor.zoomLaneRows[id] else {
-                throw Failure(description: "no Zoom lane is on screen for a clip called \"\(clip)\"")
+            }.map(\.id) + editor.timelineTrackRows.filter {
+                $0.track.name.compare(clip, options: .caseInsensitive) == .orderedSame
+            }.flatMap(\.zoomedClips)
+            guard let row = named.lazy.compactMap({ editor.zoomLaneRows[$0] }).first else {
+                throw Failure(description: "no Zoom lane is on screen for a clip or track called \"\(clip)\"")
             }
             return (row.lowerBound + row.upperBound) / 2 + (row.upperBound - row.lowerBound) * lean
         }

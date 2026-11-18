@@ -162,10 +162,12 @@ extension EditorState {
         documentMomentChanged()
     }
 
-    /// Shift or Command click on a bar: into the pick, or out of it. A zoom on
-    /// another clip starts a new pick, because one clip is in hand at a time.
+    /// Shift or Command click on a bar: into the pick, or out of it. A track's
+    /// zooms share one Zoom lane, so a bar on another clip of that lane joins
+    /// the pick too, the way a box over the lane picks them; the clip in hand
+    /// stays the one the pick began on.
     func togglePickedZoom(_ ref: ClipZoomRef) {
-        guard selectedZoom?.layerID == ref.layerID, !pickedZooms.isEmpty else {
+        guard let held = selectedZoom, !pickedZooms.isEmpty else {
             pickZoom(ref)
             return
         }
@@ -174,26 +176,41 @@ extension EditorState {
                 letGoOfZoom()
                 return
             }
-            pickedZooms.remove(ref)
-            if selectedZoom == ref { selectedZoom = earliest(of: pickedZooms) }
+            var rest = pickedZooms
+            rest.remove(ref)
+            if held == ref, let next = earliest(of: rest) {
+                holdZooms(rest, first: next)
+            } else {
+                pickedZooms = rest
+            }
         } else {
             pickedZooms.insert(ref)
-            selectedZoom = ref
+            if ref.layerID == held.layerID { selectedZoom = ref }
         }
         documentMomentChanged()
     }
 
-    /// The Zoom lane's label: every zoom on the clip, picked together.
-    func pickAllZooms(onClip id: UUID) {
-        guard let zooms = document?.layer(id: id)?.zooms, let first = zooms.first else { return }
-        guard zooms.count > 1 else {
-            pickZoom(ClipZoomRef(layerID: id, zoomID: first.id))
+    /// The Zoom lane's label: every zoom on the lane, on every clip of the
+    /// track that has one, picked together.
+    func pickAllZooms(onClips ids: [UUID]) {
+        guard let document else { return }
+        let refs = ids.flatMap { id in
+            (document.layer(id: id)?.zooms ?? []).map { ClipZoomRef(layerID: id, zoomID: $0.id) }
+        }
+        guard let first = earliest(of: Set(refs)) else { return }
+        guard refs.count > 1 else {
+            pickZoom(first)
             return
         }
-        if selectedLayerID != id { selectLayer(id) }
-        pickedZooms = Set(zooms.map { ClipZoomRef(layerID: id, zoomID: $0.id) })
-        selectedZoom = ClipZoomRef(layerID: id, zoomID: first.id)
+        holdZooms(Set(refs), first: first)
         documentMomentChanged()
+    }
+
+    /// Several zooms in hand, with `first`'s clip the one picked.
+    private func holdZooms(_ refs: Set<ClipZoomRef>, first: ClipZoomRef) {
+        if selectedLayerID != first.layerID { selectLayer(first.layerID) }
+        selectedZoom = first
+        pickedZooms = refs
     }
 
     /// Whether a zoom is one of those picked.

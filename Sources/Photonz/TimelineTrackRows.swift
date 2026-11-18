@@ -111,7 +111,7 @@ struct TimelineTrackRow: View {
             // each for them was rebuilt on every far jump of the playhead.
             let keyedByClip = editorState.keyedMotionsAtRest(layerIDs: row.clips.map(\.layerID))
             ForEach(row.clips.filter {
-                !$0.lanes.isEmpty || keyedByClip[$0.layerID] != nil || row.zoomedClips.contains($0.layerID)
+                !$0.lanes.isEmpty || keyedByClip[$0.layerID] != nil
             }) { clip in
                 let keyed = keyedByClip[clip.layerID] ?? []
                 if !keyed.isEmpty, editorState.isKeyTrackOpen(track.id) {
@@ -122,11 +122,12 @@ struct TimelineTrackRow: View {
                     MotionStripLaneView(lane: lane, layerName: clip.layerName, laneWidth: laneWidth,
                                         labelWidth: TimelineDock.lanesLeading)
                 }
-                // Its zooms, one bar each, under the clip they frame.
-                if row.zoomedClips.contains(clip.layerID) {
-                    ZoomLane(layerID: clip.layerID, laneWidth: laneWidth, indent: indent,
-                             isLocked: track.isLocked, isLifted: isLifted)
-                }
+            }
+            // Every zoom on the track's clips, one bar each under the clip it
+            // frames, on the one Zoom lane the track has (`ZoomLane`).
+            if !row.zoomedClips.isEmpty {
+                ZoomLane(clipIDs: row.zoomedClips, laneWidth: laneWidth, indent: indent,
+                         isLocked: track.isLocked, isLifted: isLifted)
             }
             // A clip's speed curve, under it, with the track's arrow.
             ForEach(row.clips.filter { row.rampedClips.contains($0.layerID) }) { clip in

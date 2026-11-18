@@ -1087,7 +1087,7 @@ The rule, for any view added to the editor window:
    frame. A clip's bar is handed the stretch it draws across by its lane, cut
    to the clip, or its whole span when it is no wider than two windows
    (`TimelineDrawnStretch.cut`), so a bar wholly in view is not built again
-   for a scroll. A row that lives outside the lane (a clip's Zoom lane) first
+   for a scroll. A row that lives outside the lane (a track's Zoom lane) first
    asks the rows' sight (`EditorState.timelineRowsSight`, `TimelineSight.rows`:
    the window and two more either side, moved in steps of two windows and
    more) and reads the window only when something of its own reaches it; the
@@ -1097,7 +1097,11 @@ The rule, for any view added to the editor window:
    and draws nothing at all, so a zoom leaves it alone: the 126 lanes, a
    handful on screen, still cost 6 to 10 ms of every frame of a zoom at every
    zoom level until they did (2026-11-16). A new row per clip under a track
-   follows the same rule.
+   follows the same rule. Since 2026-11-18 a track has ONE Zoom lane, holding
+   the bars of every zoomed clip on it side by side (a clip's zooms stay
+   inside the clip and a track's clips do not stack), so the hour-long edit
+   has one Zoom row under V1 where it had 126; the lane still asks the rows'
+   sight before it reads the window.
 10. **A pick wakes the track it left, the track it landed on, and those two
    clips; nothing else on the timeline reads the selection.** The grid works
    out each track's share of the pick (`TrackPickShare`: picked on its header,

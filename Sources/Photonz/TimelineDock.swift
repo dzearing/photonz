@@ -822,7 +822,8 @@ struct TimelineDock: View {
                 + CGFloat(group.lanes.count) * (MotionStripView.laneHeight + 3)
         }
         let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
-        let zooms = CGFloat(track.zoomedClips.count) * (ZoomLane.height + 3)
+        // One Zoom lane holds every zoomed clip on the track.
+        let zooms = track.zoomedClips.isEmpty ? 0 : ZoomLane.height + 3
         let curves = CGFloat(track.rampedClips.count) * (SpeedCurveLane.height + 3)
         let expanded = track.expandsCut ? ExpandedCutRows.height + 3 : 0
         return lane + CGFloat(motionLanes) * (MotionStripView.laneHeight + 3) + inner + words + zooms + curves

@@ -95,3 +95,11 @@ struct ZoomScrubWalkActionTests {
         #expect(PlaytestAction(rawValue: "expectZoomBoxDown")?.drivesTheTimeline == true)
     }
 }
+
+@Suite("Walks can check a track's zooms share one Zoom lane")
+struct ZoomLanePerTrackWalkActionTests {
+
+    @Test func theClaimIsAnActionTheEditorAnswers() {
+        #expect(PlaytestAction(rawValue: "expectOneZoomLanePerTrack")?.drivesTheTimeline == true)
+    }
+}

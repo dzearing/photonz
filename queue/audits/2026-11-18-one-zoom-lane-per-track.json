@@ -1,0 +1,43 @@
+{
+  "feature": "One Zoom lane per track on a long edit",
+  "epic": "video-perf",
+  "summary": "A track's zooms now share one Zoom row under it, bars side by side, so the hour-long edit shows one Zoom row under V1 instead of 126 and the Background and Music tracks stay in sight.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-long-edit-has-one-zoom-lane-per-track-walk.json (opens the 60 minute reference edit).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 60 minute reference edit (Scripts/perf/reference-edit.sh 60) and look under V1: one Zoom row, then Background and Music.",
+      "shot": "2026-11-18-one-zoom-lane-1-whole-hour-sc.png"
+    },
+    {
+      "do": "Zoom the timeline in on the first minute (= a few times).",
+      "shot": "2026-11-18-one-zoom-lane-2-first-minute-sc.png"
+    },
+    {
+      "do": "Click the 150% bar on the Zoom row: it picks that zoom and puts its box on the picture.",
+      "shot": "2026-11-18-one-zoom-lane-3-one-picked-sc.png"
+    },
+    {
+      "do": "Shift click the 190% bar, which sits on another clip: both are picked.",
+      "shot": "2026-11-18-one-zoom-lane-3b-two-clips-picked-sc.png"
+    },
+    {
+      "do": "Click the word Zoom at the left of the row: every zoom on the track is picked and the panel reads them together.",
+      "shot": "2026-11-18-one-zoom-lane-4-label-picks-every-zoom-sc.png"
+    },
+    {
+      "do": "Draw a box across the Zoom row and a clip: the zooms it touches are picked with the clip."
+    }
+  ],
+  "evaluate": [
+    "Does one Zoom row under the track read clearly as the zooms of all its clips?",
+    "Is Shift click on a bar of another clip adding to the pick what you expect?",
+    "Should the label pick every zoom on the track, or only the ones on the clip under the playhead?",
+    "At the whole hour the bars are 3 point slivers. Is that enough to see where the zooms are?"
+  ],
+  "rough": [
+    "The mock (video-zoom-wt.html) draws a punch-in as Scale and Centre key lanes, two rows under V1; the app's zoom bars on a Zoom row come from a-zoom-region-that-frames-a-spot-and-can-follow, and this task keeps them to one row, within the mock's two.",
+    "On the hour-long edit the panel takes about a second to show the picked zoom's rows after a click; at half a second the walk's picture still showed an empty panel. Left in the task log rather than filed: the open task the-timeline-of-an-hour-long-edit-scrolls-zooms owns the long edit's speed.",
+    "At the whole-hour view each bar is a faint 3 point sliver on the dark lane; they read as ticks, not bars, until the timeline is zoomed in."
+  ]
+}

@@ -138,9 +138,11 @@ enum PlaytestZoom {
     }
 
     static func expectPicked(_ editor: EditorState) throws -> String {
-        let clip = try recording(in: editor)
-        guard editor.selectedZoom?.layerID == clip.id else {
-            throw Failure(description: "no zoom on the recording is picked")
+        // Any recording's zoom: an edit cut from many has one Zoom lane per
+        // track, with every clip's zooms on it.
+        _ = try recording(in: editor)
+        guard let ref = editor.selectedZoom, editor.document?.layer(id: ref.layerID)?.movie != nil else {
+            throw Failure(description: "no zoom on a recording is picked")
         }
         guard let box = editor.zoomBoxInDocument else {
             throw Failure(description: "a zoom is picked and its box is not up on the picture")
@@ -163,9 +165,13 @@ enum PlaytestZoom {
     }
 
     static func expectEveryPicked(_ editor: EditorState) throws -> String {
-        let clip = try recording(in: editor)
-        let zooms = clip.zooms ?? []
-        let lit = zooms.filter { editor.isZoomPicked(ClipZoomRef(layerID: clip.id, zoomID: $0.id)) }
+        // Every zoom on every recording: a track's zoomed clips share one
+        // Zoom lane, and its label picks them all.
+        _ = try recording(in: editor)
+        let zooms = (editor.document?.allLayers ?? []).filter { $0.movie != nil }.flatMap { clip in
+            (clip.zooms ?? []).map { ClipZoomRef(layerID: clip.id, zoomID: $0.id) }
+        }
+        let lit = zooms.filter(editor.isZoomPicked)
         guard zooms.count > 1, lit.count == zooms.count, editor.pickedZooms.count == zooms.count else {
             throw Failure(description: "\(lit.count) of \(zooms.count) zooms are picked")
         }
@@ -190,6 +196,35 @@ enum PlaytestZoom {
         }
         return "the \(picked.count) zooms picked all ease in over \(ease) ms; the others over "
             + "\(rest.map(\.easeInMS)) ms"
+    }
+
+    /// Every track with zoomed clips draws them on one Zoom lane: each zoomed
+    /// clip's lane is laid out (its bars there to reach), and all of a track's
+    /// clips name the same row down the tracks.
+    static func expectOneLanePerTrack(_ editor: EditorState) throws -> String {
+        let tracks = editor.timelineTrackRows.filter { !$0.zoomedClips.isEmpty }
+        guard !tracks.isEmpty else { throw Failure(description: "no track has a zoomed clip") }
+        var said: [String] = []
+        var rows = Set<ClosedRange<CGFloat>>()
+        for track in tracks {
+            let laid = track.zoomedClips.compactMap { editor.zoomLaneRows[$0] }
+            guard laid.count == track.zoomedClips.count else {
+                throw Failure(description: "\(track.zoomedClips.count - laid.count) of the "
+                    + "\(track.zoomedClips.count) zoomed clips on \(track.track.name) have no Zoom lane laid out")
+            }
+            let own = Set(laid)
+            guard own.count == 1, let row = own.first else {
+                throw Failure(description: "\(track.track.name) stacks \(own.count) Zoom lanes, one per zoomed clip")
+            }
+            rows.insert(row)
+            let zooms = track.zoomedClips.reduce(0) { $0 + (editor.document?.layer(id: $1)?.zooms?.count ?? 0) }
+            said.append("\(zooms) zooms on \(track.zoomedClips.count) clips share one Zoom lane under "
+                + "\(track.track.name)")
+        }
+        guard rows.count == tracks.count else {
+            throw Failure(description: "\(tracks.count) zoomed tracks but \(rows.count) Zoom lanes")
+        }
+        return said.joined(separator: "; ")
     }
 
     static func expectCount(_ editor: EditorState, _ count: Int, nonePicked: Bool = false) throws -> String {

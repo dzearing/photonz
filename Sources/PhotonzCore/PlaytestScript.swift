@@ -1347,6 +1347,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case expectFourZooms
     /// Fail unless the recording has two zooms left and none is picked.
     case expectTwoZoomsLeft
+    /// Fail unless every track with zoomed clips draws them on ONE Zoom lane,
+    /// with every zoomed clip's bars on it to reach: a long edit never stacks
+    /// a lane per zoomed clip.
+    case expectOneZoomLanePerTrack
     /// Fail unless a zoom is picked with its box DOWN: the picture shows what
     /// the zoom does at the playhead, not the whole picture with the box.
     case expectZoomBoxDown
@@ -1889,7 +1893,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
              .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo,
              .expectThreeZoomsPicked, .expectPickedZoomsEaseInAlike, .expectFourZooms, .expectTwoZoomsLeft,
-             .expectEveryZoomPicked, .expectNoZooms,
+             .expectEveryZoomPicked, .expectNoZooms, .expectOneZoomLanePerTrack,
              .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
              .curveDrawOnZoom, .expectZoomFollowsCurve, .expectDissolveFollowsCurve,
              .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture, .expectZoomShowsItsBox,

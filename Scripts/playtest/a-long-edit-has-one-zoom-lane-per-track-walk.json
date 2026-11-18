@@ -1,0 +1,142 @@
+{
+  "out": "/tmp/photonz-playtest/a-long-edit-has-one-zoom-lane-per-track-walk",
+  "seed": "The hour-long reference edit (524 clips, 126 zooms on a third of its main track's clips) shows ONE Zoom lane under the main track, holding every zoomed clip's bars side by side, exactly as a person running Next gets it with no flag touched. Until 2026-11-18 the track stacked a lane per zoomed clip, 126 rows, and pushed everything under them out of sight. The whole hour is photographed, then the timeline zooms in to its first minute, where the bars are wide enough to read, a press on one picks it with its box up on the picture, and a press on the lane's Zoom label picks all 126, whichever clip each is on.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "referenceEdit": 60
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 3600000,
+      "playheadMS": 0
+    },
+    {
+      "do": "action",
+      "action": "expectOneZoomLanePerTrack"
+    },
+    {
+      "do": "describe",
+      "stage": "1-whole-hour",
+      "note": "The whole hour: one Zoom lane under the main track, the tracks under it in sight"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-whole-hour"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "expectOneZoomLanePerTrack"
+    },
+    {
+      "do": "describe",
+      "stage": "2-first-minute",
+      "note": "Zoomed in on the start: the zooms of several clips side by side on the one lane"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-first-minute"
+    },
+    {
+      "do": "windowClick",
+      "lane": "Zoom V1",
+      "seconds": 13.5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "expectZoomPicked"
+    },
+    {
+      "do": "describe",
+      "stage": "3-one-picked",
+      "note": "A press on the 150% bar on V1's Zoom lane picks that zoom and puts its box up on the picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-one-picked"
+    },
+    {
+      "do": "windowClick",
+      "lane": "Zoom V1",
+      "seconds": 33.6,
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "3b-two-clips-picked",
+      "note": "Shift click on the 190% bar, on another clip of the same lane, adds it: both bars lit, the panel reads the two together"
+    },
+    {
+      "do": "snapshot",
+      "name": "3b-two-clips-picked"
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        48,
+        933
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "expectEveryZoomPicked"
+    },
+    {
+      "do": "describe",
+      "stage": "4-label-picks-all",
+      "note": "A press on the lane's Zoom label picks every zoom on the track, on every clip"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-label-picks-every-zoom"
+    }
+  ]
+}

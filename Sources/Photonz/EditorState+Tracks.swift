@@ -81,8 +81,8 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// cue can carry a drift mark and an unpicked one can be drawn as the
     /// light `CaptionCueBar`.
     var cuesArePlain = false
-    /// The clips on this track that have zooms, each with a Zoom lane under
-    /// it (`ZoomLane`).
+    /// The clips on this track that have zooms, sharing the one Zoom lane
+    /// under the track (`ZoomLane`).
     var zoomedClips: [UUID] = []
     /// How many clips the whole edit holds, on every track: a long edit
     /// paints its quiet tracks too (`TimelinePaint.longEdit`).

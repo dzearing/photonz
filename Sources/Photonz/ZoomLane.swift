@@ -2,8 +2,12 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
-/// **Zoom**: the lane under a recording that has zooms on it, one bar per zoom
-/// (`ClipZoom.swift`, `EditorState+Zoom`).
+/// **Zoom**: the one lane under a track whose recordings have zooms on them,
+/// one bar per zoom (`ClipZoom.swift`, `EditorState+Zoom`). Every zoomed clip
+/// on the track shares it: a clip's zooms stay inside the clip and the clips
+/// on a track sit side by side, so the bars do too, and an hour-long edit with
+/// a zoom on every other clip reads as one row rather than a row per clip
+/// (126 of them on the reference edit until 2026-11-18).
 ///
 /// A bar is the stretch the zoom is on; the lighter ends are its way in and
 /// out, and the small upright mark where each ramp meets the hold is a handle
@@ -11,11 +15,12 @@ import SwiftUI
 /// ends trim it, its middle carries it, and a right click has Follow Cursor,
 /// how far in, and Delete Zoom. Shift or Command click adds a bar to the pick
 /// or takes it out, and a click on the lane's "Zoom" label picks every bar on
-/// it, so a change in the panel or the menus reaches all of them at once.
+/// it, whichever clip each is on, so a change in the panel or the menus reaches all of them at once.
 /// Screen Studio's zoom track, laid out the way the Words lane is.
 struct ZoomLane: View {
     @Environment(EditorState.self) private var editorState
-    let layerID: UUID
+    /// The clips on the track that have zooms, in the track's order.
+    let clipIDs: [UUID]
     let laneWidth: CGFloat
     var indent: CGFloat = 0
     var isLocked = false
@@ -41,9 +46,10 @@ struct ZoomLane: View {
 
     /// Every zoom on the lane is picked.
     private var allPicked: Bool {
-        let zooms = editorState.document?.layer(id: layerID)?.zooms ?? []
-        return zooms.count > 1
-            && zooms.allSatisfy { editorState.isZoomPicked(ClipZoomRef(layerID: layerID, zoomID: $0.id)) }
+        let refs = clipIDs.flatMap { id in
+            (editorState.document?.layer(id: id)?.zooms ?? []).map { ClipZoomRef(layerID: id, zoomID: $0.id) }
+        }
+        return refs.count > 1 && refs.allSatisfy(editorState.isZoomPicked)
     }
 
     /// What it reads off the document (the clip's zooms) follows an edit a
@@ -52,72 +58,91 @@ struct ZoomLane: View {
     var body: some View { readingALatePass { lateBody } }
 
     @ViewBuilder private var lateBody: some View {
-        // Built only near the part of the tracks on screen: the hour-long
-        // reference edit has 126 Zoom lanes, and a header, bars and grips for
-        // every one of them held the main thread for a fifth of a second as
-        // the window opened, and twice that again the first time anything
-        // read the window's accessibility (2026-11-16). Out of sight it is an
-        // empty row of the same height, so nothing below it moves.
+        // Built only near the part of the tracks on screen: when the
+        // hour-long reference edit had a Zoom lane per zoomed clip, 126 of
+        // them, a header, bars and grips for every one held the main thread
+        // for a fifth of a second as the window opened (2026-11-16). Out of
+        // sight it is an empty row of the same height, so nothing below it
+        // moves.
         BuiltNearSight(height: Self.height) {
             lane.playtestField("Zoom lane")
         }
         // Where the lane is down the tracks, for a box drawn over them
-        // (`EditorState+TrackRange`), built or not.
+        // (`EditorState+TrackRange`), built or not: written for each clip on
+        // it, since a box and a right click ask by clip.
         .onGeometryChange(for: CGRect.self) { proxy in
             proxy.frame(in: .named(TimelineDock.tracksSpace))
         } action: { frame in
-            if !isLifted { editorState.zoomLaneRows[layerID] = frame.minY...frame.maxY }
+            guard !isLifted else { return }
+            for id in clipIDs { editorState.zoomLaneRows[id] = frame.minY...frame.maxY }
         }
-        .onDisappear { if !isLifted { editorState.zoomLaneRows[layerID] = nil } }
+        .onChange(of: clipIDs) { old, new in
+            guard !isLifted else { return }
+            let row = old.lazy.compactMap { editorState.zoomLaneRows[$0] }.first
+            for id in Set(old).subtracting(new) { editorState.zoomLaneRows[id] = nil }
+            if let row { for id in new { editorState.zoomLaneRows[id] = row } }
+        }
+        .onDisappear {
+            guard !isLifted else { return }
+            for id in clipIDs { editorState.zoomLaneRows[id] = nil }
+        }
     }
 
     private var lane: some View {
         HStack(spacing: TimelineDock.gap) {
             Self.header(indent: indent, isLit: allPicked)
                 .contentShape(Rectangle())
-                .onTapGesture { editorState.pickAllZooms(onClip: layerID) }
+                .onTapGesture { editorState.pickAllZooms(onClips: clipIDs) }
                 .help("Pick every zoom")
                 .accessibilityAddTraits(.isButton)
                 .accessibilityLabel("Pick every zoom")
                 .playtestControl("Zoom lane label", detail: "Timeline")
-            ZoomBarsView(layerID: layerID, laneWidth: laneWidth, isLocked: isLocked)
+            ZoomBarsView(clipIDs: clipIDs, laneWidth: laneWidth, isLocked: isLocked)
         }
     }
 
     // MARK: Where the bars go
 
     struct Bar {
+        /// The clip the zoom is on.
+        let layerID: UUID
         let zoom: ClipZoom
         let x: CGFloat
         let width: CGFloat
         let easeIn: CGFloat
         let easeOut: CGFloat
+
+        var ref: ClipZoomRef { ClipZoomRef(layerID: layerID, zoomID: zoom.id) }
     }
 
-    /// Where each zoom on the clip is across the lane, read where the bars
-    /// are drawn and not in the lane, so the label beside them is not built
-    /// again as the timeline scrolls. A lane none of whose zooms reach the
-    /// rows' sight (`TimelineSight.rows`: the window and two more either
-    /// side) has nothing in the window and does not read the window at all:
-    /// the hour-long reference edit has 126 Zoom lanes, and each was built
-    /// again on every frame of a scroll (2026-11-15).
-    static func bars(_ editorState: EditorState, layerID: UUID, laneWidth: CGFloat) -> [Bar] {
-        guard let layer = editorState.document?.layer(id: layerID) else { return [] }
-        let spans = editorState.zoomsShown(onClip: layerID).compactMap { zoom in
-            editorState.spanOnTimeline(zoom, of: layer).map { (zoom: zoom, span: $0) }
+    /// Where each zoom on the lane's clips is across the lane, read where the
+    /// bars are drawn and not in the lane, so the label beside them is not
+    /// built again as the timeline scrolls. A lane none of whose zooms reach
+    /// the rows' sight (`TimelineSight.rows`: the window and two more either
+    /// side) has nothing in the window and does not read the window at all
+    /// (docs/design/video.md 8f rule 9): when every zoomed clip had a lane of
+    /// its own, the hour-long reference edit's 126 were each built again on
+    /// every frame of a scroll (2026-11-15).
+    static func bars(_ editorState: EditorState, clipIDs: [UUID], laneWidth: CGFloat) -> [Bar] {
+        guard let document = editorState.document else { return [] }
+        let spans = clipIDs.flatMap { id -> [(layerID: UUID, zoom: ClipZoom, span: (start: Int, end: Int))] in
+            guard let layer = document.layer(id: id) else { return [] }
+            return editorState.zoomsShown(onClip: id).compactMap { zoom in
+                editorState.spanOnTimeline(zoom, of: layer).map { (layerID: id, zoom: zoom, span: $0) }
+            }
         }
         if editorState.motionStripMeasuresADocument, let sight = editorState.timelineRowsSight,
            !spans.contains(where: { sight.reaches(fromMS: Double($0.span.start), toMS: Double($0.span.end)) }) {
             return []
         }
         let ruler = editorState.motionStripRuler
-        return spans.compactMap { zoom, span in
+        return spans.compactMap { layerID, zoom, span in
             let x0 = laneWidth * ruler.fraction(ofMS: Double(span.start))
             let x1 = laneWidth * ruler.fraction(ofMS: Double(span.end))
             guard x1 >= 0, x0 <= laneWidth, x1 > x0 else { return nil }
             let perMS = (x1 - x0) / CGFloat(max(1, zoom.lengthMS))
             let eases = zoom.eases
-            return Bar(zoom: zoom, x: x0, width: x1 - x0,
+            return Bar(layerID: layerID, zoom: zoom, x: x0, width: x1 - x0,
                        easeIn: CGFloat(eases.inMS) * perMS, easeOut: CGFloat(eases.outMS) * perMS)
         }
     }
@@ -150,11 +175,11 @@ struct ZoomLane: View {
 /// The bars themselves, painted, with the picked one lit.
 private struct ZoomBarsView: View {
     @Environment(EditorState.self) private var editorState
-    let layerID: UUID
+    let clipIDs: [UUID]
     let laneWidth: CGFloat
     let isLocked: Bool
 
-    private var bars: [ZoomLane.Bar] { ZoomLane.bars(editorState, layerID: layerID, laneWidth: laneWidth) }
+    private var bars: [ZoomLane.Bar] { ZoomLane.bars(editorState, clipIDs: clipIDs, laneWidth: laneWidth) }
 
     @State private var hovered: ZoomLane.Bar?
     @State private var pressed: (bar: ZoomLane.Bar, grab: ZoomGrab)?
@@ -164,15 +189,15 @@ private struct ZoomBarsView: View {
     @State private var boxing = false
 
     private func isPicked(_ bar: ZoomLane.Bar) -> Bool {
-        editorState.isZoomLit(ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id))
+        editorState.isZoomLit(bar.ref)
     }
 
     /// Whether the lane is in the tracks' view, or near enough to scroll in
     /// (`TimelineSight.rowShows`). Out of it the lane draws and reads
-    /// nothing, so a zoom along time leaves it alone: the hour-long
-    /// reference edit has 126 Zoom lanes, a handful on screen, and every one
-    /// was drawn again on each frame of a zoom, about 8 ms a frame however
-    /// far in (2026-11-16).
+    /// nothing, so a zoom along time leaves it alone: when the hour-long
+    /// reference edit had 126 Zoom lanes, a handful on screen, every one was
+    /// drawn again on each frame of a zoom, about 8 ms a frame however far in
+    /// (2026-11-16).
     @State private var showsDownTheTracks = true
 
     /// Its right-click rows read the document: a pass late, with its lane.
@@ -192,10 +217,10 @@ private struct ZoomBarsView: View {
 
     @ViewBuilder private var lateBody: some View {
         let bars = self.bars
-        let picked = Set(bars.filter(isPicked).map(\.zoom.id))
+        let picked = Set(bars.filter(isPicked).map(\.ref))
         Canvas { context, _ in
             for bar in bars {
-                let isPicked = picked.contains(bar.zoom.id)
+                let isPicked = picked.contains(bar.ref)
                 let rect = CGRect(x: bar.x, y: ZoomLane.barTop, width: max(3, bar.width),
                                   height: ZoomLane.barHeight)
                 let shape = Path(roundedRect: rect, cornerRadius: 5)
@@ -261,7 +286,7 @@ private struct ZoomBarsView: View {
         .accessibilityElement()
         .accessibilityLabel("Zoom")
         .accessibilityValue(picked.count > 1 ? "\(picked.count) picked"
-            : bars.first { picked.contains($0.zoom.id) }.map { ZoomLane.label($0.zoom) } ?? "")
+            : bars.first { picked.contains($0.ref) }.map { ZoomLane.label($0.zoom) } ?? "")
         .playtestControl("Zoom lane", detail: "Timeline")
     }
 
@@ -277,7 +302,7 @@ private struct ZoomBarsView: View {
                 }
                 if boxing { return box(value) }
                 guard let pressed, !isLocked else { return }
-                let ref = ClipZoomRef(layerID: layerID, zoomID: pressed.bar.zoom.id)
+                let ref = pressed.bar.ref
                 if !dragging {
                     guard abs(value.translation.width) >= 3 else { return }
                     dragging = true
@@ -315,7 +340,7 @@ private struct ZoomBarsView: View {
                     // playhead moving puts a framed zoom's box away, and the
                     // pick is what puts it up.
                     editorState.playheadToTimelineClick(laneX: value.startLocation.x, laneWidth: laneWidth)
-                    let ref = ClipZoomRef(layerID: layerID, zoomID: pressed.bar.zoom.id)
+                    let ref = pressed.bar.ref
                     let flags = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
                     if flags.contains(.shift) || flags.contains(.command) {
                         editorState.togglePickedZoom(ref)
@@ -328,7 +353,7 @@ private struct ZoomBarsView: View {
 
     /// Hand a press between the bars to the timeline's box.
     private func box(_ value: DragGesture.Value) {
-        TimelineLaneMarquee.changed(editorState, value, top: editorState.zoomLaneRows[layerID]?.lowerBound ?? 0,
+        TimelineLaneMarquee.changed(editorState, value, top: clipIDs.first.flatMap { editorState.zoomLaneRows[$0]?.lowerBound } ?? 0,
                                     leading: 0, ruler: editorState.motionStripRuler, laneWidth: laneWidth)
     }
 
@@ -337,8 +362,8 @@ private struct ZoomBarsView: View {
     private func menuBar(_ bars: [ZoomLane.Bar]) -> ZoomLane.Bar? {
         if let pressed = rightPressedBar(bars) { return pressed }
         if let hovered { return hovered }
-        let picked = editorState.selectedZoom?.layerID == layerID ? editorState.selectedZoom?.zoomID : nil
-        return bars.first { $0.zoom.id == picked } ?? (bars.count == 1 ? bars.first : nil)
+        let picked = editorState.selectedZoom
+        return bars.first { $0.ref == picked } ?? (bars.count == 1 ? bars.first : nil)
     }
 
     /// The bar under the moment a right click on the tracks just landed on
@@ -354,7 +379,7 @@ private struct ZoomBarsView: View {
         let _ = editorState.timelineRightPresses
         let pressed = rightPressedBar(bars)
         if let bar = pressed ?? menuBar(bars) {
-            let ref = ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id)
+            let ref = bar.ref
             // Only a bar the click landed on is picked by it.
             let _ = pressed != nil ? editorState.timelineMenuBuilt(for: .zoom(ref)) : ()
             MenuRowsView(rows: editorState.zoomMenuRows(ref))
