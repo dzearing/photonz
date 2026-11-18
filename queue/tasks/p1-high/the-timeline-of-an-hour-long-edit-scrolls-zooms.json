@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-18T01:05:16.643Z",
+  "updated": "2026-11-18T11:34:00.648Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -357,9 +357,17 @@
     {
       "t": "2026-11-18T01:05:16.642Z",
       "note": "Pass 11 landed 746e282ae: a busy lane's gridlines ride on the painted clips' canvas (near Fit -0.2 ms, scroll -0.25 in four pairs; look unchanged), and where a near-Fit frame goes is measured: lanes empty 8.4 ms, lane views 2.5, canvas views 1.6, canvas drawing 4.5. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: draw far less per zoom frame)."
+    },
+    {
+      "t": "2026-11-18T11:33:57.634Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T11:34:00.647Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
     }
   ],
-  "started": "2026-11-17T22:29:11.872Z",
+  "started": "2026-11-18T11:33:57.633Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
@@ -372,5 +380,11 @@
     "painted-clips-take-a-hand-walk",
     "a-cut-slid-under-a-still-pointer-walk",
     "a-painted-gap-takes-a-right-click-walk"
-  ]
+  ],
+  "failures": 1,
+  "lastError": {
+    "at": "2026-11-18T11:34:00.646Z",
+    "exit": 1,
+    "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+  }
 }
