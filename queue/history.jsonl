@@ -17943,3 +17943,7 @@
 {"t":"2026-11-18T10:27:04.497Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-18T10:27:04.574Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-18T10:27:11.663Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 16 landed e15fa62e2 (composite 8.6 -> 5.5 ms, drawn output unchanged); bars not reached (scrub 2 refreshes in most runs vs 1, 1 dropped frame a minute vs 0, edits 14-57 ms vs 16). Pass 17 leads in the log."}
+{"t":"2026-11-18T10:38:51.307Z","ev":"slice_pass","walks":29,"passed":29,"failed":0,"seconds":533,"of":1177,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-18T10:38:51.494Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-18T11:31:11.014Z","ev":"runner_failed","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","kind":"task","exit":1,"consecutive":1,"outcome":"failed","environment":false,"signIn":false,"reason":null,"error":"You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"}
+{"t":"2026-11-18T11:31:11.651Z","ev":"leftovers","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","task":"a-long-edit-with-transitions-plays-scrubs-and-ed","state":"stashed","count":10,"stash":"ce7ea1d5454a77742f9def9fe5db1565cf690214"}

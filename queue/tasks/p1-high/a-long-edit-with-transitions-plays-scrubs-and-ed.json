@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-18T10:27:11.662Z",
+  "updated": "2026-11-18T11:31:11.693Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,21 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-18T10:27:11.661Z",
-      "note": "... 12 earlier entries elided",
-      "elided": 12
-    },
-    {
-      "t": "2026-11-14T12:09:54.791Z",
-      "note": "Pass 4 landed cbfda886b: edits while playing trim 87->33, blade 223->85, undo 119->62 ms (repeated trims/moves ~18-20); play 1 dropped a minute. Bars not reached: edits <=16 ms, scrub within 1 frame, no dropped frames. Stays open."
-    },
-    {
-      "t": "2026-11-14T15:05:07.734Z",
-      "note": "seq 10 -> 20"
-    },
-    {
-      "t": "2026-11-14T16:30:48.737Z",
-      "note": "claimed by go loop"
+      "t": "2026-11-18T11:31:11.692Z",
+      "note": "... 15 earlier entries elided",
+      "elided": 15
     },
     {
       "t": "2026-11-14T18:50:22.056Z",
@@ -507,11 +495,29 @@
     {
       "t": "2026-11-18T10:27:11.660Z",
       "note": "Pass 16 landed e15fa62e2 (composite 8.6 -> 5.5 ms, drawn output unchanged); bars not reached (scrub 2 refreshes in most runs vs 1, 1 dropped frame a minute vs 0, edits 14-57 ms vs 16). Pass 17 leads in the log."
+    },
+    {
+      "t": "2026-11-18T10:38:51.489Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T11:31:11.008Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-11-18T11:31:11.691Z",
+      "note": "ran out of turn with 10 file(s) still changed: Sources/Photonz/EditorState+Time.swift, Sources/Photonz/EditorState.swift, Sources/Photonz/Playtest/PlaytestSpeedWalk.swift, Sources/PhotonzRender/RenderScheduler.swift, Tests/PhotonzRenderTests/PlaybackNeverBlinksTests.swift, Tests/PhotonzRenderTests/RenderSchedulerTests.swift, Tests/PhotonzRenderTests/ShownSizeCompositeTests.swift, Sources/Photonz/Pass17Timing.swift, Sources/PhotonzCore/ScrubPictureAsks.swift, Tests/PhotonzCoreTests/ScrubPictureAsksTests.swift. Put aside so the next task started clean; restore with `git stash apply ce7ea1d5454a77742f9def9fe5db1565cf690214` before carrying on."
     }
   ],
-  "started": "2026-11-18T08:57:33.280Z",
+  "started": "2026-11-18T10:38:51.488Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
-  ]
+  ],
+  "failures": 1,
+  "lastError": {
+    "at": "2026-11-18T11:31:11.007Z",
+    "exit": 1,
+    "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+  }
 }
