@@ -17903,3 +17903,10 @@
 {"t":"2026-11-18T04:21:35.438Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
 {"t":"2026-11-18T04:21:35.518Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
 {"t":"2026-11-18T04:21:35.599Z","ev":"task_pending","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":"in_progress","note":"Slide into Edit now moves as layers (7ac3afa83), median longest still 41 -> 33.5ms; the 30ms film bar (1 of 3 runs) and the busy-under-half bar are not reached, next steps in the log"}
+{"t":"2026-11-18T04:22:17.811Z","ev":"task_started","id":"edit-mode-s-contents-come-in-with-the-slide-not","title":"Switching a long recording to Edit never freezes the app, and its tool bar arrives with the slide","priority":"p2-normal"}
+{"t":"2026-11-18T05:40:48.846Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T05:40:48.924Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T05:40:49.011Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T05:40:49.088Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T05:40:49.165Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-18T05:41:09.875Z","ev":"task_pending","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":"in_progress","note":"Bars not reached (2: walk film 35ms on HEAD, median 35 over 24 filmed switches; 3: busy ~600-760ms of 0.8s). Every slide frame is a ~14ms SwiftUI render on the main thread; two experiments (empty panel shell behind View, accessibility hidden during the slide) gave no measurable gain and were reverted. Next step in the log: take the frames off the main thread, canvas first (2-3ms a frame). Tools committed 64bd14f1a."}

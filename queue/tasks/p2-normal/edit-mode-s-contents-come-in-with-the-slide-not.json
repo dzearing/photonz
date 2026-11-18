@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-11-18T04:21:35.598Z",
+  "updated": "2026-11-18T05:41:09.874Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -294,10 +294,38 @@
     {
       "t": "2026-11-18T04:21:35.597Z",
       "note": "Slide into Edit now moves as layers (7ac3afa83), median longest still 41 -> 33.5ms; the 30ms film bar (1 of 3 runs) and the busy-under-half bar are not reached, next steps in the log"
+    },
+    {
+      "t": "2026-11-18T04:22:17.806Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-18T05:40:48.844Z",
+      "note": "Measured 2026-11-17 on HEAD a0d3ae6b, WindowServer at 44-46% from another app all session: the walk's film read 35ms; the 8-switch film walk (Scripts/perf/walks/view-to-edit-films.json, new) read longest stills median 35ms over 24 switches (3 of 24 at or under 30, max 57). The stills are scattered single missed frames (34ms = two 60Hz frames), at the start (the pass after the key, ~17-20ms) and mid-slide, not one fixed stall."
+    },
+    {
+      "t": "2026-11-18T05:40:48.922Z",
+      "note": "Per-frame cost (xctrace + os_signpost passes, 6 switches): every slide frame is a full SwiftUI render on the main thread, median 13.5-14.3ms against a 16.7ms frame, back to back with no idle. Split: AttributeGraph ~31%, NSHostingView layout ~28%, accessibility/focus ~19% (incl. the window's drag regions _resetDragMargins/UpdateStructuralRegions ~15-17%), CA commit ~12%. App code ~0. Pass 2 after the key is ~20ms, half of it SwiftUI accessibility (applyProperties, updateFocusResponder walk). With the canvas's PictureMove effect switched off the frame median fell to 11.4ms, so the picture move is 2-3ms a frame."
+    },
+    {
+      "t": "2026-11-18T05:40:49.009Z",
+      "note": "Tried and dropped (no measurable gain, reverted): (a) the empty panel shell kept mounted behind View with its sections held, so the key inserts nothing: walk film 36, 37, 34ms; (b) the sliding window accessibilityHidden for the slide's 0.35s: walk film 42, 30, 32, 19; (a)+(b): walk 26, 28, 32, 35, 50, 25, 26 but the 8-switch film walk median 34.5 vs HEAD 35 over 24 switches each, and (b) moves the accessibility churn into passes 2-3 and costs VoiceOver its place for the slide. No main-thread pass reached 100ms in any run (max ~70ms, at the panel filling after the landing, same as HEAD)."
+    },
+    {
+      "t": "2026-11-18T05:40:49.086Z",
+      "note": "Next step for whoever takes this: the 30ms bar needs each slide frame well under 16.7ms on a busy machine, and SwiftUI keyframes put a ~14ms main-thread render in every frame. Moving only the canvas into Core Animation (CanvasNSView animating its own layer's transform with a spring matching .smooth(0.25), model value home) saves 2-3ms a frame; the panel and dock would still be SwiftUI-driven, so the whole win needs them in layers SwiftUI does not re-render per frame. Compare builds with the film walk, 3 runs each (24 switches), never one walk's single film. Bar (3), main thread under half of 0.8s, cannot be met while the frames are SwiftUI renders (slide ~260ms busy) and the panel fills in the same 0.8s (~300ms). Tools: Scripts/perf/trace-bursts.py now takes --from/--to/--at/--dump."
+    },
+    {
+      "t": "2026-11-18T05:40:49.163Z",
+      "note": "left rough (under the bar, no task): the 8-switch film walk also shows 77ms and 40ms stills right after the slide lands (the pass that puts Edit's pieces in reach and the panel's first section), outside the walk's 0.35s film window."
+    },
+    {
+      "t": "2026-11-18T05:41:09.873Z",
+      "note": "Bars not reached (2: walk film 35ms on HEAD, median 35 over 24 filmed switches; 3: busy ~600-760ms of 0.8s). Every slide frame is a ~14ms SwiftUI render on the main thread; two experiments (empty panel shell behind View, accessibility hidden during the slide) gave no measurable gain and were reverted. Next step in the log: take the frames off the main thread, canvas first (2-3ms a frame). Tools committed 64bd14f1a."
     }
   ],
   "walks": [
     "view-to-edit-on-a-long-recording-walk"
   ],
-  "started": "2026-11-18T02:35:37.737Z"
+  "started": "2026-11-18T04:22:17.805Z"
 }
