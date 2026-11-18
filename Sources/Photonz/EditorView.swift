@@ -99,6 +99,16 @@ struct EditorView: View {
                     // Canvas surround adapts to the system appearance (Preview-
                     // style): near-black in dark mode, light gray in light mode.
                     .background(Color(nsColor: .underPageBackgroundColor))
+                    // Into Edit, drawn back where View had the picture and
+                    // slid home (`ViewEditSlide`).
+                    .modifier(ViewEditSlideCanvasMove())
+                    // Whatever the canvas scaled back does not reach is the
+                    // canvas's surround, not the window.
+                    .background {
+                        if editorState.viewEditSlide != nil {
+                            Color(nsColor: .underPageBackgroundColor).padding(-4000)
+                        }
+                    }
                     // The toolbar is an OVERLAY, not a ZStack sibling: an overlay
                     // does not contribute to the canvas's minimum width, so a wide
                     // toolbar can never push the inspector off the window edge (the
@@ -177,6 +187,10 @@ struct EditorView: View {
                                    value: editorState.activeTool)
                         .offset(y: toolBarHidden ? EditorChromeLayout.toolBarHiddenDrop : 0)
                         .opacity(toolBarHidden ? 0 : 1)
+                        // Into Edit the switch is not animated (the window is
+                        // laid out as Edit at once and slid home as layers),
+                        // so the bar rises on the same curve by itself.
+                        .animation(.viewEditMode, value: toolBarHidden)
                         .allowsHitTesting(!toolBarHidden)
                         .accessibilityHidden(editorState.editPiecesOutOfReach)
                         .environment(\.editPiecesOutOfReach, editorState.editPiecesOutOfReach)
@@ -191,7 +205,10 @@ struct EditorView: View {
                                 .transition(.opacity.combined(with: .offset(y: 10)))
                         }
                     }
-                    .clipped()  // keep a transient over-wide toolbar off the panel
+                    // Keep a transient over-wide toolbar off the panel; open
+                    // while the slide into Edit draws the picture past the
+                    // canvas's new frame, under the panel and the dock.
+                    .modifier(ViewEditSlideCanvasClip(panelReach: inspectorShown ? panelWidth + 1 : 0))
                     // What the capsule takes, so every other bottom overlay
                     // (the Measure hint, the crop pill, the legend) clears one
                     // more row when it is up. Zero when it is not.
@@ -217,6 +234,10 @@ struct EditorView: View {
                 // Kept behind View once built, at no width at all, so it hangs
                 // off the window's right edge where no click reaches it, and
                 // Edit slides it in by giving its width back (`EditModeArrival`).
+                //
+                // In a stack that is always there, so a panel the switch into
+                // Edit puts in slides in with the rest (`ViewEditSlide`).
+                ZStack {
                 if inspectorShown || editorState.isInspectorKeptBehindView {
                     HStack(spacing: 0) {
                         InspectorResizeHandle(width: $panelWidth)
@@ -238,6 +259,8 @@ struct EditorView: View {
                     .environment(\.editPiecesOutOfReach, editorState.editPiecesOutOfReach)
                     .transition(.move(edge: .trailing))
                 }
+                }
+                .modifier(ViewEditSlidePanelShift())
             }
             // The bottom dock: the strip, or the one row it leaves behind when
             // it is put away, or nothing at all where nothing moves. Putting it
@@ -252,6 +275,7 @@ struct EditorView: View {
             if editorState.motionStripMeasuresADocument, editorState.motionStripPhase != .none {
                 TimelineDock(windowHeight: geo.size.height)
                     .modifier(PlayerControlsTuck())
+                    .modifier(ViewEditSlideDockDrop())
                     .onChange(of: geo.size.width, initial: true) { _, width in
                         editorState.timelineSoundLaneHeight = SoundLaneShape.height(windowWidth: width)
                     }

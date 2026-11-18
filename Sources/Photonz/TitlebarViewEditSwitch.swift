@@ -37,6 +37,9 @@ struct TitlebarViewEditSwitch: View {
                          },
                          size: .small, tipsBelow: true) { editorState.setViewEditMode($0) }
             .frame(width: Self.width)
+            // Into Edit the switch is not animated (`ViewEditSlide`), so the
+            // pick moves on the slide's curve by itself.
+            .animation(.viewEditMode, value: mode)
             .overlay {
                 HStack(spacing: 0) {
                     ForEach(ViewEditMode.allCases, id: \.self) { each in

@@ -1827,6 +1827,18 @@ final class EditorState {
         // View keeps it, out of sight, for the next time.
         var startArriving = false
         arrivesFromOpening = false
+        // Into Edit from View, the window is laid out as Edit once, here, and
+        // the picture, the panel and the dock are slid home as layers
+        // (`ViewEditSlide`). Back to View, and anything else, still animates
+        // the layout itself.
+        let slide = mode == .edit ? layeredSlideIntoEdit() : nil
+        if viewEditSlide != nil || slide != nil {
+            viewEditSlide = slide
+            if slide != nil {
+                viewEditSlideRun &+= 1
+                endViewEditSlide(run: viewEditSlideRun)
+            }
+        }
         if mode == .edit {
             editSlideLands = Date(timeIntervalSinceNow: ViewEditMode.landedSeconds)
             if editPiecesAsleep { editPiecesAsleep = false }
@@ -1838,9 +1850,17 @@ final class EditorState {
         } else if documentHasTime {
             isEditorKeptBehindView = true
         }
-        withAnimation(.viewEditMode) {
+        if slide != nil {
+            // Not animated: the layout jumps to Edit's in this one pass, and
+            // the editor view's keyframes slide it home from there
+            // (`ViewEditSlideEffects`).
             viewEditMode = mode
             refitForViewEditMode()
+        } else {
+            withAnimation(.viewEditMode) {
+                viewEditMode = mode
+                refitForViewEditMode()
+            }
         }
         if startArriving { advanceEditArrivalOnceTheSlideLands() }
         putEditPiecesInReachOnceTheSlideLands()
@@ -1850,10 +1870,39 @@ final class EditorState {
         }
     }
 
+    /// The slide into Edit under way, drawn as layers: where View had the
+    /// picture and the dock, so the editor view can draw Edit's back there
+    /// and slide it home (`ViewEditSlideEffects`). Nil while nothing slides.
+    private(set) var viewEditSlide: ViewEditSlide?
+    /// Counts the slides: each new one sets the editor view's keyframes off
+    /// from the start, in the very pass that lays the window out as Edit, and
+    /// one overtaken by another switch never ends the next.
+    private(set) var viewEditSlideRun = 0
+
+    /// The slide the key into Edit sets off as layers, or nil to animate the
+    /// layout as before: a document with time in View (not Preview), whose
+    /// tool bar and tracks are already built behind it, with a picture on
+    /// screen to slide.
+    private func layeredSlideIntoEdit() -> ViewEditSlide? {
+        guard documentHasTime, viewEditMode == .view, !isPreviewing, isEditorKeptBehindView,
+              let viewport, canvasViewSize.width > 0, canvasViewSize.height > 0 else { return nil }
+        return ViewEditSlide(from: viewport, dockHeightFrom: timelineDockFrame.height)
+    }
+
+    /// Lets the slide go once it has landed, so the canvas is clipped to its
+    /// frame again. One overtaken by a later switch is left to that one.
+    private func endViewEditSlide(run: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + ViewEditSlide.seconds + 0.02) { [weak self] in
+            guard let self, self.viewEditSlideRun == run, self.viewEditSlide != nil else { return }
+            self.viewEditSlide = nil
+        }
+    }
+
     /// Lands a document that has just opened in its mode, at once rather
     /// than animated: the window should open already being what it is.
     func openInItsMode(_ document: PhotonzDocument, forAGuide: Bool = false) {
         forgetPreview()
+        if viewEditSlide != nil { viewEditSlide = nil }
         pickedBeforeView = nil
         editArrival = .settled
         arrivesFromOpening = false

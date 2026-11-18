@@ -1,0 +1,25 @@
+{
+  "feature": "View to Edit slides in as layers",
+  "epic": "video-perf",
+  "summary": "Pressing Cmd-2 on a recording lays the window out as Edit once and slides the picture, the timeline and the panel into place, instead of laying the whole window out again on every frame. On the five minute captioned recording the slide's longest still went from a median of 41ms to 33.5ms over twelve filmed switches each, but it still does not stay under 30ms every time.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open a recording longer than a few minutes, with captions written, and let the window sit in View for a second.",
+  "switched": {},
+  "try": [
+    { "do": "Press Cmd-2 and watch the picture: it shrinks in place toward its Edit spot rather than jumping.", "shot": "2026-11-17-view-to-edit-layered-slide-sheet.png" },
+    { "do": "Watch the timeline rise from under the transport and the panel come in from the right edge on the same curve." },
+    { "do": "Press Cmd-1, then Cmd-2 again, a few times in a row.", "shot": "2026-11-17-view-to-edit-layered-slide-edit.png" },
+    { "do": "From View, press B (the blade) to start an edit: the same slide brings Edit in." },
+    { "do": "Hide the panel with its title bar toggle, go to View, then Cmd-2: the picture and timeline slide in alone." }
+  ],
+  "evaluate": [
+    "Does the slide into Edit feel smoother than it did, especially through its middle?",
+    "Does the picture's shrink line up with the timeline rising, or does one feel ahead of the other?",
+    "Is the small catch right after the key still noticeable to you?"
+  ],
+  "rough": [
+    "The slide still catches for 30 to 59ms right after the key on some switches (5 of 12 filmed switches at or under 30ms, against 2 of 12 before). That catch is SwiftUI updating the window once for Edit: the panel's shell going in, its focus and accessibility walk, the window recomputing its drag area. App code is a few ms of it. Left on this task (edit-mode-s-contents-come-in-with-the-slide-not), which stays open.",
+    "Back to View (Cmd-1) still animates the layout itself, 17 to 30ms a frame; only the way into Edit moves as layers. Left on this task.",
+    "The main thread is still busy 600 to 760ms of the 0.8s after Cmd-2, most of it the panel's sections arriving after the slide. Left on this task.",
+    "No mock covers the motion of the View and Edit switch; the settled Edit window is unchanged."
+  ]
+}
