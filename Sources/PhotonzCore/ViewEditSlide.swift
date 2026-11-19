@@ -13,6 +13,13 @@ import CoreGraphics
 /// to 49ms.
 ///
 /// `progress` runs from 1 (where View had everything) to 0 (Edit, home).
+///
+/// Since 2026-11-19 the slide itself is Core Animation's: the start of each
+/// move is handed to the layers that hold the canvas, the panel, the dock and
+/// the tool bar, and the render server slides them home, so the main thread
+/// draws nothing while they move. Driven by SwiftUI keyframes, every frame
+/// was a whole-window SwiftUI render of 11 to 14ms (8.5ms even with nothing
+/// moving), and the slide's longest still ran 33 to 47ms.
 public struct ViewEditSlide: Equatable, Sendable {
     /// The picture as View drew it, the moment before the key.
     public var from: Viewport
@@ -45,15 +52,28 @@ public struct ViewEditSlide: Equatable, Sendable {
         return CGAffineTransform(a: s, b: 0, c: 0, d: s, tx: tx * progress, ty: ty * progress)
     }
 
+    /// `pictureMove` at the start of the slide, as the transform of the layer
+    /// that holds the canvas, for Core Animation to slide home: about the
+    /// layer's `anchor`, in the coordinates of the layer it sits in, where the
+    /// canvas's top-left corner is `canvasOrigin` and y runs down when `yDown`.
+    /// Identity when the two are not the same picture.
+    public func pictureLayerTransform(to: Viewport, canvasOrigin: CGPoint, anchor: CGPoint,
+                                      yDown: Bool) -> CGAffineTransform {
+        let move = pictureMove(to: to, progress: 1)
+        guard move != .identity else { return .identity }
+        // A canvas point v sits at canvasOrigin + D v; it has to be drawn at
+        // canvasOrigin + D (s v + t). About the anchor that is a scale by s and
+        // a shift of (1 - s)(canvasOrigin - anchor) + D t.
+        let s = move.a
+        let t = CGPoint(x: move.tx, y: yDown ? move.ty : -move.ty)
+        return CGAffineTransform(a: s, b: 0, c: 0, d: s,
+                                 tx: (1 - s) * (canvasOrigin.x - anchor.x) + t.x,
+                                 ty: (1 - s) * (canvasOrigin.y - anchor.y) + t.y)
+    }
+
     /// How far down the dock is drawn, so it starts as tall as View had it
     /// (its tracks below the window's foot) and rises.
     public func dockDrop(dockHeight: CGFloat, progress: CGFloat) -> CGFloat {
         max(0, dockHeight - dockHeightFrom) * progress
-    }
-
-    /// How far right the panel is drawn: just off the window's edge at the
-    /// start.
-    public static func panelShift(width: CGFloat, progress: CGFloat) -> CGFloat {
-        width * progress
     }
 }

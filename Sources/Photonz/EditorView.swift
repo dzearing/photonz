@@ -100,8 +100,8 @@ struct EditorView: View {
                     // style): near-black in dark mode, light gray in light mode.
                     .background(Color(nsColor: .underPageBackgroundColor))
                     // Into Edit, drawn back where View had the picture and
-                    // slid home (`ViewEditSlide`).
-                    .modifier(ViewEditSlideCanvasMove())
+                    // slid home by Core Animation (`ViewEditSlide`).
+                    .viewEditSlideLayer(.picture)
                     // Whatever the canvas scaled back does not reach is the
                     // canvas's surround, not the window.
                     .background {
@@ -187,10 +187,11 @@ struct EditorView: View {
                                    value: editorState.activeTool)
                         .offset(y: toolBarHidden ? EditorChromeLayout.toolBarHiddenDrop : 0)
                         .opacity(toolBarHidden ? 0 : 1)
-                        // Into Edit the switch is not animated (the window is
-                        // laid out as Edit at once and slid home as layers),
-                        // so the bar rises on the same curve by itself.
-                        .animation(.viewEditMode, value: toolBarHidden)
+                        // Into Edit from View the bar is put up at once and
+                        // risen by Core Animation with the rest of the slide
+                        // (`ViewEditSlide`); every other way it animates here.
+                        .viewEditSlideLayer(.toolBar)
+                        .animation(editorState.viewEditSlide == nil ? .viewEditMode : nil, value: toolBarHidden)
                         .allowsHitTesting(!toolBarHidden)
                         .accessibilityHidden(editorState.editPiecesOutOfReach)
                         .environment(\.editPiecesOutOfReach, editorState.editPiecesOutOfReach)
@@ -209,6 +210,7 @@ struct EditorView: View {
                     // while the slide into Edit draws the picture past the
                     // canvas's new frame, under the panel and the dock.
                     .modifier(ViewEditSlideCanvasClip(panelReach: inspectorShown ? panelWidth + 1 : 0))
+                    .viewEditSlideLayer(.canvasClip)
                     // What the capsule takes, so every other bottom overlay
                     // (the Measure hint, the crop pill, the legend) clears one
                     // more row when it is up. Zero when it is not.
@@ -260,7 +262,8 @@ struct EditorView: View {
                     .transition(.move(edge: .trailing))
                 }
                 }
-                .modifier(ViewEditSlidePanelShift())
+                .modifier(ViewEditSlidePanelUnder())
+                .viewEditSlideLayer(.panel)
             }
             // The bottom dock: the strip, or the one row it leaves behind when
             // it is put away, or nothing at all where nothing moves. Putting it
@@ -275,7 +278,7 @@ struct EditorView: View {
             if editorState.motionStripMeasuresADocument, editorState.motionStripPhase != .none {
                 TimelineDock(windowHeight: geo.size.height)
                     .modifier(PlayerControlsTuck())
-                    .modifier(ViewEditSlideDockDrop())
+                    .viewEditSlideLayer(.dock)
                     .onChange(of: geo.size.width, initial: true) { _, width in
                         editorState.timelineSoundLaneHeight = SoundLaneShape.height(windowWidth: width)
                     }

@@ -1834,9 +1834,12 @@ final class EditorState {
         let slide = mode == .edit ? layeredSlideIntoEdit() : nil
         if viewEditSlide != nil || slide != nil {
             viewEditSlide = slide
-            if slide != nil {
+            if let slide {
                 viewEditSlideRun &+= 1
+                viewEditSlideLayers.begin(slide, toolBarDrop: EditorChromeLayout.toolBarHiddenDrop)
                 endViewEditSlide(run: viewEditSlideRun)
+            } else {
+                viewEditSlideLayers.cancel()
             }
         }
         if mode == .edit {
@@ -1851,11 +1854,16 @@ final class EditorState {
             isEditorKeptBehindView = true
         }
         if slide != nil {
-            // Not animated: the layout jumps to Edit's in this one pass, and
-            // the editor view's keyframes slide it home from there
+            // Not animated, not even by an animation a view hangs on what
+            // changes here: the layout jumps to Edit's in this one pass, and
+            // Core Animation slides the pieces home from there
             // (`ViewEditSlideEffects`).
-            viewEditMode = mode
-            refitForViewEditMode()
+            var still = Transaction()
+            still.disablesAnimations = true
+            withTransaction(still) {
+                viewEditMode = mode
+                refitForViewEditMode()
+            }
         } else {
             withAnimation(.viewEditMode) {
                 viewEditMode = mode
@@ -1874,10 +1882,12 @@ final class EditorState {
     /// picture and the dock, so the editor view can draw Edit's back there
     /// and slide it home (`ViewEditSlideEffects`). Nil while nothing slides.
     private(set) var viewEditSlide: ViewEditSlide?
-    /// Counts the slides: each new one sets the editor view's keyframes off
-    /// from the start, in the very pass that lays the window out as Edit, and
-    /// one overtaken by another switch never ends the next.
+    /// Counts the slides, so one overtaken by another switch never ends the
+    /// next.
     private(set) var viewEditSlideRun = 0
+    /// Runs the slide on the layers of the pieces that move. Never observed:
+    /// the slide is Core Animation's, and SwiftUI is not told about it.
+    @ObservationIgnored let viewEditSlideLayers = ViewEditSlideLayers()
 
     /// The slide the key into Edit sets off as layers, or nil to animate the
     /// layout as before: a document with time in View (not Preview), whose
@@ -1894,6 +1904,7 @@ final class EditorState {
     private func endViewEditSlide(run: Int) {
         DispatchQueue.main.asyncAfter(deadline: .now() + ViewEditSlide.seconds + 0.02) { [weak self] in
             guard let self, self.viewEditSlideRun == run, self.viewEditSlide != nil else { return }
+            self.viewEditSlideLayers.finish()
             self.viewEditSlide = nil
         }
     }
@@ -1902,7 +1913,7 @@ final class EditorState {
     /// than animated: the window should open already being what it is.
     func openInItsMode(_ document: PhotonzDocument, forAGuide: Bool = false) {
         forgetPreview()
-        if viewEditSlide != nil { viewEditSlide = nil }
+        if viewEditSlide != nil { viewEditSlideLayers.cancel(); viewEditSlide = nil }
         pickedBeforeView = nil
         editArrival = .settled
         arrivesFromOpening = false
@@ -6670,3 +6681,4 @@ final class EditorState {
     /// a window.
     var canvasColorSpace: CGColorSpace? { hostWindow?.colorSpace?.cgColorSpace }
 }
+

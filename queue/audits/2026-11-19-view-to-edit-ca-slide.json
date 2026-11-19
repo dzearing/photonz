@@ -1,0 +1,27 @@
+{
+  "feature": "Switching a long recording to Edit slides at full frame rate",
+  "epic": "video-perf",
+  "summary": "Going from View to Edit on a long captioned recording now slides the picture, the tool bar, the tracks and the panel in at the display's full rate, and the app stays free while it moves. The slide is now handed to the Mac's own animation engine instead of being redrawn by the app on every frame.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open a recording of a few minutes with captions, in View (Cmd-1).",
+  "switched": {},
+  "try": [
+    { "do": "Press Cmd-2 and watch the picture, the tool bar and the tracks come in together.", "shot": "2026-11-19-view-to-edit-ca-slide-sheet.png" },
+    { "do": "Play the slow-motion reel (four times slower than life) and look for a frame where something jumps or sits still.", "shot": "2026-11-19-view-to-edit-ca-slide.gif" },
+    { "do": "Press Cmd-1, then Cmd-2 again, a few times in a row.", "shot": "2026-11-19-view-to-edit-ca-edit-sc.png" },
+    { "do": "Press Cmd-1 halfway through a slide into Edit, and check the window ends up in View with nothing left out of place." },
+    { "do": "Hide the panel (the panel button at the top right), then switch View and Edit again." }
+  ],
+  "evaluate": [
+    "Does the slide into Edit feel as smooth as a built-in Mac animation now?",
+    "Is the first frame after Cmd-2 where View left off, with no jump?",
+    "Does the tool bar fading up from below while the picture shrinks look right, or should it wait for the picture?",
+    "Does anything in Edit look different at rest from before (the glass tool bar, the panel, the tracks)?"
+  ],
+  "rough": [
+    "Measured on the walk's five minute captioned recording: the slide's longest still frame is now 11 to 16ms (31 to 35 pictures in 0.33s) against 33 to 47ms before (about 15 pictures); over 24 filmed switches the median is about 15ms and 22 of 24 are at or under 30ms (two read 36 and 46ms).",
+    "The main thread is busy 271 to 335ms of the 0.8s after Cmd-2 on later switches (600 to 760ms before). The very first switch after opening builds the panel's sections for the first time and read 319, 373, 385 and once 591ms.",
+    "Back to View (Cmd-1) is unchanged: it still redraws every frame in the app and its film shows stills of 28 to 57ms. It is not part of this task's bar.",
+    "The panel still fills its sections just after the slide lands, as settled on 2026-10-20 (the card was taken as recommended); with the slide no longer costing the app anything per frame, letting the full panel slide in is now possible, which is a product call left as it is.",
+    "No mock covers this surface: it is a speed change, the look is the same."
+  ]
+}

@@ -79,10 +79,46 @@ struct ViewEditSlideTests {
         #expect(slide.dockDrop(dockHeight: 30, progress: 1) == 0)
     }
 
-    @Test("the panel starts just off the window's right edge")
-    func panelSlidesIn() {
-        #expect(ViewEditSlide.panelShift(width: 281, progress: 1) == 281)
-        #expect(ViewEditSlide.panelShift(width: 281, progress: 0.25) == 70.25)
-        #expect(ViewEditSlide.panelShift(width: 281, progress: 0) == 0)
+    // Since 2026-11-19 the slide runs as Core Animation on the layers that
+    // hold the canvas, the panel, the dock and the tool bar, so the main
+    // thread draws nothing while it moves. The canvas's layer is moved by one
+    // transform, which Core Animation applies about the layer's anchor point,
+    // in the coordinates of the layer it sits in.
+
+    /// Where a layer's transform puts `point` of its superlayer: about the
+    /// anchor, as Core Animation does.
+    private func rendered(_ point: CGPoint, by transform: CGAffineTransform, anchor: CGPoint) -> CGPoint {
+        let off = CGPoint(x: point.x - anchor.x, y: point.y - anchor.y).applying(transform)
+        return CGPoint(x: anchor.x + off.x, y: anchor.y + off.y)
+    }
+
+    @Test("the canvas's layer transform puts Edit's picture where View drew it, y down or up, any anchor",
+          arguments: [true, false])
+    func layerTransformStartsWhereViewWas(yDown: Bool) {
+        let slide = ViewEditSlide(from: view, dockHeightFrom: 48)
+        // The canvas's top-left corner in its superlayer, and an anchor
+        // somewhere else entirely.
+        let origin = CGPoint(x: 40, y: yDown ? 30 : 900)
+        let anchor = CGPoint(x: 700, y: 410)
+        let transform = slide.pictureLayerTransform(to: edit, canvasOrigin: origin, anchor: anchor, yDown: yDown)
+        // A canvas point's place in the superlayer, with nothing moved.
+        func inSuper(_ v: CGPoint) -> CGPoint {
+            CGPoint(x: origin.x + v.x, y: yDown ? origin.y + v.y : origin.y - v.y)
+        }
+        for corner in [CGPoint.zero, CGPoint(x: 2880, y: 0), CGPoint(x: 0, y: 1800), CGPoint(x: 2880, y: 1800)] {
+            let moved = rendered(inSuper(drawn(corner, by: edit)), by: transform, anchor: anchor)
+            let was = inSuper(drawn(corner, by: view))
+            #expect(abs(moved.x - was.x) < 0.001)
+            #expect(abs(moved.y - was.y) < 0.001)
+        }
+    }
+
+    @Test("a picture that changed size in between gets no layer transform")
+    func layerTransformNothingToMatch() {
+        let slide = ViewEditSlide(from: view, dockHeightFrom: 48)
+        var other = edit
+        other.documentSize = CGSize(width: 100, height: 100)
+        #expect(slide.pictureLayerTransform(to: other, canvasOrigin: .zero, anchor: CGPoint(x: 5, y: 5),
+                                            yDown: true) == .identity)
     }
 }
