@@ -1,0 +1,26 @@
+{
+  "id": "the-scrub-refresh-speed-check-stops-failing-main",
+  "title": "The scrub refresh speed check stops failing main when a CI runner is busy",
+  "goal": "Main's checks went red on 2026-11-19 because one speed test compared two raw timings taken a moment apart on a busy CI machine, and the smaller-picture one happened to read slower. The test should only fail when drawing at the shown size really is no cheaper than drawing at full size.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 4010,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-19T21:15:04.309Z",
+  "updated": "2026-11-19T21:15:04.312Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CI run https://github.com/dzearing/photonz/actions/runs/44611675341 (commit df4edff9d). `gh run view 44611675341 --log-failed | grep -E '✘'` printed:\n✘ Test \"At the size it is shown, a scrub refresh composites well inside a 60 hertz frame\" recorded an issue at ScrubCompositePerfTests.swift:99:9: Expectation failed: (shown → 58.762917) < (full → 48.742)\nCalibration machine reads 17ms full, 7.5ms shown; the runner read 48.7 full and 58.8 shown, so the runner was ~3x slower and swinging. `shown` is checkFrames' rawMS (interleaved with the 1080p yardstick, which itself loads the GPU), `full` is a plain median taken earlier without a yardstick, so the two readings are not like for like. The preceding two runs on main (44586497514, 44569490885) were green. Found by the runner on find-out-why-exporting-a-video-holds-about-4-gb, which does not touch this test.",
+  "acceptance": [
+    "The scrub refresh test no longer compares two raw wall-clock readings taken at different moments on a loaded machine (judge both beside the same ruler, or interleave the two sizes)",
+    "Test slice 1 of 3 passes on main again"
+  ],
+  "log": [
+    {
+      "t": "2026-11-19T21:15:04.311Z",
+      "note": "created (manual)"
+    }
+  ]
+}

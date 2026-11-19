@@ -18166,3 +18166,17 @@
 {"t":"2026-11-19T20:43:25.952Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
 {"t":"2026-11-19T20:43:26.018Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
 {"t":"2026-11-19T20:43:48.368Z","ev":"task_done","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":"in_progress","note":"The slide into Edit now runs in Core Animation (579bd94f4): tool bar, tracks and picture arrive with the slide, panel sections just after; view-to-edit-on-a-long-recording-walk passed 4 runs in a row with film stills 11-16ms and no pass over 82ms; main thread busy 271-335ms of 0.8s on later switches (first switch after opening 319-385, once 591). Suite green, 21/22 related walks (video-tool-bar step 68 is the known one). Audit queue/audits/2026-11-19-view-to-edit-ca-slide.json with a reel and contact sheet."}
+{"t":"2026-11-19T21:14:23.046Z","ev":"slice_pass","walks":29,"passed":29,"failed":0,"seconds":1803,"of":1179,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-19T21:14:23.486Z","ev":"task_started","id":"find-out-why-exporting-a-video-holds-about-4-gb","title":"Find out why exporting a video holds about 4 GB of memory, however short the export","priority":"p2-normal"}
+{"t":"2026-11-19T21:15:04.313Z","ev":"task_created","id":"the-scrub-refresh-speed-check-stops-failing-main","priority":"p1-high","title":"The scrub refresh speed check stops failing main when a CI runner is busy"}
+{"t":"2026-11-19T22:30:01.123Z","ev":"task_note","id":"find-out-why-exporting-a-video-holds-about-4-gb"}
+{"t":"2026-11-19T22:30:01.188Z","ev":"task_note","id":"find-out-why-exporting-a-video-holds-about-4-gb"}
+{"t":"2026-11-19T22:30:01.255Z","ev":"task_note","id":"find-out-why-exporting-a-video-holds-about-4-gb"}
+{"t":"2026-11-19T22:30:01.324Z","ev":"task_note","id":"find-out-why-exporting-a-video-holds-about-4-gb"}
+{"t":"2026-11-19T22:30:01.389Z","ev":"task_note","id":"find-out-why-exporting-a-video-holds-about-4-gb"}
+{"t":"2026-11-19T22:30:01.456Z","ev":"task_note","id":"find-out-why-exporting-a-video-holds-about-4-gb"}
+{"t":"2026-11-19T22:30:01.522Z","ev":"task_note","id":"find-out-why-exporting-a-video-holds-about-4-gb"}
+{"t":"2026-11-19T22:30:01.588Z","ev":"task_note","id":"find-out-why-exporting-a-video-holds-about-4-gb"}
+{"t":"2026-11-19T22:30:01.655Z","ev":"task_note","id":"find-out-why-exporting-a-video-holds-about-4-gb"}
+{"t":"2026-11-19T22:30:01.721Z","ev":"task_walks","id":"find-out-why-exporting-a-video-holds-about-4-gb","walks":[]}
+{"t":"2026-11-19T22:30:06.486Z","ev":"task_done","id":"find-out-why-exporting-a-video-holds-about-4-gb","from":"in_progress","note":"Named what an export holds at its peak: a steady ~1.1 GB (decode and encoder surfaces) plus 2-3 GB bursts of Core Image half-float working buffers, a new size every frame, from the drop shadow of a clip turning in depth (+2.3 GB, gone with shadows off) and the Lanczos enlargement of a clip zoom (+1.0-1.8 GB). Core Image frees them on a few-second timer and the export draws ~66 frames/s, so they stack; the peak does not grow with length. Tried 7 ways to lower it, all measured on the 30 s export; the two that help cost 22% and 57% more time, so the baseline stays and the log says why. The buffers are purgeable-volatile (not verified under real pressure). No code changed."}

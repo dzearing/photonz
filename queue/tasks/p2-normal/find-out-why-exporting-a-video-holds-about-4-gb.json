@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-17T03:08:47.259Z",
-  "updated": "2026-11-19T13:56:59.656Z",
+  "updated": "2026-11-19T22:30:06.485Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by memory-stays-bounded-while-an-hour-long-edit-pla (2026-11-16). The speed walk now records the app's peak since launch (task_vm_info ledger_phys_footprint_peak) before the export (walkPeakFootprintMB) and after it (export.peakFootprintMB). Reproduced: `Scripts/playtest.sh Scripts/playtest/speed-walk.json` three runs: walk peak 1731 / 1696 / 1734 MB, export (30 s, MP4 Standard Full) peak 3944 / 3889 / 3921 MB ('[6 speed] exported 30s of video at the sheet's defaults in 14.0s (0.47x real time), 54MB, drawn, longest main thread pass 4ms, memory peak 3944MB'). The same walk with the export step removed: 1728 MB. `Scripts/playtest.sh Scripts/perf/walks/long-6-export.json` (the whole 6 minutes): 4376 MB. So it is mostly a fixed cost, not a climb with length. Not looked into: likely the per-clip decoder passes the export opens (one AVAssetReader per clip since 19721ee12) and the GPU drawing into the encoder's pool. A 16 GB Mac is where it would matter.",
@@ -58,13 +58,63 @@
     {
       "t": "2026-11-19T13:56:59.655Z",
       "note": "seq 50 -> 20"
+    },
+    {
+      "t": "2026-11-19T21:14:23.477Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T22:30:01.121Z",
+      "note": "Reproduced with an export-only walk (reference edit 6, export 0:50 for 30s at MP4 Standard Full, no playing first): peaks 3857, 3774, 3895, 4067 MB. So the 4 GB is the export's own, not left over from playing."
+    },
+    {
+      "t": "2026-11-19T22:30:01.186Z",
+      "note": "What it holds, measured per exported frame (temporary phys_footprint log in DocumentFrames.draw, reverted) and with footprint -v / vmmap -wide at the peak: a steady ~1.0-1.1 GB through plain stretches (the 3456x2234 BGRA decode surfaces from VTDecoderXPCService, 29.5 MB each, the encoder's 420v and BGRA pools, 11.1/29.5 MB each, ~90 MB malloc), plus BURSTS of 2-3 GB that are ALL IOSurfaces named 'CoreImage', half float (RGhA), each a different size: 3763x2593 74.5 MB, 3722x2579 73.3 MB, 3644x2552 71 MB, 3405x2235 58 MB..., and blur steps 1933x1678, 2023x1768, 530x1628. At the transition plateau: 29 such surfaces over 40 MB = 1.63 GB, 184 dirty surfaces = 2.99 GB in all."
+    },
+    {
+      "t": "2026-11-19T22:30:01.253Z",
+      "note": "Where the bursts come from (each confirmed by switching it off): (1) the drop shadow of a clip turning in depth (the Take 2 to Take 1 turn at 0:59.4): the shadow is blurred from the warped card, whose outline and blur radius change every frame. Shadows off: that burst goes from +2.3 GB to nothing (flat 1.0 GB, 59-65 s). (2) a clip zoom (Take 3 at 1:10.6, 1:13.9 with B-roll 2): the zoomed part is enlarged with CILanczosScaleTransform, two passes, and its middle buffer is a new size each frame (3072x1536, 3072x1600, 3072x1728, 3072x1984...): +1.0 to +1.8 GB. With both, 1:14 reaches 4.1 GB."
+    },
+    {
+      "t": "2026-11-19T22:30:01.322Z",
+      "note": "Why they pile up: Core Image reuses a working buffer only at the same size, so a new size every frame means new buffers, and it frees old ones on a wall clock timer, a few seconds, not per frame. The export draws about 66 frames a second, so buffers made over the last ~3 s stack up. Proof that it is time, not frames: with vmmap slowing the same export to 2.9x real time the peak fell to 2.0-2.3 GB; and the plateau after the turn drops in steps 3-5 s after the turn ends with only one clip on screen. Playback does not show it because the window draws at its shown size (about a quarter of the pixels) and at most 60 frames a second. It does not grow with length: 30 s and 6 min peak alike."
+    },
+    {
+      "t": "2026-11-19T22:30:01.387Z",
+      "note": "Ruled out, each measured on the 30 s export: the renderer's own caches (raster 1 entry, wraps 3-5 frames, flat through every burst); CI intermediate caching off on the light context 4098 MB (wrong context: Next mixes on the sRGB one); autoreleasepool round each frame 4078 MB; CIContextOption.memoryTarget 512 4114 MB (no effect); motion smear skipped 4107 MB (no transition in that stretch carries one); renderer.letGo() every frame 9211 MB (worse); a fresh CIContext every 10 frames 5823 MB (worse: a dropped context frees on the same timer)."
+    },
+    {
+      "t": "2026-11-19T22:30:01.454Z",
+      "note": "What would bring it down, and its price: cacheIntermediates off on the export's context: peak 3293 MB (-0.8 GB, zoom bursts halve, turn unchanged) for 16.5 s against 13.5 s, 22% slower. DocumentRenderer.clearSharedCaches() after every frame: 3313 MB for 21.2 s, 57% slower. Both break 'take no longer', so neither was shipped. A real cut means drawing a turning card's shadow or a zoom so its working buffers keep one size from frame to frame (blur the shadow at a fixed, lower resolution; resample the zoom into a fixed-size buffer). That changes the pictures, which this task's acceptance rules out, so it is left as the next step if the number ever matters."
+    },
+    {
+      "t": "2026-11-19T22:30:01.520Z",
+      "note": "Not verified: every one of those CoreImage buffers is marked purgeable-volatile (vmmap PURGE=V: 169 surfaces, 1142 MB, inside a 2.2 GB footprint). That means the system may throw them away under memory pressure instead of compressing or swapping them, so on a 16 GB Mac the burst may never push the machine short. phys_footprint counts them all the same. Testing it needs real pressure: about 50 GB allocated on this 64 GB Mac while the user works, which I did not do."
+    },
+    {
+      "t": "2026-11-19T22:30:01.586Z",
+      "note": "Also seen (by design, not a defect): an MP4 export at Standard draws 433 frames of sample stretches before the 900 of the file itself (DocumentMovieWriter.holdsToBudget, the budget check), 4.6 s of the 13.5 s. Those stretches pass through the same turns and zooms, so the peak can fall in either pass. Left rough, not filed: speed is not this task's question, and the pre-pass is documented in the writer."
+    },
+    {
+      "t": "2026-11-19T22:30:01.653Z",
+      "note": "Chose to explain the peak rather than lower short-6.json's export.peakFootprintMB: no change that keeps the pictures and the time brought it down. Baseline left as it is. Main was red on an unrelated scrub perf flake (ScrubCompositePerfTests, shown 58.8 ms vs full 48.7 ms on a busy runner); filed as the-scrub-refresh-speed-check-stops-failing-main (p1). No code changed in this task, so CI was not asked to verify anything."
+    },
+    {
+      "t": "2026-11-19T22:30:01.719Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-19T22:30:06.483Z",
+      "note": "Named what an export holds at its peak: a steady ~1.1 GB (decode and encoder surfaces) plus 2-3 GB bursts of Core Image half-float working buffers, a new size every frame, from the drop shadow of a clip turning in depth (+2.3 GB, gone with shadows off) and the Lanczos enlargement of a clip zoom (+1.0-1.8 GB). Core Image frees them on a few-second timer and the export draws ~66 frames/s, so they stack; the peak does not grow with length. Tried 7 ways to lower it, all measured on the 30 s export; the two that help cost 22% and 57% more time, so the baseline stays and the log says why. The buffers are purgeable-volatile (not verified under real pressure). No code changed."
     }
   ],
-  "started": "2026-11-18T15:25:17.777Z",
+  "started": "2026-11-19T21:14:23.476Z",
   "failures": 0,
   "lastError": {
     "at": "2026-11-18T15:25:23.984Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-  }
+  },
+  "walks": [],
+  "completed": "2026-11-19T22:30:06.484Z"
 }
