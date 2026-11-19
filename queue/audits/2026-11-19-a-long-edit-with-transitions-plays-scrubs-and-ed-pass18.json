@@ -1,0 +1,24 @@
+{
+  "feature": "A long edit plays a minute without losing a frame, and the walk says so honestly",
+  "epic": "video-perf",
+  "summary": "The 6 minute reference edit already showed every frame while it played: the one dropped frame a minute the speed walk kept reporting was its counting. The walk now counts the frames the picture actually skipped and names where any lost frame was due.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The 6 minute reference edit: Scripts/perf/reference-edit.sh, then open it. The numbers come from Scripts/perf/speed-walk.sh.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 6 minute reference edit and park the playhead at 0:15.", "shot": "2026-11-19-long-edit-pass18-after-the-edits-sc.png" },
+    { "do": "Press Space and watch a minute of it, through the dissolves, the push and the cube." },
+    { "do": "Watch the first moment after Space: the picture starts moving about a twentieth of a second after the press." },
+    { "do": "Pause, pick a clip and press B to cut it while it plays: that is the edit cost still being worked on." }
+  ],
+  "evaluate": [
+    "Does a minute of play look perfectly even to you, with no hitch at the transitions?",
+    "Does the start after Space feel immediate?",
+    "Does a cut with B while playing still feel like it catches for a moment?"
+  ],
+  "rough": [
+    "Three one-minute plays, every look recorded: each new picture came 25 to 38 ms of edit time after the one before, never one skipped. The old count still read 1, 0 and 1 dropped, from the start's first tick and the last picture in flight. New count: 0, 0 and 0 of 1817; the speed walk afterwards also 0.",
+    "The first new picture after Space comes 50 to 67 ms after the press. It is now its own number in the walk, not a lost frame.",
+    "Still not reached on this task: an edit while playing holds the window 11 to 51 ms against the bar of 16 (blade 35, pick from nothing 51), and a dragged playhead's picture is 3 refreshes behind at worst against 1.",
+    "No mock covers this: it is a measurement and speed change with nothing new on screen."
+  ]
+}
