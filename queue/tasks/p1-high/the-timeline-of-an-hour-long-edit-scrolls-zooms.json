@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-19T15:36:46.629Z",
+  "updated": "2026-11-19T16:44:11.630Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -413,9 +413,33 @@
     {
       "t": "2026-11-19T15:36:46.628Z",
       "note": "Pass 12 landed d04e1564c: a zoom stretches the last painting instead of painting every frame. Near Fit 13.5-14.3 -> 12.2-12.4 ms, zoom in 11.8-12.6 -> 11.0, scroll 9.0-9.7 -> 8.9; look unchanged at rest. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+    },
+    {
+      "t": "2026-11-19T16:10:49.339Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T16:43:56.917Z",
+      "note": "Pass 13 (2026-11-19). Baseline at 17dd91f1b (60 min edit, /tmp/tl60.json): near Fit 12.42-12.50 ms mean (p95 17.8-18.5, 279-282 late of 648), zoom in 10.41-10.87, out 10.31-10.33, scroll 9.07-9.37 (p95 11.9, worst 41); edits longest pass trim 43 / move 30 / blade 63 / undo 41 / transition 86 / title 36. Profile (25 s, timeline measure): lane bodies 1.31 s, painted clips' paint closure 0.90 s, paintedBars ~0.54 s, Bar equality ~0.27 s, hasClickMarks 0.16-0.18 s (copied the document and a Layer per clip in sight per frame)."
+    },
+    {
+      "t": "2026-11-19T16:43:56.986Z",
+      "note": "Pass 13 change: LanePaintingKept (TimelineTrackRows.swift) keeps a painting lane's bars, painted cuts, gaps and gridlines under a key of everything they are read from (row, paints, kept incl. pointer/renaming/freeze/transition drag, drawn stretch, paint span, left edge range, paint zoom, lane size, scheme, switches, panel-ground flag; document by sharesWorkedOutAnswers; cuts also by drag/grip/session/pointer/picked) and hands back the same arrays, so TimelinePaintedClips' == answers on buffer identity. Never kept while a waveform is missing or a sound is being cleaned (re-read each frame, so still told when it lands). hasClickMarks reads a click source kept per document (TimelinePaintedFacts.clickSource; the recording's pointer track still looked up live). Rule added to docs/design/video.md 8f."
+    },
+    {
+      "t": "2026-11-19T16:43:57.057Z",
+      "note": "Pass 13 after, same build A/B by a throwaway defaults switch, two runs each: near Fit 12.03/12.11 -> 11.67/11.70 (late 226/245 -> 208/214), zoom out 10.02/9.97 -> 9.82/9.56, zoom in and scroll unchanged within noise (10.8, 8.8). Lane bodies 1.31 -> 0.99 s in the same profile. Fit photographed before and after a full timeline speed measure: identical pixel for pixel. 15 walks green on the final build (task's 10 + a-click-tick-is-hidden-and-slid, an-editing-session, reference-edit-opens, a-sound-s-waveform-follows-its-level, a-sound-lane-is-as-tall-as-the-mock). Scripts/test.sh exit 0. Audit queue/audits/2026-11-19-timeline-hour-long-pass13-kept-painting.json. Landed 1fda7669d."
+    },
+    {
+      "t": "2026-11-19T16:43:57.130Z",
+      "note": "Still open, bars not reached: near Fit ~11.7 ms mean (p95 ~17) vs 8.3, scroll worst 23-26 vs 16, edits 30-86 ms vs 16 (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). Largest app item left: the canvases' paint closure when a painting is laid afresh (~0.8 s of 25 s; waveforms ~a quarter) on every let-go of a held zoom and every stretch move of a scroll. Next lever: draw waveforms from a path kept per clip and scale, or a lane drawn into a layer whose transform moves without SwiftUI (needs the paint code against CGContext). Left rough, not filed: motionStripCycleMS + rulerDocument + shownDocument are read by every view reading the ruler (~0.2 s of 25 s); Experiments.isEnabled string compares on every flag read."
+    },
+    {
+      "t": "2026-11-19T16:44:11.629Z",
+      "note": "Pass 13 landed 1fda7669d: busy lanes keep their painting while nothing it is read from changes, and click ticks stop copying a clip per frame. Near Fit 12.0-12.1 -> 11.7 ms a frame, zoom out 10.0 -> 9.7, fewer late frames; look unchanged (Fit pixel-identical). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
     }
   ],
-  "started": "2026-11-19T13:59:47.355Z",
+  "started": "2026-11-19T16:10:49.338Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
