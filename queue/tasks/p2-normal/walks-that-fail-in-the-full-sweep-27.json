@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-11-11T03:48:30.958Z",
-  "updated": "2026-11-18T06:41:58.455Z",
+  "updated": "2026-11-19T07:04:30.442Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-17T15:33:58Z DID NOT FINISH (the run was interrupted: whoever was running it went away): it reached 118 of 1175 walks in 36 minutes, of which 112 passed. The walks it never reached are unknown, not passing.\n\nFailing walks (6): a-clip-s-sound-is-linked-under-it-walk, a-glyph-takes-the-saved-stroke-walk, a-line-and-an-oval-wear-the-saved-stroke-walk, a-saved-stroke-tile-counts-its-lines-walk, a-screen-hugs-what-it-holds-walk, a-transition-is-picked-at-the-cut-walk\n\nThose 6 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: an-hour-long-edit-opens-without-a-freeze-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nNot run this time and still failing from the last check (16): component-choice-one-step-walk, component-choice-walk, component-instance-walk, component-look-walk, component-override-walk, component-preview-front-walk, component-text-halo-walk, copies-share-choice-walk, copy-own-color-walk, copy-own-number-walk, copy-svg-into-a-code-editor-walk, icon-into-a-component-onto-the-timeline-walk, insert-a-title-before-a-clip-walk, label-grows-walk, library-reveal-walk, tool-and-library-dropdowns-open-on-a-click-walk\nThis run was interrupted before reaching them. They are unread, not fixed.\n\nFull output: queue/sweep/2026-11-17-065742.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-clip-s-own-sound-is-the-bottom-half-of-the-cli: The timeline lanes changed height for every recording with sound; walks aiming at fixed window points outside the sets run by the task may need moving\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -134,6 +134,18 @@
     {
       "t": "2026-11-18T06:41:58.454Z",
       "note": "clicking-a-timeline-item-moves-the-playhead-walk and a-transition-is-picked-at-the-cut-walk fail on main at b67555a8b, found by a-long-edit-with-many-zooms-shows-one-zoom-lane on 2026-11-18. clicking-...: step 58 rightClick on the picture at (1107, 866) finds no 'Add Key at 0:02.00'; rows are Split at 0:02.36, Freeze Frame at 0:02.36…, Speed, —, Detach Audio, Audio, —, Cut, Copy, Delete, Ripple Delete, —, More. Same failure with the zoom-lane change stashed (Scripts/playtest.sh on plain main), so not caused by it; passed in the 2026-11-11 sweep. a-transition-...: step 46 expect 'Fade In' reads '0.51s' not '0.5s' (already in the 2026-11-17 sweep's failures)."
+    },
+    {
+      "t": "2026-11-19T05:32:28.551Z",
+      "note": "rotating check 2026-11-19T05:32:28Z, 31 walks run from 80 onward in the rotation: a-sound-s-bend-handle-follows-the-hand-walk, a-title-animation-takes-the-curve-row-walk, a-transition-is-picked-at-the-cut-walk, a-video-clip-menu-leads-with-the-picture-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-11-19T07:04:10.638Z",
+      "note": "component-preview-front-walk is flaky, not broken (2026-11-18, find-out-whether-landing-a-component-sheet-holds): on unchanged main it passed 5 of 6 runs, failing once at step 47 ('the canvas was handed Off for the copy at (110, 290), and the walk says Hover'; step 45 move said 'nothing under the pointer watches for one' while a CALayer transition animated for the whole 0.4 s wait). Another failure seen: step 62, Escape did not leave Preview within 0.8 s. component-preview-walk fails at step 34 (no control called Preview pill) on unchanged main, every run."
+    },
+    {
+      "t": "2026-11-19T07:04:30.441Z",
+      "note": "component-preview-front-walk, more runs: with the mains-kept change (commit after 2026-11-18 22:xx) 4 of 7 passed, every failure the same step 47 hover-during-a-transition signature as the baseline's. The walk's 0.4 s wait after the move is the thing to look at."
     }
   ],
   "standing": "walk-sweep"

@@ -18027,3 +18027,17 @@
 {"t":"2026-11-19T04:41:43.786Z","ev":"task_walks","id":"while-ask-writes-a-long-plan-its-line-names-each","walks":["ask-names-each-step-as-it-writes-walk"]}
 {"t":"2026-11-19T05:13:55.091Z","ev":"task_note","id":"while-ask-writes-a-long-plan-its-line-names-each"}
 {"t":"2026-11-19T05:13:55.176Z","ev":"task_done","id":"while-ask-writes-a-long-plan-its-line-names-each","from":"in_progress","note":"Ask's plan turns on the built-in model stream; the Agent line now says 'Writing step N: <name>, <part>' as the model writes. Same reply shape (tests + measured identical on b11826), unreadable-reply path intact. Measured: component sheet longest gap while writing 3.4 s (bar 8), fox 4.0 s overall. Audit queue/audits/2026-11-18-ask-names-each-step-as-it-writes.json; commit 94516f463."}
+{"t":"2026-11-19T05:32:28.553Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-19T05:34:32.502Z","ev":"slice_pass","walks":31,"passed":27,"failed":4,"seconds":867,"of":1178,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-19T05:34:32.701Z","ev":"task_started","id":"find-out-whether-landing-a-component-sheet-holds","title":"Find out whether landing a component sheet holds the app for half a second","priority":"p2-normal"}
+{"t":"2026-11-19T07:03:50.474Z","ev":"task_created","id":"a-landed-component-sheet-draws-without-a-hold","priority":"p2-normal","title":"A landed component sheet draws without a hold"}
+{"t":"2026-11-19T07:03:55.778Z","ev":"task_walks","id":"find-out-whether-landing-a-component-sheet-holds","walks":["a-component-sheet-lands-without-a-long-hold-walk"]}
+{"t":"2026-11-19T07:04:10.249Z","ev":"task_note","id":"find-out-whether-landing-a-component-sheet-holds"}
+{"t":"2026-11-19T07:04:10.332Z","ev":"task_note","id":"find-out-whether-landing-a-component-sheet-holds"}
+{"t":"2026-11-19T07:04:10.410Z","ev":"task_note","id":"find-out-whether-landing-a-component-sheet-holds"}
+{"t":"2026-11-19T07:04:10.484Z","ev":"task_note","id":"find-out-whether-landing-a-component-sheet-holds"}
+{"t":"2026-11-19T07:04:10.563Z","ev":"task_note","id":"find-out-whether-landing-a-component-sheet-holds"}
+{"t":"2026-11-19T07:04:10.640Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-19T07:04:30.365Z","ev":"task_note","id":"find-out-whether-landing-a-component-sheet-holds"}
+{"t":"2026-11-19T07:04:30.443Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-19T07:04:37.566Z","ev":"task_done","id":"find-out-whether-landing-a-component-sheet-holds","from":"in_progress","note":"Yes, it holds: timed with the walk markers down, landing Ask's 11-component sheet held the main thread 541-557 ms (the blank Layers/Agent rows from 11-01 no longer reproduce). Cause found by Time Profiler: the copy sync re-walked the tree per main lookup (quadratic in copies) and path(of:) walked it per placed layer; both now answer from per-document kept answers (PhotonzCore, tests first), hold now 387-396 ms. The rest (12 steps in one pass, Layers list laying out 91 rows) is filed as a-landed-component-sheet-draws-without-a-hold, guarded by the new a-component-sheet-lands-without-a-long-hold-walk. Full test suite green."}

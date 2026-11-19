@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 160,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T23:13:08.577Z",
-  "updated": "2026-11-17T15:37:32.118Z",
+  "updated": "2026-11-19T07:04:37.565Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-01 by while-ask-works-the-agent-panel-says-what-it-is, not confirmed outside the probe. Command: one-off walk, blank 1440x1024, Command K, 'create a table of apple like quality base components that show different states and text', waitFor askSettled, snapshot at once and 5 s later (copy of the sheet block of Scripts/playtest/ask-says-what-it-is-doing-across-requests-walk.json). Log: 'mainBusy 6507.4ms over 35216 passes, longest 466.1ms from 242213ms in'; the snapshot 0.8 s after settling shows LAYERS 66 with an empty list and AGENT 1 with no row; 5 s later both are drawn. In the rotating check's longer run (scene, edit and photo already in the document) the wait after landing 'never went quiet (14 of 14 slices busy, busiest 330ms)' and the Agent group still held the finished request's live line 2.8 s after it ended. Caveat that keeps this a question: the probe hangs walk markers (about half the window's views, PanelTarget.swift), so the dev app may be lighter.",
@@ -61,6 +61,47 @@
     {
       "t": "2026-11-17T15:37:32.117Z",
       "note": "seq 150 -> 160"
+    },
+    {
+      "t": "2026-11-19T05:34:32.696Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T07:03:55.776Z",
+      "note": "owns these walks: a-component-sheet-lands-without-a-long-hold-walk"
+    },
+    {
+      "t": "2026-11-19T07:04:10.247Z",
+      "note": "Timed without walk markers: a walk replays the two replies Qwen3.8 27B gave the user's sheet request in eval run 20261110-065514-ask (setup askReplies), at Next defaults, markers down (timedWithoutMarkers). The click on Send held the main thread 541 ms, 548 ms and 557 ms on three runs (longest pass, starting about 85 ms after the click). The blank Layers list and Agent row from 2026-11-01 do NOT reproduce: both are drawn in the picture 0.8 s after landing."
+    },
+    {
+      "t": "2026-11-19T07:04:10.330Z",
+      "note": "Cause, from Time Profiler on the probe (xcrun xctrace record --attach): the pass is ~70 ms of AskSession starting the run, ~380 ms of the 12 plan steps run back to back (AgentWork never suspends), then ~150-200 ms of SwiftUI laying out 91 new Layers rows. Inside the steps, syncComponentInstances re-walked the whole tree for every main lookup, several per copy, so it grew with the square of the copies (119 of 346 samples); PhotonzDocument.path(of:) walked the tree for every placed layer (37 samples)."
+    },
+    {
+      "t": "2026-11-19T07:04:10.408Z",
+      "note": "Fixed in PhotonzCore: mainComponents kept in DocumentDerived (reset by any write to layers or, now, componentOriginals), path(of:) answers from the same layer-path index layer(id:) builds. Tests first: MainComponentsKeptTests (sync of 96 copies vs 24 read ratio 8.9 before, 3.4 after; 138 ms to 13 ms in debug) and DocumentDerivedTests.pathsFromTheIndex. Landing hold now 391, 387, 390, 396 ms."
+    },
+    {
+      "t": "2026-11-19T07:04:10.482Z",
+      "note": "What is left (still over 100 ms) is filed as a-landed-component-sheet-draws-without-a-hold: the 12 steps in one pass (~200 ms) and the Layers list's lazy stack placing 91 rows plus the focus walk (~200 ms). New guard walk a-component-sheet-lands-without-a-long-hold-walk at 480 ms."
+    },
+    {
+      "t": "2026-11-19T07:04:10.561Z",
+      "note": "Walks: 26 of 28 component walks pass. component-preview-walk fails at step 34 (no Preview pill) on baseline code too. component-preview-front-walk is flaky on both builds: baseline 5 of 6 passed, with this change 5 of 7 so far; every failure is an event not acted on (hover during a CALayer transition at step 47, Escape at step 62), and the walk was already on the standing failing list. Logged on walks-that-fail-in-the-full-sweep-27."
+    },
+    {
+      "t": "2026-11-19T07:04:30.363Z",
+      "note": "component-preview-front-walk final count: with this change 4 of 7 passed, baseline 5 of 6; all four failures (three with the change, one without) are the same step 47 signature, the hover not taken while a CALayer transition animates through the whole 0.4 s wait. A race that predates this change; the rate difference is within what seven runs can tell apart. Folded into walks-that-fail-in-the-full-sweep-27."
+    },
+    {
+      "t": "2026-11-19T07:04:37.563Z",
+      "note": "Yes, it holds: timed with the walk markers down, landing Ask's 11-component sheet held the main thread 541-557 ms (the blank Layers/Agent rows from 11-01 no longer reproduce). Cause found by Time Profiler: the copy sync re-walked the tree per main lookup (quadratic in copies) and path(of:) walked it per placed layer; both now answer from per-document kept answers (PhotonzCore, tests first), hold now 387-396 ms. The rest (12 steps in one pass, Layers list laying out 91 rows) is filed as a-landed-component-sheet-draws-without-a-hold, guarded by the new a-component-sheet-lands-without-a-long-hold-walk. Full test suite green."
     }
-  ]
+  ],
+  "started": "2026-11-19T05:34:32.695Z",
+  "walks": [
+    "a-component-sheet-lands-without-a-long-hold-walk"
+  ],
+  "completed": "2026-11-19T07:04:37.564Z"
 }
