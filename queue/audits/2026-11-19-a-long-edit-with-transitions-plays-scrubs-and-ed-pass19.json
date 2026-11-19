@@ -1,0 +1,26 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 19: picking a clip and the edits after it)",
+  "epic": "video-perf",
+  "summary": "Picking a clip on the 6 minute edit no longer reads the recording's frame to see whether a Border could follow its edge, and the canvas no longer works out every border and shadow of the picked clip just to place the motion pivot. Worst of three runs while playing: trim 22 to 16 ms, blade 63 to 51, pick 32 to 29, undo with a clip picked 25 to 19, let go of a clip 42 to 34, pick from nothing 51 to 47. Nothing drawn changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. File > Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6). The numbers come from Scripts/perf/speed-walk.sh.",
+  "switched": {},
+  "try": [
+    { "do": "Press Space to play the 6 minute edit from 0:15.", "shot": "2026-11-19-long-edit-pass19-a-clip-picked-sc.png" },
+    { "do": "While it plays, click Take 2 on the V1 track to pick it." },
+    { "do": "Click Take 3, then Take 1, then Take 4, each for the first time." },
+    { "do": "Press Escape to let go, then click a clip again." },
+    { "do": "With a clip picked, press B to cut it, then Command Z." }
+  ],
+  "evaluate": [
+    "Does the first click on each clip land as quickly as the second click on it now does?",
+    "Does letting go of a clip (Escape) while it plays still leave a visible hitch in the picture?",
+    "Is the panel filling in after a pick from nothing still the slowest thing you notice when editing?"
+  ],
+  "rough": [
+    "The bar is not reached: edits while playing take 12 to 60 ms on their longest pass against 16. What is left is mostly SwiftUI's own graph and layout work and a window-wide floor (focus and title bar drag regions, about a tenth of every pass) that app code cannot reach without swizzling AppKit; written in docs/design/video.md, 'The window-wide floor'. This task (a-long-edit-with-transitions-plays-scrubs-and-ed) stays open for it.",
+    "Scrubbing: the median lag is 1 refresh in every run, but the worst-case scrub numbers swung this morning on the old build too (worst lag 9 refreshes, worst frame under the hand 45, in an A/B at 05:21 and 05:23), so the speed walk can go red on them under load. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Playback: one dropped frame (one 66 to 85 ms gap at a different moment each time) in 4 of 9 one-minute plays on this build and 0 of 3 on the build without it, in the same hour at a load of about 5. Nothing in this change runs while playing with nothing picked, so I do not think it is the cause, but it is not proven. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "A recording with a real alpha channel (ProRes 4444) no longer offers Shape on its Border row: it follows its box. Screen recordings have no alpha, so nobody using the app today sees a difference.",
+    "No mock covers this: it is speed, not a surface."
+  ]
+}

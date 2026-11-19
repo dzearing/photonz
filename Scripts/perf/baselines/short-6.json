@@ -10,58 +10,58 @@
   "date" : "2026-11-19T11:42:21Z",
   "edits" : [
     {
-      "callMS" : 3.020208328962326,
+      "callMS" : 3.5503751132637262,
       "did" : "half a second off the end of Take 2",
       "edit" : "trim",
-      "longestPassMS" : 22.222541738301516
+      "longestPassMS" : 16.468833200633526
     },
     {
-      "callMS" : 10.190250119194388,
+      "callMS" : 7.776416838169098,
       "did" : "Take 1 cut at 0:22.4",
       "edit" : "blade",
-      "longestPassMS" : 63.107374822720885
+      "longestPassMS" : 50.8267916738987
     },
     {
-      "callMS" : 1.180499792098999,
+      "callMS" : 1.193000003695488,
       "did" : "the last edit taken back",
       "edit" : "undo",
-      "longestPassMS" : 30.457541812211275
+      "longestPassMS" : 28.504749992862344
     },
     {
-      "callMS" : 1.9099581986665726,
+      "callMS" : 1.6972501762211323,
       "did" : "Take 2 picked",
       "edit" : "pick",
-      "longestPassMS" : 31.88470844179392
+      "longestPassMS" : 29.34758341871202
     },
     {
-      "callMS" : 2.853041747584939,
+      "callMS" : 2.834708197042346,
       "did" : "half a second off the end of Take 3",
       "edit" : "trim, picked",
-      "longestPassMS" : 18.99912510998547
+      "longestPassMS" : 16.981083434075117
     },
     {
-      "callMS" : 3.8992916233837605,
+      "callMS" : 3.9331666193902493,
       "did" : "Take 2 cut at 0:31.2",
       "edit" : "blade, picked",
-      "longestPassMS" : 38.74554159119725
+      "longestPassMS" : 38.07720821350813
     },
     {
-      "callMS" : 1.1458750814199448,
+      "callMS" : 1.122083282098174,
       "did" : "the last edit taken back",
       "edit" : "undo, picked",
-      "longestPassMS" : 25.09483345784247
+      "longestPassMS" : 19.494375213980675
     },
     {
-      "callMS" : 0.5012499168515205,
+      "callMS" : 0.4802499897778034,
       "did" : "nothing picked",
       "edit" : "unpick",
-      "longestPassMS" : 42.2907501924783
+      "longestPassMS" : 33.87437481433153
     },
     {
-      "callMS" : 1.9879583269357681,
+      "callMS" : 1.962708542123437,
       "did" : "Take 3 picked",
       "edit" : "pick, from nothing",
-      "longestPassMS" : 51.29170836880803
+      "longestPassMS" : 46.874833293259144
     }
   ],
   "export" : {
@@ -75,7 +75,7 @@
   },
   "form" : "short",
   "frameStepMS" : 33,
-  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18 (2026-11-19)",
+  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18; edits from 3 runs on pass 19, 64db7ec53+changes (2026-11-19)",
   "machine" : "Mac16,5, 16 cores, 64GB",
   "minutes" : 6,
   "plays" : [

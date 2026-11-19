@@ -14,6 +14,11 @@
 #       [--at S S ...]                only the passes starting within 3 ms of each time
 #                                     (the second pass after each key, say, read off --list)
 #       [--dump 'Symbol']             the stacks around that frame, heaviest first
+#       [--below 'Symbol']            the app's own views, layouts and getters found under
+#                                     that frame, heaviest first: which ScrollView or
+#                                     GeometryReader a pass is measuring, say (a frame
+#                                     counts as the app's when its type is one the app
+#                                     declares, read from Sources/)
 #       [--process Photonz]           only that process: for a trace recorded with
 #                                     --all-processes instead of --attach, which is how
 #                                     to catch a window's opening in a walk's setup
@@ -47,6 +52,7 @@ ap.add_argument('--from', dest='frm', type=float, default=None, help='only passe
 ap.add_argument('--to', type=float, default=None, help='only passes starting at or before this, s')
 ap.add_argument('--at', type=float, nargs='*', default=None, help='only passes starting within 3 ms of these, s')
 ap.add_argument('--dump', default=None, help='print the stacks around this frame')
+ap.add_argument('--below', default=None, help="name the app's own frames found under this frame, heaviest first")
 args = ap.parse_args()
 
 def export(trace, schema):
@@ -202,3 +208,28 @@ if args.dump:
                 stacks[' > '.join(n[:60] for n in outer[max(0, i - 6):i + 8])] += ms
     print(f'stacks through {args.dump}:')
     for st, v in stacks.most_common(8): print(f'{v:6.1f} ms  {st}\n')
+
+if args.below:
+    import glob, re
+    here = os.path.dirname(os.path.abspath(__file__))
+    ours = set()
+    for f in glob.glob(os.path.join(here, '..', '..', 'Sources', '**', '*.swift'), recursive=True):
+        for m in re.finditer(r'\b(?:struct|class|enum|extension|actor)\s+([A-Z][A-Za-z0-9_]*)', open(f, errors='ignore').read()):
+            ours.add(m.group(1))
+    word = re.compile(r'([A-Z][A-Za-z0-9_]*)[.<(]')
+    found = collections.Counter()
+    through = 0.0
+    for b in long:
+        for t, ms, names in b:
+            outer = list(reversed(names))
+            hits = [j for j, n in enumerate(outer) if args.below in n]
+            if not hits: continue
+            through += ms
+            seen = set()
+            for n in outer[hits[0] + 1:]:
+                m = word.search(n.replace('protocol witness for ', '').replace('specialized ', ''))
+                if m and m.group(1) in ours and n not in seen:
+                    seen.add(n)
+                    found[n[:110]] += ms
+    print(f'under {args.below} ({through:.0f} ms), the app\'s own frames:')
+    for n, v in found.most_common(args.top): print(f'{v:7.1f} ms  {n}')

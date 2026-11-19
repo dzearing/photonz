@@ -194,6 +194,24 @@ struct ShapeOutlineTests {
         #expect(label.shapeToFollow() == .letters)
     }
 
+    /// A recording's frames have no see-through edge, and its frame is never
+    /// even read to find out: on a 6 minute edit the first pick of each clip
+    /// traced its picture, about 6 ms of a pick's 30 ms pass (2026-11-19).
+    @Test func aRecordingHasNoEdgeAndIsNeverTraced() {
+        var clip = picture()
+        clip.movie = MovieRef(pixelSize: CGSize(width: 1920, height: 1080), durationMS: 5000)
+        var asked = 0
+        let unit = CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 1, height: 1), transform: nil)
+        #expect(clip.shapeToFollow(pictureHasEdge: { _ in asked += 1; return true }) == .none)
+        #expect(clip.followedOutline(pictureEdge: { _ in asked += 1; return unit }) == nil)
+        #expect(asked == 0)
+        // A group round a recording closes round its box, not its frame's alpha.
+        let package = group([clip])
+        let outline = package.followedOutline(pictureEdge: { _ in asked += 1; return unit })
+        #expect(asked == 0)
+        #expect(outline != nil)
+    }
+
     /// The Border row asks Shape or Box of a group, and asks nothing of a box.
     @Test func theRowAsksWhereThereIsAShape() {
         let package = group([arrow()])

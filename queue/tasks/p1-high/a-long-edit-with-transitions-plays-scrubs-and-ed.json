@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-19T11:49:20.106Z",
+  "updated": "2026-11-19T12:29:16.199Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,33 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-19T11:48:56.244Z",
-      "note": "... 24 earlier entries elided",
-      "elided": 24
-    },
-    {
-      "t": "2026-11-14T20:48:24.584Z",
-      "note": "Next for this task (pass 7): (a) the first edit after opening costs ~10 ms more plus a ~20 ms body-less pass: NSWindow _setDocumentEdited -> theme frame -> window layout -> NSHostingView.layout, and the root's saveTarget focused value flipping (EditorWindowRoots.swift); try setting isDocumentEdited a pass later. (b) every edit's own pass still runs a window layout (NSHostingView.layout ~12-20% of it) and NSWindow _resetDragMargins (blade); find what changes size. (c) views still woken in the own pass: ClickTicksView (reads clickTicks off the document), CaptionGuidesOverlay, EditorCanvasSurface, ZoomBarsView. (d) blade: after the pick the panel builds sections over ~600 ms in passes of 20-80 ms (first blade only; later ones 7 inspector builds). Bars not reached: edits <=16 ms (trim 29, blade 82, undo 61), scrub within 1 frame (2), no dropped frames (1/min)."
-    },
-    {
-      "t": "2026-11-14T20:48:24.665Z",
-      "note": "Pass 6 landed 0aa333984: Properties no longer rebuilds every tick with a cut clip picked (44-46 -> 1-3 builds), a new key no longer rebuilds Time (keyframe-anything-walk green again), the tree's fade/zoom/click questions kept per document. Bars not reached: edits while playing trim 29 / blade 82 / undo 61 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute. Stays open for pass 7 (leads in the log)."
-    },
-    {
-      "t": "2026-11-15T13:16:49.814Z",
-      "note": "seq 20 -> 30"
-    },
-    {
-      "t": "2026-11-15T13:17:24.097Z",
-      "note": "digest 2026-11-15: the edit numbers have flattened: pass 4 trim 33 / blade 85 / undo 62 ms, pass 5 29 / 88 / 58, pass 6 29 / 82 / 61, against a bar of 16. Pass 5 showed why: an edit's pass costs about as much as the window has views, whatever it touches. So pass 7 should take the structural lead in pass 5's notes (fewer live views in the lanes: paint cut marks and click ticks as well as plain clips, or the tracks in their own hosting view) rather than more single fixes, and say in its log if that does not move trim below 20 ms. Passes 5 and 6 left their numbers in this log only; the latest audit is still pass 4's."
-    },
-    {
-      "t": "2026-11-15T13:17:29.123Z",
-      "note": "digest 2026-11-15, correction to the line above: pass 6 already tried the timeline in a hosting view of its own and it did not pay (docs/design/video.md 8f says not to retry). The structural lead left is fewer live views in the lanes."
-    },
-    {
-      "t": "2026-11-15T20:16:54.532Z",
-      "note": "claimed by go loop"
+      "t": "2026-11-19T12:29:16.198Z",
+      "note": "... 30 earlier entries elided",
+      "elided": 30
     },
     {
       "t": "2026-11-15T21:45:15.000Z",
@@ -507,9 +483,33 @@
     {
       "t": "2026-11-19T11:48:56.243Z",
       "note": "Pass 17 landed fc28facc9: a video's picture stays on a GPU surface and goes up as it is, so composite 5.6 -> 4.2 ms and a dragged playhead's picture trails the hand by 1 refresh in the middle (was 2). Bars not reached (0 dropped: 1 a minute; edits 16 ms: 15-63; worst scrub lag 3). Pass 18 leads in the log."
+    },
+    {
+      "t": "2026-11-19T11:49:37.460Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T12:29:03.664Z",
+      "note": "Pass 18 took the playback bar (0 dropped), which had not moved since pass 7. Recorded every look of three one-minute plays from 0:15 (temporary dump, removed): the picture is the playhead's own moment at each clock tick, ticks 25-38 ms apart and not on a 33 ms grid; no moment was ever jumped over. The old tally (due = wall/33) read 1, 0, 1: run 1 had the last picture in flight (shown 74972, playhead 75006), run 3 had the clock's first tick 46 ms after Space (advance 59967 of 60000 wall). Its own unit test had allowed 'dropped <= 1' for a perfect picture."
+    },
+    {
+      "t": "2026-11-19T12:29:03.740Z",
+      "note": "Pass 18 fix (19e4cdd15, SpeedWalk.tally/missedMoments/droppedMoments, SpeedWalkTests: realistic off-grid clock, a skipped moment, three skipped, a slow clock): dropped = moments a jump spans past one step (first jump after Space gets one step of slack) + moments passed after the last picture less the one in flight + ticks a clock that fell behind the wall never made (one tick slack). PlayTally.firstPictureMS (judged in the baseline); the walk prints where any dropped frame was due. Result: 3 plays 0/1817 dropped, first picture 50-67 ms; speed walk 0 dropped, trim 11, blade 35, undo 23, pick 30, pick from nothing 51 ms; scrub lag median 1 / worst 3. short-6.json play dropped 1 -> 0, firstPictureMS 67. docs/design/video.md speed walk play line + a paragraph after the 2026-11-14 numbers."
+    },
+    {
+      "t": "2026-11-19T12:29:03.815Z",
+      "note": "Pass 18 verified: test.sh exit 0; walks ok: speed-walk (against the new baseline), scrub-never-blacks-out, playing-a-recording-never-blinks, playback-speed, command-r-opens-the-speed. history-filter-switch-speed-walk (matched by name only) failed twice on a 18-22 ms press pass while test.sh had the load average at 21, ok on a quiet rerun; not filed, untouched by this change. Looked at the speed walk capture: edit, picked clip and panel drawn right. Audit queue/audits/2026-11-19-a-long-edit-with-transitions-plays-scrubs-and-ed-pass18.json."
+    },
+    {
+      "t": "2026-11-19T12:29:03.902Z",
+      "note": "Next for pass 19: (a) edits while playing 11-51 ms vs 16: the blade with nothing picked fills the panel from nothing (pick from nothing 51), and passes that build no body still cost 10-30 ms (window-wide layout, accessibility focus, drag margins; digest 2026-11-16 said this floor deserves a pass of its own): profile one bodiless pass with trace-bursts.py --passes; (b) worst scrub lag 3 vs 1. Bar met this pass: 1x playback drops no frames. Left rough, not filed: nothing beyond this task's own bars."
+    },
+    {
+      "t": "2026-11-19T12:29:16.197Z",
+      "note": "Pass 18 landed 19e4cdd15: the 1 dropped frame a minute was the speed walk's count, not the picture; counted by skipped moments, three minutes of play read 0 of 1817 dropped (bar met), first picture 50-67 ms after Space. Bars not reached: edits while playing 11-51 ms vs 16, worst scrub lag 3 vs 1. Pass 19 leads in the log."
     }
   ],
-  "started": "2026-11-19T10:41:17.466Z",
+  "started": "2026-11-19T11:49:37.459Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"

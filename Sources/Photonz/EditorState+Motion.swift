@@ -69,7 +69,7 @@ extension EditorState {
     /// Pick one thing and the list is about that thing.
     var motionLayer: Layer? {
         guard Experiments.shared.motionEnabled,
-              let id = soleLayerID(layerStyleSelection.layerIDs),
+              let id = soleLayerID(layerStyleTargetIDs),
               let layer = document?.layer(id: id), !layer.isLocked else { return nil }
         return layer
     }
@@ -89,7 +89,7 @@ extension EditorState {
     /// and a section explaining that would be one of many.
     var motionNeedsOneLayer: Bool {
         guard Experiments.shared.motionEnabled, motionLayer == nil else { return false }
-        return layerStyleSelection.layerIDs.count > 1
+        return layerStyleTargetIDs.count > 1
     }
 
     /// The entries in the list, top to bottom.

@@ -1377,6 +1377,29 @@ panel in a SwiftUI host of its own took a tenth off and left section passes
 as they were, so the window-wide part is mostly the focus and accessibility
 walk, which a separate host does not avoid. Not kept, for that reason.
 
+**The window-wide floor, and what a canvas pass may compute** (2026-11-19,
+pass 19). About a tenth of every main thread pass on the 6 minute edit is
+AppKit and SwiftUI keeping the window's own bookkeeping, not anything a view
+asked for. An lldb breakpoint on `-[NSWindow(Regions)
+_postWindowNeedsToResetDragMargins]` showed how: the window works out which of
+its title bar area can drag it by asking the full-size SwiftUI host whether it
+accepts focus (`NSHostingView.acceptsFirstResponder`, which walks every
+focusable control for the first one) and for its opaque regions; reading the
+host's responder tree updates the hit shapes of anything that moved, and SwiftUI
+answers a moved hit shape by asking for the drag regions again
+(`WindowDragPreventionContentPathObserver`). So any pass that moves a control
+pays for one more of these on the next display cycle. Nothing in the app's own
+code reaches it short of swizzling private AppKit, which we do not do; the way
+to pay less is fewer controls changing place per pass. The other app cost the
+same trace found was the canvas: its body asked for the whole style reading of
+the picked layers (every border, shadow and edge) just to learn which one
+layer the motion pivot belongs to, and the first pick of each clip traced the
+see-through edge of the recording's frame (about 6 ms) for a Border row that
+was never going to offer Shape. A view body that only needs WHICH layers are
+picked reads `layerStyleTargetIDs`; a recording has no edge to follow.
+`Scripts/perf/trace-bursts.py --below '<SwiftUI frame>'` names the app's own
+views and layouts under a frame (which scroll view a pass re-measures, say).
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

@@ -55,7 +55,7 @@ extension EditorState {
     func layerIDs(reaching reach: PanelReach) -> [UUID] {
         switch reach {
         case .fixed(let ids): return ids
-        case .layerStyle: return layerStyleSelection.layerIDs
+        case .layerStyle: return layerStyleTargetIDs
         case .partRow(let id): return partRowReach(rowID: id)
         case .partThickness(let id):
             return outlineThicknessSelection.of(partRowReach(rowID: id)).layerIDs

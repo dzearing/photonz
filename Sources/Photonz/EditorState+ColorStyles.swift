@@ -317,6 +317,16 @@ extension EditorState {
         }
     }
 
+    /// The layers `layerStyleSelection` speaks for, without reading a single
+    /// style: the picked layers that are there and not locked. What a question
+    /// that only wants WHICH layers asks, since the whole reading resolves every
+    /// border, shadow and edge, and the canvas asks it on every pass (the motion
+    /// pivot's handle).
+    var layerStyleTargetIDs: [UUID] {
+        guard let document else { return [] }
+        return colorStyleTargetIDs.filter { document.layer(id: $0)?.isLocked == false }
+    }
+
     /// What the type rows show: the picked TEXT layers and what they are set
     /// in. One label picked or ten, this is the same reading, which is what
     /// lets three labels be made 14pt in one go instead of three.

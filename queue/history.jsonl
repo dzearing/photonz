@@ -18047,3 +18047,9 @@
 {"t":"2026-11-19T11:48:56.073Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-19T11:48:56.147Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-19T11:48:56.246Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 17 landed fc28facc9: a video's picture stays on a GPU surface and goes up as it is, so composite 5.6 -> 4.2 ms and a dragged playhead's picture trails the hand by 1 refresh in the middle (was 2). Bars not reached (0 dropped: 1 a minute; edits 16 ms: 15-63; worst scrub lag 3). Pass 18 leads in the log."}
+{"t":"2026-11-19T11:49:37.465Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-19T12:29:03.667Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T12:29:03.743Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T12:29:03.818Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T12:29:03.905Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T12:29:16.200Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 18 landed 19e4cdd15: the 1 dropped frame a minute was the speed walk's count, not the picture; counted by skipped moments, three minutes of play read 0 of 1817 dropped (bar met), first picture 50-67 ms after Space. Bars not reached: edits while playing 11-51 ms vs 16, worst scrub lag 3 vs 1. Pass 19 leads in the log."}

@@ -39,7 +39,11 @@ extension Layer {
         case .group(let group):
             return group.isFrame || group.children.isEmpty ? .none : .outline
         case .image(let ref):
-            return crop == nil && zoomWindow == nil && pictureHasEdge(ref) ? .outline : .none
+            // A recording's frames are solid video, so it has no edge to
+            // follow, and its picture is never read to find out: tracing one
+            // cost a pick on a long edit about 6 ms (2026-11-19).
+            return movie == nil && crop == nil && zoomWindow == nil && pictureHasEdge(ref)
+                ? .outline : .none
         // Paint is soft-edged marks, not an outline a ring could run round.
         case .zoomCallout, .lens, .measure, .collage, .sound, .paint:
             return .none
@@ -79,7 +83,7 @@ extension Layer {
             else { return nil }
             return PathContent(area)
         case .image(let ref):
-            guard crop == nil, zoomWindow == nil, pictureEdge(ref) != nil,
+            guard movie == nil, crop == nil, zoomWindow == nil, pictureEdge(ref) != nil,
                   let area = drawnArea(contentScale: contentScale, pictureEdge: pictureEdge)
             else { return nil }
             return PathContent(area)
@@ -110,7 +114,8 @@ extension Layer {
             return ShapeOutline.union(of: self, group: group, contentScale: scale,
                                       pictureEdge: pictureEdge)
         case .image(let ref):
-            guard crop == nil, zoomWindow == nil, let edge = pictureEdge(ref) else { return boxArea() }
+            guard movie == nil, crop == nil, zoomWindow == nil,
+                  let edge = pictureEdge(ref) else { return boxArea() }
             var stretch = CGAffineTransform(scaleX: ownBox.width, y: ownBox.height)
             return edge.copy(using: &stretch)
         case .sound:
