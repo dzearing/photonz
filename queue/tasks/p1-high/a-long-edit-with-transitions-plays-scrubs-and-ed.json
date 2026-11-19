@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-19T13:58:20.662Z",
+  "updated": "2026-11-19T18:18:17.550Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,13 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-19T13:58:20.661Z",
-      "note": "... 40 earlier entries elided",
-      "elided": 40
-    },
-    {
-      "t": "2026-11-15T23:01:35.350Z",
-      "note": "Fix (45c1b849e): on Next's videos the piece a cut, a hold or a same-clip undo picks reaches the views a run loop pass later (EditorState.pickPieceAPassLater; selectedClipPieceIndex is now computed: it returns the owed pick to every command, and pickedPieceShown is what views watch), so B then Delete still takes the right piece. Blade picked 42-45 -> 29-36 (one run 44), level with trim; undo after it 43-46 -> 38-45. New short-6 baseline, worst of 3: trim 32, blade 77, undo 41; pick 46, trim picked 34, blade picked 32, undo picked 44. test.sh green (one PieceCopyWriter flake on the first run, passed alone and on the rerun, logged on find-out-why-the-cut-export-test-fails-again-in); 15 cut/hold/undo/scrub/key walks ok, an-editing-session and keyframe-anything included. Written in docs/design/video.md 8f. Audit queue/audits/2026-11-15-a-long-edit-with-transitions-plays-scrubs-and-ed-pass8.json."
+      "t": "2026-11-19T18:18:17.549Z",
+      "note": "... 41 earlier entries elided",
+      "elided": 41
     },
     {
       "t": "2026-11-15T23:01:35.426Z",
@@ -507,6 +503,10 @@
     {
       "t": "2026-11-19T13:58:20.660Z",
       "note": "design review 2026-11-19: pass 20's (b), spreading unpick's teardown like arrivals, is the same panel cost leaving-preview-slides-back-without-a-hitch (over a third of a second leaving Preview) and folding-a-section-that-lets-the-panel-fit-again (21 to 29 ms) are open for. Build it so those two can use it."
+    },
+    {
+      "t": "2026-11-19T18:18:17.548Z",
+      "note": "From the hour-long timeline pass 14 (2026-11-19): speed-walk fails on scrub hunt (frame lag worst 39 vs at most 34, sight lag worst 34 vs at most 27) both on a build with the painted-picture change and in a run at 05:41 before it; scrub, not the timeline."
     }
   ],
   "started": "2026-11-19T12:29:42.780Z",

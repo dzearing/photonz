@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-19T16:44:11.630Z",
+  "updated": "2026-11-19T18:18:43.675Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -437,9 +437,29 @@
     {
       "t": "2026-11-19T16:44:11.629Z",
       "note": "Pass 13 landed 1fda7669d: busy lanes keep their painting while nothing it is read from changes, and click ticks stop copying a clip per frame. Near Fit 12.0-12.1 -> 11.7 ms a frame, zoom out 10.0 -> 9.7, fewer late frames; look unchanged (Fit pixel-identical). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+    },
+    {
+      "t": "2026-11-19T16:44:41.138Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T18:18:17.347Z",
+      "note": "Pass 14 (2026-11-19). Baseline at 899f3f6f2 (60 min edit, /tmp/tl60 timeline measure, 4 runs): near Fit 11.62-11.86 ms mean, zoom in 10.76-10.95, out 9.66-10.15, scroll 8.70-8.95 (p95 11.6-12.6). New in the speed line: near Fit split into frames holding the painting (378, mean 10.46-10.52) and frames painted afresh (270, mean 13.25-13.61). Decomposition of a held frame (throwaway defaults switches, one build): lane frozen at the held ruler and stretched from outside 10.05; frozen and not stretched 8.37; Zoom lanes ~0.5; so a held frame's cost is re-drawing the stretched canvases (~1.7 ms), not lane bodies. Hold widened to 20%: near Fit 11.48 -> 11.26 only (not kept)."
+    },
+    {
+      "t": "2026-11-19T18:18:17.414Z",
+      "note": "Pass 14 change: TimelinePaintedPicture (TimelinePaintedClips.swift) lays a busy lane's clip painting and its cut painting into a CGImage once (ImageRenderer at the display scale, 12 pt margin, cut to the frame as a Canvas cuts) and shows an Image; a held zoom stretches one image, a scroll slides it. A fade in progress paints the old Canvas via TimelineView; wider than 16,000 px stays a Canvas. After (3 runs): near Fit 11.00-11.02 (held 9.09-9.23, fresh 13.48-13.71), zoom in 10.34-10.66, out 9.03-9.65, scroll 8.54-8.64 (p95 11.1-12.1); walk peak footprint unchanged. Pixel check in one run flipping the path (PHOTONZ_PLAYTEST_PACE=full walk, defaults flipped during waits): only one pixel row at each lane's top and bottom edge differs (whole-pixel landing); a first version without the margin cut band shadows, a version with margin but no clip showed band shadows below V1 that the Canvas never drew. Tried and backed out: drawingGroup round each lane (near Fit 11.1, scroll p95 9.5) breaks AppKit views inside a lane (rename field, probe markers: yellow hatching, 3 walks failed). 16 walks green; Scripts/test.sh exit 0; speed-walk fails on scrub hunt sight lag 34 vs 16, same as a 05:41 run before this change (scrub, a-long-edit-with-transitions-plays-scrubs-and-ed). Rules in docs/design/video.md 8f. Audit queue/audits/2026-11-19-timeline-hour-long-pass14-painted-picture.json."
+    },
+    {
+      "t": "2026-11-19T18:18:17.479Z",
+      "note": "Still open, bars not reached: near Fit ~11.0 ms mean (p95 16.7) vs 8.3, scroll worst 21-22 vs 16, edits (inspector). What is left near Fit: frames painted afresh (13.5 ms, 40% of the loop: ImageRenderer of the paint closure plus lane bodies) and ~0.8 ms a held frame over the 8.4 floor (Zoom lanes ~0.5, the stretched image). Next: fewer fresh paints per zoom (a zoom out lets go every two frames because the window leaves the 1/32 margin; a wider margin now costs only picture width), and Zoom lanes held like the tracks. Left rough, not filed: none new."
+    },
+    {
+      "t": "2026-11-19T18:18:43.674Z",
+      "note": "Pass 14 landed 77f9ec5ee: busy lanes are painted into a picture once and a zoom stretches it. Near Fit 11.6-11.9 -> 11.0 ms a frame (held frames 10.5 -> 9.1), zoom out ~9.9 -> 9.3, scroll 8.8 -> 8.6; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
     }
   ],
-  "started": "2026-11-19T16:10:49.338Z",
+  "started": "2026-11-19T16:44:41.137Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",

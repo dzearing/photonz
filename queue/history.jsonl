@@ -18154,3 +18154,9 @@
 {"t":"2026-11-19T16:43:57.059Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-19T16:43:57.132Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-19T16:44:11.631Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 13 landed 1fda7669d: busy lanes keep their painting while nothing it is read from changes, and click ticks stop copying a clip per frame. Near Fit 12.0-12.1 -> 11.7 ms a frame, zoom out 10.0 -> 9.7, fewer late frames; look unchanged (Fit pixel-identical). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
+{"t":"2026-11-19T16:44:41.146Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-19T18:18:17.349Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-19T18:18:17.416Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-19T18:18:17.481Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-19T18:18:17.551Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T18:18:43.676Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 14 landed 77f9ec5ee: busy lanes are painted into a picture once and a zoom stretches it. Near Fit 11.6-11.9 -> 11.0 ms a frame (held frames 10.5 -> 9.1), zoom out ~9.9 -> 9.3, scroll 8.8 -> 8.6; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
