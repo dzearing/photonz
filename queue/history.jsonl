@@ -18160,3 +18160,9 @@
 {"t":"2026-11-19T18:18:17.481Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-19T18:18:17.551Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-19T18:18:43.676Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 14 landed 77f9ec5ee: busy lanes are painted into a picture once and a zoom stretches it. Near Fit 11.6-11.9 -> 11.0 ms a frame (held frames 10.5 -> 9.1), zoom out ~9.9 -> 9.3, scroll 8.8 -> 8.6; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
+{"t":"2026-11-19T18:19:14.422Z","ev":"task_started","id":"edit-mode-s-contents-come-in-with-the-slide-not","title":"Switching a long recording to Edit never freezes the app, and its tool bar arrives with the slide","priority":"p2-normal"}
+{"t":"2026-11-19T20:43:25.820Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-19T20:43:25.886Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-19T20:43:25.952Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-19T20:43:26.018Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-11-19T20:43:48.368Z","ev":"task_done","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":"in_progress","note":"The slide into Edit now runs in Core Animation (579bd94f4): tool bar, tracks and picture arrive with the slide, panel sections just after; view-to-edit-on-a-long-recording-walk passed 4 runs in a row with film stills 11-16ms and no pass over 82ms; main thread busy 271-335ms of 0.8s on later switches (first switch after opening 319-385, once 591). Suite green, 21/22 related walks (video-tool-bar step 68 is the known one). Audit queue/audits/2026-11-19-view-to-edit-ca-slide.json with a reel and contact sheet."}

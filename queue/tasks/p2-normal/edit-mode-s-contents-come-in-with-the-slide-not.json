@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-11-19T13:55:42.830Z",
+  "updated": "2026-11-19T20:43:48.367Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -350,16 +350,41 @@
     {
       "t": "2026-11-19T13:55:42.829Z",
       "note": "failure count cleared by the 2026-11-19 triage: all three were the weekly usage limit, which every task hit alike, so none were this task"
+    },
+    {
+      "t": "2026-11-19T18:19:14.417Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T20:43:25.818Z",
+      "note": "Measured first on HEAD 74a113d9 (quiet machine, WindowServer ~3%): walk film 34ms (fail); 8-switch film walk medians 34-35ms over 24 switches. Trace: with every slide effect switched off the keyframe ticks still cost 8.5ms a frame (6.46-6.68s window, 7-10ms passes at 120Hz): it is SwiftUI animating at all in this window, not what moves. Also found: into Edit the layout itself was still being animated by an animation hung on a changing value (panel 0->265 and dock 48->353 over ~10 frames), despite the comment saying it jumped."
+    },
+    {
+      "t": "2026-11-19T20:43:25.884Z",
+      "note": "Built: the slide into Edit is Core Animation's. Canvas, canvas column, panel, dock and tool bar each get .geometryGroup() (which makes SwiftUI give them their own _NSGraphicsView; without it all 112 views sit flat under the hosting view) plus an empty marker NSView inside; the marker's host's superview is the group. The key pass lays out Edit in a disablesAnimations transaction; markers' setFrameSize (panel width, dock height) and the canvas marker's update (Edit camera) add additive position / transform / opacity CASpringAnimations (perceptualDuration 0.25, bounce 0, cut at 0.30s), all on the commit's beginTime; the canvas column gets a moving CALayer mask for the panel's edge. Pure math ViewEditSlide.pictureLayerTransform tested in PhotonzCore; panelShift removed (unused)."
+    },
+    {
+      "t": "2026-11-19T20:43:25.950Z",
+      "note": "Results on the final build: view-to-edit-on-a-long-recording-walk passed 4 runs in a row, film longest still 11, 16, 11, 11ms (31-35 pictures), no pass over 82ms. 8-switch film walk x3: 11-25ms bar 2 outliers (36, 46); median ~15 vs 34-35. Into-Edit mainBusy of 0.8s: later switches 271-335ms (was 600-760); the first switch after opening 319, 373, 385, once 591 (panel sections built for the first time). 21 of 22 related walks green; video-tool-bar-walk step 68 (lens) is the known failure owned by walks-that-fail-in-the-full-sweep-27. Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-19T20:43:26.016Z",
+      "note": "Chose geometryGroup + marker over re-hosting the panel and dock in their own NSHostingViews because it changes no environment, focus or sizing; if a group's view cannot be found that piece simply lands at once. Left rough (under the bar): Cmd-1 back to View still animates in SwiftUI (stills 28-57ms), not part of this task's bar; the walk's own describe note still tells the 2026-10 story."
+    },
+    {
+      "t": "2026-11-19T20:43:48.365Z",
+      "note": "The slide into Edit now runs in Core Animation (579bd94f4): tool bar, tracks and picture arrive with the slide, panel sections just after; view-to-edit-on-a-long-recording-walk passed 4 runs in a row with film stills 11-16ms and no pass over 82ms; main thread busy 271-335ms of 0.8s on later switches (first switch after opening 319-385, once 591). Suite green, 21/22 related walks (video-tool-bar step 68 is the known one). Audit queue/audits/2026-11-19-view-to-edit-ca-slide.json with a reel and contact sheet."
     }
   ],
   "walks": [
     "view-to-edit-on-a-long-recording-walk"
   ],
-  "started": "2026-11-18T13:54:46.249Z",
+  "started": "2026-11-19T18:19:14.416Z",
   "failures": 0,
   "lastError": {
     "at": "2026-11-18T13:54:52.242Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-  }
+  },
+  "completed": "2026-11-19T20:43:48.366Z"
 }
