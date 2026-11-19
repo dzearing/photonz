@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p2-normal",
   "seq": 170,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-02T14:13:20.821Z",
-  "updated": "2026-11-17T15:37:32.186Z",
+  "updated": "2026-11-19T10:29:14.867Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-11-02 (docs/design/ask.md, Choosing a model): Gemma 4 E2B 4.6 held-out (4.2 GB, the only one that fits), Qwen3.5 4B 12.4 (reads 7.8 GB, perhaps high; the eval memory reading took 29.1 for the 9B once, likely another llama-server), Gemma 4 E4B 4.5. Small models fail mostly by writing tool calls Ask cannot use (AskConversation.brokenCalls counts unparsed text calls, drawing problems and refused arguments together). Ask instructions are about 16k tokens, half of an 8 GB Macs 32k window. Qwen3.5 9B reached 20.7 at --mac 16. Model files are already in ~/Library/Application Support/Photonz/Models. Eval: Scripts/ask-eval.sh run --engine ask --set held-out --models <id> --mac 8 --minutes 8, then --resume.",
@@ -62,6 +62,52 @@
     {
       "t": "2026-11-17T15:37:32.185Z",
       "note": "seq 160 -> 170"
+    },
+    {
+      "t": "2026-11-19T07:05:16.359Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T08:49:30.682Z",
+      "note": "Memory, measured: Qwen3.5 4B at the 8 GB Mac's 32k window loads at 4.5-4.6 GB; it grew to 7.8 GB in the eval because llama-server keeps copies of earlier reads (--cache-ram, 8 GB default) and two 50 MB state checkpoints every turn (up to 32). Standalone 16-turn test: default peak 5.77 GB; --cache-ram 0 --ctx-checkpoints 2 peak 4.75 GB with each turn still reading only its new ~316 tokens; --ctx-checkpoints 0 peak 4.66 GB but re-reads the whole 15-19k prompt every turn. So Macs under 16 GB now get --cache-ram 0 --ctx-checkpoints 2."
+    },
+    {
+      "t": "2026-11-19T08:49:30.876Z",
+      "note": "Climb subset (19-20 cases, --models qwen3.5-4b --mac 8): baseline 20261119-070825-ask mean 33.3 over 16 cases, peak 7.8 GB; thinking on + no prompt cache 20261119-074247-ask 36.6 over 19 (30.2 on the 16 shared; drawings up: cat 24->31, coffee cup 6->22, house 29->44, fox 0->19; two zeros: a redline answered in words, a runaway think of 8192 tokens with no answer), peak 5.4 GB. Added a 2048-token thinking budget for models marked thinks. video-case-titles-before-three-clips never runs (sample recording never opens, 540 s), left out; covered by the-ask-scoring-run-refuses-to-score-when-the-mo."
+    },
+    {
+      "t": "2026-11-19T08:49:31.104Z",
+      "note": "Other models: no newer small Qwen or Gemma on Hugging Face (ggml-org/unsloth searched 2026-11-19). Qwen3.5 9B's smallest sensible file is UD-IQ3_XXS 4.02 GB + 0.92 GB eyes, over 5.2 GB once its window is added, so not tried."
+    },
+    {
+      "t": "2026-11-19T10:29:10.831Z",
+      "note": "owns these walks: ask-sets-itself-up-walk, ask-settings-lists-models-walk"
+    },
+    {
+      "t": "2026-11-19T10:29:10.906Z",
+      "note": "Held-out, Qwen3.5 4B thinking (2048 budget) with the 8 GB limits, --models qwen3.5-4b --mac 8: 14.5 over 53 cases, 49.2 s median, 4.8 GB peak, 92 of 401 calls broken (20261119-084048-ask-held-out). Climb (19-case slice, thinking): 36.6 (20261119-074247-ask); no-thinking baseline slice 33.3 over 16 (20261119-070825-ask). The full 94-case climb was not run: at about 3.5 min a case it is 5+ hours, and the held-out already settled that it does not reach 20. Nothing reached 20, so the 8 GB dialog still says memory is short and the 4B row still says Too weak for Ask (its numbers updated to this run; smallest Mac now 8 GB)."
+    },
+    {
+      "t": "2026-11-19T10:29:10.985Z",
+      "note": "Chose to keep thinking on for Qwen3.5 4B over turning it back off because it lifted every drawing on the climb slice and the held-out total rose from 12.4 (45 cases, no thinking, 2026-11-02) to 14.5; no same-day held-out run without thinking was done, so that comparison is across set sizes."
+    },
+    {
+      "t": "2026-11-19T10:29:11.065Z",
+      "note": "left rough: the 8 GB dialog says the Mac does not have enough memory, while a model now fits but is too weak; still true of a model that does Ask's work, so left as the task asked. Untried idea: a shorter prompt for small models; drawings, most of the held-out set, are the model's own skill, so it may not close 6 points. Not filed: no open owner and it is a speculative climb, not a defect."
+    },
+    {
+      "t": "2026-11-19T10:29:11.145Z",
+      "note": "Walks: ask-sets-itself-up-walk, ask-settings-lists-models-walk, ask-deletes-an-older-model-walk, ask-offers-the-new-default-model-walk all ok on the rebuilt probe. Full test.sh green. Commits 2e836c933, fff83a327."
+    },
+    {
+      "t": "2026-11-19T10:29:14.865Z",
+      "note": "No model reached 20 on an 8 GB Mac (acceptance item 3). Qwen3.5 4B as an 8 GB Mac now fits (peak 4.8 GB, was 7.8, from --cache-ram 0 --ctx-checkpoints 2 on Macs under 16 GB) and thinks first (capped at 2048 tokens): held-out 14.5 at 49.2 s, climb slice 36.6. The 8 GB dialog and row stay as they were (Too weak for Ask). Everything tried, with totals, is in the log and docs/design/ask.md, An 8 GB Mac. Tests green, 4 Ask model walks ok, commits 2e836c933 fff83a327."
     }
-  ]
+  ],
+  "started": "2026-11-19T07:05:16.358Z",
+  "walks": [
+    "ask-sets-itself-up-walk",
+    "ask-settings-lists-models-walk"
+  ],
+  "completed": "2026-11-19T10:29:14.866Z"
 }

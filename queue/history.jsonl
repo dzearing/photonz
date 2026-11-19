@@ -18041,3 +18041,13 @@
 {"t":"2026-11-19T07:04:30.365Z","ev":"task_note","id":"find-out-whether-landing-a-component-sheet-holds"}
 {"t":"2026-11-19T07:04:30.443Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
 {"t":"2026-11-19T07:04:37.566Z","ev":"task_done","id":"find-out-whether-landing-a-component-sheet-holds","from":"in_progress","note":"Yes, it holds: timed with the walk markers down, landing Ask's 11-component sheet held the main thread 541-557 ms (the blank Layers/Agent rows from 11-01 no longer reproduce). Cause found by Time Profiler: the copy sync re-walked the tree per main lookup (quadratic in copies) and path(of:) walked it per placed layer; both now answer from per-document kept answers (PhotonzCore, tests first), hold now 387-396 ms. The rest (12 steps in one pass, Layers list laying out 91 rows) is filed as a-landed-component-sheet-draws-without-a-hold, guarded by the new a-component-sheet-lands-without-a-long-hold-walk. Full test suite green."}
+{"t":"2026-11-19T07:05:16.365Z","ev":"task_started","id":"ask-works-on-an-8-gb-mac","title":"Ask works on an 8 GB Mac","priority":"p2-normal"}
+{"t":"2026-11-19T08:49:30.685Z","ev":"task_note","id":"ask-works-on-an-8-gb-mac"}
+{"t":"2026-11-19T08:49:30.884Z","ev":"task_note","id":"ask-works-on-an-8-gb-mac"}
+{"t":"2026-11-19T08:49:31.110Z","ev":"task_note","id":"ask-works-on-an-8-gb-mac"}
+{"t":"2026-11-19T10:29:10.833Z","ev":"task_walks","id":"ask-works-on-an-8-gb-mac","walks":["ask-sets-itself-up-walk","ask-settings-lists-models-walk"]}
+{"t":"2026-11-19T10:29:10.908Z","ev":"task_note","id":"ask-works-on-an-8-gb-mac"}
+{"t":"2026-11-19T10:29:10.987Z","ev":"task_note","id":"ask-works-on-an-8-gb-mac"}
+{"t":"2026-11-19T10:29:11.067Z","ev":"task_note","id":"ask-works-on-an-8-gb-mac"}
+{"t":"2026-11-19T10:29:11.147Z","ev":"task_note","id":"ask-works-on-an-8-gb-mac"}
+{"t":"2026-11-19T10:29:14.868Z","ev":"task_done","id":"ask-works-on-an-8-gb-mac","from":"in_progress","note":"No model reached 20 on an 8 GB Mac (acceptance item 3). Qwen3.5 4B as an 8 GB Mac now fits (peak 4.8 GB, was 7.8, from --cache-ram 0 --ctx-checkpoints 2 on Macs under 16 GB) and thinks first (capped at 2048 tokens): held-out 14.5 at 49.2 s, climb slice 36.6. The 8 GB dialog and row stay as they were (Too weak for Ask). Everything tried, with totals, is in the log and docs/design/ask.md, An 8 GB Mac. Tests green, 4 Ask model walks ok, commits 2e836c933 fff83a327."}
