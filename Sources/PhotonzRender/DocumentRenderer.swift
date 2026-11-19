@@ -3,7 +3,9 @@ import CoreImage
 import CoreVideo
 import CoreImage.CIFilterBuiltins
 import Foundation
+import IOSurface
 import PhotonzCore
+import VideoToolbox
 
 /// Composites a PhotonzDocument into a CGImage using Core Image
 /// (GPU-accelerated via Metal where available).
@@ -28,6 +30,11 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// Whether a big raster is kept on a GPU surface (`FrameOnASurface.keep`).
     /// Off only for a test that draws the same document both ways.
     var keepsBigRastersOnASurface = true
+
+    /// Whether a video's whole picture is drawn onto a GPU surface and shown
+    /// from there (`renderInteractiveFrame`). Off only for a test that draws
+    /// the same document both ways.
+    var drawsMovingPicturesOnASurface = true
 
     /// Where this renderer mixes see-through paint right now.
     public var compositing: CompositingSpace {
@@ -557,6 +564,14 @@ public final class DocumentRenderer: @unchecked Sendable {
     private var lastColorSpace: CGColorSpace?
     private var frameBuffer: UnsafeMutableRawPointer?
     private var frameBufferCapacity = 0
+    /// Whether `frameBuffer` holds `lastFrame`, so a patch can be drawn over
+    /// it. Not after a picture drawn onto a surface.
+    private var bufferHoldsLastFrame = false
+    /// The surface `lastFrame` was drawn on, when it was.
+    private var lastSurface: IOSurfaceRef?
+    /// The surfaces a video's pictures are drawn on, a few reused in turn.
+    private var surfacePool: CVPixelBufferPool?
+    private var surfacePoolSize = (width: 0, height: 0)
     private var frameSize = (width: 0, height: 0)
     private let interactiveLock = NSLock()
     private static let srgb = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
@@ -585,6 +600,10 @@ public final class DocumentRenderer: @unchecked Sendable {
         frameSize = (0, 0)
         lastDocument = nil
         lastFrame = nil
+        lastSurface = nil
+        bufferHoldsLastFrame = false
+        surfacePool = nil
+        surfacePoolSize = (0, 0)
         lastColorSpace = nil
         lastCompositing = nil
         interactiveLock.unlock()
@@ -637,6 +656,36 @@ public final class DocumentRenderer: @unchecked Sendable {
     public func renderInteractive(_ document: PhotonzDocument, store: ImageStore,
                                   contentScale: CGFloat = 1,
                                   colorSpace: CGColorSpace? = nil) -> CGImage? {
+        renderInteractiveFrame(document, store: store, contentScale: contentScale,
+                               colorSpace: colorSpace)?.image
+    }
+
+    /// One picture for the canvas, and the GPU surface it is on when it was
+    /// drawn onto one.
+    ///
+    /// Unchecked: a surface is not Sendable. It is written once, inside
+    /// `renderInteractiveFrame`, before anything else can see it, and only
+    /// shown after.
+    public struct InteractiveFrame: @unchecked Sendable {
+        public let image: CGImage
+        public let surface: IOSurfaceRef?
+    }
+
+    /// `renderInteractive`, with the surface the picture is on.
+    ///
+    /// A video's whole picture is drawn onto a GPU surface (one of a few
+    /// reused in turn) and its picture made of the surface, so it is never
+    /// read back off the GPU nor copied: the canvas shows the surface itself
+    /// while a video plays or a hand moves the playhead. Read back into the
+    /// bitmap and copied out of it, that was about two milliseconds of every
+    /// picture of the 6 minute reference edit a scrubbing hand waited for
+    /// (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 17). A small
+    /// change straight after (a title nudged on a paused video) draws the
+    /// whole picture into the bitmap once, and is patched from then on, as a
+    /// still picture always is.
+    public func renderInteractiveFrame(_ document: PhotonzDocument, store: ImageStore,
+                                       contentScale: CGFloat = 1,
+                                       colorSpace: CGColorSpace? = nil) -> InteractiveFrame? {
         let width = Int(document.canvasSize.width.rounded())
         let height = Int(document.canvasSize.height.rounded())
         guard width >= 1, height >= 1 else { return nil }
@@ -656,25 +705,93 @@ public final class DocumentRenderer: @unchecked Sendable {
         // A picture that arrived, went, or was read again at another size
         // since the last frame changes pixels the document says nothing
         // about, so the whole canvas is drawn again. So does a new scale.
-        if let lastDocument, let lastFrame, frameBuffer != nil,
+        if let lastDocument, let lastFrame,
            frameSize == (width, height), pictures == lastPictures,
            contentScale == lastContentScale, space == lastCompositing, colors == lastColorSpace {
             switch RenderDiff.dirtyRegion(from: lastDocument, to: document) {
             case .none:
-                return lastFrame
+                return InteractiveFrame(image: lastFrame, surface: lastSurface)
             case .rect(let dirty)
                 where Double(dirty.width * dirty.height)
                     < Self.fullRenderAreaShare * Double(width * height):
-                return renderLocked(document, store: store, region: dirty,
+                // After a picture on a surface the bitmap is out of date: the
+                // whole picture goes into it once, to patch from.
+                return renderLocked(document, store: store, region: bufferHoldsLastFrame ? dirty : nil,
                                     width: width, height: height, contentScale: contentScale,
-                            colorSpace: colors)
+                                    colorSpace: colors).map { InteractiveFrame(image: $0, surface: nil) }
             default:
                 break
             }
         }
+        if drawsMovingPicturesOnASurface, document.hasTime,
+           let frame = renderOnASurface(document, store: store, width: width, height: height,
+                                        contentScale: contentScale, colorSpace: colors) {
+            return frame
+        }
         return renderLocked(document, store: store, region: nil,
                             width: width, height: height, contentScale: contentScale,
-                            colorSpace: colors)
+                            colorSpace: colors).map { InteractiveFrame(image: $0, surface: nil) }
+    }
+
+    /// The whole composite drawn onto the next free surface, with a picture
+    /// made of it. Nil when no surface could be had, and the bitmap is used.
+    /// Must hold `interactiveLock`.
+    private func renderOnASurface(_ document: PhotonzDocument, store: ImageStore,
+                                  width: Int, height: Int, contentScale: CGFloat,
+                                  colorSpace: CGColorSpace) -> InteractiveFrame? {
+        guard let buffer = nextSurface(width: width, height: height) else { return nil }
+        guard let output = compositeImage(document, store: store, contentScale: contentScale) else { return nil }
+        // The picture made of the surface, and the canvas showing it, both
+        // read the colours it is in from here.
+        CVBufferSetAttachment(buffer, kCVImageBufferCGColorSpaceKey, colorSpace, .shouldPropagate)
+        let destination = CIRenderDestination(pixelBuffer: buffer)
+        destination.colorSpace = colorSpace
+        let canvas = CGRect(x: 0, y: 0, width: width, height: height)
+        guard let task = try? context.startTask(toRender: output.cropped(to: canvas), from: canvas,
+                                                to: destination, at: .zero),
+              (try? task.waitUntilCompleted()) != nil
+        else { return nil }
+        var made: CGImage?
+        VTCreateCGImageFromCVPixelBuffer(buffer, options: nil, imageOut: &made)
+        guard let picture = made else { return nil }
+        let surface = CVPixelBufferGetIOSurface(buffer)?.takeUnretainedValue()
+        if let surface, let colours = colorSpace.copyPropertyList() {
+            IOSurfaceSetValue(surface, kIOSurfaceColorSpace, colours)
+        }
+        frameSize = (width, height)
+        lastDocument = document
+        lastFrame = picture
+        lastSurface = surface
+        bufferHoldsLastFrame = false
+        return InteractiveFrame(image: picture, surface: surface)
+    }
+
+    /// A surface `width` by `height` to draw on: one not still held by a
+    /// picture or shown on screen, from a few kept for the purpose.
+    private func nextSurface(width: Int, height: Int) -> CVPixelBuffer? {
+        if surfacePool == nil || surfacePoolSize != (width, height) {
+            let buffers: [String: Any] = [
+                kCVPixelBufferWidthKey as String: width,
+                kCVPixelBufferHeightKey as String: height,
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferIOSurfacePropertiesKey as String: [String: Any](),
+                kCVPixelBufferMetalCompatibilityKey as String: true,
+            ]
+            let pool: [String: Any] = [kCVPixelBufferPoolMinimumBufferCountKey as String: 3]
+            var made: CVPixelBufferPool?
+            guard CVPixelBufferPoolCreate(nil, pool as CFDictionary, buffers as CFDictionary, &made)
+                    == kCVReturnSuccess, let made else { return nil }
+            surfacePool = made
+            surfacePoolSize = (width, height)
+        }
+        guard let surfacePool else { return nil }
+        // The pool hands out only a surface nothing uses: it counts a
+        // surface's users the way the screen does while one is up
+        // (`IOSurfaceIsInUse` is true of every surface it has handed out),
+        // so the one on screen is never drawn on again under it.
+        var buffer: CVPixelBuffer?
+        guard CVPixelBufferPoolCreatePixelBuffer(nil, surfacePool, &buffer) == kCVReturnSuccess else { return nil }
+        return buffer
     }
 
     /// Which bitmap every visible picture layer would be drawn with right now.
@@ -730,10 +847,14 @@ public final class DocumentRenderer: @unchecked Sendable {
                                   shouldInterpolate: false, intent: .defaultIntent) else {
             lastDocument = nil
             lastFrame = nil
+            lastSurface = nil
+            bufferHoldsLastFrame = false
             return nil
         }
         lastDocument = document
         lastFrame = frame
+        lastSurface = nil
+        bufferHoldsLastFrame = true
         return frame
     }
 

@@ -891,6 +891,21 @@ lldb to the probe, break on `CI::MetalContext::bind_cgimage` and print `x1`:
 a pointer that comes back on every frame is a bitmap being copied in every
 frame.
 
+**The same holds on the way out (2026-11-19).** A video's whole picture is
+drawn onto one of a few pooled surfaces (`DocumentRenderer.renderInteractiveFrame`),
+never read back into the bitmap and copied out of it, and while it plays or a
+hand moves the playhead the canvas shows that surface itself
+(`CanvasNSView.showPlayingPicture`). The pool hands out only a surface nobody
+uses, and the screen counts as a user while a surface is up, so the one shown
+is never drawn on again under it. A small change straight after (a title
+nudged on a paused video) draws the whole picture into the bitmap once and is
+patched from then on; a still picture never touches a surface. Composite
+median 5.6 -> 4.2 ms, and a dragged playhead's picture trails the hand by one
+refresh in the middle rather than two. The render queue is no longer an actor
+either: asking for a picture from the main actor through a task waited for the
+main actor's next turn first, 0.8 ms in the middle and 3.5 at the slow end
+(`RenderScheduler.submit`, now synchronous under a lock).
+
 ## 8f. Who may watch the playhead
 
 While a video plays the playhead moves thirty times a second, and everything

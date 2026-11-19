@@ -325,7 +325,13 @@ extension CanvasNSView {
     /// something else on the canvas could want to change with the picture:
     /// nothing up yet, a drag or a held picture in flight, something picked
     /// (whose handles follow a keyed layer), a stroke landing.
-    func showPlayingPicture(_ picture: CGImage, posed: PhotonzDocument?) -> Bool {
+    ///
+    /// `surface`, when the picture was drawn on one, is what goes up: the
+    /// screen shows it as it is, where the picture made of it would be copied
+    /// on its way (`DocumentRenderer.renderInteractiveFrame`). `image` still
+    /// holds the picture, which keeps the surface from being drawn on again
+    /// while it is up.
+    func showPlayingPicture(_ picture: CGImage, surface: IOSurfaceRef?, posed: PhotonzDocument?) -> Bool {
         guard image != nil, viewport != nil, !contentLayer.isHidden,
               calloutHoldImage == nil, annotationCommitImage == nil, dragPreview == nil,
               selectedLayerID == nil, multiSelectedLayerIDs.isEmpty,
@@ -336,7 +342,7 @@ extension CanvasNSView {
         if let posed { document = posed }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        contentLayer.contents = picture
+        contentLayer.contents = surface ?? picture
         CATransaction.commit()
         return true
     }

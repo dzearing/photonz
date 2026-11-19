@@ -86,7 +86,7 @@ struct ShownSizeCompositeTests {
         let store = ImageStore()
         let delivered = Delivered()
         let scheduler = RenderScheduler(store: store, onDelivery: { await delivered.set($0.image) })
-        await scheduler.submit(Self.shown(document, at: scale), contentScale: scale)
+        scheduler.submit(Self.shown(document, at: scale), contentScale: scale)
         await scheduler.waitUntilIdle()
         let picture = try #require(await delivered.image)
         #expect(Self.whitePixels(picture, in: title.frame.magnified(by: scale)) > 5000)

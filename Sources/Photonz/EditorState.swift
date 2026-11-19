@@ -2173,7 +2173,7 @@ final class EditorState {
     var documentTimeMSUnwatched: Int { storedDocumentTimeMS }
     /// The canvas's way of putting a playing frame straight up
     /// (`showPlayingPicture`), handed over when the canvas is made.
-    @ObservationIgnored var playingPictures: ((CGImage, PhotonzDocument?) -> Bool)?
+    @ObservationIgnored var playingPictures: ((CGImage, IOSurfaceRef?, PhotonzDocument?) -> Bool)?
     /// The picture on the canvas went up without SwiftUI being told
     /// (`showPlayingPicture`), so it is told once play stops or the hand lets
     /// go (`catchUpOnQuietPictures`).
@@ -2254,8 +2254,10 @@ final class EditorState {
     /// at most one new picture asked for per refresh, however fast the moves
     /// come (`DisplayFrames`).
     @ObservationIgnored var scrubFrames: DisplayFrames?
-    @ObservationIgnored var momentAwaitingRefresh = false
-    @ObservationIgnored var momentAskedAtRefresh = -1
+    /// When a hand on the playhead asks for a picture, and which picture
+    /// asked for is up (`ScrubPictureAsks`): each one is numbered as it is
+    /// asked for and the number comes back with it as its render's tag.
+    @ObservationIgnored var scrubAsks = ScrubPictureAsks()
     /// How fast, and which way, it is playing: 1 for Space and the Play
     /// button, anything on J and L's ladder for a shuttle, negative backwards
     /// (`EditorState+TimelineKeys`).
@@ -6395,7 +6397,7 @@ final class EditorState {
     /// (`CanvasNSView.showPlayingPicture`); anything else goes the usual way,
     /// and stopping or letting go does too, so the frame left on screen is
     /// built as every still picture is.
-    private func showPlayingPicture(_ picture: CGImage, moment: Int?) -> Bool {
+    private func showPlayingPicture(_ picture: CGImage, surface: IOSurfaceRef?, moment: Int?) -> Bool {
         guard isDocumentPlaying || playheadInHand, moment != nil, !crispTileOutOfDate, crispTile == nil,
               let playingPictures else { return false }
         let keptImage = _renderedImage
@@ -6403,7 +6405,7 @@ final class EditorState {
         _renderedImage = picture
         _shownMomentMS = moment
         let posed = documentHasKeyClock ? canvasGeometryDocument : nil
-        if playingPictures(picture, posed) {
+        if playingPictures(picture, surface, posed) {
             pictureShownQuietly = true
             return true
         }
@@ -6564,8 +6566,9 @@ final class EditorState {
                     // Drop the frame if the document was closed while rendering.
                     guard let self, self.history != nil, !self.windowClosed else { return }
                     let moment = frame.document.hasTime ? frame.stamp : nil
+                    self.scrubAsks.shown(frame.tag >> 1)
                     self.shownDrawnDocument = frame.document
-                    if !(frame.image.map { self.showPlayingPicture($0, moment: moment) } ?? false) {
+                    if !(frame.image.map { self.showPlayingPicture($0, surface: frame.surface, moment: moment) } ?? false) {
                         self.renderedImage = frame.image
                         if self.crispTileOutOfDate, !self.crispTileKeptUntilReplaced {
                             self.crispTileOutOfDate = false
@@ -6579,7 +6582,7 @@ final class EditorState {
                         self.askToTypeIn(pending.layerID)
                     }
                     #if PHOTONZ_PLAYTEST
-                    if frame.tag == Self.drawnFromTheExactFrames { self.playtestShownExactMomentMS = moment }
+                    if frame.tag & 1 == Self.drawnFromTheExactFrames { self.playtestShownExactMomentMS = moment }
                     if self.playtestRecordsDrawnFrames, let moment {
                         self.playtestShownFrameIDs = self.playtestDrawnFrameIDs[moment]
                     }
@@ -6619,10 +6622,13 @@ final class EditorState {
                 .filter { pictures.image(for: $0) != nil }.map(\.id))
         }
         #endif
-        let asked = tag
+        // Numbered, so the picture says which ask it answers
+        // (`ScrubPictureAsks`); the bit below is the playtest's.
+        let number = scrubAsks.asked()
+        let askedTag = number << 1 | tag
         Task {
             await scheduler.submit(document, store: pictures, stamp: moment, contentScale: contentScale,
-                                   colorSpace: colors, tag: asked)
+                                   colorSpace: colors, tag: askedTag)
         }
     }
 

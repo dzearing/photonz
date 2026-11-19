@@ -151,8 +151,7 @@ extension EditorState {
         let unsettled = !playheadSettled
         playheadSettled = true
         catchUpPanelPlayhead()
-        if momentAwaitingRefresh || unsettled {
-            momentAwaitingRefresh = false
+        if scrubAsks.lettingGo() || unsettled {
             documentMomentChanged()
         }
         endScrubAudition()
@@ -176,16 +175,16 @@ extension EditorState {
             documentMomentChanged()
             return
         }
-        if atOnce, frames.count > momentAskedAtRefresh {
-            momentAskedAtRefresh = frames.count
-            momentAwaitingRefresh = false
+        // A landing waits for the refresh, and for any picture still on its
+        // way (`ScrubPictureAsks`).
+        if !atOnce {
+            scrubAsks.frameLanded()
+        } else if scrubAsks.handMoved(atRefresh: frames.count) {
             documentMomentChanged()
-        } else {
-            momentAwaitingRefresh = true
         }
         frames.run { [weak self] in
             guard let self else { return }
-            guard momentAwaitingRefresh else {
+            guard scrubAsks.refreshed() else {
                 // A refresh with nothing new: nothing to draw until the hand
                 // moves again.
                 if !playheadInHand { scrubFrames?.stop() }
@@ -193,7 +192,6 @@ extension EditorState {
             }
             // What is left over from the refresh just gone. It does not use up
             // the new refresh's own first move, which is still drawn at once.
-            momentAwaitingRefresh = false
             documentMomentChanged()
         }
     }

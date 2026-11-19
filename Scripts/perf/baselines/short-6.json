@@ -3,81 +3,81 @@
 
   },
   "composites" : {
-    "askedToShownMedianMS" : 5.63675,
-    "askedToShownWorstMS" : 13.053042,
-    "drawMedianMS" : 5.618625,
-    "drawWorstMS" : 13.0485,
-    "pictures" : 2210
+    "askedToShownMedianMS" : 4.326042,
+    "askedToShownWorstMS" : 10.517417,
+    "drawMedianMS" : 4.231917,
+    "drawWorstMS" : 10.505875,
+    "pictures" : 2223
   },
-  "date" : "2026-11-18T10:16:55Z",
+  "date" : "2026-11-19T11:42:21Z",
   "edits" : [
     {
-      "callMS" : 3.0300833750516176,
+      "callMS" : 3.020208328962326,
       "did" : "half a second off the end of Take 2",
       "edit" : "trim",
-      "longestPassMS" : 14.472708338871598
+      "longestPassMS" : 22.222541738301516
     },
     {
-      "callMS" : 8.360291831195354,
+      "callMS" : 10.190250119194388,
       "did" : "Take 1 cut at 0:22.4",
       "edit" : "blade",
-      "longestPassMS" : 56.512291776016355
+      "longestPassMS" : 63.107374822720885
     },
     {
-      "callMS" : 1.3025833759456873,
+      "callMS" : 1.180499792098999,
       "did" : "the last edit taken back",
       "edit" : "undo",
-      "longestPassMS" : 31.818541465327144
+      "longestPassMS" : 30.457541812211275
     },
     {
-      "callMS" : 1.7802915535867214,
+      "callMS" : 1.9099581986665726,
       "did" : "Take 2 picked",
       "edit" : "pick",
-      "longestPassMS" : 31.942749861627817
+      "longestPassMS" : 31.88470844179392
     },
     {
-      "callMS" : 2.8910415712743998,
+      "callMS" : 2.853041747584939,
       "did" : "half a second off the end of Take 3",
       "edit" : "trim, picked",
-      "longestPassMS" : 18.685499904677272
+      "longestPassMS" : 18.99912510998547
     },
     {
-      "callMS" : 4.473041743040085,
-      "did" : "Take 2 cut at 0:31.3",
+      "callMS" : 3.8992916233837605,
+      "did" : "Take 2 cut at 0:31.2",
       "edit" : "blade, picked",
-      "longestPassMS" : 30.9666667599231
+      "longestPassMS" : 38.74554159119725
     },
     {
-      "callMS" : 1.3772500678896904,
+      "callMS" : 1.1458750814199448,
       "did" : "the last edit taken back",
       "edit" : "undo, picked",
-      "longestPassMS" : 28.21170841343701
+      "longestPassMS" : 25.09483345784247
     },
     {
-      "callMS" : 0.5414583720266819,
+      "callMS" : 0.5012499168515205,
       "did" : "nothing picked",
       "edit" : "unpick",
-      "longestPassMS" : 41.00404167547822
+      "longestPassMS" : 42.2907501924783
     },
     {
-      "callMS" : 2.1765832789242268,
+      "callMS" : 1.9879583269357681,
       "did" : "Take 3 picked",
       "edit" : "pick, from nothing",
-      "longestPassMS" : 41.29779152572155
+      "longestPassMS" : 51.29170836880803
     }
   ],
   "export" : {
-    "longestMainPassMS" : 1.9440834876149893,
+    "longestMainPassMS" : 1.9938333425670862,
     "megabytes" : 54.16443347930908,
-    "peakFootprintMB" : 3442.4715423583984,
+    "peakFootprintMB" : 3471.6275634765625,
     "route" : "drawn",
-    "seconds" : 13.289080583490431,
+    "seconds" : 13.25666766660288,
     "settings" : "MP4, Standard, Full",
     "videoSeconds" : 30
   },
   "form" : "short",
   "frameStepMS" : 33,
-  "head" : "10f4b00b0+changes (worst of 3)",
+  "head" : "9b7ecdc39+changes (worst of 3)",
   "machine" : "Mac16,5, 16 cores, 64GB",
   "minutes" : 6,
   "plays" : [
@@ -86,8 +86,8 @@
       "framesDue" : 1818,
       "framesShown" : 1817,
       "label" : "whole",
-      "seconds" : 60.001104749972,
-      "worstGapMS" : 66.10262487083673
+      "seconds" : 60.002240624977276,
+      "worstGapMS" : 65.9641248639673
     },
     {
       "dropped" : 0,
@@ -95,7 +95,7 @@
       "framesShown" : 12,
       "label" : "cross dissolve at 0:21.6",
       "seconds" : 0.4,
-      "worstGapMS" : 41.71008337289095
+      "worstGapMS" : 41.67191660962999
     },
     {
       "dropped" : 0,
@@ -103,7 +103,7 @@
       "framesShown" : 12,
       "label" : "push at 0:28.0",
       "seconds" : 0.4,
-      "worstGapMS" : 50.01645837910473
+      "worstGapMS" : 42.46412497013807
     },
     {
       "dropped" : 0,
@@ -111,7 +111,7 @@
       "framesShown" : 12,
       "label" : "cross dissolve at 0:39.0",
       "seconds" : 0.4,
-      "worstGapMS" : 44.728999957442284
+      "worstGapMS" : 42.35920822247863
     },
     {
       "dropped" : 0,
@@ -119,7 +119,7 @@
       "framesShown" : 12,
       "label" : "cross dissolve at 0:50.1",
       "seconds" : 0.4,
-      "worstGapMS" : 49.987541511654854
+      "worstGapMS" : 39.49925000779331
     },
     {
       "dropped" : 0,
@@ -127,7 +127,7 @@
       "framesShown" : 24,
       "label" : "cube at 0:59.8",
       "seconds" : 0.8,
-      "worstGapMS" : 41.736874962225556
+      "worstGapMS" : 42.183500016108155
     },
     {
       "dropped" : 0,
@@ -135,35 +135,35 @@
       "framesShown" : 12,
       "label" : "cross dissolve at 1:08.5",
       "seconds" : 0.4,
-      "worstGapMS" : 34.9069582298398
+      "worstGapMS" : 41.688583325594664
     }
   ],
   "scrubs" : [
     {
-      "frameLagMedianFrames" : 33,
-      "frameLagWorstFrames" : 119,
+      "frameLagMedianFrames" : 40,
+      "frameLagWorstFrames" : 152,
       "frames" : 240,
-      "lagMedianFrames" : 2,
+      "lagMedianFrames" : 1,
       "lagWorstFrames" : 3,
-      "movesMade" : 255,
-      "seconds" : 2.130899750161916,
-      "sightLagMedianFrames" : 2,
+      "movesMade" : 252,
+      "seconds" : 2.131215791683644,
+      "sightLagMedianFrames" : 1,
       "sightLagWorstFrames" : 91,
       "speed" : "medium",
-      "worstFrameMS" : 17.987833358347416
+      "worstFrameMS" : 20.699708256870508
     },
     {
       "frameLagMedianFrames" : 2,
-      "frameLagWorstFrames" : 41,
+      "frameLagWorstFrames" : 21,
       "frames" : 240,
-      "lagMedianFrames" : 2,
+      "lagMedianFrames" : 1,
       "lagWorstFrames" : 3,
       "movesMade" : 242,
-      "seconds" : 2.0193289583548903,
-      "sightLagMedianFrames" : 2,
-      "sightLagWorstFrames" : 37,
+      "seconds" : 2.0182401249185205,
+      "sightLagMedianFrames" : 1,
+      "sightLagWorstFrames" : 16,
       "speed" : "hunt",
-      "worstFrameMS" : 14.108375180512667
+      "worstFrameMS" : 14.66695824638009
     }
   ],
   "sound" : {
@@ -174,5 +174,5 @@
   "timeline" : [
 
   ],
-  "walkPeakFootprintMB" : 1744.1742553710938
+  "walkPeakFootprintMB" : 1775.1899490356445
 }

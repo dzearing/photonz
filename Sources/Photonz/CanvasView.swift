@@ -311,7 +311,7 @@ struct CanvasView: NSViewRepresentable {
     /// Takes the canvas's way of putting a playing frame straight up, so a
     /// video playing goes past SwiftUI frame by frame
     /// (`EditorState.showPlayingPicture`).
-    var registerPlayingPictures: ((@escaping (CGImage, PhotonzDocument?) -> Bool) -> Void)?
+    var registerPlayingPictures: ((@escaping (CGImage, IOSurfaceRef?, PhotonzDocument?) -> Bool) -> Void)?
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -760,11 +760,11 @@ final class CanvasNSView: NSView {
     var documentTimeMS: Int { documentTimeNow() }
     /// Hands the editor a way to put a playing frame straight up
     /// (`showPlayingPicture`), once, when the view is first given one.
-    var registerPlayingPictures: ((@escaping (CGImage, PhotonzDocument?) -> Bool) -> Void)? {
+    var registerPlayingPictures: ((@escaping (CGImage, IOSurfaceRef?, PhotonzDocument?) -> Bool) -> Void)? {
         didSet {
             guard oldValue == nil, let registerPlayingPictures else { return }
-            registerPlayingPictures { [weak self] picture, posed in
-                self?.showPlayingPicture(picture, posed: posed) ?? false
+            registerPlayingPictures { [weak self] picture, surface, posed in
+                self?.showPlayingPicture(picture, surface: surface, posed: posed) ?? false
             }
         }
     }

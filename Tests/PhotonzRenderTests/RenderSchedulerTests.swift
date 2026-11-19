@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import Synchronization
 import Testing
 import PhotonzCore
 @testable import PhotonzRender
@@ -47,7 +48,7 @@ struct RenderSchedulerTests {
         let collector = FrameCollector()
         let scheduler = RenderScheduler(store: store) { await collector.add($0) }
 
-        await scheduler.submit(doc)
+        scheduler.submit(doc)
         await scheduler.waitUntilIdle()
 
         let images = await collector.images
@@ -70,9 +71,9 @@ struct RenderSchedulerTests {
         actor Tags { var seen: [Int] = []; func add(_ tag: Int) { seen.append(tag) } }
         let tags = Tags()
         let scheduler = RenderScheduler(store: store, onDelivery: { await tags.add($0.tag) })
-        await scheduler.submit(doc, stamp: 5, tag: 1)
+        scheduler.submit(doc, stamp: 5, tag: 1)
         await scheduler.waitUntilIdle()
-        await scheduler.submit(doc, stamp: 6)
+        scheduler.submit(doc, stamp: 6)
         await scheduler.waitUntilIdle()
         #expect(await tags.seen == [1, 0])
     }
@@ -92,7 +93,7 @@ struct RenderSchedulerTests {
         // Slide the patch right 100 times in rapid succession.
         for i in 0..<100 {
             doc.layers[doc.layers.count - 1].frame.origin.x = CGFloat(i % 50)
-            await scheduler.submit(doc)
+            scheduler.submit(doc)
         }
         await scheduler.waitUntilIdle()
 
@@ -118,8 +119,8 @@ struct RenderSchedulerTests {
         let collector = FrameCollector()
         let scheduler = RenderScheduler(store: store) { await collector.add($0) }
 
-        await scheduler.submit(.withBaseImage(red))
-        await scheduler.submit(.withBaseImage(green))
+        scheduler.submit(.withBaseImage(red))
+        scheduler.submit(.withBaseImage(green))
         await scheduler.waitUntilIdle()
 
         let images = await collector.images
@@ -138,12 +139,48 @@ struct RenderSchedulerTests {
         let collector = FrameCollector()
         let scheduler = RenderScheduler(store: store) { await collector.add($0) }
 
-        await scheduler.submit(.withBaseImage(base), colorSpace: p3)
+        scheduler.submit(.withBaseImage(base), colorSpace: p3)
         await scheduler.waitUntilIdle()
 
         let image = try #require(await collector.images.last)
         #expect(image.colorSpace?.name == CGColorSpace.displayP3)
         let p = pixel(image, x: 10, y: 10)
         #expect(p.r > 240 && p.g < 16, "still red, read back in sRGB")
+    }
+
+    /// A picture is asked for straight from the main actor, with no task in
+    /// between: a task started there first waits its turn on the main actor,
+    /// and while a hand dragged the playhead of the 6 minute reference edit
+    /// that turn cost 0.8 ms in the middle and 3.5 at the slow end, enough to
+    /// put the picture a refresh behind the hand
+    /// (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 17).
+    @MainActor
+    @Test("A picture asked for while the main actor stays busy is drawn and delivered all the same")
+    func drawsWhileTheMainActorIsBusy() {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 20, height: 20, r: 255, g: 0, b: 0))
+        let arrived = Mutex(false)
+        let scheduler = RenderScheduler(store: store) { image in
+            if image != nil { arrived.withLock { $0 = true } }
+        }
+        scheduler.submit(.withBaseImage(base))
+        // Hold the main actor, never giving it up, until the picture comes.
+        let deadline = Date().addingTimeInterval(5)
+        while !arrived.withLock({ $0 }), Date() < deadline {}
+        #expect(arrived.withLock { $0 })
+    }
+
+    @Test("Pictures asked for in a row are drawn in that order, the newest last")
+    func askedInARowDrawnInOrder() async {
+        let store = ImageStore()
+        let ids = (0..<30).map { i in store.register(solidImage(width: 4, height: 4, r: UInt8(i * 8), g: 0, b: 0)) }
+        actor Stamps { var seen: [Int] = []; func add(_ stamp: Int) { seen.append(stamp) } }
+        let stamps = Stamps()
+        let scheduler = RenderScheduler(store: store, onDelivery: { await stamps.add($0.stamp) })
+        for (i, id) in ids.enumerated() { scheduler.submit(.withBaseImage(id), stamp: i) }
+        await scheduler.waitUntilIdle()
+        let seen = await stamps.seen
+        #expect(seen == seen.sorted())
+        #expect(seen.last == 29)
     }
 }

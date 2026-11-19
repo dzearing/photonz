@@ -156,7 +156,7 @@ struct ScrubNeverGoesBlackTests {
         let asked = store.snapshot()
         // The budget lets frame 10 go between the ask and the draw.
         store.remove(movie.frameRef(atSourceMS: PlaybackNeverBlinksTests.ms(10)))
-        await scheduler.submit(drawn, store: asked)
+        scheduler.submit(drawn, store: asked)
         await scheduler.waitUntilIdle()
         let middle = try PlaybackNeverBlinksTests.middle(box.image)
         #expect(middle.a == 255 && middle.r > 200, "the clip drew as nothing")

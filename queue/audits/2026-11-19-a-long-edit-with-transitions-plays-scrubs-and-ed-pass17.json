@@ -1,0 +1,25 @@
+{
+  "feature": "A long edit scrubs a refresh behind the hand, not two",
+  "epic": "video-perf",
+  "summary": "Dragging the playhead across the 6 minute reference edit now shows each picture one screen refresh after the hand in the middle of a drag, where it was two. Each picture of the edit draws in 4.2 ms, down from 5.6.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The 6 minute reference edit: Scripts/perf/reference-edit.sh, then open it.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 6 minute reference edit.", "shot": "2026-11-19-long-edit-pass17-reference-edit.png" },
+    { "do": "Drag the playhead slowly across the first minute and watch the picture keep up with your hand." },
+    { "do": "Hunt back and forth over one cut, quickly, and watch for the picture lagging behind." },
+    { "do": "Press Space to play through a dissolve and the cube transition.", "shot": "2026-11-19-long-edit-pass17-playing.png" },
+    { "do": "Pause, pick a title and nudge it with the arrow keys: it should move at once." }
+  ],
+  "evaluate": [
+    "Does a slow drag of the playhead feel attached to your hand?",
+    "When you hunt over a cut, does the picture ever stay behind long enough to notice?",
+    "Do the colours and the picture look exactly as they did before while playing?"
+  ],
+  "rough": [
+    "Speed walk, worst of 3 runs each side (Scripts/perf/speed-walk.sh): picture behind the hand in the middle, medium drag 2 -> 1 refresh, hunt 2 -> 1; composite median 5.6 -> 4.2 ms. At worst it is still 3 refreshes behind, against the bar of 1.",
+    "Playback still drops about 1 frame a minute (bar 0), and an edit while playing still holds the main thread 15 to 63 ms (bar 16). Both stay open on this task.",
+    "The sharp recording frame under a fast drag still arrives 30 to 40 refreshes after the hand in the middle: that is decoding, not drawing.",
+    "Export is untouched: it draws through its own path, which this change does not reach."
+  ]
+}

@@ -23302,3 +23302,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Changed: Macs under 16 GB start Ask's server with `--cache-ram 0 --ctx-checkpoints 2` (Qwen3.5 4B peak 7.8 GB to 4.8 GB). Built-in models can think first (`Choice.thinks`, Qwen3.5 4B only, capped at 2048 tokens a turn).
 - Measured: Qwen3.5 4B as an 8 GB Mac, held-out 14.5 at 49.2 s, climb slice 36.6. Still under the floor of 20, so the 8 GB dialog and the row are unchanged. Details in `docs/design/ask.md`, "An 8 GB Mac".
 - Open: no model that fits 5.2 GB does Ask's work yet. Untried: a shorter prompt for small models (drawings, the bulk of the held-out set, are the model's own skill, so it may not be enough).
+
+## 2026-11-19 — long edit perf, pass 17
+
+- A video's whole picture is drawn onto a pooled GPU surface and the canvas shows the surface itself while playing or scrubbing (`DocumentRenderer.renderInteractiveFrame`, `CanvasNSView.showPlayingPicture`): no read back, no copy. Still pictures keep the bitmap and its patches.
+- `RenderScheduler` is a lock-guarded class, not an actor: asking for a picture no longer waits for the main actor's next turn. Scrub asks numbered (`ScrubPictureAsks`) so a landed frame waits for a picture already on its way.
+- Speed walk (worst of 3): composite 5.6 -> 4.2 ms; scrub lag median 2 -> 1 refresh at both speeds. Baseline rewritten.
+- Next: worst scrub lag 3, 1 dropped frame a minute, edits 15-63 ms on the main thread.
