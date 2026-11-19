@@ -18053,3 +18053,12 @@
 {"t":"2026-11-19T12:29:03.818Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-19T12:29:03.905Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-19T12:29:16.200Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 18 landed 19e4cdd15: the 1 dropped frame a minute was the speed walk's count, not the picture; counted by skipped moments, three minutes of play read 0 of 1817 dropped (bar met), first picture 50-67 ms after Space. Bars not reached: edits while playing 11-51 ms vs 16, worst scrub lag 3 vs 1. Pass 19 leads in the log."}
+{"t":"2026-11-19T12:29:42.786Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-19T13:51:52.652Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T13:51:52.720Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T13:51:52.789Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T13:51:52.855Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T13:51:52.925Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T13:51:53.004Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T13:51:53.081Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-19T13:52:09.508Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 19 landed 067272ae0: a pick no longer traces the recording's edge or reads every style (worst of 3, while playing: pick 32->29, unpick 42->34, undo picked 25->19, trim 22->16, blade 63->51 ms); found why every pass pays a window-wide floor (title bar drag regions and the focus walk feed each other through SwiftUI; not reachable from app code). Bars not reached: edits 12-60 ms vs 16, worst scrub lag 3 vs 1. Pass 20 leads in the log."}

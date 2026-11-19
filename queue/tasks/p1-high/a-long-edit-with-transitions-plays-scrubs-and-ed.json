@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-19T12:29:16.199Z",
+  "updated": "2026-11-19T13:52:09.507Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,45 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-19T12:29:16.198Z",
-      "note": "... 30 earlier entries elided",
-      "elided": 30
-    },
-    {
-      "t": "2026-11-15T21:45:15.000Z",
-      "note": "Pass 7 measured first (6 min edit, edits walk, playing): trim 19-23, move 16-21, blade 57 (own 43, then ~450 ms of 15-57 ms panel passes), undo after a blade 60, after a trim 20. Split by hand (temporary walk edits pick/pause/bladeStill): pausing 6-9 ms; with a clip picked and stopped, a trim 54-55 ms, a blade 59-75, the undo after it 56-66. The speed walk's trim has nothing picked so it never saw the picked case."
-    },
-    {
-      "t": "2026-11-15T21:45:15.000Z",
-      "note": "Fix 1 (PanelShelfPane.drawnHeight lastDrawn, tests in PanelShelfPaneTests): the first pick of a clip brings its ten sections one pass apart (PanelSectionArrival); while one was unmeasured the folded Library drew at its chosen 163 pt and went back to 45 the pass after, a visible bounce and two passes per section. Now it holds where it was. Panel builds after the first blade 35 -> 31; the tail's total time did not move (454 vs 464 ms summed), so it is a visual fix more than a speed one."
-    },
-    {
-      "t": "2026-11-15T21:45:15.000Z",
-      "note": "Fix 2 (EditorState.perform): rule 6 no longer waits for play: any key, menu or agent edit on a video draws the picture in its own pass and the timeline and panel in the next (drags let go excepted). Stopped trim with a clip picked 54-55 -> 31-44 ms. The blade (47-62) and undo after it (64-66) did not move: their extra is the piece selection change, not the document write. docs/design/video.md 8f rule 6 rewritten plus a paragraph on what a pick costs."
-    },
-    {
-      "t": "2026-11-15T21:45:15.000Z",
-      "note": "Did NOT pay or not settled: catchUpOnTheNextPassOnAVideo in splitClipAtPlayhead alone (blade own median ~49 -> ~39, noisy 36-60; subsumed by fix 2). Time Profiler on blade and trim bursts: SwiftUI bodies ~22%, rest of AG update ~44%, window layout ~16%, CA commit ~24%; no app function above ~4% (motionStripCycleMS ~2 ms an edit, ClickTicksView ~1.3). Tools: a withObservationTracking wrapper plus a body fingerprint of the panel's @State showed 1 of 35 panel builds came from EditorState and the rest from arrivalPass and budget measurements. Gotchas: foreground sleep is refused by the harness (exit 144); xctrace attach from a script using perl delays worked."
-    },
-    {
-      "t": "2026-11-15T21:45:15.000Z",
-      "note": "Verified: test.sh green (14,765 + split runs); speed-walk ok, 22 numbers within the baseline (trim 29, blade own 46 / longest 75, undo 57); 24 walks ok across cutting, trimming, holds, undo, keys, transitions and the Library shelf; a-transition-is-picked-at-the-cut-walk fails at step 46 (Fade In 0.51s) as on main, owned by walks-that-fail-in-the-full-sweep-27. Audit queue/audits/2026-11-15-a-long-edit-with-transitions-plays-scrubs-and-ed-pass7.json."
-    },
-    {
-      "t": "2026-11-15T21:45:15.000Z",
-      "note": "Next for pass 8: (a) the selection change a blade makes (selectClipPiece) and an undo hands back (restoreSelectionFromHistory) costs ~20-30 ms more than a trim's pass; find what reads selectedClipPieceIndex and move it to a late pass or a lane-handed value; (b) the first pick's 450 ms of section arrivals: each arrival is a whole window pass of 15-65 ms, Appearance and Effects the largest; (c) the speed walk should measure an edit with a clip picked, since that is how a person edits. Bars not reached: edits <=16 ms, scrub within 1 frame, no dropped frames. Stays open."
-    },
-    {
-      "t": "2026-11-15T21:46:02.669Z",
-      "note": "Pass 7 landed 9c97068c5: edits on a video split across two frames when stopped too (stopped trim with a clip picked 54 -> 31-44 ms); the folded Library no longer bounces while a pick's sections arrive. Bars not reached: edits while playing trim 29 / blade 46 own, 75 longest / undo 57 vs 16 ms; scrub 2 frames vs 1; ~1 dropped frame a minute. Stays open; pass 8 leads in the log."
-    },
-    {
-      "t": "2026-11-15T21:57:29.882Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-15T23:01:23.770Z",
-      "note": "Pass 8 landed 45c1b849e: a cut on a picked clip costs what a trim does (blade picked 42-45 -> 29-36 ms) and the speed walk now times edits both with nothing picked and with a clip picked, without charging an edit for restarting play. Bars not reached (edits ~32-44 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute). Stays open; pass 9 leads above."
+      "t": "2026-11-19T13:52:09.506Z",
+      "note": "... 39 earlier entries elided",
+      "elided": 39
     },
     {
       "t": "2026-11-15T23:01:35.276Z",
@@ -507,9 +471,45 @@
     {
       "t": "2026-11-19T12:29:16.197Z",
       "note": "Pass 18 landed 19e4cdd15: the 1 dropped frame a minute was the speed walk's count, not the picture; counted by skipped moments, three minutes of play read 0 of 1817 dropped (bar met), first picture 50-67 ms after Space. Bars not reached: edits while playing 11-51 ms vs 16, worst scrub lag 3 vs 1. Pass 19 leads in the log."
+    },
+    {
+      "t": "2026-11-19T12:29:42.781Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T13:51:52.649Z",
+      "note": "Pass 19 measured first (64db7ec53, short speed walk): trim 16, blade 56, undo 28, pick 32, trim picked 18, blade picked 28, undo picked 24, unpick 38, pick from nothing 39 ms. Time Profiler over 36 edits while playing (xctrace --attach + os_signpost, trace-bursts.py --passes): long passes ~50% AttributeGraph update, 15% accessibility and focus, 13% window layout, 10% bodies. Bodiless passes: AccessibilityNode.updateFocus 5.6% of all pass time, NSWindow _resetDragMargins 4.5%."
+    },
+    {
+      "t": "2026-11-19T13:51:52.717Z",
+      "note": "Pass 19 found the window-wide floor's mechanism (lldb breakpoint on -[NSWindow(Regions) _postWindowNeedsToResetDragMargins], 1830 hits in 25 s): the drag-region reset asks the full-size NSHostingView acceptsFirstResponder (FocusNavigator.firstNavigableItem walks every focusable control) and its opaque regions; reading the responder tree updates moved hit shapes, and SwiftUI's WindowDragPreventionContentPathObserver posts the next reset. Any pass that moves a control pays one on the next display cycle. Not reachable without swizzling private AppKit; not done. Written in docs/design/video.md 'The window-wide floor'."
+    },
+    {
+      "t": "2026-11-19T13:51:52.786Z",
+      "note": "Pass 19 fixes (067272ae0): (1) a layer that plays a recording has no see-through edge and never asks PictureEdges (the first pick of each clip traced a 3456x2234 frame, ~6 ms of a ~30 ms pass); (2) EditorState.layerStyleTargetIDs for motionLayer/motionNeedsOneLayer/PanelReach, so the canvas body no longer builds the whole LayerStyleSelection per pass (canvas body share 1.3% -> 0.7%). Edits walk x4 picks: 29-37 -> 25-27 ms. Worst of 3 short walks: trim 22->16, blade 63->51, undo 30->29, pick 32->29, trim picked 19->17, blade picked 39->38, undo picked 25->19, unpick 42->34, pick from nothing 51->47. Baseline: edits section only."
+    },
+    {
+      "t": "2026-11-19T13:51:52.852Z",
+      "note": "Pass 19 did NOT pay / not pursued: caching PanelFieldRowLayout's control minimum (what is under minimum(of:) is SwiftUI building rows that just arrived, not repeat measuring); AppKitPopUpAdaptor updateNSView (~1.2% of pass time, menus re-resolving item labels) left. Blade passes of 47-60 ms hold only ~18 ms of main thread CPU: the rest is the main thread blocked (mach_msg in CA commit), worth a Time Profiler run with waiting threads recorded."
+    },
+    {
+      "t": "2026-11-19T13:51:52.922Z",
+      "note": "Pass 19 noise check: worst-case scrub numbers swung on the OLD build in an A/B the same hour (medium lag worst 9, hunt frame lag worst 45 at 05:21/05:23; 18-24 through 11-17/18), so speed-walk can go red on 'lag worst'/'frame lag worst' under load ~5; baseline scrub numbers left as they were. Play: 1 dropped (one 66-85 ms gap, different moment each time) in 4 of 9 one-minute plays on the new build, 0 of 3 on the old build, same hour; no path from this change into play with nothing picked. Recorded, not claimed either way."
+    },
+    {
+      "t": "2026-11-19T13:51:53.001Z",
+      "note": "Pass 19 verified: test.sh exit 0; walks ok: border-follows-the-shape, label-border-follows, motion-pivot, motion-pivot-in-a-corner, motion-pivot-reads-once, spinner-turns-about-the-artboard, two-way-effect-setting-reads-mixed, scrub-never-blacks-out, an-editing-session, playing-a-recording-never-blinks. Speed walk: edits within the new baseline; its last two runs went red on worst-case scrub numbers (see noise check). Looked at the capture of a picked clip: handles, panel and timeline drawn right. Audit queue/audits/2026-11-19-a-long-edit-with-transitions-plays-scrubs-and-ed-pass19.json. Left rough, not filed: nothing beyond this task's own bars."
+    },
+    {
+      "t": "2026-11-19T13:51:53.078Z",
+      "note": "Next for pass 20: (a) the blocked part of the blade's long passes (Time Profiler with waiting threads, or signposts round the CA commit); (b) unpick tears down all ten panel sections in one pass (34 ms): spread it like arrivals; (c) the speed walk's worst-case scrub numbers need a margin that survives a load of 5, or a median of worsts, so rotating checks do not go red on noise. Bars not reached: edits <=16 ms (12-60), worst scrub lag 1 (3, up to 10 under load)."
+    },
+    {
+      "t": "2026-11-19T13:52:09.505Z",
+      "note": "Pass 19 landed 067272ae0: a pick no longer traces the recording's edge or reads every style (worst of 3, while playing: pick 32->29, unpick 42->34, undo picked 25->19, trim 22->16, blade 63->51 ms); found why every pass pays a window-wide floor (title bar drag regions and the focus walk feed each other through SwiftUI; not reachable from app code). Bars not reached: edits 12-60 ms vs 16, worst scrub lag 3 vs 1. Pass 20 leads in the log."
     }
   ],
-  "started": "2026-11-19T11:49:37.459Z",
+  "started": "2026-11-19T12:29:42.780Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
