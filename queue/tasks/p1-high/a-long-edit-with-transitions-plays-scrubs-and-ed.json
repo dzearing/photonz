@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-18T11:31:54.167Z",
+  "updated": "2026-11-19T11:49:20.106Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,33 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-18T11:31:54.166Z",
-      "note": "... 18 earlier entries elided",
-      "elided": 18
-    },
-    {
-      "t": "2026-11-14T18:50:22.293Z",
-      "note": "Left rough, not filed: blade (B) while playing still stops playback and picks the piece before the cut, by design (cut, cut, Delete); the question about Premiere's keep-playing Add Edit is still open in the speed walk audit. Release probe builds after a PhotonzCore change took over 10 minutes to link here."
-    },
-    {
-      "t": "2026-11-14T18:50:22.372Z",
-      "note": "Pass 5: bars not reached (trim ~29, blade ~55 own pass/88 longest, undo ~58 vs 16 ms; scrub 2 frames vs 1; ~1 dropped frame a minute). Found the edit's pass scales with the window's view count, not with what rebuilds; landed the cache prune fix and a stored documentHasTime. Stays open for pass 6."
-    },
-    {
-      "t": "2026-11-14T18:50:59.739Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-14T20:48:24.345Z",
-      "note": "walks speed-walk, scrub-never-blacks-out-walk -> speed-walk, scrub-never-blacks-out-walk, keyframe-anything-walk"
-    },
-    {
-      "t": "2026-11-14T20:48:24.426Z",
-      "note": "Pass 6 (0aa333984): (1) the Properties section read the piece under the playhead off the clock (clipPieceInHand via keyClipLine), so with a cut clip picked it rebuilt every tick of play: 44-46 builds in the 1.5 s after a blade, now 1-3 (readingThePlayheadForThePanel). (2) keyframe-anything-walk failed at step 27 (timeSection rebuilt by a new key) since pass 4 put the key diamond and Add Key answers in PanelPlayhead; split into PanelKeyPlayhead, walk passes. (3) hasPictureFades/hasZooms/hasClickEffects kept in DocumentDerived.TreeFacts: they copied every layer 3x per drawn moment, ~6 ms of main thread per second of play on the 6 min edit (Time Profiler, 387 samples/min). Short speed walk vs baseline: trim 29, blade 82, undo 61 ms; play 1 dropped/min; scrub 2/3 frames (within noise, baseline not rewritten). test.sh green; 24 walks ok."
-    },
-    {
-      "t": "2026-11-14T20:48:24.506Z",
-      "note": "Pass 6 findings that did NOT pay: (a) the timeline's grid in an NSHostingView of its own (a separate SwiftUI graph) with the dock reading rows and sound plan a pass late: trim own pass 27-28, blade 51-54, undo 55-57, unchanged. The edit's own pass is the views its writes wake plus the window render, not the graph's size; written in docs/design/video.md 8f, do not retry. (b) moving the dock's naturalBodyHeight/audioPlan reads a pass late alone: own pass unchanged, late pass +1-4 ms (grid built twice); reverted. Tools: Time Profiler via xctrace --attach on a walk of 40 trims, main-thread samples split into bursts at 1.6 ms gaps and the burst holding SpeedWalkProbe.perform taken as the edit's own pass; a temporary withObservationTracking wrapper round a body writing Thread.callStackSymbols on wake named the setter (catchUpOnTheNextPass, history via perform, documentTimeMS via restartDocumentClock)."
+      "t": "2026-11-19T11:48:56.244Z",
+      "note": "... 24 earlier entries elided",
+      "elided": 24
     },
     {
       "t": "2026-11-14T20:48:24.584Z",
@@ -507,14 +483,38 @@
     {
       "t": "2026-11-18T11:31:54.165Z",
       "note": "runner failed (exit 1, attempt 2): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-11-19T10:41:17.467Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T11:48:55.919Z",
+      "note": "Pass 17 restored the previous attempt's stash (ce7ea1d54) and finished it. The stash had a compile error (a designated init delegating in RenderScheduler, now a class); the first speed walk this pass therefore measured a stale probe and served as today's before (composite 5.4 ms, scrub lag median medium 1 / hunt 2). With the stash alone (scheduler off the actor, ScrubPictureAsks), 3 runs: lag unchanged (hunt 2), composite 5.5. A temporary timing log (removed) split a hunt picture: 1.1 ms main thread before asking, 0.4 waiting its turn, 5.8 drawing, ~0.2-1 delivery: just over a 8.3 ms refresh."
+    },
+    {
+      "t": "2026-11-19T11:48:55.994Z",
+      "note": "Pass 17 fix (fc28facc9): DocumentRenderer.renderInteractiveFrame draws a video's whole picture onto a pooled IOSurface (CVPixelBufferPool of BGRA, 3+) and makes a VT CGImage of it; RenderScheduler.Frame carries the surface; CanvasNSView.showPlayingPicture puts the surface itself up while playing or scrubbing. Still pictures never use it; a patch after a surface frame draws the whole picture into the bitmap once (bufferHoldsLastFrame). Checked: the pool marks every buffer it vends in use and never recycles one whose IOSurface use count someone else raised (as CA does while it is up), measured with a scratch program. Tests MovingFrameOnASurfaceTests (same pixels as read back within 1, upright, patch after surface right, still picture stays in bitmap, <=4 surfaces for 24 pictures)."
+    },
+    {
+      "t": "2026-11-19T11:48:56.070Z",
+      "note": "Pass 17 result, short speed walk, 6 runs with the change, baseline rewritten (worst of 3): composite median 5.6 -> 4.2 ms (hunt draw 5.8 -> 3.4); scrub lag median medium 2 -> 1, hunt 2 -> 1 in every run; sight lag median 1; worst lag still 3. Play: 1 dropped a minute (same), edits 15-63 ms (same, main thread untouched). Verified: test.sh exit 0; walks ok: playing-a-recording-never-blinks, scrub-never-blacks-out, soft-gradients-in-a-recording-play-smooth, playing-a-recording-backwards-keeps-up, a-recording-opens-sharp, scrubbing-shows-the-zoom, an-editing-session, hear-the-scrub, reference-edit-opens, redline, playback-speed-keeps-pace, opening-title-dissolve, title-tiles-play, keyframe-anything; speed-walk ok x3 against the new baseline. Looked at the speed walk capture and the playing capture: colours, way up and layers right. Design note appended to docs/design/video.md 'What a composite may hold between frames'. Audit queue/audits/2026-11-19-a-long-edit-with-transitions-plays-scrubs-and-ed-pass17.json."
+    },
+    {
+      "t": "2026-11-19T11:48:56.144Z",
+      "note": "Next for pass 18: (a) edits 15-63 ms on the main thread (blade's inspector rebuild, 33 inspectorPanel bodies, is the biggest); (b) 1 dropped frame a minute while playing; (c) worst scrub lag 3 and the sharp frame under a fast drag 30-40 refreshes behind (decode). Main CI red at aab12cc7c (TextRevealUnclippedTests on the CI machine) folded into find-out-why-the-legibility-check-once-read-the. Left rough, not filed: nothing beyond this task's own bars."
+    },
+    {
+      "t": "2026-11-19T11:48:56.243Z",
+      "note": "Pass 17 landed fc28facc9: a video's picture stays on a GPU surface and goes up as it is, so composite 5.6 -> 4.2 ms and a dragged playhead's picture trails the hand by 1 refresh in the middle (was 2). Bars not reached (0 dropped: 1 a minute; edits 16 ms: 15-63; worst scrub lag 3). Pass 18 leads in the log."
     }
   ],
-  "started": "2026-11-18T11:31:45.833Z",
+  "started": "2026-11-19T10:41:17.466Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
   ],
-  "failures": 2,
+  "failures": 0,
   "lastError": {
     "at": "2026-11-18T11:31:54.164Z",
     "exit": 1,
