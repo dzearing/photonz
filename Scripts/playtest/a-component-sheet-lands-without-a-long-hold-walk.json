@@ -1,0 +1,1085 @@
+{
+  "out": "/tmp/photonz-playtest/a-component-sheet-lands-without-a-long-hold-walk",
+  "seed": "A stopwatch on the moment Ask lands a sheet of components, at Next defaults with no flag touched. The model's two replies are the ones Qwen3.8 27B gave the user's own request (component-table, eval run 20261110-065514-ask): eleven components with their states and a title, 188 layers. Timed with the walk's markers down (timedWithoutMarkers), the click on Send holds the main thread for the whole landing: 541 ms on 2026-11-18, 388 ms once the document kept its mains and its layer paths (find-out-whether-landing-a-component-sheet-holds). The rest is the twelve steps run in one pass and the Layers list laying out 91 new rows (a-landed-component-sheet-draws-without-a-hold). The guard sits at 480 so a busy Mac does not turn it red; the bar is 100.",
+  "clock": 120,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "timedWithoutMarkers": true,
+    "askReplies": [
+      {
+        "message": {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Default",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "fill": "#0A84FF",
+                          "part": "Background"
+                        }
+                      ],
+                      "name": "Hover"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#0062CC",
+                          "part": "Background"
+                        }
+                      ],
+                      "name": "Pressed"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#007AFF",
+                          "part": "Background",
+                          "stroke": "#007AFF",
+                          "strokeWidth": 3
+                        }
+                      ],
+                      "name": "Focused"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#E5E5EA",
+                          "part": "Background"
+                        },
+                        {
+                          "color": "#B0B0B8",
+                          "part": "Label"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Button",
+                  "parts": [
+                    {
+                      "cornerRadius": 8,
+                      "fill": "#007AFF",
+                      "height": 36,
+                      "name": "Background",
+                      "shape": "rectangle",
+                      "width": 120,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "centerIn": "Background",
+                      "color": "#FFFFFF",
+                      "fontSize": 15,
+                      "height": 36,
+                      "name": "Label",
+                      "shape": "text",
+                      "text": "Button",
+                      "weight": "medium",
+                      "width": 120,
+                      "x": 0,
+                      "y": 0
+                    }
+                  ],
+                  "x": 24,
+                  "y": 120
+                },
+                "name": "add_component"
+              },
+              "id": "krpYH831L2X9nRlHfiy9vV5QWDRLYDmN"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Off",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "fill": "#34C759",
+                          "part": "Track"
+                        },
+                        {
+                          "part": "Knob",
+                          "x": 22
+                        }
+                      ],
+                      "name": "On"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#F2F2F7",
+                          "part": "Track"
+                        },
+                        {
+                          "opacity": 0.6,
+                          "part": "Knob"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Toggle",
+                  "parts": [
+                    {
+                      "cornerRadius": 16,
+                      "fill": "#E9E9EB",
+                      "height": 31,
+                      "name": "Track",
+                      "shape": "rectangle",
+                      "width": 51,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "fill": "#FFFFFF",
+                      "height": 27,
+                      "name": "Knob",
+                      "shadow": {
+                        "color": "#000000",
+                        "opacity": 0.2,
+                        "radius": 2,
+                        "x": 0,
+                        "y": 1
+                      },
+                      "shape": "ellipse",
+                      "width": 27,
+                      "x": 2,
+                      "y": 2
+                    }
+                  ],
+                  "x": 24,
+                  "y": 200
+                },
+                "name": "add_component"
+              },
+              "id": "69HfN9h2YuQXeJea2BmlrR5bFKmfSuX4"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Off",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "fill": "#007AFF",
+                          "part": "Box",
+                          "stroke": "#007AFF"
+                        },
+                        {
+                          "part": "Check",
+                          "stroke": "#FFFFFF"
+                        }
+                      ],
+                      "name": "On"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#F2F2F7",
+                          "part": "Box",
+                          "stroke": "#E5E5EA"
+                        },
+                        {
+                          "color": "#B0B0B8",
+                          "part": "Label"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Checkbox",
+                  "parts": [
+                    {
+                      "cornerRadius": 6,
+                      "fill": "#FFFFFF",
+                      "height": 22,
+                      "name": "Box",
+                      "shape": "rectangle",
+                      "stroke": "#C7C7CC",
+                      "strokeWidth": 1.5,
+                      "width": 22,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "closed": false,
+                      "height": 10,
+                      "name": "Check",
+                      "points": [
+                        {
+                          "x": 0,
+                          "y": 5
+                        },
+                        {
+                          "x": 5,
+                          "y": 10
+                        },
+                        {
+                          "x": 14,
+                          "y": 0
+                        }
+                      ],
+                      "shape": "path",
+                      "width": 14,
+                      "x": 4,
+                      "y": 6
+                    },
+                    {
+                      "alignment": "left",
+                      "color": "#1C1C1E",
+                      "fontSize": 15,
+                      "height": 22,
+                      "name": "Label",
+                      "shape": "text",
+                      "text": "Checkbox",
+                      "weight": "regular",
+                      "width": 120,
+                      "x": 30,
+                      "y": 0
+                    }
+                  ],
+                  "x": 24,
+                  "y": 280
+                },
+                "name": "add_component"
+              },
+              "id": "ZOHPPdLKJZa0e86eXqzYxfoTUudIRHDw"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Off",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "part": "Ring",
+                          "stroke": "#007AFF"
+                        },
+                        {
+                          "part": "Dot",
+                          "visible": true
+                        }
+                      ],
+                      "name": "On"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "part": "Ring",
+                          "stroke": "#E5E5EA"
+                        },
+                        {
+                          "color": "#B0B0B8",
+                          "part": "Label"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Radio",
+                  "parts": [
+                    {
+                      "fill": "#FFFFFF",
+                      "height": 22,
+                      "name": "Ring",
+                      "shape": "ellipse",
+                      "stroke": "#C7C7CC",
+                      "strokeWidth": 1.5,
+                      "width": 22,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "fill": "#007AFF",
+                      "height": 10,
+                      "name": "Dot",
+                      "shape": "ellipse",
+                      "visible": false,
+                      "width": 10,
+                      "x": 6,
+                      "y": 6
+                    },
+                    {
+                      "alignment": "left",
+                      "color": "#1C1C1E",
+                      "fontSize": 15,
+                      "height": 22,
+                      "name": "Label",
+                      "shape": "text",
+                      "text": "Radio",
+                      "weight": "regular",
+                      "width": 120,
+                      "x": 30,
+                      "y": 0
+                    }
+                  ],
+                  "x": 24,
+                  "y": 360
+                },
+                "name": "add_component"
+              },
+              "id": "MNRd49FrVWjBxWfX9gkARgJJi9nPF5Q0"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Default",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "part": "Background",
+                          "stroke": "#007AFF",
+                          "strokeWidth": 2
+                        }
+                      ],
+                      "name": "Focused"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "color": "#1C1C1E",
+                          "part": "Placeholder",
+                          "text": "Hello, world"
+                        }
+                      ],
+                      "name": "Filled"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#F2F2F7",
+                          "part": "Background",
+                          "stroke": "#F2F2F7"
+                        },
+                        {
+                          "color": "#C7C7CC",
+                          "part": "Placeholder"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Text Field",
+                  "parts": [
+                    {
+                      "cornerRadius": 10,
+                      "fill": "#FFFFFF",
+                      "height": 40,
+                      "name": "Background",
+                      "shape": "rectangle",
+                      "stroke": "#E5E5EA",
+                      "strokeWidth": 1,
+                      "width": 280,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "alignment": "left",
+                      "color": "#8E8E93",
+                      "fontSize": 15,
+                      "height": 40,
+                      "name": "Placeholder",
+                      "shape": "text",
+                      "text": "Enter text",
+                      "weight": "regular",
+                      "width": 252,
+                      "x": 14,
+                      "y": 0
+                    }
+                  ],
+                  "x": 24,
+                  "y": 440
+                },
+                "name": "add_component"
+              },
+              "id": "6CSQj96PysnkNEF7DkFfsKDk2qNleGdT"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "First",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "part": "Selection",
+                          "x": 80
+                        },
+                        {
+                          "color": "#1C1C1E",
+                          "opacity": 0.6,
+                          "part": "Label One"
+                        },
+                        {
+                          "color": "#1C1C1E",
+                          "part": "Label Two"
+                        }
+                      ],
+                      "name": "Second"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#F2F2F7",
+                          "part": "Background"
+                        },
+                        {
+                          "fill": "#FFFFFF",
+                          "opacity": 0.6,
+                          "part": "Selection"
+                        },
+                        {
+                          "color": "#B0B0B8",
+                          "part": "Label One"
+                        },
+                        {
+                          "color": "#B0B0B8",
+                          "part": "Label Two"
+                        },
+                        {
+                          "color": "#B0B0B8",
+                          "part": "Label Three"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Segmented Control",
+                  "parts": [
+                    {
+                      "cornerRadius": 8,
+                      "fill": "#E9E9EB",
+                      "height": 32,
+                      "name": "Background",
+                      "shape": "rectangle",
+                      "width": 240,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "cornerRadius": 6,
+                      "fill": "#FFFFFF",
+                      "height": 28,
+                      "name": "Selection",
+                      "shadow": {
+                        "color": "#000000",
+                        "opacity": 0.12,
+                        "radius": 2,
+                        "x": 0,
+                        "y": 1
+                      },
+                      "shape": "rectangle",
+                      "width": 78,
+                      "x": 2,
+                      "y": 2
+                    },
+                    {
+                      "centerIn": "Selection",
+                      "color": "#1C1C1E",
+                      "fontSize": 13,
+                      "height": 28,
+                      "name": "Label One",
+                      "shape": "text",
+                      "text": "One",
+                      "weight": "medium",
+                      "width": 78,
+                      "x": 2,
+                      "y": 2
+                    },
+                    {
+                      "centerIn": "Background",
+                      "color": "#1C1C1E",
+                      "fontSize": 13,
+                      "height": 28,
+                      "name": "Label Two",
+                      "shape": "text",
+                      "text": "Two",
+                      "weight": "regular",
+                      "width": 80,
+                      "x": 80,
+                      "y": 2
+                    },
+                    {
+                      "centerIn": "Background",
+                      "color": "#1C1C1E",
+                      "fontSize": 13,
+                      "height": 28,
+                      "name": "Label Three",
+                      "shape": "text",
+                      "text": "Three",
+                      "weight": "regular",
+                      "width": 78,
+                      "x": 160,
+                      "y": 2
+                    }
+                  ],
+                  "x": 24,
+                  "y": 520
+                },
+                "name": "add_component"
+              },
+              "id": "TiQhnJKZTlHi7yaUnCakzBZdCqn311Z6"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Default",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "height": 28,
+                          "opacity": 0.9,
+                          "part": "Knob",
+                          "width": 28
+                        }
+                      ],
+                      "name": "Pressed"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#C7C7CC",
+                          "part": "Fill"
+                        },
+                        {
+                          "opacity": 0.5,
+                          "part": "Knob"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Slider",
+                  "parts": [
+                    {
+                      "cornerRadius": 2,
+                      "fill": "#E5E5EA",
+                      "height": 4,
+                      "name": "Track",
+                      "shape": "rectangle",
+                      "width": 240,
+                      "x": 0,
+                      "y": 14
+                    },
+                    {
+                      "cornerRadius": 2,
+                      "fill": "#007AFF",
+                      "height": 4,
+                      "name": "Fill",
+                      "shape": "rectangle",
+                      "width": 144,
+                      "x": 0,
+                      "y": 14
+                    },
+                    {
+                      "fill": "#FFFFFF",
+                      "height": 24,
+                      "name": "Knob",
+                      "shadow": {
+                        "color": "#000000",
+                        "opacity": 0.2,
+                        "radius": 3,
+                        "x": 0,
+                        "y": 1
+                      },
+                      "shape": "ellipse",
+                      "width": 24,
+                      "x": 132,
+                      "y": 4
+                    }
+                  ],
+                  "x": 24,
+                  "y": 600
+                },
+                "name": "add_component"
+              },
+              "id": "ofLqrhzXg3GAPZuu3KdzytiygEZ2dLSi"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Off",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "fill": "#34C759",
+                          "part": "Track"
+                        },
+                        {
+                          "part": "Knob",
+                          "x": 22
+                        }
+                      ],
+                      "name": "On"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#F2F2F7",
+                          "part": "Track"
+                        },
+                        {
+                          "opacity": 0.6,
+                          "part": "Knob"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Switch",
+                  "parts": [
+                    {
+                      "cornerRadius": 16,
+                      "fill": "#E9E9EB",
+                      "height": 31,
+                      "name": "Track",
+                      "shape": "rectangle",
+                      "width": 51,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "fill": "#FFFFFF",
+                      "height": 27,
+                      "name": "Knob",
+                      "shadow": {
+                        "color": "#000000",
+                        "opacity": 0.2,
+                        "radius": 2,
+                        "x": 0,
+                        "y": 1
+                      },
+                      "shape": "ellipse",
+                      "width": 27,
+                      "x": 2,
+                      "y": 2
+                    }
+                  ],
+                  "x": 24,
+                  "y": 680
+                },
+                "name": "add_component"
+              },
+              "id": "m4kiZibD094hodTkkchnABH5cfXbUGbn"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Default",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "fill": "#F2F2F7",
+                          "part": "Background"
+                        }
+                      ],
+                      "name": "Pressed"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#F2F2F7",
+                          "part": "Background",
+                          "stroke": "#F2F2F7"
+                        },
+                        {
+                          "color": "#B0B0B8",
+                          "part": "Value"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Stepper",
+                  "parts": [
+                    {
+                      "cornerRadius": 8,
+                      "fill": "#FFFFFF",
+                      "height": 32,
+                      "name": "Background",
+                      "shape": "rectangle",
+                      "stroke": "#E5E5EA",
+                      "strokeWidth": 1,
+                      "width": 120,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "closed": false,
+                      "height": 4,
+                      "name": "Minus",
+                      "points": [
+                        {
+                          "x": 0,
+                          "y": 2
+                        },
+                        {
+                          "x": 12,
+                          "y": 2
+                        }
+                      ],
+                      "shape": "path",
+                      "width": 12,
+                      "x": 12,
+                      "y": 14
+                    },
+                    {
+                      "centerIn": "Background",
+                      "color": "#1C1C1E",
+                      "fontSize": 15,
+                      "height": 32,
+                      "name": "Value",
+                      "shape": "text",
+                      "text": "1",
+                      "weight": "medium",
+                      "width": 48,
+                      "x": 36,
+                      "y": 0
+                    },
+                    {
+                      "closed": false,
+                      "height": 12,
+                      "name": "Plus",
+                      "points": [
+                        {
+                          "x": 6,
+                          "y": 0
+                        },
+                        {
+                          "x": 6,
+                          "y": 12
+                        },
+                        {
+                          "x": 0,
+                          "y": 6
+                        },
+                        {
+                          "x": 12,
+                          "y": 6
+                        }
+                      ],
+                      "shape": "path",
+                      "width": 12,
+                      "x": 92,
+                      "y": 8
+                    }
+                  ],
+                  "x": 24,
+                  "y": 760
+                },
+                "name": "add_component"
+              },
+              "id": "X3C4KQUcWSvSXgenwXxgQpNSGzuehbL7"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Default",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "fill": "#34C759",
+                          "part": "Fill",
+                          "width": 240
+                        }
+                      ],
+                      "name": "Complete"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#C7C7CC",
+                          "part": "Fill"
+                        }
+                      ],
+                      "name": "Paused"
+                    }
+                  ],
+                  "name": "Progress Bar",
+                  "parts": [
+                    {
+                      "cornerRadius": 4,
+                      "fill": "#E5E5EA",
+                      "height": 8,
+                      "name": "Track",
+                      "shape": "rectangle",
+                      "width": 240,
+                      "x": 0,
+                      "y": 8
+                    },
+                    {
+                      "cornerRadius": 4,
+                      "fill": "#007AFF",
+                      "height": 8,
+                      "name": "Fill",
+                      "shape": "rectangle",
+                      "width": 144,
+                      "x": 0,
+                      "y": 8
+                    }
+                  ],
+                  "x": 24,
+                  "y": 840
+                },
+                "name": "add_component"
+              },
+              "id": "Yd3Iu5xrfp9ANK7KvSmhfdJYGGwyg6zy"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Default",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "part": "Count",
+                          "text": ""
+                        }
+                      ],
+                      "name": "Empty"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#C7C7CC",
+                          "part": "Background"
+                        }
+                      ],
+                      "name": "Disabled"
+                    }
+                  ],
+                  "name": "Badge",
+                  "parts": [
+                    {
+                      "cornerRadius": 12,
+                      "fill": "#FF3B30",
+                      "height": 24,
+                      "name": "Background",
+                      "shape": "ellipse",
+                      "width": 24,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "centerIn": "Background",
+                      "color": "#FFFFFF",
+                      "fontSize": 13,
+                      "height": 24,
+                      "name": "Count",
+                      "shape": "text",
+                      "text": "3",
+                      "weight": "semibold",
+                      "width": 24,
+                      "x": 0,
+                      "y": 0
+                    }
+                  ],
+                  "x": 24,
+                  "y": 920
+                },
+                "name": "add_component"
+              },
+              "id": "dkGWHjPJrgrEaY46Jq4nWZwt9ate1dEq"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "firstLook": "Warning",
+                  "labels": true,
+                  "looks": [
+                    {
+                      "changes": [
+                        {
+                          "fill": "#FF3B30",
+                          "part": "Icon"
+                        },
+                        {
+                          "part": "Title",
+                          "text": "Error"
+                        },
+                        {
+                          "part": "Message",
+                          "text": "Something went wrong"
+                        }
+                      ],
+                      "name": "Error"
+                    },
+                    {
+                      "changes": [
+                        {
+                          "fill": "#34C759",
+                          "part": "Icon"
+                        },
+                        {
+                          "part": "Title",
+                          "text": "Success"
+                        },
+                        {
+                          "part": "Message",
+                          "text": "All done"
+                        }
+                      ],
+                      "name": "Success"
+                    }
+                  ],
+                  "name": "Alert",
+                  "parts": [
+                    {
+                      "cornerRadius": 12,
+                      "fill": "#FFFFFF",
+                      "height": 64,
+                      "name": "Background",
+                      "shadow": {
+                        "color": "#000000",
+                        "opacity": 0.15,
+                        "radius": 12,
+                        "x": 0,
+                        "y": 4
+                      },
+                      "shape": "rectangle",
+                      "width": 320,
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "fill": "#FF9500",
+                      "height": 32,
+                      "name": "Icon",
+                      "shape": "ellipse",
+                      "width": 32,
+                      "x": 16,
+                      "y": 16
+                    },
+                    {
+                      "alignment": "left",
+                      "color": "#1C1C1E",
+                      "fontSize": 15,
+                      "height": 20,
+                      "name": "Title",
+                      "shape": "text",
+                      "text": "Alert",
+                      "weight": "semibold",
+                      "width": 244,
+                      "x": 60,
+                      "y": 12
+                    },
+                    {
+                      "alignment": "left",
+                      "color": "#8E8E93",
+                      "fontSize": 13,
+                      "height": 18,
+                      "name": "Message",
+                      "shape": "text",
+                      "text": "Something needs attention",
+                      "weight": "regular",
+                      "width": 244,
+                      "x": 60,
+                      "y": 34
+                    }
+                  ],
+                  "x": 24,
+                  "y": 1000
+                },
+                "name": "add_component"
+              },
+              "id": "qDFugRXJkj5BgPibIEoPaKaEKyN9t37c"
+            },
+            {
+              "function": {
+                "arguments": {
+                  "color": "#1C1C1E",
+                  "fontSize": 34,
+                  "text": "Base Components",
+                  "weight": "bold",
+                  "x": 24,
+                  "y": 32
+                },
+                "name": "add_text"
+              },
+              "id": "qyLxBHRpO2sELgQkQHpyrbzXlZ01UoYw"
+            }
+          ]
+        }
+      },
+      {
+        "message": {
+          "content": "Planned a titled sheet of eleven Apple-style base components \u2014 Button, Toggle, Checkbox, Radio, Text Field, Segmented Control, Slider, Stepper, Progress Bar, Badge and Alert \u2014 each laid out as a labelled row showing its states and text.",
+          "role": "assistant"
+        }
+      }
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "create a table of apple like quality base components that show different states and text"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "wait",
+      "seconds": 4,
+      "longestUnderMS": 480
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 150
+    },
+    {
+      "do": "snapshot",
+      "name": "1-landed"
+    }
+  ]
+}

@@ -128,15 +128,16 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// instance is filled from and Edit Original opens, kept here rather than
     /// in `layers` so nothing that draws, exports or picks from the picture
     /// ever meets one (`ComponentLibrary.swift`). Top-level layers, each a
-    /// main, in the order the Library lists them.
-    public var componentOriginals: [Layer] = []
+    /// main, in the order the Library lists them. Writing it starts the kept
+    /// answers again, since the document's mains are one of them.
+    public var componentOriginals: [Layer] = [] { didSet { derived = DocumentDerived() } }
     /// The camera every frame of this document is seen through
     /// (`Space3D.swift`). Nil is the default camera, which leaves a document
     /// nobody has turned in 3D looking exactly as it does, and is every
     /// document written before this existed.
     public var camera: SceneCamera?
-    /// What has been worked out from the layers and tracks, kept until either
-    /// changes (`DocumentDerived.swift`). Not content: never compared, hashed
+    /// What has been worked out from the layers, the tracks and the component
+    /// library, kept until one of them changes (`DocumentDerived.swift`). Not content: never compared, hashed
     /// or saved.
     var derived = DocumentDerived()
 
@@ -397,6 +398,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             }
             return nil
         }
+        // From the same kept index `layer(id:)` builds: placing a sheet of
+        // components asks where each new layer sits, over and over, and the
+        // walk was about a tenth of the hold as Ask landed one (2026-11-18).
+        if let indexed = derived.layerPath(of: id, in: layers) { return indexed }
         return search(layers, [])
     }
 

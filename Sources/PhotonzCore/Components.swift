@@ -79,17 +79,24 @@ extension PhotonzDocument {
     /// order the Library lists them, then any still in the picture in the
     /// order the tree holds them (an editing space, or a document the editor
     /// has not opened yet; `ComponentLibrary.swift`).
+    ///
+    /// Worked out once and kept until a layer or the library is written
+    /// (`DocumentDerived`): putting the copies in step after every edit asks
+    /// for this several times a copy, and each answer walked the whole tree,
+    /// so a sheet's sync grew with the square of its copies (2026-11-18).
     public var mainComponents: [Layer] {
-        var found: [Layer] = []
-        func walk(_ list: [Layer]) {
-            for index in list.indices {
-                if list[index].isMainComponent { found.append(list[index]) }
-                if case .group(let group) = list[index].content { walk(group.children) }
+        derived.answer(\.mainComponents) {
+            var found: [Layer] = []
+            func walk(_ list: [Layer]) {
+                for index in list.indices {
+                    if list[index].isMainComponent { found.append(list[index]) }
+                    if case .group(let group) = list[index].content { walk(group.children) }
+                }
             }
+            walk(componentOriginals)
+            forEachLayer { if $0.isMainComponent { found.append($0) } }
+            return found
         }
-        walk(componentOriginals)
-        forEachLayer { if $0.isMainComponent { found.append($0) } }
-        return found
     }
 
     /// What each component is called, from mains already in hand: the name a

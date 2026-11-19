@@ -15,8 +15,8 @@ import Synchronization
 //
 // So the answers are kept beside the document they were read off, and thrown
 // away the moment anything they were read off changes: every write to
-// `layers`, `tracks`, the duration, the canvas size or the pixel scale gives
-// the document a fresh, empty store
+// `layers`, `tracks`, the component library, the duration, the canvas size or
+// the pixel scale gives the document a fresh, empty store
 // (the `didSet`s in `Document.swift`). A copy shares the store it was copied
 // with until one of them is written to, which is exactly when their answers
 // could start to differ. The store never takes part in equality, hashing or
@@ -66,6 +66,12 @@ struct DocumentDerived: Hashable, Sendable {
         /// Whether anything anywhere in the tree fades, zooms or shows its
         /// clicks (`TreeFacts`).
         var treeFacts: TreeFacts?
+        /// Every main in the document, the library's first
+        /// (`PhotonzDocument.mainComponents`). Putting the copies in step
+        /// after an edit asks for it several times a copy, and each answer
+        /// was a walk of the whole tree: on a sheet of eleven components
+        /// that Ask landed, about a third of a 533 ms hold (2026-11-18).
+        var mainComponents: [Layer]?
     }
 
     /// What the whole tree holds that drawing a moment has to do something
@@ -95,6 +101,10 @@ struct DocumentDerived: Hashable, Sendable {
     var keptAudioMix: [AudioMixSegment]? { store.answers.withLock { $0.audioMix } }
     /// The tree's facts kept, for tests: nil until the document is asked.
     var keptTreeFacts: TreeFacts? { store.answers.withLock { $0.treeFacts } }
+    /// Whether the index of where each layer sits has been built, for tests.
+    var hasLayerIndex: Bool { store.answers.withLock { $0.layerPaths != nil } }
+    /// The mains kept, for tests: nil until the document is asked.
+    var keptMainComponents: [Layer]? { store.answers.withLock { $0.mainComponents } }
 
     /// Whether two documents carry the very same store: one is a copy of
     /// the other and neither has had what the answers are read off written
@@ -187,8 +197,8 @@ struct DocumentDerived: Hashable, Sendable {
 
 extension PhotonzDocument {
     /// Whether `other` is this document, or a copy of it, with nothing any
-    /// kept answer is read off written since: its layers, tracks, duration,
-    /// canvas size and pixel scale all as they were. A check of one pointer,
+    /// kept answer is read off written since: its layers, tracks, component
+    /// library, duration, canvas size and pixel scale all as they were. A check of one pointer,
     /// so the app can keep answers of its own beside a document (the
     /// timeline's painted bars) and know on every frame whether they still
     /// hold. False for a document of equal content read afresh.

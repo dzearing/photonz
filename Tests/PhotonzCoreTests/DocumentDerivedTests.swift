@@ -290,4 +290,22 @@ struct DocumentDerivedTests {
         // Equal content read afresh is not the same answers.
         #expect(!doc.sharesWorkedOutAnswers(with: Self.fresh(doc)))
     }
+
+    @Test("Where each layer sits is answered from the kept index once it is built, and a move is seen at once")
+    func pathsFromTheIndex() throws {
+        var doc = Self.six
+        let ids = doc.allLayers.map(\.id)
+        // Asked the way a walk would answer, before any index exists.
+        let walked = ids.map { Self.fresh(doc).path(of: $0) }
+        // Asked often enough that the index is built, the answers are the same.
+        for _ in 0...DocumentDerived.lookupsBeforeIndex { _ = doc.path(of: ids[0]) }
+        #expect(doc.derived.hasLayerIndex)
+        #expect(ids.map { doc.path(of: $0) } == walked)
+        #expect(doc.path(of: UUID()) == nil)
+        // The top layer moved to the bottom: the next answer follows it.
+        let moved = try #require(doc.layers.last)
+        doc.layers = [moved] + doc.layers.dropLast()
+        #expect(!doc.derived.hasLayerIndex)
+        #expect(doc.path(of: moved.id) == [0])
+    }
 }
