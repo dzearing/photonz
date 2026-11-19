@@ -782,9 +782,12 @@ on every call. That cost is the app's too, and is the speed tasks' to remove.
 `SpeedWalk` in PhotonzCore) use the reference edit the way a person does and
 write every number into one `speed.json`:
 
-- **play**: frames due on the app's 33 ms clock against the different moments
-  the canvas actually showed, dropped frames, the worst wait between two new
-  pictures, the same for each transition (a stall over a cut is charged to the
+- **play**: the different moments the canvas actually showed, dropped frames
+  (moments the picture jumped over, counted by how many 33 ms steps a jump
+  spans; moments the playhead passed after the last new picture, less the one
+  still in flight; and ticks a clock that fell behind the wall never made),
+  how long after Space the first new picture came, the worst wait between two
+  new pictures, the same for each transition (a stall over a cut is charged to the
   cut, even with no look inside it), what the sound engine left out, and how
   long the renderer took to draw each picture it was asked for.
 - **scrub**: the playhead dragged end to end in 5 s, 2 s and a third of a
@@ -1157,7 +1160,16 @@ for the hand (later the same day): the worst of three runs dropped 4 a minute,
 and a medium scrub showed the frame under the hand 2 display frames after it
 moved in the middle and 4 at worst, against 8 and 21. With rules 6 and 7
 (2026-11-14): 1 dropped a minute, worst gap 67 ms; trim, blade and undo while
-playing 33, 85 and 62 ms at worst, against 87, 223 and 119. `ViewBuildMeter`'s `idleBuilds` and the play
+playing 33, 85 and 62 ms at worst, against 87, 223 and 119.
+
+That "1 dropped a minute" was the count, not the picture (2026-11-19, pass 18):
+frames due were the wall clock over 33 ms, but the clock ticks about every
+33 ms without keeping to a 33 ms grid, its first tick lands 40 to 55 ms after
+Space, and the last picture is in flight when the minute ends. Every look of
+three minutes of play on the 6 minute edit showed each new moment 25 to 38 ms
+of document time after the one before, never one jumped over, and the old
+count still read 1, 0 and 1. The count is now made of the jumps themselves
+and the walk prints the document time of any frame it drops. `ViewBuildMeter`'s `idleBuilds` and the play
 measure of `Scripts/perf/speed-walk.sh` are how a new view is checked against
 this.
 

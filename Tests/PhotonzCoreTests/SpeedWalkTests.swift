@@ -23,10 +23,104 @@ struct SpeedWalkTests {
     @Test("A picture that keeps up drops nothing and never waits longer than a clock tick")
     func smoothDropsNothing() {
         let tally = SpeedWalk.tally(Self.smooth(seconds: 2), frameStepMS: 33)
-        #expect(tally.framesDue == 61)
-        #expect(tally.dropped <= 1)
+        #expect(tally.framesDue == 60)
+        #expect(tally.dropped == 0)
         #expect(tally.worstGapMS <= 40)
         #expect(abs(tally.seconds - 2) < 0.01)
+    }
+
+    /// Looks the way the probe really takes them (pass 18, 2026-11-19): the
+    /// clock ticks about every 33ms of the wall but not on a 33ms grid, the
+    /// picture is the playhead's own moment at each tick, a refresh (8.3ms)
+    /// shows it, and the first new picture after Space comes about 50ms
+    /// after the press.
+    static func realistic(seconds: Double, startMS: Double = 50, endInFlight: Bool) -> [SpeedWalk.PlaySample] {
+        var out = [SpeedWalk.PlaySample(wallMS: 0, playheadMS: 15_000, shownMS: 15_000)]
+        var ticks: [Double] = []
+        var tick = startMS
+        var wobble = 0
+        while tick < seconds * 1000 {
+            ticks.append(tick)
+            wobble = (wobble + 7) % 11
+            tick += 29 + Double(wobble % 9)
+        }
+        var shown = 15_000
+        var wall = 8.33
+        var t = 0
+        while wall < seconds * 1000 {
+            var playhead = 15_000
+            while t < ticks.count, ticks[t] <= wall {
+                playhead = 15_000 + Int(ticks[t])
+                // The picture asked at this tick is up by the next refresh,
+                // except the last one when the stretch ends with it in flight.
+                shown = playhead
+                t += 1
+            }
+            if t > 0 { playhead = 15_000 + Int(ticks[t - 1]) }
+            out.append(SpeedWalk.PlaySample(wallMS: wall, playheadMS: playhead, shownMS: shown))
+            wall += 8.33
+        }
+        if endInFlight, let last = out.last {
+            // The clock has ticked once more and its picture is not up yet.
+            out.append(SpeedWalk.PlaySample(wallMS: last.wallMS + 1, playheadMS: last.playheadMS + 33,
+                                            shownMS: last.shownMS))
+        }
+        return out
+    }
+
+    @Test("A picture that keeps up off the grid, starting a tick late and ending with one in flight, drops nothing")
+    func realisticDropsNothing() {
+        for inFlight in [false, true] {
+            let tally = SpeedWalk.tally(Self.realistic(seconds: 60, endInFlight: inFlight), frameStepMS: 33)
+            #expect(tally.dropped == 0, "end in flight: \(inFlight)")
+            #expect(tally.framesShown == tally.framesDue)
+            #expect(tally.framesDue > 1_750 && tally.framesDue < 1_900)
+            // The start is its own number, not a dropped frame.
+            #expect(tally.firstPictureMS.map { abs($0 - 58.3) < 9 } == true)
+        }
+    }
+
+    @Test("A moment the picture jumped over is a dropped frame, wherever the clock's ticks fall")
+    func skippedMomentIsDropped() {
+        var samples = Self.realistic(seconds: 10, endInFlight: false)
+        // Take out every look that shows one moment in the middle: the
+        // picture goes straight from the moment before it to the one after.
+        let moments = Array(Set(samples.compactMap(\.shownMS))).sorted()
+        let gone = moments[moments.count / 2]
+        let before = moments[moments.count / 2 - 1]
+        samples = samples.map { sample in
+            var sample = sample
+            if sample.shownMS == gone { sample.shownMS = before }
+            return sample
+        }
+        let tally = SpeedWalk.tally(samples, frameStepMS: 33)
+        #expect(tally.dropped == 1)
+        #expect(tally.framesShown + tally.dropped == tally.framesDue)
+        // And the walk can say where it was.
+        let at = SpeedWalk.droppedMoments(samples, frameStepMS: 33)
+        #expect(at.count == 1)
+        #expect(at.first.map { abs($0 - gone) < 10 } == true)
+        // And one that skipped three in a row is three.
+        let three = moments[moments.count / 3 ..< moments.count / 3 + 3]
+        let held = moments[moments.count / 3 - 1]
+        let worse = samples.map { sample -> SpeedWalk.PlaySample in
+            var sample = sample
+            if let shown = sample.shownMS, three.contains(shown) { sample.shownMS = held }
+            return sample
+        }
+        #expect(SpeedWalk.tally(worse, frameStepMS: 33).dropped == 4)
+    }
+
+    @Test("A clock that falls behind the wall drops what it never reached, though every picture it reached was shown")
+    func slowClockDrops() {
+        // The playhead moves at half the wall's pace, each of its moments shown.
+        let samples = stride(from: 0.0, through: 2000, by: 8).map { wall -> SpeedWalk.PlaySample in
+            let ms = Int(wall / 2) / 33 * 33
+            return SpeedWalk.PlaySample(wallMS: wall, playheadMS: ms, shownMS: ms)
+        }
+        let tally = SpeedWalk.tally(samples, frameStepMS: 33)
+        #expect(tally.framesShown == 30)
+        #expect(tally.dropped >= 29 && tally.dropped <= 31)
     }
 
     @Test("A stall is counted as dropped frames and as the gap it left")
@@ -63,7 +157,7 @@ struct SpeedWalkTests {
         let samples = [SpeedWalk.PlaySample(wallMS: 0, playheadMS: 15_000, shownMS: 15_000),
                        SpeedWalk.PlaySample(wallMS: 80_000, playheadMS: 38_100, shownMS: 15_000)]
         let tally = SpeedWalk.tally(samples, frameStepMS: 33)
-        #expect(tally.framesDue == 2424)
+        #expect(abs(tally.framesDue - 2424) <= 3)
         #expect(tally.framesShown == 0)
         #expect(tally.worstGapMS == 80_000)
         // A transition the playhead crossed meanwhile is charged the wait.

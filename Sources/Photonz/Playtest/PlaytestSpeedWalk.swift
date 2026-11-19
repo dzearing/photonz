@@ -148,9 +148,13 @@ final class SpeedWalkProbe {
         run.plays = [whole] + cuts
         run.sound = SpeedWalk.SoundTally(piecesLeftOut: leftOut, silentLooks: silent, looks: looks)
         let worstCut = cuts.max { $0.worstGapMS < $1.worstGapMS }
+        let droppedAt = SpeedWalk.droppedMoments(samples, frameStepMS: step)
         return String(format: "played %.1fs from %@ to %@: %d of %d frames shown, %d dropped, worst gap %.0fms",
                       whole.seconds, SpeedWalk.clock(fromMS), SpeedWalk.clock(reachedMS),
                       whole.framesShown, whole.framesDue, whole.dropped, whole.worstGapMS)
+            + (droppedAt.isEmpty ? "" : " (due at " + droppedAt.prefix(8).map(SpeedWalk.clock).joined(separator: ", ")
+                + (droppedAt.count > 8 ? ", ..." : "") + ")")
+            + (whole.firstPictureMS.map { String(format: ", first new picture %.0fms after Space", $0) } ?? "")
             + "; \(cuts.count) transitions crossed, \(cuts.filter { $0.dropped > 0 }.count) of them dropped frames"
             + (worstCut.map { String(format: ", the worst %@ (%d of %d dropped, gap %.0fms)", $0.label,
                                      $0.dropped, $0.framesDue, $0.worstGapMS) } ?? "")

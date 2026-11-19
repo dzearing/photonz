@@ -54,15 +54,20 @@ public enum SpeedWalk {
         /// The longest wait between one new picture and the next, which a
         /// person sees as the picture sticking.
         public var worstGapMS: Double
+        /// For the whole run, how long after Space the first new picture came
+        /// on screen: a start that takes a while, not a frame lost (nil for a
+        /// transition, and in runs from before 2026-11-19).
+        public var firstPictureMS: Double?
 
         public init(label: String, seconds: Double, framesDue: Int, framesShown: Int,
-                    dropped: Int, worstGapMS: Double) {
+                    dropped: Int, worstGapMS: Double, firstPictureMS: Double? = nil) {
             self.label = label
             self.seconds = seconds
             self.framesDue = framesDue
             self.framesShown = framesShown
             self.dropped = dropped
             self.worstGapMS = worstGapMS
+            self.firstPictureMS = firstPictureMS
         }
     }
 
@@ -100,17 +105,58 @@ public enum SpeedWalk {
         return out
     }
 
-    /// The whole run: due by the wall clock it took, shown as every new
-    /// moment after the first look, and the longest wait between two.
+    /// The moments a person never saw, as the document times they were due
+    /// at: the ones the picture jumped over between two new pictures, and
+    /// the ones the playhead passed after the last new picture. The clock
+    /// ticks about once a `frameStepMS` but not on a grid of it (each picture
+    /// is the playhead's own moment at its tick), so a jump is counted by how
+    /// many steps it spans, and the one picture still in flight when the
+    /// stretch ends is not lost. Until 2026-11-19 frames due were the wall
+    /// clock over the step, and a run that showed every moment read one
+    /// dropped a minute: the start's first tick and the last picture in
+    /// flight (pass 18 of `a-long-edit-with-transitions-plays-scrubs-and-ed`).
+    private static func missedMoments(_ came: [Arrival], end: PlaySample, stepMS: Int) -> [Int] {
+        var out: [Int] = []
+        func steps(_ from: Int, _ to: Int) -> Int {
+            Int((Double(to - from) / Double(stepMS)).rounded())
+        }
+        for (index, (before, after)) in zip(came, came.dropFirst()).enumerated() {
+            // The clock starts at Space and its first tick lands a little
+            // more than a step after: the first jump gets one step of slack,
+            // and how long it took is the run's first picture time.
+            let span = steps(before.shownMS, after.shownMS) - (index == 0 ? 1 : 0)
+            guard span > 1 else { continue }
+            out += (1 ..< span).map { before.shownMS + $0 * (after.shownMS - before.shownMS) / span }
+        }
+        if let last = came.last {
+            let span = steps(last.shownMS, end.playheadMS)
+            if span > 1 { out += (1 ..< span).map { last.shownMS + $0 * stepMS } }
+        }
+        return out
+    }
+
+    /// Where in the document the run's dropped frames were due, to say in a
+    /// walk's line which cut or clip lost them.
+    public static func droppedMoments(_ samples: [PlaySample], frameStepMS: Int) -> [Int] {
+        guard let last = samples.last, frameStepMS > 0 else { return [] }
+        return missedMoments(arrivals(samples), end: last, stepMS: frameStepMS)
+    }
+
+    /// The whole run: shown as every new moment after the first look, dropped
+    /// as every moment missed, plus the ticks a clock that fell behind the
+    /// wall never made (one tick of slack, since the playhead moves only on
+    /// its ticks), and the longest wait between two new pictures.
     public static func tally(_ samples: [PlaySample], frameStepMS: Int) -> PlayTally {
         guard let first = samples.first, let last = samples.last, frameStepMS > 0 else {
             return PlayTally(label: "whole", seconds: 0, framesDue: 0, framesShown: 0, dropped: 0, worstGapMS: 0)
         }
         let wall = max(0, last.wallMS - first.wallMS)
-        let due = Int((wall / Double(frameStepMS)).rounded())
         let came = arrivals(samples)
         // The picture up at the first look was not shown BY this stretch.
         let shown = max(0, came.count - (first.shownMS == nil ? 0 : 1))
+        let behindMS = wall - Double(last.playheadMS - first.playheadMS)
+        let clockLost = max(0, Int(((behindMS - Double(frameStepMS)) / Double(frameStepMS)).rounded(.down)))
+        let dropped = missedMoments(came, end: last, stepMS: frameStepMS).count + clockLost
         var worst = 0.0
         var previous = first.wallMS
         for arrival in came {
@@ -118,20 +164,24 @@ public enum SpeedWalk {
             previous = arrival.wallMS
         }
         worst = max(worst, last.wallMS - previous)
-        return PlayTally(label: "whole", seconds: wall / 1000, framesDue: due, framesShown: min(shown, due),
-                         dropped: max(0, due - shown), worstGapMS: worst)
+        let firstNew = came.first { $0.shownMS != first.shownMS }.map { $0.wallMS - first.wallMS }
+        return PlayTally(label: "whole", seconds: wall / 1000, framesDue: shown + dropped, framesShown: shown,
+                         dropped: dropped, worstGapMS: worst, firstPictureMS: firstNew)
     }
 
-    /// One transition: due as its length on the app's clock, shown as the
-    /// different moments inside it that came on screen, and the longest wait
-    /// between two new pictures while the playhead was crossing it, so a
-    /// stall that froze the picture over a cut is charged to that cut even
-    /// when no look landed inside it.
+    /// One transition: shown as the different moments inside it that came on
+    /// screen, dropped as the moments inside it the picture missed, and the
+    /// longest wait between two new pictures while the playhead was crossing
+    /// it, so a stall that froze the picture over a cut is charged to that
+    /// cut even when no look landed inside it.
     public static func tally(_ samples: [PlaySample], over span: Span, frameStepMS: Int) -> PlayTally {
         let length = span.range.count
-        let due = frameStepMS > 0 ? Int((Double(length) / Double(frameStepMS)).rounded()) : 0
         let came = arrivals(samples)
         let shown = Set(came.map(\.shownMS).filter { span.range.contains($0) }).count
+        let dropped = frameStepMS > 0 && !samples.isEmpty
+            ? missedMoments(came, end: samples[samples.count - 1], stepMS: frameStepMS)
+                .filter { span.range.contains($0) }.count
+            : 0
         var worst = 0.0
         var previous: Arrival?
         for arrival in came {
@@ -154,8 +204,8 @@ public enum SpeedWalk {
                 worst = max(worst, end.wallMS - lastArrival.wallMS)
             }
         }
-        return PlayTally(label: span.label, seconds: Double(length) / 1000, framesDue: due,
-                         framesShown: min(shown, due), dropped: max(0, due - shown), worstGapMS: worst)
+        return PlayTally(label: span.label, seconds: Double(length) / 1000, framesDue: shown + dropped,
+                         framesShown: shown, dropped: dropped, worstGapMS: worst)
     }
 
     /// Every transition on the document's picture tracks, in time order,
@@ -629,6 +679,9 @@ public struct SpeedRun: Codable, Equatable, Sendable {
             let key = play.label == "whole" ? "play" : "play \(play.label)"
             out.append(Metric(key: "\(key): dropped", value: Double(play.dropped), unit: .frames))
             out.append(Metric(key: "\(key): worst gap", value: play.worstGapMS, unit: .ms))
+            if let start = play.firstPictureMS {
+                out.append(Metric(key: "\(key): first picture", value: start, unit: .ms))
+            }
         }
         if let sound {
             out.append(Metric(key: "sound: pieces left out", value: Double(sound.piecesLeftOut), unit: .bodies))
@@ -691,6 +744,9 @@ extension SpeedRun {
                     out.plays[i].dropped = max(out.plays[i].dropped, play.dropped)
                     out.plays[i].worstGapMS = max(out.plays[i].worstGapMS, play.worstGapMS)
                     out.plays[i].framesShown = min(out.plays[i].framesShown, play.framesShown)
+                    if let start = play.firstPictureMS {
+                        out.plays[i].firstPictureMS = max(out.plays[i].firstPictureMS ?? start, start)
+                    }
                 } else {
                     out.plays.append(play)
                 }

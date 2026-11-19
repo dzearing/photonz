@@ -1,7 +1,5 @@
 {
-  "bodiesPerFrame" : {
-
-  },
+  "bodiesPerFrame" : {},
   "composites" : {
     "askedToShownMedianMS" : 4.326042,
     "askedToShownWorstMS" : 10.517417,
@@ -77,13 +75,14 @@
   },
   "form" : "short",
   "frameStepMS" : 33,
-  "head" : "9b7ecdc39+changes (worst of 3)",
+  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18 (2026-11-19)",
   "machine" : "Mac16,5, 16 cores, 64GB",
   "minutes" : 6,
   "plays" : [
     {
-      "dropped" : 1,
-      "framesDue" : 1818,
+      "dropped" : 0,
+      "firstPictureMS" : 67.0,
+      "framesDue" : 1817,
       "framesShown" : 1817,
       "label" : "whole",
       "seconds" : 60.002240624977276,
@@ -171,8 +170,6 @@
     "piecesLeftOut" : 0,
     "silentLooks" : 0
   },
-  "timeline" : [
-
-  ],
+  "timeline" : [],
   "walkPeakFootprintMB" : 1775.1899490356445
 }
