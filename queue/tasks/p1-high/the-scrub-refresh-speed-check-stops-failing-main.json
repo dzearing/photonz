@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 4010,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-19T21:15:04.309Z",
-  "updated": "2026-11-19T21:15:04.312Z",
+  "updated": "2026-11-19T22:52:42.951Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/44611675341 (commit df4edff9d). `gh run view 44611675341 --log-failed | grep -E '✘'` printed:\n✘ Test \"At the size it is shown, a scrub refresh composites well inside a 60 hertz frame\" recorded an issue at ScrubCompositePerfTests.swift:99:9: Expectation failed: (shown → 58.762917) < (full → 48.742)\nCalibration machine reads 17ms full, 7.5ms shown; the runner read 48.7 full and 58.8 shown, so the runner was ~3x slower and swinging. `shown` is checkFrames' rawMS (interleaved with the 1080p yardstick, which itself loads the GPU), `full` is a plain median taken earlier without a yardstick, so the two readings are not like for like. The preceding two runs on main (44586497514, 44569490885) were green. Found by the runner on find-out-why-exporting-a-video-holds-about-4-gb, which does not touch this test.",
@@ -21,6 +21,25 @@
     {
       "t": "2026-11-19T21:15:04.311Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-19T22:30:29.919Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T22:52:42.809Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-19T22:52:42.875Z",
+      "note": "Reproduced from the CI log of 44611675341: full 48.7ms read alone first, shown 58.8ms read later beside a ruler at 27.5ms (8x its own 3.3ms). Chose a per-round paired ratio (median of shown/full, order alternating, each on its own timed renderer, ruler in the same round) over two separate gated readings, because pairing cancels whatever load the machine has at that moment; the shown-size budget is judged from the same rounds. Local: 0.68; 8 copies at once x3: 24/24 pass, worst 0.92; earlier green CI read 0.43-0.6."
+    },
+    {
+      "t": "2026-11-19T22:52:42.949Z",
+      "note": "Tests/PhotonzRenderTests/ScrubCompositePerfTests.swift now draws the ruler, the full size and the shown size back to back in each of 29 rounds and fails only if the median per-round shown/full ratio is 1 or more; the shown size is still gated against 7.5ms from the same rounds. Commit 11c1116f3. Scripts/test.sh green; 24/24 under 8x local contention; CI run 44630821614 all three slices green (ratio 0.59 on the runner, ruler at 6.6x)."
     }
-  ]
+  ],
+  "started": "2026-11-19T22:30:29.918Z",
+  "walks": [],
+  "completed": "2026-11-19T22:52:42.950Z"
 }
