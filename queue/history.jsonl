@@ -18140,3 +18140,10 @@
 {"t":"2026-11-19T13:58:20.663Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-19T13:59:26.570Z","ev":"triage","summary":"merged 0, dropped 1 (later epic), moved 4 Ask model-quality tasks to p3 (user parked Ask local-model work), cleared usage-limit failure counts on 11 tasks, renumbered all priorities, linked 3 panel rebuild tasks; fixed two loop defects (environment failures charged to tasks, refused claims counted as daily passes)"}
 {"t":"2026-11-19T13:59:26.600Z","ev":"digest","file":"2026-11-19.md"}
+{"t":"2026-11-19T13:59:47.360Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-19T15:36:46.300Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-19T15:36:46.368Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-19T15:36:46.435Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-19T15:36:46.499Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-19T15:36:46.565Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-19T15:36:46.630Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 12 landed d04e1564c: a zoom stretches the last painting instead of painting every frame. Near Fit 13.5-14.3 -> 12.2-12.4 ms, zoom in 11.8-12.6 -> 11.0, scroll 9.0-9.7 -> 8.9; look unchanged at rest. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
