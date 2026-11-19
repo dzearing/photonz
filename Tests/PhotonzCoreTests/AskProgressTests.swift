@@ -126,8 +126,8 @@ struct AskProgressTests {
         // An estimate under the truth never says 100 before it writes.
         #expect(AskStage.thinking(turn: 1, at: AskModelProgress(read: 12_000, written: 0), expected: 10_000)
                 == .readingRequest(percent: 99))
-        #expect(AskStage.thinking(turn: 1, at: AskModelProgress(read: 9_946, written: 20), expected: 10_000) == .writing)
-        #expect(AskStage.writing.line == "Writing the steps")
+        #expect(AskStage.thinking(turn: 1, at: AskModelProgress(read: 9_946, written: 20), expected: 10_000) == .writing())
+        #expect(AskStage.writing().line == "Writing the steps")
         // Nothing known (another runtime, or the server between requests).
         #expect(AskStage.thinking(turn: 2, at: nil, expected: 10_000) == .thinking(turn: 2))
         let idle = try AgentJSON.parse(Data("""

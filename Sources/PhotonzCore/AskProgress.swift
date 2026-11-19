@@ -30,8 +30,9 @@ public enum AskStage: Hashable, Sendable {
     /// The planning model reading the request and everything sent with it,
     /// this far through.
     case readingRequest(percent: Int)
-    /// The planning model writing its answer.
-    case writing
+    /// The planning model writing its answer, as far as its stream has
+    /// shown (`AskStreamedAnswer`): no step yet says only that it writes.
+    case writing(AskWriting = AskWriting())
     /// The planning model asked to look at something before it plans.
     case lookingUp(tool: String)
     case planningDrawing(subject: String, part: Int, of: Int)
@@ -65,6 +66,9 @@ public enum AskStage: Hashable, Sendable {
 
     /// The most a line may run, the panel's budget (UX-PATTERNS §4).
     public static let budget = 40
+    /// The most of a part's name a writing line keeps, so the step's own
+    /// name always has room beside it.
+    static let longestPart = 14
 
     /// The line as shown: within `budget`, the subject or reason cut first.
     public var line: String {
@@ -104,7 +108,16 @@ public enum AskStage: Hashable, Sendable {
         case .readingWhatItFound: return ("Reading what it found", "", "")
         case .thinking(let turn): return (turn <= 1 ? "Thinking it through" : "Working out the steps", "", "")
         case .readingRequest(let percent): return ("Reading your request, \(percent)%", "", "")
-        case .writing: return ("Writing the steps", "", "")
+        case .writing(let writing):
+            guard writing.step > 0 else { return ("Writing the steps", "", "") }
+            guard let subject = writing.subject else { return ("Writing step \(writing.step)", "", "") }
+            // The part is what moves, so a long name is cut before it is
+            // (a "Segmented Control" read the same through all its parts).
+            guard let part = writing.part.map({ Self.plain($0) }), part != Self.plain(subject) else {
+                return ("Writing step \(writing.step): ", Self.plain(subject), "")
+            }
+            let shortPart = part.count > Self.longestPart ? String(part.prefix(Self.longestPart - 1)) + "…" : part
+            return ("Writing step \(writing.step): ", Self.plain(subject), ", " + shortPart)
         case .lookingUp(let tool): return (Self.lookingUp(tool), "", "")
         case .planningDrawing(let subject, let part, let of):
             return ("Planning ", Self.plain(subject), counted(part, of))
@@ -177,9 +190,12 @@ public enum AskStage: Hashable, Sendable {
     /// has read against the tokens the request was estimated at, or that it
     /// is writing. Never 100% while it is still reading, since the estimate
     /// can come in under the truth.
-    public static func thinking(turn: Int, at progress: AskModelProgress?, expected: Int) -> AskStage {
+    /// `writing` is what the streamed answer has shown so far.
+    public static func thinking(turn: Int, at progress: AskModelProgress?, expected: Int,
+                                writing: AskWriting = AskWriting()) -> AskStage {
         guard let progress else { return .thinking(turn: turn) }
-        if progress.written > 0 { return .writing }
+        // A stream that has heard a step outranks a count read a moment late.
+        if progress.written > 0 || writing.step > 0 { return .writing(writing) }
         let percent = expected > 0 ? progress.read * 100 / expected : 0
         return .readingRequest(percent: min(99, max(1, percent)))
     }
@@ -195,7 +211,9 @@ public enum AskStage: Hashable, Sendable {
     /// One of each stage, for the copy checks.
     public static let examples: [AskStage] = [
         .starting, .gettingModelReady, .gettingPainterReady, .reading(video: false), .reading(video: true),
-        .lookingAtCanvas, .thinking(turn: 1), .thinking(turn: 3), .readingRequest(percent: 99), .writing,
+        .lookingAtCanvas, .thinking(turn: 1), .thinking(turn: 3), .readingRequest(percent: 99), .writing(),
+        .writing(AskWriting(step: 4)), .writing(AskWriting(step: 4, subject: "Toggle", part: "Knob")),
+        .writing(AskWriting(step: 12, subject: "Segmented Control With A Very Long Name", part: "Selected")),
         .lookingUp(tool: "list_components"), .lookingUp(tool: "list_styles"), .lookingUp(tool: "list_titles"),
         .lookingUp(tool: "list_brushes"), .lookingUp(tool: "read_document"), .lookingUp(tool: "render_picture"),
         .lookingUp(tool: "find_elements"), .lookingUp(tool: "find_misalignments"),

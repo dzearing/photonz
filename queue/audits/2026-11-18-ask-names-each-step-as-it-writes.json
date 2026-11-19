@@ -1,0 +1,28 @@
+{
+  "feature": "Ask's live line names each step as the plan is written",
+  "epic": "agent-ask",
+  "summary": "While Ask writes a long plan, the line under the request now counts the steps and names the one it is on and the part it has reached (\"Writing step 4: Radio, Dot\"), instead of sitting on \"Writing the steps\". On a component sheet it never went more than 3.4 s without changing while writing (bar: 8 s).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask's built-in model (Qwen3.8 27B on this Mac). Walk: Scripts/playtest/ask-names-each-step-as-it-writes-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a blank picture and press Command-K." },
+    { "do": "Type: create a table of apple like quality base components that show different states and text, then press Return.", "shot": "2026-11-18-ask-names-each-step-writing-sc.png" },
+    { "do": "Watch the line under the request once it stops saying Reading your request: it counts the steps and names each part." },
+    { "do": "Let it finish and compare the sheet with one you made before today.", "shot": "2026-11-18-ask-names-each-step-sheet-done-sc.png" },
+    { "do": "Open a new blank picture, press Command-K and ask: draw an illustration of a fox." }
+  ],
+  "evaluate": [
+    "Can you tell how far along a long plan is from the line alone?",
+    "Do the names it shows (Toggle, Knob, Disabled) read as the things you will see on the canvas?",
+    "Does the line change too often to read, or about right?",
+    "Is the finished sheet as good as before?"
+  ],
+  "rough": [
+    "Measured, component sheet (run 2, after the fixes): writing ran from 10.0 s to 117.7 s, 11 steps, 96 changes of line, longest without a change 3.4 s. The whole request's longest gap was 7.3 s, while the model read its second turn.",
+    "Measured, component sheet (run 1): writing ran 95 to 259 s and one step (Segmented Control) showed the same cut line for 22 s, since its long name pushed the part off the end. Fixed in this task: the name is now cut before the part, so each part shows (Writing step 6: Segmented…, Selection).",
+    "Measured, fox: the plan is one short step (Writing step 1: a fox, under a second); its longest gap is 4.0 s, during painting, as before. It still plans, paints, traces and checks the fox as it did.",
+    "The line changes about every 1.5 s while writing, so its fade between lines is often caught halfway (the first picture shows Message fading out as Success comes in).",
+    "Only the built-in model streams. With Ollama picked in Settings the line still says Writing the steps.",
+    "No mock draws this line's words; it keeps the panel's 40 character budget (UX-PATTERNS §4)."
+  ]
+}

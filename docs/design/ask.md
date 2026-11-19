@@ -282,6 +282,7 @@ timer:
 | a canvas picture for a model that sees | Looking at the canvas | `conversation` |
 | the model reading the prompt | Reading your request, 41% | llama-server `/slots`, polled while a turn is out (from two seconds in: before that the count is the last request's): `n_prompt_tokens` against Ask's own estimate of the request, held under 100 |
 | the model writing | Writing the steps | `/slots` `n_decoded` above 0 |
+| the model writing, each step as it comes | Writing step 4: Toggle, Knob | the plan's turns are streamed (`stream: true`) and read as they arrive (`AskStreamedAnswer`): the step count, the call's own `name`/`title`/`subject`/`label`/`text`, the latest `name`/`title`/`label` inside it; a new step at once, a new part at most once a second (`AskWritingPacer`). The streamed reply is assembled into the unstreamed shape, measured identical on b11826 |
 | a look the planner asked for | Looking through the components, … | the look's tool |
 | a drawing's plan | Planning a fox, 1 of 2 | `withDrawingPlans` |
 | the picture model loading | Getting ready to paint | `AskPictureModel.report` |

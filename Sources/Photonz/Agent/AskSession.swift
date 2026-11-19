@@ -1218,6 +1218,18 @@ final class AskSession {
             let saying = first
             say(saying ?? .thinking(turn: turn))
             let expected = talk.estimatedTokens(of: talk.chatBody(model: model)["messages"]?.arrayValue ?? [])
+            // As the model writes, its streamed answer says which step and
+            // part it has reached (`AskStreamedAnswer`); a try again keeps
+            // saying why.
+            let writing = AskWritingHeard()
+            let hearWriting: @Sendable (AskWriting) -> Void = { reached in
+                Task { @MainActor in
+                    guard writing.open else { return }
+                    writing.latest = reached
+                    if saying == nil { say(.writing(reached)) }
+                }
+            }
+            defer { writing.open = false }
             // While the model works, its server says how far it has read and
             // whether it is writing yet (a try again keeps saying why).
             let watch = saying == nil && AskLocalModel.runtime == .builtIn ? Task { @MainActor in
@@ -1229,7 +1241,7 @@ final class AskSession {
                     try? await Task.sleep(for: .milliseconds(700))
                     guard !Task.isCancelled else { return }
                     if let progress = await AskModelServer.shared.progress(), !Task.isCancelled {
-                        say(AskStage.thinking(turn: turn, at: progress, expected: expected))
+                        say(AskStage.thinking(turn: turn, at: progress, expected: expected, writing: writing.latest))
                     }
                 }
             } : nil
@@ -1251,7 +1263,7 @@ final class AskSession {
                 // server reads and writes nothing for a minute and a half is
                 // given up (`AskModelWatch`): its request is cancelled, which
                 // a stop of the whole request does too.
-                let asking = Task { try await AskLocalModel.chat(body, standing: standing, said: said) }
+                let asking = Task { try await AskLocalModel.chat(body, standing: standing, said: said, heard: hearWriting) }
                 let ended = AskTurnEnd()
                 let minder = Task { @MainActor in
                     let sent = Date()
@@ -1294,6 +1306,10 @@ final class AskSession {
                     }
                 }
                 watch?.cancel()
+                writing.open = false
+                if writing.latest.step > 0 {
+                    note("written as it came: \(writing.latest.step) steps, the last \(writing.latest.tool ?? "unnamed")")
+                }
                 noteServer()
                 // Long enough to hold a whole component call, so a look the
                 // planner let through can be rebuilt from the trace (a blue
@@ -1589,4 +1605,13 @@ final class AskServerLines {
 final class AskTurnEnd {
     enum Why { case cut, quiet }
     var why: Why?
+}
+
+/// What one turn's streamed answer has shown so far, for the server's own
+/// progress to say alongside; closed once the turn is answered, so a late
+/// reading never covers the line that follows.
+@MainActor
+final class AskWritingHeard {
+    var latest = AskWriting()
+    var open = true
 }

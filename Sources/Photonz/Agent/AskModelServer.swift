@@ -121,8 +121,11 @@ final class AskModelServer {
     /// (`AskConversation.standingBody`), given on a request's first turn
     /// only: it is restored from its saved read, or read and saved, before
     /// the request goes (`AskStandingRead`). `said` hears a line for the trace.
+    /// `heard`, when given, has the answer streamed and hears how far it has
+    /// got as it is written (`AskStreamedAnswer`); the answer is the same.
     func chat(_ body: AgentJSON, on choice: AskBuiltInModels.Choice, standing: AgentJSON? = nil,
-              said: ((String) -> Void)? = nil) async throws -> AgentJSON {
+              said: ((String) -> Void)? = nil,
+              heard: (@Sendable (AskWriting) -> Void)? = nil) async throws -> AgentJSON {
         busy += 1
         defer {
             busy -= 1
@@ -135,11 +138,18 @@ final class AskModelServer {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = AskTools.wireEncoded(AskServerChat.body(fromOllama: body))
+        request.httpBody = AskTools.wireEncoded(AskServerChat.body(fromOllama: body, stream: heard != nil))
         request.timeoutInterval = AskLocalModel.chatSeconds
+        let streamed: AgentJSON?
         let data: Data
         do {
-            data = try await AskLocalModel.send(request)
+            if let heard {
+                streamed = try await AskLocalModel.streamed(request, heard: heard)
+                data = Data()
+            } else {
+                streamed = nil
+                data = try await AskLocalModel.send(request)
+            }
         } catch is CancellationError {
             throw CancellationError()
         } catch AskLocalModel.Trouble.tooSlow {
@@ -155,7 +165,7 @@ final class AskModelServer {
             stop()
             throw Failure.wouldNotStart
         }
-        let reply = try AgentJSON.parse(data)
+        let reply = try streamed ?? AgentJSON.parse(data)
         if let timings = reply["timings"], let read = timings["prompt_n"]?.doubleValue {
             said?("the model read \(Int(read)) new tokens (\(Int(timings["cache_n"]?.doubleValue ?? 0)) it had already)")
         }

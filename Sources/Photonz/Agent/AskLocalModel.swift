@@ -181,7 +181,10 @@ enum AskLocalModel {
     /// the same every time, which the built-in server restores from a saved
     /// read rather than reading again (`AskStandingRead`); `said` hears what
     /// it did, for the trace.
-    static func chat(_ body: AgentJSON, standing: AgentJSON? = nil, said: ((String) -> Void)? = nil) async throws -> AgentJSON {
+    /// `heard`, on the built-in server only, hears how far the answer has
+    /// got as the model writes it (`AskStreamedAnswer`).
+    static func chat(_ body: AgentJSON, standing: AgentJSON? = nil, said: ((String) -> Void)? = nil,
+                     heard: (@Sendable (AskWriting) -> Void)? = nil) async throws -> AgentJSON {
         #if PHOTONZ_PLAYTEST
         if let reply = walkReplies.first {
             if walkReplies.count > 1 { walkReplies.removeFirst() }
@@ -193,7 +196,7 @@ enum AskLocalModel {
                   AskModelServer.isDownloaded(choice) else { throw Trouble.noModel }
             let json: AgentJSON
             do {
-                json = try await AskModelServer.shared.chat(body, on: choice, standing: standing, said: said)
+                json = try await AskModelServer.shared.chat(body, on: choice, standing: standing, said: said, heard: heard)
             } catch AskModelServer.Failure.tooSlow {
                 throw Trouble.tooSlow
             } catch is AskModelServer.Failure {
@@ -212,6 +215,37 @@ enum AskLocalModel {
         let json = try AgentJSON.parse(data)
         if let said = json["error"]?.stringValue { throw Trouble.server(said) }
         return json
+    }
+
+    /// One turn streamed (`AskStreamedAnswer`): `heard` hears how far the
+    /// answer has got, paced (`AskWritingPacer`), and the answer comes back
+    /// in the shape the server gives without streaming. Its failures are
+    /// `send`'s, so a stop, a timeout and a server gone away read the same.
+    nonisolated static func streamed(_ request: URLRequest,
+                                     heard: @escaping @Sendable (AskWriting) -> Void) async throws -> AgentJSON {
+        var answer = AskStreamedAnswer()
+        var pacer = AskWritingPacer()
+        let started = Date()
+        do {
+            let (bytes, _) = try await session.bytes(for: request)
+            for try await line in bytes.lines {
+                answer.take(line)
+                if pacer.says(answer.writing, at: Date().timeIntervalSince(started)) { heard(answer.writing) }
+            }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as URLError where error.code == .cancelled {
+            throw CancellationError()
+        } catch let error as URLError where error.code == .timedOut {
+            throw Trouble.tooSlow
+        } catch {
+            throw Trouble.noRunner
+        }
+        if Task.isCancelled { throw CancellationError() }
+        // A stream that stopped with neither its end nor a complaint is a
+        // server that went away part way, as a send with no answer is.
+        guard answer.finished || answer.reply["error"] != nil else { throw Trouble.noRunner }
+        return answer.reply
     }
 
     nonisolated static func send(_ request: URLRequest) async throws -> Data {

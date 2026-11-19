@@ -1,0 +1,229 @@
+{
+  "out": "/tmp/photonz-playtest/ask-names-each-step-as-it-writes-walk",
+  "seed": "while-ask-writes-a-long-plan-its-line-names-each: at Next defaults, a component sheet line names each step and part as the model writes it (Writing step 4: Toggle, Knob) and never sits still for more than 8 s while it writes; a fox drawing still plans and paints as before",
+  "clock": 1990,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "create a table of apple like quality base components that show different states and text"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running",
+      "timeout": 15
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": true
+    },
+    {
+      "do": "wait",
+      "seconds": 110,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "1-sheet-at-110s"
+    },
+    {
+      "do": "describe",
+      "stage": "1-sheet-at-110s",
+      "note": "the live line 110 s after the request was sent"
+    },
+    {
+      "do": "wait",
+      "seconds": 15,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "1-sheet-at-125s"
+    },
+    {
+      "do": "describe",
+      "stage": "1-sheet-at-125s",
+      "note": "the live line 125 s after the request was sent"
+    },
+    {
+      "do": "wait",
+      "seconds": 15,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "1-sheet-at-140s"
+    },
+    {
+      "do": "describe",
+      "stage": "1-sheet-at-140s",
+      "note": "the live line 140 s after the request was sent"
+    },
+    {
+      "do": "wait",
+      "seconds": 30,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "1-sheet-at-170s"
+    },
+    {
+      "do": "describe",
+      "stage": "1-sheet-at-170s",
+      "note": "the live line 170 s after the request was sent"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askSettled",
+      "timeout": 480
+    },
+    {
+      "do": "wait",
+      "seconds": 10,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "1-sheet-done",
+      "note": "the stages  showed, with when each came"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-sheet-done"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "draw an illustration of a fox"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running",
+      "timeout": 15
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": true
+    },
+    {
+      "do": "wait",
+      "seconds": 3,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "2-fox-at-3s"
+    },
+    {
+      "do": "describe",
+      "stage": "2-fox-at-3s",
+      "note": "the live line 3 s after the request was sent"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askSettled",
+      "timeout": 480
+    },
+    {
+      "do": "wait",
+      "seconds": 10,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-fox-done",
+      "note": "the stages  showed, with when each came"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-fox-done"
+    }
+  ]
+}

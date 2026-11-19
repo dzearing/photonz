@@ -302,8 +302,9 @@ public enum AskServerChat {
     /// rather than writing until the window is full.
     public static let mostTokensATurn = 8192
 
-    public static func body(fromOllama body: AgentJSON) -> AgentJSON {
-        var out: [String: AgentJSON] = ["stream": false, "max_tokens": .number(Double(mostTokensATurn))]
+    /// `stream` asks for the answer as it is written (`AskStreamedAnswer`).
+    public static func body(fromOllama body: AgentJSON, stream: Bool = false) -> AgentJSON {
+        var out: [String: AgentJSON] = ["stream": .bool(stream), "max_tokens": .number(Double(mostTokensATurn))]
         if let model = body["model"] { out["model"] = model }
         if let temperature = body["options"]?["temperature"] { out["temperature"] = temperature }
         if let most = body["options"]?["num_predict"] { out["max_tokens"] = most }
