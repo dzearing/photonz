@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-17T11:05:07.925Z",
-  "updated": "2026-11-19T13:56:59.807Z",
+  "updated": "2026-11-19T23:55:58.990Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-17-024542.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nNSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) (HeldDragKeys.swift:111)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)\n\nDigest spot check 2026-11-17: the report's top frames are AppKit's, +[NSApplication _crashOnException:] under -[NSView updateConstraintsForSubtreeIfNeeded] in the display cycle; photonz_nextEvent is only the event pump it was called from. The long-edit pass 13 runner saw this crash once in 6 runs of scrub-never-blacks-out-walk with its change in, and 0 in 9 more runs (its log, 2026-11-17T11:04Z): it names -[NSWindow _postWindowNeedsUpdateConstraints] from NSHostingView.updateWindowContentSizeExtremaIfNecessary. That change has since landed (f87714cbc), so this cannot be put down to unfinished source. Command to try: Scripts/playtest.sh Scripts/playtest/scrub-never-blacks-out-walk.json, repeated.",
@@ -66,6 +66,14 @@
     {
       "t": "2026-11-19T13:56:59.806Z",
       "note": "seq 70 -> 40"
+    },
+    {
+      "t": "2026-11-19T23:46:44.838Z",
+      "note": "Seen again 2026-11-19 15:44 on sound-effects-eq-compressor-locked-walk, at its open step (the step's note reads window 100000x1028 pt, canvas 100023x830 pt), before anything played. Same signature: +[NSApplication _crashOnException:] from -[NSWindow(NSDisplayCycle) _postWindowNeedsUpdateConstraints] in a layout pass. Report: ~/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-154454.ips. The same walk passed 44 of 44 on the very next run. Two sightings now on different walks, so it is not about scrubbing."
+    },
+    {
+      "t": "2026-11-19T23:55:58.989Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 15:44:54.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-154454.ips"
     }
   ],
   "started": "2026-11-18T18:26:28.712Z",

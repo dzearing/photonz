@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-17T08:59:14.689Z",
-  "updated": "2026-11-19T13:56:59.732Z",
+  "updated": "2026-11-19T23:55:45.727Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-17 by Scripts/perf/walks/long-60-sound.json (and long-20-sound.json), the speed walk's play measure: 'pieces put on while playing landed within 1ms of the press's clock, which was within 200ms of the playhead (-183ms ahead of it at the median)'. engineClockMS = clockFromMS + (silent clock node's player seconds - 80 ms lead); it is compared with editor.documentTimeMS at each one-second look. Hypothesis, not confirmed: the document clock starts at the press on the main thread, while the engine (DocumentAudioEngine.play on its queue) stops, attaches, opens files, prepares and starts the engine and then hangs everything 80 ms ahead, and nothing moves fromMS on by that time. Not yet compared with editor.shownMomentMS or the output node's presentationLatency, so the picture may lag the playhead by a similar amount and the two may be in step. Code: Sources/Photonz/DocumentAudioPlayer.swift play(_:fromMS:speed:), Sources/Photonz/Playtest/PlaytestSpeedWalk.swift play().",
@@ -57,17 +57,38 @@
     {
       "t": "2026-11-19T13:56:59.731Z",
       "note": "seq 60 -> 30"
+    },
+    {
+      "t": "2026-11-19T22:52:59.746Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T23:46:54.294Z",
+      "note": "Reproduced 2026-11-19 with a new look in the speed walk's play measure: at each one-second look, the moment the speaker puts out (the engine clock's last render carried on to the instant, less engine.outputNode.presentationLatency) at the next display refresh, set beside the picture handed to the canvas by then. Before: 6 min edit, 30s from 0:00 and 30s from 2:30, sound 182 and 187 ms behind the picture's frame moment at the median (168 to 201 ms), output latency 1 ms. Cause as hypothesised: the playhead starts at the press while the sound starts after the engine stops, rewires and starts (about 100 ms) plus an 80 ms lead, and nothing moved the sound's start on by that."
+    },
+    {
+      "t": "2026-11-19T23:46:54.359Z",
+      "note": "Chose to start the sound where the picture will be when it is first heard (the first ~150 ms after a press are silent) over holding the picture until the sound is ready, because the picture already answers Space in about 60 ms and holding it would cost that. Chose to read the task's limits by ITU-R BT.1359 (sound EARLY by more than 45 ms or LATE by more than 125 ms is noticed; the task wrote them the other way round) and to aim inside 45 ms either way, which meets both readings."
+    },
+    {
+      "t": "2026-11-19T23:55:45.649Z",
+      "note": "Sound walks: 19 that play, scrub, export or check sound all pass at Next defaults (an-editing-session, playback-speed, hear-the-scrub, sound-on-the-timeline, title-sounds-whoosh-and-tick and the rest). One crash on sound-effects-eq-compressor-locked-walk at its open step, before anything played, is the known layout loop: folded into the-app-crashed-in-nsapplication-photonz-nexteve; the walk passed on its re-run. Left rough, not filed: sync measured only at 1x and only on this Mac's output (1 ms latency); wireless headphones untested. Audit: queue/audits/2026-11-19-sound-in-step-with-picture.json"
+    },
+    {
+      "t": "2026-11-19T23:55:45.725Z",
+      "note": "Confirmed and fixed: the sound came out 182-187 ms behind the picture on screen (measured: engine clock plus output latency at the picture's display refresh). It now opens where the picture will be when first heard (SoundStartMoment, DocumentAudioEngine.play starts every node at one host instant). After: -3 to +5 ms median, -18 to +19 ms worst on the 6 and 20 minute edits, inside 45 ms either way. Speed walk's play measure reports it on every run. Tests green (15,261), 19 sound walks green. Commit e4ade3fb4."
     }
   ],
   "walks": [
     "long-20-sound",
     "long-60-sound"
   ],
-  "started": "2026-11-18T16:55:52.728Z",
+  "started": "2026-11-19T22:52:59.745Z",
   "failures": 0,
   "lastError": {
     "at": "2026-11-18T16:55:59.860Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-  }
+  },
+  "completed": "2026-11-19T23:55:45.726Z"
 }
