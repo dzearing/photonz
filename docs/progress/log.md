@@ -23296,3 +23296,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Each picture of the 6 minute reference edit is drawn in 5.5 ms (median, worst of 3 runs), down from 8.6. A sample of the render thread while it played put about three quarters of each composite in two CPU copies: every decoded recording frame was read back off the GPU into a bitmap and uploaded again by every composite, and the moving background's full-frame mask (30 MB) was uploaded on every frame though it was kept. lldb on `CI::MetalContext::bind_cgimage`, printing `x1`, named the second one.
 - Fix (e15fa62e2): `FrameOnASurface.draw` keeps a decoded frame on an IOSurface the composite reads in place; `FrameOnASurface.keep` copies a kept raster of 512 x 512 or more onto one once. Drawn output is byte for byte the same (`FrameOnASurfaceTests`). Rule written in `docs/design/video.md` ("What a composite may hold between frames").
 - Bars still not reached: scrub 2 refreshes behind in most runs (1 in one of 3; bar 1), play 1 dropped frame a minute (bar 0), edits 14 to 57 ms (bar 16). Next: hand the canvas the frame on the surface it was drawn on, saving the ~1.3 ms read back.
+
+## 2026-11-19 — Ask on an 8 GB Mac (task ask-works-on-an-8-gb-mac)
+
+- Changed: Macs under 16 GB start Ask's server with `--cache-ram 0 --ctx-checkpoints 2` (Qwen3.5 4B peak 7.8 GB to 4.8 GB). Built-in models can think first (`Choice.thinks`, Qwen3.5 4B only, capped at 2048 tokens a turn).
+- Measured: Qwen3.5 4B as an 8 GB Mac, held-out 14.5 at 49.2 s, climb slice 36.6. Still under the floor of 20, so the 8 GB dialog and the row are unchanged. Details in `docs/design/ask.md`, "An 8 GB Mac".
+- Open: no model that fits 5.2 GB does Ask's work yet. Untried: a shorter prompt for small models (drawings, the bulk of the held-out set, are the model's own skill, so it may not be enough).
