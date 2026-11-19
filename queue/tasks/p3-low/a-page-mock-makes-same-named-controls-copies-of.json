@@ -3,13 +3,13 @@
   "title": "A page mock makes same-named controls copies of one component",
   "goal": "When Ask mocks a web page, controls that are the same thing (python.org has twelve navigation links) become one Library component with copies placed on the page, instead of twelve separate components all called Nav Link.",
   "epic": "agent-ask",
-  "priority": "p2-normal",
-  "seq": 190,
+  "priority": "p3-low",
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-03T14:52:14.194Z",
-  "updated": "2026-11-17T15:37:32.317Z",
+  "updated": "2026-11-19T13:57:04.754Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-11-03 (queue/audits/2026-11-03-ask-mocks-a-web-page.json, rough): python.org came back as 23 components, twelve of them called Nav Link. add_page_parts lands each call as its own component (AskConversation.webPlan / addWebParts); same name + same box shape could be one component placed with per-copy words.",
@@ -66,6 +66,18 @@
     {
       "t": "2026-11-17T15:37:32.316Z",
       "note": "seq 180 -> 190"
+    },
+    {
+      "t": "2026-11-19T13:56:53.755Z",
+      "note": "priority p2-normal -> p3-low"
+    },
+    {
+      "t": "2026-11-19T13:56:53.830Z",
+      "note": "triage 2026-11-19: moved to p3. On 2026-11-18 the user stopped the runner on ask-on-qwen3-8-27b-keeps-a-drawing-its-look-name and parked it, saying they are not sure Ask's local-model work is worth doing now. This task is the same kind of work (how well the local model draws, lays out or is scored), so it waits behind video and loop work until the user picks Ask's model quality up again."
+    },
+    {
+      "t": "2026-11-19T13:57:04.753Z",
+      "note": "seq 190 -> 50"
     }
   ]
 }

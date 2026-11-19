@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 480,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T03:23:52.871Z",
-  "updated": "2026-11-17T15:37:34.258Z",
+  "updated": "2026-11-19T13:56:53.202Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-20: MisalignmentScan on app-window-2x.png marks the top middle selection handle (996,928 21x14 px) as Top edge 4 pt off. Reproduce: Scripts/playtest.sh with a walk opening that file and asking find the misalignments (see the audit walks in queue/audits/2026-10-20-find-misalignments.json), or run MisalignmentScan.findings on it. Corpus: Tests/PhotonzRenderTests/Fixtures/misalign, Scripts/misalign-corpus/make-corpus.mjs.",
@@ -106,6 +106,10 @@
     {
       "t": "2026-11-17T15:37:34.257Z",
       "note": "seq 470 -> 480"
+    },
+    {
+      "t": "2026-11-19T13:56:53.201Z",
+      "note": "triage 2026-11-19: serves Alignment checking, an epic staged later; dropped, not parked, so the queue holds only now-work. The reproduction (app-window-2x.png, top selection handle marked 4 pt off) is in this task's notes for when that epic is staged."
     }
   ]
 }

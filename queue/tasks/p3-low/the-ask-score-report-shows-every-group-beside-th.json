@@ -3,13 +3,13 @@
   "title": "The Ask score report shows every group beside the total and says when one falls",
   "goal": "The scored test set is how the loop decides whether a change made Ask better. Today it reports one total for the unseen requests, so when Ask moved to the model built into Photonz the layout score fell from about 30 to about 7 and nobody saw it, because better drawings lifted the total. The same total held a drawing task open for five passes on swings in groups it never touched. The report should show each group, and say when one falls.",
   "epic": "agent-ask",
-  "priority": "p2-normal",
-  "seq": 130,
+  "priority": "p3-low",
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "loop",
   "created": "2026-10-23T14:07:33.733Z",
-  "updated": "2026-11-19T03:29:47.234Z",
+  "updated": "2026-11-19T13:57:04.669Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, 2026-10-23 digest. Scripts/ask-eval.sh report prints: held-out 60.3 (45 cases, 20261023-105134-ask-held-out), nothing else. queue/evals/ask-eval-history.jsonl held-out groups (total, drawing, layout, redline, video): 20261022-094634 60.3 65.3 23.3 37.9 59.7 (Ollama); 20261022-231423 61 69.1 6.4 31.5 48.1 (built in, first run); 20261023-034535 58.1 67.4 5.7 5.5 51.6; 20261023-105134 60.3 69.5 7.3 13.6 49.8. The scene task (a-scene-of-things-doing-something-together-is-dr) was claimed five times in 24 hours chasing a total of 61 that its own group (drawing, 65.7 to 69.5) never moved. Code: Scripts/ask-eval/eval.mjs; prompt: queue/bin/runner-prompt.md around the held-out rule. The layout and redline drops themselves are on ask-on-the-local-model-makes-results-that-look-f and ask-s-redlines-do-at-least-as-well-on-unseen-req.",
@@ -96,10 +96,26 @@
     {
       "t": "2026-11-19T03:29:47.233Z",
       "note": "runner failed (exit 1, attempt 3): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-11-19T13:55:42.839Z",
+      "note": "failure count cleared by the 2026-11-19 triage: all three were the weekly usage limit, which every task hit alike, so none were this task"
+    },
+    {
+      "t": "2026-11-19T13:56:53.598Z",
+      "note": "priority p2-normal -> p3-low"
+    },
+    {
+      "t": "2026-11-19T13:56:53.677Z",
+      "note": "triage 2026-11-19: moved to p3. On 2026-11-18 the user stopped the runner on ask-on-qwen3-8-27b-keeps-a-drawing-its-look-name and parked it, saying they are not sure Ask's local-model work is worth doing now. This task is the same kind of work (how well the local model draws, lays out or is scored), so it waits behind video and loop work until the user picks Ask's model quality up again."
+    },
+    {
+      "t": "2026-11-19T13:57:04.668Z",
+      "note": "seq 130 -> 40"
     }
   ],
   "started": "2026-11-19T03:29:40.993Z",
-  "failures": 3,
+  "failures": 0,
   "lastError": {
     "at": "2026-11-19T03:29:47.232Z",
     "exit": 1,

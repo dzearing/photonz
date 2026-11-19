@@ -926,10 +926,22 @@ export function waitingForScreen(t) {
 // tomorrow; the user can still hand it over by hand (`status <id> pending` does
 // not reset the count, `hold` and working it in a window are unaffected).
 export const MAX_PASSES_A_DAY = Math.max(1, Number(process.env.PHOTONZ_MAX_PASSES_A_DAY) || 3);
+// A claim whose runner was refused within two minutes (a usage limit, a lost
+// sign-in) did no work and is not a pass. On 2026-11-18 the weekly limit spent
+// every focus task's three passes in seconds each, so when the limit lifted
+// that evening the loop skipped all of them and worked six hours further down
+// the queue. A task that keeps dying fast is parked by its failure count.
+export const REFUSED_WITHIN_MS = 120 * 1000;
 export function passesToday(t, at = new Date()) {
   const midnight = new Date(at); midnight.setHours(0, 0, 0, 0);
-  return (Array.isArray(t.log) ? t.log : [])
-    .filter((e) => e && e.note === 'claimed by go loop' && e.t && new Date(e.t) >= midnight).length;
+  const log = Array.isArray(t.log) ? t.log : [];
+  return log.filter((e, i) => {
+    if (!(e && e.note === 'claimed by go loop' && e.t && new Date(e.t) >= midnight)) return false;
+    const next = log[i + 1];
+    const refused = next && next.t && /^runner (failed|could not sign in)/.test(next.note || '')
+      && new Date(next.t) - new Date(e.t) <= REFUSED_WITHIN_MS;
+    return !refused;
+  }).length;
 }
 export function cappedForToday(t, at = new Date()) {
   return t && t.status === 'pending' && passesToday(t, at) >= MAX_PASSES_A_DAY
@@ -1293,7 +1305,11 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
     appendLog(task, `runner could not sign in; handed back uncharged: ${message}`);
     saveTask(task);
   } else if (task && unfinalized) {
-    task.failures = (task.failures || 0) + 1;
+    // A failure the environment owns (every task fails alike) is not charged
+    // to the task. Charging it left eleven tasks at three failures through the
+    // weekly limit of 2026-11-18, so the first ordinary failure after it would
+    // have parked any of them at once.
+    if (!environment) task.failures = (task.failures || 0) + 1;
     task.lastError = { at: now(), exit, message };
     if (!environment && task.failures >= MAX_TASK_FAILURES) {
       parkTask(task, `parked after ${task.failures} runner failures in a row; last error: ${message}`);
@@ -1301,7 +1317,9 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
       outcome = 'parked';
     } else {
       task.status = 'pending';
-      appendLog(task, `runner failed (exit ${exit}, attempt ${task.failures}): ${message}`);
+      appendLog(task, environment
+        ? `runner failed (exit ${exit}, not charged: runners are failing whichever task runs): ${message}`
+        : `runner failed (exit ${exit}, attempt ${task.failures}): ${message}`);
       saveTask(task);
     }
   }

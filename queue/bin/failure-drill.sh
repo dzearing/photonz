@@ -226,6 +226,9 @@ check("tasks parked during an environment streak are handed back",
   unparks.length + " unparked; still parked: " + tasks.filter((t) => t.parked).map((t) => t.id).join(", "));
 check("no task is left in_progress", tasks.every((t) => t.status !== "in_progress"),
   tasks.map((t) => t.id + "=" + t.status).join(", "));
+check("a failure blamed on the environment is not charged to the task",
+  tasks.every((t) => (t.failures || 0) < 3),
+  tasks.map((t) => t.id + " failures=" + (t.failures || 0)).join(", "));
 
 // The waits have to actually grow, and the shipped defaults have to be the real
 // ones: an unset PHOTONZ_BACKOFF_STEPS must not collapse to zero. (The window

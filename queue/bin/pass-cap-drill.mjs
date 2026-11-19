@@ -28,6 +28,13 @@ put({ id: 'worked-twice', status: 'pending', seq: 2, deps: [], created: yesterda
 put({ id: 'worked-a-lot-yesterday', status: 'pending', seq: 3, deps: [], created: yesterday(1),
   log: [claimed(yesterday(9)), claimed(yesterday(10)), claimed(yesterday(11)), claimed(yesterday(12))] });
 put({ id: 'fresh', status: 'pending', seq: 4, deps: [], created: yesterday(1), log: [] });
+// 2026-11-18: the weekly limit refused every runner within seconds of its claim.
+const later = (iso, s) => new Date(new Date(iso).getTime() + s * 1000).toISOString();
+const refusedAt = (h) => [claimed(today(h)), { t: later(today(h), 6), note: "runner failed (exit 1, attempt 1): You've hit your weekly limit" }];
+put({ id: 'refused-three-times', status: 'pending', seq: 5, deps: [], created: yesterday(1),
+  log: [...refusedAt(0), ...refusedAt(0), ...refusedAt(0)] });
+put({ id: 'failed-after-real-work', status: 'pending', seq: 6, deps: [], created: yesterday(1),
+  log: [claimed(today(0)), { t: later(today(0), 1800), note: 'runner failed (exit 1, attempt 1): tests red' }, claimed(today(0)), claimed(today(0))] });
 
 const q = await import('./queue-lib.mjs');
 let failures = 0;
@@ -42,8 +49,10 @@ const byId = (id) => all().find((t) => t.id === id);
 check('three passes today is the cap', q.MAX_PASSES_A_DAY, 3);
 check('passes are counted since local midnight', q.passesToday(byId('worked-three-times')), 3);
 check('yesterday does not count', q.passesToday(byId('worked-a-lot-yesterday')), 0);
+check('a claim refused within seconds is not a pass', q.passesToday(byId('refused-three-times')), 0);
+check('a run that failed after real work still counts', q.passesToday(byId('failed-after-real-work')), 3);
 check('a task worked three times today is not ready; the rest are, in order',
-  q.readyTasks().map((t) => t.id), ['worked-twice', 'worked-a-lot-yesterday', 'fresh']);
+  q.readyTasks().map((t) => t.id), ['worked-twice', 'worked-a-lot-yesterday', 'fresh', 'refused-three-times']);
 check('its row says why it waits', typeof q.taskRow(byId('worked-three-times')).cappedForToday, 'string');
 check('a ready row carries no such note', q.taskRow(byId('fresh')).cappedForToday, undefined);
 const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(9);

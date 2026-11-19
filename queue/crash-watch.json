@@ -33,7 +33,8 @@
     "Photonz Probe-2026-11-11-202247.ips": "runner diagnostic: a-walk-that-pulls-a-library-tile-by-hand-sees-it built the probe with throwaway code in pickUpTile that called NSStringFromClass on every objc_copyClassList class (a non-NSObject root traps in ___forwarding___); never committed. probe|Run.pickUpTile(_:to:number:) < Run.perform(_:number:) < Run.start()",
     "Photonz Probe-2026-11-13-114048.ips": "runner diagnostic: playback-speed-you-can-pick-0-25x-0-5x-1x-1-5x-2 built the probe mid-task with two voices connected straight to one AVAudioUnitTimePitch (it has one input), so a player node was left disconnected and AVAudioPlayerNode.play threw; that runner fixed it with a gathering mixer before committing 0c0b3edf8. probe|DocumentAudioEngine.play(_:fromMS:speed:) < closure #4 in DocumentAudioPlayer.play(_:fromMS:speed:) < closure #1 in DocumentAudioEngine.run(_:)",
     "Photonz Probe-2026-11-14-233558.ips": "probe|macos-ax-notify",
-    "Photonz Probe-2026-11-17-024542.ips": "probe|NSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) < static PhotonzApp.$main() < Photonz_main"
+    "Photonz Probe-2026-11-17-024542.ips": "probe|NSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-11-18-221657.ips": "probe|macos-ax-notify"
   },
   "signatures": {
     "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter",

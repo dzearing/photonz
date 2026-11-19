@@ -1,0 +1,27 @@
+{
+  "id": "a-long-edit-with-transitions-plays-scrubs-and-ed-2026-11-18T11-31-11-650Z",
+  "task": "a-long-edit-with-transitions-plays-scrubs-and-ed",
+  "kind": "task",
+  "label": "A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast",
+  "title": "A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast",
+  "outcome": "failed",
+  "at": "2026-11-18T11:31:11.650Z",
+  "files": [
+    "Sources/Photonz/EditorState+Time.swift",
+    "Sources/Photonz/EditorState.swift",
+    "Sources/Photonz/Playtest/PlaytestSpeedWalk.swift",
+    "Sources/PhotonzRender/RenderScheduler.swift",
+    "Tests/PhotonzRenderTests/PlaybackNeverBlinksTests.swift",
+    "Tests/PhotonzRenderTests/RenderSchedulerTests.swift",
+    "Tests/PhotonzRenderTests/ShownSizeCompositeTests.swift",
+    "Sources/Photonz/Pass17Timing.swift",
+    "Sources/PhotonzCore/ScrubPictureAsks.swift",
+    "Tests/PhotonzCoreTests/ScrubPictureAsksTests.swift"
+  ],
+  "count": 10,
+  "state": "stashed",
+  "stash": "ce7ea1d5454a77742f9def9fe5db1565cf690214",
+  "restore": "git stash apply ce7ea1d5454a77742f9def9fe5db1565cf690214",
+  "why": "",
+  "handed": "2026-11-18T11:31:45.838Z"
+}

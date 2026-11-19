@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-19T13:52:09.507Z",
+  "updated": "2026-11-19T13:58:20.662Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,13 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-19T13:52:09.506Z",
-      "note": "... 39 earlier entries elided",
-      "elided": 39
-    },
-    {
-      "t": "2026-11-15T23:01:35.276Z",
-      "note": "Pass 8 measured first (6 min edit, playing, new edits walk): the undo after a blade read 57-61 ms only because the speed walk restarted play in the same turn as the undo (a blade stops play). Play now gets 1 s first; that alone took it to 38-46. Speed walk gained a 'pick' edit; edits after it are kept as '<edit>, picked' (PlaytestSpeedMeasure.tallyName, SpeedWalkStepTests). Picked numbers before the fix: trim 31-33, blade 42-45, undo after blade 43-46, pick 38-46."
+      "t": "2026-11-19T13:58:20.661Z",
+      "note": "... 40 earlier entries elided",
+      "elided": 40
     },
     {
       "t": "2026-11-15T23:01:35.350Z",
@@ -507,6 +503,10 @@
     {
       "t": "2026-11-19T13:52:09.505Z",
       "note": "Pass 19 landed 067272ae0: a pick no longer traces the recording's edge or reads every style (worst of 3, while playing: pick 32->29, unpick 42->34, undo picked 25->19, trim 22->16, blade 63->51 ms); found why every pass pays a window-wide floor (title bar drag regions and the focus walk feed each other through SwiftUI; not reachable from app code). Bars not reached: edits 12-60 ms vs 16, worst scrub lag 3 vs 1. Pass 20 leads in the log."
+    },
+    {
+      "t": "2026-11-19T13:58:20.660Z",
+      "note": "design review 2026-11-19: pass 20's (b), spreading unpick's teardown like arrivals, is the same panel cost leaving-preview-slides-back-without-a-hitch (over a third of a second leaving Preview) and folding-a-section-that-lets-the-panel-fit-again (21 to 29 ms) are open for. Build it so those two can use it."
     }
   ],
   "started": "2026-11-19T12:29:42.780Z",
