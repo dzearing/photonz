@@ -23309,3 +23309,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - `RenderScheduler` is a lock-guarded class, not an actor: asking for a picture no longer waits for the main actor's next turn. Scrub asks numbered (`ScrubPictureAsks`) so a landed frame waits for a picture already on its way.
 - Speed walk (worst of 3): composite 5.6 -> 4.2 ms; scrub lag median 2 -> 1 refresh at both speeds. Baseline rewritten.
 - Next: worst scrub lag 3, 1 dropped frame a minute, edits 15-63 ms on the main thread.
+
+## 2026-11-19 — hour-long timeline, pass 12 (task the-timeline-of-an-hour-long-edit-scrolls-zooms)
+
+- A zoom a step at a time keeps each busy lane's last painting and stretches it to the new scale (`TimelinePaint.stretch`, `EditorState.timelineHeldPainting`, `timelinePaintRuler`/`timelinePaintStretch`): painted again past 8.5 per cent, when the window outgrows the painting, and 30 ms after the zoom stops. The Zoom lane keeps its zooms' spans per document (`ZoomLane.Spans`).
+- 60 min edit, mean frame: near Fit 13.5-14.3 -> 12.2-12.4 ms (late 370-444 -> 243-277 of 648), zoom in 11.8-12.6 -> 10.9-11.1, scroll 9.0-9.7 -> 8.9.
+- Tried and backed out: drawing groups and nested hosting views per canvas (a stretched or slid canvas is rasterised again regardless). Rule written into docs/design/video.md 8f.
+- Bars still not reached: 8.3 ms on 95 per cent of zoom/scroll frames, none over 16; edits (inspector, other task). About 60 per cent of a zoom frame is SwiftUI graph and layout now.

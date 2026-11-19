@@ -541,11 +541,16 @@ struct TimelineTrackRow: View {
         // While the timeline zooms, only the window: every frame of a zoom
         // paints the canvas again, and the stretch is two and a half windows
         // (`TimelinePaint.paintedMS`).
-        let paintedMS = TimelinePaint.paintedMS(window: ruler, stretch: stretch,
+        // While a zoom holds the last painting, it is laid against the window
+        // it was painted at and stretched to this one, not painted again
+        // (`EditorState.timelineHeldPainting`).
+        let paintRuler = editorState.timelinePaintRuler
+        let paintStretch = editorState.timelinePaintStretch
+        let paintedMS = TimelinePaint.paintedMS(window: paintRuler, stretch: stretch,
                                                 isZooming: editorState.timelinePaintsTheWindow)
-        let canvas = TimelinePaint.Canvas(drawnMS: paintedMS, ruler: ruler, laneWidth: laneWidth)
+        let canvas = TimelinePaint.Canvas(drawnMS: paintedMS, ruler: paintRuler, laneWidth: laneWidth)
         let canvasX = canvas.offset(in: ruler, laneWidth: laneWidth, scale: displayScale)
-        let painting = paintedBars(clipsInSight, linked: linkedInSight, kept: kept, ruler: ruler,
+        let painting = paintedBars(clipsInSight, linked: linkedInSight, kept: kept, ruler: paintRuler,
                                    alternates: alternates, stretch: paintedMS)
         // Past the stretch the painting covers, a painting lane builds only
         // what somebody is working on: the sight reaches half a window
@@ -627,9 +632,10 @@ struct TimelineTrackRow: View {
                                                    edge: TimelineGapSlot.edgeTone.color(colorScheme)),
                                      canvas: canvas, drawnMS: paintedMS,
                                      laneWidth: laneWidth, laneHeight: laneHeight,
-                                     gridlines: ruler.secondTickMS(across: paintedMS),
+                                     gridlines: paintRuler.secondTickMS(across: paintedMS),
                                      gridInk: VideoKit.Palette.edgeLo.color(colorScheme))
                     .equatable()
+                    .scaleEffect(x: paintStretch, y: 1, anchor: .topLeading)
                     .offset(x: canvasX)
                     .allowsHitTesting(!track.isLocked)
                 let following = painting.bars.filter(\.nameFollowsEdge)
@@ -742,6 +748,7 @@ struct TimelineTrackRow: View {
                     TimelinePaintedCuts(marks: cuts.map(\.mark), canvas: canvas, laneWidth: laneWidth,
                                         height: laneHeight)
                         .equatable()
+                        .scaleEffect(x: paintStretch, y: 1, anchor: .topLeading)
                         .offset(x: canvasX)
                 }
                 let painted = Set(cuts.map(\.key))
@@ -838,7 +845,7 @@ struct TimelineTrackRow: View {
         }
         let clips = row.clips.filter(onTheStretch)
         let linked = row.linked.filter(onTheStretch)
-        let leftEdge = editorState.timelineLeftEdgeRangeMS
+        let leftEdge = editorState.timelinePaintLeftEdgeRangeMS
         var kept = kept
         for id in [pointerClipID, editorState.renamingClipID, editorState.freezeAsk?.layerID,
                    editorState.clipTransitionDrag?.layerID] {
@@ -846,7 +853,7 @@ struct TimelineTrackRow: View {
         }
         let sounds = Dictionary(linked.map { ($0.layerID, $0) }, uniquingKeysWith: { first, _ in first })
         let carryingSound = Set(row.linked.map(\.layerID))
-        let zoom = editorState.timelineScaleOnly
+        let zoom = editorState.timelinePaintScaleOnly
         let tint = VideoKit.Palette.soundTrack(row.soundNumber)
         // `ClipPiecesBar.soundOnThePanelGround`'s fill, worked out here in the
         // view's own scheme: a Canvas does not always say which it is.

@@ -1030,6 +1030,26 @@ The rule, for any view added to the editor window:
      wide stretch. Zooming the hour-long reference edit painted two and a
      half windows on every frame until then: 16 to 18 ms a frame, 12 after
      (2026-11-16). What is built past the painting follows it (`builds`).
+   - **A zoom a step at a time stretches the last painting rather than
+     painting again** (`TimelinePaint.stretch`, `EditorState.timelineHeldPainting`):
+     while the new scale is within 8.5 per cent of the one a lane last painted
+     at, and the window still inside what it painted, the lane lays the same
+     painting against that older ruler (`timelinePaintRuler`) and stretches
+     it to this one (`timelinePaintStretch`). Time across a lane is linear,
+     so every clip, cut and gap lands exactly where a fresh painting puts it;
+     only a name, a corner or a diamond is a few per cent wider for a frame
+     or two. 30 ms after the last step the hold is let go and the lanes paint
+     afresh, so what rests on screen is always a true painting. Anything the
+     painting reads that a zoom changes is read through the hold too (the
+     left edge's reach, how far in for the pictures' strength), or the held
+     painting would not be equal to itself and would be painted anyway.
+     Near Fit on the hour-long reference edit: 13.5 ms a frame, 12.3 after
+     (2026-11-19).
+   - **A painting in a layer of its own, or a drawing group, does not save
+     its rasterising**: tried on 2026-11-19. A stretched or slid canvas is
+     rasterised again either way; a nested hosting view per canvas took
+     0.6 s off rasterising a twelve-second zoom and added 1.4 s of its own
+     upkeep, and a scroll went from 9.2 ms a frame to 10.1.
    - **A strip fades in only when it appears on a clip that was already
      painted**, as a zoom in brings a clip's pictures up. A clip that slides
      in with a scroll or a zoom out brings its strip with it, drawn at once,

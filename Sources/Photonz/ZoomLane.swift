@@ -123,14 +123,25 @@ struct ZoomLane: View {
     /// (docs/design/video.md 8f rule 9): when every zoomed clip had a lane of
     /// its own, the hour-long reference edit's 126 were each built again on
     /// every frame of a scroll (2026-11-15).
-    static func bars(_ editorState: EditorState, clipIDs: [UUID], laneWidth: CGFloat) -> [Bar] {
+    static func bars(_ editorState: EditorState, clipIDs: [UUID], laneWidth: CGFloat,
+                     spans kept: Spans? = nil) -> [Bar] {
         guard let document = editorState.document else { return [] }
-        let spans = clipIDs.flatMap { id -> [(layerID: UUID, zoom: ClipZoom, span: (start: Int, end: Int))] in
-            guard let layer = document.layer(id: id) else { return [] }
-            return editorState.zoomsShown(onClip: id).compactMap { zoom in
-                editorState.spanOnTimeline(zoom, of: layer).map { (layerID: id, zoom: zoom, span: $0) }
+        // Where each zoom is in time, kept until a layer is written or a
+        // hand holds a zoom, a clip or a box (each shows the zooms where the
+        // hand has them): only where that falls across the lane changes as
+        // the window moves. Worked out afresh on every frame, the zooms of
+        // the hour-long reference edit's one Zoom lane were about 0.3 ms of
+        // each frame of a scroll (2026-11-19).
+        let inHand = editorState.zoomDrag != nil || editorState.clipBarDrag != nil
+            || editorState.boxExtrasDrag != nil
+        let spans = kept.flatMap { inHand ? nil : $0.spans(clipIDs, in: document) }
+            ?? clipIDs.flatMap { id -> [Spans.Span] in
+                guard let layer = document.layer(id: id) else { return [] }
+                return editorState.zoomsShown(onClip: id).compactMap { zoom in
+                    editorState.spanOnTimeline(zoom, of: layer).map { (layerID: id, zoom: zoom, span: $0) }
+                }
             }
-        }
+        if !inHand { kept?.keep(spans, clipIDs, for: document) }
         if editorState.motionStripMeasuresADocument, let sight = editorState.timelineRowsSight,
            !spans.contains(where: { sight.reaches(fromMS: Double($0.span.start), toMS: Double($0.span.end)) }) {
             return []
@@ -144,6 +155,27 @@ struct ZoomLane: View {
             let eases = zoom.eases
             return Bar(layerID: layerID, zoom: zoom, x: x0, width: x1 - x0,
                        easeIn: CGFloat(eases.inMS) * perMS, easeOut: CGFloat(eases.outMS) * perMS)
+        }
+    }
+
+    /// Where a lane's zooms are in time, kept for one document
+    /// (`PhotonzDocument.sharesWorkedOutAnswers`).
+    final class Spans {
+        typealias Span = (layerID: UUID, zoom: ClipZoom, span: (start: Int, end: Int))
+        private var document: PhotonzDocument?
+        private var clipIDs: [UUID] = []
+        private var kept: [Span] = []
+
+        func spans(_ clipIDs: [UUID], in document: PhotonzDocument) -> [Span]? {
+            guard let held = self.document, held.sharesWorkedOutAnswers(with: document),
+                  self.clipIDs == clipIDs else { return nil }
+            return kept
+        }
+
+        func keep(_ spans: [Span], _ clipIDs: [UUID], for document: PhotonzDocument) {
+            self.document = document
+            self.clipIDs = clipIDs
+            kept = spans
         }
     }
 
@@ -179,7 +211,11 @@ private struct ZoomBarsView: View {
     let laneWidth: CGFloat
     let isLocked: Bool
 
-    private var bars: [ZoomLane.Bar] { ZoomLane.bars(editorState, clipIDs: clipIDs, laneWidth: laneWidth) }
+    private var bars: [ZoomLane.Bar] {
+        ZoomLane.bars(editorState, clipIDs: clipIDs, laneWidth: laneWidth, spans: spans)
+    }
+    /// Where the zooms are in time, between frames (`ZoomLane.Spans`).
+    @State private var spans = ZoomLane.Spans()
 
     @State private var hovered: ZoomLane.Bar?
     @State private var pressed: (bar: ZoomLane.Bar, grab: ZoomGrab)?

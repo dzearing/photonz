@@ -1,0 +1,30 @@
+{
+  "feature": "A zoom on the hour-long timeline stretches the last painting instead of painting every frame",
+  "epic": "video-perf",
+  "summary": "While you pinch or zoom the timeline a step at a time, each busy lane keeps the picture it painted a frame or two ago and stretches it to the new zoom, painting again only once the stretch passes 8.5 per cent or the window outgrows what was painted, and always 30 ms after the zoom stops. Every clip and cut lands where it belongs; near Fit on the 60 minute reference edit a zoom frame is about 1.2 ms quicker and a third fewer frames are late. The Zoom lane also stops working out its zooms from the document on every frame.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit. The timeline opens at Fit." },
+    { "do": "Pinch in slowly on the timeline from Fit to about 8x, then back out." },
+    { "do": "Look at one zoom frame held and stretched (top) beside the same zoom painted fresh (bottom), on the 6 minute edit at 4x: clips, cuts, diamonds and names line up.", "shot": "2026-11-19-timeline-hour-long-pass12-held-vs-fresh-4x.png" },
+    { "do": "The whole window, held frame above, fresh below, at 4x on the 6 minute edit.", "shot": "2026-11-19-timeline-hour-long-pass12-held-vs-fresh-window.png" },
+    { "do": "The one place a held frame differs: crossing the zoom where clips' names get their dark pill, the pill and the shorter name come in up to two frames late.", "shot": "2026-11-19-timeline-hour-long-pass12-held-vs-fresh-fit.png" },
+    { "do": "Stop pinching and look closely at names and corners: they are freshly painted, never stretched.", "shot": "2026-11-19-timeline-hour-long-pass12-held-sc.png" },
+    { "do": "Pinch, then click a clip and a cut right away: both pick as before." }
+  ],
+  "evaluate": [
+    "While you pinch, do you see names or corners breathe wider and narrower? They are at most 8.5 per cent off, for a frame or two.",
+    "Does a pinch near the whole hour feel smoother than before?",
+    "When you stop, does anything settle or jump? It should not."
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, mean frame, before on HEAD (five runs through the pass) and after (three runs, final build): near Fit 13.5-14.3 ms before, 12.2-12.4 after, late frames 370-444 of 648 before, 243-277 after; zoom in 11.8-12.6 before, 10.9-11.1 after; zoom out 10.2-11.5 before, 9.6-10.2 after; scroll 9.0-9.7 before, 8.86-8.91 after (late 10-29 of 360 before, 10-13 after, p95 11.8-12.1, worst 23-34 ms).",
+    "Held stretch of 4.5 per cent (one frame in two held) was measured first: near Fit 13.5 to 12.8 ms in two paired runs. 8.5 per cent (two in three) gave 12.5-12.75 in two paired runs, so 8.5 was kept. Chose 8.5 over 4.5 because the held and fresh pictures differ only where the pictures along a clip fall, which a zoom lays out again on every frame anyway.",
+    "Tried and backed out: a drawing group on each painted canvas (no change), and each canvas in a nested hosting view of its own (rasterising during a zoom fell from 1.78 s to 1.17 s of a 12 s run, but the nested views' upkeep added 1.4 s, and a scroll went from 9.2 to 10.1 ms a frame). Written into docs/design/video.md 8f.",
+    "Where a zoom frame goes now, by profile: about 60 per cent SwiftUI's graph and layout, 16 per cent rasterising the canvases (a stretched or slid canvas is rasterised again whatever is done to it), the app's own lane code about a quarter. No single part of the lanes is worth more than about 1 ms.",
+    "Bars of the task not reached: 95 per cent of zoom and scroll frames under 8.3 ms and none over 16 (near Fit about 12.3 ms a frame, scroll worst 23-34 ms), and edits within 16 ms (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). The task stays open.",
+    "Walks: 13 timeline and pinch walks and 14 Zoom lane walks run; all green but a-transition-is-picked-at-the-cut-walk (step 46) and clicking-a-timeline-item-moves-the-playhead-walk (step 58), both failing on main before this change and owned by walks-that-fail-in-the-full-sweep-27.",
+    "No mock covers the timeline's speed; nothing about the timeline's resting look changed."
+  ]
+}

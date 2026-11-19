@@ -72,6 +72,73 @@ extension EditorState {
     /// Where the window's left hand edge is, to within half a window, read
     /// without reading the edge: a bar starting past the end of this has
     /// nothing hanging off the left of the lane to keep in sight.
+    /// The ruler the painting lanes paint against: the window's own, or
+    /// while a zoom holds their last painting, the window it was painted at
+    /// (`timelineHeldPainting`). Laid across the lane, it is stretched by
+    /// `timelinePaintStretch` to stand for the window.
+    var timelinePaintRuler: MotionStripRuler {
+        guard let held = timelineHeldPainting else { return motionStripRuler }
+        return paintRuler(held.zoom)
+    }
+
+    /// How much wider the painting is drawn than it was painted: one unless
+    /// a zoom holds it.
+    var timelinePaintStretch: CGFloat {
+        guard let held = timelineHeldPainting else { return 1 }
+        return CGFloat(TimelinePaint.stretch(painted: paintRuler(held.zoom), to: motionStripRuler) ?? 1)
+    }
+
+    /// How far in the painting was painted, for how strongly a clip's
+    /// pictures show (`ClipPiecesBar.picturesOpacity`).
+    var timelinePaintScaleOnly: TimelineZoom {
+        guard let held = timelineHeldPainting else { return timelineScaleOnly }
+        return TimelineZoom(scale: held.zoom.scale, startMS: 0)
+    }
+
+    /// Where the left edge could reach when the painting was painted
+    /// (`timelineLeftEdgeRangeMS`).
+    var timelinePaintLeftEdgeRangeMS: ClosedRange<Double> {
+        timelineHeldPainting?.leftEdgeMS ?? timelineLeftEdgeRangeMS
+    }
+
+    private func paintRuler(_ zoom: TimelineZoom) -> MotionStripRuler {
+        MotionStripRuler(documentMS: motionStripCycleMS, zoom: zoom.clamped(documentMS: timelineLengthForZoomMS))
+    }
+
+    /// Called as the window is written, before it changes: on a zoom, keeps
+    /// the painting the lanes laid last while a stretch of it stands for the
+    /// new window (`TimelinePaint.stretch`), and paints again past that; on
+    /// any other move, paints at the window. A zoom a step at a time near
+    /// the whole-hour view of the reference edit painted every lane again on
+    /// every frame, for a change of scale of four per cent (2026-11-19).
+    func holdTimelinePainting(to newValue: TimelineZoom, isZoom: Bool) {
+        if !isZoom, newValue == timelineZoom { return }
+        guard isZoom, motionStripMeasuresADocument, canOpenOutTheTimeline else {
+            letGoOfTheHeldPainting()
+            return
+        }
+        let held = timelineHeldPainting
+            ?? TimelineHeldPainting(zoom: timelineZoom, leftEdgeMS: timelineLeftEdgeRangeMS)
+        guard TimelinePaint.stretch(painted: paintRuler(held.zoom), to: paintRuler(newValue)) != nil else {
+            letGoOfTheHeldPainting()
+            return
+        }
+        if timelineHeldPainting != held { timelineHeldPainting = held }
+        // Painted again a moment after the last step, once the zoom stops.
+        timelineHeldPaintingSettle?.cancel()
+        timelineHeldPaintingSettle = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(TimelineHeldPainting.settleMS))
+            guard !Task.isCancelled else { return }
+            self?.letGoOfTheHeldPainting()
+        }
+    }
+
+    private func letGoOfTheHeldPainting() {
+        timelineHeldPaintingSettle?.cancel()
+        timelineHeldPaintingSettle = nil
+        if timelineHeldPainting != nil { timelineHeldPainting = nil }
+    }
+
     var timelineLeftEdgeRangeMS: ClosedRange<Double> {
         guard motionStripMeasuresADocument else { return 0...0 }
         let length = timelineLengthForZoomMS
@@ -526,3 +593,13 @@ extension EditorState {
     }
 }
 
+
+/// The window a held painting was painted at, and where the lane's left edge
+/// could reach then (`EditorState.timelineHeldPainting`).
+struct TimelineHeldPainting: Equatable {
+    let zoom: TimelineZoom
+    let leftEdgeMS: ClosedRange<Double>
+
+    /// How long after the last step of a zoom the lanes paint again.
+    static let settleMS = 30
+}

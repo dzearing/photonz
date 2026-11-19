@@ -2062,11 +2062,13 @@ final class EditorState {
         set {
             // A change of scale is a zoom, and the painting lanes paint only
             // the window until the next move along (`TimelinePaint.paintedMS`).
-            if TimelinePaint.isZoom(from: timelineZoom, to: newValue) {
+            let isZoom = TimelinePaint.isZoom(from: timelineZoom, to: newValue)
+            if isZoom {
                 if !timelinePaintsTheWindow { timelinePaintsTheWindow = true }
             } else if newValue.startMS != timelineZoomStartMS, timelinePaintsTheWindow {
                 timelinePaintsTheWindow = false
             }
+            holdTimelinePainting(to: newValue, isZoom: isZoom)
             if newValue.scale != timelineZoomScale { timelineZoomScale = newValue.scale }
             if newValue.startMS != timelineZoomStartMS { timelineZoomStartMS = newValue.startMS }
             let stretch = TimelineDrawnStretch(windowStartMS: newValue.startMS,
@@ -2106,6 +2108,13 @@ final class EditorState {
     /// anyway, and goes back to the wide stretch at the next move along
     /// (`TimelinePaint.paintedMS`).
     private(set) var timelinePaintsTheWindow = false
+    /// The window the painting lanes last painted at, while a zoom stretches
+    /// that painting to the window rather than painting again
+    /// (`TimelinePaint.stretch`), and where the left edge could reach then;
+    /// nil when they paint at the window itself. Let go a moment after the
+    /// zoom stops, so what rests on screen is always freshly painted.
+    var timelineHeldPainting: TimelineHeldPainting?
+    @ObservationIgnored var timelineHeldPaintingSettle: Task<Void, Never>?
     /// What a row outside the lanes (a clip's Zoom lane) is culled by: a wide
     /// sight that holds still for windows of a scroll at a time
     /// (`TimelineSight.rows`). Nil until the window is first written, and

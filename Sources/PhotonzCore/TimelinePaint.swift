@@ -168,6 +168,39 @@ public enum TimelinePaint {
         return (window.startMS - sliver)...(window.startMS + window.spanMS + sliver)
     }
 
+    /// How far a zoom may stretch the painting a lane laid a frame or two
+    /// ago before the lane paints it again: a name or a corner drawn at most
+    /// this much wider or narrower than it is, for a frame or two. At the
+    /// speed walk's step of four per cent a frame, two frames of three are
+    /// held: 4.5 per cent (one of two held) took about 0.6 ms off a near-Fit
+    /// frame of the reference edit, 8.5 about 1 ms, and a held frame
+    /// photographed beside a fresh one at the same zoom differs only in where
+    /// the pictures along a clip fall, which a zoom lays out again on every
+    /// frame anyway (2026-11-19).
+    public static let heldStretch = 0.085
+
+    /// How much wider the painting laid under `painted` is drawn to stand
+    /// for `window`, or nil when it must be painted again: the change of
+    /// scale is more than `heldStretch`, or the window reaches past what
+    /// was painted (`paintedMS` while zooming).
+    ///
+    /// Time across a lane is linear, so a painting stretched about where it
+    /// starts puts every clip, cut and gap exactly where a fresh one would;
+    /// only what has a size of its own (a name, a corner, a fade diamond) is
+    /// a few per cent wider or narrower for those frames. Near the whole-hour
+    /// view of the reference edit a lane's painting cost about half of each
+    /// frame of a zoom, all of it laid again for a change of four per cent
+    /// (2026-11-19).
+    public static func stretch(painted: MotionStripRuler, to window: MotionStripRuler) -> Double? {
+        guard painted.spanMS > 0, window.spanMS > 0 else { return nil }
+        let ratio = painted.spanMS / window.spanMS
+        guard abs(ratio - 1) <= heldStretch + 1e-9 else { return nil }
+        let covered = paintedMS(window: painted, stretch: 0...0, isZooming: true)
+        guard window.startMS >= covered.lowerBound - 1e-6,
+              window.startMS + window.spanMS <= covered.upperBound + 1e-6 else { return nil }
+        return ratio
+    }
+
     /// Whether moving the window from `old` to `new` is a zoom: its scale
     /// changed. A move along at the same scale is a scroll.
     public static func isZoom(from old: TimelineZoom, to new: TimelineZoom) -> Bool {

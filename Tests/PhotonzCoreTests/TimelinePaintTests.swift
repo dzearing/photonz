@@ -197,6 +197,48 @@ import Testing
         #expect(TimelinePaint.paintedMS(window: window, stretch: stretch, isZooming: false) == stretch)
     }
 
+    // MARK: A painting held through a zoom
+
+    /// A zoom a step at a time keeps the last painting, stretched to the new
+    /// scale, while the stretch is slight and the painting still covers the
+    /// window: every clip lands where it belongs, since time across the lane
+    /// is linear, and only a name or a corner is a few per cent wider for a
+    /// frame (2026-11-19).
+    @Test func aSlightZoomStretchesThePaintingItHolds() {
+        let painted = Self.window(scale: 2, startMS: 900_000)
+        let anchor = painted.startMS + painted.spanMS / 2
+        let inStep = Self.window(scale: 2 * 1.04, startMS: anchor - painted.spanMS / 1.04 / 2)
+        let outStep = Self.window(scale: 2 / 1.04, startMS: anchor - painted.spanMS * 1.04 / 2)
+        let stretchIn = TimelinePaint.stretch(painted: painted, to: inStep)
+        let stretchOut = TimelinePaint.stretch(painted: painted, to: outStep)
+        #expect(stretchIn.map { abs($0 - 1.04) < 1e-9 } == true)
+        #expect(stretchOut.map { abs($0 - 1 / 1.04) < 1e-9 } == true)
+    }
+
+    /// Two steps of four per cent in are still held; three are too far, and
+    /// it is painted again.
+    @Test func aZoomPastTheHeldStretchPaintsAgain() {
+        let painted = Self.window(scale: 2, startMS: 900_000)
+        let anchor = painted.startMS + painted.spanMS / 2
+        func steps(_ n: Int) -> MotionStripRuler {
+            let by = pow(1.04, Double(n))
+            return Self.window(scale: 2 * by, startMS: anchor - painted.spanMS / by / 2)
+        }
+        #expect(TimelinePaint.stretch(painted: painted, to: steps(2)) != nil)
+        #expect(TimelinePaint.stretch(painted: painted, to: steps(3)) == nil)
+    }
+
+    /// A zoom out about the window's left edge uncovers more on the right
+    /// than the painting's sliver reaches: it is painted again rather than
+    /// showing an unpainted strip.
+    @Test func aWindowPastWhatWasPaintedPaintsAgain() {
+        let painted = Self.window(scale: 2, startMS: 900_000)
+        let out = Self.window(scale: 2 / 1.04, startMS: painted.startMS)
+        #expect(TimelinePaint.stretch(painted: painted, to: out) == nil)
+        let along = Self.window(scale: 2, startMS: painted.startMS + painted.spanMS / 8)
+        #expect(TimelinePaint.stretch(painted: painted, to: along) == nil)
+    }
+
     /// A change of scale is a zoom; a move along at the same scale is not.
     @Test func aZoomIsAChangeOfScale() {
         let at = TimelineZoom(scale: 8, startMS: 10_000)
