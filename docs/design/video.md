@@ -1138,6 +1138,20 @@ The rule, for any view added to the editor window:
      0.4 ms; it was not kept because such a canvas may present what it drew
      after the frame that moved it, which on a scroll would be a jump of a
      whole stretch for a frame (not watched for, only reasoned).
+   - **A painting lane keeps what it worked out for its painting** (its
+     bars, painted cuts, gaps and gridlines, `LanePaintingKept`) under
+     everything they were read from: the row, the drawn stretch, the scale,
+     what is kept as a view, the switches, the lane's size and scheme, and
+     the document by identity. A scroll inside one stretch and a zoom holding
+     its last painting change none of those, so the lane hands the painting
+     the very same arrays and its comparison answers at once. A painting
+     waiting on something no key sees (a waveform still being read, a sound
+     being cleaned) is never kept, so it is still told when that lands. A
+     new input to the painting goes into the key, or a lane goes on painting
+     the old answer through a scroll. Near Fit 12.0 to 11.7 ms a frame, zoom
+     out 10.0 to 9.7, in two paired runs (2026-11-19); a clip's click source
+     is kept with the document too (`TimelinePaintedFacts.clickSource`),
+     since finding its layer on every frame copied it.
 9. **Nothing per clip reads the window unless it is near it.** A scroll
    writes the window every frame, so whatever reads it is built again every
    frame. A clip's bar is handed the stretch it draws across by its lane, cut

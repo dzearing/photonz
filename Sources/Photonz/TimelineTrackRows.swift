@@ -53,6 +53,9 @@ struct TimelineTrackRow: View {
     /// zooms under it is over something new with no move to say so, and this
     /// is what is read again then (`readPointer`).
     @State private var pointerSpot = PointerSpot()
+    /// What this lane last worked out for its painting, kept while nothing it
+    /// was worked out from has changed (`LanePaintingKept`).
+    @State private var keptPainting = LanePaintingKept()
     @FocusState private var isNaming: Bool
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.displayScale) private var displayScale
@@ -530,7 +533,7 @@ struct TimelineTrackRow: View {
         let clipsInSight = sight.clips(row.clips, keeping: kept)
         let linkedInSight = sight.clips(row.linked, keeping: kept)
         let alternates = alternateClips
-        let carrying = Set(row.linked.map(\.layerID))
+        let carrying = keptPainting.carrying(row)
         // A busy lane paints its plain clips as one layer and builds a bar
         // only for the ones somebody is working on (`TimelinePaint`).
         // Painted across the drawn stretch and slid into place, so a scroll
@@ -550,8 +553,10 @@ struct TimelineTrackRow: View {
                                                 isZooming: editorState.timelinePaintsTheWindow)
         let canvas = TimelinePaint.Canvas(drawnMS: paintedMS, ruler: paintRuler, laneWidth: laneWidth)
         let canvasX = canvas.offset(in: ruler, laneWidth: laneWidth, scale: displayScale)
-        let painting = paintedBars(clipsInSight, linked: linkedInSight, kept: kept, ruler: paintRuler,
-                                   alternates: alternates, stretch: paintedMS)
+        let document = editorState.document
+        let laid = painting(document, clipsInSight: clipsInSight.count, kept: kept, ruler: paintRuler,
+                            alternates: alternates, stretch: paintedMS)
+        let painting = laid.painting
         // Past the stretch the painting covers, a painting lane builds only
         // what somebody is working on: the sight reaches half a window
         // further, all of it off screen (`TimelinePaint.builds`).
@@ -627,12 +632,12 @@ struct TimelineTrackRow: View {
             }
             if !painting.bars.isEmpty {
                 TimelinePaintedClips(bars: painting.bars,
-                                     gaps: TimelinePaint.paintedGaps(gaps, stretch: paintedMS).map(\.range),
+                                     gaps: laid.gaps,
                                      gapInk: .init(stripe: TimelineGapSlot.stripeTone.color(colorScheme),
                                                    edge: TimelineGapSlot.edgeTone.color(colorScheme)),
                                      canvas: canvas, drawnMS: paintedMS,
                                      laneWidth: laneWidth, laneHeight: laneHeight,
-                                     gridlines: paintRuler.secondTickMS(across: paintedMS),
+                                     gridlines: laid.gridlines,
                                      gridInk: VideoKit.Palette.edgeLo.color(colorScheme))
                     .equatable()
                     .scaleEffect(x: paintStretch, y: 1, anchor: .topLeading)
@@ -690,7 +695,7 @@ struct TimelineTrackRow: View {
                 // Made only for a clip with a click to mark: one for every
                 // clip in sight was five hundred views near the whole-hour
                 // view, each reading the window on every frame of a zoom.
-                ForEach(clipsInSight.filter { builds($0) && editorState.hasClickMarks(ofClip: $0.layerID) }) { clip in
+                ForEach(clipsInSight.filter { builds($0) && editorState.hasClickMarks(ofClip: $0.layerID, in: document) }) { clip in
                     ClickTicksView(layerID: clip.layerID, laneWidth: laneWidth,
                                    height: pictureHeight(of: clip, carrying: carrying),
                                    isLocked: track.isLocked)
@@ -738,12 +743,11 @@ struct TimelineTrackRow: View {
                 }
             }
             if !isBlade, !isTrackSelect {
-                let all = editorState.document?.editPoints(onTrack: track.id) ?? []
+                let all = document?.editPoints(onTrack: track.id) ?? []
                 let points = sight.editPoints(all)
                 // On a lane that paints its clips, the cuts at rest are
                 // painted too, every one on the drawn stretch.
-                let cuts = painting.ids.isEmpty ? []
-                    : paintedCuts(all.filter { paintedMS.contains(Double($0.atMS)) })
+                let cuts = painting.ids.isEmpty ? [] : paintedCuts(all, document: document, stretch: paintedMS)
                 if !cuts.isEmpty {
                     TimelinePaintedCuts(marks: cuts.map(\.mark), canvas: canvas, laneWidth: laneWidth,
                                         height: laneHeight)
@@ -829,13 +833,12 @@ struct TimelineTrackRow: View {
     /// which they are (`TimelinePaint`). Nothing on a quiet lane, a Captions
     /// track (`CaptionCuesLayer` paints its own), a picked or switched off
     /// track, or a muted one.
-    private func paintedBars(_ inSight: [MotionStripGroup], linked linkedInSight: [MotionStripGroup],
-                             kept: Set<UUID>, ruler: MotionStripRuler, alternates: Set<MotionStripGroup.ID>,
-                             stretch: ClosedRange<Double>)
-        -> (paints: Bool, ids: Set<UUID>, bars: [TimelinePaintedClips.Bar]) {
-        guard !row.isCaptions, !row.isOff, !isHeld, !row.soundIsMuted, !row.soundIsOff,
-              lanePaints(clipsInSight: inSight.count),
-              let document = editorState.document else { return (false, [], []) }
+    private func paintedBars(_ document: PhotonzDocument?, paints: Bool, kept: Set<UUID>, ruler: MotionStripRuler,
+                             leftEdge: ClosedRange<Double>, zoom: TimelineZoom, alternates: Set<MotionStripGroup.ID>,
+                             carryingSound: Set<UUID>, switches: TimelinePaintedFacts.Switches, groundsSounds: Bool,
+                             stretch: ClosedRange<Double>, waits: inout Bool)
+        -> LanePaintingKept.Painting {
+        guard paints, let document else { return (false, [], []) }
         // Every clip on the drawn stretch, which is what the canvas covers:
         // cut by the sight instead, the list would change, and the painting
         // with it, four times as often as a scroll moves the stretch.
@@ -845,19 +848,10 @@ struct TimelineTrackRow: View {
         }
         let clips = row.clips.filter(onTheStretch)
         let linked = row.linked.filter(onTheStretch)
-        let leftEdge = editorState.timelinePaintLeftEdgeRangeMS
-        var kept = kept
-        for id in [pointerClipID, editorState.renamingClipID, editorState.freezeAsk?.layerID,
-                   editorState.clipTransitionDrag?.layerID] {
-            if let id { kept.insert(id) }
-        }
         let sounds = Dictionary(linked.map { ($0.layerID, $0) }, uniquingKeysWith: { first, _ in first })
-        let carryingSound = Set(row.linked.map(\.layerID))
-        let zoom = editorState.timelinePaintScaleOnly
         let tint = VideoKit.Palette.soundTrack(row.soundNumber)
         // `ClipPiecesBar.soundOnThePanelGround`'s fill, worked out here in the
         // view's own scheme: a Canvas does not always say which it is.
-        let groundsSounds = Experiments.shared.soundOnThePanelGroundEnabled
         let ground = VideoKit.Palette.panel2.color(colorScheme).mix(with: .white, by: 0.03)
         var ids = Set<UUID>()
         var pictures: [TimelinePaintedClips.Bar] = []
@@ -866,7 +860,6 @@ struct TimelineTrackRow: View {
         // changes (`TimelinePaintedFacts`): only where it is, and what the
         // view does to it, is worked out on each frame.
         let memo = editorState.timelinePaintedFacts
-        let switches = paintedFactsSwitches
         for clip in clips {
             guard let bar = clip.bar, let known = memo.clip(clip.layerID, in: document, switches, make: {
                 paintedFacts(of: clip.layerID, in: document)
@@ -894,12 +887,14 @@ struct TimelineTrackRow: View {
             if ownSound {
                 guard TimelinePaint.paints(facts) else { continue }
                 facts.levelHasPoints = !known.level.points.isEmpty
-                facts.soundHasBadge = known.levelHasBadge
-                    || editorState.soundCleaningProgress(of: clip.layerID) != nil
+                let cleaning = editorState.soundCleaningProgress(of: clip.layerID) != nil
+                if cleaning { waits = true }
+                facts.soundHasBadge = known.levelHasBadge || cleaning
                 var wave: Waveform?
                 if let played = known.playedSound {
                     wave = SoundLibrary.shared.waveform(for: played)
                     facts.waveformMissing = wave == nil
+                    if wave == nil { waits = true }
                     // Painted flat until the shape lands, and asked for
                     // here, since no bar of its own is built to ask.
                     if wave == nil { SoundLibrary.shared.loadWaveform(for: played) }
@@ -917,12 +912,14 @@ struct TimelineTrackRow: View {
             var sound: TimelinePaintedClips.Bar?
             if carries, TimelinePaint.paints(facts), let group = sounds[clip.layerID], let soundTime = group.bar {
                 facts.levelHasPoints = !known.level.points.isEmpty
-                facts.soundHasBadge = known.levelHasBadge
-                    || editorState.soundCleaningProgress(of: clip.layerID) != nil
+                let cleaning = editorState.soundCleaningProgress(of: clip.layerID) != nil
+                if cleaning { waits = true }
+                facts.soundHasBadge = known.levelHasBadge || cleaning
                 var wave: Waveform?
                 if group.isSound, let played = known.playedSound {
                     wave = SoundLibrary.shared.waveform(for: played)
                     facts.waveformMissing = wave == nil
+                    if wave == nil { waits = true }
                     // Painted flat until the shape lands, and asked for
                     // here, since no bar of its own is built to ask.
                     if wave == nil { SoundLibrary.shared.loadWaveform(for: played) }
@@ -955,6 +952,39 @@ struct TimelineTrackRow: View {
             if let sound { soundBars.append(sound) }
         }
         return (true, ids, pictures + soundBars)
+    }
+
+    /// What the lane paints, worked out again only when something it is
+    /// worked out from has changed (`LanePaintingKept`): on a scroll inside
+    /// one drawn stretch, or a zoom holding its last painting, nothing has.
+    private func painting(_ document: PhotonzDocument?, clipsInSight: Int, kept: Set<UUID>, ruler: MotionStripRuler,
+                          alternates: Set<MotionStripGroup.ID>, stretch: ClosedRange<Double>) -> LanePaintingKept.Laid {
+        let paints = !row.isCaptions && !row.isOff && !isHeld && !row.soundIsMuted && !row.soundIsOff
+            && lanePaints(clipsInSight: clipsInSight)
+        var kept = kept
+        for id in [pointerClipID, editorState.renamingClipID, editorState.freezeAsk?.layerID,
+                   editorState.clipTransitionDrag?.layerID] {
+            if let id { kept.insert(id) }
+        }
+        let switches = paintedFactsSwitches
+        let groundsSounds = Experiments.shared.soundOnThePanelGroundEnabled
+        let leftEdge = editorState.timelinePaintLeftEdgeRangeMS
+        let zoom = editorState.timelinePaintScaleOnly
+        let carrying = keptPainting.carrying(row)
+        let key = LanePaintingKept.Key(row: row, paints: paints, kept: kept, stretch: stretch, spanMS: ruler.spanMS,
+                                       leftEdge: leftEdge, zoom: zoom, laneWidth: laneWidth, laneHeight: laneHeight,
+                                       scheme: colorScheme, switches: switches, groundsSounds: groundsSounds)
+        return keptPainting.laid(key, document: document) {
+            var waits = false
+            let painting = paintedBars(document, paints: paints, kept: kept, ruler: ruler, leftEdge: leftEdge,
+                                       zoom: zoom, alternates: alternates, carryingSound: carrying,
+                                       switches: switches, groundsSounds: groundsSounds, stretch: stretch,
+                                       waits: &waits)
+            guard !painting.bars.isEmpty else { return (.init(painting: painting, gaps: [], gridlines: []), waits) }
+            let gaps = TimelinePaint.paintedGaps(editorState.timelineGaps(onTrack: track), stretch: stretch)
+            return (.init(painting: painting, gaps: gaps.map(\.range), gridlines: ruler.secondTickMS(across: stretch)),
+                    waits)
+        }
     }
 
     /// The switches what `TimelinePaintedFacts` keeps was read under.
@@ -997,16 +1027,30 @@ struct TimelineTrackRow: View {
     /// The cuts at rest, which a lane that paints its clips paints too: not
     /// picked or under a grip, neither clip in a hand, no hold on black or
     /// white, and not under the pointer.
-    private func paintedCuts(_ points: [TimelineEditPoint]) -> [(key: TimelineCutKey, mark: TimelinePaintedCuts.Mark)] {
-        guard let document = editorState.document else { return [] }
+    private func paintedCuts(_ all: [TimelineEditPoint], document: PhotonzDocument?,
+                             stretch: ClosedRange<Double>) -> [LanePaintingKept.PaintedCut] {
+        guard let document else { return [] }
         let dragged = editorState.clipBarDrag?.layerID
         let underGrip = editorState.editPointUnderGrip
-        let transitions = Experiments.shared.transitionsAtACutEnabled
         let session = editorState.clipTransitionDrag?.place
-        let memo = editorState.timelinePaintedFacts
-        let switches = paintedFactsSwitches
         let pointer = pointerEditPointID
         let picked = editorState.selectedEditPoint.map(TimelineCutKey.init)
+        let switches = paintedFactsSwitches
+        let state = LanePaintingKept.CutState(dragged: dragged, underGrip: underGrip, session: session,
+                                              pointer: pointer, picked: picked)
+        return keptPainting.cuts(state, all: all) {
+            paintedCuts(all.filter { stretch.contains(Double($0.atMS)) }, document: document, dragged: dragged,
+                        underGrip: underGrip, session: session, pointer: pointer, picked: picked,
+                        switches: switches)
+        }
+    }
+
+    private func paintedCuts(_ points: [TimelineEditPoint], document: PhotonzDocument, dragged: UUID?,
+                             underGrip: TimelineCutPlace?, session: TimelineCutPlace?, pointer: String?,
+                             picked: TimelineCutKey?, switches: TimelinePaintedFacts.Switches)
+        -> [LanePaintingKept.PaintedCut] {
+        let transitions = switches.transitions
+        let memo = editorState.timelinePaintedFacts
         return points.compactMap { point in
             let key = TimelineCutKey(point)
             let place = TimelineCutPlace.edit(outgoing: point.outgoing, incoming: point.incoming)
@@ -2148,3 +2192,107 @@ extension TimelineTrackRow: Equatable {
     var x: CGFloat?
 }
 
+
+/// **What a painting lane worked out for its painting, kept while nothing it
+/// was worked out from has changed** (`the-timeline-of-an-hour-long-edit-scrolls-zooms`,
+/// pass 13).
+///
+/// A lane reads the timeline's window, so its body runs on every frame of a
+/// zoom or a scroll. What it paints does not change on most of those frames:
+/// a scroll inside one drawn stretch slides the painting, and a zoom holding
+/// its last painting stretches it (`EditorState.timelineHeldPainting`). Yet
+/// every frame worked out every bar, cut, gap and gridline on the stretch
+/// again, and the painting then compared them all with the last frame's, to
+/// find them the same: about a tenth of a zoom frame near the whole-hour view
+/// of the 60 minute reference edit (2026-11-19).
+///
+/// So the lane keeps them under everything they were read from (the row, the
+/// stretch, the scale, what is kept as a view, the switches, the document by
+/// identity) and hands back the very same arrays while that holds, which the
+/// painting's own comparison then answers at once. A painting waiting on
+/// something no key can see (a waveform still being read, a sound being
+/// cleaned) is never kept: it is worked out again each frame, as before, and
+/// so is told when that lands.
+@MainActor final class LanePaintingKept {
+    typealias Painting = (paints: Bool, ids: Set<UUID>, bars: [TimelinePaintedClips.Bar])
+    typealias PaintedCut = (key: TimelineCutKey, mark: TimelinePaintedCuts.Mark)
+
+    struct Laid {
+        var painting: Painting
+        var gaps: [Range<Int>]
+        var gridlines: [Double]
+    }
+
+    /// Everything the painting is worked out from but the document.
+    struct Key: Equatable {
+        let row: TimelineTrackRowModel
+        let paints: Bool
+        let kept: Set<UUID>
+        let stretch: ClosedRange<Double>
+        let spanMS: Double
+        let leftEdge: ClosedRange<Double>
+        let zoom: TimelineZoom
+        let laneWidth: CGFloat
+        let laneHeight: CGFloat
+        let scheme: ColorScheme
+        let switches: TimelinePaintedFacts.Switches
+        let groundsSounds: Bool
+    }
+
+    /// What the painted cuts are worked out from beyond the painting's key.
+    struct CutState: Equatable {
+        let dragged: UUID?
+        let underGrip: TimelineCutPlace?
+        let session: TimelineCutPlace?
+        let pointer: String?
+        let picked: TimelineCutKey?
+    }
+
+    private var key: Key?
+    private var document: PhotonzDocument?
+    private var laid: Laid?
+    private var cutState: CutState?
+    private var cuts: [PaintedCut]?
+    private var carryingRow: TimelineTrackRowModel?
+    private var carrying: Set<UUID> = []
+
+    /// The painting for `key` in `document`: the one kept when both are as
+    /// they were, else made by `make`, and kept unless it waits on something.
+    func laid(_ key: Key, document: PhotonzDocument?, make: () -> (Laid, waits: Bool)) -> Laid {
+        if let laid, self.key == key, Self.same(self.document, document) { return laid }
+        let (made, waits) = make()
+        self.key = waits ? nil : key
+        self.document = document
+        laid = made
+        cutState = nil
+        cuts = nil
+        return made
+    }
+
+    /// The painted cuts, asked after `laid` in the same pass: kept while the
+    /// painting was and `state` is as it was.
+    func cuts(_ state: CutState, all: [TimelineEditPoint], make: () -> [PaintedCut]) -> [PaintedCut] {
+        if key != nil, let cuts, cutState == state { return cuts }
+        let made = make()
+        cutState = state
+        cuts = made
+        return made
+    }
+
+    /// The clips on the row that carry their own sound, kept with the row.
+    func carrying(_ row: TimelineTrackRowModel) -> Set<UUID> {
+        if carryingRow != row {
+            carryingRow = row
+            carrying = Set(row.linked.map(\.layerID))
+        }
+        return carrying
+    }
+
+    private static func same(_ a: PhotonzDocument?, _ b: PhotonzDocument?) -> Bool {
+        switch (a, b) {
+        case (nil, nil): return true
+        case let (a?, b?): return a.sharesWorkedOutAnswers(with: b)
+        default: return false
+        }
+    }
+}

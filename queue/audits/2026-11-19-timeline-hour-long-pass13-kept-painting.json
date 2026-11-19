@@ -1,0 +1,27 @@
+{
+  "feature": "A busy lane on the hour-long timeline stops working out its painting again on frames where nothing about it changed",
+  "epic": "video-perf",
+  "summary": "On a scroll inside one painted stretch, or a zoom that holds its last painting, each busy lane now hands its painting the clips, cuts, gaps and gridlines it worked out last frame, instead of working them all out again and comparing them to find them the same. The ticks under recordings also stop copying a clip on every frame to ask whether it has clicks. Near Fit on the 60 minute reference edit a zoom frame is about 0.4 ms quicker and fewer frames are late; nothing on screen changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit. The timeline opens at Fit." },
+    { "do": "Pinch in slowly from Fit to about 8x and back out, a few times." },
+    { "do": "Stop at Fit and look at the lanes: they are exactly as they were before the pinching, pixel for pixel.", "shot": "2026-11-19-timeline-pass13-fit-after-zooms-sc.png" },
+    { "do": "Zoom in three steps, jump the playhead to three quarters and back to a quarter, and look at the lanes: clips, cuts, gaps and pictures all in place.", "shot": "2026-11-19-timeline-pass13-zoomed-after-jumps-sc.png" },
+    { "do": "Rest the pointer on a clip, scroll the timeline under it, then click: it picks what is under the pointer, as before." }
+  ],
+  "evaluate": [
+    "Does a pinch near the whole hour feel any smoother than this morning's build?",
+    "After a long pinch or scroll, does any lane ever show something out of date (a clip's old name, a cut that is gone) until you move it again?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, mean frame. Same build with the kept painting switched on and off by a throwaway setting, two runs each: near Fit 12.03 and 12.11 ms off, 11.67 and 11.70 on (late frames 226 and 245 of 648 off, 208 and 214 on); zoom out 10.02 and 9.97 off, 9.82 and 9.56 on; zoom in 10.76 and 10.83 off, 11.05 and 10.73 on (no change); scroll 8.81 and 8.79 off, 8.68 and 8.84 on (no change). Against this morning's build (HEAD 17dd91f1b, two runs): near Fit 12.42 to 12.50, zoom in 10.41 to 10.87, zoom out 10.31 to 10.33, scroll 9.07 to 9.37.",
+    "Edits on the 60 minute edit, longest pass, unchanged by this (they vary run to run): trim 43-69 ms, move 30-48, blade 63-65, undo 41-74, transition 82-86, title 36-39. Playing untouched: 106-109 new pictures in 3 s, view bodies built per picture timeSection 0.01, before and after.",
+    "Where a zoom frame goes now, by profile: the lanes' own bodies fell from about 1.3 s to 1.0 s of a 25 s trace; the largest app item left is the canvases' painting when a painting is laid afresh (about 0.8 s, waveforms a quarter of it), then SwiftUI's own upkeep and rasterising. No one part of the lanes is worth more than about 0.5 ms a frame now.",
+    "Pictures: the Fit pair (before and after a full run of the speed walk's zooms and scrolls) is identical pixel for pixel; the zoomed pair is not compared pixel for pixel because the window lands in a different place after the playhead's jumps (13:07 and 14:15 at its left edge), and both are complete.",
+    "Bars of the task not reached: 95 per cent of zoom and scroll frames under 8.3 ms and none over 16 (near Fit about 11.7 ms a frame, p95 17; scroll worst 23-26 ms), and edits within 16 ms (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). The task stays open.",
+    "Walks: 15 run on the final build, all green (the task's 10 timeline walks, a-click-tick-is-hidden-and-slid, an-editing-session, reference-edit-opens, a-sound-s-waveform-follows-its-level, a-sound-lane-is-as-tall-as-the-mock).",
+    "No mock covers the timeline's speed; nothing about the timeline's look changed."
+  ]
+}

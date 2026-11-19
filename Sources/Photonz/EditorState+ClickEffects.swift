@@ -30,14 +30,22 @@ extension EditorState {
 
     /// Whether `clickMarks(ofClip:)` has anything in it, without making the
     /// marks: the timeline asks it of every clip in sight.
-    func hasClickMarks(ofClip id: UUID) -> Bool {
-        guard let layer = document?.layer(id: id) else { return false }
-        if layer.addedClicks?.isEmpty == false { return true }
-        if let recorded = layer.clickEffect?.recorded { return !recorded.isEmpty }
-        // From the layer already found: asked for every clip in sight on
-        // every frame of a zoom, finding it again copied a second layer.
-        guard let movie = layer.movie else { return false }
-        return MovieLibrary.shared.pointerTrack(for: movie)?.clicks.isEmpty == false
+    func hasClickMarks(ofClip id: UUID, in shown: PhotonzDocument? = nil) -> Bool {
+        guard let document = shown ?? document else { return false }
+        // Kept with the document (`TimelinePaintedFacts.clickSource`): the
+        // lane asks for every clip in sight on every frame of a zoom.
+        let source = timelinePaintedFacts.clickSource(id, in: document) {
+            guard let layer = document.layer(id: id) else { return .none }
+            if layer.addedClicks?.isEmpty == false { return .marks }
+            if let recorded = layer.clickEffect?.recorded { return recorded.isEmpty ? .none : .marks }
+            guard let movie = layer.movie else { return .none }
+            return .recording(movie)
+        }
+        switch source {
+        case .marks: return true
+        case .none: return false
+        case .recording(let movie): return MovieLibrary.shared.pointerTrack(for: movie)?.clicks.isEmpty == false
+        }
     }
 
     /// Whether the clip has a click an effect could be drawn at.

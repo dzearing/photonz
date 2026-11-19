@@ -85,6 +85,37 @@ final class TimelinePaintedFacts {
         return made
     }
 
+    /// Where a clip's clicks come from, as the timeline's ticks ask it: the
+    /// document's own (added, or kept by a click effect), none, or the
+    /// recording's pointer path, which can land after the clip is drawn and
+    /// so is looked up each time (`EditorState.hasClickMarks`).
+    enum ClickSource {
+        case marks
+        case none
+        case recording(MovieRef)
+    }
+
+    private var clickDocument: PhotonzDocument?
+    private var clickSources: [UUID: ClickSource] = [:]
+
+    /// The clip's click source in `document`, worked out by `make` the first
+    /// time it is asked for this document. Kept apart from the painting's
+    /// facts, since no switch changes it. Asked for every clip in sight on
+    /// every frame of a zoom or a scroll, finding the layer each time copied
+    /// it: about one and a half per cent of a zoom frame on the 60 minute
+    /// reference edit (2026-11-19).
+    func clickSource(_ id: UUID, in document: PhotonzDocument, make: () -> ClickSource) -> ClickSource {
+        if let kept = clickDocument, kept.sharesWorkedOutAnswers(with: document) {
+            if let source = clickSources[id] { return source }
+        } else {
+            clickDocument = document
+            clickSources.removeAll(keepingCapacity: true)
+        }
+        let made = make()
+        clickSources[id] = made
+        return made
+    }
+
     /// The cut's mark in `document`, worked out by `make` the first time.
     func cut(_ id: TimelineCutKey, in document: PhotonzDocument, _ switches: Switches, make: () -> Cut) -> Cut {
         keep(for: document, switches)
