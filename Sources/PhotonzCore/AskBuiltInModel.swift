@@ -67,9 +67,12 @@ public enum AskBuiltInModels {
         /// Whether Settings and the setup dialog offer it. One that is not is
         /// still listed, to use or delete, on a Mac that already has it.
         public let offered: Bool
+        /// Whether Ask lets it think before it answers. Off for the big
+        /// models, which plan well without it and answer sooner.
+        public let thinks: Bool
 
         public init(id: String, name: String, model: File, eyes: File?, draft: File? = nil, gigabytes: Double,
-                    blurb: String = "", measured: AskModelMeasure? = nil, offered: Bool = true) {
+                    blurb: String = "", measured: AskModelMeasure? = nil, offered: Bool = true, thinks: Bool = false) {
             self.id = id
             self.name = name
             self.model = model
@@ -79,6 +82,7 @@ public enum AskBuiltInModels {
             self.blurb = blurb
             self.measured = measured
             self.offered = offered
+            self.thinks = thinks
         }
 
         /// What it cannot run without.
@@ -172,9 +176,17 @@ public enum AskBuiltInModels {
                            "Qwen3.5-4B-Q4_K_M.gguf", 2_740_937_888, folder: "qwen3.5-4b"),
                eyes: file("unsloth/Qwen3.5-4B-GGUF", "e87f176479d0855a907a41277aca2f8ee7a09523",
                           "mmproj-F16.gguf", 672_423_616, folder: "qwen3.5-4b"),
-               gigabytes: 7.8,
+               // The most it held over a held-out run planned as an 8 GB Mac
+               // (`--mac 8`), at that Mac's 32k window with the small Mac's
+               // server limits (`AskBuiltInServerPlan.smallMacLimits`): it
+               // fits an 8 GB Mac, which may give it 5.2. It held 7.8 before
+               // those limits. Thinking first lifted its drawings on the climb
+               // set; it is still too weak for Ask (`docs/design/ask.md`, "An 8 GB Mac").
+               gigabytes: 4.8,
                blurb: "Small.",
-               measured: AskModelMeasure(heldOut: 12.4, medianSeconds: 57.4, run: "20261102-012713-ask-held-out")),
+               measured: AskModelMeasure(heldOut: 14.5, medianSeconds: 49.2, run: "20261119-084048-ask-held-out",
+                                         mac: "M4 Max set up as an 8 GB Mac"),
+               thinks: true),
         Choice(id: "gemma-4-e2b", name: "Gemma 4 E2B",
                model: file("ggml-org/gemma-4-E2B-it-GGUF", "6938c58e698502037401a5f19f6905f2fb2f7dee",
                            "gemma-4-E2B-it-Q4_0.gguf", 2_841_481_184),
@@ -274,7 +286,7 @@ public enum AskBuiltInServerPlan {
     /// (`AskStandingRead`).
     public static func arguments(for choice: AskBuiltInModels.Choice, in folder: URL, port: Int,
                                  draftOnDisk: Bool = false, window: Int = AskConversation.contextWindow,
-                                 reads: URL? = nil) -> [String] {
+                                 reads: URL? = nil, memoryGigabytes: Double? = nil) -> [String] {
         var args = ["--model", folder.appending(path: choice.model.name).path]
         if let eyes = choice.eyes { args += ["--mmproj", folder.appending(path: eyes.name).path] }
         if draftOnDisk, let draft = choice.draft {
@@ -288,7 +300,34 @@ public enum AskBuiltInServerPlan {
             "--n-gpu-layers", "999", "--jinja", "--parallel", "1", "--no-webui",
         ]
         if let reads { args += ["--slot-save-path", reads.path] }
+        if let memoryGigabytes { args += smallMacLimits(memoryGigabytes: memoryGigabytes) }
+        if choice.thinks {
+            args += ["--reasoning-budget", String(thinkingBudget), "--reasoning-budget-message", thinkingBudgetMessage]
+        }
         return args
+    }
+
+    /// The most a model that thinks (`AskBuiltInModels.Choice.thinks`) may
+    /// think in one turn, in tokens. At temperature 0 Qwen3.5 4B sometimes
+    /// thought until the turn's 8192 tokens ran out and answered nothing,
+    /// 145 s gone (the eval, 2026-11-19); its useful thoughts were far shorter.
+    public static let thinkingBudget = 2048
+    /// Said for the model when its thinking runs out, so it answers.
+    public static let thinkingBudgetMessage = "Enough thinking. Now I make the call."
+
+    /// What the server is told on a Mac under 16 GB so it stays inside the
+    /// memory that Mac may give it. Measured on Qwen3.5 4B at a 32k window,
+    /// 2026-11-19 (`docs/design/ask.md`, "An 8 GB Mac"): llama.cpp keeps copies
+    /// of earlier reads in memory (`--cache-ram`, 8 GB unless told) and two
+    /// 50 MB checkpoints of the model's running state every turn (up to 32),
+    /// which took it from 4.6 GB loaded to 7.8 GB over a drawing looked at and
+    /// drawn again, past the 5.2 GB it may hold. With no copies and two
+    /// checkpoints it peaked at 4.75 GB over 16 turns and still read only each
+    /// turn's new words; with no checkpoints at all it read the whole talk
+    /// again every turn. A request's start is restored from its file anyway
+    /// (`AskStandingRead`).
+    public static func smallMacLimits(memoryGigabytes: Double) -> [String] {
+        memoryGigabytes < 16 ? ["--cache-ram", "0", "--ctx-checkpoints", "2"] : []
     }
 }
 
@@ -314,8 +353,8 @@ public enum AskServerChat {
         if let schema = body["format"], schema.objectValue != nil {
             out["response_format"] = ["type": "json_schema", "json_schema": ["name": "answer", "schema": schema]]
         }
-        if body["think"]?.boolValue == false {
-            out["chat_template_kwargs"] = ["enable_thinking": false]
+        if let think = body["think"]?.boolValue {
+            out["chat_template_kwargs"] = ["enable_thinking": .bool(think)]
         }
         var messages: [AgentJSON] = []
         // Calls not answered yet, oldest first: (id, tool name).

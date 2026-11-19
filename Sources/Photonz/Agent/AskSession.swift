@@ -1158,7 +1158,8 @@ final class AskSession {
                                memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1,
                                window: AskLocalModel.window, web: web?.page, lookedUp: lookedUp, iconDesign: iconDesign,
                                iconBreak: iconBreak, blankIcon: blankIcon, toldMotion: toldMotion,
-                               sees: editor.documentHasTime ? await AskLocalModel.sees(model) : false)
+                               sees: editor.documentHasTime ? await AskLocalModel.sees(model) : false,
+                               thinks: AskBuiltInModels.choice(id: model)?.thinks ?? false)
     }
 
     /// The longest side of the canvas picture the planning model is shown:

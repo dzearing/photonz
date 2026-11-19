@@ -766,7 +766,7 @@ Measured on an M4 Max, 64 GB, on the held-out set (45 cases, totals only).
 | Qwen3.6 35B | 60.2 | 5 | 49.1 | 3 | 21.7 | 21.0 GB | 36 GB | | `20261024-191502-ask-held-out` |
 | Gemma 4 26B | 20.2 | 2 | 35.5 | 4 | 23.1 | 15.4 GB | 36 GB | 148 of 278 | `20261102-004807-ask-held-out` |
 | Qwen3.5 9B (16 GB Mac) | 20.7 | 2 | 91.8 | 2 | 10.1 (peak, 32k) | 6.6 GB | 16 GB | 41 of 190 | `20261102-122343-ask-held-out` |
-| Qwen3.5 4B | 12.4, too weak | 1 | 57.4 | 3 | 7.8 | 3.4 GB | 16 GB | 49 of 207 | `20261102-012713-ask-held-out` |
+| Qwen3.5 4B (8 GB Mac, thinks) | 14.5, too weak | 1 | 49.2 | 3 | 4.8 (peak, 32k) | 3.4 GB | 8 GB | 92 of 401 | `20261119-084048-ask-held-out` |
 | Gemma 4 E4B | 4.5, too weak | 1 | 13.3 | 5 | 7.3 | 5.2 GB | 16 GB | 74 of 123 | `20261102-002913-ask-held-out` |
 | Gemma 4 E2B | 4.6, too weak | 1 | 15.8 | 5 | 4.2 | 3.4 GB | 8 GB | 27 of 102 | `20261102-001045-ask-held-out` |
 | Z-Image Turbo (pictures) | 57.5 with it, 35.9 without | 4 | 31 a drawing request | 4 | 12 more | 11.2 GB | beside the chat model | | `20261022-043200-ask-held-out` |
@@ -794,10 +794,38 @@ What each Mac gets (`AskModelSetup.plan`, plenty of disk):
 | 48 GB | Qwen3.8 27B | 21.3 GB |
 | 64 GB | Qwen3.8 27B and Z-Image Turbo | 32.5 GB |
 
-An 8 GB Mac may hold 5.2 GB. Only Gemma 4 E2B fits (4.6 held-out); Qwen3.5
-4B might, if its 7.8 GB reading is high, but scores 12.4. Both are far under the
-floor, so their rows say Too weak for Ask and the dialog says the memory is
-short.
+An 8 GB Mac may hold 5.2 GB. Gemma 4 E2B (4.6 held-out) and, since
+2026-11-19, Qwen3.5 4B (14.5) fit it; both are under the floor, so their rows
+say Too weak for Ask and the dialog says the memory is short.
+
+### An 8 GB Mac (2026-11-19)
+
+Tried to give an 8 GB Mac an Ask that does real work (task
+`ask-works-on-an-8-gb-mac`). Nothing reached the floor of 20.
+
+* **Memory was the server's, not the model's.** Qwen3.5 4B loads at 4.6 GB at
+  the 32k window. Over a request it grew to 7.8 GB: llama.cpp keeps copies of
+  earlier reads in memory (`--cache-ram`, 8 GB unless told) and saves two 50 MB
+  checkpoints of the model's running state every turn, up to 32. A 16 turn
+  talk peaked at 5.77 GB as it was; at 4.75 GB with `--cache-ram 0
+  --ctx-checkpoints 2`, still reading only each turn's new words (about 316
+  tokens); at 4.66 GB with no checkpoints, but then every turn read the whole
+  15,000 to 19,000 tokens again. A Mac under 16 GB now runs the server with
+  `--cache-ram 0 --ctx-checkpoints 2` (`AskBuiltInServerPlan.smallMacLimits`),
+  and the held-out run peaked at 4.8 GB.
+* **Thinking first** (`Choice.thinks`, Qwen3.5 4B only, capped at 2048 tokens
+  a turn by `--reasoning-budget`): on 16 climb cases run both ways the mean
+  went 33.3 to 30.2, drawings up (cat 24 to 31, coffee cup 6 to 22, house 29
+  to 44, fox 0 to 19), two cases to 0 (a redline answered in words, and a
+  think that ran the whole 8192 token turn with no answer, which is why it is
+  now capped). Held-out, thinking with the limits: 14.5 at 49.2 s
+  (`20261119-084048-ask-held-out`; 12.4 on 2026-11-02 was a 45 case set without
+  thinking). Climb, the 19 case slice: 36.6 (`20261119-074247-ask`).
+* **No other model fits.** No smaller Qwen or Gemma is newer than these
+  (searched 2026-11-19). Qwen3.5 9B's smallest sensible file is 4.0 GB (UD
+  IQ3_XXS) plus its 0.9 GB picture reader, over 5.2 GB once the window is added.
+* The speed above is this M4 Max's. An 8 GB Mac (an M1 to M3 with 8 GPU
+  cores) reads and writes several times slower.
 Among models on a Mac, `ranked` puts the small ones in score order, so a Mac
 holding several answers with the best, and the New default offer only ever
 steps up (`AskBuiltInModels.newer`).

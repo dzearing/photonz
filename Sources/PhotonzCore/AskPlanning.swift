@@ -505,6 +505,8 @@ public struct AskConversation: Sendable {
 
     /// The window this talk is sent with.
     public let window: Int
+    /// The model thinks before it answers (`AskBuiltInModels.Choice.thinks`).
+    public let thinks: Bool
     /// The most a request may take, in tokens, leaving room for the reply.
     public var budget: Int { window - Self.replyRoom }
 
@@ -591,8 +593,9 @@ public struct AskConversation: Sendable {
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
                 window: Int = AskConversation.contextWindow, web: AskWebPage? = nil,
                 lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil, iconBreak: AskIconBreak.Answer? = nil,
-                blankIcon: Bool = false, toldMotion: Bool = false, sees: Bool = false) {
+                blankIcon: Bool = false, toldMotion: Bool = false, sees: Bool = false, thinks: Bool = false) {
         self.request = request
+        self.thinks = thinks
         self.placeable = Self.placeable(in: library)
         self.web = web
         self.lookedUp = web == nil ? lookedUp : nil
@@ -735,7 +738,7 @@ public struct AskConversation: Sendable {
 
     private func body(model: String, messages: [AgentJSON]) -> AgentJSON {
         ["model": .string(model), "messages": .array(messages), "tools": .array(offeredTools),
-         "stream": false, "think": false, "keep_alive": "30m",
+         "stream": false, "think": .bool(thinks), "keep_alive": "30m",
          "options": ["num_ctx": .number(Double(window)), "temperature": 0]]
     }
 

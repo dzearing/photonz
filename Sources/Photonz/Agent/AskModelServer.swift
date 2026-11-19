@@ -341,14 +341,16 @@ final class AskModelServer {
         case .start:
             let port = AskBuiltInServerPlan.pickPort()
             try AskWalkServerProcess.start(helper, arguments: AskBuiltInServerPlan.arguments(
-                for: choice, in: Self.folder, port: port, draftOnDisk: draftOnDisk, window: window, reads: Self.readsFolder),
+                for: choice, in: Self.folder, port: port, draftOnDisk: draftOnDisk, window: window, reads: Self.readsFolder,
+                memoryGigabytes: AskLocalModel.memoryGigabytes),
                 record: .init(model: choice.id, port: port, folder: Self.folder.path, draft: draftOnDisk, window: window))
             return try await share(choice, port: port)
         }
         let port = AskBuiltInServerPlan.pickPort()
         try server.launch(helper, arguments: AskBuiltInServerPlan.arguments(for: choice, in: Self.folder, port: port,
                                                                             draftOnDisk: draftOnDisk, window: window,
-                                                                            reads: Self.readsFolder),
+                                                                            reads: Self.readsFolder,
+                                                                            memoryGigabytes: AskLocalModel.memoryGigabytes),
                           environment: nil, pidFolder: Self.folder, note: "starts \(choice.id) on port \(port)")
         self.port = port
         running = choice.id

@@ -310,4 +310,44 @@ struct AskBuiltInModelTests {
         #expect(old.draft == nil)
         #expect(!AskBuiltInServerPlan.arguments(for: old, in: folder, port: 18_200, draftOnDisk: true).contains("--spec-type"))
     }
+
+    // MARK: Thinking first
+
+    @Test("Ask asks a model to think before it answers only when that model is marked to")
+    func thinksFirst() throws {
+        let talk = AskConversation(request: "draw a cat", documentRead: #"{"kind":"picture","layers":[]}"#)
+        #expect(talk.chatBody(model: "m")["think"]?.boolValue == false)
+        let thinking = AskConversation(request: "draw a cat", documentRead: #"{"kind":"picture","layers":[]}"#, thinks: true)
+        #expect(thinking.chatBody(model: "m")["think"]?.boolValue == true)
+        // The saved standing read is the same either way: thinking changes only what follows the request.
+        #expect(thinking.standingBody(model: "m")?["messages"] == talk.standingBody(model: "m")?["messages"])
+        let big = try #require(AskBuiltInModels.choice(id: "qwen3.8-27b"))
+        #expect(!big.thinks)
+    }
+
+    @Test("On a Mac under 16 GB the server keeps no copies of earlier reads and two checkpoints; bigger Macs keep its own")
+    func smallMacLimits() throws {
+        let choice = try #require(AskBuiltInModels.choice(id: "qwen3.5-4b"))
+        let folder = URL(fileURLWithPath: "/tmp/models")
+        let small = AskBuiltInServerPlan.arguments(for: choice, in: folder, port: 18_200, memoryGigabytes: 8)
+        func value(_ args: [String], _ flag: String) -> String? { args.firstIndex(of: flag).map { args[$0 + 1] } }
+        #expect(value(small, "--cache-ram") == "0")
+        #expect(value(small, "--ctx-checkpoints") == "2")
+        for big in [AskBuiltInServerPlan.arguments(for: choice, in: folder, port: 18_200, memoryGigabytes: 16),
+                    AskBuiltInServerPlan.arguments(for: choice, in: folder, port: 18_200)] {
+            #expect(!big.contains("--cache-ram"))
+            #expect(!big.contains("--ctx-checkpoints"))
+        }
+    }
+
+    @Test("A model that thinks has its thinking capped, so a turn always ends in an answer; one that does not is not told")
+    func thinkingIsCapped() throws {
+        let folder = URL(fileURLWithPath: "/tmp/models")
+        let small = try #require(AskBuiltInModels.choice(id: "qwen3.5-4b"))
+        #expect(small.thinks)
+        let args = AskBuiltInServerPlan.arguments(for: small, in: folder, port: 18_200)
+        #expect(args.firstIndex(of: "--reasoning-budget").map { args[$0 + 1] } == String(AskBuiltInServerPlan.thinkingBudget))
+        let big = try #require(AskBuiltInModels.choice(id: "qwen3.8-27b"))
+        #expect(!AskBuiltInServerPlan.arguments(for: big, in: folder, port: 18_200).contains("--reasoning-budget"))
+    }
 }
