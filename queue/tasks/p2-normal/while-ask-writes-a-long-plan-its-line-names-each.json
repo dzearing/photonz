@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 150,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T23:12:58.328Z",
-  "updated": "2026-11-17T15:37:32.053Z",
+  "updated": "2026-11-19T05:13:55.175Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-01 by while-ask-works-the-agent-panel-says-what-it-is. Command: a one-off walk running only 'create a table of apple like quality base components that show different states and text' at Next defaults (copy of the sheet block of Scripts/playtest/ask-says-what-it-is-doing-across-requests-walk.json). Its ask.stages: '88.3s Writing the steps', '185.5s Working out the steps' -> 97.2 s on one line (the line shows its time, 1:37, so the checklist's elapsed-time clause holds, but there is no sense of how far). The rotating check's run of the same request: 18.2 s on 'Writing the steps'.\n\nWhy it cannot say more today: the turn is one non-streamed POST (AskModelServer.chat -> AskLocalModel.send), and llama-server b11826's /slots gives only n_decoded (tokens written), never the text, so the steps are not known until the answer lands. The way in is streaming the chat (stream:true, SSE tool_call deltas from llama-server's OpenAI endpoint) and counting tool calls / reading each call's name or component name as it arrives, feeding AskStage (Sources/PhotonzCore/AskProgress.swift) a new .writing(step:name:) case. Keep the unreadable-reply path in AskSession.plan working.",
@@ -66,7 +66,31 @@
     {
       "t": "2026-11-17T15:37:32.052Z",
       "note": "seq 140 -> 150"
+    },
+    {
+      "t": "2026-11-19T04:16:24.856Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-19T04:41:43.691Z",
+      "note": "Before building: a person watching a long plan wants to see it move and to recognise what is being made; the component names (Toggle, Button) are their words, the tool names are not, so the line names the step's own name and the part inside it, never a tool. Risk checked first: does streaming change the answer? Measured on llama-server b11826 (Qwen3.5 4B, temperature 0): streamed and unstreamed replies assemble to identical tool calls, for a whole answer and for one cut off by max_tokens; llama.cpp builds both from the same final parse, and a mid-stream complaint arrives as an 'error:' event with the same message, so the unreadable-reply path (Failed to parse tool call) still fires. Only the plan's turns stream; every other call to the server is unchanged. Chose 'Writing step 4: Toggle, Knob' over the task's 'Writing the steps: Toggle, 4 so far' because the step number first reads as progress and the name is what gets cut at the 40 character budget."
+    },
+    {
+      "t": "2026-11-19T04:41:43.784Z",
+      "note": "walks none -> ask-names-each-step-as-it-writes-walk"
+    },
+    {
+      "t": "2026-11-19T05:13:55.089Z",
+      "note": "Measured at Next defaults (ask-names-each-step-as-it-writes-walk, Qwen3.8 27B): run 1 found a 22 s stall on 'Writing step 6: Segmented Control…' (long name cut over the part) and a step-0 flicker back to 'Reading your request' when /slots read late; both fixed and tested. Run 2: sheet writing 10.0-117.7 s, 11 steps, longest gap while writing 3.4 s (bar 8), whole request 7.3 s; fox one step, longest gap 4.0 s while painting, plans/paints/traces as before. Pictures looked at: 1-sheet-at-110s-sc.png (line reads 'Writing step 10: Alert, Success', mid-crossfade from 'Message') and 1-sheet-done-sc.png (full sheet, 83 layers). Left rough, not filed: Ollama runtime does not stream (still 'Writing the steps'); the line's crossfade is often caught mid-fade at this change rate. Commit 94516f463."
+    },
+    {
+      "t": "2026-11-19T05:13:55.173Z",
+      "note": "Ask's plan turns on the built-in model stream; the Agent line now says 'Writing step N: <name>, <part>' as the model writes. Same reply shape (tests + measured identical on b11826), unreadable-reply path intact. Measured: component sheet longest gap while writing 3.4 s (bar 8), fox 4.0 s overall. Audit queue/audits/2026-11-18-ask-names-each-step-as-it-writes.json; commit 94516f463."
     }
   ],
-  "walks": []
+  "walks": [
+    "ask-names-each-step-as-it-writes-walk"
+  ],
+  "started": "2026-11-19T04:16:24.855Z",
+  "completed": "2026-11-19T05:13:55.174Z"
 }
