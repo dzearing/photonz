@@ -606,11 +606,67 @@ public enum SpeedWalk {
         /// picture was.
         public var silentLooks: Int
         public var looks: Int
+        /// How far the sound came out from the picture on screen. Nil in a
+        /// run written before it was kept, or when nothing played.
+        public var sync: SyncTally?
 
-        public init(piecesLeftOut: Int, silentLooks: Int, looks: Int) {
+        public init(piecesLeftOut: Int, silentLooks: Int, looks: Int, sync: SyncTally? = nil) {
             self.piecesLeftOut = piecesLeftOut
             self.silentLooks = silentLooks
             self.looks = looks
+            self.sync = sync
+        }
+    }
+
+    /// The sound against the picture, looked at once a second while playing:
+    /// the moment of the document coming out of the speaker (the engine's own
+    /// clock, plus the output's latency) at the instant the picture then on
+    /// its way reaches the screen, against the moment that picture shows.
+    /// Positive is the sound behind the picture (task
+    /// `find-out-whether-the-sound-plays-a-fifth-of-a-se`).
+    public struct SyncTally: Codable, Equatable, Sendable {
+        /// The broadcast limits of what a person notices (ITU-R BT.1359):
+        /// sound later than the picture by more than this...
+        public static let lateLimitMS = 125.0
+        /// ...or earlier than it by more than this. Sound before the
+        /// picture never happens in a room, so it is noticed much sooner.
+        public static let earlyLimitMS = 45.0
+
+        /// How far behind the picture the sound is at one look. A frame
+        /// stamped `shownMS` is on screen for its whole step, so the sound is
+        /// set against the middle of it: in step reads nought, not half a
+        /// frame early.
+        public static func soundBehindMS(shownMS: Int, heardMS: Double, frameStepMS: Int) -> Double {
+            Double(shownMS) + Double(frameStepMS) / 2 - heardMS
+        }
+
+        public var looks: Int
+        public var medianBehindMS: Double
+        /// The most behind any look was, and the least (negative when the
+        /// sound was ahead).
+        public var latestBehindMS: Double
+        public var earliestBehindMS: Double
+        /// What the output device adds after the engine, counted in above.
+        public var outputLatencyMS: Double
+
+        public init(soundBehindMS: [Double], outputLatencyMS: Double) {
+            let sorted = soundBehindMS.sorted()
+            looks = sorted.count
+            medianBehindMS = sorted.isEmpty ? 0 : sorted[sorted.count / 2]
+            latestBehindMS = sorted.last ?? 0
+            earliestBehindMS = sorted.first ?? 0
+            self.outputLatencyMS = outputLatencyMS
+        }
+
+        /// Every look inside the limits a person notices.
+        public var inStep: Bool {
+            looks > 0 && latestBehindMS <= Self.lateLimitMS && earliestBehindMS >= -Self.earlyLimitMS
+        }
+
+        /// Every look within the early limit either way: in step however the
+        /// limits are read.
+        public var withinTightLimit: Bool {
+            looks > 0 && latestBehindMS <= Self.earlyLimitMS && earliestBehindMS >= -Self.earlyLimitMS
         }
     }
 }

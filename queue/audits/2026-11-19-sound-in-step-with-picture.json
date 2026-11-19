@@ -1,0 +1,25 @@
+{
+  "feature": "Sound plays in step with the picture",
+  "epic": "video-perf",
+  "summary": "Pressing play used to bring the sound out about a fifth of a second behind the picture for the whole playthrough, so people talking in a recording looked dubbed. The sound now opens where the picture will be when it is first heard, and comes out within 20 ms of the picture on the 6 and 20 minute reference edits.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any recording of someone talking, or the 20 minute reference edit.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording of someone talking and switch to Edit." },
+    { "do": "Press Space and watch their lips against their voice." },
+    { "do": "Press Space to stop, click the playhead somewhere in the middle, and press Space again." },
+    { "do": "Press L twice to play at double speed, then K, then J and L to compare at half speed." },
+    { "do": "Put on wireless headphones and play again." }
+  ],
+  "evaluate": [
+    "Do the lips and the voice look in step from the very first word after Space?",
+    "Is the short silence right after you press play (about a sixth of a second, as before) something you notice?",
+    "On wireless headphones, is it still in step?"
+  ],
+  "rough": [
+    "Measured, not heard: the walk reads which moment the sound engine says is reaching the speaker (its clock plus the output's reported latency) at the instant the picture reaches the screen. Before: 182 to 187 ms behind at the median, 168 to 201 ms worst. After: -3 to +5 ms at the median, -18 to +19 ms worst, over 120 one-second looks on the 6 and 20 minute edits.",
+    "Only measured on this Mac's current output, which reports 1 ms of latency. Wireless headphones report much more and the fix allows for whatever the output reports, but that case was not measured.",
+    "Only measured at normal speed. Half and double speed use the same arithmetic (unit tested) and their walks pass, but nothing yet measures their sync.",
+    "The task gave the limits as 45 ms late or 125 ms early. The broadcast standard it comes from (ITU-R BT.1359) has them the other way round: early sound is noticed sooner. The result is inside 45 ms either way, so it meets both."
+  ]
+}

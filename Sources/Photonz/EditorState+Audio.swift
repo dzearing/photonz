@@ -1,6 +1,7 @@
 import AVFoundation
 import AppKit
 import Foundation
+import QuartzCore
 import PhotonzCore
 import PhotonzMedia
 import UniformTypeIdentifiers
@@ -642,8 +643,22 @@ extension EditorState {
         loadSoundShapes()
         audioPlayer.setOutputGain(playerVolume.outputGain)
         cleanedSoundsHeard = SoundLibrary.shared.cleanedArrivals
-        audioPlayer.play(audioMix, fromMS: documentTimeMS,
-                         speed: isDocumentPlaying ? documentPlaybackRate : PlaybackSpeed.normal)
+        let rate = isDocumentPlaying ? documentPlaybackRate : PlaybackSpeed.normal
+        audioPlayer.play(audioMix, fromMS: documentTimeMS, speed: rate, playhead: soundPlayhead(rate: rate))
+    }
+
+    /// The picture's clock for the sound to open in step with: where the
+    /// playhead was when it last started and when, on the clock the sound
+    /// engine counts in. Read off the clock's own start rather than the
+    /// playhead's last tick, which can be a frame stale, so a sound restarted
+    /// mid-play lands exactly where the picture is too.
+    private func soundPlayhead(rate: Double) -> DocumentAudioEngine.Playhead {
+        let now = CACurrentMediaTime()
+        guard isDocumentPlaying, let started = documentPlaybackStartedAt else {
+            return DocumentAudioEngine.Playhead(ms: documentTimeMS, atSeconds: now, rate: rate)
+        }
+        return DocumentAudioEngine.Playhead(ms: documentPlaybackStartedAtMS,
+                                            atSeconds: now - Date().timeIntervalSince(started), rate: rate)
     }
 
     /// The speaker on the transport: the sound off, or back on at the level it

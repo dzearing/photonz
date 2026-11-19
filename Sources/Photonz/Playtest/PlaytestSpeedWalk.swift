@@ -90,6 +90,8 @@ final class SpeedWalkProbe {
         var nextListenMinute = fromMS / 60_000 + (fromMS % 60_000 == 0 ? 0 : 1)
         var worstClockApartMS = 0
         var clockAheadMS: [Int] = []
+        var soundBehindMS: [Double] = []
+        var outputLatencyMS = 0.0
         while CACurrentMediaTime() - start < seconds, editor.isDocumentPlaying {
             await frames.next()
             let now = CACurrentMediaTime() - start
@@ -119,6 +121,17 @@ final class SpeedWalkProbe {
                     worstClockApartMS = max(worstClockApartMS, abs(clockMS - at))
                     clockAheadMS.append(clockMS - at)
                 }
+                // The sound against the picture a person sees: the picture
+                // handed to the canvas by now goes up at the next refresh,
+                // and what the speaker is putting out at that same instant,
+                // its own latency counted, is set beside it.
+                if let shown = editor.shownMomentMS,
+                   let onGlass = frames.refresh(atOrAfter: CACurrentMediaTime()),
+                   let heard = editor.audioPlayer.heard(atHostSeconds: onGlass) {
+                    soundBehindMS.append(SpeedWalk.SyncTally.soundBehindMS(shownMS: shown, heardMS: heard.ms,
+                                                                            frameStepMS: MovieRef.frameStepMS))
+                    outputLatencyMS = heard.outputLatencyMS
+                }
                 nextSoundLook += 1
             }
         }
@@ -146,7 +159,9 @@ final class SpeedWalkProbe {
         let cuts = spans.map { SpeedWalk.tally(samples, over: $0, frameStepMS: step) }
         run.plays.removeAll()
         run.plays = [whole] + cuts
-        run.sound = SpeedWalk.SoundTally(piecesLeftOut: leftOut, silentLooks: silent, looks: looks)
+        let sync = soundBehindMS.isEmpty ? nil
+            : SpeedWalk.SyncTally(soundBehindMS: soundBehindMS, outputLatencyMS: outputLatencyMS)
+        run.sound = SpeedWalk.SoundTally(piecesLeftOut: leftOut, silentLooks: silent, looks: looks, sync: sync)
         let worstCut = cuts.max { $0.worstGapMS < $1.worstGapMS }
         let droppedAt = SpeedWalk.droppedMoments(samples, frameStepMS: step)
         return String(format: "played %.1fs from %@ to %@: %d of %d frames shown, %d dropped, worst gap %.0fms",
@@ -164,6 +179,12 @@ final class SpeedWalkProbe {
             + String(format: ", pieces put on while playing landed within %.0fms of the press's clock, "
                      + "which was within %dms of the playhead (%dms ahead of it at the median)",
                      lateSkewMS, worstClockApartMS, clockAheadMS.sorted().dropFirst(clockAheadMS.count / 2).first ?? 0)
+            + (sync.map {
+                String(format: "; against the picture on screen the sound came out %.0fms behind it at the median "
+                       + "(%.0fms to %.0fms over %d looks, the output's own %.0fms counted): %@",
+                       $0.medianBehindMS, $0.earliestBehindMS, $0.latestBehindMS, $0.looks, $0.outputLatencyMS,
+                       $0.withinTightLimit ? "in step" : $0.inStep ? "in step, but more than 45ms off" : "OUT OF STEP")
+            } ?? "")
             + String(format: "; the renderer handed the canvas %d pictures, drawn in %.0fms (median) to %.0fms, "
                      + "%.0fms (median) to %.0fms from asked to arrived", pictures,
                      run.composites?.drawMedianMS ?? 0, run.composites?.drawWorstMS ?? 0,

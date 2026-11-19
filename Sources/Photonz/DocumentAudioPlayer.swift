@@ -1,6 +1,7 @@
 import AVFoundation
 import Foundation
 import PhotonzCore
+import QuartzCore
 
 // Playing the document's sound (`docs/design/video-audio.md`).
 //
@@ -67,7 +68,17 @@ final class DocumentAudioPlayer {
     /// `speed` is the transport's (`PlaybackSpeed`): off normal the whole mix
     /// goes through one time stretch that keeps its pitch, the way QuickTime's
     /// half speed sounds slow rather than low.
-    func play(_ mix: [AudioMixSegment], fromMS: Int, speed: Double = PlaybackSpeed.normal) {
+    ///
+    /// `playhead` is where the picture's clock was and when (seconds on the
+    /// `CACurrentMediaTime` clock), and how fast it runs: the sound opens on
+    /// the moment that clock will have reached when the sound is first heard,
+    /// so it comes out in step with the picture rather than a fifth of a
+    /// second behind it (`SoundStartMoment`). Without one, the playhead is
+    /// taken as at `fromMS` now.
+    func play(_ mix: [AudioMixSegment], fromMS: Int, speed: Double = PlaybackSpeed.normal,
+              playhead: DocumentAudioEngine.Playhead? = nil) {
+        let playhead = playhead
+            ?? DocumentAudioEngine.Playhead(ms: fromMS, atSeconds: CACurrentMediaTime(), rate: speed)
         // Every piece still to come, in order of start: the engine puts on
         // the stretch just ahead of the playhead and tops it up as it plays
         // (`AudioScheduleWindow`), so a long edit is heard to its end.
@@ -79,7 +90,7 @@ final class DocumentAudioPlayer {
                 return DocumentAudioEngine.Piece(segment: segment, url: url)
             }
         let stretch = Float(PlaybackSpeed.holdsPitch(atRate: speed) ? speed : PlaybackSpeed.normal)
-        engine.run { $0.play(pieces, fromMS: fromMS, speed: stretch) }
+        engine.run { $0.play(pieces, playhead: playhead, speed: stretch) }
         follow(mix, atMS: fromMS)
     }
 
@@ -90,6 +101,15 @@ final class DocumentAudioPlayer {
     /// Where the engine's own clock says the document is, for a walk to set
     /// beside the picture's. Nil when nothing is playing.
     var engineClockMS: Int? { engine.read { $0.clockMS() } }
+
+    /// The moment of the document heard from the speaker at `hostSeconds`,
+    /// output latency and all, and that latency in milliseconds. For a walk
+    /// to set beside the picture on screen. Nil when nothing is playing.
+    func heard(atHostSeconds hostSeconds: Double) -> (ms: Double, outputLatencyMS: Double)? {
+        engine.read { engine in
+            engine.heardMS(atHostSeconds: hostSeconds).map { ($0, engine.outputLatencySeconds * 1000) }
+        }
+    }
 
     /// The furthest a piece put on after the press landed from where the
     /// press's clock says it belongs, in milliseconds. For a walk.
@@ -160,6 +180,20 @@ final class DocumentAudioEngine: @unchecked Sendable {
         let url: URL
     }
 
+    /// The picture's clock at one instant: the playhead's moment, when it
+    /// was there (seconds on the `CACurrentMediaTime` clock), and how fast
+    /// it runs.
+    struct Playhead: Sendable {
+        let ms: Int
+        let atSeconds: Double
+        let rate: Double
+    }
+
+    /// How far after the engine is running everything at the press is
+    /// started, so every node is on and scheduled before its first sample is
+    /// due and two sounds meant to start together do.
+    private static let leadSeconds = 0.05
+
     /// One mixer per voice of a layer: the level is this node's volume, and
     /// following a level over time is setting it as the playhead moves. A
     /// layer has one voice, except while a transition on a join inside it has
@@ -211,8 +245,11 @@ final class DocumentAudioEngine: @unchecked Sendable {
     /// 2x it runs at the document's pace too), which is what a piece put on
     /// later is placed against.
     private var clock: AVAudioPlayerNode?
+    /// The moment of the document the clock's first sample plays. The
+    /// clock and every piece at the press start at one host instant, so the
+    /// clock's own time is the document's time since this moment.
     private var clockFromMS = 0
-    /// The 80 ms everything at the press is hung after, in the clock's time.
+    /// Kept at nought: the press's pieces start at the clock's sample nought.
     private var leadSeconds = 0.0
     /// Pieces put on after the press, waiting to be checked against the
     /// clock once they have played a moment, and the worst any of them
@@ -271,13 +308,14 @@ final class DocumentAudioEngine: @unchecked Sendable {
         engine.mainMixerNode.outputVolume = gain
     }
 
-    func play(_ pieces: [Piece], fromMS: Int, speed: Float = 1) {
+    func play(_ pieces: [Piece], playhead: Playhead, speed: Float = 1) {
         stop()
         self.pieces = pieces
         worstLateSkewMS = 0
-        window = AudioScheduleWindow(spans: pieces.map { Span(startMS: $0.segment.startMS, endMS: $0.segment.endMS) },
-                                     fromMS: fromMS)
-        guard !pieces.isEmpty else { return }
+        guard !pieces.isEmpty else {
+            window = AudioScheduleWindow(spans: [], fromMS: playhead.ms)
+            return
+        }
         if speed != 1 {
             // Every voice through one stretch, so everything slows together.
             // The player nodes upstream run on the document's clock, which
@@ -297,6 +335,16 @@ final class DocumentAudioEngine: @unchecked Sendable {
         }
         self.speed = speed
 
+        // Which pieces go on first is judged from about where the sound will
+        // open (the engine has not started, so not exactly): the stretch on
+        // is twenty seconds long, so a tenth of a second either way changes
+        // nothing about what is on it.
+        let expected = SoundStartMoment.documentMS(
+            playheadMS: playhead.ms, playheadAtSeconds: playhead.atSeconds,
+            startsAtSeconds: Self.hostSecondsNow() + 0.1, outputLatencySeconds: outputLatencySeconds,
+            rate: playhead.rate)
+        window = AudioScheduleWindow(spans: pieces.map { Span(startMS: $0.segment.startMS, endMS: $0.segment.endMS) },
+                                     fromMS: expected)
         let first = window.start()
         var attached: [(index: Int, node: AVAudioPlayerNode, file: AVAudioFile)] = []
         for index in first.add {
@@ -327,18 +375,25 @@ final class DocumentAudioEngine: @unchecked Sendable {
         }
         running = true
 
-        // One moment in the future that everything is hung off, so two sounds
-        // meant to start together do, whatever order they were scheduled in.
+        // One host instant a little ahead, now the engine runs, that the
+        // clock and every piece start at, so two sounds meant to start
+        // together do whatever order they were scheduled in. The sound opens
+        // on the moment the picture will be showing when that instant comes
+        // out of the speaker, not the moment play was pressed.
+        let startsAt = Self.hostSecondsNow() + Self.leadSeconds
+        clockFromMS = SoundStartMoment.documentMS(
+            playheadMS: playhead.ms, playheadAtSeconds: playhead.atSeconds,
+            startsAtSeconds: startsAt, outputLatencySeconds: outputLatencySeconds, rate: playhead.rate,
+            pictureLagMS: SoundStartMoment.pictureLagMS)
+        leadSeconds = 0
+        let when = AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startsAt))
         let rate = format.sampleRate
-        leadSeconds = 0.08
-        clockFromMS = fromMS
-        let lead = AVAudioTime(sampleTime: AVAudioFramePosition(rate * leadSeconds), atRate: rate)
         for item in attached {
-            schedule(item.node, file: item.file, segment: pieces[item.index].segment, fromMS: fromMS,
-                     lead: lead, rate: rate)
+            schedule(item.node, file: item.file, segment: pieces[item.index].segment, fromMS: clockFromMS,
+                     lead: AVAudioTime(sampleTime: 0, atRate: rate), rate: rate)
         }
-        for item in attached { item.node.play() }
-        ticking.play()
+        for item in attached { item.node.play(at: when) }
+        ticking.play(at: when)
 
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now() + Self.tickSeconds, repeating: Self.tickSeconds,
@@ -348,9 +403,32 @@ final class DocumentAudioEngine: @unchecked Sendable {
         tick = timer
     }
 
+    /// Now, in seconds on the host clock (the one `CACurrentMediaTime` and
+    /// `AVAudioTime`'s host times count).
+    private static func hostSecondsNow() -> Double {
+        AVAudioTime.seconds(forHostTime: mach_absolute_time())
+    }
+
     /// Where the document is by the engine's own clock, in milliseconds.
     func clockMS() -> Int? {
         clockSeconds().map { Int((Double(clockFromMS) + ($0 - leadSeconds) * 1000).rounded()) }
+    }
+
+    /// What the output device adds between the engine and the room, in
+    /// seconds: the hardware's latency and its safety offset, which is a
+    /// tenth of a second or more on wireless headphones.
+    var outputLatencySeconds: Double { engine.outputNode.presentationLatency }
+
+    /// The moment of the document coming out of the speaker at `hostSeconds`
+    /// (the `CACurrentMediaTime` clock), in milliseconds: the clock node's
+    /// last render, carried on to that instant at the speed it runs, less the
+    /// output's own latency. Nil when nothing is playing.
+    func heardMS(atHostSeconds hostSeconds: Double) -> Double? {
+        guard running, let clock, let rendered = clock.lastRenderTime, rendered.isHostTimeValid,
+              rendered.isSampleTimeValid, let own = clock.playerTime(forNodeTime: rendered) else { return nil }
+        let renderedDocMS = Double(clockFromMS) + (Double(own.sampleTime) / own.sampleRate - leadSeconds) * 1000
+        let since = hostSeconds - AVAudioTime.seconds(forHostTime: rendered.hostTime) - outputLatencySeconds
+        return renderedDocMS + since * 1000 * Double(speed)
     }
 
     /// Seconds on the clock node's own time since the press.
@@ -542,6 +620,9 @@ final class DocumentAudioEngine: @unchecked Sendable {
     private func schedule(_ node: AVAudioPlayerNode, file: AVAudioFile,
                           segment: AudioMixSegment, fromMS: Int,
                           lead: AVAudioTime, rate: Double) {
+        // A piece over before the sound opens (it ended in the moment the
+        // engine took to start) plays nothing, not its last sample.
+        guard segment.endMS > fromMS else { return }
         let intoSegment = max(0, fromMS - segment.startMS)
         let speed = Double(max(1, segment.speedPercent)) / 100
         let sourceStartMS = segment.sourceInMS + Int(Double(intoSegment) * speed)

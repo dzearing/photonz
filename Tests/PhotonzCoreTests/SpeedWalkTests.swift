@@ -687,3 +687,44 @@ struct SpeedWalkScrubPlacesTests {
         #expect(SpeedWalk.memoryScrubPlaces(count: 3, lengthMS: 10_000).allSatisfy { (0...1).contains($0) })
     }
 }
+
+@Suite("How far the sound comes out from the picture on screen")
+struct SpeedWalkSoundSyncTests {
+
+    @Test("Median, latest and earliest of the looks, in milliseconds the sound is behind the picture")
+    func spread() {
+        let tally = SpeedWalk.SyncTally(soundBehindMS: [190, 180, 185, 175, 200], outputLatencyMS: 12)
+        #expect(tally.looks == 5)
+        #expect(tally.medianBehindMS == 185)
+        #expect(tally.latestBehindMS == 200)
+        #expect(tally.earliestBehindMS == 175)
+        #expect(tally.outputLatencyMS == 12)
+    }
+
+    @Test("In step means no look is more than 45ms early or 125ms late (ITU-R BT.1359), and the tight reading is 45 either way")
+    func limits() {
+        #expect(SpeedWalk.SyncTally(soundBehindMS: [10, 124, -20], outputLatencyMS: 0).inStep)
+        #expect(SpeedWalk.SyncTally(soundBehindMS: [10, -44], outputLatencyMS: 0).inStep)
+        #expect(!SpeedWalk.SyncTally(soundBehindMS: [10, 126], outputLatencyMS: 0).inStep)
+        #expect(!SpeedWalk.SyncTally(soundBehindMS: [10, -46], outputLatencyMS: 0).inStep)
+        #expect(SpeedWalk.SyncTally(soundBehindMS: [44, -44], outputLatencyMS: 0).withinTightLimit)
+        #expect(!SpeedWalk.SyncTally(soundBehindMS: [46, 0], outputLatencyMS: 0).withinTightLimit)
+        // No looks is no answer, never a pass.
+        #expect(!SpeedWalk.SyncTally(soundBehindMS: [], outputLatencyMS: 0).inStep)
+    }
+
+    @Test("A frame is on screen for its whole step, so the sound is set against the middle of it")
+    func frameMiddle() {
+        // Heard exactly at the middle of a 33ms frame stamped 1000: in step.
+        #expect(SpeedWalk.SyncTally.soundBehindMS(shownMS: 1000, heardMS: 1016.5, frameStepMS: 33) == 0)
+        // Heard at the frame's own stamp: the sound is half a frame behind.
+        #expect(SpeedWalk.SyncTally.soundBehindMS(shownMS: 1000, heardMS: 1000, frameStepMS: 33) == 16.5)
+    }
+
+    @Test("A run written before the sync was kept still reads")
+    func oldRunsRead() throws {
+        let old = #"{"piecesLeftOut": 0, "silentLooks": 0, "looks": 3}"#
+        let sound = try JSONDecoder().decode(SpeedWalk.SoundTally.self, from: Data(old.utf8))
+        #expect(sound.sync == nil)
+    }
+}
