@@ -1050,6 +1050,28 @@ The rule, for any view added to the editor window:
      rasterised again either way; a nested hosting view per canvas took
      0.6 s off rasterising a twelve-second zoom and added 1.4 s of its own
      upkeep, and a scroll went from 9.2 ms a frame to 10.1.
+   - **A painting is laid into a picture once and the picture is shown**
+     (`TimelinePaintedPicture`, 2026-11-19): a held zoom stretches one image
+     instead of drawing five hundred clips again at the new stretch, which a
+     Canvas does on every frame it is stretched. Near the whole-hour view a
+     held frame went from 10.5 ms to 9.1 and the near-Fit loop from 11.7 to
+     11.0, with no change in memory. It is laid with a margin and cut to its
+     frame, as a Canvas cuts what it draws; what still differs from a Canvas
+     is one pixel row along a lane's top and bottom edge, where the picture
+     lands on whole pixels. While a picture or strip fades in, the lane is a
+     Canvas again, painted each frame until the fade is done. A painting
+     wider than 16,000 pixels stays a Canvas.
+   - **A drawing group round the whole lane is faster still, and cannot be
+     used**: on 2026-11-19 it took the near-Fit loop to 11.1 ms and a
+     scroll's p95 from 12 ms to 9.5, but a drawing group cannot hold an
+     AppKit view, and a lane holds the field a clip is renamed in and, in a
+     probe, the markers walks find things by: each came out as yellow
+     hatching with a no-entry sign, and three timeline walks failed.
+   - **Not rebuilding a lane at all while a zoom holds it saves little**:
+     with the lane frozen at the held ruler and the whole of it stretched
+     from outside, a held frame cost 10.05 ms against 10.5 (2026-11-19);
+     frozen and not stretched it cost 8.4. What a held frame costs is the
+     stretched drawing, not the lane's body.
    - **A strip fades in only when it appears on a clip that was already
      painted**, as a zoom in brings a clip's pictures up. A clip that slides
      in with a scroll or a zoom out brings its strip with it, drawn at once,

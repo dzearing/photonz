@@ -104,6 +104,8 @@ struct TimelinePaintedClips: View, Equatable {
     }
     /// Bumped each time a picture lands, which paints it.
     @State private var landed = 0
+    @Environment(\.displayScale) private var displayScale
+    @Environment(\.colorScheme) private var colorScheme
 
     enum Fade: Hashable {
         case tile(ClipFilmstripFrames.Key)
@@ -143,28 +145,43 @@ struct TimelinePaintedClips: View, Equatable {
         // Side by side rather than one over the other as an overlay: the
         // painting takes no presses, and a hit-testing switch on a view is
         // inherited by anything overlaid on it.
-        ZStack(alignment: .topLeading) {
-            TimelineView(.animation(minimumInterval: nil, paused: fades.isEmpty)) { timeline in
-                let now = timeline.date.timeIntervalSinceReferenceDate
-                Canvas { context, _ in
-                    Self.paintGridlines(gridlines, ruler: ruler, laneWidth: laneWidth, height: laneHeight,
-                                        ink: gridInk, in: &context)
-                    Self.paintGaps(gaps, ruler: ruler, laneWidth: laneWidth, height: laneHeight, ink: gapInk,
-                                   in: &context)
-                    for (one, strip) in zip(placed, strips) {
-                        var alpha: (Fade) -> Double = { _ in 1 }
-                        if !fades.isEmpty || before != nil {
-                            alpha = { fade in
-                                // New on a clip painted last time: clear
-                                // until its fade starts.
-                                if case .strip(let id) = fade, let before, before.contains(id), !seen.contains(id),
-                                   fades[fade] == nil {
-                                    return 0
-                                }
-                                return Self.faded(since: fades[fade], now: now)
-                            }
+        let paint: (inout GraphicsContext, TimeInterval) -> Void = { context, now in
+            Self.paintGridlines(gridlines, ruler: ruler, laneWidth: laneWidth, height: laneHeight,
+                                ink: gridInk, in: &context)
+            Self.paintGaps(gaps, ruler: ruler, laneWidth: laneWidth, height: laneHeight, ink: gapInk,
+                           in: &context)
+            for (one, strip) in zip(placed, strips) {
+                var alpha: (Fade) -> Double = { _ in 1 }
+                if !fades.isEmpty || before != nil {
+                    alpha = { fade in
+                        // New on a clip painted last time: clear
+                        // until its fade starts.
+                        if case .strip(let id) = fade, let before, before.contains(id), !seen.contains(id),
+                           fades[fade] == nil {
+                            return 0
                         }
-                        Self.paint(one, strip: strip, alpha: alpha, in: &context)
+                        return Self.faded(since: fades[fade], now: now)
+                    }
+                }
+                Self.paint(one, strip: strip, alpha: alpha, in: &context)
+            }
+        }
+        ZStack(alignment: .topLeading) {
+            Group {
+                if fades.isEmpty {
+                    // Laid into a picture once, which a scroll slides and a
+                    // zoom holding it stretches without drawing it again
+                    // (`TimelinePaintedPicture`).
+                    TimelinePaintedPicture(width: canvas.width, height: laneHeight, scale: displayScale,
+                                           scheme: colorScheme) { context in
+                        paint(&context, Date.timeIntervalSinceReferenceDate)
+                    }
+                } else {
+                    // A picture or strip fading in is painted on every frame
+                    // until it is in.
+                    TimelineView(.animation(minimumInterval: nil, paused: false)) { timeline in
+                        let now = timeline.date.timeIntervalSinceReferenceDate
+                        Canvas { context, _ in paint(&context, now) }
                     }
                 }
             }
@@ -959,6 +976,7 @@ struct TimelinePaintedCuts: View, Equatable {
     }
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.displayScale) private var displayScale
     let marks: [Mark]
     /// Painted on the drawn stretch and slid into place by the lane, as the
     /// clips are (`TimelinePaint.Canvas`).
@@ -971,7 +989,8 @@ struct TimelinePaintedCuts: View, Equatable {
         // window, and a Canvas's context does not always say so.
         let scheme = colorScheme
         let ruler = canvas.ruler
-        Canvas { context, _ in
+        // Laid into a picture once, as the clips are (`TimelinePaintedPicture`).
+        TimelinePaintedPicture(width: canvas.width, height: height, scale: displayScale, scheme: scheme) { context in
             let scale = max(1, context.environment.displayScale)
             func snap(_ v: CGFloat) -> CGFloat { (v * scale).rounded() / scale }
             for mark in marks {
@@ -1039,5 +1058,61 @@ struct TimelinePaintedCuts: View, Equatable {
 
     nonisolated static func == (a: TimelinePaintedCuts, b: TimelinePaintedCuts) -> Bool {
         a.marks == b.marks && a.canvas == b.canvas && a.laneWidth == b.laneWidth && a.height == b.height
+    }
+}
+
+/// A lane's painting laid once into a picture at the screen's scale, and the
+/// picture shown. A Canvas is drawn again whenever it is moved by anything
+/// but a whole pixel or stretched: a zoom that holds the last painting
+/// (`EditorState.timelineHeldPainting`) stretched each lane's two canvases on
+/// every frame, and drawing their five hundred clips again was about 1.2 ms of
+/// a 10.5 ms frame near the whole-hour view of the hour-long reference edit
+/// (2026-11-19). A picture is stretched as one image.
+///
+/// Laid with `margin` to spare on every side and placed back by it, since a
+/// Canvas draws past its own frame (an edge's stroke, a band's shadow) and a
+/// picture of the frame alone cut those off. A painting wider than a picture
+/// can be is drawn as a Canvas, as before.
+struct TimelinePaintedPicture: View {
+    let width: CGFloat
+    let height: CGFloat
+    let scale: CGFloat
+    let scheme: ColorScheme
+    let paint: (inout GraphicsContext) -> Void
+
+    static let margin: CGFloat = 12
+    /// The widest picture laid, in pixels, inside what the GPU takes.
+    static let widestPixels: CGFloat = 16_000
+
+    var body: some View {
+        let margin = Self.margin
+        if let picture = picture {
+            Image(decorative: picture, scale: scale)
+                .frame(width: width + margin * 2, height: height + margin * 2)
+                .offset(x: -margin, y: -margin)
+                .frame(width: width, height: height, alignment: .topLeading)
+        } else {
+            Canvas { context, _ in paint(&context) }
+                .frame(width: width, height: height)
+        }
+    }
+
+    private var picture: CGImage? {
+        let margin = Self.margin
+        let scale = max(1, scale)
+        guard width > 0, height > 0, (width + margin * 2) * scale <= Self.widestPixels else { return nil }
+        let paint = self.paint
+        let laid = Canvas { context, _ in
+            context.translateBy(x: margin, y: margin)
+            // Cut where a Canvas of the frame cuts its drawing.
+            context.clip(to: Path(CGRect(x: 0, y: 0, width: width, height: height)))
+            paint(&context)
+        }
+        .frame(width: width + margin * 2, height: height + margin * 2)
+        .environment(\.colorScheme, scheme)
+        .environment(\.displayScale, scale)
+        let renderer = ImageRenderer(content: laid)
+        renderer.scale = scale
+        return renderer.cgImage
     }
 }

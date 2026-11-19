@@ -497,6 +497,10 @@ final class SpeedWalkProbe {
         // so a median sits on 16.7 ms until a change takes a whole refresh
         // off, and the mean shows a change smaller than that.
         var means: [String] = []
+        // Near Fit, frames whose lanes stretched the painting they held
+        // against frames whose lanes painted afresh
+        // (`EditorState.timelineHeldPainting`), for the line.
+        var heldSplit = ""
         func film(_ label: String, moves: Int, _ move: () -> Bool) async -> SpeedWalk.FrameTimes {
             ViewBuildMeter.shared.reset()
             var at: [Double] = []
@@ -514,14 +518,23 @@ final class SpeedWalkProbe {
             let start = CACurrentMediaTime()
             await frames.next()
             at.append(0)
+            var held: [Double] = []
+            var fresh: [Double] = []
             for _ in 0..<moves {
                 // A timeline that cannot keep up is stopped at twenty seconds.
                 guard CACurrentMediaTime() - start < 20, move() else { break }
                 let octave = max(0, Int(log2(max(1, editor.timelineZoom.scale)).rounded(.down)))
+                let isHeld = editor.timelineHeldPainting != nil
                 await frames.next()
                 let now = (CACurrentMediaTime() - start) * 1000
                 octaves[octave, default: []].append(now - (at.last ?? 0))
+                if isHeld { held.append(now - (at.last ?? 0)) } else { fresh.append(now - (at.last ?? 0)) }
                 at.append(now)
+            }
+            if label == "near fit" {
+                func mean(_ v: [Double]) -> Double { v.isEmpty ? 0 : v.reduce(0, +) / Double(v.count) }
+                heldSplit = String(format: "; near fit held %d frames mean %.2fms, painted afresh %d mean %.2fms",
+                                   held.count, mean(held), fresh.count, mean(fresh))
             }
             if at.count > 1, let last = at.last {
                 means.append(String(format: "%@ %.2fms", label, last / Double(at.count - 1)))
@@ -568,7 +581,7 @@ final class SpeedWalkProbe {
         editor.fitTimeline()
         run.timeline = [zoomIn, zoomOut, scroll]
         return "views at fit: \(viewsAtFit); views zoomed in: \(viewsZoomed); clip bars built a frame: "
-            + barsPerFrame.joined(separator: ", ") + "; by zoom: " + byZoom.joined(separator: "; ") + "; mean frame: " + means.joined(separator: ", ") + "; "
+            + barsPerFrame.joined(separator: ", ") + "; by zoom: " + byZoom.joined(separator: "; ") + "; mean frame: " + means.joined(separator: ", ") + heldSplit + "; "
             + [zoomIn, zoomOut, nearFit, scroll].map {
             String(format: "%@: %d frames, median %.1fms, p95 %.1fms, worst %.0fms, %d late against %.1fms",
                    $0.label, $0.frames, $0.medianMS, $0.p95MS, $0.worstMS, $0.late, $0.refreshMS)

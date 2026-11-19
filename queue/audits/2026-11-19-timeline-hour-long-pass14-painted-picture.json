@@ -1,0 +1,27 @@
+{
+  "feature": "A busy lane on the hour-long timeline is painted into a picture once, and a zoom stretches the picture",
+  "epic": "video-perf",
+  "summary": "Each busy lane's clips and cuts are now laid into one picture when they change, and the picture is what is shown. A step of a zoom stretches that picture instead of drawing the lane's five hundred clips again, so near the whole-hour view a zoom frame is about 0.7 ms quicker and fewer frames are late. Nothing on screen changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit. The timeline opens showing the whole hour.", "shot": "2026-11-19-timeline-pass14-fit-sc.png" },
+    { "do": "Pinch in slowly from the whole hour to about 8x and back out, a few times." },
+    { "do": "Zoom in nine steps with the zoom key and look at the lanes: pictures, cuts, bands, names and the Music lane's diamonds all in place and sharp.", "shot": "2026-11-19-timeline-pass14-zoomed-sc.png" },
+    { "do": "Scroll the zoomed timeline end to end with two fingers." },
+    { "do": "Pick a clip, right-click it and choose Rename: the name field opens on the clip as before." }
+  ],
+  "evaluate": [
+    "Does a pinch near the whole hour feel smoother than yesterday's build?",
+    "While pinching, do names or edges ever look soft or smeared for longer than a blink?",
+    "After a pinch or a scroll, does any lane ever show something out of date until you move it again?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, mean frame, three runs after against four runs of this morning's build: near Fit 11.00 to 11.02 ms (was 11.62 to 11.86), of which frames holding the last painting 9.09 to 9.23 (was 10.46 to 10.52) and frames painted afresh 13.48 to 13.71 (was 13.25 to 13.61, no change); zoom in 10.34 to 10.66 (was 10.76 to 10.95); zoom out 9.03 to 9.65 (was 9.66 to 10.15); scroll 8.54 to 8.64 (was 8.70 to 8.95; p95 11.1 to 12.1). Late frames near Fit 202 to 210 of 648 (was 209 to 237). Peak memory of the walk unchanged (1334 to 1388 MB, was 1379 to 1401).",
+    "Pictures: the same window photographed in one run with the picture and with the old drawing differs only in one pixel row along each lane's top and bottom edge (the picture lands on whole pixels, by up to 87 of 255 in that row); nothing a person would see. While a picture or strip of film fades in, the lane is drawn the old way until the fade is done.",
+    "Tried and not kept: a drawing group round each whole lane was faster still (near Fit 11.1, scroll p95 9.5 ms), but it cannot hold the field a clip is renamed in, which came out as yellow hatching with a no-entry sign, and three timeline walks failed. Freezing a lane while a zoom holds it saved only 0.4 ms a held frame: what a held frame costs is drawing the stretched lane, which the picture now saves. Both written into docs/design/video.md 8f.",
+    "Bars of the task not reached: 95 per cent of zoom and scroll frames under 8.3 ms and none over 16 (near Fit about 11.0 ms a frame, p95 16.7; scroll worst 21 to 22 ms), and edits within 16 ms (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). The task stays open.",
+    "Walks: 16 run on the final build, all green (the task's timeline walks, timeline-right-click-walk with its rename, a-click-tick-is-hidden-and-slid, an-editing-session, reference-edit-opens, a-sound-s-waveform-follows-its-level, transition-band-reads-as-the-mock). speed-walk fails on scrub hunt lag (sight lag worst 34 against 16), the same number a run from before this change read at 05:41 today; scrub, owned by a-long-edit-with-transitions-plays-scrubs-and-ed.",
+    "No mock covers the timeline's speed; nothing about the timeline's look changed."
+  ]
+}
