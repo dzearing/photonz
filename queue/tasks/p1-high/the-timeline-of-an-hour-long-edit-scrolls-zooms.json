@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-20T15:54:50.364Z",
+  "updated": "2026-11-20T18:02:31.970Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -461,6 +461,26 @@
     {
       "t": "2026-11-20T15:54:50.357Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T17:31:56.975Z",
+      "note": "Pass 15 (2026-11-20). Baseline at 43699e1c7 (60 min edit, timeline measure only, machine load ~5): near Fit 12.1-12.9 ms mean (held 9.9-10.8, fresh 15.2-15.7), zoom in 11.3-11.7, out 10.1-10.7, scroll 9.5-10.9 (p95 13.8-16.6, worst 22-41). New in the speed line: scroll split into frames that only slid the painting (122, mean 8.2-8.3 = the floor) and frames that moved the drawn stretch (238, mean 11.6-11.9); paintings laid a frame and ms each (TimelinePaintedPicture via ViewBuildMeter.paintedPicture): 0.26-0.44 ms each, ~1 ms of a moved frame. Profile of the scroll (trace-bursts --from/--to, new --without): AG update 36%, bodies 20%, CA 16%, accessibility 11% (probe), layout 11%; picture laying 0.85 ms a frame."
+    },
+    {
+      "t": "2026-11-20T17:31:57.061Z",
+      "note": "Pass 15 tried and backed out (A/B on one build by throwaway defaults switches): (1) the pass-14 next step, fewer fresh paints per zoom: zoom sliver 1/10 (zoom out held 2 of 3 like zoom in) and hold 12.5%/sliver 0.14: held frames 432/492 of 648 but each held frame cost as much more, near Fit 12.8-12.9 / 12.2-12.7 vs 12.8-12.9, no gain. (2) the pass-9 next step, the stretch laid in pieces of time half a window wide (TimelinePaint.tiles, each an Equatable Piece kept while what it covers is unchanged): after fixing the key (a piece's x across the canvas moved with the stretch) pictures laid went 3.6 -> 7.2 a frame and scroll 9.7 -> 12.4 ms (slid frames 7.7 -> 9.0): the extra image views cost more than the painting saved. Picture laying is not where a move's time goes."
+    },
+    {
+      "t": "2026-11-20T18:02:16.052Z",
+      "note": "Pass 15 change: TimelineDrawnStretch(stepShare:) and stepShare(lanePixels:marginPixels:widestPixels:) (tested): the drawn stretch moves a whole window at a time where four windows of the lane plus the picture margin fit in TimelinePaintedPicture.widestPixels, else half (EditorState.timelineDrawnStepShare, reads timelineLaneWidth and the window's backing scale). Chose a whole window over 1.5 because 5.5 windows passes 16,000 px on the speed walk's 1463 pt lane and would fall back to a sliding Canvas. A/B on one build (throwaway switch): scroll mean 10.46/10.62 -> 9.46/9.49 ms, late 104-114 -> 55-56 of 360, worst unchanged; final build 8.98/9.88 (late 31/73, machine under load). Walks on the final build: 12 of 13 green (task's walks + an-editing-session, reference-edit-opens, timeline-zooms-out-past-the-end); clip-pictures-when-zoomed-in-walk fails ~1 run in 3 on one pan pass of 50.5-74 ms against 50, equally with the old half step (2 of 6 each way), so not this change; left on this task, which owns the walk. Scripts/test.sh exit 0. Looked at 2-scrolled-sc and the scrolled-more capture: pictures, names, cuts, waveforms, zoom row in place. Audit queue/audits/2026-11-20-timeline-hour-long-pass15-whole-window-step.json. Landed f01d1eeaa."
+    },
+    {
+      "t": "2026-11-20T18:02:16.133Z",
+      "note": "Still open, bars not reached: near Fit ~12-13 ms mean on today's busier machine (pass 14 read 11.0), scroll worst ~22 vs 16, edits (inspector). What is left is generic SwiftUI upkeep per frame (AG update ~36%, layout ~11%, CA commit ~16%, accessibility ~11% in the probe) across every view reading the ruler; picture laying is ~1 ms. Next lever is structural: lanes whose painting and slide do not go through the SwiftUI graph at all (one CALayer per lane with the picture as contents, moved by the ruler outside SwiftUI), with full clip views and overlays still SwiftUI. Left rough, not filed: none new."
+    },
+    {
+      "t": "2026-11-20T18:02:31.969Z",
+      "note": "Pass 15 landed f01d1eeaa: a scroll moves the painted stretch a whole window at a time, so busy lanes repaint half as often. Scroll mean 10.5 -> 9.5 ms, late frames 104-114 -> 55 of 360; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
     }
   ],
   "started": "2026-11-20T15:54:50.356Z",
