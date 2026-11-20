@@ -18257,3 +18257,15 @@
 {"t":"2026-11-20T07:34:31.844Z","ev":"task_note","id":"find-out-why-animated-charts-walk-sometimes-cann"}
 {"t":"2026-11-20T07:34:31.911Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
 {"t":"2026-11-20T07:34:46.678Z","ev":"task_done","id":"find-out-why-animated-charts-walk-sometimes-cann","from":"in_progress","note":"This was an app bug, not a slow Library. About one recording in six opened straight into Edit with a blank panel that stayed blank until a pick (also seen with the window shown, as a person has it). Fixed in EditorState/EditorView/InspectorPanel: Edit's arrival and the panel's fill each ask for their next step themselves when SwiftUI drops the onChange. animated-charts-walk step 9 failed 9 of 24 runs before, passes 10 of 10 after. Short walk blank 0 of 95 (was 16 of 70). Scripts/test.sh green. Commit 'A recording opened straight into Edit always fills its panel'."}
+{"t":"2026-11-20T07:57:31.686Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":1210,"of":1180,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-20T07:57:31.878Z","ev":"task_started","id":"a-spotlight-dims-and-blurs-everything-except-the","title":"A spotlight dims and blurs everything except the area you want people to look at","priority":"p1-high"}
+{"t":"2026-11-20T08:56:50.241Z","ev":"task_walks","id":"a-spotlight-dims-and-blurs-everything-except-the","walks":["spotlight-lens-walk","spotlight-on-a-video-walk"]}
+{"t":"2026-11-20T08:57:41.432Z","ev":"task_created","id":"a-spotlight-draws-the-border-shadow-and-blur-it","priority":"p2-normal","title":"A spotlight draws the border, shadow and blur it is given round its lit area"}
+{"t":"2026-11-20T08:57:57.685Z","ev":"task_note","id":"a-spotlight-dims-and-blurs-everything-except-the"}
+{"t":"2026-11-20T08:57:57.750Z","ev":"task_note","id":"a-spotlight-dims-and-blurs-everything-except-the"}
+{"t":"2026-11-20T08:57:57.817Z","ev":"task_note","id":"a-spotlight-dims-and-blurs-everything-except-the"}
+{"t":"2026-11-20T08:57:57.881Z","ev":"task_note","id":"a-spotlight-dims-and-blurs-everything-except-the"}
+{"t":"2026-11-20T08:57:57.947Z","ev":"task_note","id":"a-spotlight-dims-and-blurs-everything-except-the"}
+{"t":"2026-11-20T08:57:58.011Z","ev":"task_note","id":"a-spotlight-dims-and-blurs-everything-except-the"}
+{"t":"2026-11-20T08:57:58.078Z","ev":"task_note","id":"an-agent-can-change-what-it-made-fonts-captions"}
+{"t":"2026-11-20T08:58:24.843Z","ev":"task_done","id":"a-spotlight-dims-and-blurs-everything-except-the","from":"in_progress","note":"Lens tool > Does: Spotlight. The box stays pixel-identical; outside goes darker (Dim), softer (Blur) or both, with Feather and a rectangle (layer corner radius) or ellipse shape; live preview + one undo step per pull; saved, exported identically (PNG test), works on video. Bar: Dim 50% takes outside mean luma 127.5 -> 63.5, inside unchanged. Frame time 6.7-10.9 ms median at 12 MP. Verified by 27 unit tests, full Scripts/test.sh green, spotlight-lens-walk and spotlight-on-a-video-walk at Next defaults (screen = fresh render, 0.00%). Audit queue/audits/2026-11-20-spotlight.json. Commit 13fc3f259."}

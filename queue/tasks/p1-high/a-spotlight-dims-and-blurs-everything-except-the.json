@@ -5,11 +5,11 @@
   "epic": "",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-20T05:58:21.138Z",
-  "updated": "2026-11-20T05:58:24.387Z",
+  "updated": "2026-11-20T08:58:24.842Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-19: \"i would like a lens effect which dims and/or blurs (with sliders?) everyting but an area, used to highlight something\".\n\nWhat exists: the Next-only Lens tool (FeatureCatalog lensFlag next-lens, Sources/PhotonzCore/Lens.swift, Sources/PhotonzRender/LensFilter.swift, Sources/Photonz/LensInspector.swift, EditorState+Lens.swift). It applies ONE LensAdjustment (blur, pixelate, greyscale, invert, brightness) to what is UNDER its box, cropped to the box (LensFilter.image ... .cropped(to: box)). Nothing today affects everything OUTSIDE an area, and a lens can only hold one adjustment, so dim+blur together is impossible.\n\nSuggested shape (runner decides): either an 'Outside' / 'Spotlight' mode on a lens that inverts the region and carries both a dim and a blur amount, or a separate spotlight layer kind. Either way the effect covers the whole canvas except the area, so the layer's rendered extent is the canvas, not its frame; watch hit testing, selection handles and bounds (the handles belong to the area, and the canvas-wide dim must not make the whole picture click-select it). Keep the lens's existing corner radii handling for the shape. Blur must clamp-to-extent before blurring (LensFilter already does this for sampleReach) or the picture edges go dark.\n\nRecordings already have a click 'spotlight' (ClickEffect.swift, done task clicks-in-a-recording-can-show-an-effect-on-the); that is per click on the cursor, a different thing; don't merge them.\n\nTargets Next. Not confirmed: whether video timeline layers go through the same compositor.",
@@ -31,6 +31,48 @@
     {
       "t": "2026-11-20T05:58:24.386Z",
       "note": "seq 4020 -> 30"
+    },
+    {
+      "t": "2026-11-20T07:57:31.873Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T08:56:50.239Z",
+      "note": "owns these walks: spotlight-lens-walk, spotlight-on-a-video-walk"
+    },
+    {
+      "t": "2026-11-20T08:57:57.683Z",
+      "note": "Adversarial pass before building: a Photoshop user does this with a black layer + mask or the Spotlight in Snagit/CleanShot; ours is one drag and stays editable. Mock gap: none (no mock covers it). Collision risk: the canvas-wide dim must not make the whole picture click-select it (hit testing stays on the box; walk step 12 proves it)."
+    },
+    {
+      "t": "2026-11-20T08:57:57.748Z",
+      "note": "Chose a Spotlight kind on the Lens tool (Does: Spotlight) over a new tool, because it is the same gesture and the same kind of layer, and the tool bar stays as it is."
+    },
+    {
+      "t": "2026-11-20T08:57:57.815Z",
+      "note": "Chose Dim to scale stored colour values (half is half as bright to the eye) over scaling light, because a 50% dim in light only looked about 27% darker. Chose the feather to lie wholly outside the box so the lit area is identical at any feather."
+    },
+    {
+      "t": "2026-11-20T08:57:57.879Z",
+      "note": "Measured: outside mean luma 127.5 -> 63.5 (0.498) light, -> 64.0 (0.502) sRGB, inside unchanged. 12 MP/10 layers wall clock: plain 4.5 ms, Dim drag 6.7, Blur drag 10.9, Feather drag 7.1 (19 before limiting the feather blur), window patch 6.0 median. Screen matched a fresh render on every walk frame (0.00%)."
+    },
+    {
+      "t": "2026-11-20T08:57:57.945Z",
+      "note": "Pictures looked at: every -sc.png of spotlight-lens-walk (contact sheet 2026-11-20-spotlight-sheet.png) and the video walk's 2-spotlight: dim only stays sharp, blur only stays bright, feather falls off outside, ellipse and rounding cut the lit area, move/resize follow, click in the dim picks nothing, undo is one step."
+    },
+    {
+      "t": "2026-11-20T08:57:58.009Z",
+      "note": "Rough items: border/shadow/blur effects do nothing on a spotlight -> filed a-spotlight-draws-the-border-shadow-and-blur-it (p2, reproduced). Video playback cost of a whole-frame blur not measured -> left rough here (only paid while a spotlight with Blur is on screen; not a defect). Agent cannot set spotlight rows -> folded into the pin comment; lens kind/amount for agents is still notYet."
+    },
+    {
+      "t": "2026-11-20T08:58:24.840Z",
+      "note": "Lens tool > Does: Spotlight. The box stays pixel-identical; outside goes darker (Dim), softer (Blur) or both, with Feather and a rectangle (layer corner radius) or ellipse shape; live preview + one undo step per pull; saved, exported identically (PNG test), works on video. Bar: Dim 50% takes outside mean luma 127.5 -> 63.5, inside unchanged. Frame time 6.7-10.9 ms median at 12 MP. Verified by 27 unit tests, full Scripts/test.sh green, spotlight-lens-walk and spotlight-on-a-video-walk at Next defaults (screen = fresh render, 0.00%). Audit queue/audits/2026-11-20-spotlight.json. Commit 13fc3f259."
     }
-  ]
+  ],
+  "started": "2026-11-20T07:57:31.872Z",
+  "walks": [
+    "spotlight-lens-walk",
+    "spotlight-on-a-video-walk"
+  ],
+  "completed": "2026-11-20T08:58:24.841Z"
 }
