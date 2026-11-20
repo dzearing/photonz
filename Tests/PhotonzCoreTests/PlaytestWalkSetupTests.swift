@@ -231,6 +231,23 @@ struct PlaytestTimelineSetupTests {
         #expect(!plain.setup.timelineRoom)
     }
 
+    /// The editor window comes back at the frame the last one was left at. A
+    /// walk can start from a screen-wide one, which is what a walk that sizes
+    /// its window differently has to cope with (2026-11-19: SwiftUI chased the
+    /// old size up to 100000 points and AppKit crashed the probe).
+    @Test("it can start from a screen-wide editor window left by the last one")
+    func screenWideWindow() throws {
+        let wide = try PlaytestScript.decode(Data("""
+        { "setup": { "screenWideWindow": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(wide.setup.screenWideWindow)
+        #expect(wide.setup.isEmpty == false)
+        let plain = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(!plain.setup.screenWideWindow)
+    }
+
     @Test("saying nothing leaves it to the app")
     func unsaid() throws {
         let script = try PlaytestScript.decode(Data("""

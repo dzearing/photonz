@@ -8017,8 +8017,8 @@ private final class Run {
             case .windowLaptop:
                 if let window = editor.hostWindow {
                     let visible = (window.screen ?? NSScreen.main)?.visibleFrame ?? window.frame
-                    window.setFrame(NSRect(x: visible.minX + 40, y: visible.maxY - 720 - 40,
-                                           width: 1200, height: 720), display: true)
+                    Self.resize(window, to: NSRect(x: visible.minX + 40, y: visible.maxY - 720 - 40,
+                                                   width: 1200, height: 720))
                 }
             case .keyAtPlayhead: editor.keyAtPlayhead()
             case .pickRotationRow:
@@ -17506,8 +17506,8 @@ private final class Run {
         if let size {
             let screen = window.screen ?? NSScreen.main
             let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1600, height: 1000)
-            window.setFrame(NSRect(x: visible.minX + 40, y: visible.maxY - size.height - 40,
-                                   width: size.width, height: size.height), display: true)
+            Self.resize(window, to: NSRect(x: visible.minX + 40, y: visible.maxY - size.height - 40,
+                                           width: size.width, height: size.height))
         }
         // The screen capture reads what the compositor has, so the window has
         // to have been drawn on screen at least once. It stays visible for this
@@ -17536,8 +17536,8 @@ private final class Run {
         if let size {
             let screen = window.screen ?? NSScreen.main
             let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1600, height: 1000)
-            window.setFrame(NSRect(x: visible.minX + 40, y: visible.maxY - size.height - 40,
-                                   width: size.width, height: size.height), display: true)
+            Self.resize(window, to: NSRect(x: visible.minX + 40, y: visible.maxY - size.height - 40,
+                                           width: size.width, height: size.height))
         }
         window.makeKey()
         Self.keepBehindThePerson(window)
@@ -17548,6 +17548,14 @@ private final class Run {
         }
         // The viewport settles a frame after the resize.
         await sleep(0.5)
+        // A window that has run away from the size it was given says so here,
+        // by name, rather than as a crash a few steps on (`resize(_:to:)`).
+        if let visible = (window.screen ?? NSScreen.main)?.visibleFrame,
+           window.frame.width > max(size?.width ?? 0, visible.width) + 1 {
+            throw Failure(description: "the window ran away to \(Int(window.frame.width))x\(Int(window.frame.height)) pt"
+                          + (size.map { ", asked for \(Int($0.width))x\(Int($0.height))" } ?? "")
+                          + ", wider than the screen")
+        }
         editor = opened
         self.window = window
         let documentSize = opened.document?.canvasSize ?? .zero
@@ -21233,6 +21241,24 @@ private final class Run {
         sheet.alphaValue = 0
         answer()
         if parent.attachedSheet === sheet { sheet.alphaValue = alpha }
+    }
+
+    /// Resizes a window from outside SwiftUI and lays it out at once.
+    ///
+    /// Without the layout, SwiftUI keeps the size it last laid the window out
+    /// at. If an animated change to the editor (the dock or the tool bar
+    /// arriving) lands before SwiftUI has caught up, SwiftUI's window sizing
+    /// puts the window back to that old size and then adds the difference
+    /// again on every pass: 1728 to 1440 made it 2016, 2304, 2592 and so on
+    /// until AppKit stopped at 100000 points wide and crashed the probe over a
+    /// constraints pass that never settled (2026-11-17 and 19, about one walk
+    /// in three that opened a video after a walk that left the window another
+    /// size). A 25-line SwiftUI app does the same with a `setFrame` and a
+    /// `withAnimation` in one turn, and laying the window out after the
+    /// `setFrame` stops it there too.
+    static func resize(_ window: NSWindow, to frame: NSRect) {
+        window.setFrame(frame, display: true)
+        window.layoutIfNeeded()
     }
 
     static func keepBehindThePerson(_ window: NSWindow) {

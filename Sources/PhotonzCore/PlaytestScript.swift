@@ -207,6 +207,13 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// walk clicks at window points measured with the recording across the
     /// whole lane, and those points would land on other moments.
     public var timelineRoom: Bool
+    /// True: the editor window this walk opens comes back screen-wide, the
+    /// frame macOS keeps for it when the last one was left that way, before
+    /// the walk's open step sizes it. A person's next window does the same.
+    /// It is the start a walk sized differently from the walk before it gets,
+    /// and the one that crashed the probe on 2026-11-19: SwiftUI chased the
+    /// old size up to 100000 points when the walk resized the window.
+    public var screenWideWindow: Bool
     /// The probe is the ACTIVE app for the whole walk.
     ///
     /// A walk leaves the person's keyboard alone and never brings the probe
@@ -292,6 +299,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
                 flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, timelineRoom: Bool = false,
+                screenWideWindow: Bool = false,
                 front: Bool = false, behindLook: Bool = false, shown: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
                 askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false, askMac: Int? = nil,
@@ -310,6 +318,7 @@ public struct PlaytestSetup: Sendable, Equatable {
         self.history = history
         self.timelineOpen = timelineOpen
         self.timelineRoom = timelineRoom
+        self.screenWideWindow = screenWideWindow
         self.front = front
         self.behindLook = behindLook
         self.shown = shown
@@ -322,7 +331,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
-            && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && !behindLook && !shown && history == nil && !timedWithoutMarkers
+            && flags.isEmpty && timelineOpen == nil && !timelineRoom && !screenWideWindow && !front && !behindLook && !shown && history == nil && !timedWithoutMarkers
             && !askModelMissing && askModelsOnly == nil && !offline && !agentHome && askMac == nil && askSearch == nil && askReplies.isEmpty
             && askSeconds == nil && referenceEdit == nil
     }
@@ -334,7 +343,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "askSeconds", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "referenceEdit", "scratch", "shown",
+    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "askSeconds", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "referenceEdit", "scratch", "screenWideWindow", "shown",
                             "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -440,6 +449,7 @@ public struct PlaytestSetup: Sendable, Equatable {
                   flags: try Self.choices(fields["flags"]),
                   timelineOpen: try Self.yesOrNo(fields["timelineOpen"], field: "timelineOpen"),
                   timelineRoom: try Self.yesOrNo(fields["timelineRoom"], field: "timelineRoom") ?? false,
+                  screenWideWindow: try Self.yesOrNo(fields["screenWideWindow"], field: "screenWideWindow") ?? false,
                   front: try Self.yesOrNo(fields["front"], field: "front") ?? false,
                   behindLook: try Self.yesOrNo(fields["behindLook"], field: "behindLook") ?? false,
                   shown: try Self.yesOrNo(fields["shown"], field: "shown") ?? false,

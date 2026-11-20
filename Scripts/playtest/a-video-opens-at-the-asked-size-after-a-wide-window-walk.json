@@ -1,0 +1,17 @@
+{
+  "out": "/tmp/photonz-playtest/a-video-opens-at-the-asked-size-after-a-wide-window-walk",
+  "seed": "The noisy screen recording at Next defaults with no flag set, opened into Edit with its tracks showing, in an editor window that comes back screen-wide because the last one was left that way, and sized to 1440 by 900 the moment it is shown. The window stays 1440 by 900 and the app keeps running. Before 2026-11-19 about one open in three grew the window 288 points a frame to 100000 points wide and AppKit crashed the app: SwiftUI chased the size it had last laid the window out at. Run it ten times in a row to see it hold.",
+  "setup": {
+    "timelineOpen": true,
+    "screenWideWindow": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/Noisy voice recording 1280x800.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "selectRow", "row": "Noisy voice recording 1280x800" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Audio Effects Empty", "reads": "No effects" },
+    { "do": "snapshot", "name": "1-opened-at-1440" }
+  ]
+}

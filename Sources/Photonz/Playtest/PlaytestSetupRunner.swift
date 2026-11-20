@@ -223,6 +223,7 @@ struct PlaytestSetupRunner {
         EditorState.walkOpensRecordingsInEdit = setup.timelineOpen == true
         EditorState.walkOpensTimelinesWithRoom = setup.timelineRoom
         if setup.timelineRoom { said.append("a recording opens zoomed out with room after its end") }
+        if setup.screenWideWindow { said.append(PlaytestSetupRunner.leaveAScreenWideWindow()) }
         // Every walk says afresh too: Ask on a Mac with no model downloaded.
         AskModelServer.walkFolder = setup.askModelMissing ? PlaytestSetupRunner.emptyAskModels() : nil
         if setup.askModelMissing { said.append("Ask has no model downloaded") }
@@ -290,6 +291,39 @@ struct PlaytestSetupRunner {
     /// Cuts the probe off from everything but this Mac's loopback for the
     /// rest of its life (`PlaytestOffline`), then proves it: a fetch from the
     /// web must fail. What it says goes in the walk's log.
+    /// Saves a screen-wide frame as the one the next editor window comes back
+    /// at, as if the last window had been left that way, so the walk's open
+    /// step resizes a window that opened at another size. That is the start
+    /// that crashed the probe about one time in three on 2026-11-19, before
+    /// the harness laid the window out after resizing it
+    /// (`PlaytestHarness.resize(_:to:)`).
+    ///
+    /// macOS keeps the frame under a key SwiftUI names after the window's
+    /// root view, so every saved editor frame is overwritten rather than one
+    /// key spelled out here.
+    static func leaveAScreenWideWindow() -> String {
+        guard let screen = NSScreen.main else { return "no screen to leave a screen-wide window on" }
+        let visible = screen.visibleFrame
+        let whole = screen.frame
+        let numbers = [visible.minX, visible.minY, visible.width, visible.height - 38,
+                       whole.minX, whole.minY, whole.width, whole.height]
+        let saved = numbers.map { String(Int($0.rounded())) }.joined(separator: " ") + " "
+        let defaults = UserDefaults.standard
+        var keys = defaults.dictionaryRepresentation().keys.filter {
+            $0.hasPrefix("NSWindow Frame ") && $0.contains("Photonz.EditorWindowID")
+        }
+        // On a Mac that has never kept one, the key the editor window group
+        // uses for its first window, as SwiftUI names it today.
+        if keys.isEmpty { keys = [Self.firstEditorWindowFrameKey] }
+        for key in keys { defaults.set(saved, forKey: key) }
+        return "the editor window comes back screen-wide (\(saved.trimmingCharacters(in: .whitespaces)))"
+    }
+
+    static let firstEditorWindowFrameKey = "NSWindow Frame SwiftUI.WindowGroup<SwiftUI.PresentedWindowContent"
+        + "<Photonz.EditorWindowID, SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<Photonz.EditorRootView, "
+        + "SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Photonz.AppCoordinator>>>, "
+        + "SwiftUI._FlexFrameLayout>>>-1-AppWindow-1"
+
     static func goOffline() -> String {
         typealias SandboxInit = @convention(c) (UnsafePointer<CChar>, UInt64,
                                                 UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>) -> Int32
