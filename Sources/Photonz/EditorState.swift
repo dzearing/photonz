@@ -1686,9 +1686,14 @@ final class EditorState {
     /// for their turn (`EditModeArrival`).
     /// Settled whenever nothing is arriving.
     private(set) var editArrival: EditModeArrival = .settled
-    /// One pass on. Called by the editor view once the last stage has drawn.
-    func advanceEditArrival(animated: Bool = true) {
-        guard let next = editArrival.next else { return }
+    /// One pass on. Called by the editor view once the last stage has drawn,
+    /// and by the stage itself if the view never does (`keepArriving`).
+    /// `from` is the stage the caller saw: one that has already been left
+    /// asks for nothing, so the two callers never move it on twice.
+    func advanceEditArrival(animated: Bool = true, from stage: EditModeArrival? = nil) {
+        if let stage, editArrival != stage { return }
+        let at = editArrival
+        guard let next = at.next else { return }
         if isWatching {
             // Behind View nothing is on screen to slide, and a pass while the
             // recording plays would cost the player a frame: wait for it to
@@ -1696,11 +1701,12 @@ final class EditorState {
             guard isEditorKeptBehindView else { return }
             if isDocumentPlaying {
                 DispatchQueue.main.asyncAfter(deadline: .now() + Self.buildBehindViewDelay) { [weak self] in
-                    self?.advanceEditArrival()
+                    self?.advanceEditArrival(from: at)
                 }
                 return
             }
             editArrival = next
+            keepArriving(after: next)
             return
         }
         // A piece still being built behind View when Cmd-2 came waits for the
@@ -1708,14 +1714,35 @@ final class EditorState {
         let slideLeft = editSlideLands.timeIntervalSinceNow
         if slideLeft > 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + slideLeft) { [weak self] in
-                self?.advanceEditArrival()
+                self?.advanceEditArrival(from: at)
             }
             return
         }
         // On the same curve as the switch, so the tool bar that comes in
         // here slides up after the rest rather than appearing.
-        guard animated else { editArrival = next; return }
-        withAnimation(.viewEditMode) { editArrival = next }
+        if animated {
+            withAnimation(.viewEditMode) { editArrival = next }
+        } else {
+            editArrival = next
+        }
+        keepArriving(after: next)
+    }
+    /// The editor view moves Edit's arrival on from
+    /// `.onChange(of: editArrival)`, once each stage has drawn. About one
+    /// recording in six opened straight into Edit, SwiftUI drew a stage and
+    /// never ran that action, so the arrival stopped at the tracks' rows and
+    /// the panel stayed empty, Show Library and all, until a pick
+    /// (`animated-charts-walk`, 2026-11-19; a window shown as a person has it
+    /// did the same). So a stage also asks for the next itself, two turns of
+    /// the run loop later, by which time the view's ask has normally come;
+    /// whichever comes second finds the stage already left (`from:`).
+    private func keepArriving(after stage: EditModeArrival) {
+        guard stage.next != nil, !stage.nextWaitsForTheSlide else { return }
+        Task { @MainActor [weak self] in
+            await NextRunLoopPass.start()
+            await NextRunLoopPass.start()
+            self?.advanceEditArrival(from: stage)
+        }
     }
     /// Edit's pieces (the tool bar, the tracks, and the panel where
     /// `isInspectorKeptBehindView` says so) built and kept, out of sight,

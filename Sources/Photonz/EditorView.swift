@@ -415,7 +415,7 @@ struct EditorView: View {
                 if now.nextWaitsForTheSlide {
                     editorState.advanceEditArrivalOnceTheSlideLands()
                 } else {
-                    DispatchQueue.main.async { editorState.advanceEditArrival() }
+                    DispatchQueue.main.async { editorState.advanceEditArrival(from: now) }
                 }
             }
         }

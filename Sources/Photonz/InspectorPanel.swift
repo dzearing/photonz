@@ -363,6 +363,17 @@ struct InspectorPanel: View {
             !editorState.editArrival.panelMayFill || editorState.secondsUntilTheSlideLands > 0
         }
         let _ = arrivalPass // the catch-up pass reads its own trigger
+        // A pass that finds sections still owed, with Edit far enough in for
+        // the dock to fill, asks for the catch-up itself rather than trusting
+        // `.onChange(of: editorState.editArrival)` alone. Opening a recording
+        // straight into Edit, SwiftUI drew the pass where Edit's last stage
+        // came in and, about one open in three, never ran that action: the
+        // dock had no sections at all, and stayed empty (Show Library added
+        // nothing) until a pick changed what it asked for
+        // (`animated-charts-walk`, 2026-11-19). `catchUp` guards against a
+        // second ask, so when the action does run this one is a no-op.
+        let _ = arrivals.askFromThePass(
+            owed: editorState.editArrival.panelMayFill && arrivals.isWaiting(for: wanted)) { catchUp() }
         // Sections this pass leaves out stay built, unseen, for one more pass
         // when the pick has not moved: a cut clicked on the clip in hand
         // shows its own sections in the click's frame and pulls the clip's
@@ -2908,6 +2919,20 @@ private struct SectionDrag: Equatable {
 
     /// A catch-up pass is on its way, so a second one is not asked for.
     var isCatchingUp = false
+
+    /// A pass asked for a catch-up a turn of the main queue from now.
+    private var isAsked = false
+
+    /// Ask for a catch-up after this pass when one is owed and none is on its
+    /// way. One ask per turn, however many times the body runs before it.
+    func askFromThePass(owed: Bool, _ catchUp: @escaping @MainActor () -> Void) {
+        guard owed, !isCatchingUp, !isAsked else { return }
+        isAsked = true
+        DispatchQueue.main.async { [self] in
+            isAsked = false
+            catchUp()
+        }
+    }
 
     /// What has been let in so far, by raw id, without noting anything.
     var mounted: [String] { state.mounted }
