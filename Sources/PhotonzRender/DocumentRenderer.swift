@@ -1077,6 +1077,19 @@ public final class DocumentRenderer: @unchecked Sendable {
                 continue
             }
 
+            // A spotlight draws everything OUTSIDE its box rather than the
+            // inside of it, so it skips the box-sized path every other layer
+            // takes and lays a canvas-wide veil over the picture instead
+            // (`SpotlightFilter`). Its box is only the hole.
+            if let lens = layer.lens, lens.adjustment.actsOutside {
+                let below = underlay.map { output.composited(over: $0) } ?? output
+                if let veil = spotlightVeil(layer, lens: lens, frame: frame, backdrop: below,
+                                            region: clip, canvasHeight: document.canvasSize.height) {
+                    output = composite(veil, over: output, mode: layer.effectiveBlendMode, extent: clip)
+                }
+                continue
+            }
+
             // What a layer that reads what is BELOW it gets to see: everything
             // under it on the canvas, which inside a group means its group's
             // contents so far over the canvas beneath the group. A zoom callout
@@ -1426,8 +1439,13 @@ public final class DocumentRenderer: @unchecked Sendable {
         // below it to read, so its tile would be empty glass. Its row shows the
         // part of the REAL composite it covers instead, which is both the
         // honest answer and the useful one — you see the blur you made.
-        if let layer = document.detachedLayer(id: id), case .lens = layer.content {
-            return resampled(rasterize(region: layer.frame.standardized, of: document, store: store),
+        if let layer = document.detachedLayer(id: id), case .lens(let lens) = layer.content {
+            // A spotlight's picture is everything BUT its box, so its tile is
+            // the whole picture, dim and all.
+            let region = lens.adjustment.actsOutside
+                ? CGRect(origin: .zero, size: document.canvasSize)
+                : layer.frame.standardized
+            return resampled(rasterize(region: region, of: document, store: store),
                              maxDimension: maxDimension, minimumAspect: minimumAspect)
         }
         let outset = document.layer(id: id)?.outlineOutset ?? 0
@@ -3483,6 +3501,47 @@ public final class DocumentRenderer: @unchecked Sendable {
             around: CGPoint(x: box.midX + offset.x, y: box.midY - offset.y))
         guard abs(turn.a * turn.d - turn.b * turn.c) > 1e-9 else { return nil }
         return turn
+    }
+
+    /// A spotlight's veil over `region`: the picture below, dimmed and
+    /// softened everywhere but the layer's own area (`SpotlightFilter`).
+    /// `frame` is the layer's box on the canvas, top-left, in output pixels.
+    ///
+    /// The area takes the layer's corner radius (Appearance) on a rectangle
+    /// and fills its box on an ellipse, and turns with the layer, so a turned
+    /// spotlight lights a turned area.
+    private func spotlightVeil(_ layer: Layer, lens: LensContent, frame: CGRect, backdrop: CIImage,
+                               region: CGRect, canvasHeight: CGFloat) -> CIImage? {
+        let box = flipped(frame.standardized, canvasHeight: canvasHeight)
+        guard box.width >= 1, box.height >= 1 else { return nil }
+        let turn = canvasTurn(of: layer, box: box)
+        let radii = layer.style.cornerRadii
+        return SpotlightFilter.veil(of: lens, over: backdrop, canvas: region,
+                                    opacity: layer.style.opacity,
+                                    linearLight: compositing == .linearLight) { outset in
+            let grown = box.insetBy(dx: -outset, dy: -outset)
+            var shape: CIImage?
+            switch lens.spotlightShape {
+            case .ellipse:
+                shape = SpotlightFilter.ellipse(in: grown)
+            case .rectangle:
+                if radii.isRound || outset > 0 {
+                    // Grown outward, a corner keeps its curve and gains the
+                    // outset on it, which is the shape a soft edge round a box
+                    // falls off along.
+                    let rounded = outset > 0
+                        ? CornerRadii(topLeft: radii.topLeft + outset, topRight: radii.topRight + outset,
+                                      bottomRight: radii.bottomRight + outset,
+                                      bottomLeft: radii.bottomLeft + outset)
+                        : radii
+                    shape = self.roundedRectImage(rect: grown, radii: rounded, color: .white)
+                } else {
+                    shape = CIImage(color: .white).cropped(to: grown)
+                }
+            }
+            if let turn { shape = shape?.transformed(by: turn) }
+            return shape
+        }
     }
 
     /// A canvas-space picture brought into the frame-sized space every other

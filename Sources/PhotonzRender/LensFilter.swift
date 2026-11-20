@@ -61,6 +61,10 @@ enum LensFilter {
             return image.applyingFilter("CIColorControls", parameters: [
                 kCIInputBrightnessKey: min(max(lens.brightness, -1), 1),
             ])
+        // Drawn outside its box by `SpotlightFilter`, never through here:
+        // inside its box a spotlight changes nothing.
+        case .spotlight:
+            return image
         }
     }
 }

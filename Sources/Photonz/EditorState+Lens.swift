@@ -14,7 +14,8 @@ enum LensCopy {
     static let toolTitle = "Lens"
     static let sectionTitle = "Lens"
     static let toolHelp = "Drag a box over anything to change what is underneath it: "
-        + "blur an address, pixelate a name, grey out a region, or magnify it."
+        + "blur an address, pixelate a name, grey out a region, magnify it, "
+        + "or spotlight it by dimming everything else."
     /// Said once, where somebody hiding something can read it. Not a second
     /// mechanism: export and copy already flatten. This is the LONG wording,
     /// which is what the Does picker says on hover.
@@ -217,6 +218,71 @@ extension EditorState {
             layer.content = .lens(lens)
         }
         submit(doc)
+    }
+
+    // MARK: Spotlight
+
+    /// The Lens tool's spotlight settings: what the NEXT spotlight you draw
+    /// arrives with. Written only from the tool's own rows.
+    func changeLensToolSpotlight(_ change: (inout LensContent) -> Void) {
+        var content = lensToolContent
+        let was = content
+        change(&content)
+        guard content != was else { return }
+        lensToolContent = content
+        lensToolRevision &+= 1
+    }
+
+    /// The picked spotlight as the panel shows it: mid-pull while a slider is
+    /// under a finger, what the document says the rest of the time.
+    var selectedSpotlight: LensContent? {
+        guard let picked = selectedLens, picked.content.adjustment == .spotlight else { return nil }
+        if let preview = spotlightPreview, preview.id == picked.id { return preview.content }
+        return picked.content
+    }
+
+    /// Live while a spotlight slider is under a finger: rendered straight
+    /// away and kept out of history, so the whole pull is one step to undo.
+    func previewSpotlight(_ change: (inout LensContent) -> Void) {
+        guard let picked = selectedLens, picked.content.adjustment == .spotlight,
+              var doc = document else { return }
+        var content = spotlightPreview.flatMap { $0.id == picked.id ? $0.content : nil }
+            ?? picked.content
+        change(&content)
+        spotlightPreview = (picked.id, content)
+        doc.updateLayer(id: picked.id) { layer in
+            guard layer.lens != nil else { return }
+            layer.content = .lens(content)
+        }
+        submit(doc)
+    }
+
+    /// Slider release: one undo step from where the pull started to where it
+    /// ended.
+    func commitSpotlight() {
+        guard let preview = spotlightPreview else { return }
+        spotlightPreview = nil
+        perform { document in
+            document.updateLayer(id: preview.id) { layer in
+                guard layer.lens != nil else { return }
+                layer.content = .lens(preview.content)
+            }
+        }
+    }
+
+    /// One change to the picked spotlight, one undo step: the Shape row, and
+    /// anything else that is a pick rather than a pull.
+    func changeSpotlight(_ change: (inout LensContent) -> Void) {
+        guard let picked = selectedLens, picked.content.adjustment == .spotlight else { return }
+        var content = picked.content
+        change(&content)
+        guard content != picked.content else { return }
+        perform { document in
+            document.updateLayer(id: picked.id) { layer in
+                guard layer.lens != nil else { return }
+                layer.content = .lens(content)
+            }
+        }
     }
 
     /// Slider release: one undo step from where the pull started to where it

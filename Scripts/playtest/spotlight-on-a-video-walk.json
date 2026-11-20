@@ -1,0 +1,23 @@
+{
+  "out": "/tmp/photonz-playtest/spotlight-on-a-video-walk",
+  "seed": "The Lens tool's Spotlight on a video: a screen recording opened at Next defaults, the Lens tool set to Spotlight, a box dragged over part of the frame. Everything outside the box goes darker and softer on the frame shown, and what is on screen matches the same frame drawn from scratch. Canvas coordinates are window points measured down from the top-left of the editor view.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "1-open" },
+    { "do": "tool", "tool": "lens" },
+    { "do": "waitFor", "condition": "tool", "value": "lens" },
+    { "do": "action", "action": "armLensSpotlight" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [420, 220], "to": [700, 360], "steps": 10 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectPicked", "layers": ["Spotlight"] },
+    { "do": "expectFresh" },
+    { "do": "describe", "stage": "2-spotlight", "note": "THE TEST: the box stays as it was and the rest of the frame is darker and softer, on a video" },
+    { "do": "panel", "stage": "2-spotlight" },
+    { "do": "snapshot", "name": "2-spotlight" }
+  ]
+}

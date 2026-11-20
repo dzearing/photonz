@@ -1535,6 +1535,10 @@ final class EditorState {
     var lensAmountPreview: (id: UUID, amount: CGFloat)?
     /// Where that pull started, so the undo step spans the whole of it.
     var lensAmountBeforeDrag: CGFloat?
+    /// A picked spotlight's settings while one of its sliders is under a
+    /// finger (Dim, Blur or Feather), committed as one undo step on release,
+    /// the same bargain the lens's own slider strikes.
+    var spotlightPreview: (id: UUID, content: LensContent)?
     /// The band tint a picked callout's Fill opacity slider is being pulled to
     /// right now, committed to history only when the slider is let go.
     var calloutFillPreview: (id: UUID, opacity: CGFloat)?
@@ -6314,6 +6318,13 @@ final class EditorState {
                 guard var lens = layer.lens else { return }
                 lens.amount = preview.amount
                 layer.content = .lens(lens)
+            }
+        }
+        // ...and a spotlight's Dim, Blur or Feather.
+        if let preview = spotlightPreview {
+            document.updateLayer(id: preview.id) { layer in
+                guard layer.lens != nil else { return }
+                layer.content = .lens(preview.content)
             }
         }
         // A callout's Fill opacity under a finger, for the same reason.

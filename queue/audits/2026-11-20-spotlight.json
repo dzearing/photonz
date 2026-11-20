@@ -1,0 +1,35 @@
+{
+  "feature": "Spotlight: dim and blur everything but one area",
+  "epic": "",
+  "summary": "The Lens tool has a seventh kind, Spotlight. Drag a box round anything and the box stays exactly as it was while everything else on the picture goes darker, softer, or both. It is a live layer: move it, resize it, round it, make it an ellipse, soften its edge, retune it any time.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any screenshot. Walks: spotlight-lens-walk (picture) and spotlight-on-a-video-walk (a screen recording), both at Next defaults, both photographed the real window.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot, press K for the Lens tool, and in the panel's Lens Tool section set Does to Spotlight.", "shot": "2026-11-20-spotlight-before.png" },
+    { "do": "Drag a box round one button or row. Everything outside it goes darker and a little softer; the box is untouched.", "shot": "2026-11-20-spotlight-both.png" },
+    { "do": "In the Lens section, pull Blur to 0 for dim only.", "shot": "2026-11-20-spotlight-dim-only.png" },
+    { "do": "Pull Dim to 0 and Blur up for blur only.", "shot": "2026-11-20-spotlight-blur-only.png" },
+    { "do": "Pull Feather up to soften the edge round the box.", "shot": "2026-11-20-spotlight-feather.png" },
+    { "do": "Set Shape to Ellipse, or set a Corner Radius in Appearance for a rounded box.", "shot": "2026-11-20-spotlight-ellipse.png" },
+    { "do": "Drag the box somewhere else, or drag a handle to resize it; the lit area follows.", "shot": "2026-11-20-spotlight-moved.png" },
+    { "do": "Open a screen recording and do the same: the spotlight lands as its own track over the clip.", "shot": "2026-11-20-spotlight-video.png" }
+  ],
+  "evaluate": [
+    "Is Lens > Does > Spotlight where you would look for this, or would you expect it as its own tool?",
+    "Are Dim 50% and Blur 4 pt the right starting point for highlighting a button?",
+    "Does the Feather edge look natural, or should it reach into the box as well as out?",
+    "Should the spotlight be able to wear a ring (Effects > Border) round the lit area?"
+  ],
+  "rough": [
+    "No mock covers a spotlight or the Lens panel, so there is no side-by-side; the rows follow the Lens and Magnify sections already in the panel.",
+    "Chose a Spotlight kind on the existing Lens tool over a new tool, because it is the same gesture (drag a box) and the same kind of layer (changes what is under it), and the tool bar stays as it is.",
+    "Chose Dim to scale the colour values, so Dim 50% is half as bright to the eye in either mixing setting. Measured on a striped picture: outside mean luma 127.5 to 63.5 (ratio 0.498) in light, 127.5 to 64.0 (0.502) in sRGB, inside unchanged at 127.5. A plain Lens cannot pass that bar: it only ever changes what is inside its box, so the outside ratio stays 1.0.",
+    "Chose a feather that lies wholly outside the box, so what you lit is pixel-identical at any feather (unit tested at feather 0 and 30).",
+    "Frame time, 12 megapixel picture with 10 layers, wall clock to a finished image on this Mac: no spotlight 4.5 ms; dragging Dim 6.7 ms median; dragging Blur 10.9 ms median; dragging Feather 7.1 ms median (19 ms before the feather blur was limited to the area's neighbourhood); a window-sized patch with dim and blur 6.0 ms median. First frame of a drag peaks at about 20 ms. The canvas on screen matched a fresh render on every frame of the walk's drags (0.00% differing).",
+    "A spotlight's own Border, Shadow and Blur effects do nothing yet: only Opacity, Blending and Corner Radius from Appearance apply to it.",
+    "On a video it works through the same drawing, but every frame now blurs the whole frame while a spotlight with Blur is on screen; not measured during playback.",
+    "An agent cannot set a spotlight's rows yet (nor any lens's kind or amount); a field for it did not fit in Ask's first request, which had 14 tokens to spare."
+  ],
+  "reel": "2026-11-20-spotlight-reel.gif",
+  "sheet": "2026-11-20-spotlight-sheet.png"
+}

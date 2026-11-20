@@ -36,6 +36,9 @@ public enum RenderDiff {
             let padding = layer.style.borderWidth + 2
             return bounds.insetBy(dx: -padding, dy: -padding)
         }
+        // A spotlight draws everywhere EXCEPT its box: its dim covers the
+        // whole canvas, so whatever changes about it changes all of it.
+        if let lens = layer.lens, lens.adjustment.actsOutside { return .infinite }
         var bounds = layer.frame
         if !layer.transform.isIdentity {
             bounds = layer.frame.applying(layer.transform.affineTransform(around: layer.turnPivot))

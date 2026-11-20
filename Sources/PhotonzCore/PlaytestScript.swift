@@ -2556,6 +2556,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// takes it to the strong end and `pullLensAmountBack` to the gentle one,
     /// so a walk can show the same lens at two settings.
     case pullLensAmount, pullLensAmountBack
+    /// The seventh kind, Spotlight, armed on the tool and picked on a lens
+    /// already drawn.
+    case armLensSpotlight, lensSpotlight
+    /// A PICKED spotlight's own rows, each pulled the way a finger pulls a
+    /// slider (live previews, one undo step on release): Dim only (Blur to
+    /// nought, Dim to half), Blur only (Dim to nought, Blur to 8pt), both
+    /// (Dim half, Blur 8pt), Feather to 40pt, and the Shape row to Ellipse.
+    case spotlightDimOnly, spotlightBlurOnly, spotlightBoth, spotlightFeather, spotlightEllipse
     case setTextSize, setTextWeight
     /// The same menus set the other way, so a walk can put the picked labels
     /// into a known state whatever the last walk left the new-text default at.

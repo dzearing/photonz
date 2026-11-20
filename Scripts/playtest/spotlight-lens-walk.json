@@ -1,0 +1,83 @@
+{
+  "out": "/tmp/photonz-playtest/spotlight-lens-walk",
+  "seed": "A spotlight is the Lens tool's seventh kind: the box you draw stays exactly as it was and everything ELSE on the picture goes darker, softer, or both, so the eye lands on the box. This walk opens a real settings-pane screenshot at Next defaults, sets the Lens tool to Spotlight, drags a box round one row, then shows Dim only, Blur only, both, a feathered edge, rounded corners and an ellipse, resizes and moves the box, checks a click out in the dimmed part does not pick the spotlight, and undoes. Canvas coordinates are window points measured down from the top-left of the editor view.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "snapshot", "name": "1-open" },
+
+    { "do": "tool", "tool": "lens" },
+    { "do": "waitFor", "condition": "tool", "value": "lens" },
+    { "do": "action", "action": "armLensSpotlight" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-tool", "note": "the Lens tool set to Spotlight: the panel's tool section shows Dim, Blur, Feather and Shape for the next spotlight" },
+    { "do": "panel", "stage": "2-tool" },
+    { "do": "snapshot", "name": "2-tool-spotlight" },
+
+    { "do": "drag", "from": [88, 348], "to": [376, 396], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Spotlight"] },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "3-drawn", "note": "THE TEST: one drag made a spotlight; the row inside the box is untouched and everything else is darker and softer. The handles sit on the box, and the panel's Lens section says Spotlight with its four rows" },
+    { "do": "panel", "stage": "3-drawn" },
+    { "do": "snapshot", "name": "3-spotlight" },
+
+    { "do": "action", "action": "spotlightDimOnly" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-dim-only", "note": "Blur pulled to nought, Dim at half: the rest is darker but still sharp" },
+    { "do": "snapshot", "name": "4-dim-only" },
+
+    { "do": "action", "action": "spotlightBlurOnly" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-blur-only", "note": "Dim pulled to nought, Blur at 8pt: the rest is as bright as it was but soft" },
+    { "do": "snapshot", "name": "5-blur-only" },
+
+    { "do": "action", "action": "spotlightBoth" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectFresh" },
+    { "do": "describe", "stage": "6-both", "note": "Dim half and Blur 8pt together" },
+    { "do": "snapshot", "name": "6-both" },
+
+    { "do": "action", "action": "spotlightFeather" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectFresh" },
+    { "do": "describe", "stage": "7-feather", "note": "Feather 40pt: the edge round the box falls off softly, outside the box, and the row inside is still untouched" },
+    { "do": "panel", "stage": "7-feather" },
+    { "do": "snapshot", "name": "7-feather" },
+
+    { "do": "action", "action": "dragCornerRadius" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-rounded", "note": "the layer's corner radius rounds the lit area" },
+    { "do": "snapshot", "name": "8-rounded" },
+
+    { "do": "action", "action": "spotlightEllipse" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "9-ellipse", "note": "Shape set to Ellipse: the lit area is the oval inside the box" },
+    { "do": "snapshot", "name": "9-ellipse" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "drag", "from": [376, 396], "to": [420, 440], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "10-resized", "note": "the bottom-right handle dragged out: the lit area grew with it" },
+    { "do": "snapshot", "name": "10-resized" },
+
+    { "do": "drag", "from": [232, 380], "to": [232, 220], "steps": 12, "expectFresh": 0.5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Spotlight"] },
+    { "do": "describe", "stage": "11-moved", "note": "dragged by its middle up the picture: the spotlight now lights what it landed on" },
+    { "do": "snapshot", "name": "11-moved" },
+
+    { "do": "click", "at": [640, 620] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPicked", "layers": [] },
+    { "do": "describe", "stage": "12-click-in-dim", "note": "a click out in the dimmed part of the picture picks nothing: the spotlight is its box, not the whole canvas" },
+    { "do": "snapshot", "name": "12-click-in-dim" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectFresh" },
+    { "do": "describe", "stage": "13-undone", "note": "one undo steps back over the move, as one step" },
+    { "do": "snapshot", "name": "13-undone" }
+  ]
+}

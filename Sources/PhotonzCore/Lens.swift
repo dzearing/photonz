@@ -19,6 +19,13 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
     case invert
     /// Lifts what is underneath towards white, or pushes it towards black.
     case brightness
+    /// Leaves what is underneath its own area alone and dims, blurs or both
+    /// EVERYTHING ELSE on the picture, so the eye lands on the area. The one
+    /// adjustment that acts outside its box rather than inside it, and the one
+    /// with several numbers rather than one (`LensContent.spotlightDim` and
+    /// friends), which is why it has no single `settingTitle`. Last, because
+    /// an order somebody has learned does not get reshuffled.
+    case spotlight
 
     /// The word on the adjustment, in the tool's capsule and in the panel.
     public var title: String {
@@ -28,8 +35,13 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
         case .greyscale: "Greyscale"
         case .invert: "Invert"
         case .brightness: "Brightness"
+        case .spotlight: "Spotlight"
         }
     }
+
+    /// Whether this adjustment changes the picture OUTSIDE its box and leaves
+    /// the inside alone, rather than the other way round.
+    public var actsOutside: Bool { self == .spotlight }
 
     /// The word on this adjustment's one number, or nil for the one that has
     /// no number at all. The panel ASKS rather than knowing, so a slider with
@@ -39,7 +51,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
         case .blur: "Strength"
         case .pixelate: "Block size"
         case .greyscale: "Amount"
-        case .invert: nil
+        case .invert, .spotlight: nil
         case .brightness: "Amount"
         }
     }
@@ -55,7 +67,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
         case .blur: 1...60
         case .pixelate: 2...80
         case .greyscale: 0...1
-        case .invert: 0...0
+        case .invert, .spotlight: 0...0
         case .brightness: -1...1
         }
     }
@@ -68,7 +80,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
         case .blur: 8
         case .pixelate: 12
         case .greyscale: 1
-        case .invert: 0
+        case .invert, .spotlight: 0
         case .brightness: 0.35
         }
     }
@@ -80,7 +92,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
     public var isLength: Bool {
         switch self {
         case .blur, .pixelate: true
-        case .greyscale, .invert, .brightness: false
+        case .greyscale, .invert, .brightness, .spotlight: false
         }
     }
 
@@ -95,11 +107,26 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
             return "\(Int(amount.rounded())) pt"
         case .greyscale:
             return "\(Int((amount * 100).rounded()))%"
-        case .invert:
+        case .invert, .spotlight:
             return ""
         case .brightness:
             let percent = Int((amount * 100).rounded())
             return percent > 0 ? "+\(percent)%" : "\(percent)%"
+        }
+    }
+}
+
+/// The outline of the area a spotlight leaves lit. A rectangle rounds its
+/// corners with the layer's own corner radius, the one in Appearance; an
+/// ellipse fills its box.
+public enum SpotlightShape: String, CaseIterable, Hashable, Codable, Sendable {
+    case rectangle
+    case ellipse
+
+    public var title: String {
+        switch self {
+        case .rectangle: "Rectangle"
+        case .ellipse: "Ellipse"
         }
     }
 }
@@ -123,16 +150,55 @@ public struct LensContent: Hashable, Codable, Sendable {
     /// How far the picture is lifted or pushed, -1 to 1.
     public var brightness: CGFloat
 
+    // The spotlight's own four. Kept apart from the numbers above for the
+    // reason they are kept apart from each other: switching a spotlight to
+    // Blur and back hands the spotlight back as it was.
+
+    /// How much of the light outside the area is taken away, 0 to 1. Half is
+    /// half as bright to the eye: the stored colour values are halved, the
+    /// way a black veil at that opacity darkens a picture in any editor.
+    public private(set) var spotlightDim: CGFloat
+    /// How far the picture outside the area is softened: a gaussian sigma in
+    /// document points, nought for none.
+    public private(set) var spotlightBlur: CGFloat
+    /// How wide the soft band between the lit area and the dimmed rest is, in
+    /// document points. It lies wholly OUTSIDE the area, so what is inside
+    /// stays exactly as it was at any feather. Nought is a hard edge.
+    public private(set) var spotlightFeather: CGFloat
+    /// The outline of the lit area.
+    public var spotlightShape: SpotlightShape
+
+    public static let defaultSpotlightDim: CGFloat = 0.5
+    public static let defaultSpotlightBlur: CGFloat = 4
+    public static let defaultSpotlightFeather: CGFloat = 0
+    public static let spotlightDimRange: ClosedRange<CGFloat> = 0...1
+    /// Stops where the blur lens does, for the same reason.
+    public static let spotlightBlurRange: ClosedRange<CGFloat> = 0...60
+    public static let spotlightFeatherRange: ClosedRange<CGFloat> = 0...120
+
     public init(adjustment: LensAdjustment = .blur,
                 blurRadius: CGFloat = LensAdjustment.blur.defaultAmount,
                 blockSize: CGFloat = LensAdjustment.pixelate.defaultAmount,
                 greyscaleAmount: CGFloat = LensAdjustment.greyscale.defaultAmount,
-                brightness: CGFloat = LensAdjustment.brightness.defaultAmount) {
+                brightness: CGFloat = LensAdjustment.brightness.defaultAmount,
+                spotlightDim: CGFloat = LensContent.defaultSpotlightDim,
+                spotlightBlur: CGFloat = LensContent.defaultSpotlightBlur,
+                spotlightFeather: CGFloat = LensContent.defaultSpotlightFeather,
+                spotlightShape: SpotlightShape = .rectangle) {
         self.adjustment = adjustment
         self.blurRadius = blurRadius
         self.blockSize = blockSize
         self.greyscaleAmount = greyscaleAmount
         self.brightness = brightness
+        self.spotlightDim = spotlightDim
+        self.spotlightBlur = spotlightBlur
+        self.spotlightFeather = spotlightFeather
+        self.spotlightShape = spotlightShape
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case adjustment, blurRadius, blockSize, greyscaleAmount, brightness
+        case spotlightDim, spotlightBlur, spotlightFeather, spotlightShape
     }
 
     public init(from decoder: Decoder) throws {
@@ -149,6 +215,60 @@ public struct LensContent: Hashable, Codable, Sendable {
             ?? LensAdjustment.greyscale.defaultAmount
         brightness = try c.decodeIfPresent(CGFloat.self, forKey: .brightness)
             ?? LensAdjustment.brightness.defaultAmount
+        spotlightDim = try c.decodeIfPresent(CGFloat.self, forKey: .spotlightDim)
+            ?? Self.defaultSpotlightDim
+        spotlightBlur = try c.decodeIfPresent(CGFloat.self, forKey: .spotlightBlur)
+            ?? Self.defaultSpotlightBlur
+        spotlightFeather = try c.decodeIfPresent(CGFloat.self, forKey: .spotlightFeather)
+            ?? Self.defaultSpotlightFeather
+        spotlightShape = try c.decodeIfPresent(SpotlightShape.self, forKey: .spotlightShape)
+            ?? .rectangle
+    }
+
+    /// Written out by hand only because the four spotlight numbers are
+    /// `private(set)`; the keys are the stored names, as synthesis would give.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(adjustment, forKey: .adjustment)
+        try c.encode(blurRadius, forKey: .blurRadius)
+        try c.encode(blockSize, forKey: .blockSize)
+        try c.encode(greyscaleAmount, forKey: .greyscaleAmount)
+        try c.encode(brightness, forKey: .brightness)
+        try c.encode(spotlightDim, forKey: .spotlightDim)
+        try c.encode(spotlightBlur, forKey: .spotlightBlur)
+        try c.encode(spotlightFeather, forKey: .spotlightFeather)
+        try c.encode(spotlightShape, forKey: .spotlightShape)
+    }
+
+    private static func held(_ value: CGFloat, in range: ClosedRange<CGFloat>,
+                             otherwise fallback: CGFloat) -> CGFloat {
+        guard value.isFinite else { return fallback }
+        return min(max(value, range.lowerBound), range.upperBound)
+    }
+
+    /// Each setter holds its number inside what the panel offers; a value that
+    /// is not a number at all falls back to that number's default.
+    public mutating func setSpotlightDim(_ value: CGFloat) {
+        spotlightDim = Self.held(value, in: Self.spotlightDimRange, otherwise: Self.defaultSpotlightDim)
+    }
+
+    public mutating func setSpotlightBlur(_ value: CGFloat) {
+        spotlightBlur = Self.held(value, in: Self.spotlightBlurRange, otherwise: Self.defaultSpotlightBlur)
+    }
+
+    public mutating func setSpotlightFeather(_ value: CGFloat) {
+        spotlightFeather = Self.held(value, in: Self.spotlightFeatherRange,
+                                     otherwise: Self.defaultSpotlightFeather)
+    }
+
+    /// The Dim readout: a percentage.
+    public static func dimLabel(_ value: CGFloat) -> String {
+        "\(Int(((value.isFinite ? value : 0) * 100).rounded()))%"
+    }
+
+    /// The Blur and Feather readouts: points.
+    public static func lengthLabel(_ value: CGFloat) -> String {
+        "\(Int((value.isFinite ? value : 0).rounded())) pt"
     }
 
     /// The number the adjustment in force is using. Reading and writing this
@@ -164,7 +284,7 @@ public struct LensContent: Hashable, Codable, Sendable {
         case .blur: blurRadius
         case .pixelate: blockSize
         case .greyscale: greyscaleAmount
-        case .invert: 0
+        case .invert, .spotlight: 0
         case .brightness: brightness
         }
     }
@@ -181,7 +301,7 @@ public struct LensContent: Hashable, Codable, Sendable {
         case .blur: blurRadius = clamped
         case .pixelate: blockSize = clamped
         case .greyscale: greyscaleAmount = clamped
-        case .invert: break
+        case .invert, .spotlight: break
         case .brightness: brightness = clamped
         }
     }
@@ -198,7 +318,10 @@ public struct LensContent: Hashable, Codable, Sendable {
         switch adjustment {
         case .blur: (blurRadius * 3).rounded(.up)
         case .pixelate: blockSize.rounded(.up)
-        case .greyscale, .invert, .brightness: 0
+        // A spotlight's picture is everything OUTSIDE its box, so how far past
+        // the box it reads is the whole canvas (`backdropSource`). This number
+        // is for the inside-the-box kinds.
+        case .greyscale, .invert, .brightness, .spotlight: 0
         }
     }
 
@@ -211,6 +334,7 @@ public struct LensContent: Hashable, Codable, Sendable {
         case .greyscale: greyscaleAmount <= 0
         case .invert: false
         case .brightness: brightness == 0
+        case .spotlight: spotlightDim <= 0 && spotlightBlur <= 0
         }
     }
 
@@ -225,6 +349,8 @@ public struct LensContent: Hashable, Codable, Sendable {
         // sharpen the very thing somebody hid.
         out.blurRadius = blurRadius * scale
         out.blockSize = blockSize * scale
+        out.spotlightBlur = spotlightBlur * scale
+        out.spotlightFeather = spotlightFeather * scale
         return out
     }
 }
@@ -287,6 +413,10 @@ extension Layer {
         switch content {
         case .zoomCallout(let callout):
             return callout.sourceRect.standardized
+        case .lens(let lens) where lens.adjustment.actsOutside:
+            // Everything outside its area is its picture, so everything is
+            // what it reads.
+            return .infinite
         case .lens(let lens):
             let reach = lens.sampleReach
             // A TURNED lens shows the picture underneath the right way up, so
@@ -371,6 +501,9 @@ public enum LensKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// above it were there first: an order somebody has learned does not get
     /// reshuffled to make room.
     case magnify
+    /// Dims and blurs everything but the area drawn. After Magnify, which was
+    /// there first.
+    case spotlight
 
     public init(_ adjustment: LensAdjustment) {
         self = LensKind(rawValue: adjustment.rawValue) ?? .blur

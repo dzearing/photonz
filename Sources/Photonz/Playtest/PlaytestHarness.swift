@@ -8242,6 +8242,29 @@ private final class Run {
                 editor.lensToolKind = .magnify
             case .lensMagnify:
                 editor.setLensKind(.magnify)
+            case .armLensSpotlight:
+                editor.lensToolKind = .spotlight
+            case .lensSpotlight:
+                editor.setLensKind(.spotlight)
+            case .spotlightDimOnly, .spotlightBlurOnly, .spotlightBoth, .spotlightFeather:
+                // A pull, the way a finger pulls: four live previews, then one
+                // committed undo step on release.
+                if let from = editor.selectedSpotlight {
+                    let dim: CGFloat = action == .spotlightBlurOnly ? 0 : 0.5
+                    let blur: CGFloat = action == .spotlightDimOnly ? 0 : 8
+                    let feather: CGFloat = action == .spotlightFeather ? 40 : from.spotlightFeather
+                    for step in 1...4 {
+                        let t = CGFloat(step) / 4
+                        editor.previewSpotlight {
+                            $0.setSpotlightDim(from.spotlightDim + (dim - from.spotlightDim) * t)
+                            $0.setSpotlightBlur(from.spotlightBlur + (blur - from.spotlightBlur) * t)
+                            $0.setSpotlightFeather(from.spotlightFeather + (feather - from.spotlightFeather) * t)
+                        }
+                    }
+                    editor.commitSpotlight()
+                }
+            case .spotlightEllipse:
+                editor.changeSpotlight { $0.spotlightShape = .ellipse }
             case .lensBlur:
                 editor.setLensAdjustment(.blur)
             case .lensPixelate:

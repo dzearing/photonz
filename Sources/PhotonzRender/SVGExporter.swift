@@ -124,7 +124,10 @@ public enum SVGExporter {
         // Turned in space, it reaches wherever the camera puts its corners,
         // which a card brought near can take well past its own box.
         if let quad = document.drawnQuad(of: layer.id) { reach = Space3D.bounds(of: quad) }
-        let box = reach.insetBy(dx: -layer.reachPadding, dy: -layer.reachPadding)
+        // A spotlight's picture is the whole canvas outside its box.
+        let box = (layer.lens?.adjustment.actsOutside == true
+                   ? canvas
+                   : reach.insetBy(dx: -layer.reachPadding, dy: -layer.reachPadding))
             .integral.intersection(canvas)
         guard !box.isNull, box.width >= 1, box.height >= 1 else { return nil }
 

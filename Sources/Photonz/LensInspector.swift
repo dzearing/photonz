@@ -63,6 +63,12 @@ struct LensInspector: View {
             // number. Same two rows a callout has always had.
             if kind.magnifies {
                 MagnifierSettingsRows(layer: layer)
+            } else if kind == .spotlight {
+                SpotlightSettingsRows(
+                    content: editorState.selectedSpotlight ?? lens,
+                    pull: { change in editorState.previewSpotlight(change) },
+                    release: { editorState.commitSpotlight() },
+                    pick: { change in editorState.changeSpotlight(change) })
             } else if let title = lens.adjustment.settingTitle {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
@@ -99,10 +105,81 @@ struct LensInspector: View {
             return "How big one block is. Bigger blocks give less away."
         case .greyscale:
             return "How much of the colour is drained out. All the way is black and white."
-        case .invert:
+        case .invert, .spotlight:
             return ""
         case .brightness:
             return "Lifts the picture underneath towards white, or pushes it towards black."
+        }
+    }
+}
+
+/// A spotlight's own four settings: how much darker and how much softer
+/// everything outside its area goes, how soft the edge between is, and the
+/// area's outline. The same rows for a picked spotlight and for the tool in
+/// your hand; what a pull and a pick DO is handed in.
+///
+/// The area's corner rounding is not here: it is the layer's corner radius,
+/// in Appearance with every other layer's.
+struct SpotlightSettingsRows: View {
+    let content: LensContent
+    /// A slider moving: live, and for a picked spotlight kept out of history.
+    let pull: ((inout LensContent) -> Void) -> Void
+    /// A slider let go: the pull becomes one undo step.
+    let release: () -> Void
+    /// A one-off pick (the Shape row): one undo step on its own.
+    let pick: ((inout LensContent) -> Void) -> Void
+
+    static let dimHelp = "How much darker everything outside the area goes. Nought leaves it as bright as it was."
+    static let blurHelp = "How much softer everything outside the area goes. Nought leaves it sharp."
+    static let featherHelp = "How soft the edge round the area is. Nought is a hard edge."
+    static let shapeHelp = "The outline of the area left as it is. Round a rectangle's corners in Appearance."
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            slider("Dim", value: content.spotlightDim, range: LensContent.spotlightDimRange,
+                   readout: LensContent.dimLabel(content.spotlightDim), help: Self.dimHelp) { v in
+                pull { $0.setSpotlightDim(v) }
+            }
+            slider("Blur", value: content.spotlightBlur, range: LensContent.spotlightBlurRange,
+                   readout: LensContent.lengthLabel(content.spotlightBlur), help: Self.blurHelp) { v in
+                pull { $0.setSpotlightBlur(v) }
+            }
+            slider("Feather", value: content.spotlightFeather, range: LensContent.spotlightFeatherRange,
+                   readout: LensContent.lengthLabel(content.spotlightFeather), help: Self.featherHelp) { v in
+                pull { $0.setSpotlightFeather(v) }
+            }
+            HStack(spacing: 8) {
+                Text("Shape").font(.caption).foregroundStyle(.secondary)
+                Spacer(minLength: 8)
+                SegmentedControl("Shape", selection: content.spotlightShape,
+                                 options: SpotlightShape.allCases.map { .init($0, $0.title) },
+                                 form: .natural) { shape in pick { $0.spotlightShape = shape } }
+                    .controlSize(.small)
+                    .fixedSize()
+                    .panelHelp(Self.shapeHelp)
+            }
+            .playtestField("Shape")
+        }
+    }
+
+    private func slider(_ title: String, value: CGFloat, range: ClosedRange<CGFloat>,
+                        readout: String, help: String,
+                        set: @escaping (CGFloat) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(title).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text(readout)
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            Slider(value: Binding(get: { Double(value) }, set: { set(CGFloat($0)) }),
+                   in: Double(range.lowerBound)...Double(range.upperBound)) { editing in
+                if !editing { release() }
+            }
+            .controlSize(.small)
+            .panelHelp(help)
+            .playtestControl(title, detail: readout)
         }
     }
 }
@@ -133,6 +210,14 @@ struct LensToolInspector: View {
             .playtestField("Does")
             if editorState.lensToolKind.magnifies {
                 MagnifierToolSettingsRows()
+            } else if editorState.lensToolKind == .spotlight {
+                // The tool's own memory: no history, nothing on the canvas
+                // yet, so a pull and a pick both just write it.
+                SpotlightSettingsRows(
+                    content: editorState.lensToolContent,
+                    pull: { change in editorState.changeLensToolSpotlight(change) },
+                    release: {},
+                    pick: { change in editorState.changeLensToolSpotlight(change) })
             } else if let title = editorState.lensToolAdjustment.settingTitle {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
@@ -153,7 +238,7 @@ struct LensToolInspector: View {
             // document still holds the original, is on the Does picker's tip.
             // Magnify hides nothing, so it is not told this: a reassurance
             // about the wrong thing is one more sentence to read past.
-            if !editorState.lensToolKind.magnifies {
+            if !editorState.lensToolKind.magnifies, editorState.lensToolKind != .spotlight {
                 Text(LensCopy.safetyCaption)
                     .font(.caption2)
                     .foregroundStyle(.secondary)

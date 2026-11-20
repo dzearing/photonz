@@ -285,6 +285,8 @@ struct AgentReachTests {
         LayersPanelHeaderControls.swift › item: Button() | command: stack_selection, group, mirror_across_center, center_on_artboard, union, outline_stroke, make_component
         LensInspector.swift › body: Slider(value: Binding( get: { Double(amount) }, set: { ) | notYet: a lens's kind and amount
         LensInspector.swift › body: Slider(value: Binding(get: { Double(editorState.lensToo) | leftOut: toolInHand
+        LensInspector.swift › slider: Slider(value: Binding(get: { Double(value) }, set: { se) | notYet: a spotlight's dim, blur and feather, with a lens's kind and amount
+        LensInspector.swift › Shape | notYet: a spotlight's shape, with a lens's kind and amount
         LibraryCatalogTiles.swift › \\(count) | command: apply_transition_to_every_cut
         LibraryCatalogTiles.swift › Insert at Playhead | notYet: putting a Library background on the timeline
         LibraryColorDrop.swift › Save | add_style.name
@@ -497,7 +499,13 @@ struct AgentReachTests {
 
     /// How many panel controls are not reached yet. Lower it as they get a way
     /// in; never raise it to make room for a new control.
-    static let panelNotYetPin = 213
+    ///
+    /// Raised once, 213 to 215, on 2026-11-20 for the spotlight's rows (Dim,
+    /// Blur and Feather share one slider; Shape): an agent cannot make a lens
+    /// of any kind yet, so a field to retune one would only spend Ask's first
+    /// request, which had 14 tokens left (`AskDocumentFitTests`). They come in
+    /// with a lens's kind and amount.
+    static let panelNotYetPin = 215
 
     // MARK: Right-click menus
 

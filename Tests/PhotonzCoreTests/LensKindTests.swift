@@ -17,7 +17,7 @@ struct LensKindTests {
     /// reshuffled to make room.
     @Test func theToolOffersTheFiveAdjustmentsAndMagnify() {
         #expect(LensKind.allCases == [.blur, .pixelate, .greyscale, .invert,
-                                      .brightness, .magnify])
+                                      .brightness, .magnify, .spotlight])
     }
 
     @Test func everyKindSaysItsName() {

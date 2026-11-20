@@ -24,7 +24,9 @@ struct LensTests {
     /// Four of the five carry a number you can pull; Invert is the one that
     /// has nothing to set, and the panel must be able to ask rather than know.
     @Test func onlyInvertHasNoSetting() {
-        for adjustment in LensAdjustment.allCases where adjustment != .invert {
+        // Spotlight has four numbers of its own rather than one
+        // (`SpotlightTests`).
+        for adjustment in LensAdjustment.allCases where adjustment != .invert && adjustment != .spotlight {
             #expect(adjustment.settingTitle != nil)
             #expect(adjustment.range.lowerBound < adjustment.range.upperBound)
         }
