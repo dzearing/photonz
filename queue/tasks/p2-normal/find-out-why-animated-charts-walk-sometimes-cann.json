@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 57.5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-20T05:21:16.199Z",
-  "updated": "2026-11-20T07:34:31.843Z",
+  "updated": "2026-11-20T07:34:46.677Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-20 while checking other expectInView walks for find-out-why-a-newly-added-eq-sometimes-sits-abo. Scripts/playtest.sh Scripts/playtest/animated-charts-walk.json --no-build: first run exit 1 with step 9 (press): no control called \"Catalog\" is in the panel; the ones that are: Blade (the tool bar), Sections, Volume (Transport) ... (no Library controls listed at all). Second run of the same command exit 0. Step 7 is action showLibrary, step 8 wait 0.8 (a wait returns early once the app is quiet), step 9 press Catalog. Likely the same shape as the EQ flake: a fixed wait that returns early. A waitFor on the Library being drawn would be the walk-side fix if the panel itself is fine.",
@@ -41,10 +41,15 @@
     {
       "t": "2026-11-20T07:34:31.842Z",
       "note": "Acceptance: animated-charts-walk before the fix, step 9 failed 9 of 24 runs; after both fixes 23 of 23 passed (13 with the panel fix, then 10 of 10 with both). Siblings green: view-to-edit-on-a-long-recording, view-mode-and-edit-mode, color-grade-warms-a-clip, every-section-header-opens, library-reveal, captions-on-demand, command-r-opens-the-speed, clip-click-cost, a-click-on-a-clip-piece-picks-it. Scripts/test.sh exit 0. section-fold-motion-walk fails step 14 identically on unchanged code (owned by folding-a-section-that-lets-the-panel-fit-again). No renderer or composite path change."
+    },
+    {
+      "t": "2026-11-20T07:34:46.675Z",
+      "note": "This was an app bug, not a slow Library. About one recording in six opened straight into Edit with a blank panel that stayed blank until a pick (also seen with the window shown, as a person has it). Fixed in EditorState/EditorView/InspectorPanel: Edit's arrival and the panel's fill each ask for their next step themselves when SwiftUI drops the onChange. animated-charts-walk step 9 failed 9 of 24 runs before, passes 10 of 10 after. Short walk blank 0 of 95 (was 16 of 70). Scripts/test.sh green. Commit 'A recording opened straight into Edit always fills its panel'."
     }
   ],
   "walks": [
     "animated-charts-walk"
   ],
-  "started": "2026-11-20T05:22:10.815Z"
+  "started": "2026-11-20T05:22:10.815Z",
+  "completed": "2026-11-20T07:34:46.676Z"
 }
