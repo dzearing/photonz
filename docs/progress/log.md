@@ -23338,3 +23338,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Causes found with a per-look dump and a pass log (both removed): the read at rest stopped at its window so the first move decoded from a key frame (173 ms); and the small frames' budget evicted the follower's frames as they landed while clips coming up held their own.
 - Fixes: the read at rest becomes the follower (`MovieSweep.restingPass`), a clip coming up is read a little and waits for the hand (`comingPausesAfter`), clips coming up give way in the budget (`MovieFrameQueue.farthest(aside:)`), the follower stays 800 ms ahead (`followLeadMS`), long-waiting passes give their place in the read limit. Rule written into docs/design/video.md 8e.
 - Next: edits while playing (12-55 ms vs 16), the hunt's first tenth of a second, the medium drag.
+
+## 2026-11-20: a cross fade plays the way it exports (part 1 of 2)
+
+- New walk step `expectTransitionPlaysAsExported`: keeps every picture the canvas is handed while a transition plays and holds it against the export's picture of the same moment (streamed, as an MP4 is written), plus a staleness check on the frames each picture was drawn from. Walk: `a-cross-fade-plays-as-exported-walk` (fixture, jump-cut dissolve and two-clip dissolve, 1x / first frame / 0.5x / 2x).
+- Reproduced on the user's own HEVC screen recordings (key frames ~2.2s apart): playing right after a scrub drew frames up to 34 behind on both sides of a dissolve.
+- Fixed: a frame a transition borrows from past a clip's stretch is stood in for by the nearest borrowed frame (`MovieFramesInHand.frameIndexToShow`), not one from back inside the clip; a play pass fallen behind is kept when a restart would decode from the same key frame (`MoviePlayPass.serves`, `MovieKeyFrames.latest(atOrBefore:)`), and frames the playhead has passed are not converted.
+- Open: Space right after a scrub landing ~1s past a key frame still holds a slightly old frame for ~0.6s (first decode measured 614ms); play start cancels the resting read already decoding there. Next: play waits for its first frame or adopts the resting read.

@@ -66,10 +66,17 @@ public struct MovieFramesInHand: Equatable, Sendable {
     /// whenever one is in hand there. One from past the clip's last frame or
     /// before its first is a picture the edit never shows, often another
     /// scene of the recording left in hand by another clip of it (2026-11-17).
+    ///
+    /// A frame asked for outside `within` is one a transition borrows: the
+    /// shot going out carried on past its last frame, the one coming in
+    /// started before its first. Its stand-in is simply the nearest, which is
+    /// the borrowed frame just shown; one from back inside the clip jumped a
+    /// playing dissolve back and forth whenever a borrowed frame was late
+    /// (2026-11-20).
     public func frameIndexToShow(_ wanted: Int, of movie: UUID, within: ClosedRange<Int>? = nil) -> Int? {
         guard let held = frames[movie], !held.isEmpty else { return nil }
         if held.contains(wanted) { return wanted }
-        if let within {
+        if let within, within.contains(wanted) {
             let inside = held.filter { within.contains($0) }
             if !inside.isEmpty { return standIn(for: wanted, among: inside) }
         }

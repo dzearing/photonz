@@ -84,12 +84,25 @@ public enum MoviePlayPass {
     /// (`startLead`), so it serves a playhead that has not reached it yet
     /// by that much. At a speed that keeps only some frames, what the window
     /// has to hold is the kept frame the playhead shows, not its own.
+    ///
+    /// Fallen behind, it still serves when starting over would decode from the
+    /// same key frame it is already decoding from (`keyFrames`, when they are
+    /// known): a pass opened at the playhead would only start that decoding
+    /// again, further behind than this one. On a screen recording, key frames
+    /// two seconds apart, a pass opened after a scrub was started over every
+    /// four frames and never handed over one, and the shot going out of a
+    /// dissolve stood still for the whole of it (2026-11-20).
     public static func serves(running: ClosedRange<Int>, reached: Int, playhead: Int,
-                              inHand: (Int) -> Bool, speed: Double = 1) -> Bool {
+                              inHand: (Int) -> Bool, speed: Double = 1,
+                              keyFrames: MovieKeyFrames? = nil) -> Bool {
         guard running.contains(playhead)
             || (playhead < running.lowerBound && playhead >= running.lowerBound - startLead(speed: speed))
         else { return false }
-        if reached < playhead - fallenBehind(speed: speed) { return false }
+        if reached < playhead - fallenBehind(speed: speed),
+           !startingOverSavesNothing(reached: reached, opening: playhead + startLead(speed: speed),
+                                     keyFrames: keyFrames) {
+            return false
+        }
         let stride = MoviePlayBackward.stride(speed: speed)
         let shown = playhead - playhead % stride
         // The last few frames a pass read may still be on their way to the
@@ -99,6 +112,24 @@ public enum MoviePlayPass {
         let inFlight = fallenBehindFrames * stride
         if shown < reached - inFlight, shown >= running.lowerBound, !inHand(shown) { return false }
         return true
+    }
+
+    /// Whether a frame a pass aimed at `aimedAt` decodes is worth turning
+    /// into a picture: not one the playhead has left more than
+    /// `fallenBehindFrames` behind. Every frame is still decoded (a file is
+    /// read forwards from a key frame); converting is most of the cost, and a
+    /// pass kept while it catches up (`serves`) gets there sooner without it.
+    public static func worthTurningIntoAPicture(frame: Int, aimedAt: Int) -> Bool {
+        frame >= aimedAt - fallenBehindFrames
+    }
+
+    /// Whether a pass opened on `opening` would decode from a key frame no
+    /// later than where a pass that has got to `reached` is: no key frame
+    /// lies between them. False when the key frames are not known.
+    public static func startingOverSavesNothing(reached: Int, opening: Int, keyFrames: MovieKeyFrames?) -> Bool {
+        guard let keyFrames, !keyFrames.frames.isEmpty,
+              let from = keyFrames.latest(atOrBefore: opening) else { return false }
+        return from <= reached
     }
 
     /// Whether the frame `frame` is the running pass's to read, so nothing
@@ -246,15 +277,19 @@ public enum MoviePlayPass {
     /// opens: one for each frame under the playhead (two while a dissolve
     /// runs between parts of it), then one for each stretch `coming`, unless a
     /// pass kept already reaches it, up to `passesPerRecording`.
+    ///
+    /// `keyFrames` are the recording's, when known: a pass fallen behind with
+    /// no key frame between it and the playhead is kept (`serves`).
     public static func plan(now: [Int], coming: [Int], passes: [Running],
-                            inHand: (Int) -> Bool, speed: Double = 1) -> Plan {
+                            inHand: (Int) -> Bool, speed: Double = 1,
+                            keyFrames: MovieKeyFrames? = nil) -> Plan {
         var plan = Plan()
         let stride = MoviePlayBackward.stride(speed: speed)
         for frame in unique(now) {
             let serving = passes.indices.filter {
                 plan.aim[$0] == nil
                     && serves(running: passes[$0].running, reached: passes[$0].reached,
-                              playhead: frame, inHand: inHand, speed: speed)
+                              playhead: frame, inHand: inHand, speed: speed, keyFrames: keyFrames)
             }
             let aim = Aim(playhead: frame, reach: reach(speed: speed))
             if let best = serving.min(by: { abs(passes[$0].reached - frame) < abs(passes[$1].reached - frame) }) {

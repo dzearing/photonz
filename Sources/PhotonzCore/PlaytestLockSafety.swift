@@ -306,6 +306,11 @@ public enum PlaytestLockSafety {
         // run of scrub-never-blacks-out-walk is its watch; if it refuses
         // there, take it out.
         "expectScrubSmooth",
+        // Added 2026-11-20 by reading, NOT yet watched under a lock: it
+        // plays and scrubs through the editor's own calls and reads the
+        // pictures the canvas is handed, never a name.
+        // a-cross-fade-plays-as-exported-walk is its watch.
+        "expectTransitionPlaysAsExported",
         // Added 2026-09-28 by reading, NOT yet watched under a lock: it plays
         // through the editor's own calls and reads the picture and the drawn
         // document the editor holds, finding its layer by the layer's own name

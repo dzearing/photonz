@@ -800,6 +800,15 @@ final class MovieFrameFetcher {
         }
     }
     private var playPasses: [UUID: [PlayPass]] = [:]
+    #if PHOTONZ_PLAYTEST
+    /// Probe only: each recording's passes as "frames reached>aim+reach".
+    var playtestPasses: [UUID: [String]] {
+        playPasses.mapValues { passes in
+            passes.map { "\($0.frames.lowerBound)-\($0.frames.upperBound) at \($0.mark.reached)"
+                + " aimed \($0.mark.aim.playhead)+\($0.mark.aim.reach)" }
+        }
+    }
+    #endif
     /// Every how many frames the passes in `playPasses` keep
     /// (`MoviePlayBackward.stride`). A pass keeps what it was opened to keep,
     /// so a change of speed that changes this starts them all over: a pass
@@ -1347,9 +1356,12 @@ final class MovieFrameFetcher {
             pass.task.cancel()
             return false
         }
+        // Where it starts decoding from decides whether a pass fallen behind
+        // is worth starting over (`MoviePlayPass.serves`).
+        learnKeyFrames(of: movie, at: url)
         let plan = MoviePlayPass.plan(now: now, coming: next, passes: passes.map(\.running),
                                       inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) },
-                                      speed: speed)
+                                      speed: speed, keyFrames: keyFrames[movie.id])
         var kept: [PlayPass] = []
         for (index, pass) in passes.enumerated() {
             if let aim = plan.aim[index] {
@@ -1389,12 +1401,13 @@ final class MovieFrameFetcher {
         // a change of speed opens passes afresh only where the playhead
         // leaves this one behind, and the frames it skips are then read on
         // their own (`MoviePlayPass.keeps`).
+        // ...and a frame the playhead has already left behind is decoded on
+        // the way but never converted, so a pass kept while it catches up
+        // gets there sooner (`MoviePlayPass.worthTurningIntoAPicture`).
         let thins = MoviePlayBackward.stride(speed: speed) > 1
-        let keeps: (@Sendable (Int) -> Bool)?
-        if thins {
-            keeps = { frame in MoviePlayPass.keeps(frame: frame, speed: speed) }
-        } else {
-            keeps = nil
+        let keeps: @Sendable (Int) -> Bool = { frame in
+            MoviePlayPass.worthTurningIntoAPicture(frame: frame, aimedAt: mark.aim.playhead)
+                && (!thins || MoviePlayPass.keeps(frame: frame, speed: speed))
         }
         let skips = MoviePlayPass.skipsUnreferenced(speed: speed)
         let task = Task.detached(priority: .userInitiated) {

@@ -4180,6 +4180,29 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("An expectTransitionPlaysAsExported step reads its transition, lead, speed and scrub")
+    func expectTransitionPlaysAsExportedParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectTransitionPlaysAsExported", "name": "x" },
+                     { "do": "expectTransitionPlaysAsExported", "name": "y", "transition": 2, "lead": 0,
+                       "rate": 0.5, "scrub": true, "tolerance": 6 } ] }
+        """)
+        guard case .expectTransitionPlaysAsExported(let name, let transition, let lead, let rate, let scrub,
+                                                    let tolerance) = script.steps[0],
+              case .expectTransitionPlaysAsExported(_, let second, let none, let half, let scrubbed,
+                                                    let six) = script.steps[1] else {
+            Issue.record("expectTransitionPlaysAsExported"); return
+        }
+        #expect(name == "x" && transition == 1 && lead == 0.5 && rate == 1 && !scrub && tolerance == 8)
+        #expect(second == 2 && none == 0 && half == 0.5 && scrubbed && six == 6)
+        #expect(PlaytestStep.names.contains("expectTransitionPlaysAsExported"))
+        for bad in [#""transition": 0"#, #""lead": 9"#, #""rate": -1"#, #""tolerance": 0"#] {
+            #expect(throws: (any Error).self) {
+                try decode(#"{ "steps": [ { "do": "expectTransitionPlaysAsExported", "name": "x", "# + bad + " } ] }")
+            }
+        }
+    }
+
     @Test("An expectPlaybackNeverBlank step defaults to three seconds and twenty moments")
     func expectPlaybackNeverBlankDefaults() throws {
         let script = try decode("""

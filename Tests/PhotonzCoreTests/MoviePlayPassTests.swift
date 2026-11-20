@@ -52,6 +52,79 @@ struct MoviePlayPassTests {
         #expect(!serves)
     }
 
+    // A pass is started over behind a playhead to save decoding: one opened
+    // where the playhead is decodes from the key frame before it. When that is
+    // the very key frame the pass behind is already decoding from, starting
+    // over saves nothing and throws away what it has decoded. On a Mac screen
+    // recording, key frames about two seconds apart, a pass opened after a
+    // scrub was started over every four frames, never handed over a frame,
+    // and the shot going out of a dissolve stood still on a frame a second
+    // old for the whole dissolve (`a-cross-fade-plays-smoothly-in-the-
+    // editor-the-wa`, 2026-11-20: passes 176, 181, 186, 191, none read).
+
+    /// Key frames about every 2.2 seconds, as in a Mac screen recording.
+    private var screenRecordingKeys: MovieKeyFrames {
+        MovieKeyFrames(sourceMS: [0, 2625, 4850, 7033])
+    }
+
+    @Test("A pass behind the playhead with no key frame between them goes on")
+    func behindInTheSameStretchGoesOn() {
+        // Key frames at grid frames 0, 79, 146, 213. A pass opened at 176
+        // that has read nothing yet, the playhead at 186.
+        #expect(MoviePlayPass.serves(running: 176...279, reached: 176, playhead: 186,
+                                     inHand: { _ in false }, keyFrames: screenRecordingKeys))
+        // ...and one further on that has fallen behind, the same.
+        #expect(MoviePlayPass.serves(running: 150...279, reached: 170, playhead: 200,
+                                     inHand: { _ in false }, keyFrames: screenRecordingKeys))
+    }
+
+    @Test("A pass behind a key frame the playhead has passed is started again there")
+    func behindAKeyFrameStartsAgain() {
+        // The playhead at 215 is past the key frame at 213: a pass opened
+        // there decodes from 213, not from 146.
+        #expect(!MoviePlayPass.serves(running: 176...279, reached: 176, playhead: 215,
+                                      inHand: { _ in false }, keyFrames: screenRecordingKeys))
+    }
+
+    @Test("A pass behind with key frames not known yet is started again, as before")
+    func behindWithoutKeyFrames() {
+        #expect(!MoviePlayPass.serves(running: 176...279, reached: 176, playhead: 186,
+                                      inHand: { _ in false }, keyFrames: nil))
+        #expect(!MoviePlayPass.serves(running: 176...279, reached: 176, playhead: 186,
+                                      inHand: { _ in false }, keyFrames: MovieKeyFrames(sourceMS: [])))
+    }
+
+    @Test("A playing playhead keeps the pass decoding toward it rather than opening one beside it")
+    func planKeepsThePassInTheSameStretch() {
+        let behind = MoviePlayPass.Running(running: 176...279, reached: 176, playhead: 180, reach: 8)
+        let plan = MoviePlayPass.plan(now: [186], coming: [], passes: [behind],
+                                      inHand: { _ in false }, keyFrames: screenRecordingKeys)
+        #expect(plan.open.isEmpty)
+        #expect(plan.aim[0]?.playhead == 186)
+        // Without key frames it is opened again at the playhead, as before.
+        let blind = MoviePlayPass.plan(now: [186], coming: [], passes: [behind], inHand: { _ in false })
+        #expect(blind.open.map(\.playhead) == [186])
+    }
+
+    @Test("A pass catching up turns only frames near or ahead of the playhead into pictures")
+    func catchingUpSkipsFramesGoneBy() {
+        #expect(MoviePlayPass.worthTurningIntoAPicture(frame: 186, aimedAt: 186))
+        #expect(MoviePlayPass.worthTurningIntoAPicture(frame: 200, aimedAt: 186))
+        #expect(MoviePlayPass.worthTurningIntoAPicture(frame: 186 - MoviePlayPass.fallenBehindFrames, aimedAt: 186))
+        #expect(!MoviePlayPass.worthTurningIntoAPicture(frame: 185 - MoviePlayPass.fallenBehindFrames, aimedAt: 186))
+    }
+
+    @Test("The latest key frame at or before a frame")
+    func keyFrameAtOrBefore() {
+        let keys = screenRecordingKeys
+        #expect(keys.frames == [0, 79, 146, 213])
+        #expect(keys.latest(atOrBefore: 186) == 146)
+        #expect(keys.latest(atOrBefore: 146) == 146)
+        #expect(keys.latest(atOrBefore: 145) == 79)
+        #expect(keys.latest(atOrBefore: 500) == 213)
+        #expect(MovieKeyFrames(sourceMS: [100]).latest(atOrBefore: 1) == nil)
+    }
+
     @Test("A playhead that went back before the pass starts it again")
     func wentBack() {
         #expect(!MoviePlayPass.serves(running: 20...last, reached: 25, playhead: 12, inHand: { _ in true }))

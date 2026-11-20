@@ -117,6 +117,29 @@ struct FramesInHandTests {
         #expect(inHand.frameIndexToShow(58, of: movie.id, within: 40...60) == 45)
     }
 
+    /// A transition between two clips shows frames of each from past its own
+    /// stretch: the shot going out carries on past its last frame, the one
+    /// coming in starts before its first. A late one of those was stood in
+    /// for by a frame from back inside the clip, a frame or a second away,
+    /// and the next one to land jumped forward again: a dissolve that
+    /// flickered while it played and was clean in the export, which waits
+    /// for every frame (`a-cross-fade-plays-smoothly-in-the-editor-the-wa`,
+    /// 2026-11-20).
+    @Test("A frame a transition borrows from past the clip is stood in for by the nearest borrowed one")
+    func borrowedFrameStandsInFromTheBorrowedStretch() {
+        let movie = Self.movie()
+        var inHand = MovieFramesInHand()
+        // The clip plays frames 40 to 60; the transition carries it on past 60.
+        for index in [45, 55, 58, 59, 60, 61, 62, 63] { inHand.insert(movie: movie.id, frameIndex: index) }
+        #expect(inHand.frameIndexToShow(64, of: movie.id, within: 40...60) == 63)
+        // ...and the shot coming in starts before its first frame, 40.
+        var incoming = MovieFramesInHand()
+        for index in [34, 35, 36, 41, 45] { incoming.insert(movie: movie.id, frameIndex: index) }
+        #expect(incoming.frameIndexToShow(37, of: movie.id, within: 40...60) == 36)
+        // A frame inside the stretch still keeps to it.
+        #expect(inHand.frameIndexToShow(57, of: movie.id, within: 40...60) == 55)
+    }
+
     @Test("A clip trimmed to part of a recording draws a stand-in from that part")
     func drawnStandInInsideTheClip() throws {
         let movie = Self.movie()

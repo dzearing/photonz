@@ -54,6 +54,17 @@ public struct MovieKeyFrames: Equatable, Sendable {
         return (frames[best], sourceMS[best])
     }
 
+    /// The last key frame at or before `frame`: where a pass opened on
+    /// `frame` starts decoding. Nil before the first one.
+    public func latest(atOrBefore frame: Int) -> Int? {
+        var low = 0, high = frames.count
+        while low < high {
+            let mid = (low + high) / 2
+            if frames[mid] <= frame { low = mid + 1 } else { high = mid }
+        }
+        return low > 0 ? frames[low - 1] : nil
+    }
+
     /// The key frame nearest `frame`, either side; a tie goes to the one
     /// behind. Nil for a recording with none.
     public func nearest(to frame: Int) -> (frame: Int, sourceMS: Int)? {

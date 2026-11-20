@@ -4199,6 +4199,12 @@ private final class Run {
             note(number, step.name, try await checkScrubSmooth(name: name, moves: moves),
                  state: describe())
 
+        case .expectTransitionPlaysAsExported(let name, let transition, let lead, let rate, let scrub, let tolerance):
+            note(number, step.name,
+                 try await checkTransitionPlaysAsExported(name: name, transition: transition, lead: lead,
+                                                          rate: rate, scrub: scrub, tolerance: tolerance),
+                 state: describe())
+
         case .filmThumb(let film):
             note(number, step.name, try await filmThumb(film, number: number), state: describe())
         case .filmHover(let film):
@@ -12417,6 +12423,304 @@ private final class Run {
             + "the clip on screen was drawn in every one (\(seen.sorted().joined(separator: ", "))); "
             + lateness + gapNote
     }
+
+    /// One picture the canvas was handed while a transition played, and the
+    /// export's picture of the same moment (`expectTransitionPlaysAsExported`).
+    private struct TransitionLook {
+        let moment: Int
+        let shown: CGImage
+        let drawn: PhotonzDocument
+        let present: Set<UUID>
+        /// For each frame the moment shows, the frames of its recording in
+        /// hand near it as the picture landed.
+        let near: [String]
+        var export: CGImage?
+        var difference = 0.0
+        var shownLight = 0.0
+        var exportLight = 0.0
+    }
+
+    /// The stretches of the document where a transition draws a second
+    /// picture: a moment whose frames include one for a layer the document
+    /// does not hold (the incoming shot, `MovieFrameRequest.layerID`).
+    private static func transitionSpans(in document: PhotonzDocument) -> [ClosedRange<Int>] {
+        var spans: [ClosedRange<Int>] = []
+        var start: Int?
+        var last = 0
+        let length = document.documentDurationMS
+        var ms = 0
+        while ms < length {
+            let two = document.movieFrames(atTimeMS: ms).contains { document.layer(id: $0.layerID) == nil }
+            if two, start == nil { start = ms }
+            if two { last = ms }
+            if !two, let begun = start { spans.append(begun...last); start = nil }
+            ms += 4
+        }
+        if let begun = start { spans.append(begun...last) }
+        return spans
+    }
+
+    /// `image` drawn on black at `width`, in sRGB, with its bytes.
+    private static func onBlack(_ image: CGImage, width: Int) -> (image: CGImage, bytes: [UInt8])? {
+        let height = max(1, Int((Double(image.height) * Double(width) / Double(max(1, image.width))).rounded()))
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: &bytes, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: width * 4, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.setFillColor(CGColor(gray: 0, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.interpolationQuality = .medium
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        guard let made = context.makeImage() else { return nil }
+        return (made, bytes)
+    }
+
+    private static func bytes(of image: CGImage) -> [UInt8] {
+        onBlack(image, width: image.width)?.bytes ?? []
+    }
+
+    /// Plays through a transition and holds every picture the canvas is
+    /// handed while it runs up against the export's picture of the same
+    /// moment (`expectTransitionPlaysAsExported`).
+    private func checkTransitionPlaysAsExported(name: String, transition: Int, lead: Double, rate: Double,
+                                                scrub: Bool, tolerance: Double) async throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "there is no recording in this document to play")
+        }
+        let spans = Self.transitionSpans(in: document)
+        guard spans.count >= transition else {
+            throw Failure(description: "the document has \(spans.count) transition(s) drawing two pictures, "
+                + "so there is no transition \(transition) to play through")
+        }
+        let span = spans[transition - 1]
+        let start = max(0, span.lowerBound - Int((lead * 1000).rounded()))
+        let width = 320
+        var looks: [TransitionLook] = []
+        editor.pauseDocument()
+        if scrub {
+            // A hand that takes the playhead from a few seconds back and lets
+            // go just before the transition, then Space.
+            editor.scrubDocument(toMS: max(0, start - 3000))
+            await sleep(0.8)
+            editor.beginPlayheadDrag()
+            let from = editor.documentTimeMS
+            for step in 1...15 {
+                editor.dragPlayhead(toMS: from + (start - from) * step / 15)
+                await sleep(1.0 / 60)
+            }
+            editor.endPlayheadDrag()
+            // ...and presses Space about as soon as a person does after
+            // letting go of the mouse.
+            await sleep(0.4)
+        } else {
+            editor.scrubDocument(toMS: start)
+            await sleep(1.2)
+        }
+        let watched = (span.lowerBound - 100)...(span.upperBound + 100)
+        editor.playtestPictureTap = { image, moment, drawn, present in
+            guard watched.contains(moment), let small = Self.onBlack(image, width: width)?.image else { return }
+            let hand = editor.movieFrames.inHand
+            let near = document.movieFrames(atTimeMS: moment).map { request -> String in
+                let wanted = request.movie.frameIndex(atSourceMS: request.sourceMS)
+                let held = ((wanted - 20)...(wanted + 20)).filter {
+                    hand.contains(movie: request.movie.id, frameIndex: $0)
+                }
+                let passes = editor.movieFrames.playtestPasses[request.movie.id] ?? []
+                return "\(wanted): " + held.map(String.init).joined(separator: ",")
+                    + " [" + passes.joined(separator: "; ") + "]"
+            }
+            looks.append(TransitionLook(moment: moment, shown: small, drawn: drawn, present: present, near: near))
+        }
+        defer { editor.playtestPictureTap = nil; editor.playtestTapPresent = [:] }
+        editor.playDocument(rate: rate)
+        let began = Date()
+        let limit = (Double(span.upperBound - start) / 1000 + 0.4) / rate + 3
+        while editor.isDocumentPlaying, editor.documentTimeMS < span.upperBound + 150,
+              Date().timeIntervalSince(began) < limit {
+            await sleep(0.02)
+        }
+        editor.pauseDocument()
+        editor.playtestPictureTap = nil
+        guard looks.count >= 2 else {
+            throw Failure(description: "the canvas was handed \(looks.count) picture(s) while the transition "
+                + "at \(String(format: "%.2fs", Double(span.lowerBound) / 1000)) played")
+        }
+        // The export's picture of every moment the canvas showed, drawn the
+        // way the file is written.
+        let height = looks[0].shown.height
+        // Read the way an MP4 is written: each clip in one pass, front to
+        // back, so the moments go in order.
+        let frames = DocumentFrames(document: document, store: editor.store,
+                                    movieURLs: MovieLibrary.shared.urls(in: document),
+                                    size: CGSize(width: width, height: height), streaming: true)
+        defer { frames.putTheStoreBack() }
+        var exported: [Int: CGImage] = [:]
+        for moment in Set(looks.map(\.moment)).sorted() {
+            if let made = await frames.frame(atMS: moment), let small = Self.onBlack(made, width: width)?.image {
+                exported[moment] = small
+            }
+        }
+        for index in looks.indices { looks[index].export = exported[looks[index].moment] }
+        func light(_ bytes: [UInt8]) -> Double {
+            var sum = 0.0
+            var index = 0
+            while index + 3 < bytes.count {
+                sum += 0.2126 * Double(bytes[index]) + 0.7152 * Double(bytes[index + 1])
+                    + 0.0722 * Double(bytes[index + 2])
+                index += 4
+            }
+            return sum / Double(max(1, bytes.count / 4))
+        }
+        for index in looks.indices {
+            let shown = Self.bytes(of: looks[index].shown)
+            let export = looks[index].export.map(Self.bytes(of:)) ?? []
+            looks[index].shownLight = light(shown)
+            looks[index].exportLight = light(export)
+            guard shown.count == export.count, !shown.isEmpty else { looks[index].difference = 255; continue }
+            var sum = 0
+            var at = 0
+            while at + 3 < shown.count {
+                sum += abs(Int(shown[at]) - Int(export[at])) + abs(Int(shown[at + 1]) - Int(export[at + 1]))
+                    + abs(Int(shown[at + 2]) - Int(export[at + 2]))
+                at += 4
+            }
+            looks[index].difference = Double(sum) / Double(shown.count / 4 * 3)
+        }
+        // What each picture was drawn from: for every frame the moment shows,
+        // the frame the canvas drew instead, and whether it was there.
+        func cause(_ look: TransitionLook) -> String {
+            var said: [String] = []
+            for request in document.movieFrames(atTimeMS: look.moment) {
+                let who = document.layer(id: request.layerID)?.name
+                    ?? "the second picture"
+                let wanted = request.movie.frameIndex(atSourceMS: request.sourceMS)
+                guard let drawn = look.drawn.allLayers.first(where: { $0.id == request.layerID }) else {
+                    said.append("\(who) not drawn"); continue
+                }
+                guard drawn.isVisible, case .image(let ref) = drawn.content else {
+                    said.append("\(who) hidden"); continue
+                }
+                let shown = request.movie.frameIndex(ofFrameID: ref.id)
+                let there = look.present.contains(ref.id) ? "" : ", MISSING from the store"
+                if shown == wanted {
+                    said.append("\(who) frame \(wanted)\(there)")
+                } else {
+                    said.append("\(who) frame \(shown.map(String.init) ?? "?") for \(wanted)\(there)")
+                }
+            }
+            return said.joined(separator: "; ")
+        }
+        // How far the frame drawn for each side was from the one its moment
+        // shows: a picture can match the export closely and still be a frame
+        // a second old on a recording where little moves.
+        func lag(_ look: TransitionLook) -> Int {
+            document.movieFrames(atTimeMS: look.moment).map { request -> Int in
+                let wanted = request.movie.frameIndex(atSourceMS: request.sourceMS)
+                guard let drawn = look.drawn.allLayers.first(where: { $0.id == request.layerID }),
+                      drawn.isVisible, case .image(let ref) = drawn.content,
+                      look.present.contains(ref.id),
+                      let shown = request.movie.frameIndex(ofFrameID: ref.id) else { return Int.max }
+                return abs(shown - wanted)
+            }.max() ?? 0
+        }
+        // One grid frame off is a frame landing just after its picture was
+        // asked for, 33ms nobody sees; a stale picture is many more.
+        let onTime = max(1, PlaybackKeepsUp.framesOnTime(rate: rate))
+        let late = looks.indices.filter { lag(looks[$0]) > onTime }
+        let behind = late.map { lag(looks[$0]) }.max() ?? 0
+        let stale = PlaybackKeepsUp.problem(lateLooks: late.map { $0 + 1 },
+                                            framesBehind: behind == Int.max ? 999 : behind, looks: looks.count)
+        var wrong: [String] = []
+        for (index, look) in looks.enumerated() where look.difference > tolerance {
+            wrong.append(String(format: "picture %d at %.3fs differs by %.1f (light %.1f, export %.1f): %@",
+                                index + 1, Double(look.moment) / 1000, look.difference,
+                                look.shownLight, look.exportLight, cause(look)))
+        }
+        var jumps: [String] = []
+        for index in looks.indices.dropFirst() {
+            let before = looks[index - 1], now = looks[index]
+            let jump = abs(now.shownLight - before.shownLight)
+            let fade = abs(now.exportLight - before.exportLight)
+            if jump > fade + tolerance {
+                jumps.append(String(format: "pictures %d to %d (%.3fs to %.3fs) jump %.1f in brightness where "
+                                    + "the export moves %.1f", index, index + 1, Double(before.moment) / 1000,
+                                    Double(now.moment) / 1000, jump, fade))
+            }
+        }
+        // Every picture beside the export's, in rows, and a pair per picture
+        // for a reel.
+        let pairWidth = width * 2 + 4
+        let columns = 3
+        let rows = (looks.count + columns - 1) / columns
+        if let space = CGColorSpace(name: CGColorSpace.sRGB),
+           let sheet = CGContext(data: nil, width: columns * (pairWidth + 8), height: rows * (height + 8),
+                                 bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+            sheet.setFillColor(CGColor(gray: 0.15, alpha: 1))
+            sheet.fill(CGRect(x: 0, y: 0, width: sheet.width, height: sheet.height))
+            for (index, look) in looks.enumerated() {
+                let x = (index % columns) * (pairWidth + 8)
+                let y = sheet.height - (index / columns + 1) * (height + 8)
+                sheet.draw(look.shown, in: CGRect(x: x, y: y, width: width, height: height))
+                if let export = look.export {
+                    sheet.draw(export, in: CGRect(x: x + width + 4, y: y, width: width, height: height))
+                }
+                if look.difference > tolerance {
+                    sheet.setStrokeColor(CGColor(red: 1, green: 0.2, blue: 0.2, alpha: 1))
+                    sheet.setLineWidth(3)
+                    sheet.stroke(CGRect(x: x + 1, y: y + 1, width: pairWidth - 2, height: height - 2))
+                }
+            }
+            if let made = sheet.makeImage() { try writePNG(made, name: "\(name)-sheet") }
+            for (index, look) in looks.enumerated() {
+                guard let pair = CGContext(data: nil, width: pairWidth, height: height, bitsPerComponent: 8,
+                                           bytesPerRow: 0, space: space,
+                                           bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { continue }
+                pair.setFillColor(CGColor(gray: 0.15, alpha: 1))
+                pair.fill(CGRect(x: 0, y: 0, width: pairWidth, height: height))
+                pair.draw(look.shown, in: CGRect(x: 0, y: 0, width: width, height: height))
+                if let export = look.export {
+                    pair.draw(export, in: CGRect(x: width + 4, y: 0, width: width, height: height))
+                }
+                if let made = pair.makeImage() { try writePNG(made, name: String(format: "%@-pair-%03d", name, index + 1)) }
+            }
+        }
+        let table = looks.enumerated().map { index, look in
+            String(format: "%d %.3fs diff %.1f light %.1f/%.1f", index + 1, Double(look.moment) / 1000,
+                   look.difference, look.shownLight, look.exportLight)
+        }
+        write(json: ["span": [span.lowerBound, span.upperBound], "looks": table,
+                     "causes": looks.map(cause), "inHand": looks.map { $0.near.joined(separator: " | ") }],
+              to: "\(name)-looks.json")
+        let worst = looks.map(\.difference).max() ?? 0
+        let mean = looks.map(\.difference).reduce(0, +) / Double(looks.count)
+        let how = (scrub ? "after a scrub landing " : "")
+            + (lead == 0 ? "from its first frame" : String(format: "from %.2fs before it", lead))
+            + (rate == 1 ? "" : " at \(PlaybackSpeed.label(rate))")
+        let summary = String(format: "the transition at %.2fs to %.2fs played %@: the canvas was handed %d "
+                             + "pictures in it, each against the export's (%@-sheet.png), mean difference %.1f, "
+                             + "worst %.1f", Double(span.lowerBound) / 1000, Double(span.upperBound) / 1000,
+                             how, looks.count, name, mean, worst)
+        var staleSaid = ""
+        if let stale {
+            let which: [String] = late.prefix(6).map { index in "picture \(index + 1): " + cause(looks[index]) }
+            staleSaid = "; " + stale + " (" + which.joined(separator: " | ") + ")"
+        }
+        guard wrong.isEmpty, jumps.isEmpty, stale == nil else {
+            var said = summary
+            if !wrong.isEmpty {
+                said += "; \(wrong.count) picture(s) over \(tolerance): " + wrong.prefix(8).joined(separator: " | ")
+            }
+            if !jumps.isEmpty { said += "; " + jumps.prefix(5).joined(separator: " | ") }
+            throw Failure(description: said + staleSaid)
+        }
+        return summary + (late.isEmpty ? "; every picture was drawn from the frames its moment shows"
+            : "; \(late.count) picture(s) drawn from a frame up to \(behind) off, within what a person cannot see")
+    }
+
 
     /// One look at a playing document for `expectPlaybackShows`: the moment,
     /// what the layer was doing in the document the picture was drawn from,

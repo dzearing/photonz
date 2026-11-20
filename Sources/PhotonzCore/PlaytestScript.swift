@@ -4550,6 +4550,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// its own outline (`scrubbing-is-smooth-never-goes-black-and-the-pic`),
     /// neither of which a snapshot taken after the hand lets go can see.
     case expectScrubSmooth(name: String, moves: Int)
+    /// Play through a transition and compare every picture the canvas is
+    /// handed while it runs with the export's picture of the same moment
+    /// (`a-cross-fade-plays-smoothly-in-the-editor-the-wa`). Playing starts
+    /// `lead` seconds before the `transition`th transition (1 is the first)
+    /// at `rate`, reached by a hand scrubbing onto that place and Space 0.4s
+    /// after letting go when `scrub`,
+    /// and fails when any picture's mean difference from the export's is
+    /// over `tolerance` (0 to 255), or when the brightness between two
+    /// pictures in a row jumps by more than the export's does between the
+    /// same two moments, plus `tolerance`. Writes each picture beside the
+    /// export's to `<name>-sheet.png`.
+    case expectTransitionPlaysAsExported(name: String, transition: Int, lead: Double, rate: Double,
+                                         scrub: Bool, tolerance: Double)
     /// Films the window while a segmented control's thumb moves and reads
     /// where the glass is drawn in every frame against its rail
     /// (`PlaytestThumbFilm`). Frames go to `<name>-<n>-sc.png`, the readings
@@ -4939,7 +4952,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectNamesClearOfWords", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectPlaceTag", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectOpenRefused", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectSoundPitch", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectTitleBarClear", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectNamesClearOfWords", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectPlaceTag", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectOpenRefused", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectSoundPitch", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectTransitionPlaysAsExported", "expectSectionFits", "expectSections", "expectPaneGap", "expectTitleBarClear", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "speed", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -5102,6 +5115,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectSoundPitch: "expectSoundPitch"
         case .expectPlaybackShows: "expectPlaybackShows"
         case .expectScrubSmooth: "expectScrubSmooth"
+        case .expectTransitionPlaysAsExported: "expectTransitionPlaysAsExported"
         case .filmThumb: "filmThumb"
         case .filmHover: "filmHover"
         case .filmWindow: "filmWindow"
@@ -6822,6 +6836,28 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectPlaybackShows(layer: try f.string("layer"), name: try f.string("name"),
                                         seconds: seconds, moments: Int(moments))
+        case "expectTransitionPlaysAsExported":
+            let transition = try f.optionalNumber("transition") ?? 1
+            let lead = try f.optionalNumber("lead") ?? 0.5
+            let rate = try f.optionalNumber("rate") ?? 1
+            let tolerance = try f.optionalNumber("tolerance") ?? 8
+            guard transition >= 1, transition == transition.rounded() else {
+                throw f.invalid("transition", "transitions are counted from 1, not \(transition)")
+            }
+            guard lead >= 0, lead <= 5 else {
+                throw f.invalid("lead", "playing starts from 0 to 5 seconds before the transition, not \(lead)")
+            }
+            guard rate > 0, PlaybackSpeed.isChoice(rate) || TimelineShuttle.ladder.contains(rate) else {
+                throw f.invalid("rate", "a transition is played forwards at a speed on the menu, "
+                    + "\(PlaybackSpeed.choices.map(PlaybackSpeed.label).joined(separator: ", ")), not \(rate)")
+            }
+            guard tolerance > 0, tolerance < 255 else {
+                throw f.invalid("tolerance", "a difference is allowed somewhere between 0 and 255, not \(tolerance)")
+            }
+            self = .expectTransitionPlaysAsExported(name: try f.string("name"), transition: Int(transition),
+                                                    lead: lead, rate: rate,
+                                                    scrub: try f.optionalFlag("scrub") ?? false,
+                                                    tolerance: tolerance)
         case "expectScrubSmooth":
             let moves = try f.optionalNumber("moves") ?? 64
             guard moves >= 4, moves <= 400, moves == moves.rounded() else {

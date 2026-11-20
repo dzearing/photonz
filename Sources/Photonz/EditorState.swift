@@ -483,6 +483,14 @@ final class EditorState {
     /// ...worked out as each picture is asked for, by its moment, from the
     /// frames in hand right then.
     @ObservationIgnored var playtestDrawnFrameIDs: [Int: Set<UUID>] = [:]
+    /// Probe only: handed every picture the canvas is given for a moment of a
+    /// recording, as it is given, with the document it was drawn from and
+    /// which of that document's pictures were in the store the render drew
+    /// from (`expectTransitionPlaysAsExported`). Nil, the usual case, costs
+    /// nothing.
+    @ObservationIgnored var playtestPictureTap: ((CGImage, Int, PhotonzDocument, Set<UUID>) -> Void)?
+    /// ...the pictures in the store each render drew from, by its ask.
+    @ObservationIgnored var playtestTapPresent: [Int: Set<UUID>] = [:]
     /// Probe only: what Preview found, so a walk can claim it left it so.
     @ObservationIgnored var playtestDocumentBeforePreview: (document: PhotonzDocument, canUndo: Bool, canRedo: Bool)?
     /// Probe only: the Export sheet opens on SVG, because a walk cannot click
@@ -6654,6 +6662,9 @@ final class EditorState {
                     if self.playtestRecordsDrawnFrames, let moment {
                         self.playtestShownFrameIDs = self.playtestDrawnFrameIDs[moment]
                     }
+                    if let tap = self.playtestPictureTap, let moment, let image = frame.image {
+                        tap(image, moment, frame.document, self.playtestTapPresent.removeValue(forKey: frame.tag) ?? [])
+                    }
                     #endif
                     if moment != nil {
                         self.recentCompositeTimes.append((frame.drawMS, frame.sinceAskedMS))
@@ -6694,6 +6705,13 @@ final class EditorState {
         // (`ScrubPictureAsks`); the bit below is the playtest's.
         let number = scrubAsks.asked()
         let askedTag = number << 1 | tag
+        #if PHOTONZ_PLAYTEST
+        if playtestPictureTap != nil, let pictures {
+            if playtestTapPresent.count > 500 { playtestTapPresent = [:] }
+            playtestTapPresent[askedTag] = Set(Self.imageRefs(in: document)
+                .filter { pictures.image(for: $0) != nil }.map(\.id))
+        }
+        #endif
         Task {
             await scheduler.submit(document, store: pictures, stamp: moment, contentScale: contentScale,
                                    colorSpace: colors, tag: askedTag)
@@ -6718,6 +6736,20 @@ final class EditorState {
         }
         add(document.layers)
         add(document.layersInsideMergedClips)
+        return ids
+    }
+
+    /// Every picture a drawn document shows, the second picture of a
+    /// transition and the windows a push draws through included.
+    static func imageRefs(in document: PhotonzDocument) -> [ImageRef] {
+        var ids: [ImageRef] = []
+        func add(_ layers: [Layer]) {
+            for layer in layers where layer.isVisible {
+                if case .image(let ref) = layer.content { ids.append(ref) }
+                add(layer.children)
+            }
+        }
+        add(document.layers)
         return ids
     }
     #endif
