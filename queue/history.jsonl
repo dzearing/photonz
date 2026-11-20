@@ -18369,3 +18369,10 @@
 {"t":"2026-11-20T18:02:16.054Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-20T18:02:16.135Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-20T18:02:31.971Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 15 landed f01d1eeaa: a scroll moves the painted stretch a whole window at a time, so busy lanes repaint half as often. Scroll mean 10.5 -> 9.5 ms, late frames 104-114 -> 55 of 360; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
+{"t":"2026-11-20T18:38:48.094Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-20T18:38:48.190Z","ev":"slice_pass","walks":10,"passed":9,"failed":1,"seconds":1803,"of":1182,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-20T18:38:48.397Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-20T20:11:12.351Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-20T20:11:12.426Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-20T20:11:12.503Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-20T20:11:17.332Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 16 landed d545006f9: while zooming, only clips near the left edge draw their names live (was every clip on screen, ~95 a lane). Near Fit 13.4-13.5 -> 13.0-13.2 ms, zoom out 11.0-11.2 -> 10.4-10.7, fewer late frames; look unchanged. Found that the track lanes are the whole cost above the 8.3 floor. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}

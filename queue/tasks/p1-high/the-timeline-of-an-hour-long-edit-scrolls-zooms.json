@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-20T18:02:31.970Z",
+  "updated": "2026-11-20T20:11:17.331Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -481,9 +481,29 @@
     {
       "t": "2026-11-20T18:02:31.969Z",
       "note": "Pass 15 landed f01d1eeaa: a scroll moves the painted stretch a whole window at a time, so busy lanes repaint half as often. Scroll mean 10.5 -> 9.5 ms, late frames 104-114 -> 55 of 360; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+    },
+    {
+      "t": "2026-11-20T18:38:48.391Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T20:11:12.349Z",
+      "note": "Pass 16 (2026-11-20). Baseline at 7492718b9 (60 min edit, timeline measure only, load 3.4-7): near Fit 12.5 ms mean (held 10.3, fresh 15.5), zoom in 11.5, out 10.5, scroll 9.9. Decomposition on one build by throwaway switches: lanes hidden -> every measure at the 8.3 floor (near Fit 13.4 -> 8.4); painted pictures hidden -> -0.6 ms only; Zoom lanes hidden -> 0; time ruler ticks empty -> ~-1 ms; inside a lane, each of edge names / cut views / gaps+part marks+click ticks / full clip views ~0.5 ms; a lane of nothing but its pictures: held 8.7, fresh 11.5. With NO lanes the zoom in p95 is still 18 ms on this loaded Mac. Counted at Fit: ~95 names per lane drawn live by TimelinePaintedNames every frame (nameFollowsEdge true for every clip in the window, since pass 15 made the left-edge reach a whole step)."
+    },
+    {
+      "t": "2026-11-20T20:11:12.424Z",
+      "note": "Pass 16 change: TimelinePaint.leftEdgeWhileZooming(window:) (tested: every window a held painting stands for has its edge in reach) is the left-edge reach while timelinePaintsTheWindow (EditorState.timelineLeftEdgeRangeMS): sliver/32 before to span*(1+1/32-1/1.085) after, so only clips near the edge draw names live while zooming. A/B one build, 3 runs each: near Fit 13.38-13.54 -> 13.04-13.20, held 11.44-11.83 -> 11.03-11.18, zoom in 11.73-12.13 -> 11.55-11.94, out 10.98-11.18 -> 10.37-10.74, late near Fit 360-372 -> 334-350. Looked at three captures on the final build (zoomed in about 20:03 with Take 2 and Moving Background off the left edge: names at the edge; scrolled; zoomed out: an edge sliver of ~34 pt shows no name, by design, room > 40). 13 walks green (task's 10 + an-editing-session, reference-edit-opens, timeline-zooms-out-past-the-end); Scripts/test.sh exit 0. Audit queue/audits/2026-11-20-timeline-hour-long-pass16-edge-names.json. Landed d545006f9."
+    },
+    {
+      "t": "2026-11-20T20:11:12.501Z",
+      "note": "Still open, bars not reached: near Fit ~13 ms on today's loaded Mac (12.5 at the start of the pass), zoom in p95 ~24, scroll worst ~22 vs 16, edits (inspector). Next: (1) measure whether the ruler's ~1 ms is the probe-only PlaytestRulerMarkAnchor (an NSView per ruler number moved every frame) and, if so, make the probe's marks cheaper so the speed walk reads what the shipping app does; (2) lane children ~0.5 ms each: move the edge names, cut views and part marks onto the painting's coordinates so a held or slid frame does not re-diff them; (3) fresh paints ~2.7 ms a frame beyond a held one. Left rough, not filed: none new."
+    },
+    {
+      "t": "2026-11-20T20:11:17.330Z",
+      "note": "Pass 16 landed d545006f9: while zooming, only clips near the left edge draw their names live (was every clip on screen, ~95 a lane). Near Fit 13.4-13.5 -> 13.0-13.2 ms, zoom out 11.0-11.2 -> 10.4-10.7, fewer late frames; look unchanged. Found that the track lanes are the whole cost above the 8.3 floor. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
     }
   ],
-  "started": "2026-11-20T15:54:50.356Z",
+  "started": "2026-11-20T18:38:48.390Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
