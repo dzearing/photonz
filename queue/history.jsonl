@@ -18376,3 +18376,8 @@
 {"t":"2026-11-20T20:11:12.426Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-20T20:11:12.503Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-20T20:11:17.332Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 16 landed d545006f9: while zooming, only clips near the left edge draw their names live (was every clip on screen, ~95 a lane). Near Fit 13.4-13.5 -> 13.0-13.2 ms, zoom out 11.0-11.2 -> 10.4-10.7, fewer late frames; look unchanged. Found that the track lanes are the whole cost above the 8.3 floor. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
+{"t":"2026-11-20T20:11:44.595Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-20T20:38:35.689Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-20T20:44:49.043Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-20T20:44:49.117Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-20T20:44:49.195Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 17 landed 8153b42db: the ruler's walk markers come down for timed steps and are not hung in the dev app; near Fit 12.1 -> 11.3 ms a frame, scroll 9.3 -> 8.8, look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: fresh paintings laid off the main thread)."}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-20T20:11:17.331Z",
+  "updated": "2026-11-20T20:44:49.194Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,20 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-14T12:09:54.712Z",
-      "note": "From a-long-edit pass 4 (cbfda886b): TimelineChildMarks (part timing marks) is now made only for clips that have marks, with values from the lane. Click ticks were NOT changed: an Equatable ClickTicksView fed from the lane broke the tick drag in a-click-tick-is-hidden-and-slid-walk, so a pass on click ticks needs that walk green."
-    },
-    {
-      "t": "2026-11-14T15:03:49.979Z",
-      "note": "seq 50 -> 40"
-    },
-    {
-      "t": "2026-11-14T15:04:17.329Z",
-      "note": "Digest 2026-11-14 design review: pass 2's audit says a painted cut or transition band answers a click only once the pointer has rested on it, and a click with no pointer move first picks the clip under it, and that no walk clicks a cut on a busy track. A person does click without moving: scroll or pinch the timeline with the pointer held still, so a cut slides under it, then click. That would pick the clip when they meant the cut. Not reproduced by me (no real-pointer walk runs here), so added as an acceptance item for this task rather than filed as a bug. Also: docs/design/video.md section 8 carries the playhead rules 1 to 7 but nothing yet on painted busy lanes (24 or more clips in sight paint; a clip under the pointer becomes its view). Worth a rule 8 when this task closes, so the next per-clip feature knows it is drawn twice."
-    },
-    {
-      "t": "2026-11-14T15:05:07.974Z",
-      "note": "seq 40 -> 50"
+      "t": "2026-11-20T20:44:49.193Z",
+      "note": "... 4 earlier entries elided",
+      "elided": 4
     },
     {
       "t": "2026-11-14T22:36:46.938Z",
@@ -501,9 +490,25 @@
     {
       "t": "2026-11-20T20:11:17.330Z",
       "note": "Pass 16 landed d545006f9: while zooming, only clips near the left edge draw their names live (was every clip on screen, ~95 a lane). Near Fit 13.4-13.5 -> 13.0-13.2 ms, zoom out 11.0-11.2 -> 10.4-10.7, fewer late frames; look unchanged. Found that the track lanes are the whole cost above the 8.3 floor. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+    },
+    {
+      "t": "2026-11-20T20:11:44.591Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T20:44:49.040Z",
+      "note": "Pass 17 (2026-11-20). Baseline at 7c2522030 (60 min edit, timeline measure only, load ~6): near Fit 12.1-12.2 ms mean (held 10.0, fresh 15.0-15.2), zoom in 11.0-11.5, out 9.8-9.9, scroll 9.2-9.4. Pass 16's next step (1) confirmed: PlaytestRulerMarkAnchor (one NSView per ruler number, the ruler and the playhead) ignored both PlaytestMarkers.areHung and PlaytestMarkerHold, so the speed walk timed it and the dev app hung it. Now behind areHung + WhileMarkersHang. A/B one build, 3 runs each, throwaway defaults switch: near Fit 12.08-12.18 -> 11.24-11.34 (held 10.0 -> 9.3, fresh 15.0-15.2 -> 14.0-14.1), scroll 9.2-9.4 -> 8.7-8.9, zoom out 9.8-9.9 -> 9.3-9.7, late near Fit 263-273 -> 217-224 of 648. Profile (xctrace, /tmp/p17.trace): TimelinePaintedPicture.picture ~11% of the main thread over the measure (~2.5 ms a fresh frame: paint 30%, waveforms 24%, bands 22%), lane bodies around it; no leaf over ~1.5%. 9 timeline walks + clip-pictures-when-zoomed-in, speed-walk (scrub lag fail once, ok on rerun), an-editing-session, hour-long/20-min open walks, timeline-zooms-out-past-the-end green. Scripts/test.sh exit 0. history-filter-switch-speed-walk failed twice (blank picture, no timeline: not this change), folded into walks-that-fail-in-the-full-sweep-27. Audit queue/audits/2026-11-20-timeline-hour-long-pass17-ruler-markers.json. Landed 8153b42db."
+    },
+    {
+      "t": "2026-11-20T20:44:49.114Z",
+      "note": "Still open, bars not reached: near Fit ~11.3 ms mean (p95 ~17) vs 8.3, zoom in p95 ~23, scroll worst ~21 vs 16, edits (inspector). What is left near Fit is fresh paints (14 ms vs 9.3 held, 42% of near-Fit frames). Next: lay fresh paintings off the main thread (paint code against CGContext, keep stretching the old picture until the new one lands) so a fresh frame costs a held one; that is the one lever left worth more than ~0.5 ms. Left rough, not filed: none new."
+    },
+    {
+      "t": "2026-11-20T20:44:49.192Z",
+      "note": "Pass 17 landed 8153b42db: the ruler's walk markers come down for timed steps and are not hung in the dev app; near Fit 12.1 -> 11.3 ms a frame, scroll 9.3 -> 8.8, look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: fresh paintings laid off the main thread)."
     }
   ],
-  "started": "2026-11-20T18:38:48.390Z",
+  "started": "2026-11-20T20:11:44.590Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
