@@ -216,6 +216,59 @@ check('a zone behind UTC reads right', crashTimeMs('2026-09-18 01:22:38.00 -0700
 check('a zone ahead of it does too', crashTimeMs('2026-09-18 10:22:38.00 +0200') === Date.parse('2026-09-18T08:22:38Z'));
 check('nonsense is 0 rather than NaN', crashTimeMs('whenever') === 0);
 
+// ---- 8. an AppKit exception the report lost the words of -------------------
+// macOS 27 keeps the backtrace of an exception AppKit crashes the app over and
+// drops its reason (the layout crashes of 2026-11-17 and 2026-11-19 both read
+// "Messages:" and nothing else). The probe writes the reason down itself,
+// keyed by pid (PlaytestExceptionRecorder), and the report picks it up here.
+console.log('an AppKit exception the probe wrote down');
+const DIR4 = fs.mkdtempSync(path.join(os.tmpdir(), 'photonz-crash-drill-exc-'));
+const EXC = path.join(DIR4, 'exceptions.jsonl');
+const layoutStamp = '2026-11-19 15:44:54.00 -0800';
+const layoutBody = {
+  pid: 4242,
+  faultingThread: 0,
+  exception: { type: 'EXC_BREAKPOINT', signal: 'SIGTRAP' },
+  termination: { indicator: 'Trace/BPT trap: 5' },
+  threads: [{ triggered: true, frames: [{ symbol: '+[NSApplication _crashOnException:]', imageIndex: 1 }] }],
+  usedImages: [{ name: 'Photonz Probe', CFBundleIdentifier: PROBE }, { name: 'AppKit' }],
+};
+fs.writeFileSync(path.join(DIR4, 'layout.ips'),
+  JSON.stringify(header(layoutStamp)) + '\n' + JSON.stringify(layoutBody));
+const at = crashTimeMs(layoutStamp);
+fs.writeFileSync(EXC, [
+  // Same pid, a day earlier: a pid that came round again is not this crash.
+  { pid: 4242, atMs: at - 86_400_000, name: 'NSRangeException', reason: 'an older crash', windows: [] },
+  { pid: 9999, atMs: at, name: 'NSGenericException', reason: 'another process', windows: [] },
+  'not json at all',
+  { pid: 4242, atMs: at + 300, name: 'NSInternalInconsistencyException', reason: 'more Update Constraints passes than views',
+    windows: [{ title: 'Noisy voice recording', frame: [40, 56, 100000, 1028], contentMinSize: [100288, 432], visible: true }] },
+].map((l) => (typeof l === 'string' ? l : JSON.stringify(l))).join('\n') + '\n');
+r = readCrashReport(path.join(DIR4, 'layout.ips'), { exceptionLog: EXC });
+check('the reason the probe wrote down becomes the report\'s message',
+  r && r.messages[0] === 'AppKit exception NSInternalInconsistencyException: more Update Constraints passes than views', r && r.messages);
+check('with each window\'s size and minimum beside it',
+  r && r.messages[1] === 'window "Noisy voice recording" 100000x1028 pt, minimum content 100288x432', r && r.messages);
+check('and both reach the lines a walk prints',
+  r && crashLines(r).some((l) => l.includes('more Update Constraints')), r && crashLines(r));
+// The window that ran away, written when it happened, seconds before the crash.
+fs.appendFileSync(EXC, JSON.stringify({
+  kind: 'runawayWindow', pid: 4242, atMs: at - 4000, title: 'Noisy voice recording', frame: [100000, 1028],
+  stack: [
+    '0   Photonz Probe                       0x0000000102 closure #1 in static PlaytestExceptionRecorder.watchForARunawayWindow() + 120',
+    '1   CoreFoundation                      0x000000018d __CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__ + 148',
+    '2   AppKit                              0x0000000191 -[NSWindow _setFrame:updateBorderViewSize:] + 1000',
+    '3   AppKit                              0x0000000191 -[NSWindow setFrame:display:] + 40',
+  ],
+}) + '\n');
+r = readCrashReport(path.join(DIR4, 'layout.ips'), { exceptionLog: EXC });
+check('a window that ran away before the crash is named after the exception, with what resized it',
+  r && r.messages[0].startsWith('AppKit exception') && r.messages[2] === 'window "Noisy voice recording" grew to 100000x1028 pt; the resize came from:'
+    && r.messages[3] === '  AppKit -[NSWindow _setFrame:updateBorderViewSize:] + 1000' && r.messages.length === 5, r && r.messages);
+r = readCrashReport(path.join(DIR4, 'layout.ips'), { exceptionLog: path.join(DIR4, 'missing.jsonl') });
+check('no log is no message, not a failure', r && r.messages.length === 0, r && r.messages);
+fs.rmSync(DIR4, { recursive: true, force: true });
+
 fs.rmSync(DIR, { recursive: true, force: true });
 fs.rmSync(DIR2, { recursive: true, force: true });
 console.log(failures ? `\n${failures} FAILED` : '\nall ok');

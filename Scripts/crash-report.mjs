@@ -110,7 +110,77 @@ function faultingThread(body) {
   return body.threads?.[body.faultingThread ?? -1] || body.threads?.find((t) => t.triggered) || null;
 }
 
-export function readCrashReport(file) {
+// What the probe wrote down as AppKit crashed it (PlaytestExceptionRecorder in
+// the app): macOS 27 keeps an AppKit exception's backtrace in the report but
+// drops its name and reason, so the 2026-11-17 and 2026-11-19 layout crashes
+// both read "Messages:" with nothing after it. The probe writes one JSON line
+// per such crash, keyed by process id, and the report is matched to it here.
+export const EXCEPTION_LOG = path.join(os.homedir(), 'Library', 'Logs', 'Photonz Probe', 'exceptions.jsonl');
+
+// The probe also writes down, once per process, the first time a window grows
+// wider than four screens and the call stack that grew it (kind
+// "runawayWindow"), since both layout crashes came with the editor window about
+// 100000 points wide. `kind` picks which of the two lines to find.
+export function recordedException({ pid, whenMs, kind = '', log = process.env.PHOTONZ_EXCEPTION_LOG || EXCEPTION_LOG } = {}) {
+  if (!pid) return null;
+  let text = '';
+  try {
+    text = fs.readFileSync(log, 'utf8');
+  } catch {
+    return null;
+  }
+  let best = null;
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    let entry;
+    try {
+      entry = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (entry.pid !== pid || (entry.kind || '') !== kind) continue;
+    // A process id comes round again, so the line has to be from the same
+    // minute or two as the crash. The report's clock is to the second.
+    // A runaway window is written when it happens, which can be a while
+    // before AppKit gives up, so that line may be up to ten minutes older.
+    const before = kind === 'runawayWindow' ? 600_000 : 120_000;
+    if (whenMs && entry.atMs && (entry.atMs < whenMs - before || entry.atMs > whenMs + 120_000)) continue;
+    best = entry;
+  }
+  return best;
+}
+
+// The recorded exception (and runaway window, if one was written down) as the
+// lines a report's messages are made of.
+export function exceptionMessages(entry, runaway = null) {
+  const lines = [];
+  if (entry) {
+    lines.push(`AppKit exception ${entry.name || '?'}: ${entry.reason || '(no reason given)'}`);
+    const size = (a, b) => `${Math.round(a ?? 0)}x${Math.round(b ?? 0)}`;
+    for (const w of (entry.windows || []).slice(0, 4)) {
+      const [, , width, height] = w.frame || [];
+      const [minW, minH] = w.contentMinSize || [];
+      lines.push(`window "${w.title || ''}" ${size(width, height)} pt, minimum content ${size(minW, minH)}${w.visible ? '' : ', hidden'}`);
+    }
+  }
+  if (runaway) {
+    const [width, height] = runaway.frame || [];
+    // The frames that resized it, without the recorder's own, the
+    // notification plumbing and the number and address columns, so the lines
+    // name AppKit's and the app's calls.
+    const all = (runaway.stack || [])
+      .map((f) => String(f).replace(/^\d+\s+/, '').replace(/\s+0x[0-9a-f]+\s+/, ' ').trim());
+    const plumbing = /NotificationCenter|_CFXNotification|__CFNOTIFICATIONCENTER|_CFNotification|postNotification/;
+    let from = 0;
+    all.forEach((f, i) => { if (plumbing.test(f)) from = i + 1; });
+    const frames = all.slice(from).filter((f) => !/PlaytestExceptionRecorder/.test(f)).slice(0, 14);
+    lines.push(`window "${runaway.title || ''}" grew to ${Math.round(width ?? 0)}x${Math.round(height ?? 0)} pt; the resize came from:`);
+    for (const f of frames) lines.push(`  ${f}`);
+  }
+  return lines;
+}
+
+export function readCrashReport(file, { exceptionLog } = {}) {
   let text;
   try {
     text = fs.readFileSync(file, 'utf8');
@@ -134,6 +204,10 @@ export function readCrashReport(file) {
     .flat()
     .map(String)
     .filter((m) => m && !GENERIC_ASI.test(m));
+  const whenMs = crashTimeMs(head.timestamp);
+  asi.push(...exceptionMessages(
+    recordedException({ pid: body.pid, whenMs, log: exceptionLog }),
+    recordedException({ pid: body.pid, whenMs, kind: 'runawayWindow', log: exceptionLog })));
   const what = signal ? `${exception} (${signal})` : exception;
   const where = frames.slice(0, 3).map((f) => shorten(f.symbol, 60)).join(' < ');
   return {
@@ -141,7 +215,7 @@ export function readCrashReport(file) {
     app: head.app_name || '',
     bundleId,
     when: head.timestamp || '',
-    whenMs: crashTimeMs(head.timestamp),
+    whenMs,
     exception,
     signal,
     indicator: body.termination?.indicator || '',

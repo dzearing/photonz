@@ -25,6 +25,10 @@ struct PhotonzApp: App {
         #if PHOTONZ_PLAYTEST
         // First of all: nothing a probe does may reach the person's clipboard.
         PlaytestPrivateClipboard.install()
+        // An exception AppKit crashes the app over keeps its reason in a line
+        // of its own, since macOS 27's crash report drops it
+        // (`PlaytestExceptionRecorder`).
+        PlaytestExceptionRecorder.install()
         // Before anything reads a feature flag, and before the menu bar exists:
         // a walk that says it runs with a feature switched off has to have it
         // off while the Help menu is being built, or the shelf it claims is
