@@ -14386,6 +14386,34 @@ private final class Run {
             $0.contentView.convert($0.contentView.bounds, to: nil).height
         } ?? inWindow.height
         func points(_ value: CGFloat) -> String { "\(Int(value.rounded())) pt" }
+        // Nothing of it on screen at all. `visibleRect` is then a zero rect at
+        // the view's own origin, which in this unflipped view is its BOTTOM
+        // corner, so the arithmetic below would read "all of it cut off
+        // above" whichever side it is really on. On 2026-11-20 that sent a
+        // task hunting an EQ scrolled past the top of the panel when it was
+        // still below the bottom, a moment before the panel's reveal ran
+        // (find-out-why-a-newly-added-eq-sometimes-sits-abo). So say which
+        // side, measured against every scroller that clips it.
+        if match.visibleRect.isEmpty, !match.bounds.isEmpty {
+            var clips: [NSRect] = []
+            var scroller = match.enclosingScrollView
+            while let each = scroller {
+                clips.append(each.contentView.convert(each.contentView.bounds, to: nil))
+                scroller = each.enclosingScrollView
+            }
+            clips.append(inWindow)
+            let side = clips.lazy.compactMap { clip -> String? in
+                if box.minY >= clip.maxY - 0.5 {
+                    return "\(points(box.minY - clip.maxY)) above the top of what a person can see"
+                }
+                if box.maxY <= clip.minY + 0.5 {
+                    return "\(points(clip.minY - box.maxY)) below the bottom of what a person can see"
+                }
+                return nil
+            }.first ?? "hidden by something that is not a scroller"
+            throw Failure(description: "\"\(name)\" is not on screen at all: it is \(points(box.height)) "
+                + "tall and sits \(side). Whatever it is in should have scrolled to it.")
+        }
         // In AppKit's coordinates y counts up from the bottom, so what is cut
         // off the BOTTOM of the panel is what falls below `minY`.
         let below = max(shown.minY - box.minY, inWindow.minY - box.minY)

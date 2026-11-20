@@ -72,6 +72,13 @@
       "reads": "1"
     },
     {
+      "comment": "The panel scrolls the new effect into view a beat after the plus (a quarter second, then a quarter second of scroll), so wait for that before checking it, rather than reading the panel before it has moved.",
+      "do": "waitFor",
+      "condition": "sectionInView",
+      "value": "Audio Effects",
+      "timeout": 2
+    },
+    {
       "do": "expectInView",
       "field": "Noise reduction",
       "whole": true
