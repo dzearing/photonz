@@ -872,6 +872,27 @@ Every frame a recording shows on screen at once counts as where its playhead is
 for the small frames' budget (`MovieFrameFetcher.focus`): kept to the first,
 the second take in a dissolve had each key frame let go the moment it landed.
 
+**A hunt going forward is one pass, not a run of stretches (2026-11-20, pass
+20).** One pass reads about as fast as a hand hunting at five times playing
+speed (a sample every 3 ms or so on the reference recordings), so a stretch
+ended with the hand at its last frame, and the next one, which started only
+then, first decoded from the key frame before its start: up to two seconds of
+film before its first picture. The picture sat on the stretch's last frame for
+8 to 45 refreshes at every restart, about every one and a half seconds of the
+edit, and those were the hunt's worst numbers in every speed walk since pass
+15. Now a hand going forward under a recording is followed by one pass reading
+to the end of the recording (`MovieSweep.window(follows:)`), paced to stay a
+stretch ahead of the hand (`MovieSweep.waits`), and stopped when the hand
+stops, turns back or leaves the recording. Going back stays a stretch at a
+time, since a recording decodes forwards only. While a hand moves, the small
+frames let go first are the ones it has passed (`MovieFrameFetcher.handGoesBack`,
+weighted as playing is): let go by distance alone, the frames the pass had
+read a second ahead were the farthest, and went before the hand got there.
+How it was found: a dump of every look of the hunt (hand, frame shown, frames
+drawn) beside a log of every pass's start, first sample and each picture made,
+on one clock. Hunt, three runs each: frame under the hand worst 43 to 49 ->
+16 to 18, sight lag worst 40 -> 12 to 14, both medians 1.
+
 **The reference edit's recordings need ids that differ in their first eight
 bytes.** A frame's picture id is its recording's id with the frame number
 folded into the last eight (`MovieRef.frameID`). Until 2026-11-17 the

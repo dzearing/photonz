@@ -68,14 +68,35 @@ public enum MovieSweep {
 
     /// The grid frames to read for a hand whose first missing frame is `frame`,
     /// going `backward` or forward, inside the recording.
-    public static func window(from frame: Int, backward: Bool, movie: MovieRef) -> ClosedRange<Int> {
+    ///
+    /// A pass that `follows` a hand going forward under it reads on to the
+    /// end of the recording, kept a stretch ahead of the hand (`waits`)
+    /// rather than ended and started again. A pass reads about as fast as a
+    /// hand hunting at five times its playing speed, so each next stretch
+    /// started with the hand already at its first frame, and first decoded
+    /// from the key frame before it, up to two seconds of film: the picture
+    /// sat 8 to 45 refreshes behind the hand at every restart (2026-11-20).
+    /// Going back, a pass cannot follow (a recording decodes forwards only),
+    /// so it stays a stretch.
+    public static func window(from frame: Int, backward: Bool, movie: MovieRef,
+                              follows: Bool = false) -> ClosedRange<Int> {
         let ahead = aheadMS / MovieRef.frameStepMS
         let behind = behindMS / MovieRef.frameStepMS
         let last = movie.frameIndex(atSourceMS: movie.durationMS)
         let low = backward ? frame - ahead : frame - behind
-        let high = backward ? frame + behind : frame + ahead
+        let high = backward ? frame + behind : (follows ? last : frame + ahead)
         let from = min(max(0, low), last)
         return from...max(from, min(last, high))
+    }
+
+    /// Whether a pass following a hand (`window(follows:)`) whose next frame
+    /// to hand over is `nextFrame` waits before reading on: once it is a
+    /// stretch ahead of the hand on `hand`, so it never fills the small
+    /// frames' budget with frames far from the hand. Never before the hand
+    /// is on the recording.
+    public static func waits(nextFrame: Int, hand: Int?) -> Bool {
+        guard let hand else { return false }
+        return nextFrame > hand + aheadMS / MovieRef.frameStepMS
     }
 
     /// The stretch to start reading for a hand on `handFrame`, or nil when
@@ -88,7 +109,7 @@ public enum MovieSweep {
     /// hand was a moment ago.
     public static func next(handFrame: Int, backward: Bool, movie: MovieRef,
                             inHand: (Int) -> Bool, running: ClosedRange<Int>?,
-                            glimpse: Bool = false) -> ClosedRange<Int>? {
+                            glimpse: Bool = false, follows: Bool = false) -> ClosedRange<Int>? {
         let last = movie.frameIndex(atSourceMS: movie.durationMS)
         let hand = min(max(0, handFrame), last)
         if glimpse {
@@ -101,7 +122,7 @@ public enum MovieSweep {
         guard let missing = ahead.first(where: { !inHand($0) && running?.contains($0) != true })
         else { return nil }
         if let running, running.contains(hand) || running.contains(missing) { return nil }
-        return window(from: missing, backward: backward, movie: movie)
+        return window(from: missing, backward: backward, movie: movie, follows: follows)
     }
 
     /// Whether a frame a stretch reads is worth turning into a picture for a

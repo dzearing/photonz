@@ -671,8 +671,18 @@ final class MovieFrameFetcher {
         /// in the decoder, eight at a time, each taking 200 to 600ms to show
         /// anything (2026-11-17).
         let glimpse: Bool
+        /// A pass following a hand going forward under it to the end of the
+        /// recording, paced a stretch ahead of it (`MovieSweep.window(follows:)`).
+        var follows = false
     }
     private var sweeps: [UUID: Sweep] = [:]
+    /// Which way a hand on the playhead is going, nil when none is: the
+    /// frames it has passed go first when there are too many small ones
+    /// (`keepInsideBudget`). Let go by distance alone, a pass following a
+    /// hunting hand a second ahead lost the frames ahead, the next ones the
+    /// hand needed, and the picture sat on one frame for a quarter second
+    /// with them read and gone (2026-11-20).
+    private var handGoesBack: Bool?
     /// The glimpses being read, across every recording: a hand that fast is
     /// in a different clip, often a different recording, on nearly every
     /// refresh.
@@ -878,6 +888,7 @@ final class MovieFrameFetcher {
                playingSpeed: Double = 1,
                playingBackward: Double? = nil, backPlaces: [MovieBackPlace] = []) {
         if !handMoving { stopSweeps() }
+        handGoesBack = handMoving ? backward : nil
         let playsAhead = playing != nil && !handMoving && !backward
         if !playsAhead { stopPlayPasses() }
         let stride = MoviePlayBackward.stride(speed: playingSpeed)
@@ -1086,10 +1097,16 @@ final class MovieFrameFetcher {
             return
         }
         if sweeps[movie.id]?.glimpse == true { return }
+        // A hand going forward under the recording is followed by one pass
+        // rather than read in stretches (`MovieSweep.window(follows:)`). One
+        // that turns back is not covered by it, however far it reaches.
+        let follows = underHand && !backward && !glimpse
+        var running = sweeps[movie.id]
+        if backward, running?.follows == true { running = nil }
         guard let frames = MovieSweep.next(
             handFrame: frame, backward: backward, movie: movie,
             inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) },
-            running: sweeps[movie.id]?.frames, glimpse: glimpse)
+            running: running?.frames, glimpse: glimpse, follows: follows)
         else { return }
         sweeps[movie.id]?.task.cancel()
         let token = UUID()
@@ -1105,14 +1122,18 @@ final class MovieFrameFetcher {
         let keeps: (@Sendable (Int) -> Bool)? = glimpse ? nil : { @Sendable index in
             hand.value.map { MovieSweep.worthShowing(frame: index, hand: $0, backward: backward) } ?? true
         }
+        let paced: (@Sendable (Int) -> Bool)? = follows ? { @Sendable next in
+            MovieSweep.waits(nextFrame: next, hand: hand.value)
+        } : nil
         let task = Task.detached(priority: .userInitiated) {
             let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size,
-                                                 keeps: keeps) { index, image in
+                                                 waitsAt: paced, keeps: keeps) { index, image in
                 Task { @MainActor in file(index, image) }
             }
             await finished(swept)
         }
-        sweeps[movie.id] = Sweep(token: token, frames: frames, task: task, hand: hand, glimpse: glimpse)
+        sweeps[movie.id] = Sweep(token: token, frames: frames, task: task, hand: hand, glimpse: glimpse,
+                                 follows: follows)
         if glimpse { glimpseRunning.insert(token) }
     }
 
@@ -1506,7 +1527,8 @@ final class MovieFrameFetcher {
                 let kind = resident.indices.filter { resident[$0].rough == rough }
                 guard let farthest = MovieFrameQueue<Read>.farthest(
                     kind.map { (resident[$0].movie, resident[$0].frameIndex) }, from: foci,
-                    forward: !playPasses.isEmpty, backward: backSpeed != nil) else { break }
+                    forward: !playPasses.isEmpty || handGoesBack == false,
+                    backward: backSpeed != nil || handGoesBack == true) else { break }
                 let gone = resident.remove(at: kind[farthest]).ref
                 store.remove(gone)
                 dropped.append(gone.id)

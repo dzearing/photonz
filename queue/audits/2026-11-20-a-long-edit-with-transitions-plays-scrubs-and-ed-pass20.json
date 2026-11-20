@@ -1,0 +1,37 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 20: hunting for a moment)",
+  "epic": "video-perf",
+  "summary": "Dragging the playhead forward at a hunting pace (about five times playing speed) on the 6 minute edit no longer freezes the picture every second and a half. The recording under the hand is now read in one continuous pass that stays a second and a half ahead of the hand, not in short stretches that each started late. Hunt, worst of seven runs: the frame under the hand trails by at most 18 refreshes (was 43 to 49 this morning) and what you see by at most 14 (was 40); both medians are 1. Nothing drawn changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). The numbers come from Scripts/perf/speed-walk.sh (its hunt drags from 1:00 to 1:10 in two seconds).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then click the timeline ruler at 1:00.",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Drag the playhead steadily to the right, about ten seconds of the edit in two seconds of your hand.",
+      "shot": "2026-11-20-long-edit-pass20-after-a-hunt-sc.png"
+    },
+    {
+      "do": "Watch the recording in the canvas while you drag: it should move the whole way, with no hold every second or so."
+    },
+    {
+      "do": "Without letting go, drag back a few seconds, then forward again."
+    },
+    {
+      "do": "Let go and press Space to play from there."
+    }
+  ],
+  "evaluate": [
+    "Does the picture keep moving the whole time you drag forward at a hunting pace, with no regular hitch?",
+    "When you turn back mid-drag, does the picture follow you back as quickly as it did before?",
+    "Is there still a brief hold at the very start of a drag, before the picture starts moving?"
+  ],
+  "rough": [
+    "The first fifth of a second of a hunt can still trail the hand by about 13 refreshes: the first pass decodes from the key frame before where you start, up to two seconds of film, before its first picture. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "The medium drag (end to end in two seconds) is unchanged: it shows key frames, and its worst numbers still swing from run to run (sight lag worst 34 to 68 today). Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Edits while playing are unchanged at 14 to 51 ms on their longest pass against a bar of 16. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "No mock covers this: it is speed, not a surface."
+  ]
+}

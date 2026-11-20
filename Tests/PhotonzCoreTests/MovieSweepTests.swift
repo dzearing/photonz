@@ -206,6 +206,46 @@ struct MovieSweepTests {
         #expect(!MovieSweep.worthShowing(frame: 60 + slack + 1, hand: 60, backward: true))
         #expect(MovieSweep.worthShowing(frame: 20, hand: 60, backward: true))
     }
+
+    // A hunt read in stretches that each started only once the last had
+    // finished trailed the hand by 8 to 45 refreshes at every restart: a pass
+    // reads about as fast as a hand hunting at five times its playing speed,
+    // so the next one started with the hand already at its first frame, and
+    // first decoded from the key frame before it, up to two seconds of film
+    // (2026-11-20, speed walk hunt).
+
+    @Test("A hand going forward under it is followed to the end of the recording in one pass")
+    func followingReachesTheEnd() {
+        let last = movie.frameIndex(atSourceMS: movie.durationMS)
+        let window = MovieSweep.window(from: 20, backward: false, movie: movie, follows: true)
+        #expect(window.lowerBound == 20 - MovieSweep.behindMS / MovieRef.frameStepMS)
+        #expect(window.upperBound == last)
+        #expect(MovieSweep.next(handFrame: 20, backward: false, movie: movie, inHand: { _ in false },
+                                running: nil, follows: true) == window)
+    }
+
+    @Test("Going back, or ahead of the hand, a stretch stays a stretch")
+    func followingOnlyForward() {
+        #expect(MovieSweep.window(from: 80, backward: true, movie: movie, follows: true)
+                == MovieSweep.window(from: 80, backward: true, movie: movie))
+    }
+
+    @Test("A pass following the hand waits once it is a stretch ahead of it, and never behind it")
+    func followingPaces() {
+        let ahead = MovieSweep.aheadMS / MovieRef.frameStepMS
+        #expect(!MovieSweep.waits(nextFrame: 60 + ahead, hand: 60))
+        #expect(MovieSweep.waits(nextFrame: 60 + ahead + 1, hand: 60))
+        #expect(!MovieSweep.waits(nextFrame: 40, hand: 60))
+        // Before the hand is on the recording there is nothing to pace by.
+        #expect(!MovieSweep.waits(nextFrame: 500, hand: nil))
+    }
+
+    @Test("A pass following the hand covers everything ahead of it, so nothing else starts")
+    func followingCovers() {
+        let last = movie.frameIndex(atSourceMS: movie.durationMS)
+        #expect(MovieSweep.next(handFrame: 90, backward: false, movie: movie, inHand: { _ in false },
+                                running: 17...last, follows: true) == nil)
+    }
 }
 
 /// A hand too fast for a stretch is shown the key frame nearest it, which
