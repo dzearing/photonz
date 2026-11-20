@@ -23331,3 +23331,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Panel rows `SpotlightSettingsRows` (picked layer: live preview + one undo step; tool: lensToolContent). Walks `spotlight-lens-walk`, `spotlight-on-a-video-walk` (works on video through the same compositor).
 - Agent reach pin raised 213 -> 215 for the two new rows: no agent can make a lens yet and Ask's first request had 14 tokens to spare.
 - Next: `a-spotlight-draws-the-border-shadow-and-blur-it` (effects do nothing on a spotlight).
+
+## 2026-11-20 — Long edit speed, pass 21 (task a-long-edit-with-transitions-plays-scrubs-and-ed)
+
+- A hunt on the 6 minute edit starts moving at once and a repeat hunt holds no frame: three hunts in a row, frame under the hand worst 17-22 -> 4-6 refreshes, picture 12-17 -> 2-3, medians 1. Speed walk green x3; baseline hunt numbers tightened (18 -> 8, 14 -> 6).
+- Causes found with a per-look dump and a pass log (both removed): the read at rest stopped at its window so the first move decoded from a key frame (173 ms); and the small frames' budget evicted the follower's frames as they landed while clips coming up held their own.
+- Fixes: the read at rest becomes the follower (`MovieSweep.restingPass`), a clip coming up is read a little and waits for the hand (`comingPausesAfter`), clips coming up give way in the budget (`MovieFrameQueue.farthest(aside:)`), the follower stays 800 ms ahead (`followLeadMS`), long-waiting passes give their place in the read limit. Rule written into docs/design/video.md 8e.
+- Next: edits while playing (12-55 ms vs 16), the hunt's first tenth of a second, the medium drag.

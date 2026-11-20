@@ -75,7 +75,7 @@
   },
   "form" : "short",
   "frameStepMS" : 33,
-  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18; edits from 3 runs on pass 19, 64db7ec53+changes (2026-11-19); scrub hunt frame and sight lags from 7 runs on pass 20, 377689c7b+changes (2026-11-20)",
+  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18; edits from 3 runs on pass 19, 64db7ec53+changes (2026-11-19); scrub hunt frame and sight lags from 3 runs on pass 21, 853e5c7c4+changes (2026-11-20)",
   "machine" : "Mac16,5, 16 cores, 64GB",
   "minutes" : 6,
   "plays" : [
@@ -153,14 +153,14 @@
     },
     {
       "frameLagMedianFrames" : 1,
-      "frameLagWorstFrames" : 18,
+      "frameLagWorstFrames" : 8,
       "frames" : 240,
       "lagMedianFrames" : 1,
       "lagWorstFrames" : 3,
       "movesMade" : 242,
       "seconds" : 2.0182401249185205,
       "sightLagMedianFrames" : 1,
-      "sightLagWorstFrames" : 14,
+      "sightLagWorstFrames" : 6,
       "speed" : "hunt",
       "worstFrameMS" : 14.66695824638009
     }

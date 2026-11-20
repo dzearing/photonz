@@ -66,11 +66,56 @@ public enum MovieSweep {
         return low...max(low, min(last, frame + ahead))
     }
 
+    /// The read around a playhead at rest on `frame`: its resting window
+    /// (`restingWindow`), then on to the end of the recording, waiting at the
+    /// window's end (`pausesAfter`, `restWaits`) until a hand takes the
+    /// playhead forward, when it follows the hand. Stopped at its window's
+    /// end, the first move of a hunt started a new pass that decoded from the
+    /// key frame before it, 173ms before its first frame, while the hand ran
+    /// on (2026-11-20).
+    public static func restingPass(around frame: Int, movie: MovieRef,
+                                   places: Int = 1) -> (frames: ClosedRange<Int>, pausesAfter: Int) {
+        let window = restingWindow(around: frame, movie: movie, places: places)
+        let last = movie.frameIndex(atSourceMS: movie.durationMS)
+        return (window.lowerBound...max(window.upperBound, last), window.upperBound)
+    }
+
+    /// Whether a read at rest (`restingPass`) whose next frame to hand over
+    /// is `nextFrame` waits before reading on: past its window with no hand
+    /// on the recording, or a stretch ahead of the hand once one is
+    /// (`waits`).
+    public static func restWaits(nextFrame: Int, hand: Int?, pausesAfter: Int) -> Bool {
+        guard let hand else { return nextFrame > pausesAfter }
+        return waits(nextFrame: nextFrame, hand: hand)
+    }
+
+    /// How much of a clip coming up a pass opened ahead of the hand reads
+    /// before it waits for the hand to cross in (`comingPausesAfter`): what
+    /// the small frames' budget keeps of a recording the hand is only heading
+    /// for (`MovieFrameQueue.asideWeight`). It used to read a whole stretch
+    /// and stop, and once those frames gave way to the ones ahead of the
+    /// hand, crossing the cut started a pass from the key frame before it:
+    /// 7 to 9 refreshes behind at every cut (2026-11-20).
+    public static let comingLeadMS = 200
+
+    /// Where a pass opened on `frame` for a clip coming up waits for the
+    /// hand (`restWaits(pausesAfter:)`), which it then follows: read on from
+    /// there, it needs no key frame.
+    public static func comingPausesAfter(_ frame: Int, movie: MovieRef) -> Int {
+        let last = movie.frameIndex(atSourceMS: movie.durationMS)
+        return min(last, max(0, frame) + comingLeadMS / MovieRef.frameStepMS)
+    }
+
+    /// How long a read at rest stays open, waiting for a hand, before it
+    /// stops: a playhead left alone for longer is not about to be hunted
+    /// from, and a pass that waits checks every few milliseconds.
+    public static let restHoldsMS = 30_000
+
     /// The grid frames to read for a hand whose first missing frame is `frame`,
     /// going `backward` or forward, inside the recording.
     ///
     /// A pass that `follows` a hand going forward under it reads on to the
-    /// end of the recording, kept a stretch ahead of the hand (`waits`)
+    /// end of the recording, kept `followLeadMS` ahead of the hand (`waits`)
     /// rather than ended and started again. A pass reads about as fast as a
     /// hand hunting at five times its playing speed, so each next stretch
     /// started with the hand already at its first frame, and first decoded
@@ -90,14 +135,24 @@ public enum MovieSweep {
     }
 
     /// Whether a pass following a hand (`window(follows:)`) whose next frame
-    /// to hand over is `nextFrame` waits before reading on: once it is a
-    /// stretch ahead of the hand on `hand`, so it never fills the small
-    /// frames' budget with frames far from the hand. Never before the hand
+    /// to hand over is `nextFrame` waits before reading on: once it is
+    /// `followLeadMS` ahead of the hand on `hand`, so it never fills the
+    /// small frames' budget with frames far from the hand. Never before the hand
     /// is on the recording.
     public static func waits(nextFrame: Int, hand: Int?) -> Bool {
         guard let hand else { return false }
-        return nextFrame > hand + aheadMS / MovieRef.frameStepMS
+        return nextFrame > hand + followLeadMS / MovieRef.frameStepMS
     }
+
+    /// How far ahead of the hand a pass following it reads (`waits`). Less
+    /// than a stretch: with clips coming up on screen as well, the small
+    /// frames' budget held about 29 of the recording under the hand, and a
+    /// pass reading 45 ahead had each frame past those let go as it landed,
+    /// a hole the hand then sat in for up to 25 refreshes (2026-11-20). A
+    /// pass makes a frame in 3 to 4ms, so 24 frames is about 90ms of reading,
+    /// while a hand hunting at five times its playing speed takes 160ms to
+    /// cross them.
+    public static let followLeadMS = 800
 
     /// The stretch to start reading for a hand on `handFrame`, or nil when
     /// nothing new needs reading: every frame it is heading for is in hand, or

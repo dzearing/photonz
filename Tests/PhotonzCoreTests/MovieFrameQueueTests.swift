@@ -67,4 +67,25 @@ struct MovieFrameQueueTests {
         let resident = [(near, 90), (gone, 3), (near, 5)]
         #expect(MovieFrameQueue<Int>.farthest(resident, from: [near: 6]) == 1)
     }
+
+    // A second hunt over the same ground found the budget full of the frames
+    // of clips coming up, read on the first, and every frame read ahead of
+    // the hand was the farthest thing in it and let go as it landed: the
+    // picture sat 25 refreshes on one frame (2026-11-20, pass 21).
+
+    @Test("While a hand moves, a recording only coming up counts its frames as farther than the one under the hand")
+    func comingUpGoesBeforeUnderTheHand() {
+        let under = UUID(), coming = UUID()
+        // 30 frames ahead of the hand against 20 from a clip coming up.
+        let resident = [(under, 130), (coming, 520)]
+        let foci = [under: [100], coming: [500]]
+        #expect(MovieFrameQueue<Int>.farthest(resident, from: foci, forward: true) == 0)
+        #expect(MovieFrameQueue<Int>.farthest(resident, from: foci, forward: true, aside: [coming]) == 1)
+        // ...but its first frames still outrank the far end of the hand's.
+        let first = [(under, 140), (coming, 505)]
+        #expect(MovieFrameQueue<Int>.farthest(first, from: foci, forward: true, aside: [coming]) == 0)
+        // Frames the hand passed still go before a coming clip's first ones.
+        let passed = [(under, 80), (coming, 505)]
+        #expect(MovieFrameQueue<Int>.farthest(passed, from: foci, forward: true, aside: [coming]) == 0)
+    }
 }

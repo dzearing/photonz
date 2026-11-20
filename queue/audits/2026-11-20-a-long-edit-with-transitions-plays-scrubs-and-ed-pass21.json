@@ -1,0 +1,37 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 21: a hunt starts moving at once and holds no frame)",
+  "epic": "video-perf",
+  "summary": "Dragging the playhead to hunt for a moment on the 6 minute edit now moves the picture from your first move, and a second hunt over the same ground no longer sits on one frame. Hunting, three runs in a row: the frame under the hand trails by at most 4 to 6 refreshes (was 17 to 22) and what you see by at most 2 to 3 (was 12 to 17); both medians 1. Nothing drawn changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Numbers come from Scripts/perf/speed-walk.sh (its hunt drags from 1:00 to 1:10 in two seconds) and a walk of three hunts in a row.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then click the timeline ruler at 1:00.",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Wait a moment, then drag the playhead steadily right, about ten seconds of the edit in two seconds.",
+      "shot": "2026-11-20-long-edit-pass21-after-the-walk-sc.png"
+    },
+    {
+      "do": "Watch the first instant of the drag: the recording should move with your first move, not hold for a beat."
+    },
+    {
+      "do": "Click the ruler at 1:00 again and make the same drag a second time."
+    },
+    {
+      "do": "Keep dragging across the cut near 1:08 and watch the clip on the other side of it."
+    }
+  ],
+  "evaluate": [
+    "Does the picture move from your very first move when you start dragging from a still playhead?",
+    "Does a second drag over the same stretch look as smooth as the first?",
+    "Does the clip after a cut show its own picture as soon as you cross into it?"
+  ],
+  "rough": [
+    "A fast drag across the whole edit (end to end in two seconds) is unchanged: it shows key frames, and the frame under the hand still trails by 33 to 61 refreshes in the middle. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Edits while playing are unchanged at 12 to 55 ms on their longest pass against a bar of 16. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "The hunt's worst is still 4 to 6 refreshes against a bar of 1, in its first tenth of a second: the read around a still playhead covers only about half a second ahead when two recordings are on screen. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "No mock covers this: it is speed, not a surface."
+  ]
+}

@@ -42,6 +42,9 @@ public struct MovieFrameQueue<Item: Sendable>: Sendable {
 
     /// How much farther a frame gone by counts than one ahead, playing forwards.
     public static var behindWeight: Int { 3 }
+    /// How many times as far a frame of a recording a moving hand is only
+    /// heading for counts (`farthest(aside:)`).
+    public static var asideWeight: Int { 4 }
     public static var backwardBehindWeight: Int { 8 }
 
     /// Which of the frames in hand to let go when there are too many: the one
@@ -72,9 +75,16 @@ public struct MovieFrameQueue<Item: Sendable>: Sendable {
     /// it, and they count `backwardBehindWeight` times as far: the window
     /// holds a reach and a block below the playhead, and a frame shown a
     /// moment ago must go before the bottom of that block (`MoviePlayBackward`).
+    ///
+    /// A recording `aside` (one a moving hand is only heading for, a clip
+    /// coming up) counts its frames `asideWeight` times as far: the frames
+    /// read ahead of the hand on the recording under it are the next ones
+    /// shown, and a second hunt over the same ground found the budget full of
+    /// the coming clips' frames and let each of those go as it landed
+    /// (2026-11-20).
     public static func farthest(_ resident: [(movie: UUID, frame: Int)],
                                 from foci: [UUID: [Int]], forward: Bool = false,
-                                backward: Bool = false) -> Int? {
+                                backward: Bool = false, aside: Set<UUID> = []) -> Int? {
         func distance(_ frame: Int, _ focus: Int) -> Int {
             if frame < focus && forward { return (focus - frame) * behindWeight }
             if frame > focus && backward { return (frame - focus) * backwardBehindWeight }
@@ -82,7 +92,8 @@ public struct MovieFrameQueue<Item: Sendable>: Sendable {
         }
         var worst: (index: Int, distance: Int)?
         for (index, entry) in resident.enumerated() {
-            let distance = foci[entry.movie]?.map { distance(entry.frame, $0) }.min() ?? Int.max
+            let weight = aside.contains(entry.movie) ? asideWeight : 1
+            let distance = foci[entry.movie]?.map { distance(entry.frame, $0) * weight }.min() ?? Int.max
             if worst == nil || distance > (worst?.distance ?? 0) {
                 worst = (index, distance)
             }

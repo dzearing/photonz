@@ -893,6 +893,38 @@ drawn) beside a log of every pass's start, first sample and each picture made,
 on one clock. Hunt, three runs each: frame under the hand worst 43 to 49 ->
 16 to 18, sight lag worst 40 -> 12 to 14, both medians 1.
 
+**Every pass a hunt needs is open before the hand gets there (2026-11-20,
+pass 21).** Three rules, all found by the same dump and pass log (with the
+small frames' budget's every let-go added):
+
+1. *The read at rest becomes the pass the hunt follows.* The small read around
+   a still playhead (`readAroundRest`) used to stop at its window's end, so the
+   first move of a hunt opened a new pass that decoded from the key frame
+   before it: 173 ms before its first frame, the hunt's first fifth of a second
+   17 to 22 refreshes behind. Now it reads on to the end of the recording,
+   waits at its window's end (`MovieSweep.restingPass`, `restWaits`), and the
+   hand takes it over with its decoder warm. It stays open while the playhead
+   rests where it was opened (`Sweep.restingOn`; any other call stops it), at
+   the hand's priority, and gives up after 30 s (`restHoldsMS`).
+2. *A clip coming up is read a little and waits.* A pass opened for a clip
+   the hand is heading for reads 200 ms of it (`comingLeadMS`) and waits for the
+   hand to cross in, then follows it, instead of reading a stretch and stopping.
+3. *The budget favours the recording under the hand, and the pass reads only
+   what the budget keeps.* While a hand moves, frames of a recording it is only
+   heading for count four times as far (`MovieFrameQueue.farthest(aside:)`),
+   and a following pass stays 800 ms ahead (`followLeadMS`), not a stretch. On
+   a second hunt over the same ground the budget held 12 frames each of three
+   clips coming up and 29 of the hand's recording, and the pass read 45 ahead:
+   every frame past the 29th was let go as it landed, a hole the hand later sat
+   in for up to 25 refreshes. A frame read and let go before it is shown is the
+   thing to look for whenever a pass is ahead and the picture is not.
+
+A pass that may wait for seconds (1 and 2) gives its place in the limit on
+passes reading at once (`MovieSweeper.gate`) while it waits
+(`yieldsWhileWaiting`): it holds no thread then, and on a four core Mac the
+limit is two. Hunt, three runs in a row each: frame under the hand worst 17 to
+22 -> 4 to 6, sight lag worst 12 to 17 -> 2 to 3, medians 1.
+
 **The reference edit's recordings need ids that differ in their first eight
 bytes.** A frame's picture id is its recording's id with the frame number
 folded into the last eight (`MovieRef.frameID`). Until 2026-11-17 the

@@ -232,7 +232,11 @@ struct MovieSweepTests {
 
     @Test("A pass following the hand waits once it is a stretch ahead of it, and never behind it")
     func followingPaces() {
-        let ahead = MovieSweep.aheadMS / MovieRef.frameStepMS
+        let ahead = MovieSweep.followLeadMS / MovieRef.frameStepMS
+        #expect(ahead < MovieSweep.aheadMS / MovieRef.frameStepMS)
+        // ...with room to spare in the small frames' budget beside the
+        // frames of clips coming up.
+        #expect(ahead * 2 <= MovieSweep.roughBudget)
         #expect(!MovieSweep.waits(nextFrame: 60 + ahead, hand: 60))
         #expect(MovieSweep.waits(nextFrame: 60 + ahead + 1, hand: 60))
         #expect(!MovieSweep.waits(nextFrame: 40, hand: 60))
@@ -245,6 +249,51 @@ struct MovieSweepTests {
         let last = movie.frameIndex(atSourceMS: movie.durationMS)
         #expect(MovieSweep.next(handFrame: 90, backward: false, movie: movie, inHand: { _ in false },
                                 running: 17...last, follows: true) == nil)
+    }
+
+    // The read around a playhead at rest stopped at its window's end, so the
+    // first move of a hunt started a new pass that decoded from the key frame
+    // before it: 173ms before its first frame, and the frame under the hand
+    // sat 17 to 22 refreshes behind for the first fifth of a second
+    // (2026-11-20, speed walk hunt, pass 21).
+
+    @Test("A read around a playhead at rest reaches on to the end of the recording, paused at its window")
+    func restingPass() {
+        let last = movie.frameIndex(atSourceMS: movie.durationMS)
+        let pass = MovieSweep.restingPass(around: 60, movie: movie)
+        let window = MovieSweep.restingWindow(around: 60, movie: movie)
+        #expect(pass.frames == window.lowerBound...last)
+        #expect(pass.pausesAfter == window.upperBound)
+        // ...one of two at rest at once pauses at its share.
+        let two = MovieSweep.restingPass(around: 60, movie: movie, places: 2)
+        #expect(two.pausesAfter == MovieSweep.restingWindow(around: 60, movie: movie, places: 2).upperBound)
+        #expect(two.frames.upperBound == last)
+    }
+
+    @Test("A read at rest waits at its window's end until a hand takes it, then follows the hand")
+    func restWaits() {
+        let ahead = MovieSweep.followLeadMS / MovieRef.frameStepMS
+        // No hand yet: reads its window, then waits.
+        #expect(!MovieSweep.restWaits(nextFrame: 80, hand: nil, pausesAfter: 80))
+        #expect(MovieSweep.restWaits(nextFrame: 81, hand: nil, pausesAfter: 80))
+        // A hand on it: paced like any pass following one, past the window.
+        #expect(!MovieSweep.restWaits(nextFrame: 81, hand: 70, pausesAfter: 80))
+        #expect(!MovieSweep.restWaits(nextFrame: 70 + ahead, hand: 70, pausesAfter: 80))
+        #expect(MovieSweep.restWaits(nextFrame: 70 + ahead + 1, hand: 70, pausesAfter: 80))
+        // ...and a hand gone back behind it never lets it run on alone.
+        #expect(MovieSweep.restWaits(nextFrame: 81, hand: 20, pausesAfter: 80))
+    }
+
+    @Test("A pass opened for a clip coming up reads what the budget keeps of it, then waits for the hand")
+    func comingPauses() {
+        let step = MovieRef.frameStepMS
+        #expect(MovieSweep.comingPausesAfter(40, movie: movie) == 40 + MovieSweep.comingLeadMS / step)
+        let last = movie.frameIndex(atSourceMS: movie.durationMS)
+        #expect(MovieSweep.comingPausesAfter(last - 1, movie: movie) == last)
+        // What it reads before waiting is all kept beside the frames ahead
+        // of the hand, so none is let go as it lands.
+        #expect(MovieSweep.comingLeadMS / step * MovieFrameQueue<Int>.asideWeight
+                <= MovieSweep.followLeadMS / step)
     }
 }
 

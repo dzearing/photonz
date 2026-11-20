@@ -416,15 +416,23 @@ enum MovieSweeper {
     /// `skipsUnreferenced` decodes only the frames other frames are decoded
     /// from (`MoviePlayPass.skipsUnreferenced`); a skipped frame's grid frames
     /// show the one decoded before it.
+    ///
+    /// `yieldsWhileWaiting` gives the pass's place among those reading at once
+    /// (`gate`) to another while `waitsAt` holds it, and takes one again to
+    /// read on: for a pass that may wait for seconds for a hand to come
+    /// (`MovieSweep.restingPass`, `MovieSweep.comingPausesAfter`). A waiting
+    /// pass holds no thread, which is all the limit is for.
     static func sweep(movie: MovieRef, url: URL, frames: ClosedRange<Int>, size: CGSize,
                       waitsAt: (@Sendable (Int) -> Bool)? = nil,
+                      yieldsWhileWaiting: Bool = false,
                       keeps: (@Sendable (Int) -> Bool)? = nil,
                       skipsUnreferenced: Bool = false,
                       deliver: @escaping @Sendable (Int, SurfaceFrame) -> Void) async -> Bool {
         // Only a few read at once (`SweepGate`); one asked to stop while it
         // waited for its turn reads nothing.
         await gate.enter()
-        defer { gate.leave() }
+        var holding = true
+        defer { if holding { gate.leave() } }
         guard !Task.isCancelled else { return true }
         let asset = AVURLAsset(url: url)
         guard let track = try? await asset.loadTracks(withMediaType: .video).first,
@@ -481,8 +489,17 @@ enum MovieSweeper {
         // while a sample is being read crashes (tried 2026-09-27).
         while !Task.isCancelled {
             if let waitsAt, waitsAt(grid.nextFrame) {
+                if yieldsWhileWaiting, holding {
+                    gate.leave()
+                    holding = false
+                }
                 try? await Task.sleep(for: .milliseconds(4))
                 continue
+            }
+            if !holding {
+                await gate.enter()
+                holding = true
+                if Task.isCancelled { break }
             }
             guard let (ms, buffer) = nextFrame() else { break }
             hand(grid.arrived(atMS: ms), previous)
@@ -672,8 +689,14 @@ final class MovieFrameFetcher {
         /// anything (2026-11-17).
         let glimpse: Bool
         /// A pass following a hand going forward under it to the end of the
-        /// recording, paced a stretch ahead of it (`MovieSweep.window(follows:)`).
+        /// recording, paced a little ahead of it (`MovieSweep.window(follows:)`,
+        /// `MovieSweep.followLeadMS`), or waiting for one to come to it: at
+        /// rest (`restingOn`), or on a clip it is heading for.
         var follows = false
+        /// The grid frame a read around a playhead at rest was opened for
+        /// (`readAroundRest`): kept while the playhead stays there, so a hunt
+        /// from it has a pass to follow it.
+        var restingOn: Int? = nil
     }
     private var sweeps: [UUID: Sweep] = [:]
     /// Which way a hand on the playhead is going, nil when none is: the
@@ -683,6 +706,10 @@ final class MovieFrameFetcher {
     /// hand needed, and the picture sat on one frame for a quarter second
     /// with them read and gone (2026-11-20).
     private var handGoesBack: Bool?
+    /// The recordings under a moving hand (`underHand`): every other one on
+    /// screen is a clip it is only heading for, whose small frames go first
+    /// (`MovieFrameQueue.farthest(aside:)`).
+    private var handMovies = Set<UUID>()
     /// The glimpses being read, across every recording: a hand that fast is
     /// in a different clip, often a different recording, on nearly every
     /// refresh.
@@ -710,6 +737,9 @@ final class MovieFrameFetcher {
     /// still moment: read around small once the sharp frames are in
     /// (`readAroundRest`).
     private var resting: [(movie: MovieRef, url: URL, frame: Int, size: CGSize)] = []
+    /// The grid frame each recording's read at rest was last opened for, so
+    /// it is opened once per rest (`readAroundRest`).
+    private var restRead: [UUID: Int] = [:]
     private var glimpseServings = 0
     /// Each recording's key frames, once read (`MovieKeyFrames`).
     private var keyFrames: [UUID: MovieKeyFrames] = [:]
@@ -887,8 +917,16 @@ final class MovieFrameFetcher {
                playing: MoviePlayPoints? = nil,
                playingSpeed: Double = 1,
                playingBackward: Double? = nil, backPlaces: [MovieBackPlace] = []) {
-        if !handMoving { stopSweeps() }
+        if !handMoving {
+            // A read around a playhead still resting where it was opened is
+            // left open (`readAroundRest`); anything else stops.
+            let rests = playingBackward == nil && (playing == nil || backward)
+            stopSweeps(keepingRestsAt: rests ? Self.restingFrames(requests, underHand: underHand) : [:])
+        } else {
+            restRead = [:]
+        }
         handGoesBack = handMoving ? backward : nil
+        handMovies = handMoving ? Set(requests.prefix(max(0, underHand)).map(\.movie.id)) : []
         let playsAhead = playing != nil && !handMoving && !backward
         if !playsAhead { stopPlayPasses() }
         let stride = MoviePlayBackward.stride(speed: playingSpeed)
@@ -1028,27 +1066,56 @@ final class MovieFrameFetcher {
         resting = []
         for place in places where sweeps[place.movie.id] == nil {
             let movie = place.movie
-            let window = MovieSweep.restingWindow(around: place.frame, movie: movie, places: places.count)
-            guard window.contains(where: { !has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) })
+            let pass = MovieSweep.restingPass(around: place.frame, movie: movie, places: places.count)
+            let window = pass.frames.lowerBound...pass.pausesAfter
+            // Read once per rest: with its window in hand already, the pass
+            // is opened anyway the first time, so a hunt from here has one
+            // to follow it (`MovieSweep.restingPass`), but not again once it
+            // stopped waiting.
+            guard restRead[movie.id] != place.frame
+                    || window.contains(where: { !has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) })
             else { continue }
+            restRead[movie.id] = place.frame
             let token = UUID()
+            let hand = HandMark(nil)
+            // Quiet until a hand takes it: a landing redraws the canvas and
+            // every clip's row in the layers list.
             let file: @MainActor @Sendable (Int, SurfaceFrame) -> Void = { [weak self] index, image in
-                self?.fileRough(image, movie: movie, frameIndex: index, quiet: true)
+                self?.fileRough(image, movie: movie, frameIndex: index, quiet: hand.value == nil)
             }
             let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
                 guard let self else { return }
                 if !swept { unsweepable.insert(movie.id) }
                 if sweeps[movie.id]?.token == token { sweeps[movie.id] = nil }
             }
-            let url = place.url, size = place.size
-            let task = Task.detached(priority: .utility) {
-                let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: window,
-                                                     size: size) { index, image in
+            let url = place.url, size = place.size, pausesAfter = pass.pausesAfter
+            let paced: @Sendable (Int) -> Bool = { next in
+                MovieSweep.restWaits(nextFrame: next, hand: hand.value, pausesAfter: pausesAfter)
+            }
+            let keeps: @Sendable (Int) -> Bool = { index in
+                hand.value.map { MovieSweep.worthShowing(frame: index, hand: $0, backward: false) } ?? true
+            }
+            // At the hand's own priority, not in the background: this is the
+            // pass a hunt from here follows, and at utility it made a frame
+            // every 5.5ms against the 2.7 of a pass the hand started
+            // (2026-11-20), slower than a hand hunting at five times speed.
+            let task = Task.detached(priority: .userInitiated) {
+                let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: pass.frames, size: size,
+                                                     waitsAt: paced, yieldsWhileWaiting: true,
+                                                     keeps: keeps) { index, image in
                     Task { @MainActor in file(index, image) }
                 }
                 await finished(swept)
             }
-            sweeps[movie.id] = Sweep(token: token, frames: window, task: task, hand: HandMark(nil), glimpse: false)
+            sweeps[movie.id] = Sweep(token: token, frames: pass.frames, task: task, hand: hand, glimpse: false,
+                                     follows: true, restingOn: place.frame)
+            // A playhead left alone that long is not about to be hunted from.
+            Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(MovieSweep.restHoldsMS))
+                guard let self, sweeps[movie.id]?.token == token, hand.value == nil else { return }
+                task.cancel()
+                sweeps[movie.id] = nil
+            }
         }
     }
 
@@ -1101,12 +1168,15 @@ final class MovieFrameFetcher {
         // rather than read in stretches (`MovieSweep.window(follows:)`). One
         // that turns back is not covered by it, however far it reaches.
         let follows = underHand && !backward && !glimpse
+        // A clip it is heading for is read a little, then waits for the hand
+        // to cross in and follows it (`MovieSweep.comingPausesAfter`).
+        let waitsForHand = !underHand && !backward && !glimpse
         var running = sweeps[movie.id]
         if backward, running?.follows == true { running = nil }
         guard let frames = MovieSweep.next(
             handFrame: frame, backward: backward, movie: movie,
             inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) },
-            running: running?.frames, glimpse: glimpse, follows: follows)
+            running: running?.frames, glimpse: glimpse, follows: follows || waitsForHand)
         else { return }
         sweeps[movie.id]?.task.cancel()
         let token = UUID()
@@ -1122,18 +1192,22 @@ final class MovieFrameFetcher {
         let keeps: (@Sendable (Int) -> Bool)? = glimpse ? nil : { @Sendable index in
             hand.value.map { MovieSweep.worthShowing(frame: index, hand: $0, backward: backward) } ?? true
         }
+        let pausesAfter = MovieSweep.comingPausesAfter(frame, movie: movie)
         let paced: (@Sendable (Int) -> Bool)? = follows ? { @Sendable next in
             MovieSweep.waits(nextFrame: next, hand: hand.value)
+        } : waitsForHand ? { @Sendable next in
+            MovieSweep.restWaits(nextFrame: next, hand: hand.value, pausesAfter: pausesAfter)
         } : nil
         let task = Task.detached(priority: .userInitiated) {
             let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size,
-                                                 waitsAt: paced, keeps: keeps) { index, image in
+                                                 waitsAt: paced, yieldsWhileWaiting: waitsForHand,
+                                                 keeps: keeps) { index, image in
                 Task { @MainActor in file(index, image) }
             }
             await finished(swept)
         }
         sweeps[movie.id] = Sweep(token: token, frames: frames, task: task, hand: hand, glimpse: glimpse,
-                                 follows: follows)
+                                 follows: follows || waitsForHand)
         if glimpse { glimpseRunning.insert(token) }
     }
 
@@ -1225,14 +1299,26 @@ final class MovieFrameFetcher {
 
     /// Stop every one-pass read: the hand holds still, or let go, or the clock
     /// took over.
-    private func stopSweeps() {
-        for sweep in sweeps.values { sweep.task.cancel() }
+    private func stopSweeps(keepingRestsAt rests: [UUID: Int] = [:]) {
+        for (id, sweep) in sweeps where sweep.restingOn == nil || rests[id] != sweep.restingOn {
+            sweep.task.cancel()
+            sweeps[id] = nil
+        }
         for read in glimpseReads.values { read.task.cancel() }
         glimpseReads.removeAll()
         glimpseServed.removeAll()
-        sweeps.removeAll()
         glimpseNext.removeAll()
         glimpseRunning.removeAll()
+    }
+
+    /// The grid frame each recording under the hand rests on, the first
+    /// place asked for each, as `fetch` opens its reads at rest.
+    private static func restingFrames(_ requests: [MovieFrameRequest], underHand: Int) -> [UUID: Int] {
+        var frames: [UUID: Int] = [:]
+        for (index, request) in requests.enumerated() where index < underHand && frames[request.movie.id] == nil {
+            frames[request.movie.id] = request.movie.frameIndex(atSourceMS: request.sourceMS)
+        }
+        return frames
     }
 
     // MARK: Reading ahead of a playing playhead
@@ -1528,7 +1614,8 @@ final class MovieFrameFetcher {
                 guard let farthest = MovieFrameQueue<Read>.farthest(
                     kind.map { (resident[$0].movie, resident[$0].frameIndex) }, from: foci,
                     forward: !playPasses.isEmpty || handGoesBack == false,
-                    backward: backSpeed != nil || handGoesBack == true) else { break }
+                    backward: backSpeed != nil || handGoesBack == true,
+                    aside: rough && handGoesBack != nil ? Set(foci.keys).subtracting(handMovies) : []) else { break }
                 let gone = resident.remove(at: kind[farthest]).ref
                 store.remove(gone)
                 dropped.append(gone.id)
