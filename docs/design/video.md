@@ -1148,6 +1148,29 @@ The rule, for any view added to the editor window:
      painting would not be equal to itself and would be painted anyway.
      Near Fit on the hour-long reference edit: 13.5 ms a frame, 12.3 after
      (2026-11-19).
+   - **While a zoom paints the window, only a clip near the left edge has
+     its name drawn live** (`TimelinePaint.leftEdgeWhileZooming`, 2026-11-20).
+     A held painting lets go once the window leaves the sliver round what
+     was painted or the scale moves past 8.5 per cent, so the edge stays
+     between a thirty-second of a window before where it was painted and a
+     ninth after; that is the reach `nameFollowsTheEdge` is asked against
+     (`timelineLeftEdgeRangeMS`), not the drawn stretch's whole step. With
+     the step a whole window, near Fit every clip on screen, about 95 a
+     lane, had its name drawn by `TimelinePaintedNames` on every frame.
+     Three runs each way on one build: near Fit 13.4 to 13.5 ms a frame to
+     13.0 to 13.2 (held frames 11.4 to 11.8 to 11.0 to 11.2), zoom out 11.0
+     to 11.2 to 10.4 to 10.7, late frames near Fit 360 to 372 of 648 to
+     334 to 350.
+   - **Where a frame of the hour-long timeline goes** (2026-11-20, one build
+     with throwaway switches, the speed walk's timeline measure): hiding the
+     track lanes took every measure to the 8.3 ms floor (near Fit 13.4 to
+     8.4); hiding the painted pictures alone saved 0.6 ms, the Zoom lanes
+     nothing, the time ruler's labels about 1 ms. Inside a lane the edge
+     names, the cuts drawn as views, the gaps, part marks and click ticks,
+     and the full clip views each cost about 0.5 ms a frame, and a lane of
+     nothing but its pictures still cost 11.5 ms on a frame that paints
+     afresh against 8.7 on a held one. Even with no lanes at all the zoom
+     in had a p95 of 18 ms on a loaded Mac (load 4 to 5).
    - **A painting in a layer of its own, or a drawing group, does not save
      its rasterising**: tried on 2026-11-19. A stretched or slid canvas is
      rasterised again either way; a nested hosting view per canvas took

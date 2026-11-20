@@ -173,6 +173,48 @@ import Testing
         #expect(!TimelinePaint.nameFollowsTheEdge(fromMS: 2_000, toMS: 9_500, leftEdgeMS: edge))
     }
 
+    /// While a zoom paints only the window, the painting is held no longer
+    /// than `stretch` allows, so the left edge can reach no further than a
+    /// sliver before where it was painted and a ninth of a window after:
+    /// that, not a whole step of the drawn stretch, is where a name may be
+    /// pushed. Near the whole-hour view every clip in the window had its
+    /// name drawn on every frame of a zoom (2026-11-20).
+    @Test func whileItZoomsOnlyANameNearTheLeftEdgeFollowsIt() {
+        let window = Self.window(scale: 2, startMS: 900_000)
+        let reach = TimelinePaint.leftEdgeWhileZooming(window: window)
+        #expect(reach.lowerBound < window.startMS)
+        #expect(reach.upperBound > window.startMS)
+        #expect(reach.upperBound - reach.lowerBound < window.spanMS / 6)
+        // A clip in the middle of the window never meets the edge.
+        let middle = window.startMS + window.spanMS / 2
+        #expect(!TimelinePaint.nameFollowsTheEdge(fromMS: middle, toMS: middle + 10_000, leftEdgeMS: reach))
+        // The clip across the edge does.
+        #expect(TimelinePaint.nameFollowsTheEdge(fromMS: window.startMS - 5_000, toMS: window.startMS + 5_000,
+                                                 leftEdgeMS: reach))
+    }
+
+    /// Every window a held painting is stretched to has its left edge inside
+    /// the reach the painting was laid for, in and out, about any anchor.
+    @Test func everyWindowAHeldPaintingStandsForHasItsEdgeInReach() {
+        let painted = Self.window(scale: 2, startMS: 900_000)
+        let reach = TimelinePaint.leftEdgeWhileZooming(window: painted)
+        var checked = 0
+        for anchorShare in stride(from: 0.0, through: 1.0, by: 0.05) {
+            let anchor = painted.startMS + painted.spanMS * anchorShare
+            for by in stride(from: 0.9, through: 1.1, by: 0.0025) {
+                let window = Self.window(scale: 2 * by,
+                                         startMS: anchor - (anchor - painted.startMS) / by)
+                for shift in stride(from: -0.05, through: 0.05, by: 0.01) {
+                    let moved = Self.window(scale: 2 * by, startMS: window.startMS + painted.spanMS * shift)
+                    guard TimelinePaint.stretch(painted: painted, to: moved) != nil else { continue }
+                    checked += 1
+                    #expect(reach.contains(moved.startMS), "edge \(moved.startMS) outside \(reach)")
+                }
+            }
+        }
+        #expect(checked > 100)
+    }
+
     // MARK: While the timeline zooms
 
     /// Every frame of a zoom paints the canvas again, whatever it covers, so

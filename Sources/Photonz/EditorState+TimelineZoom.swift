@@ -142,6 +142,11 @@ extension EditorState {
 
     var timelineLeftEdgeRangeMS: ClosedRange<Double> {
         guard motionStripMeasuresADocument else { return 0...0 }
+        // While a zoom paints only the window, its painting is held only
+        // while the edge stays close to where it was painted, so only the
+        // clips there have their names drawn against the window
+        // (`TimelinePaint.leftEdgeWhileZooming`).
+        if timelinePaintsTheWindow { return TimelinePaint.leftEdgeWhileZooming(window: motionStripRuler) }
         let length = timelineLengthForZoomMS
         return timelineDrawnStretch.leftEdgeMS(visibleMS: timelineScaleOnly.visibleMS(documentMS: length),
                                                documentMS: length)

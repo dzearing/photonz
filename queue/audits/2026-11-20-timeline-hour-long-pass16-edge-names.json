@@ -1,0 +1,40 @@
+{
+  "feature": "Zooming the hour-long timeline redraws only the names at its left edge",
+  "epic": "video-perf",
+  "summary": "While you zoom the timeline, only the clips right at its left edge now have their names redrawn on every frame; every other name rides along with the lane's picture. Near the whole-hour view that was every clip on screen, about 95 a lane. Zooming is about half a millisecond a frame quicker and fewer frames are late. Nothing on screen changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Measured with a timeline-only speed walk on the probe, three runs each way on one build.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below.",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Click the ruler at about 20:03, then press = six times so a clip hangs off the left edge of the tracks.",
+      "shot": "2026-11-20-timeline-hour-long-pass16-zoomed-mid-sc.png"
+    },
+    {
+      "do": "Look at the left edge: the clip running off it keeps its name in sight at the edge."
+    },
+    {
+      "do": "Pinch the timeline in and out quickly near the whole-hour view, then stop."
+    },
+    {
+      "do": "Press - twice and look along V1: names, pictures, cuts and waveforms in place.",
+      "shot": "2026-11-20-timeline-hour-long-pass16-zoomed-out-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Does a pinch near the whole-hour view feel any smoother than yesterday's build?",
+    "While you pinch with a clip hanging off the left edge, does its name stay at the edge without jumping?",
+    "Once you stop zooming, is any name missing or in the wrong place until you move again?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, one build, three runs each (old reach, new reach): near Fit 13.38/13.52/13.54 to 13.18/13.04/13.20 ms a frame (frames holding the painting 11.44-11.83 to 11.03-11.18), zoom in 11.73-12.13 to 11.55-11.94, zoom out 10.98-11.18 to 10.37-10.74, late frames near Fit 360-372 to 334-350 of 648. Scroll unchanged within noise. The Mac was busier than yesterday (load 4 to 7, another app at 40 per cent), so every number reads higher than pass 15's.",
+    "Where a frame goes, measured on one build by hiding parts: with the track lanes hidden, every measure sits at the 8.3 ms floor (near Fit 13.4 to 8.4). Hiding the painted pictures alone saves 0.6 ms, the Zoom lanes nothing, the time ruler's numbers about 1 ms. Inside a lane, the edge names, cuts drawn as views, gaps with part marks and click ticks, and full clip views each cost about 0.5 ms; a lane of nothing but its pictures still costs 11.5 ms on a frame that paints afresh against 8.7 on one that holds. Written into docs/design/video.md.",
+    "Even with no lanes at all, zooming in had a p95 of 18 ms on this loaded Mac, so the bar of 95 per cent of frames under 8.3 ms cannot be reached by lane work alone here.",
+    "The time ruler's 1 ms is probably mostly the probe's invisible marker behind each ruler number (one AppKit view per number, moved every frame), which the shipping app does not have. Not proven; left in this task's log as the next thing to measure.",
+    "Bars of the task not reached: 95 per cent of zoom and scroll frames under 8.3 ms and none over 16, and edits within 16 ms. The task stays open.",
+    "No mock covers the timeline's speed; nothing about the timeline's look changed."
+  ]
+}

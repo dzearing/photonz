@@ -179,6 +179,25 @@ public enum TimelinePaint {
     /// frame anyway (2026-11-19).
     public static let heldStretch = 0.085
 
+    /// Where the lane's left edge can reach while a painting laid under
+    /// `window` during a zoom stands: `stretch` lets it go once the window
+    /// leaves the sliver either side of what was painted or the scale
+    /// changes by more than `heldStretch`, so the edge stays between a
+    /// sliver before the painted window's start and a ninth of a window
+    /// after it. A name is drawn against the window only for a clip in
+    /// this reach (`nameFollowsTheEdge`), every other one rides on the
+    /// painting. The drawn stretch's own reach is a whole step wide, which
+    /// near the whole-hour view put every clip in the window's name on the
+    /// live layer, drawn again on every frame of a zoom (2026-11-20).
+    public static func leftEdgeWhileZooming(window: MotionStripRuler) -> ClosedRange<Double> {
+        let sliver = window.spanMS / 32
+        // The narrowest window still held is the painted one over
+        // 1 + heldStretch, and it ends no further right than the sliver
+        // past what was painted.
+        let after = window.spanMS * (1 + 1.0 / 32 - 1 / (1 + heldStretch)) + 1
+        return (window.startMS - sliver - 1)...(window.startMS + after)
+    }
+
     /// How much wider the painting laid under `painted` is drawn to stand
     /// for `window`, or nil when it must be painted again: the change of
     /// scale is more than `heldStretch`, or the window reaches past what
