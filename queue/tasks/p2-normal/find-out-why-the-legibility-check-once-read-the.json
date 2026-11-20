@@ -4,12 +4,12 @@
   "goal": "Three times in a day main’s tests went red on CI because a check that looks at drawn words found them missing: twice the title entrance check saw most of a title’s words off screen, and once the legibility check read a dark caption preview as grey text on the same grey. Each time the next run on the same app code passed, and the tests pass on this Mac. Find out whether the words really are sometimes drawn late or blank on a busy machine, or the checks look too early, and fix whichever it is so main stays green. Since 17 November a second kind does the same: the test that writes a smoothed copy of a recording stalled reading its frames on the check machine for 70 seconds and failed, where it takes a fifth of a second on this Mac. Both point at the check machine's stand-in graphics and video hardware under load, so they are one question.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 60,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T05:49:07.555Z",
-  "updated": "2026-11-19T13:56:59.955Z",
+  "updated": "2026-11-20T13:10:39.310Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/43367299841 (commit 610f1dc95), Test slice 1 of 3, step Run tests, after all 5535 tests passed: 'legibility: 1546 words and icons measured on 122 specimens, light and dark, in 43s' then 'legibility: UNREADABLE (the user: no white on white or black on black, ever): Caption preview, Lower third, still, dark: 1.00:1, #232323 on #232323, at 10,10 (caption-preview-lower-third-still-dark.png)' and exit 1. The next CI run, 43368952566 on b20245458 (a queue-only commit, same app code), passed. Not reproduced locally; the check lives in Scripts/test.sh (grep photonz-legibility). Filed by a-long-reference-edit-opens-in-the-probe-in-one, which does not touch captions. Epic is video-perf only because the queue requires a now-staged epic; it is a test-health item.",
@@ -135,6 +135,10 @@
     {
       "t": "2026-11-19T13:56:59.954Z",
       "note": "seq 90 -> 60"
+    },
+    {
+      "t": "2026-11-20T13:10:39.309Z",
+      "note": "seq 60 -> 10"
     }
   ],
   "walks": [],

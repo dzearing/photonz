@@ -4,12 +4,12 @@
   "goal": "When someone asks Ask to change something already on the canvas or timeline (make the heading bolder, turn the captions yellow, soften the glow, lower the music), the agent can do it, the same way a person does it in the panel. Today it can make most things but cannot change many of their settings afterwards.",
   "epic": "agent-api",
   "priority": "p2-normal",
-  "seq": 520,
+  "seq": 470,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-10T06:09:36.930Z",
-  "updated": "2026-11-20T08:57:58.077Z",
+  "updated": "2026-11-20T13:10:42.410Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Source: the-agent-coverage-check-counts-panel-controls-a (2026-11-10). Run Scripts/test.sh --filter AgentReachTests and read the count test's printout; every not-yet line in Tests/PhotonzCoreTests/AgentReachTests.swift panelTable/rowTable names what is missing. Biggest groups (panel + menus): component copies 27, saved styles/lines 27, captions 24, measurement look 15, titles once made 15, effect settings 13, sound 12, text font/reveal 12, charts 10, motion rows 9, placement 8. Likely shape: extend set_layer (font, weight, tracking, leading, alignment, blendMode, effects[]), a set_captions_look tool, a set_sound tool (volume, gainDB, fadeCurve, eq), a restyle_title tool. Lower panelNotYetPin / rowNotYetPin as lines move.",
@@ -55,6 +55,10 @@
     {
       "t": "2026-11-20T08:57:58.076Z",
       "note": "also: a spotlight lens's Dim, Blur, Feather and Shape (2026-11-20) are notYet for agents, with a lens's kind and amount; Ask's first request had only 14 tokens to spare (AskDocumentFitTests) when a set_layer field for them was tried, so they need room made before they fit."
+    },
+    {
+      "t": "2026-11-20T13:10:42.409Z",
+      "note": "seq 520 -> 470"
     }
   ]
 }
