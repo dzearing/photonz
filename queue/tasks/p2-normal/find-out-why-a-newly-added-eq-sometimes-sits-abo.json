@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-20T01:15:13.867Z",
-  "updated": "2026-11-20T01:15:13.870Z",
+  "updated": "2026-11-20T04:32:40.921Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-19 while running the walk for the-app-crashed-in-nsapplication-photonz-nexteve: Scripts/playtest.sh Scripts/playtest/sound-effects-eq-compressor-locked-walk.json --no-build, repeated. Step 12 (expectInView) failed in 6 of 25 runs, then 4 of 25 and 1 of 5 later runs, always with: the top of \"EQ\" is not on screen: 80 pt of it is cut off above what a person can see. Whatever it is in should have scrolled to its beginning. Window 1440x900 every time. The sibling sound-effects-eq-compressor-walk passed in the one batch it ran in. Not reproduced by hand in the app.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-11-20T01:15:13.869Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-20T04:32:40.920Z",
+      "note": "Seen 2026-11-19 on a probe built from main: sound-effects-eq-compressor-locked-walk step 12 failed with the top of EQ 80 pt cut off above the panel's view, on its first run of a batch."
     }
   ],
   "walks": [

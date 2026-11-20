@@ -18197,3 +18197,35 @@
 {"t":"2026-11-20T01:19:32.202Z","ev":"task_pending","id":"the-app-crashed-in-nsapplication-photonz-nexteve","from":"in_progress","note":"Reproduced twice (about 2 in 100 runs of sound-effects-eq-compressor-locked-walk, at a video's open step; scrub walk 0 in 28). AppKit's message is now captured by the probe (d3ad7887c): more Update Constraints passes than views, with the editor window 100000x1028 and a normal 480x432 minimum. What grows the window is not found yet; the probe now records the resize's call stack so the next crash names it. Fix still to do."}
 {"t":"2026-11-20T01:19:46.922Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
 {"t":"2026-11-20T01:19:46.991Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T01:50:09.899Z","ev":"slice_pass","walks":27,"passed":27,"failed":0,"seconds":1805,"of":1179,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-20T01:50:10.350Z","ev":"task_started","id":"the-app-crashed-in-nsapplication-photonz-nexteve","title":"Find out why the editor window sometimes runs away to 100000 points wide as a video opens, and crashes","priority":"p2-normal"}
+{"t":"2026-11-20T04:31:42.601Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:42.672Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:42.741Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:42.809Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:42.875Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:42.942Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.010Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.077Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.151Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.220Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.285Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.355Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.424Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.491Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.574Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.644Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.710Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.776Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.848Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.930Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:31:43.996Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:32:40.456Z","ev":"task_walks","id":"the-app-crashed-in-nsapplication-photonz-nexteve","walks":["sound-effects-eq-compressor-locked-walk","scrub-never-blacks-out-walk","a-video-opens-at-the-asked-size-after-a-wide-window-walk"]}
+{"t":"2026-11-20T04:32:40.520Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:32:40.586Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:32:40.651Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:32:40.716Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:32:40.781Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:32:40.848Z","ev":"task_note","id":"the-app-crashed-in-nsapplication-photonz-nexteve"}
+{"t":"2026-11-20T04:32:40.922Z","ev":"task_note","id":"find-out-why-a-newly-added-eq-sometimes-sits-abo"}
+{"t":"2026-11-20T04:32:51.711Z","ev":"task_done","id":"the-app-crashed-in-nsapplication-photonz-nexteve","from":"in_progress","note":"Cause named and fixed (c23a205be): SwiftUI's window sizing (NSHostingView.windowDidLayout > updateAnimatedWindowSize) chased a stale size after the walk harness resized the window and an animated change landed before SwiftUI laid it out, adding the size difference each pass until AppKit capped the width at 100000 and crashed. Harness now lays the window out after every resize; the open step fails by name on a runaway; setup screenWideWindow and guard walk a-video-opens-at-the-asked-size-after-a-wide-window-walk (7/16 ran away without the fix, 31/31 clean with it). EQ walk 105/105 at 1440x900 from a screen-wide start, scrub walk 20/20. Photonz's own open sizing did not trigger it (0/20). Scripts/test.sh green."}

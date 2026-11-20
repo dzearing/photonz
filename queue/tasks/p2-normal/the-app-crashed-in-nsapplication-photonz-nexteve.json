@@ -5,14 +5,14 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-17T11:05:07.925Z",
-  "updated": "2026-11-20T01:19:46.990Z",
+  "updated": "2026-11-20T04:32:51.710Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-17-024542.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nNSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) (HeldDragKeys.swift:111)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)\n\nDigest spot check 2026-11-17: the report's top frames are AppKit's, +[NSApplication _crashOnException:] under -[NSView updateConstraintsForSubtreeIfNeeded] in the display cycle; photonz_nextEvent is only the event pump it was called from. The long-edit pass 13 runner saw this crash once in 6 runs of scrub-never-blacks-out-walk with its change in, and 0 in 9 more runs (its log, 2026-11-17T11:04Z): it names -[NSWindow _postWindowNeedsUpdateConstraints] from NSHostingView.updateWindowContentSizeExtremaIfNecessary. That change has since landed (f87714cbc), so this cannot be put down to unfinished source. Command to try: Scripts/playtest.sh Scripts/playtest/scrub-never-blacks-out-walk.json, repeated.\n\n2026-11-19 runner (third look), reproduced and the message captured:\n* The exception, captured by the probe's new recorder: NSGenericException \"The window has been marked as needing another Update Constraints in Window pass, but it has already had more Update Constraints in Window passes than there are views in the window. <SwiftUI.AppKitWindow> {{40, 56}, {100966, 1028}}\". Recorded twice (16:41 and 16:50, ~/Library/Logs/Photonz Probe/exceptions.jsonl).\n* Both times the window was already 100000x1028 at the walk's open step (asked for 1440x900); 1028 is the screen's usable height, so AppKit clamped the height and not the width. contentMinSize stayed 480x432, so it is NOT SwiftUI's minimum size pushing the window. The hosting view inside was 100288x1118 (canvas 100023x830, inspector beside it, the timeline pushed below the bottom at y 1118). Nothing in Sources sets a 100000 frame (EditorState.sizeWindowToImageIfReady clamps to the screen unless contentMinSize is huge; VideoWindowLayout clamps; no windowResizability/defaultSize anywhere).\n* Rate: scrub-never-blacks-out-walk 28 runs, 0 crashes. sound-effects-eq-compressor-locked-walk: 0 in 25, then 1 in a 23-walk batch (Scripts/playtest-all.sh --no-build sound, 17th walk), then 1 on the first launch after a probe rebuild, then 0 in 44 more (7 of those under 10 bounded CPU burners). So about 2 in 100, at the open of a video, not about scrubbing.\n* Ruled out in a stand-alone app: an infinite SwiftUI minimum gives a different AppKit exception (NaN/inf frame); a huge finite minimum just grows the window with no crash; an ideal width chasing its own width does not grow a plain NSHostingView window. The editor's root .frame(minWidth:minHeight:) also hides inner minimums from contentMinSize.\n* Next step: the probe now writes, once per process, the call stack of the first resize that makes any window wider than four screens (kind runawayWindow in the same file), and Scripts/crash-report.mjs prints it under the exception. The next crash (crash-watch, or a batch of sound walks) names the call that grows the window; fix that.\n* Command: Scripts/playtest-all.sh --no-build sound (or the locked EQ walk in a loop), then node Scripts/crash-report.mjs --file <the .ips>.",
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-17-024542.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nNSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) (HeldDragKeys.swift:111)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)\n\nDigest spot check 2026-11-17: the report's top frames are AppKit's, +[NSApplication _crashOnException:] under -[NSView updateConstraintsForSubtreeIfNeeded] in the display cycle; photonz_nextEvent is only the event pump it was called from. The long-edit pass 13 runner saw this crash once in 6 runs of scrub-never-blacks-out-walk with its change in, and 0 in 9 more runs (its log, 2026-11-17T11:04Z): it names -[NSWindow _postWindowNeedsUpdateConstraints] from NSHostingView.updateWindowContentSizeExtremaIfNecessary. That change has since landed (f87714cbc), so this cannot be put down to unfinished source. Command to try: Scripts/playtest.sh Scripts/playtest/scrub-never-blacks-out-walk.json, repeated.\n\n2026-11-19 runner (third look), reproduced and the message captured:\n* The exception, captured by the probe's new recorder: NSGenericException \"The window has been marked as needing another Update Constraints in Window pass, but it has already had more Update Constraints in Window passes than there are views in the window. <SwiftUI.AppKitWindow> {{40, 56}, {100966, 1028}}\". Recorded twice (16:41 and 16:50, ~/Library/Logs/Photonz Probe/exceptions.jsonl).\n* Both times the window was already 100000x1028 at the walk's open step (asked for 1440x900); 1028 is the screen's usable height, so AppKit clamped the height and not the width. contentMinSize stayed 480x432, so it is NOT SwiftUI's minimum size pushing the window. The hosting view inside was 100288x1118 (canvas 100023x830, inspector beside it, the timeline pushed below the bottom at y 1118). Nothing in Sources sets a 100000 frame (EditorState.sizeWindowToImageIfReady clamps to the screen unless contentMinSize is huge; VideoWindowLayout clamps; no windowResizability/defaultSize anywhere).\n* Rate: scrub-never-blacks-out-walk 28 runs, 0 crashes. sound-effects-eq-compressor-locked-walk: 0 in 25, then 1 in a 23-walk batch (Scripts/playtest-all.sh --no-build sound, 17th walk), then 1 on the first launch after a probe rebuild, then 0 in 44 more (7 of those under 10 bounded CPU burners). So about 2 in 100, at the open of a video, not about scrubbing.\n* Ruled out in a stand-alone app: an infinite SwiftUI minimum gives a different AppKit exception (NaN/inf frame); a huge finite minimum just grows the window with no crash; an ideal width chasing its own width does not grow a plain NSHostingView window. The editor's root .frame(minWidth:minHeight:) also hides inner minimums from contentMinSize.\n* Next step: the probe now writes, once per process, the call stack of the first resize that makes any window wider than four screens (kind runawayWindow in the same file), and Scripts/crash-report.mjs prints it under the exception. The next crash (crash-watch, or a batch of sound walks) names the call that grows the window; fix that.\n* Command: Scripts/playtest-all.sh --no-build sound (or the locked EQ walk in a loop), then node Scripts/crash-report.mjs --file <the .ips>.\n\n2026-11-19 runner (fourth look), FIXED in c23a205be: SwiftUI window sizing (NSHostingView.windowDidLayout > updateAnimatedWindowSize) chased a stale size after the harness setFrame when an animated change landed before SwiftUI laid the window out; it added the size difference every pass up to AppKit constrainFrameRect's 100000 cap. Reproduces reliably only when the saved editor frame differs from the walk's asked size (setup screenWideWindow). PlaytestHarness.resize lays the window out after setFrame; the open step fails by name on a runaway. Stand-alone repro: a WindowGroup, setFrame then withAnimation in one turn.",
   "acceptance": [
     "The scrub walk on the long edit (Scripts/playtest.sh Scripts/playtest/scrub-never-blacks-out-walk.json) is run at least 20 times on a probe built from main, and crash-watch is read after: the count of crashes is written in the log",
     "If it crashes again: the AppKit exception message is captured (it is missing from the 17 November report), the cause is fixed in Photonz code, and a test or walk fails before and passes after",
@@ -99,9 +99,129 @@
     {
       "t": "2026-11-20T01:19:46.989Z",
       "note": "crash watch: it happened again in the probe app at 2026-11-19 16:50:21.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-165021.ips"
+    },
+    {
+      "t": "2026-11-20T01:50:10.341Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T04:31:42.599Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:23:22.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-182322.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:42.670Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:38:26.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-183826.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:42.739Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:39:07.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-183907.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:42.807Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:39:29.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-183929.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:42.873Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:40:04.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184004.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:42.940Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:40:25.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184025.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.008Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:40:45.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184045.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.075Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:41:01.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184101.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.149Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:41:20.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184120.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.218Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:41:42.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184142.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.283Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:42:04.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184204.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.353Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:42:26.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184226.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.422Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:42:48.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184248.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.489Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:44:29.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184429.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.572Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:44:48.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184448.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.642Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:45:07.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-184507.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.708Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 18:53:09.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-185309.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.774Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 19:00:57.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-190057.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.846Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 19:05:49.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-190549.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.928Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 19:07:16.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-190716.ips"
+    },
+    {
+      "t": "2026-11-20T04:31:43.994Z",
+      "note": "crash watch: it happened again in the probe app at 2026-11-19 19:24:18.00 -0800: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-19-192418.ips"
+    },
+    {
+      "t": "2026-11-20T04:32:40.454Z",
+      "note": "walks sound-effects-eq-compressor-locked-walk, scrub-never-blacks-out-walk -> sound-effects-eq-compressor-locked-walk, scrub-never-blacks-out-walk, a-video-opens-at-the-asked-size-after-a-wide-window-walk"
+    },
+    {
+      "t": "2026-11-20T04:32:40.518Z",
+      "note": "The crash-watch lines from 17:50 to 19:24 on 2026-11-19 (about 20 reports) are this run's own deliberate reproductions: seeded screen-wide window frames, diagnostic builds and a build with the fix taken out. None is a new crash."
+    },
+    {
+      "t": "2026-11-20T04:32:40.584Z",
+      "note": "Acceptance 1: scrub-never-blacks-out-walk 20 runs on a probe built from main (011d8d7f8), 1 crash (run 1, after other walks had left the window saved screen-wide), 1 unrelated scrub-lag fail; crash-watch read after. With the fix: 20 of 20 from a screen-wide start."
+    },
+    {
+      "t": "2026-11-20T04:32:40.649Z",
+      "note": "Acceptance 2+3: named from a recorded crash. The runaway recorder caught SwiftUI's NSHostingView.windowDidLayout > updateAnimatedWindowSize > NSWindow setFrame, stepping +288 a pass (1728 saved minus 1440 asked); 100000 is AppKit's constrainFrameRect cap on width (checked in a stand-alone). Trigger: the harness setFrame on the window followed, before SwiftUI lays it out, by an animated change (the Edit arrival). Reproduced in a 25-line SwiftUI app; window.layoutIfNeeded() after setFrame stops it there and in the probe. Fix c23a205be (PlaytestHarness.resize). Guard walk a-video-opens-at-the-asked-size-after-a-wide-window-walk: 7 of 16 ran away with the fix taken out, 31 of 31 clean with it."
+    },
+    {
+      "t": "2026-11-20T04:32:40.714Z",
+      "note": "Acceptance 4: sound-effects-eq-compressor-locked-walk 105 runs, each from a screen-wide saved window (the hard start), 0 crashes, window 1440x900 at the open step every time. Earlier in this run, before the fix, 86 runs and 172 open-only runs from a 1440x900 saved window were all clean, which is why it looked like 2 in 100."
+    },
+    {
+      "t": "2026-11-20T04:32:40.779Z",
+      "note": "Could a person hit it: not seen. With no size from the walk, Photonz's own fit-to-picture sizing resized the window from 1728x990 and from 700x500 in 20 opens, 0 crashes, and SwiftUI never re-applied a size. The app's own setFrame calls (EditorState.sizeWindowToImageIfReady, FrontDoorView, Current's VideoEditorView) are left as they were: adding a forced layout there risks the nested whole-window update 27c069202 removed from the open, for a fault not reproduced there."
+    },
+    {
+      "t": "2026-11-20T04:32:40.846Z",
+      "note": "Left rough: a perf suite reported 1 issue in the first Scripts/test.sh run (straight after the walk batches); the next full run passed with exit 0. sound-effects-eq-compressor-locked-walk fails at step 12 (EQ cut off at the top), owned by find-out-why-a-newly-added-eq-sometimes-sits-abo. In the sound batch a-clip-s-sound-is-linked-under-it-walk (volume reads -5.7 not -8.7) and title-sounds-whoosh-and-tick-walk (no Catalog control) failed; neither touches window sizing, and the next sweep will file them if they hold."
+    },
+    {
+      "t": "2026-11-20T04:32:51.708Z",
+      "note": "Cause named and fixed (c23a205be): SwiftUI's window sizing (NSHostingView.windowDidLayout > updateAnimatedWindowSize) chased a stale size after the walk harness resized the window and an animated change landed before SwiftUI laid it out, adding the size difference each pass until AppKit capped the width at 100000 and crashed. Harness now lays the window out after every resize; the open step fails by name on a runaway; setup screenWideWindow and guard walk a-video-opens-at-the-asked-size-after-a-wide-window-walk (7/16 ran away without the fix, 31/31 clean with it). EQ walk 105/105 at 1440x900 from a screen-wide start, scrub walk 20/20. Photonz's own open sizing did not trigger it (0/20). Scripts/test.sh green."
     }
   ],
-  "started": "2026-11-19T23:56:15.686Z",
+  "started": "2026-11-20T01:50:10.340Z",
   "failures": 0,
   "lastError": {
     "at": "2026-11-18T18:26:36.714Z",
@@ -110,6 +230,8 @@
   },
   "walks": [
     "sound-effects-eq-compressor-locked-walk",
-    "scrub-never-blacks-out-walk"
-  ]
+    "scrub-never-blacks-out-walk",
+    "a-video-opens-at-the-asked-size-after-a-wide-window-walk"
+  ],
+  "completed": "2026-11-20T04:32:51.709Z"
 }
