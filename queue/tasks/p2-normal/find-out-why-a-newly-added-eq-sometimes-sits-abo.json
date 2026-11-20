@@ -1,0 +1,30 @@
+{
+  "id": "find-out-why-a-newly-added-eq-sometimes-sits-abo",
+  "title": "Find out why a newly added EQ sometimes sits above the visible part of the panel",
+  "goal": "When a sound clip gets an EQ from the plus on Audio Effects, the panel should scroll so the new effect is in view. In the walk that checks this, about one run in six finds the top of the EQ 80 points above what can be seen. Find out whether a person adding an effect sees the same, and fix it if so.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 55,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-20T01:15:13.867Z",
+  "updated": "2026-11-20T01:15:13.870Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-11-19 while running the walk for the-app-crashed-in-nsapplication-photonz-nexteve: Scripts/playtest.sh Scripts/playtest/sound-effects-eq-compressor-locked-walk.json --no-build, repeated. Step 12 (expectInView) failed in 6 of 25 runs, then 4 of 25 and 1 of 5 later runs, always with: the top of \"EQ\" is not on screen: 80 pt of it is cut off above what a person can see. Whatever it is in should have scrolled to its beginning. Window 1440x900 every time. The sibling sound-effects-eq-compressor-walk passed in the one batch it ran in. Not reproduced by hand in the app.",
+  "acceptance": [
+    "The walk sound-effects-eq-compressor-locked-walk is run at least 20 times and the number of step 12 failures is written in the log",
+    "If the panel really does leave the new effect out of view, it scrolls to it every time and the walk passes 20 of 20",
+    "If it is only the walk reading too early, the walk waits for the panel to settle and passes 20 of 20"
+  ],
+  "log": [
+    {
+      "t": "2026-11-20T01:15:13.869Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "sound-effects-eq-compressor-locked-walk"
+  ]
+}
