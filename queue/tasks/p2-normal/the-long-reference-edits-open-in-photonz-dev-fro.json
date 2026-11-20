@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-17T15:37:26.539Z",
-  "updated": "2026-11-20T04:33:27.774Z",
+  "updated": "2026-11-20T04:52:01.517Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the digests of 2026-11-16 and 2026-11-17. Scripts/perf/reference-edit.sh opens with Scripts/probe-app.sh. The files: ~/Library/Caches/Photonz Reference Edit/Reference Edit 6 min.photonz (also 20, 60). The Dev app must never be rebuilt by a runner (CLAUDE.md, Three bundles); opening a file in it is fine.",
@@ -62,6 +62,38 @@
     {
       "t": "2026-11-20T04:33:27.766Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T04:51:32.521Z",
+      "note": "Before building: a step that says Run Scripts/perf/reference-edit.sh opens the probe, and the files sit in ~/Library/Caches (hidden from Finder); double-clicking a .photonz picks whichever Photonz LaunchServices likes, so a file to click is not reliable. Six reports named a Help > Reference Edit menu that does not exist (grep of Sources finds none)."
+    },
+    {
+      "t": "2026-11-20T04:51:32.590Z",
+      "note": "Chose a dashboard button on the try step (referenceEdit: 6|20|60) that runs reference-edit.sh --dev over File > Open alone, because it is one click with no terminal; File > Open (Cmd-Shift-G) stays in each setup as the fallback. Chose a person's own copy under <folder>/Photonz Dev over opening the walks' copy, because every speed walk rewrites the walks' copy fresh and would pull it out from under an open Dev window and throw away anything saved."
+    },
+    {
+      "t": "2026-11-20T04:51:32.658Z",
+      "note": "Verified: copy rules drilled in a temp folder (first copy, refresh when untouched and the edit changed, kept when saved into, --fresh, missing app exits 1). 6, 20 and 60 opened from the copies in the probe via open -a (list_documents: 360/1200/3600 s video documents, recordings resolved). Real pointer click on the button in Chrome against a test dashboard on :8799 pointed at the probe: 'Opened in Photonz Dev', 60 min edit open. open -a needed an absolute app path (fixed). Live dashboard restarted for the route; bad minutes refused. Dev app never touched."
+    },
+    {
+      "t": "2026-11-20T04:51:32.724Z",
+      "note": "Rewrote the try steps and setup of 32 long-edit reports (2026-11-12 to 11-19, incl. pass13/14, the 11-16 timeline and opening reports) to open the edit with the button; steps opening a second length got their own button. Runner prompt has the rule; video.md documents --dev. Scripts/test.sh green (exit 0). Commit 4751d023e, pushed."
+    },
+    {
+      "t": "2026-11-20T04:51:32.788Z",
+      "note": "left rough: a saved person's copy is never refreshed by itself when the edit's recipe changes (delete it or --fresh). Under the bar for a task: nobody has hit it, and the audit says it."
+    },
+    {
+      "t": "2026-11-20T04:51:32.855Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-20T04:51:32.934Z",
+      "note": "not done yet: 2026-11-19-timeline-hour-long-pass13-kept-painting.json rough line 6 (\"Walks: 15 run on the final build, all green (the task's 10 timeline walks, a-click-tick-i…\") differs from the mock and names nothing that settles it"
+    },
+    {
+      "t": "2026-11-20T04:52:01.515Z",
+      "note": "Reports' try steps carry an Open in Photonz Dev button (\"referenceEdit\": 6|20|60) that runs Scripts/perf/reference-edit.sh N --dev: a person's own copy under ~/Library/Caches/Photonz Reference Edit/Photonz Dev opened in Photonz Dev with open -a, never rebuilt or quit; File > Open reaches the same folder. 32 long-edit reports rewritten, runner prompt rule added. Verified by a real click in Chrome against a test dashboard pointed at the probe (60 min edit opened) and 6/20/60 opened via the script; test.sh green. Audit: queue/audits/2026-11-19-the-long-reference-edits-open-in-photonz-dev.json"
     }
   ],
   "started": "2026-11-20T04:33:27.765Z",
@@ -70,5 +102,7 @@
     "at": "2026-11-18T19:57:12.188Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-  }
+  },
+  "walks": [],
+  "completed": "2026-11-20T04:52:01.516Z"
 }
