@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-20T10:29:25.015Z",
+  "updated": "2026-11-20T12:34:59.336Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,37 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-20T10:29:25.014Z",
-      "note": "... 49 earlier entries elided",
-      "elided": 49
-    },
-    {
-      "t": "2026-11-16T04:20:04.965Z",
-      "note": "Did NOT pay or not kept: (a) busyLane 24 -> 1 (paint every plain clip): clipBar bodies 36 -> 22, trim 29 -> 26, within noise; reverted. (b) ClickTicksView handed its ticks by the lane as an Equatable view: a-click-tick-is-hidden-and-slid-walk fails at step 16 (tick drag does not slide the click), exactly as on 2026-11-14; reverted to reading for itself inside readingALatePass, walk green. Cause still not found."
-    },
-    {
-      "t": "2026-11-16T04:20:05.041Z",
-      "note": "Next for pass 10: (a) the longest pass is now the timeline's late pass (17-24 ms) where every clip bar in sight (18-20) is built again because each reads the document via latePassRevision: hand ClipPiecesBar its own values from the lane (rule 7) or a per-layer revision so only the edited clips rebuild; (b) NSWindow _resetDragMargins runs after every edit (~3 ms, FocusNavigator walking every focusable item via NSHostingView.acceptsFirstResponder); (c) root body still reads saveAffordance (document) in the edit's own pass; (d) pick 42 ms and its ~450 ms of panel arrivals. Bars not reached: edits <=16 (trim 18, picked 24-29), scrub 2 frames vs 1, 1 dropped a minute. Audit queue/audits/2026-11-15-a-long-edit-with-transitions-plays-scrubs-and-ed-pass9.json."
-    },
-    {
-      "t": "2026-11-16T04:20:05.125Z",
-      "note": "Pass 9 landed 6d6f87aa1: the timeline's ruler watches only its own facts and a pick carried into the history is no edit, so an edit wakes the timeline a frame later instead of every clip in its own frame (trim 32 -> 18 ms, trim picked 34 -> 24, undo picked 44 -> 29, worst of 3). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 10 leads in the log."
-    },
-    {
-      "t": "2026-11-16T08:10:50.981Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-16T09:04:34.557Z",
-      "note": "Pass 10 fix 1: each clip bar watches only its own clip (ClipBarWatch via readingForAClipBar; which bars an edit reaches is PhotonzDocument.clipBarsChange, ClipBarsChangeTests). Measured first with a temporary build where bars watched nothing: trim late pass 18 -> 12. Shipped, worst of 3: trim 18 -> 17, blade 89 -> 62, undo 36 -> 27, trim picked 24 -> 18, blade picked 46 -> 26, undo picked 29 -> 23; pick 43 -> 41 unchanged. 20 walks ok (holds, edit points, ripple, fades, cuts, keys, click tick slide, an-editing-session, scrub). test.sh green."
-    },
-    {
-      "t": "2026-11-16T09:24:56.094Z",
-      "note": "Pass 10 fix 2 (cb47aa27c): a pick rebuilt 22 clip bars because the ruler worked out the Source ghost's room by reading selectedLayerID/multiSelectedLayerIDs, so every ruler reader watched the pick. Now EditorState.rulerGhostEndMS (written on a pick and with the late pass, only when a ghost runs past the end); the ruler reads it live only while a hand holds the document (rulerReadsTheHand). Pick builds 9 bars, longest pass 32 (baseline runs 35/36/41). a-retimed-clip-shows-its-source-walk shows the ruler still runs to ~17 s for a 2x ghost on an 8.6 s clip. 6 more walks ok (box picks, clip-click-cost, an-editing-session, keyframe-anything, speed curve). test.sh green. Baseline short-6.json rewritten after fix 1 (worst of 3) and not again after fix 2, which only made the pick faster."
-    },
-    {
-      "t": "2026-11-16T09:24:56.162Z",
-      "note": "Next for pass 11: (a) a pick still holds the window ~32 ms and rebuilds the 5 track lanes and rows (lanes read the pick to decide which clips stay full views, rule 8): hand lanes a per-track pick value; (b) the panel's first fill after a pick, ~450 ms in 15-60 ms passes (blade with nothing picked, 62); (c) undo after a trim/blade 23-27 ms: its late pass rebuilds the panel sections plus lanes; (d) NSWindow _resetDragMargins ~3 ms an edit (pass 9 lead). Bars not reached: edits <=16 ms, scrub 1 frame (2), 0 dropped (1/min). Audit queue/audits/2026-11-16-a-long-edit-with-transitions-plays-scrubs-and-ed-pass10.json. No new follow-up tasks: every cost left is one of this task's own unmet bars."
+      "t": "2026-11-20T12:34:59.335Z",
+      "note": "... 56 earlier entries elided",
+      "elided": 56
     },
     {
       "t": "2026-11-16T09:25:19.700Z",
@@ -507,9 +479,37 @@
     {
       "t": "2026-11-20T10:29:25.013Z",
       "note": "Pass 20 landed f8469daaf: a hand hunting forward on the playhead is followed by one pass that stays a stretch ahead of it, and the frames it passed are let go first, so the picture no longer freezes every 1.5 s of the edit: hunt frame lag worst 43-49 -> 16-18, sight lag worst 40 -> 12-14 (speed walk was red on these this morning, green now). Bars not reached: edits while playing 14-51 ms vs 16, worst scrub lag 1 (hunt 12-18, medium 34+). Pass 21 leads in the log."
+    },
+    {
+      "t": "2026-11-20T10:29:55.126Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T12:34:20.132Z",
+      "note": "Pass 21 measured first (853e5c7c4, a walk of three hunts in a row with a temporary per-look dump and pass log, both removed): frame under the hand worst 17-22, sight worst 12-17, medians 2. Two causes, both reproduced in the log: (1) the read around a still playhead (readAroundRest) finished ~300 ms before the hunt and the first move opened a new pass that decoded from the key frame before it, 173 ms to its first frame (the first 200 ms of every hunt 17-20 refreshes behind); (2) on the 2nd and 3rd hunt the small frames' budget (64) held 12 frames each of three clips coming up, left from the hunt before, and 29 of the hand's recording, while the follower read 45 ahead: every frame past the 29th was evicted as it landed and never read again, so the hand later sat in the hole (up to 25 refreshes, every ~2 s of the edit)."
+    },
+    {
+      "t": "2026-11-20T12:34:20.214Z",
+      "note": "Pass 21 fixes (MovieSweep.restingPass/restWaits/followLeadMS/comingLeadMS/comingPausesAfter, MovieFrameQueue.farthest(aside:), tests first in MovieSweepTests and MovieFrameQueueTests): the read at rest reads on to the end of the recording, waits at its window's end and becomes the hunt's follower (kept while the playhead rests where it was opened, Sweep.restingOn; userInitiated, not utility: at utility it made a frame every 5.5 ms against 2.7; gives up after 30 s); a pass for a clip coming up reads 200 ms of it and waits for the hand to cross in, then follows; while a hand moves, frames of recordings it is only heading for count 4x as far, and a follower stays 800 ms ahead instead of 1.5 s. Passes that may wait long give their place in MovieSweeper.gate while waiting (yieldsWhileWaiting; half the cores, 2 on a four core Mac). Chose tightening the follower's lead over raising the budget because 64 small frames is the memory bar's share and the pass refills 24 frames in ~90 ms."
+    },
+    {
+      "t": "2026-11-20T12:34:20.282Z",
+      "note": "Pass 21 result: three hunts in a row, frame worst 17-22 -> 4-6, sight worst 12-17 -> 2-3, medians 1. Speed walk 3 runs, all green against the baseline (44 numbers): hunt frame worst 8/3/4 (baseline 18), sight 6/3/4 (14); play 0 of 1817 dropped; medium and edits unchanged (trim 12-13, blade 42-44, undo 23-27, pick 28-32, pick from nothing 23-55). Baseline: hunt frameLagWorst 18->8, sightLagWorst 14->6 only. Composite path untouched (frame reading for scrubs only), so export is unchanged by construction."
+    },
+    {
+      "t": "2026-11-20T12:34:20.348Z",
+      "note": "Pass 21 verified: Scripts/test.sh exit 0; walks ok: a-recording-opens-sharp, an-editing-session, hear-the-scrub, opening-title-dissolve, playing-a-recording-backwards-keeps-up, playing-a-recording-never-blinks, playing-backwards-fast-keeps-moving, reference-edit-opens, scrubbing-shows-the-zoom, timeline-toggle-beside-the-scrubber, the-scrubber-knob-clears-the-times (failed once on the playhead's end position, ok on rerun), speed-walk x3. clicking-a-timeline-item-moves-the-playhead fails at step 58 as on main since 2026-11-17 (owned by walks-that-fail-in-the-full-sweep-27). scrub-never-blacks-out flaky: 2 of 4 runs with this change and 1 of 4 on main with it stashed failed, picture 2 refreshes behind at 1-2 of 165 frames; recorded, not claimed either way. Looked at the speed walk's capture after the edits: sharp frame, picked clip, panel and timeline right. docs/design/video.md 8e: 'Every pass a hunt needs is open before the hand gets there'. Audit queue/audits/2026-11-20-a-long-edit-with-transitions-plays-scrubs-and-ed-pass21.json."
+    },
+    {
+      "t": "2026-11-20T12:34:20.419Z",
+      "note": "Next for pass 22: (a) edits while playing 12-55 ms vs 16 (blade and pick from nothing fill the panel; unpick's teardown, shareable per the 2026-11-19 design review); (b) the hunt's first ~100 ms still 4-6 refreshes: with two recordings at rest each read covers only ~15 frames ahead (restingWindow share), so widen ahead or let the rest pass read on a little past its window; (c) medium drag frame lag median 33-61, sight worst 34. Bars not reached: edits <=16 ms, worst scrub lag 1. Left rough, not filed: nothing beyond this task's own bars; every rough audit line is this task's own."
+    },
+    {
+      "t": "2026-11-20T12:34:59.334Z",
+      "note": "Pass 21 landed cf12e8b00: a hunt starts moving at once (the read at rest becomes the pass that follows the hand) and a second hunt over the same ground holds no frame (clips coming up give way in the budget, the follower stays 800 ms ahead): three hunts in a row, frame under the hand worst 17-22 -> 4-6 refreshes, picture 12-17 -> 2-3, medians 1. Bars not reached: edits while playing 12-55 ms vs 16, worst scrub lag 1 (hunt 4-6, medium 34+). Pass 22 leads in the log."
     }
   ],
-  "started": "2026-11-20T09:05:29.087Z",
+  "started": "2026-11-20T10:29:55.125Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
