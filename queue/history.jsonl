@@ -18381,3 +18381,11 @@
 {"t":"2026-11-20T20:44:49.043Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-20T20:44:49.117Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-20T20:44:49.195Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 17 landed 8153b42db: the ruler's walk markers come down for timed steps and are not hung in the dev app; near Fit 12.1 -> 11.3 ms a frame, scroll 9.3 -> 8.8, look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: fresh paintings laid off the main thread)."}
+{"t":"2026-11-20T20:45:31.610Z","ev":"task_started","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa","title":"A cross fade plays smoothly in the editor, the way it looks in the export","priority":"p1-high"}
+{"t":"2026-11-20T22:49:06.569Z","ev":"task_walks","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa","walks":["a-cross-fade-plays-as-exported-walk"]}
+{"t":"2026-11-20T22:49:06.649Z","ev":"task_note","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa"}
+{"t":"2026-11-20T22:49:06.729Z","ev":"task_note","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa"}
+{"t":"2026-11-20T22:49:06.806Z","ev":"task_note","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa"}
+{"t":"2026-11-20T22:49:06.886Z","ev":"task_note","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa"}
+{"t":"2026-11-20T22:49:06.970Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-20T22:49:07.052Z","ev":"task_pending","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa","from":"in_progress","note":"Two causes fixed and committed (5b1effa70): borrowed transition frames stand in from the borrowed stretch; no restart of a play pass onto the same key frame. Walk a-cross-fade-plays-as-exported-walk passes at Next defaults (1x, first frame, 0.5x, 2x; jump-cut and two-clip dissolves). Still open: the after-a-scrub item, Space right after a scrub ~1s past a key frame holds a slightly old frame for ~0.6s. Audit: queue/audits/2026-11-20-a-cross-fade-plays-smoothly-in-the-editor-the-wa.json"}

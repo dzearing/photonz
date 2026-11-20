@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-20T15:56:44.058Z",
-  "updated": "2026-11-20T15:56:44.183Z",
+  "updated": "2026-11-20T22:49:07.051Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-20: \"i see a weird bug where on a video transition on i think a cross fade, playing it back in the editor mode had it flickering off and on. but cutting the exported video it was fine, i think there's a rendering bug.\" They were not sure it was a cross fade; check other transitions (push, 3D) too if the dissolve does not reproduce. I could not see their document (no document open over MCP), and did not reproduce it.\n\nWhy export and playback differ: export renders every frame and waits for both shots; live playback reads frames ahead through the play pass and frame queue (Sources/PhotonzCore/MoviePlayPass.swift, Sources/PhotonzCore/MovieFrameQueue.swift), which during a dissolve must hold frames for TWO places at once (MoviePlayPass.swift:28-31, 246, 337-340; MovieFrameQueue.swift:79-90, which already records 'a dissolve stuck that way, 2026-10-07').\n\nSuspect, not confirmed: when one side's frame is not decoded in time, the compositor draws that layer missing for a frame (on and off), rather than holding its last frame. Recent commits touching exactly this budget, worth bisecting: ad24392f4 (fast passes skip frames nothing depends on), cf12e8b00 and b9cf61d13 (hunt and frame budget, Next), c771adfbb (long edit plays). The fix must not be 'wait for the frame' if that drops playback frames; holding the newest decoded frame of the late side is the likely shape, plus fixing why it is late.\n\nOverlaps: a-long-edit-with-transitions-plays-scrubs-and-ed (p1, seq 10) is about speed on long edits with transitions; this one is about correctness of what is drawn. Keep them separate but say in both logs if one fix serves both. The rotating check's an-editing-session-walk fails on blank frames during play; say why it did not catch this (a dissolve may not be in it, or it checks only fully blank frames).",
@@ -29,6 +29,38 @@
     {
       "t": "2026-11-20T15:56:44.182Z",
       "note": "seq 2020 -> 25"
+    },
+    {
+      "t": "2026-11-20T20:45:31.606Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T22:49:06.567Z",
+      "note": "owns these walks: a-cross-fade-plays-as-exported-walk"
+    },
+    {
+      "t": "2026-11-20T22:49:06.647Z",
+      "note": "Reproduced (probe, Next defaults) with a new step expectTransitionPlaysAsExported: every picture the canvas is handed while a transition plays vs the export's picture of the same moment (streamed like an MP4), plus which frame each side was drawn from. On the fixture and on two of the user's HEVC 3456x2234 screen recordings (VFR, key frames ~2.2s apart), playing from rest at 1x, from the first frame, 0.5x and 2x matched the export (mean diff ~2/255, every frame exact), even with 14 of 16 cores busy, and filmed on screen (filmWindow) the fade was smooth. What failed every time: Space right after a scrub landing just before the dissolve, both sides drawn from frames up to 34 behind (rec-a frame 146 for 180: a second old, a screenshot thumbnail popping in the corner)."
+    },
+    {
+      "t": "2026-11-20T22:49:06.727Z",
+      "note": "Cause (timing logs in MovieSweeper): (1) a pass opened mid-GOP takes 614ms for its first frame; MoviePlayPass.serves called it fallen behind after 4 frames and restarted it at the playhead, which decodes from the SAME key frame, so passes 176,181,186,191 opened and none read a frame. (2) MovieFramesInHand stood in for a late frame borrowed past a clip's stretch with a frame from back inside the stretch (within: playedSourceFrames excludes transition handles), so a late borrowed frame jumped the shot back up to a second, then forward again: the on/off flicker, absent in export which never stands in. Fixed both; unit tests fail on old code (borrowed stand-in 60 for 64 and 41 for 37; serves with key frames)."
+    },
+    {
+      "t": "2026-11-20T22:49:06.804Z",
+      "note": "Left open (why this stays pending): after a scrub landing ~1s past a key frame and an immediate Space (or 0.4s later), the outgoing side still holds a frame (175 for 178..193, a tenth of a second old instead of a second) for ~0.6s while the first frame decodes; play start cancels the resting read that was already decoding there (stopSweeps in fetch when playing). Next step: play waits for the first frame under the playhead (Premiere does), or the play pass adopts the resting read. The committed walk has no scrub case because it would be red; the fixture lands near a key frame so it passes there anyway. Evidence on the user's recordings kept out of the public repo: ~/Library/Caches/Photonz Cross Fade Evidence."
+    },
+    {
+      "t": "2026-11-20T22:49:06.884Z",
+      "note": "Why an-editing-session-walk did not catch it: expectPlaybackNeverBlank looks 30 times over 21s, fails only on a clip area >90% see-through, counts only a dissolve inside one clip (incomingMovieFrameSourceMS, not edit-point transitions), and plays from rest, where the dissolve is exact on this Mac."
+    },
+    {
+      "t": "2026-11-20T22:49:07.050Z",
+      "note": "Two causes fixed and committed (5b1effa70): borrowed transition frames stand in from the borrowed stretch; no restart of a play pass onto the same key frame. Walk a-cross-fade-plays-as-exported-walk passes at Next defaults (1x, first frame, 0.5x, 2x; jump-cut and two-clip dissolves). Still open: the after-a-scrub item, Space right after a scrub ~1s past a key frame holds a slightly old frame for ~0.6s. Audit: queue/audits/2026-11-20-a-cross-fade-plays-smoothly-in-the-editor-the-wa.json"
     }
+  ],
+  "started": "2026-11-20T20:45:31.605Z",
+  "walks": [
+    "a-cross-fade-plays-as-exported-walk"
   ]
 }
