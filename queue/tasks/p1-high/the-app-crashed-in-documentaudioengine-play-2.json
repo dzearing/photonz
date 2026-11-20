@@ -1,0 +1,27 @@
+{
+  "id": "the-app-crashed-in-documentaudioengine-play-2",
+  "title": "The app crashed in DocumentAudioEngine.play",
+  "goal": "Crash watch caught a crash in the loop's probe app at 2026-11-20 05:43:50.00 -0800: EXC_CRASH (SIGABRT) in DocumentAudioEngine.play(_:playhead:speed:) < closure #4 in DocumentAudioPlayer.play(_:fromMS:speed:playh… < closure #1 in DocumentAudioEngine.run(_:). Read the report, reproduce it, fix the cause, and add a test that would have caught it.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 4020,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-20T15:20:56.248Z",
+  "updated": "2026-11-20T15:20:56.251Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-20-054350.ips\nException: EXC_CRASH SIGABRT\nMessages: \nStack (app frames):\nDocumentAudioEngine.play(_:playhead:speed:) (DocumentAudioPlayer.swift:395)\nclosure #4 in DocumentAudioPlayer.play(_:fromMS:speed:playhead:) (DocumentAudioPlayer.swift:93)\nclosure #1 in DocumentAudioEngine.run(_:) (DocumentAudioPlayer.swift:280)",
+  "acceptance": [
+    "Reproduced (or the exact conditions shown from the report) before the fix",
+    "The cause fixed in Photonz code, with a test or walk that fails before and passes after",
+    "crash-watch shows no new report with this signature for a week of walks"
+  ],
+  "log": [
+    {
+      "t": "2026-11-20T15:20:56.250Z",
+      "note": "created (crash-watch)"
+    }
+  ]
+}

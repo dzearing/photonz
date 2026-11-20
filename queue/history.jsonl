@@ -18347,3 +18347,16 @@
 {"t":"2026-11-20T13:10:43.081Z","ev":"task_resequenced","id":"a-spotlight-draws-the-border-shadow-and-blur-it","from":4100,"to":570}
 {"t":"2026-11-20T13:12:04.254Z","ev":"triage","summary":"merged 0, dropped 0, moved 0, reset 0; groomed 1 (spotlight border tagged measure-redline); renumbered p2 to steps of 10; evidence logged on 2 tasks (rotating check stops on the clock, Film Super walk intermittent)"}
 {"t":"2026-11-20T13:12:04.278Z","ev":"digest","file":"2026-11-20.md"}
+{"t":"2026-11-20T13:12:22.526Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-20T15:20:04.376Z","ev":"task_walks","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","walks":["speed-walk","scrub-never-blacks-out-walk"]}
+{"t":"2026-11-20T15:20:17.790Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-20T15:20:17.856Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-20T15:20:17.925Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-20T15:20:17.990Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-20T15:20:18.057Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-20T15:20:18.124Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-20T15:20:18.190Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-20T15:20:18.257Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-20T15:20:18.325Z","ev":"task_walks","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","walks":["speed-walk","scrub-never-blacks-out-walk"]}
+{"t":"2026-11-20T15:20:42.263Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 22 landed b9cf61d13: a hunt after a jump keeps the frames read for it (the frame budget no longer keeps places for recordings the playhead left), so the first tenth of a second of a hunt shows real frames: frame under the hand worst 4-7 -> 2-4 over twelve hunts, never behind the picture. Found and logged that a quarter to two fifths of an edit's long passes is SwiftUI's accessibility focus walk, which grows with the timeline. Bars not reached: edits while playing 18-54 ms vs 16, worst scrub lag 1 (hunt 2-4). Pass 23 leads in the log."}
+{"t":"2026-11-20T15:20:56.252Z","ev":"task_created","id":"the-app-crashed-in-documentaudioengine-play-2","priority":"p1-high","title":"The app crashed in DocumentAudioEngine.play"}

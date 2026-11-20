@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-20T12:34:59.336Z",
+  "updated": "2026-11-20T15:20:42.262Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,57 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-20T12:34:59.335Z",
-      "note": "... 56 earlier entries elided",
-      "elided": 56
-    },
-    {
-      "t": "2026-11-16T09:25:19.700Z",
-      "note": "Pass 10 landed 453089736 and cb47aa27c: an edit rebuilds only the clip bars it changed, and a pick no longer rebuilds every bar through the ruler (worst of 3: trim picked 24 -> 18, blade picked 46 -> 26, undo 36 -> 27, blade 89 -> 62; pick 22 bars -> 9). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 11 leads in the log."
-    },
-    {
-      "t": "2026-11-16T09:25:51.049Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-16T10:53:34.901Z",
-      "note": "Pass 11 measured first (short speed walk, e355d5075): trim 13, blade 87, undo 23, pick 36 (clipBar 7, 5 lanes, 5 rows in its own pass), trim picked 22, blade picked 36, undo picked 23. New: the speed walk can 'unpick' (nothing picked) so the next 'pick' is tallied 'pick, from nothing' (SpeedWalk.tallyName fromNothing, SpeedWalkTests). Picking from nothing while playing: 360-500 ms of main thread over 15-19 passes of 15-70 ms (sections, then rows, arriving); unpick ~100 ms over 4-6 passes, longest ~40. Time Profiler over 10 pick/unpick pairs (xctrace --attach, /tmp scripts): of the long bursts layout ~30%, AttributeGraph update ~27%, accessibility and focus (AccessibilityNode.updateFocus walking every responder) ~21%, bodies ~8%."
-    },
-    {
-      "t": "2026-11-16T10:53:34.974Z",
-      "note": "Pass 11 fix (lanes and bars watch only their own pick): the grid hands each TimelineTrackRow its TrackPickShare (PhotonzCore, TrackPickShareTests: header pick, in hand, picked clips and sounds, the single pick, the key-diamond layer) instead of every row, lane and header reading selectedLayerID/tracksInHand/keyLayer; ClipPiecesBar asks EditorState.isClipPicked (a ClipPickWatch per clip, told only when selectedLayerID moves onto or off it). Found with a temporary withObservationTracking logger on the row and lane (callStackSymbols at the willSet; removed): rows were woken by selectLayer, then by keyLayer via headerKeyLayerID (now gone). A pick builds 1 row, 1 lane and 1 clip bar (were 5, 5 and 7-9). New short-6 baseline, worst of 3: trim 15, blade 89, undo 29, pick 32 (was 41), trim picked 17, blade picked 51 (runs 28/27/51, a fourth 33), undo picked 23, unpick 39, pick from nothing 55. Blade with nothing picked read 85-92 in every run today including before the change (87), not this change. docs/design/video.md 8f rule 10."
-    },
-    {
-      "t": "2026-11-16T10:53:35.047Z",
-      "note": "Pass 11 did NOT pay: all waiting panel sections in one pass (DockArrival allowNext looping, A/B by a file switch, reverted): pick from nothing busy ~370 -> ~310 ms but longest ~62 -> ~95, and still 9-12 passes because rows (PanelRowsArrival) and measurements follow. Verified: test.sh green (one PieceCopyWriterTests flake on the first full run, passed alone 6/6 and on the rerun; logged on find-out-why-the-cut-export-test-fails-again-in); 15 walks ok (an-editing-session, keyframe-anything, pick-a-track-and-delete-it, track-header-lifts, three box-pick walks, clip-click-cost, a-retimed-clip-shows-its-source, a-painted-caption-takes-a-click, captions-are-one-layer, a-locked-track-keeps-its-clip, animate-a-property-list, a-keyed-drag-on-a-video, scrub-never-blacks-out); speed-walk ok x5. Audit queue/audits/2026-11-16-a-long-edit-with-transitions-plays-scrubs-and-ed-pass11.json."
-    },
-    {
-      "t": "2026-11-16T10:53:35.120Z",
-      "note": "Next for pass 12: (a) the pick from nothing: ~400 ms of panel arrival, 15-20 window passes each ~15-20 ms even with no body built, so the count of passes is the lever (sections, then PanelRowsArrival rows, then measurement passes; try rows arriving with their section, or measurement without a state write); (b) unpick ~100 ms (sections leaving); (c) AccessibilityNode.updateFocus walks every responder on each pass that adds controls (~16% of those passes); (d) blade with nothing picked 77-92 is (a) again. Bars not reached: edits <=16 ms, scrub 1 frame (2), 0 dropped (1/min). No new follow-up tasks: every cost left is one of this task's own unmet bars."
-    },
-    {
-      "t": "2026-11-16T10:55:02.057Z",
-      "note": "Pass 11 landed 929a0f158: a pick on a video rebuilds only the track and clip it reaches (1 row, 1 lane, 1 clip bar, were 5, 5 and 7-9); pick 41 -> 32 ms worst of 3, other edits level. The speed walk now times a pick from nothing (55 ms longest, about 400 ms of panel arrival behind it, the pass 12 lead). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 12 leads in the log."
-    },
-    {
-      "t": "2026-11-16T10:58:56.201Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-16T12:55:07.679Z",
-      "note": "Pass 12 measured first (short speed walk on 1baebe7ef, within baseline): pick from nothing longest 63 ms, blade (nothing picked) 77, trim 19, undo 30, pick 32. New probe-only tools: the speed walk's pass list now says which piece of the dock landed in each long pass ('landed: section color', 'rows effect 0 settings'; ViewBuildMeter.landed), and the meter leaves a Points of Interest mark per pass of 6 ms or more so a Time Profiler trace (xctrace --instrument os_signpost) is cut into the very same passes: Scripts/perf/trace-bursts.py --passes [--share SYM ...]. Main red on CI run 43839629711 was the known TextRevealUnclipped Metal flake; folded into find-out-why-the-legibility-check-once-read-the."
-    },
-    {
-      "t": "2026-11-16T12:55:07.750Z",
-      "note": "Pass 12 fix: one piece of the panel per run-loop pass, and a quiet pass after rows (PanelLandingTurns in PhotonzCore with PanelLandingTurnsTests; PanelLanding.mayLand in the app; InspectorPanel.catchUp and PanelRowsArrival ask it). Measured with the landed marks: the long passes of a pick from nothing were the ones where a section and another section's late rows landed together (46-89 ms) against 15-36 ms for each piece alone, and with only the one-per-pass gate the next long one was the section landing in the pass after a set of slider rows (SwiftUI's focus/accessibility pass for the new controls). Ten picks from nothing while the 6 min edit plays, interleaved on one build behind a file switch: longest pass median 56 -> 31 ms, worst 89 -> 63; total ~390 -> ~440 ms in more, shorter passes. New short-6 baseline, worst of 3: trim 20, blade 89 -> 53, undo 29, pick 33, trim picked 19, blade picked 51, undo picked 23, unpick 38, pick from nothing 55 -> 70 (one sample a run: runs 70/66/31, a fourth 55; the 10-pick walk is the real measure). docs/design/video.md 8f gained the rule."
-    },
-    {
-      "t": "2026-11-16T12:55:07.823Z",
-      "note": "Pass 12 findings that did NOT pay or were not kept: (a) caching PanelFieldRowLayout's control minimum in the Layout cache (the profile said 6.6% of passes >= 25 ms measure controls at width 0; a test showed SwiftUI calls updateCache on any size change inside the row, so it would be safe) moved nothing in wall time over 10 picks; reverted. (b) the panel in an NSHostingView of its own (sizingOptions []): pick from nothing total ~383 -> ~342 ms (-11%), section passes unchanged (~19 ms), and it cuts the panel off from the window's preferences (tutorial anchors); not kept. (c) hiding the timeline altogether: total -25%, simple section passes 19 -> 14 ms; so ~4-5 ms of each panel pass is the timeline being there, mostly window-wide accessibility/focus work (AccessibilityNode.updateFocus 11%, AccessibilityViewGraph 8.5%, NSWindow _resetDragMargins 4% of passes >= 25 ms), which a host of its own does not avoid."
-    },
-    {
-      "t": "2026-11-16T12:55:07.894Z",
-      "note": "Pass 12 verified: test.sh green (exit 0; 14,807 + split runs); speed-walk ok; walks ok: clip-click-cost, caption-pick-answers-at-once (one 97 ms pass on the first run, 2 of 2 reruns ok), every-section-header-opens, an-editing-session, keyframe-anything, effects-open-into-view, effects-room-for-the-one-you-opened, type-into-an-effects-slider, shadow-distance-keys, scrub-never-blacks-out. section-fold-motion-walk (step 14, inspectorPanel built 2 on a Time press, nothing picked) and opening-a-section-folds-the-near-side-walk (Library never in view) fail the same with the gate switched off; folded into folding-a-section-that-lets-the-panel-fit-again and walks-that-fail-in-the-full-sweep-27. Audit queue/audits/2026-11-16-a-long-edit-with-transitions-plays-scrubs-and-ed-pass12.json."
+      "t": "2026-11-20T15:20:42.261Z",
+      "note": "... 68 earlier entries elided",
+      "elided": 68
     },
     {
       "t": "2026-11-16T12:55:07.965Z",
@@ -507,9 +459,57 @@
     {
       "t": "2026-11-20T12:34:59.334Z",
       "note": "Pass 21 landed cf12e8b00: a hunt starts moving at once (the read at rest becomes the pass that follows the hand) and a second hunt over the same ground holds no frame (clips coming up give way in the budget, the follower stays 800 ms ahead): three hunts in a row, frame under the hand worst 17-22 -> 4-6 refreshes, picture 12-17 -> 2-3, medians 1. Bars not reached: edits while playing 12-55 ms vs 16, worst scrub lag 1 (hunt 4-6, medium 34+). Pass 22 leads in the log."
+    },
+    {
+      "t": "2026-11-20T13:12:22.522Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T15:20:04.373Z",
+      "note": "walks speed-walk, scrub-never-blacks-out-walk -> speed-walk, scrub-never-blacks-out-walk"
+    },
+    {
+      "t": "2026-11-20T15:20:17.787Z",
+      "note": "Pass 22 measured first (d3d99d954): speed walk green; edits trim 19, blade 41, undo 19, pick 28, trim picked 18, blade picked 20, undo picked 23, unpick 32, pick from nothing 54 ms; hunt frame/sight worst 4/4. A walk of 10 picks and 4 blades while playing: pick from nothing 36-51, blade 26-61 ms."
+    },
+    {
+      "t": "2026-11-20T15:20:17.853Z",
+      "note": "Pass 22 edit passes (Time Profiler + os_signpost, attached): long passes are CPU, not blocked (Thread State Trace: 44 of 891 ms blocked). Share: SwiftUI graph update ~45%, accessibility and focus 23-40% (AccessibilityNode.updateFocus -> ViewRendererHost.focusResponder(for:) walking every responder, plus AccessibilityViewGraph.needsUpdate's swift_conformsToProtocol), layout ~12%. With the timeline closed the accessibility share halved (23% -> 12%): the walk's cost grows with the timeline's responders. Not reachable from app code without a host of its own for the timeline (pass 12 tried the panel in its own host: a tenth). Not known whether a person's app has SwiftUI accessibility on without an assistive app running; the probe does. Not fixed."
+    },
+    {
+      "t": "2026-11-20T15:20:17.922Z",
+      "note": "Pass 22 trap: every speed step starts with a ~240 ms pass, ~190 ms of it accessibility focus. It is the walk taking its own markers down (takeTheMarkersDownForATimedStep), not counted, not the app. Written in docs/design/video.md 8e."
+    },
+    {
+      "t": "2026-11-20T15:20:17.987Z",
+      "note": "Pass 22 cause (temporary per-look dump, pass/file/evict log, all removed): in a hunt from 1:00 after one that ended at 1:10, frames 684-687 of the recording under the playhead were MISSING at 78-108 ms (frame under the hand 5-8 behind while the picture kept pace). They had been read at rest and let go as they landed: MovieFrameFetcher.focus kept a place for every recording ever asked about, so the two recordings shown at 1:10 held places and their frames ranked as close as the on-screen ones. Composites were 3-5 ms; the follower kept pace (7.5 frames/50 ms, the hand's rate). First guesses (decoder too slow, cube composite too slow) were wrong."
+    },
+    {
+      "t": "2026-11-20T15:20:18.054Z",
+      "note": "Pass 22 fix: MovieFrameQueue.placesStillShown (tests first in MovieFrameQueueTests); MovieFrameFetcher.fetch keeps focus only for the recordings the call asks for, so the clips a playhead jumped away from go first (coming places untouched, merged after). A/B, six-hunt walk twice each, no instrumentation: frame under the hand worst 4,6,5,7,4,6,4,4,4,7,4,4 -> 4,4,3,4,4,3,2,3,3,4,3,3; frame worst > sight worst in 7 of 12 hunts before, 0 of 12 after. Speed walk green (hunt 4/4 unchanged: one hunt's worst is a look the display answers ~20 ms late with the main thread idle). Composite path untouched (frame budget only), so export is unchanged by construction."
+    },
+    {
+      "t": "2026-11-20T15:20:18.121Z",
+      "note": "Pass 22 verified: Scripts/test.sh exit 0; walks ok: playing-a-recording-never-blinks, scrub-never-blacks-out, opening-title-dissolve, playing-a-recording-backwards-keeps-up, an-editing-session, hear-the-scrub, scrubbing-shows-the-zoom, a-recording-opens-sharp, reference-edit-opens, speed-walk. playing-backwards-fast-keeps-moving failed 1 of 4 runs (reason lost, log overwritten), ok 3 in a row after; it failed in the 2026-10-20 sweep too; recorded, not claimed either way. Looked at the speed walk's capture after the edits: picked clip, panel and timeline drawn right. Audit queue/audits/2026-11-20-a-long-edit-with-transitions-plays-scrubs-and-ed-pass22.json."
+    },
+    {
+      "t": "2026-11-20T15:20:18.187Z",
+      "note": "Pass 22 housekeeping: a path-limited git stash failed (could not write index) and the pop applied part of stash@{0} (this task's 2026-11-18 leftovers); undone file by file, stash@{0} still in the list unchanged."
+    },
+    {
+      "t": "2026-11-20T15:20:18.254Z",
+      "note": "Next for pass 23: (a) edits while playing 18-54 ms vs 16: find whether a person's Photonz Dev has SwiftUI accessibility on, and if so try the timeline in a host of its own on a branch, or fewer responders per clip bar; (b) the hunt's ~20 ms idle-main-thread looks (display link or render server: Metal System Trace); (c) medium drag. Bars not reached: edits <=16 ms, worst scrub lag 1. Left rough, not filed: nothing beyond this task's own bars; every rough audit line is this task's own."
+    },
+    {
+      "t": "2026-11-20T15:20:18.322Z",
+      "note": "walks speed-walk, scrub-never-blacks-out-walk -> speed-walk, scrub-never-blacks-out-walk"
+    },
+    {
+      "t": "2026-11-20T15:20:42.260Z",
+      "note": "Pass 22 landed b9cf61d13: a hunt after a jump keeps the frames read for it (the frame budget no longer keeps places for recordings the playhead left), so the first tenth of a second of a hunt shows real frames: frame under the hand worst 4-7 -> 2-4 over twelve hunts, never behind the picture. Found and logged that a quarter to two fifths of an edit's long passes is SwiftUI's accessibility focus walk, which grows with the timeline. Bars not reached: edits while playing 18-54 ms vs 16, worst scrub lag 1 (hunt 2-4). Pass 23 leads in the log."
     }
   ],
-  "started": "2026-11-20T10:29:55.125Z",
+  "started": "2026-11-20T13:12:22.521Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
