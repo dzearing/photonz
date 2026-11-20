@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 57.5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-20T05:21:16.199Z",
-  "updated": "2026-11-20T05:21:16.202Z",
+  "updated": "2026-11-20T05:51:14.126Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-20 while checking other expectInView walks for find-out-why-a-newly-added-eq-sometimes-sits-abo. Scripts/playtest.sh Scripts/playtest/animated-charts-walk.json --no-build: first run exit 1 with step 9 (press): no control called \"Catalog\" is in the panel; the ones that are: Blade (the tool bar), Sections, Volume (Transport) ... (no Library controls listed at all). Second run of the same command exit 0. Step 7 is action showLibrary, step 8 wait 0.8 (a wait returns early once the app is quiet), step 9 press Catalog. Likely the same shape as the EQ flake: a fixed wait that returns early. A waitFor on the Library being drawn would be the walk-side fix if the panel itself is fine.",
@@ -21,9 +21,18 @@
     {
       "t": "2026-11-20T05:21:16.201Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-20T05:22:10.816Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T05:51:14.125Z",
+      "note": "Before the fix: 18 runs of Scripts/playtest.sh Scripts/playtest/animated-charts-walk.json --no-build, step 9 (press Catalog) failed 8 (runs 1,5,6,7,8 of 12; 2,4,5 of 6). Plus 1 of 6 later. Not a slow Library: in every failing run the panel had NO sections from step 1 on (dockSections [], shelf pane none), and the real capture 3 s after Show Library showed a blank panel with only the Sections footer. Traced the panel body and its catch-up (temporary file trace): Edit arrives keyPass > timeline > trackRows > panelSections; in failing runs the body drew the panelSections pass but .onChange(of: editorState.editArrival) never ran catchUp, so the dock never started filling. Show Library adds nothing to the section list (Library is already in it), so nothing redrew. Same dropped-onChange shape already worked around for later passes on 2026-10-04."
     }
   ],
   "walks": [
     "animated-charts-walk"
-  ]
+  ],
+  "started": "2026-11-20T05:22:10.815Z"
 }

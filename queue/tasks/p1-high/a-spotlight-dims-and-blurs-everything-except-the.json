@@ -1,0 +1,36 @@
+{
+  "id": "a-spotlight-dims-and-blurs-everything-except-the",
+  "title": "A spotlight dims and blurs everything except the area you want people to look at",
+  "goal": "Let a person mark one area of a picture and have everything else go darker, softer, or both, with a slider for each, so the eye lands on that area. It should be a live, editable layer you can move, resize and retune later, not something burned into the picture.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-20T05:58:21.138Z",
+  "updated": "2026-11-20T05:58:24.387Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-19: \"i would like a lens effect which dims and/or blurs (with sliders?) everyting but an area, used to highlight something\".\n\nWhat exists: the Next-only Lens tool (FeatureCatalog lensFlag next-lens, Sources/PhotonzCore/Lens.swift, Sources/PhotonzRender/LensFilter.swift, Sources/Photonz/LensInspector.swift, EditorState+Lens.swift). It applies ONE LensAdjustment (blur, pixelate, greyscale, invert, brightness) to what is UNDER its box, cropped to the box (LensFilter.image ... .cropped(to: box)). Nothing today affects everything OUTSIDE an area, and a lens can only hold one adjustment, so dim+blur together is impossible.\n\nSuggested shape (runner decides): either an 'Outside' / 'Spotlight' mode on a lens that inverts the region and carries both a dim and a blur amount, or a separate spotlight layer kind. Either way the effect covers the whole canvas except the area, so the layer's rendered extent is the canvas, not its frame; watch hit testing, selection handles and bounds (the handles belong to the area, and the canvas-wide dim must not make the whole picture click-select it). Keep the lens's existing corner radii handling for the shape. Blur must clamp-to-extent before blurring (LensFilter already does this for sampleReach) or the picture edges go dark.\n\nRecordings already have a click 'spotlight' (ClickEffect.swift, done task clicks-in-a-recording-can-show-an-effect-on-the); that is per click on the cursor, a different thing; don't merge them.\n\nTargets Next. Not confirmed: whether video timeline layers go through the same compositor.",
+  "acceptance": [
+    "Try path: open a screenshot in Photonz Next, pick the Lens tool (K) or wherever the spotlight lives, drag a box round one button; everything outside the box goes darker and blurred, the button stays exactly as it was.",
+    "Two sliders, Dim and Blur, each can be set to zero on its own, so dim only, blur only, or both all work. Both change the picture live while dragging, with no hitch (frame time measured and put in the audit).",
+    "The highlighted area can be moved and resized after it is drawn, and its corners rounded (a rounded rectangle and an ellipse at least), and the edge between highlighted and dimmed can be soft (a feather slider) or hard.",
+    "It is one layer, non-destructive, one undo step per change, saved with the document and exported identically to PNG and copy (export pixel-compared to the canvas render in a test).",
+    "Unit tests in PhotonzCore and PhotonzRender before implementation: the area inside is pixel-identical to the source (including at feather 0), the outside is darkened by the Dim amount and blurred by the Blur amount, and there is no dark rim at the picture's edge from the blur.",
+    "Measured bar the plain Lens fails today: with Dim 50% the mean luminance outside the area drops by about half while inside changes by 0; both numbers in the audit.",
+    "If a video's timeline can carry the same layer cheaply, it works there too; if not, say so in the audit and file it as a follow-up rather than blocking this task.",
+    "Audit under queue/audits/ with before and after pictures (dim only, blur only, both, feathered, ellipse). Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-20T05:58:21.140Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-20T05:58:24.386Z",
+      "note": "seq 4020 -> 30"
+    }
+  ]
+}
