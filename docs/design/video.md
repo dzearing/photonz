@@ -925,6 +925,31 @@ passes reading at once (`MovieSweeper.gate`) while it waits
 limit is two. Hunt, three runs in a row each: frame under the hand worst 17 to
 22 -> 4 to 6, sight lag worst 12 to 17 -> 2 to 3, medians 1.
 
+**Only what the moment shows has a place in the budget (2026-11-20, pass
+22).** The budget lets go of the small frame farthest from where each
+recording's playhead is, and a recording with no such place goes first. But
+the fetcher kept a place for every recording it had ever been asked about. A
+hunt from 1:00, after one that ended at 1:10, found the two recordings shown
+at 1:10 still holding places, so their frames counted as close as the ones on
+screen, and the frames read around the still playhead for the next hunt were
+let go the moment they landed (685, 686, 687, then 684 of the recording under
+the playhead). The hunt then reached the end of what was left in under a tenth
+of a second and drew stand-ins: the frame under the hand up to 8 refreshes
+behind while the picture itself kept up. Each fetch now keeps places only for
+the recordings it asks for (`MovieFrameQueue.placesStillShown`); the clips a
+playhead jumped away from are what goes. Six hunts in a row from the same
+place, twice each way: frame under the hand worst 4 to 7 (mean 4.9) -> 2 to 4
+(mean 3.3), and never again further behind than the picture. What is left of
+the hunt's worst (3 to 4 refreshes) is a look the display answers 20 ms late
+with the main thread idle, not a missing frame. **When a frame is missing,
+look at what the budget let go and what it was measuring from**, not only at
+the pass.
+
+A trap found on the way: the pass marks at the start of every speed step
+show a pass of about 240 ms that is nearly all SwiftUI's accessibility focus
+walk. It is the walk taking its own markers down (`takeTheMarkersDownForATimedStep`),
+not the app, and it is never counted.
+
 **The reference edit's recordings need ids that differ in their first eight
 bytes.** A frame's picture id is its recording's id with the frame number
 folded into the last eight (`MovieRef.frameID`). Until 2026-11-17 the

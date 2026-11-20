@@ -842,8 +842,9 @@ final class MovieFrameFetcher {
     /// decoder, so a read asked for now starts the moment a lane is free
     /// rather than queuing inside the decoder behind one the hand has left.
     private var queue = MovieFrameQueue<Read>(capacity: MovieDecoder.lanes)
-    /// Which frame each recording's playhead is on, last anybody asked: two
-    /// while a dissolve runs between parts of it.
+    /// Which frame each recording's playhead is on, as the last fetch asked:
+    /// two while a dissolve runs between parts of it, none for a recording
+    /// it no longer shows.
     private var focus: [UUID: [Int]] = [:]
     /// ...and the first frames of the stretches about to come on, which the
     /// budget keeps as close as the playhead (`MoviePlayPass`).
@@ -940,6 +941,10 @@ final class MovieFrameFetcher {
         if !playsBack { stopBackBlocks() }
         backSpeed = playsBack ? playingBackward : nil
         coming = [:]
+        // Only what this moment shows keeps a place, so the frames of a clip
+        // the playhead jumped away from are the first the budget lets go
+        // (`MovieFrameQueue.placesStillShown`).
+        focus = MovieFrameQueue<Read>.placesStillShown(focus, asked: requests.map(\.movie.id))
         var wanted: [Read] = []
         var asked = Set<UUID>()
         var focused = Set<UUID>()

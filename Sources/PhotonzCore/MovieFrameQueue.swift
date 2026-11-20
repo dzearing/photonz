@@ -63,6 +63,19 @@ public struct MovieFrameQueue<Item: Sendable>: Sendable {
         return worst?.index
     }
 
+    /// Where each recording's playhead is, kept only for the recordings a
+    /// moment still asks for (`asked`). A recording it no longer shows has no
+    /// place, so its frames are the first the budget lets go (`farthest`).
+    /// Kept for every recording ever asked about, the clips left behind by a
+    /// jump of the playhead held their frames as close as the ones on screen,
+    /// and the frames read around the new still playhead for a hunt were let
+    /// go as they landed: up to 8 refreshes of stand-ins at the start of each
+    /// hunt (2026-11-20).
+    public static func placesStillShown(_ places: [UUID: [Int]], asked: some Sequence<UUID>) -> [UUID: [Int]] {
+        let shown = Set(asked)
+        return places.filter { shown.contains($0.key) }
+    }
+
     /// The same with more than one place being played in a recording (a cut
     /// coming up, a dissolve between two parts of it): the frame let go is
     /// the one farthest from the nearest of them.

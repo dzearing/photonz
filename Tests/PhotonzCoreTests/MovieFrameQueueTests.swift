@@ -88,4 +88,30 @@ struct MovieFrameQueueTests {
         let passed = [(under, 80), (coming, 505)]
         #expect(MovieFrameQueue<Int>.farthest(passed, from: foci, forward: true, aside: [coming]) == 0)
     }
+
+    // The fetcher kept "where each recording's playhead is" for every
+    // recording it was ever asked about. Jumped from 1:10 back to 1:00, the
+    // two recordings shown at 1:10 still had places, so their small frames
+    // counted as close as the ones on screen, and the frames read around the
+    // still playhead for a hunt were let go the moment they landed: the
+    // first tenth of a second of every hunt showed stand-ins, up to 8
+    // refreshes behind (2026-11-20, pass 22).
+
+    @Test("A recording a moment no longer shows loses its place, so its frames go first")
+    func placesAreOnlyWhatIsShown() {
+        let shown = UUID(), left = UUID()
+        let places = MovieFrameQueue<Int>.placesStillShown([shown: [672], left: [324]], asked: [shown])
+        #expect(places == [shown: [672]])
+        // Its frames, even right on its old place, now go before the ones
+        // read ahead of the playhead still shown.
+        let resident = [(left, 324), (shown, 687)]
+        #expect(MovieFrameQueue<Int>.farthest(resident, from: places) == 0)
+    }
+
+    @Test("Every place of a recording still shown is kept: two clips of it in a dissolve")
+    func bothPlacesOfOneRecordingStay() {
+        let movie = UUID()
+        let places = MovieFrameQueue<Int>.placesStillShown([movie: [672, 1042]], asked: [movie])
+        #expect(places == [movie: [672, 1042]])
+    }
 }

@@ -1,0 +1,37 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 22: a hunt after a jump shows real frames from its first move)",
+  "epic": "video-perf",
+  "summary": "Click the ruler somewhere new, then drag the playhead to hunt: the frames read ahead for that hunt are no longer thrown away to keep frames from where the playhead was before. Over twelve hunts each way, the frame under your hand now trails by at most 2 to 4 refreshes (was 4 to 7) and is never further behind than the picture itself. Nothing drawn changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Numbers come from a walk of six hunts in a row from 1:00 to 1:10 (each one starting with a jump back from where the last ended), run twice with the change and twice without it, and from Scripts/perf/speed-walk.sh (green against its baseline).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then click the timeline ruler at 1:10.",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Click the ruler at 1:00, inside the cube transition, and wait a moment.",
+      "shot": "2026-11-20-long-edit-pass22-after-the-walk-sc.png"
+    },
+    {
+      "do": "Drag the playhead steadily right, about ten seconds of the edit in two seconds."
+    },
+    {
+      "do": "Watch the first half second of the drag: the recording should move frame by frame, not show blurry stand-ins or hold."
+    },
+    {
+      "do": "Click the ruler at 1:00 again and repeat the drag a few times."
+    }
+  ],
+  "evaluate": [
+    "Does the picture move cleanly from your very first move after clicking the ruler somewhere new?",
+    "Does the fifth hunt from the same place look as smooth as the first?",
+    "Does the cube transition at 1:00 keep up while you drag through it?"
+  ],
+  "rough": [
+    "The worst of a hunt is still 2 to 4 refreshes against a bar of 1: one or two looks per hunt the display answers about 20 ms late with the main thread idle, so it is not a missing frame and not app code found yet. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Edits while playing are unchanged at 18 to 54 ms on their longest pass against a bar of 16. A trace this pass puts about a quarter to two fifths of those passes in SwiftUI's accessibility focus walk, which costs more the more controls the timeline holds. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "A fast drag across the whole edit is unchanged (frame under the hand 33 in the middle). Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "No mock covers this: it is speed, not a surface."
+  ]
+}
