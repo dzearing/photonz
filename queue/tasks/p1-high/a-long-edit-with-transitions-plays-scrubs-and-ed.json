@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-19T18:18:17.550Z",
+  "updated": "2026-11-20T10:29:25.015Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,41 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-19T18:18:17.549Z",
-      "note": "... 41 earlier entries elided",
-      "elided": 41
-    },
-    {
-      "t": "2026-11-15T23:01:35.426Z",
-      "note": "Did NOT pay: what is left in the undo of a cut (about 40 ms against about 20 for the undo of a trim) is the clip going from 2 pieces to 1. A Time Profiler run (xctrace --attach over 6 of each; main-thread bursts split at 1.6 ms gaps) shows the extra 12 ms spread through AttributeGraph update and layout (ScrollView/padding sizeThatFits) with no app body above 2 ms. Main was red on the TextRevealUnclipped CI flake (Metal command buffer error on the CI GPU), logged on find-out-why-the-legibility-check-once-read-the."
-    },
-    {
-      "t": "2026-11-15T23:01:35.501Z",
-      "note": "Next for pass 9: (a) a pick itself holds the window 38-46 ms, and the first pick fills the panel over ~450 ms in passes of 15-75 ms, one per section (Appearance and Effects the largest); that tail is the blade-with-nothing-picked 77. (b) the undo of a cut, 2 pieces to 1: try keeping a cut clip's bar views stable across a piece count change. (c) Bars not reached: edits <=16 ms, scrub within 1 frame (2), no dropped frames (1/min). Stays open."
-    },
-    {
-      "t": "2026-11-15T23:01:35.576Z",
-      "note": "Pass 8 landed 45c1b849e: a cut on a picked clip costs what a trim does (blade picked 42-45 -> 29-36 ms), and the speed walk now times edits both with nothing picked and with a clip picked, without charging an edit for restarting play. Bars not reached (edits ~32-44 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute). Stays open; pass 9 leads above."
-    },
-    {
-      "t": "2026-11-15T23:01:49.646Z",
-      "note": "Pass 8 landed 45c1b849e (blade on a picked clip 42-45 -> 29-36 ms; speed walk times edits picked and unpicked, no longer charges an edit for restarting play). Bars not reached: edits 32-44 ms vs 16, scrub 2 frames vs 1, 1 dropped frame a minute. Pass 9 leads in the log."
-    },
-    {
-      "t": "2026-11-16T02:32:36.487Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-16T04:20:04.748Z",
-      "note": "Pass 9 measured first (short speed walk, a6861a6fd): trim 29, blade 58, undo 38, pick 45, trim picked 33, blade picked 31, undo picked 38. Time Profiler over 20 trims (pick then trim/undo, playing): ~34 ms an edit = flush 20 (bodies of the dock, ruler, click ticks, cuts, zoom bars, panel sections, root), window layout 7, drag margins (NSWindow _resetDragMargins walking every hosting view's focus items) 3, CA commit. Tools: a probe-only census writing a stack for every read of the document in an edit's own pass (EditorState.document getter while followsAPassLater), and a withObservationTracking wrapper on TimelineTrackRow.body logging the setter that woke it; both removed."
-    },
-    {
-      "t": "2026-11-16T04:20:04.821Z",
-      "note": "Fix 1 (6d6f87aa1): 9 of 10 document reads in an edit's own pass came through motionStripRuler (shownDocument for length, clipSourceGhostsEndMS for the picked clip), read by every clip bar piece, cut, click tick, zoom lane and the time scroller. The ruler reads rulerDocument now: watched via rulerDocumentRevision (has time, length, ghost end), late for a catch-up edit; the hand's document while a trim/clip/speed stop/caption word drag is on. TimelineEditPointView, ZoomLane, ZoomBarsView, ClickTicksView, DrawnOnItsOwn and ClipPiecesBar's piece/band/grip ForEach rows read late. Reads in the pass: ~9,500 -> ~1,200 over six edits."
-    },
-    {
-      "t": "2026-11-16T04:20:04.893Z",
-      "note": "Fix 2 (6d6f87aa1): flushSelectionToHistory writes the history before perform marks catch-up, and noteWhatTheLookRowsSee moved latePassRevision for it though the document was equal: the first edit after a pick rebuilt the timeline in its own pass (clipBar 36 not 18). Now a history write leaving the document equal moves nothing. First trim of a session 26 -> 13 ms own pass; warm trims own pass ~11, timeline late pass 17-19. New short-6 baseline, worst of 3: trim 18, blade 89, undo 36, pick 43, trim picked 24, blade picked 46 (runs 26/33/46, a 4th run 28; pass 8 29-36 with one 44, read as noise not a regression), undo picked 29. test.sh green twice; 23 walks ok (clicks, zooms, source ghost, speed curve, ripple/trim, cuts, ruler, an-editing-session, keyframe-anything, scrub, captions, speed-walk)."
+      "t": "2026-11-20T10:29:25.014Z",
+      "note": "... 49 earlier entries elided",
+      "elided": 49
     },
     {
       "t": "2026-11-16T04:20:04.965Z",
@@ -507,9 +475,41 @@
     {
       "t": "2026-11-19T18:18:17.548Z",
       "note": "From the hour-long timeline pass 14 (2026-11-19): speed-walk fails on scrub hunt (frame lag worst 39 vs at most 34, sight lag worst 34 vs at most 27) both on a build with the painted-picture change and in a run at 05:41 before it; scrub, not the timeline."
+    },
+    {
+      "t": "2026-11-20T09:05:29.088Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T10:29:18.414Z",
+      "note": "Pass 20 measured first (377689c7b, short speed walk): RED on scrub hunt, frame lag worst 43 (at most 34), sight lag worst 40 (at most 27); same as the 2026-11-19 runs that read it as noise. A per-look dump of the hunt (temporary, removed) showed it is not noise: the picture kept pace (sight 1) then sat on one frame for 8 to 45 refreshes, at a regular spacing of about 2 s of the edit."
+    },
+    {
+      "t": "2026-11-20T10:29:18.479Z",
+      "note": "Pass 20 cause (a pass log on the same clock, temporary, removed): forward hunts were read in 1.6 s stretches (MovieSweep.window) and the next only started when the running one ENDED (running.contains(missing) returned nil until then), with the hand already at its last frame. One pass makes a grid frame about every 3 ms, about the pace of a 5x hand, so it never got ahead; each new pass then decoded from the key frame before its start (key frames every 1.95 s in Reference Recording 1, e.g. 21467/23417 ms), 50-100 ms, before its first picture. First guess (stalls at key frames) was wrong: the stalls were at restart points."
+    },
+    {
+      "t": "2026-11-20T10:29:18.547Z",
+      "note": "Pass 20 fix (f8469daaf): MovieSweep.window(follows:)/next(follows:) gives a hand going forward under a recording ONE pass to the recording's end, paced by MovieSweep.waits a stretch (45 grid frames) ahead of the hand via MovieSweeper.sweep(waitsAt:); a backward hand is not covered by a following pass. Second cause found on the way: keepInsideBudget let small frames go by distance alone, so the pass's frames a second ahead were evicted before the hand got there (picture held 250 ms with them read and gone); now handGoesBack weights passed frames like playing does. Tried and taken out: starting a pass at a key frame among its 3 behind frames (MovieSweep.readStart) almost never applies (no key frame there in the walk)."
+    },
+    {
+      "t": "2026-11-20T10:29:18.612Z",
+      "note": "Pass 20 result: hunt frame lag worst 43-49 -> 16-18, sight lag worst 40 -> 12-14, medians 1, over 7 runs (scrub-only walks and the speed walk). Speed walk green against the baseline (44 numbers), play 0 dropped, first picture 66 ms, edits unchanged (trim 15, blade 43, undo 23, pick 30, pick from nothing 51 ms). Baseline: hunt frameLagMedian 2->1, frameLagWorst 21->18, sightLagWorst 16->14 only. Medium drag unchanged and still noisy (sight worst 34-68, frame worst 70-202 across today's runs)."
+    },
+    {
+      "t": "2026-11-20T10:29:18.677Z",
+      "note": "Pass 20 verified: Scripts/test.sh exit 0 (the first of three runs had 1 issue in the stopwatch batch, test not captured; the next two clean; nothing in this change is in a perf suite); walks ok: hear-the-scrub, scrub-never-blacks-out, scrubbing-shows-the-zoom, the-scrubber-knob-clears-the-times, timeline-toggle-beside-the-scrubber, a-recording-opens-sharp, an-editing-session, playing-a-recording-backwards-keeps-up, playing-a-recording-never-blinks, reference-edit-opens; speed-walk ok. Looked at the capture after a hunt (1:10 of the edit): sharp frame, playhead and timeline right. docs/design/video.md 8e: 'A hunt going forward is one pass'. Audit queue/audits/2026-11-20-a-long-edit-with-transitions-plays-scrubs-and-ed-pass20.json."
+    },
+    {
+      "t": "2026-11-20T10:29:18.742Z",
+      "note": "Next for pass 21: (a) edits while playing 14-51 ms vs 16 (blade and pick from nothing fill the panel; unpick's teardown, to be built shareable per the 2026-11-19 design review); (b) the first ~200 ms of a hunt trails by ~13 refreshes: the first pass decodes from the key frame before the hand; the rest-read around the still playhead (readAroundRest) already decoded from that key frame and could become the following pass instead of stopping; (c) medium drag's worst numbers swing run to run. Bars not reached: edits <=16 ms, worst scrub lag 1. Left rough, not filed: nothing beyond this task's own bars. Rough items in the audit are all this task's own."
+    },
+    {
+      "t": "2026-11-20T10:29:25.013Z",
+      "note": "Pass 20 landed f8469daaf: a hand hunting forward on the playhead is followed by one pass that stays a stretch ahead of it, and the frames it passed are let go first, so the picture no longer freezes every 1.5 s of the edit: hunt frame lag worst 43-49 -> 16-18, sight lag worst 40 -> 12-14 (speed walk was red on these this morning, green now). Bars not reached: edits while playing 14-51 ms vs 16, worst scrub lag 1 (hunt 12-18, medium 34+). Pass 21 leads in the log."
     }
   ],
-  "started": "2026-11-19T12:29:42.780Z",
+  "started": "2026-11-20T09:05:29.087Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
