@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 55,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-20T01:15:13.867Z",
-  "updated": "2026-11-20T04:32:40.921Z",
+  "updated": "2026-11-20T05:21:45.348Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-19 while running the walk for the-app-crashed-in-nsapplication-photonz-nexteve: Scripts/playtest.sh Scripts/playtest/sound-effects-eq-compressor-locked-walk.json --no-build, repeated. Step 12 (expectInView) failed in 6 of 25 runs, then 4 of 25 and 1 of 5 later runs, always with: the top of \"EQ\" is not on screen: 80 pt of it is cut off above what a person can see. Whatever it is in should have scrolled to its beginning. Window 1440x900 every time. The sibling sound-effects-eq-compressor-walk passed in the one batch it ran in. Not reproduced by hand in the app.",
@@ -26,9 +26,49 @@
     {
       "t": "2026-11-20T04:32:40.920Z",
       "note": "Seen 2026-11-19 on a probe built from main: sound-effects-eq-compressor-locked-walk step 12 failed with the top of EQ 80 pt cut off above the panel's view, on its first run of a batch."
+    },
+    {
+      "t": "2026-11-20T04:52:29.657Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-20T05:21:32.393Z",
+      "note": "Reproduced before any change: 5 of 12 runs failed step 12, then 3 of 10 more with the message fixed. Every failure read the panel 0.25 s after the plus; every pass read it at 0.57 to 0.67 s."
+    },
+    {
+      "t": "2026-11-20T05:21:32.462Z",
+      "note": "Cause, 1: the walk read too early. Its 'wait 0.5' returns as soon as the app is quiet (0.13 s in the failing runs), and the panel's reveal for a new audio effect only starts 0.24 s after the plus and scrolls for 0.24 s. With the message fixed, every failure said the EQ was 352 pt BELOW the bottom of the panel's view, not above: the panel had not moved yet."
+    },
+    {
+      "t": "2026-11-20T05:21:32.531Z",
+      "note": "Cause, 2: the harness message was wrong. When nothing of a view is on screen, NSView.visibleRect is a zero rect at the view's origin, which in the unflipped PanelTargetView is its bottom corner, so checkInView reported the whole height as cut off ABOVE whichever side it was on. checkInView (PlaytestHarness.swift) now says which side and by how much, measured against every scroller that clips the view."
+    },
+    {
+      "t": "2026-11-20T05:21:32.600Z",
+      "note": "A person adding an effect sees the EQ scroll fully into view about half a second after the plus (the waitFor below holds at +0.57 to +0.67 s on every run). The panel is fine; no app change."
+    },
+    {
+      "t": "2026-11-20T05:21:32.668Z",
+      "note": "Fix: the three Audio Effects walks (sound-effects-eq-compressor-locked-walk, sound-effects-eq-compressor-walk, sound-effects-noise-reduction-walk) wait for the Audio Effects section to be in view (waitFor sectionInView, timeout 2 s) before expectInView. After: locked walk 20 of 20, 0 step 12 failures; the two siblings 4 of 4 each. Other expectInView walks run after the harness change: a-glyph-takes-the-saved-stroke-walk and ask-shows-the-agent-group-from-a-video-in-view-walk pass."
+    },
+    {
+      "t": "2026-11-20T05:21:32.736Z",
+      "note": "Filed find-out-why-animated-charts-walk-sometimes-cann: animated-charts-walk failed 1 of 2 runs at step 9 (no Catalog control just after Show Library), unrelated to this change. Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-20T05:21:32.804Z",
+      "note": "walks sound-effects-eq-compressor-locked-walk -> sound-effects-eq-compressor-locked-walk, sound-effects-eq-compressor-walk, sound-effects-noise-reduction-walk"
+    },
+    {
+      "t": "2026-11-20T05:21:45.346Z",
+      "note": "The panel was fine; the walk read it too early. Reproduced 5 of 12 (failures always 0.25 s after the plus, before the panel's 0.24 s-delayed scroll); the EQ was 352 pt BELOW the fold, and the 'above' wording was a harness bug (empty visibleRect read as cut off above), now fixed in checkInView. The three Audio Effects walks wait for the section to be in view before expectInView: locked walk 20 of 20, siblings 4 of 4. Scripts/test.sh green. Commit cb11c2424."
     }
   ],
   "walks": [
-    "sound-effects-eq-compressor-locked-walk"
-  ]
+    "sound-effects-eq-compressor-locked-walk",
+    "sound-effects-eq-compressor-walk",
+    "sound-effects-noise-reduction-walk"
+  ],
+  "started": "2026-11-20T04:52:29.656Z",
+  "completed": "2026-11-20T05:21:45.347Z"
 }

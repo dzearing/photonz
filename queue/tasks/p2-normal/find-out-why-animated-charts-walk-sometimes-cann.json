@@ -1,0 +1,29 @@
+{
+  "id": "find-out-why-animated-charts-walk-sometimes-cann",
+  "title": "Find out why animated-charts-walk sometimes cannot find the Library Catalog right after Show Library",
+  "goal": "The walk that checks animated charts sometimes stops before it starts: it opens the Library and, under a second later, finds no Catalog control in the panel. Find out whether the Library is slow to appear for a person too, or only the walk is reading too early, and fix whichever it is.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 57.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-20T05:21:16.199Z",
+  "updated": "2026-11-20T05:21:16.202Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-11-20 while checking other expectInView walks for find-out-why-a-newly-added-eq-sometimes-sits-abo. Scripts/playtest.sh Scripts/playtest/animated-charts-walk.json --no-build: first run exit 1 with step 9 (press): no control called \"Catalog\" is in the panel; the ones that are: Blade (the tool bar), Sections, Volume (Transport) ... (no Library controls listed at all). Second run of the same command exit 0. Step 7 is action showLibrary, step 8 wait 0.8 (a wait returns early once the app is quiet), step 9 press Catalog. Likely the same shape as the EQ flake: a fixed wait that returns early. A waitFor on the Library being drawn would be the walk-side fix if the panel itself is fine.",
+  "acceptance": [
+    "animated-charts-walk is run at least 10 times and the number of step 9 failures is written in the log",
+    "The walk passes 10 of 10, either because the Library appears in time or because the walk waits for it"
+  ],
+  "log": [
+    {
+      "t": "2026-11-20T05:21:16.201Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "animated-charts-walk"
+  ]
+}
