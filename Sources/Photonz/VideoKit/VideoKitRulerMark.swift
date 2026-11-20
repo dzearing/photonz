@@ -52,8 +52,16 @@ private struct PlaytestRulerMarkAnchor: NSViewRepresentable {
 extension View {
     /// Marks this as the ruler, one of its numbers, or the playhead line, so a
     /// walk can read where it was drawn.
+    ///
+    /// Hung only while a walk drives the probe, and taken down with the rest
+    /// of the walk's markers for a timed step: one AppKit view per number,
+    /// moved on every frame of a zoom or scroll, was about 0.8 ms of each
+    /// such frame of the hour-long timeline in the speed walk (2026-11-20),
+    /// and the dev app hung them too with nothing to read them.
     func playtestRulerMark(_ role: PlaytestRulerMarkRole) -> some View {
-        background(PlaytestRulerMarkAnchor(role: role))
+        background {
+            if PlaytestMarkers.areHung { WhileMarkersHang(marker: PlaytestRulerMarkAnchor(role: role)) }
+        }
     }
 }
 

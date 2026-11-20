@@ -1,0 +1,24 @@
+{
+  "feature": "The hour-long timeline's speed is measured without the walk's ruler markers",
+  "epic": "video-perf",
+  "summary": "The speed walk was timing an invisible marker behind every number on the timeline's ruler, which only the walk reads and which the Dev app also carried. Those markers now come down while a speed measure runs and are not hung in the Dev app, so zooming and scrolling the hour-long timeline reads about 0.8 ms a frame quicker, and is that much quicker in Photonz Dev too. Nothing on screen changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Measured with a timeline-only speed walk on the probe, three runs each way on one build, the old way back on by a throwaway switch.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 60 },
+    { "do": "Pinch the timeline in and out quickly near the whole-hour view, then stop." },
+    { "do": "Scroll the timeline end to end with two fingers." },
+    { "do": "Zoom in on any stretch and look at the ruler's numbers above the tracks.", "shot": "2026-11-20-timeline-hour-long-pass17-ruler-sc.png" }
+  ],
+  "evaluate": [
+    "Does a pinch near the whole-hour view feel any smoother than this morning's build?",
+    "Do the ruler's numbers still sit right over the moments they name at every zoom?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, one build, three runs each (markers kept, markers down): near Fit 12.18/12.13/12.08 to 11.32/11.24/11.34 ms a frame (held frames 10.0 to 9.3, fresh 15.0-15.2 to 14.0-14.1), zoom in 11.0-11.5 to 10.8-11.1, zoom out 9.8-9.9 to 9.3-9.7, scroll 9.2-9.4 to 8.7-8.9, late frames near Fit 263-273 to 217-224 of 648. Load about 6 throughout.",
+    "Most of this pass's gain is to the measure, not to the shipping app: a release build never had these markers. The Dev app did, so it gets the same 0.8 ms.",
+    "Where the rest goes, profiled on the new build: frames that lay a fresh painting cost about 14 ms against 9.3 for frames that hold one; the painting itself is about 2.5 ms of that (waveforms the largest part, then clip outlines and transition bands), the rest SwiftUI upkeep in the lanes around it. No single piece is over about 1.5 percent of the main thread. Written into docs/design/video.md.",
+    "Bars of the task not reached: 95 per cent of zoom and scroll frames under 8.3 ms and none over 16, and edits within 16 ms. The task stays open.",
+    "No mock covers the timeline's speed; nothing about the timeline's look changed."
+  ]
+}

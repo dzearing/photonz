@@ -1171,6 +1171,18 @@ The rule, for any view added to the editor window:
      nothing but its pictures still cost 11.5 ms on a frame that paints
      afresh against 8.7 on a held one. Even with no lanes at all the zoom
      in had a p95 of 18 ms on a loaded Mac (load 4 to 5).
+     Most of the ruler's millisecond was the walk's own marker behind each
+     number (an AppKit view each, moved every frame), which stayed up while
+     a speed measure timed and was hung in the dev app too. Since
+     2026-11-20 it comes down with the walk's other markers and is hung
+     only while a walk drives the probe: three runs each way on one build,
+     near Fit 12.1 to 12.2 ms a frame to 11.2 to 11.3 (held frames 10.0 to
+     9.3), scroll 9.2 to 9.4 to 8.7 to 8.9. Any marker a walk hangs on
+     something that moves with the ruler goes through `WhileMarkersHang`.
+     What is left near Fit is the fresh paints: frames that lay a picture
+     cost about 14 ms against 9.3 held, the painting about 2.5 ms of that
+     (waveforms the largest part, then clip outlines and transition
+     bands), the rest SwiftUI graph upkeep in the lanes laid around it.
    - **A painting in a layer of its own, or a drawing group, does not save
      its rasterising**: tried on 2026-11-19. A stretched or slid canvas is
      rasterised again either way; a nested hosting view per canvas took
