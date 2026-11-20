@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-19T18:18:43.675Z",
+  "updated": "2026-11-20T15:54:50.364Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -457,9 +457,13 @@
     {
       "t": "2026-11-19T18:18:43.674Z",
       "note": "Pass 14 landed 77f9ec5ee: busy lanes are painted into a picture once and a zoom stretches it. Near Fit 11.6-11.9 -> 11.0 ms a frame (held frames 10.5 -> 9.1), zoom out ~9.9 -> 9.3, scroll 8.8 -> 8.6; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+    },
+    {
+      "t": "2026-11-20T15:54:50.357Z",
+      "note": "claimed by go loop"
     }
   ],
-  "started": "2026-11-19T16:44:41.137Z",
+  "started": "2026-11-20T15:54:50.356Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",

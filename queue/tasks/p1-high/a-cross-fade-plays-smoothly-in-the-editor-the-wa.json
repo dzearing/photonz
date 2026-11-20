@@ -1,0 +1,34 @@
+{
+  "id": "a-cross-fade-plays-smoothly-in-the-editor-the-wa",
+  "title": "A cross fade plays smoothly in the editor, the way it looks in the export",
+  "goal": "Playing a video in the editor, a cross fade between two clips flickers on and off, while the exported file shows the same fade cleanly. Playback in the editor has to show every frame of a transition the way export does, with no frame where one side or the whole picture drops out.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-20T15:56:44.058Z",
+  "updated": "2026-11-20T15:56:44.183Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-20: \"i see a weird bug where on a video transition on i think a cross fade, playing it back in the editor mode had it flickering off and on. but cutting the exported video it was fine, i think there's a rendering bug.\" They were not sure it was a cross fade; check other transitions (push, 3D) too if the dissolve does not reproduce. I could not see their document (no document open over MCP), and did not reproduce it.\n\nWhy export and playback differ: export renders every frame and waits for both shots; live playback reads frames ahead through the play pass and frame queue (Sources/PhotonzCore/MoviePlayPass.swift, Sources/PhotonzCore/MovieFrameQueue.swift), which during a dissolve must hold frames for TWO places at once (MoviePlayPass.swift:28-31, 246, 337-340; MovieFrameQueue.swift:79-90, which already records 'a dissolve stuck that way, 2026-10-07').\n\nSuspect, not confirmed: when one side's frame is not decoded in time, the compositor draws that layer missing for a frame (on and off), rather than holding its last frame. Recent commits touching exactly this budget, worth bisecting: ad24392f4 (fast passes skip frames nothing depends on), cf12e8b00 and b9cf61d13 (hunt and frame budget, Next), c771adfbb (long edit plays). The fix must not be 'wait for the frame' if that drops playback frames; holding the newest decoded frame of the late side is the likely shape, plus fixing why it is late.\n\nOverlaps: a-long-edit-with-transitions-plays-scrubs-and-ed (p1, seq 10) is about speed on long edits with transitions; this one is about correctness of what is drawn. Keep them separate but say in both logs if one fix serves both. The rotating check's an-editing-session-walk fails on blank frames during play; say why it did not catch this (a dissolve may not be in it, or it checks only fully blank frames).",
+  "acceptance": [
+    "Reproduced first, in the probe at Next defaults: a two-clip edit with a cross fade (dissolve) between two different recordings, and a second case with a dissolve between two parts of the SAME recording, played at 1x through the transition. Capture every displayed frame during playback (the frames the player actually puts on screen, not an offscreen render) and name in the audit which frames go wrong and how (blank, only the outgoing shot, only the incoming shot, a stale frame).",
+    "Find the cause before fixing and write it in the audit, with the evidence. Do not assume the suspect in the notes.",
+    "Measured bar: for each displayed frame in the transition, compare it to the export's frame at the same time; every frame is within a small stated tolerance (mean pixel difference measured and listed), and the mean luminance across the transition never jumps by more than the fade itself would cause between neighbouring frames. Today's build fails this on the reproduction.",
+    "Also passes at 0.5x and 2x, after a scrub that lands just before the transition, and with the transition starting the moment play is pressed.",
+    "A walk or unit test keeps it fixed: it fails on today's code and passes after.",
+    "A reel under queue/audits/ (editor playback capture beside the export, before and after) named in the audit. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-20T15:56:44.060Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-20T15:56:44.182Z",
+      "note": "seq 2020 -> 25"
+    }
+  ]
+}
