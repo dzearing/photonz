@@ -294,10 +294,29 @@ public struct TimelineDrawnStretch: Hashable, Sendable {
     /// Half the window, when this was written.
     public let stepMS: Double
 
-    public init(windowStartMS: Double, visibleMS: Double) {
-        let step = max(1, visibleMS / 2)
+    /// `stepShare` is how far the window goes, as a share of itself, before
+    /// the stretch moves: half by default, a whole window where the lanes'
+    /// painting allows it (`stepShare(lanePixels:marginPixels:widestPixels:)`).
+    public init(windowStartMS: Double, visibleMS: Double, stepShare: Double = 0.5) {
+        let step = max(1, visibleMS * min(max(stepShare, 0.5), 1))
         stepMS = step
         anchorMS = (max(0, windowStartMS) / step).rounded(.down) * step
+    }
+
+    /// How far the window goes before the stretch moves: a whole window
+    /// where the stretch that makes, four windows across and the painting's
+    /// margin either side, still fits in one picture of `widestPixels`, and
+    /// half a window where it does not or the lane's width is not known.
+    ///
+    /// Every move of the stretch paints each busy lane again, and on a fast
+    /// scroll of the hour-long reference edit what cost was the move, not
+    /// how wide it was: a whole window's step moved it half as often, took
+    /// about a millisecond off the mean frame and halved the late ones
+    /// (2026-11-20). A painting wider than a picture is a canvas, drawn again
+    /// on every frame it slides, so the step is never allowed to make one.
+    public static func stepShare(lanePixels: Double, marginPixels: Double, widestPixels: Double) -> Double {
+        guard lanePixels > 0 else { return 0.5 }
+        return lanePixels * 4 + marginPixels <= widestPixels ? 1 : 0.5
     }
 
     /// Where the window's left edge is, somewhere inside: the edge written

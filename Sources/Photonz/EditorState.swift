@@ -2114,7 +2114,8 @@ final class EditorState {
             if newValue.scale != timelineZoomScale { timelineZoomScale = newValue.scale }
             if newValue.startMS != timelineZoomStartMS { timelineZoomStartMS = newValue.startMS }
             let stretch = TimelineDrawnStretch(windowStartMS: newValue.startMS,
-                                               visibleMS: newValue.visibleMS(documentMS: timelineLengthForZoomMS))
+                                               visibleMS: newValue.visibleMS(documentMS: timelineLengthForZoomMS),
+                                               stepShare: timelineDrawnStepShare)
             if stretch != timelineDrawnStretch { timelineDrawnStretch = stretch }
             let window = newValue.clamped(documentMS: timelineLengthForZoomMS)
             let rows = TimelineSight.rows(windowStartMS: window.startMS,
@@ -2145,6 +2146,15 @@ final class EditorState {
     /// what a clip's bar is cut down to, so a scroll redraws a bar only that
     /// often and slides it in between (`timelineDrawnMS`).
     private(set) var timelineDrawnStretch = TimelineDrawnStretch(windowStartMS: 0, visibleMS: 1)
+    /// How far the window goes before the drawn stretch moves, as a share
+    /// of itself: a whole window where the lanes' painting of four windows
+    /// still fits in one picture (`TimelineDrawnStretch.stepShare`).
+    private var timelineDrawnStepShare: Double {
+        let scale = Double(hostWindow?.backingScaleFactor ?? 2)
+        return TimelineDrawnStretch.stepShare(lanePixels: Double(timelineLaneWidth) * scale,
+                                              marginPixels: Double(TimelinePaintedPicture.margin) * 2 * scale,
+                                              widestPixels: Double(TimelinePaintedPicture.widestPixels))
+    }
     /// Whether the window's last move was a zoom: a painting lane then
     /// paints only the window, since every frame of a zoom paints it again
     /// anyway, and goes back to the wide stretch at the next move along

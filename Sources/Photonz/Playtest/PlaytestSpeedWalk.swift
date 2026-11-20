@@ -511,6 +511,9 @@ final class SpeedWalkProbe {
 
         // How many clip bars each frame built, per measure, for the line.
         var barsPerFrame: [String] = []
+        // How many lane paintings each frame laid into a
+        // picture (`TimelinePaintedPicture`), per measure.
+        var picturesPerFrame: [String] = []
         // A zoom's frames by how far in it was, so a slow stretch says where
         // it is: the median frame at each doubling of the zoom.
         var byZoom: [String] = []
@@ -522,13 +525,20 @@ final class SpeedWalkProbe {
         // against frames whose lanes painted afresh
         // (`EditorState.timelineHeldPainting`), for the line.
         var heldSplit = ""
+        // Along it, frames that moved the drawn stretch (every lane painted
+        // again) against frames that only slid it (`timelineDrawnMS`).
+        var movedSplit = ""
         func film(_ label: String, moves: Int, _ move: () -> Bool) async -> SpeedWalk.FrameTimes {
             ViewBuildMeter.shared.reset()
+            TimelinePaintedPicture.laidMS = 0
             var at: [Double] = []
             var octaves: [Int: [Double]] = [:]
             defer {
                 let built = ViewBuildMeter.shared.count(.clipBar)
                 barsPerFrame.append(String(format: "%@ %.0f", label, Double(built) / Double(max(1, at.count - 1))))
+                let laid = ViewBuildMeter.shared.count(.paintedPicture)
+                picturesPerFrame.append(String(format: "%@ %.1f (%.2fms each)", label, Double(laid) / Double(max(1, at.count - 1)),
+                                               TimelinePaintedPicture.laidMS / Double(max(1, laid))))
                 if octaves.count > 1 {
                     byZoom.append(label + " " + octaves.keys.sorted().map { octave in
                         let times = (octaves[octave] ?? []).sorted()
@@ -541,21 +551,32 @@ final class SpeedWalkProbe {
             at.append(0)
             var held: [Double] = []
             var fresh: [Double] = []
+            var slid: [Double] = []
+            var moved: [Double] = []
             for _ in 0..<moves {
+                let drawnBefore = editor.timelineDrawnMS
                 // A timeline that cannot keep up is stopped at twenty seconds.
                 guard CACurrentMediaTime() - start < 20, move() else { break }
+                let stretchMoved = editor.timelineDrawnMS != drawnBefore
                 let octave = max(0, Int(log2(max(1, editor.timelineZoom.scale)).rounded(.down)))
                 let isHeld = editor.timelineHeldPainting != nil
                 await frames.next()
                 let now = (CACurrentMediaTime() - start) * 1000
                 octaves[octave, default: []].append(now - (at.last ?? 0))
                 if isHeld { held.append(now - (at.last ?? 0)) } else { fresh.append(now - (at.last ?? 0)) }
+                if stretchMoved { moved.append(now - (at.last ?? 0)) } else { slid.append(now - (at.last ?? 0)) }
                 at.append(now)
             }
+            func worst(_ v: [Double]) -> Double { v.max() ?? 0 }
             if label == "near fit" {
                 func mean(_ v: [Double]) -> Double { v.isEmpty ? 0 : v.reduce(0, +) / Double(v.count) }
                 heldSplit = String(format: "; near fit held %d frames mean %.2fms, painted afresh %d mean %.2fms",
                                    held.count, mean(held), fresh.count, mean(fresh))
+            }
+            if label == "scroll" {
+                func mean(_ v: [Double]) -> Double { v.isEmpty ? 0 : v.reduce(0, +) / Double(v.count) }
+                movedSplit = String(format: "; scroll slid %d frames mean %.2fms worst %.0fms, stretch moved %d mean %.2fms worst %.0fms",
+                                    slid.count, mean(slid), worst(slid), moved.count, mean(moved), worst(moved))
             }
             if at.count > 1, let last = at.last {
                 means.append(String(format: "%@ %.2fms", label, last / Double(at.count - 1)))
@@ -602,7 +623,8 @@ final class SpeedWalkProbe {
         editor.fitTimeline()
         run.timeline = [zoomIn, zoomOut, scroll]
         return "views at fit: \(viewsAtFit); views zoomed in: \(viewsZoomed); clip bars built a frame: "
-            + barsPerFrame.joined(separator: ", ") + "; by zoom: " + byZoom.joined(separator: "; ") + "; mean frame: " + means.joined(separator: ", ") + heldSplit + "; "
+            + barsPerFrame.joined(separator: ", ") + "; paintings laid a frame: " + picturesPerFrame.joined(separator: ", ")
+            + "; by zoom: " + byZoom.joined(separator: "; ") + "; mean frame: " + means.joined(separator: ", ") + heldSplit + movedSplit + "; "
             + [zoomIn, zoomOut, nearFit, scroll].map {
             String(format: "%@: %d frames, median %.1fms, p95 %.1fms, worst %.0fms, %d late against %.1fms",
                    $0.label, $0.frames, $0.medianMS, $0.p95MS, $0.worstMS, $0.late, $0.refreshMS)

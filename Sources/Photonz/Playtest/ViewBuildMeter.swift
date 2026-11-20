@@ -42,6 +42,10 @@ final class ViewBuildMeter {
         /// talk has 170 of them, so a key that rebuilds every one is a key
         /// that freezes (`a-long-captioned-recording-walk`).
         case clipBar
+        /// One busy lane's painting laid into a picture
+        /// (`TimelinePaintedPicture`): a scroll lays them only when it moves
+        /// the drawn stretch, a zoom whenever it does not hold the last one.
+        case paintedPicture
         /// The Words lane under a Captions track: one body draws every word.
         case wordsLane
         /// One track of the timeline, header and lane.

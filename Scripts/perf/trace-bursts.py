@@ -7,6 +7,7 @@
 #       --time-limit 45s --output picks.trace
 #   python3 Scripts/perf/trace-bursts.py picks.trace [--min 15] [--gap 1.6] [--top 25]
 #       [--focus 'SymbolSubstring']   only bursts holding a frame with that in its name
+#       [--without 'SymbolSubstring'] only bursts holding no frame with that in its name
 #       [--list]                      one line per long burst, in time order
 #       [--passes]                    cut by the probe's own pass marks instead of by gaps
 #       [--from S] [--to S]           only passes starting in that window, seconds from
@@ -44,6 +45,7 @@ ap.add_argument('--min', type=float, default=15.0, help='shortest burst to repor
 ap.add_argument('--gap', type=float, default=1.6, help='a gap longer than this ends a burst, ms')
 ap.add_argument('--top', type=int, default=25)
 ap.add_argument('--focus', default=None)
+ap.add_argument('--without', default=None)
 ap.add_argument('--list', action='store_true')
 ap.add_argument('--passes', action='store_true')
 ap.add_argument('--process', default=None, help='only this process (a trace recorded with --all-processes), e.g. Photonz')
@@ -163,6 +165,8 @@ long = [b for b in bursts if dur(b) >= args.min
         and (args.at is None or any(abs(starts_at(b) - a) < 0.003 for a in args.at))]
 if args.focus:
     long = [b for b in long if any(args.focus in n for s in b for n in s[2])]
+if args.without:
+    long = [b for b in long if not any(args.without in n for s in b for n in s[2])]
 print(f'{len(samples)} main thread samples, {len(bursts)} bursts, {len(long)} of {args.min:.0f} ms or more'
       + (f' holding {args.focus}' if args.focus else ''))
 if not long: sys.exit(0)

@@ -57,8 +57,9 @@ extension EditorState {
     }
 
     /// What a clip's bar is drawn across, in the document's milliseconds: the
-    /// window and at least half a window either side, moving only once the
-    /// window has gone half its width (`TimelineDrawnStretch`).
+    /// window and a step either side, moving only once the window has gone
+    /// a step: a whole window where the lanes' painting allows, else half
+    /// (`TimelineDrawnStretch`, `timelineDrawnStepShare`).
     var timelineDrawnMS: ClosedRange<Double> {
         guard motionStripMeasuresADocument else {
             let lap = MotionStripRuler(cycleMS: motionStripCycleMS)

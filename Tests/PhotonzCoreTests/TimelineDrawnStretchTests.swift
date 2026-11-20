@@ -202,5 +202,37 @@ struct TimelineDrawnStretchTests {
         #expect(TimelineDrawnStretch.cut(10_000...70_000, toClipFromMS: 0, toMS: 300_000, visibleMS: 20_000)
             == 10_000...70_000)
     }
-}
 
+    // MARK: - A whole window's step where the picture allows
+
+    /// On a fast scroll every move of the stretch paints each busy lane
+    /// again, and what costs is the move, not how wide it is: a step of a
+    /// whole window moved it half as often and took a millisecond off the
+    /// mean frame of the hour-long reference edit's scroll, the late frames
+    /// halved (2026-11-20). Taken where the stretch it makes, four windows
+    /// wide, still fits in one picture.
+    @Test func aWholeWindowStepMovesTheStretchHalfAsOften() {
+        let half = TimelineDrawnStretch(windowStartMS: 100_000, visibleMS: 20_000)
+        let whole = TimelineDrawnStretch(windowStartMS: 100_000, visibleMS: 20_000, stepShare: 1)
+        #expect(half.stepMS == 10_000)
+        #expect(whole.stepMS == 20_000)
+        // Gone a whole window and a bit along, a half step has moved twice,
+        // a whole one once.
+        let along = 100_000 + 21_000.0
+        #expect(TimelineDrawnStretch(windowStartMS: along, visibleMS: 20_000).anchorMS == 120_000)
+        #expect(TimelineDrawnStretch(windowStartMS: along, visibleMS: 20_000, stepShare: 1).anchorMS == 120_000)
+        #expect(TimelineDrawnStretch(windowStartMS: 100_000 + 15_000, visibleMS: 20_000, stepShare: 1).anchorMS
+            == 100_000)
+        // Still the window and a step either side, wherever the edge is.
+        let stretch = whole.stretchMS(visibleMS: 20_000, documentMS: Self.fiveMinutes)
+        #expect(stretch == 80_000...160_000)
+    }
+
+    /// Four windows across must fit in one picture, its margin included;
+    /// otherwise the step stays half a window.
+    @Test func theWholeWindowStepOnlyWhereFourWindowsFitInAPicture() {
+        #expect(TimelineDrawnStretch.stepShare(lanePixels: 2_926, marginPixels: 48, widestPixels: 16_000) == 1)
+        #expect(TimelineDrawnStretch.stepShare(lanePixels: 3_990, marginPixels: 48, widestPixels: 16_000) == 0.5)
+        #expect(TimelineDrawnStretch.stepShare(lanePixels: 0, marginPixels: 48, widestPixels: 16_000) == 0.5)
+    }
+}

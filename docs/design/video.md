@@ -1104,6 +1104,27 @@ The rule, for any view added to the editor window:
      offsets it to a whole pixel. Only a name that can be pushed along by the
      lane's left edge in this stretch (`TimelinePaint.nameFollowsTheEdge`) is
      drawn against the window, by `TimelinePaintedNames`, every frame.
+   - **The stretch moves a whole window at a time where the picture
+     allows it** (`TimelineDrawnStretch.stepShare`, `EditorState.timelineDrawnStepShare`):
+     the stretch is the window and a step either side, and it moves once the
+     window has gone a step. Every move paints each busy lane again, and
+     what costs is the move (the lane's work, laying out and committing the
+     new pictures), not how wide it is: laying the pictures was about 0.3 ms
+     each. So the step is a whole window, making the painting four windows
+     across, wherever that still fits in one picture (`TimelinePaintedPicture.widestPixels`
+     with its margin); on a lane too wide for that it stays half a window,
+     since a painting wider than a picture is a canvas drawn again on every
+     frame it slides. On the hour-long reference edit's scroll (2026-11-20):
+     mean frame 10.5 to 9.5 ms, median 10 to 8.3, late frames 104 to 55 of
+     360, worst unchanged. Tried and backed out the same day: laying the
+     stretch in pieces half a window wide, each kept while what it covers
+     is unchanged, so a move paints one piece; it laid fewer pixels but
+     twice the pictures, and the extra image views cost more than the
+     painting saved (scroll 9.7 to 12.4 ms a frame, a frame that only slid
+     the painting 7.7 to 9.0). Also tried: a wider sliver while zooming
+     (1/10 of the window) so a zoom out holds its painting as long as a zoom
+     in does, and an 12.5 per cent hold: more frames held, but each held
+     frame cost as much more, near Fit unchanged within noise.
    - **While the timeline zooms, the painting covers only the window**
      (`TimelinePaint.paintedMS`, `EditorState.timelinePaintsTheWindow`): a
      change of scale paints every lane again whatever the canvas covers, so

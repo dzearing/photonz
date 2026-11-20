@@ -1081,6 +1081,10 @@ struct TimelinePaintedPicture: View {
     let paint: (inout GraphicsContext) -> Void
 
     static let margin: CGFloat = 12
+    #if PHOTONZ_PLAYTEST
+    /// How long laying pictures took, for the speed walk's line.
+    @MainActor static var laidMS: Double = 0
+    #endif
     /// The widest picture laid, in pixels, inside what the GPU takes.
     static let widestPixels: CGFloat = 16_000
 
@@ -1101,6 +1105,11 @@ struct TimelinePaintedPicture: View {
         let margin = Self.margin
         let scale = max(1, scale)
         guard width > 0, height > 0, (width + margin * 2) * scale <= Self.widestPixels else { return nil }
+        #if PHOTONZ_PLAYTEST
+        ViewBuildMeter.shared.built(.paintedPicture)
+        let began = CACurrentMediaTime()
+        defer { Self.laidMS += (CACurrentMediaTime() - began) * 1000 }
+        #endif
         let paint = self.paint
         let laid = Canvas { context, _ in
             context.translateBy(x: margin, y: margin)

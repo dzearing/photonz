@@ -1,0 +1,41 @@
+{
+  "feature": "Scrolling the hour-long timeline repaints its busy lanes half as often",
+  "epic": "video-perf",
+  "summary": "While you scroll, each busy lane's painting now reaches a whole window either side and is painted again once a whole window has gone by, where before it was half a window. On a fast scroll of the hour-long edit the lanes repaint half as often, so the mean frame is about a millisecond quicker and half as many frames are late. Nothing on screen changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Measured with a timeline-only speed walk on the probe.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below.",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Click the ruler above the tracks, then press = five times to zoom the timeline in to a couple of minutes.",
+      "shot": "2026-11-20-timeline-hour-long-pass15-scrolled-sc.png"
+    },
+    {
+      "do": "Scroll the timeline along with two fingers, quickly, from one end to the other."
+    },
+    {
+      "do": "Stop anywhere and look along V1: pictures, names, cuts and waveforms all in place.",
+      "shot": "2026-11-20-timeline-hour-long-pass15-scrolled-more-sc.png"
+    },
+    {
+      "do": "Drag the overview bar under the timeline back and forth."
+    }
+  ],
+  "evaluate": [
+    "Does a fast scroll along the zoomed hour feel smoother than yesterday's build?",
+    "After you stop scrolling, does any lane show pictures or names out of date until you move again?",
+    "Do the pictures along the clips fill in as quickly as before once you stop?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, scroll end to end (a third of a window a frame), paired runs on one build: mean frame 10.46 and 10.62 ms with half-window steps, 9.46 and 9.49 with whole-window steps; median 9.7 to 10.9 down to 8.3; late frames 104 to 114 of 360 down to 55 to 56; worst unchanged at 22 to 27. On the final build: 8.98 and 9.88 ms (late 31 and 73), the machine busy with other work. Zoom and near-Fit numbers did not move (near Fit about 12.8 to 13.4 ms on this busier machine).",
+    "The wider step applies only where four windows of the lane fit in one picture (about a 1,990 point wide lane on a Retina screen); a wider lane keeps the half-window step, since a painting too wide for a picture is drawn again on every frame it slides.",
+    "Tried and not kept: painting the stretch in pieces half a window wide, so a scroll paints only the piece coming in. It laid fewer pixels but twice as many pictures, and the extra picture views cost more than the painting saved (scroll 9.7 to 12.4 ms a frame). Also tried: holding a zoom's last painting longer and over a wider strip; more frames held, each held frame as much dearer, no gain. Both written into docs/design/video.md.",
+    "What a scroll frame that repaints costs is mostly the app's view upkeep, layout and handing the new pictures to the screen; laying the pictures themselves is about 0.3 ms each (now in the speed walk's line).",
+    "Bars of the task not reached: 95 per cent of zoom and scroll frames under 8.3 ms and none over 16 (near Fit about 12 to 13 ms a frame on this machine today, scroll worst 22 ms), and edits within 16 ms. The task stays open.",
+    "clip-pictures-when-zoomed-in-walk fails about one run in three on its 50 ms limit for one pass of a pan (50.5 to 74 ms), with the old half-window step as often as with the new one (2 of 6 each), on this machine under load. Recorded on this task, which owns that walk.",
+    "No mock covers the timeline's speed; nothing about the timeline's look changed."
+  ]
+}
