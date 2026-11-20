@@ -18248,3 +18248,11 @@
 {"t":"2026-11-20T05:21:32.738Z","ev":"task_note","id":"find-out-why-a-newly-added-eq-sometimes-sits-abo"}
 {"t":"2026-11-20T05:21:32.806Z","ev":"task_walks","id":"find-out-why-a-newly-added-eq-sometimes-sits-abo","walks":["sound-effects-eq-compressor-locked-walk","sound-effects-eq-compressor-walk","sound-effects-noise-reduction-walk"]}
 {"t":"2026-11-20T05:21:45.349Z","ev":"task_done","id":"find-out-why-a-newly-added-eq-sometimes-sits-abo","from":"in_progress","note":"The panel was fine; the walk read it too early. Reproduced 5 of 12 (failures always 0.25 s after the plus, before the panel's 0.24 s-delayed scroll); the EQ was 352 pt BELOW the fold, and the 'above' wording was a harness bug (empty visibleRect read as cut off above), now fixed in checkInView. The three Audio Effects walks wait for the section to be in view before expectInView: locked walk 20 of 20, siblings 4 of 4. Scripts/test.sh green. Commit cb11c2424."}
+{"t":"2026-11-20T05:22:10.825Z","ev":"task_started","id":"find-out-why-animated-charts-walk-sometimes-cann","title":"Find out why animated-charts-walk sometimes cannot find the Library Catalog right after Show Library","priority":"p2-normal"}
+{"t":"2026-11-20T05:51:14.127Z","ev":"task_note","id":"find-out-why-animated-charts-walk-sometimes-cann"}
+{"t":"2026-11-20T05:58:21.142Z","ev":"task_created","id":"a-spotlight-dims-and-blurs-everything-except-the","priority":"p1-high","title":"A spotlight dims and blurs everything except the area you want people to look at"}
+{"t":"2026-11-20T05:58:24.388Z","ev":"task_resequenced","id":"a-spotlight-dims-and-blurs-everything-except-the","from":4020,"to":30}
+{"t":"2026-11-20T07:34:31.708Z","ev":"task_note","id":"find-out-why-animated-charts-walk-sometimes-cann"}
+{"t":"2026-11-20T07:34:31.775Z","ev":"task_note","id":"find-out-why-animated-charts-walk-sometimes-cann"}
+{"t":"2026-11-20T07:34:31.844Z","ev":"task_note","id":"find-out-why-animated-charts-walk-sometimes-cann"}
+{"t":"2026-11-20T07:34:31.911Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}

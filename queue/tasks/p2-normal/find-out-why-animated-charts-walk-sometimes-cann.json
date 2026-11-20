@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-20T05:21:16.199Z",
-  "updated": "2026-11-20T05:51:14.126Z",
+  "updated": "2026-11-20T07:34:31.843Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-20 while checking other expectInView walks for find-out-why-a-newly-added-eq-sometimes-sits-abo. Scripts/playtest.sh Scripts/playtest/animated-charts-walk.json --no-build: first run exit 1 with step 9 (press): no control called \"Catalog\" is in the panel; the ones that are: Blade (the tool bar), Sections, Volume (Transport) ... (no Library controls listed at all). Second run of the same command exit 0. Step 7 is action showLibrary, step 8 wait 0.8 (a wait returns early once the app is quiet), step 9 press Catalog. Likely the same shape as the EQ flake: a fixed wait that returns early. A waitFor on the Library being drawn would be the walk-side fix if the panel itself is fine.",
@@ -29,6 +29,18 @@
     {
       "t": "2026-11-20T05:51:14.125Z",
       "note": "Before the fix: 18 runs of Scripts/playtest.sh Scripts/playtest/animated-charts-walk.json --no-build, step 9 (press Catalog) failed 8 (runs 1,5,6,7,8 of 12; 2,4,5 of 6). Plus 1 of 6 later. Not a slow Library: in every failing run the panel had NO sections from step 1 on (dockSections [], shelf pane none), and the real capture 3 s after Show Library showed a blank panel with only the Sections footer. Traced the panel body and its catch-up (temporary file trace): Edit arrives keyPass > timeline > trackRows > panelSections; in failing runs the body drew the panelSections pass but .onChange(of: editorState.editArrival) never ran catchUp, so the dock never started filling. Show Library adds nothing to the section list (Library is already in it), so nothing redrew. Same dropped-onChange shape already worked around for later passes on 2026-10-04."
+    },
+    {
+      "t": "2026-11-20T07:34:31.706Z",
+      "note": "Second path found with an in-memory trace (a file trace hid it): Edit's arrival stopped at trackRows and never reached panelSections, because EditorView's .onChange(of: editArrival), which moves each stage on, was also dropped. Not walk-only: on unchanged code a short walk (first 8 steps) left the panel blank 7 of 40 with the window hidden and 9 of 30 with setup.shown (alpha 1, as a person has it)."
+    },
+    {
+      "t": "2026-11-20T07:34:31.773Z",
+      "note": "Fix: EditorState.keepArriving asks for the next stage itself two run-loop turns after each one, and advanceEditArrival(from:) ignores an ask for a stage already left, so the view's ask and the backstop never double-advance (the slide-wait and playing re-asks carry the stage too). Kept the panel-side fix as well: a panel pass that owes sections with Edit far enough in asks for the catch-up itself (DockArrivals.askFromThePass). Panel fix alone: 2 of 60 blank. Both: 0 of 80 hidden, 0 of 15 shown."
+    },
+    {
+      "t": "2026-11-20T07:34:31.842Z",
+      "note": "Acceptance: animated-charts-walk before the fix, step 9 failed 9 of 24 runs; after both fixes 23 of 23 passed (13 with the panel fix, then 10 of 10 with both). Siblings green: view-to-edit-on-a-long-recording, view-mode-and-edit-mode, color-grade-warms-a-clip, every-section-header-opens, library-reveal, captions-on-demand, command-r-opens-the-speed, clip-click-cost, a-click-on-a-clip-piece-picks-it. Scripts/test.sh exit 0. section-fold-motion-walk fails step 14 identically on unchanged code (owned by folding-a-section-that-lets-the-panel-fit-again). No renderer or composite path change."
     }
   ],
   "walks": [

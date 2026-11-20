@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-11-11T03:48:30.958Z",
-  "updated": "2026-11-19T13:57:03.886Z",
+  "updated": "2026-11-20T07:34:31.910Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-17T15:33:58Z DID NOT FINISH (the run was interrupted: whoever was running it went away): it reached 118 of 1175 walks in 36 minutes, of which 112 passed. The walks it never reached are unknown, not passing.\n\nFailing walks (6): a-clip-s-sound-is-linked-under-it-walk, a-glyph-takes-the-saved-stroke-walk, a-line-and-an-oval-wear-the-saved-stroke-walk, a-saved-stroke-tile-counts-its-lines-walk, a-screen-hugs-what-it-holds-walk, a-transition-is-picked-at-the-cut-walk\n\nThose 6 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: an-hour-long-edit-opens-without-a-freeze-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nNot run this time and still failing from the last check (16): component-choice-one-step-walk, component-choice-walk, component-instance-walk, component-look-walk, component-override-walk, component-preview-front-walk, component-text-halo-walk, copies-share-choice-walk, copy-own-color-walk, copy-own-number-walk, copy-svg-into-a-code-editor-walk, icon-into-a-component-onto-the-timeline-walk, insert-a-title-before-a-clip-walk, label-grows-walk, library-reveal-walk, tool-and-library-dropdowns-open-on-a-click-walk\nThis run was interrupted before reaching them. They are unread, not fixed.\n\nFull output: queue/sweep/2026-11-17-065742.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-clip-s-own-sound-is-the-bottom-half-of-the-cli: The timeline lanes changed height for every recording with sound; walks aiming at fixed window points outside the sets run by the task may need moving\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -150,6 +150,10 @@
     {
       "t": "2026-11-19T13:57:03.885Z",
       "note": "seq 660 -> 550"
+    },
+    {
+      "t": "2026-11-20T07:34:31.909Z",
+      "note": "library-last-tile-reachable-walk, 2026-11-19 (find-out-why-animated-charts-walk-sometimes-cann): its step 9 waitFor sectionHeaderInView(Library) also fails, about 2 runs in 5, besides the known step 31. Two causes. One was a blank panel after opening a recording in Edit, now fixed in that task. The one left is the walk's measurement only: the dock reports Time and Captions, the Library is mounted (bodies library=112) and its shelf pane is 315-675, but no Library section frame is ever recorded. The real capture of that state shows the Library drawn and in view with Media | Catalog, and a panel step lists Catalog. So the Library section in the shelf pane sometimes never reports its frame to InspectorLayoutProbe (recordInspectorSection). Same check as step 31, so probably the same cause."
     }
   ],
   "standing": "walk-sweep"
