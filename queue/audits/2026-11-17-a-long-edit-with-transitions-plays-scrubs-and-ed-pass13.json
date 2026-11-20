@@ -2,14 +2,27 @@
   "feature": "A long edit scrubs without a stutter (pass 13: the scrub bar)",
   "epic": "video-perf",
   "summary": "Each picture of the 6 minute reference edit now costs 8.6 ms to draw instead of 10.8, because a recording's shadow is blurred once and kept rather than blurred again on every frame. The speed walk also now measures the scrub honestly: how far behind the hand the frame really under it is, not just a nearby frame shown in its place.",
-  "setup": "Photonz Probe, release Next, no switch changed from its default. Scripts/perf/reference-edit.sh 6 makes the edit; Scripts/perf/speed-walk.sh measures it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Scripts/perf/speed-walk.sh measures it.",
   "switched": {},
   "try": [
-    { "do": "Open the 6 minute reference edit and press Space: it plays across its dissolves, push and cube.", "shot": "2026-11-17-long-edit-pass13-window-sc.png" },
-    { "do": "Drag the playhead slowly across ten seconds of one take, the way you hunt for a word." },
-    { "do": "Drag the playhead from one end of the edit to the other in about two seconds." },
-    { "do": "Pick a take and look at the corner of the picture under its shadow mid-zoom (0:15): the left half is before, the right half after.", "shot": "2026-11-17-long-edit-pass13-corner-before-after.png" },
-    { "do": "Run Scripts/perf/speed-walk.sh and read the scrub line: two numbers per speed, the picture and the frame under the hand." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below and press Space: it plays across its dissolves, push and cube.",
+      "shot": "2026-11-17-long-edit-pass13-window-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Drag the playhead slowly across ten seconds of one take, the way you hunt for a word."
+    },
+    {
+      "do": "Drag the playhead from one end of the edit to the other in about two seconds."
+    },
+    {
+      "do": "Pick a take and look at the corner of the picture under its shadow mid-zoom (0:15): the left half is before, the right half after.",
+      "shot": "2026-11-17-long-edit-pass13-corner-before-after.png"
+    },
+    {
+      "do": "Run Scripts/perf/speed-walk.sh and read the scrub line: two numbers per speed, the picture and the frame under the hand."
+    }
   ],
   "evaluate": [
     "Hunting across ten seconds, does the picture keep up with your hand?",

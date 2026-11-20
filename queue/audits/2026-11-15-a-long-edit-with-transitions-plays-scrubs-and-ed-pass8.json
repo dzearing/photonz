@@ -2,14 +2,26 @@
   "feature": "A long edit plays, scrubs and edits without a stutter (pass 8)",
   "epic": "video-perf",
   "summary": "Cutting a clip you have picked (B) now costs about what a trim does: the piece the cut hands you lights up one frame after the cut instead of in the same frame, and ⌫ still throws that piece away straight after. The speed walk now times every edit both with nothing picked and with a clip picked.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Click a clip on V1 so its sections fill the panel, then press Space to play.", "shot": "2026-11-15-long-edit-pass8-after-the-edits-sc.png" },
-    { "do": "While it plays over that clip, press B." },
-    { "do": "Press Delete straight away." },
-    { "do": "Press Command Z twice." },
-    { "do": "Press Space, then B again on the same clip, and watch the ring land on the piece before the cut." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then click a clip on V1 so its sections fill the panel, then press Space to play.",
+      "shot": "2026-11-15-long-edit-pass8-after-the-edits-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "While it plays over that clip, press B."
+    },
+    {
+      "do": "Press Delete straight away."
+    },
+    {
+      "do": "Press Command Z twice."
+    },
+    {
+      "do": "Press Space, then B again on the same clip, and watch the ring land on the piece before the cut."
+    }
   ],
   "evaluate": [
     "Does B on a picked clip feel as quick as a trim now?",

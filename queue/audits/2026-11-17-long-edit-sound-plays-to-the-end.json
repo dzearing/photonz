@@ -2,13 +2,22 @@
   "feature": "A long edit's sound plays to the end",
   "epic": "video-perf",
   "summary": "Played from the start, a 20 or 60 minute edit used to go silent at about 6 minutes 25 seconds while the picture carried on. Now every voice and the music play at their moment for as long as the edit plays.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. The edit is the 20 minute reference edit: Scripts/perf/reference-edit.sh 20 opens it in the probe; Scripts/playtest.sh Scripts/perf/walks/long-20-sound.json measures it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 20 minute reference edit in Photonz Dev. Scripts/playtest.sh Scripts/perf/walks/long-20-sound.json measures it.",
   "switched": {},
   "try": [
-    { "do": "Open a video longer than ten minutes with voices or music all the way through." },
-    { "do": "Press Home, then Space." },
-    { "do": "Leave it playing past the 7 minute mark and listen." },
-    { "do": "Press Space to pause around 8 minutes, click a moment near 15 minutes, press Space again." }
+    {
+      "do": "Open the 20 minute reference edit in Photonz Dev with the button below, or any video longer than ten minutes with voices or music all the way through.",
+      "referenceEdit": 20
+    },
+    {
+      "do": "Press Home, then Space."
+    },
+    {
+      "do": "Leave it playing past the 7 minute mark and listen."
+    },
+    {
+      "do": "Press Space to pause around 8 minutes, click a moment near 15 minutes, press Space again."
+    }
   ],
   "evaluate": [
     "Do you still hear the voices and the music after 6 minutes 30 seconds?",

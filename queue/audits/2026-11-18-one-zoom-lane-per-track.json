@@ -2,12 +2,13 @@
   "feature": "One Zoom lane per track on a long edit",
   "epic": "video-perf",
   "summary": "A track's zooms now share one Zoom row under it, bars side by side, so the hour-long edit shows one Zoom row under V1 instead of 126 and the Background and Music tracks stay in sight.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-long-edit-has-one-zoom-lane-per-track-walk.json (opens the 60 minute reference edit).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
     {
-      "do": "Open the 60 minute reference edit (Scripts/perf/reference-edit.sh 60) and look under V1: one Zoom row, then Background and Music.",
-      "shot": "2026-11-18-one-zoom-lane-1-whole-hour-sc.png"
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below and look under V1: one Zoom row, then Background and Music.",
+      "shot": "2026-11-18-one-zoom-lane-1-whole-hour-sc.png",
+      "referenceEdit": 60
     },
     {
       "do": "Zoom the timeline in on the first minute (= a few times).",

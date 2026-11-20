@@ -2,14 +2,26 @@
   "feature": "A long edit plays, scrubs and edits without a stutter (pass 12)",
   "epic": "video-perf",
   "summary": "Clicking a clip when nothing is picked fills the right panel a piece at a time, and two pieces used to land in the same frame. Now one piece lands per frame, with a quiet frame after the heavy ones, so the longest catch while the 6 minute edit plays went from about 56 ms to about 31 (median of ten clicks; worst 89 to 63). A cut with nothing picked went from 89 to 53 ms at worst of three.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Press Space to play the edit.", "shot": "2026-11-16-long-edit-pass12-after-the-edits-sc.png" },
-    { "do": "While it plays, click an empty part of the timeline so nothing is picked." },
-    { "do": "Click a clip on V1 and watch the picture while the panel fills in." },
-    { "do": "Click empty timeline again, then press B with the playhead over a clip." },
-    { "do": "Pick the clip again and open Effects to check the shadow's sliders are all there." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then press Space to play the edit.",
+      "shot": "2026-11-16-long-edit-pass12-after-the-edits-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "While it plays, click an empty part of the timeline so nothing is picked."
+    },
+    {
+      "do": "Click a clip on V1 and watch the picture while the panel fills in."
+    },
+    {
+      "do": "Click empty timeline again, then press B with the playhead over a clip."
+    },
+    {
+      "do": "Pick the clip again and open Effects to check the shadow's sliders are all there."
+    }
   ],
   "evaluate": [
     "Does the picture keep moving smoothly while the panel fills in after you click a clip?",

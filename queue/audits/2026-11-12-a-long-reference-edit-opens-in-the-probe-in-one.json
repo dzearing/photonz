@@ -2,14 +2,29 @@
   "feature": "The reference edit every video speed fix measures against",
   "epic": "video-perf",
   "summary": "A long, busy video edit built the same way every time, at 6, 20 and 60 minutes: Retina screen recordings cut onto three picture tracks over a moving background, 37 cuts in every six minutes with dissolves, pushes, cubes and flips, titles, zooms, sound and music. One command opens it in the probe, and a walk can start with it open.",
-  "setup": "The probe (Photonz Probe), release Next, no flag changed from its default. Nothing in the app changed for a person; this is a measuring tool.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Nothing in the app changed for a person; this is a measuring tool.",
   "switched": {},
   "try": [
-    { "do": "Run Scripts/perf/reference-edit.sh 6. The first run on a Mac writes the recordings, about three minutes; after that it takes seconds.", "shot": "2026-11-12-reference-edit-opened-sc.png" },
-    { "do": "Look at the timeline: Title, V2 with b-roll, V1 with the cuts and their transitions, zoom rows, and below them the background and music tracks." },
-    { "do": "Look at the contact sheet: twelve moments, among them the middle of a dissolve, a push, a cube and a flip.", "shot": "2026-11-12-reference-edit-sheet.png" },
-    { "do": "Press Space, watch for three seconds, press Space again.", "shot": "2026-11-12-reference-edit-stopped-sc.png" },
-    { "do": "Run Scripts/perf/reference-edit.sh 20, then 60, and see how long each takes to become usable." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below. The first run on a Mac writes the recordings, about three minutes; after that it takes seconds.",
+      "shot": "2026-11-12-reference-edit-opened-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Look at the timeline: Title, V2 with b-roll, V1 with the cuts and their transitions, zoom rows, and below them the background and music tracks."
+    },
+    {
+      "do": "Look at the contact sheet: twelve moments, among them the middle of a dissolve, a push, a cube and a flip.",
+      "shot": "2026-11-12-reference-edit-sheet.png"
+    },
+    {
+      "do": "Press Space, watch for three seconds, press Space again.",
+      "shot": "2026-11-12-reference-edit-stopped-sc.png"
+    },
+    {
+      "do": "Open the 20 minute reference edit in Photonz Dev with the button below, then the 60 minute one beside it with File > Open, and see how long each takes to become usable.",
+      "referenceEdit": 20
+    }
   ],
   "evaluate": [
     "Does the 6 minute edit look like a real screen-recording edit you would make, busy enough to be a fair test?",

@@ -2,16 +2,35 @@
   "feature": "A zoom on the hour-long timeline stretches the last painting instead of painting every frame",
   "epic": "video-perf",
   "summary": "While you pinch or zoom the timeline a step at a time, each busy lane keeps the picture it painted a frame or two ago and stretches it to the new zoom, painting again only once the stretch passes 8.5 per cent or the window outgrows what was painted, and always 30 ms after the zoom stops. Every clip and cut lands where it belongs; near Fit on the 60 minute reference edit a zoom frame is about 1.2 ms quicker and a third fewer frames are late. The Zoom lane also stops working out its zooms from the document on every frame.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Open the 60 minute reference edit. The timeline opens at Fit." },
-    { "do": "Pinch in slowly on the timeline from Fit to about 8x, then back out." },
-    { "do": "Look at one zoom frame held and stretched (top) beside the same zoom painted fresh (bottom), on the 6 minute edit at 4x: clips, cuts, diamonds and names line up.", "shot": "2026-11-19-timeline-hour-long-pass12-held-vs-fresh-4x.png" },
-    { "do": "The whole window, held frame above, fresh below, at 4x on the 6 minute edit.", "shot": "2026-11-19-timeline-hour-long-pass12-held-vs-fresh-window.png" },
-    { "do": "The one place a held frame differs: crossing the zoom where clips' names get their dark pill, the pill and the shorter name come in up to two frames late.", "shot": "2026-11-19-timeline-hour-long-pass12-held-vs-fresh-fit.png" },
-    { "do": "Stop pinching and look closely at names and corners: they are freshly painted, never stretched.", "shot": "2026-11-19-timeline-hour-long-pass12-held-sc.png" },
-    { "do": "Pinch, then click a clip and a cut right away: both pick as before." }
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below. The timeline opens at Fit.",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Pinch in slowly on the timeline from Fit to about 8x, then back out."
+    },
+    {
+      "do": "Look at one zoom frame held and stretched (top) beside the same zoom painted fresh (bottom), on the 6 minute edit at 4x: clips, cuts, diamonds and names line up.",
+      "shot": "2026-11-19-timeline-hour-long-pass12-held-vs-fresh-4x.png"
+    },
+    {
+      "do": "The whole window, held frame above, fresh below, at 4x on the 6 minute edit.",
+      "shot": "2026-11-19-timeline-hour-long-pass12-held-vs-fresh-window.png"
+    },
+    {
+      "do": "The one place a held frame differs: crossing the zoom where clips' names get their dark pill, the pill and the shorter name come in up to two frames late.",
+      "shot": "2026-11-19-timeline-hour-long-pass12-held-vs-fresh-fit.png"
+    },
+    {
+      "do": "Stop pinching and look closely at names and corners: they are freshly painted, never stretched.",
+      "shot": "2026-11-19-timeline-hour-long-pass12-held-sc.png"
+    },
+    {
+      "do": "Pinch, then click a clip and a cut right away: both pick as before."
+    }
   ],
   "evaluate": [
     "While you pinch, do you see names or corners breathe wider and narrower? They are at most 8.5 per cent off, for a frame or two.",

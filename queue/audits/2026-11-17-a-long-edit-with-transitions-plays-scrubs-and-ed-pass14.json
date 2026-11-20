@@ -2,14 +2,26 @@
   "feature": "A long edit scrubs without a stutter (pass 14: what a moving hand is shown)",
   "epic": "video-perf",
   "summary": "Dragging the playhead fast across the 6 minute edit now shows the recording 4 display frames from your hand at the median, where before the change it was 8 to 22, because a fast hand is shown the key frame nearest it, which decodes on its own. Hunting slowly across a cut no longer shows a stale picture of the next clip for a quarter of a second: the worst moment went from about 214 display frames to 15.",
-  "setup": "Photonz Probe, release Next, no switch changed from its default. Scripts/perf/reference-edit.sh 6 makes the edit; Scripts/perf/speed-walk.sh measures it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Scripts/perf/speed-walk.sh measures it.",
   "switched": {},
   "try": [
-    { "do": "Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).", "shot": "2026-11-17-a-long-edit-with-transitions-plays-scrubs-and-ed-pass14-1.png" },
-    { "do": "Drag the playhead from one end of the edit to the other in about two seconds and watch the picture." },
-    { "do": "Drag it slowly across ten seconds of the edit that cross a cut, the way you hunt for a moment." },
-    { "do": "Stop the drag anywhere and hold still: the sharp frame follows within a quarter of a second." },
-    { "do": "Run Scripts/perf/speed-walk.sh and read the scrub line: the last number per speed is how far from your hand what it shows of the recording is." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below.",
+      "shot": "2026-11-17-a-long-edit-with-transitions-plays-scrubs-and-ed-pass14-1.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Drag the playhead from one end of the edit to the other in about two seconds and watch the picture."
+    },
+    {
+      "do": "Drag it slowly across ten seconds of the edit that cross a cut, the way you hunt for a moment."
+    },
+    {
+      "do": "Stop the drag anywhere and hold still: the sharp frame follows within a quarter of a second."
+    },
+    {
+      "do": "Run Scripts/perf/speed-walk.sh and read the scrub line: the last number per speed is how far from your hand what it shows of the recording is."
+    }
   ],
   "evaluate": [
     "Dragging end to end fast, does the picture now look like the place your hand is, rather than somewhere it was a moment ago?",

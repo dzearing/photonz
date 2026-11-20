@@ -2,14 +2,26 @@
   "feature": "A long edit plays, scrubs and edits without a stutter (pass 19: picking a clip and the edits after it)",
   "epic": "video-perf",
   "summary": "Picking a clip on the 6 minute edit no longer reads the recording's frame to see whether a Border could follow its edge, and the canvas no longer works out every border and shadow of the picked clip just to place the motion pivot. Worst of three runs while playing: trim 22 to 16 ms, blade 63 to 51, pick 32 to 29, undo with a clip picked 25 to 19, let go of a clip 42 to 34, pick from nothing 51 to 47. Nothing drawn changes.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. File > Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6). The numbers come from Scripts/perf/speed-walk.sh.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). The numbers come from Scripts/perf/speed-walk.sh.",
   "switched": {},
   "try": [
-    { "do": "Press Space to play the 6 minute edit from 0:15.", "shot": "2026-11-19-long-edit-pass19-a-clip-picked-sc.png" },
-    { "do": "While it plays, click Take 2 on the V1 track to pick it." },
-    { "do": "Click Take 3, then Take 1, then Take 4, each for the first time." },
-    { "do": "Press Escape to let go, then click a clip again." },
-    { "do": "With a clip picked, press B to cut it, then Command Z." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then press Space to play the 6 minute edit from 0:15.",
+      "shot": "2026-11-19-long-edit-pass19-a-clip-picked-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "While it plays, click Take 2 on the V1 track to pick it."
+    },
+    {
+      "do": "Click Take 3, then Take 1, then Take 4, each for the first time."
+    },
+    {
+      "do": "Press Escape to let go, then click a clip again."
+    },
+    {
+      "do": "With a clip picked, press B to cut it, then Command Z."
+    }
   ],
   "evaluate": [
     "Does the first click on each clip land as quickly as the second click on it now does?",

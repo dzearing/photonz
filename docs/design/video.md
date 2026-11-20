@@ -768,7 +768,11 @@ minutes, 524 clips in the hour.
 Mac (60 fps H.264, a voice-like sound, two minutes of music), into a folder
 named for `ReferenceEdit.recipeVersion`, so changing what they look like means
 bumping it. `Scripts/perf/reference-edit.sh 6|20|60` writes the project and
-opens it in the probe; a walk says `"setup": { "referenceEdit": 6 }`;
+opens it in the probe; with `--dev` it opens a person's own copy (under
+`Photonz Dev/` in the same folder, never rewritten once saved into) in Photonz
+Dev, which is what the dashboard's "Open in Photonz Dev" button on a report's
+try step runs (a step with `"referenceEdit": 60`); a walk says
+`"setup": { "referenceEdit": 6 }`;
 `ReferenceEditTool --sheet` draws twelve moments of it through the renderer.
 
 The builder places clips straight onto their tracks and fits each transition

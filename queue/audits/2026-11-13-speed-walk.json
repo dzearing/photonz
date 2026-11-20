@@ -3,12 +3,13 @@
   "epic": "video-perf",
   "task": "a-speed-walk-measures-the-long-reference-edit-th",
   "summary": "A walk now plays, scrubs, edits, scrolls and exports the 6, 20 and 60 minute reference edits and writes every number into one results file, and a two minute short form in the walk set fails when a change makes it slower. Today's numbers: the 6 minute edit shows 35 of 10,906 frames when played whole, because the main thread is busy the whole time working out the timeline's tracks again for every frame it looks ahead to.",
-  "setup": "Photonz Probe (built by Scripts/probe-app.sh), release Next, no flag changed from its default. The commands run from the repo in Terminal.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). The commands run from the repo in Terminal.",
   "switched": {},
   "try": [
     {
-      "do": "Run Scripts/perf/reference-edit.sh 6, then press Space in the probe and watch the playhead and the picture for ten seconds.",
-      "shot": "2026-11-12-speed-walk-frozen-while-playing-sc.png"
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then press Space and watch the playhead and the picture for ten seconds.",
+      "shot": "2026-11-12-speed-walk-frozen-while-playing-sc.png",
+      "referenceEdit": 6
     },
     {
       "do": "Run Scripts/perf/speed-walk.sh (about two minutes) and read the path of the results file it prints.",

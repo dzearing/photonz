@@ -3,14 +3,26 @@
   "epic": "video-perf",
   "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
   "summary": "Scrolling the hour-long reference edit's timeline no longer rebuilds the 126 Zoom rows under V1 or the clips that stay in view on every frame. A fast scroll went from about 46 ms a frame to about 41. The timeline looks exactly as before.",
-  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Run Scripts/perf/reference-edit.sh 60 and wait for the edit to open." },
-    { "do": "Pinch the timeline in until about a minute shows, the stretch where clips show their pictures.", "shot": "2026-11-15-timeline-hour-zoomed-scrolled-sc.png" },
-    { "do": "Swipe along the timeline with two fingers, slowly, then flick it from one end to the other." },
-    { "do": "Scroll down to the Zoom rows under V1 and swipe along again: the bars of the zooms come in with their clips." },
-    { "do": "Drag a zoom bar to the lane's right edge and hold it there, so the timeline scrolls under it." }
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below and wait for the edit to open.",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Pinch the timeline in until about a minute shows, the stretch where clips show their pictures.",
+      "shot": "2026-11-15-timeline-hour-zoomed-scrolled-sc.png"
+    },
+    {
+      "do": "Swipe along the timeline with two fingers, slowly, then flick it from one end to the other."
+    },
+    {
+      "do": "Scroll down to the Zoom rows under V1 and swipe along again: the bars of the zooms come in with their clips."
+    },
+    {
+      "do": "Drag a zoom bar to the lane's right edge and hold it there, so the timeline scrolls under it."
+    }
   ],
   "evaluate": [
     "Does a slow swipe along a zoomed-in hour feel smoother than it did?",

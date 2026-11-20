@@ -2,14 +2,28 @@
   "feature": "The hour-long timeline stops working out the same answers on every frame",
   "epic": "video-perf",
   "summary": "Zooming and scrolling the 60 minute reference edit's timeline is about 1 ms a frame quicker: which clips are shaded apart, which cuts are painted and each waveform's points are no longer worked out again on every frame, and a transition band casts its shadow without a layer of its own. Nothing on screen changes.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Open the 60 minute reference edit. The timeline opens at Fit.", "shot": "2026-11-17-timeline-hour-long-pass10-fit-sc.png" },
-    { "do": "Pinch or press Command = a few times to zoom in near the whole hour, then back out.", "shot": "2026-11-17-timeline-hour-long-pass10-zoomed-sc.png" },
-    { "do": "Scroll the timeline along with two fingers, end to end." },
-    { "do": "Compare the Fit view with the build before this change: top is before, middle after, bottom the difference made 16 times brighter.", "shot": "2026-11-17-timeline-hour-long-pass10-head-vs-new.png" },
-    { "do": "Click a cut on V1 to pick it, then click a clip: the cut's own view comes and goes as before." }
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below. The timeline opens at Fit.",
+      "shot": "2026-11-17-timeline-hour-long-pass10-fit-sc.png",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Pinch or press Command = a few times to zoom in near the whole hour, then back out.",
+      "shot": "2026-11-17-timeline-hour-long-pass10-zoomed-sc.png"
+    },
+    {
+      "do": "Scroll the timeline along with two fingers, end to end."
+    },
+    {
+      "do": "Compare the Fit view with the build before this change: top is before, middle after, bottom the difference made 16 times brighter.",
+      "shot": "2026-11-17-timeline-hour-long-pass10-head-vs-new.png"
+    },
+    {
+      "do": "Click a cut on V1 to pick it, then click a clip: the cut's own view comes and goes as before."
+    }
   ],
   "evaluate": [
     "Does zooming in and out near the whole-hour view feel any smoother than this morning?",

@@ -2,14 +2,28 @@
   "feature": "The hour-long timeline paints the gaps between clips",
   "epic": "video-perf",
   "summary": "On a long edit the empty spaces between clips (the striped, dashed slots on the Title and V2 tracks) are painted with the clips instead of being two views each, so zooming near the whole-hour view takes about 17 ms a frame instead of 22, and a scroll misses far fewer refreshes. A right click on a gap still offers Ripple Delete first.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit, or the walk a-painted-gap-takes-a-right-click-walk).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Open the 60 minute reference edit. The timeline opens at Fit with gaps striped on Title and V2.", "shot": "2026-11-17-timeline-hour-long-painted-gaps-fit-sc.png" },
-    { "do": "Pinch or press Command = a few times to zoom the timeline in from Fit, then back out.", "shot": "2026-11-17-timeline-hour-long-painted-gaps-zoomed-sc.png" },
-    { "do": "Scroll the timeline along with two fingers, end to end." },
-    { "do": "Rest the pointer in the gap on V2 before the first B-roll and right click: Ripple Delete is the first row." },
-    { "do": "Compare the gaps with today's build: top is before, middle is after, bottom marks the pixels that differ.", "shot": "2026-11-17-timeline-hour-long-gaps-head-vs-painted.png" }
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below. The timeline opens at Fit with gaps striped on Title and V2.",
+      "shot": "2026-11-17-timeline-hour-long-painted-gaps-fit-sc.png",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Pinch or press Command = a few times to zoom the timeline in from Fit, then back out.",
+      "shot": "2026-11-17-timeline-hour-long-painted-gaps-zoomed-sc.png"
+    },
+    {
+      "do": "Scroll the timeline along with two fingers, end to end."
+    },
+    {
+      "do": "Rest the pointer in the gap on V2 before the first B-roll and right click: Ripple Delete is the first row."
+    },
+    {
+      "do": "Compare the gaps with today's build: top is before, middle is after, bottom marks the pixels that differ.",
+      "shot": "2026-11-17-timeline-hour-long-gaps-head-vs-painted.png"
+    }
   ],
   "evaluate": [
     "Does zooming in and out near the whole-hour view feel smoother than before?",

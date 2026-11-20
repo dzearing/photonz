@@ -3,15 +3,31 @@
   "epic": "video-perf",
   "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
   "summary": "Zooming the hour-long reference edit's timeline went from about 570 ms a frame to about 50 ms, and it now gets all the way in and back out in the time it used to take to zoom four times in. A busy track now paints its plain clips, their sounds and the cuts between them in one go, and a clip becomes its full self the moment the pointer reaches it, so the timeline looks and works as before.",
-  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Run Scripts/perf/reference-edit.sh 60 and wait for the edit to open at Fit.", "shot": "2026-11-14-timeline-painted-hour-fit-sc.png" },
-    { "do": "Pinch the timeline in until about a minute shows, then pinch back out to the whole hour." },
-    { "do": "Compare the strips: each pair is the same view before this change (upper) and after it (lower), at Fit and at a quarter hour.", "shot": "2026-11-14-timeline-painted-before-after.png" },
-    { "do": "Rest the pointer on a clip in V1, then click it.", "shot": "2026-11-14-timeline-painted-take-1-picked-sc.png" },
-    { "do": "Drag a fade diamond on a clip's sound half, or the end of a transition band, near the whole-hour view." },
-    { "do": "Press Space and trim the end of a clip ahead of the playhead while it plays, then press Command-Z." }
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below and wait for the edit to open at Fit.",
+      "shot": "2026-11-14-timeline-painted-hour-fit-sc.png",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Pinch the timeline in until about a minute shows, then pinch back out to the whole hour."
+    },
+    {
+      "do": "Compare the strips: each pair is the same view before this change (upper) and after it (lower), at Fit and at a quarter hour.",
+      "shot": "2026-11-14-timeline-painted-before-after.png"
+    },
+    {
+      "do": "Rest the pointer on a clip in V1, then click it.",
+      "shot": "2026-11-14-timeline-painted-take-1-picked-sc.png"
+    },
+    {
+      "do": "Drag a fade diamond on a clip's sound half, or the end of a transition band, near the whole-hour view."
+    },
+    {
+      "do": "Press Space and trim the end of a clip ahead of the playhead while it plays, then press Command-Z."
+    }
   ],
   "evaluate": [
     "Does zooming out to the whole hour now keep up with your fingers well enough that you would use it?",

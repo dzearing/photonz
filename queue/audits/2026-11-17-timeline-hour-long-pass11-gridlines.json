@@ -2,14 +2,28 @@
   "feature": "The hour-long timeline's gridlines ride on the painted clips",
   "epic": "video-perf",
   "summary": "On a busy lane the faint second lines behind the clips are now drawn on the same layer as the clips, so a scroll slides them instead of drawing them again on every frame. Zooming and scrolling the 60 minute reference edit is about 0.2 ms a frame quicker; nothing on screen changes. This pass also measured where the rest of a near-Fit zoom frame goes.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Open the 60 minute reference edit. The timeline opens at Fit; the faint lines at 0:00, 2:00, 4:00 run down every track.", "shot": "2026-11-17-timeline-hour-long-pass11-fit-sc.png" },
-    { "do": "Press Command = three times to zoom in.", "shot": "2026-11-17-timeline-hour-long-pass11-zoomed-sc.png" },
-    { "do": "Scroll the timeline along with two fingers: the lines move with the clips." },
-    { "do": "Compare the zoomed tracks with the old way: top is the lines as a layer of their own, middle on the clips' layer, bottom the difference made 16 times brighter (only pictures still loading, and the lines' edges by 1 to 3 levels of 255).", "shot": "2026-11-17-timeline-hour-long-pass11-before-after.png" },
-    { "do": "Pinch in and out near the whole hour, then click a clip and a cut: both pick as before." }
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below. The timeline opens at Fit; the faint lines at 0:00, 2:00, 4:00 run down every track.",
+      "shot": "2026-11-17-timeline-hour-long-pass11-fit-sc.png",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Press Command = three times to zoom in.",
+      "shot": "2026-11-17-timeline-hour-long-pass11-zoomed-sc.png"
+    },
+    {
+      "do": "Scroll the timeline along with two fingers: the lines move with the clips."
+    },
+    {
+      "do": "Compare the zoomed tracks with the old way: top is the lines as a layer of their own, middle on the clips' layer, bottom the difference made 16 times brighter (only pictures still loading, and the lines' edges by 1 to 3 levels of 255).",
+      "shot": "2026-11-17-timeline-hour-long-pass11-before-after.png"
+    },
+    {
+      "do": "Pinch in and out near the whole hour, then click a clip and a cut: both pick as before."
+    }
   ],
   "evaluate": [
     "Do the gridlines look the same as before at Fit and zoomed in?",

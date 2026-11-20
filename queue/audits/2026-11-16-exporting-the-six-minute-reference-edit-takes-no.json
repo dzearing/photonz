@@ -2,12 +2,13 @@
   "feature": "Exporting a long video edit takes a third of its running time",
   "epic": "video-perf",
   "summary": "The 6 minute reference edit, with its dissolves, 3D transitions, titles, zooms and b-roll, now exports at the sheet's defaults in 118 seconds instead of 435 to 460. The 20 minute edit takes 393 seconds. The pictures in the file are the same as before, and the app stays responsive while it writes.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any edit made of screen recordings with transitions (the speed walk's 6 minute reference edit: Scripts/perf/reference-edit.sh 6).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
     {
-      "do": "File > Export, choose MP4, Full and Standard, press Export and pick a place.",
-      "shot": "2026-11-16-export-sheet-sc.png"
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then File > Export, choose MP4, Full and Standard, press Export and pick a place.",
+      "shot": "2026-11-16-export-sheet-sc.png",
+      "referenceEdit": 6
     },
     {
       "do": "Watch the progress card: a 6 minute edit finishes in about two minutes on this Mac."

@@ -2,14 +2,26 @@
   "feature": "A long edit plays, scrubs and edits without a stutter (pass 9)",
   "epic": "video-perf",
   "summary": "Trimming or undoing on the 6 minute edit while it plays now holds the window for less time: a trim 32 to 18 ms at worst, a trim on a picked clip 34 to 24, an undo on a picked clip 44 to 29. The first edit after you pick a clip no longer redraws the whole timeline twice. Nothing on screen looks different.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Press Space to play the edit.", "shot": "2026-11-15-long-edit-pass9-after-the-edits-sc.png" },
-    { "do": "While it plays, drag the end of a clip just ahead of the playhead half a second shorter." },
-    { "do": "Press Command Z." },
-    { "do": "Click a clip on V1 so its sections fill the panel, press Space again, and trim it the same way." },
-    { "do": "Press Command Z, then B on the picked clip, then Command Z." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then press Space to play the edit.",
+      "shot": "2026-11-15-long-edit-pass9-after-the-edits-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "While it plays, drag the end of a clip just ahead of the playhead half a second shorter."
+    },
+    {
+      "do": "Press Command Z."
+    },
+    {
+      "do": "Click a clip on V1 so its sections fill the panel, press Space again, and trim it the same way."
+    },
+    {
+      "do": "Press Command Z, then B on the picked clip, then Command Z."
+    }
   ],
   "evaluate": [
     "Does a trim while it plays feel like it lands without the picture catching?",

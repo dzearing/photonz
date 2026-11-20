@@ -3,12 +3,13 @@
   "epic": "video-perf",
   "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
   "summary": "Zooming or scrolling the hour-long edit no longer looks every painted clip and cut up in the document again on each frame, and waveforms, names and the film pictures to fetch cost less to draw. A zoom frame went from about 16.5 ms to 13.3 and a scroll frame from 15.9 to 13.2. The timeline looks the same.",
-  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
     {
-      "do": "Open the 60 minute reference edit and press Fit: the whole hour, exactly as before.",
-      "shot": "2026-11-16-timeline-pass7-0-fit-sc.png"
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below and press Fit: the whole hour, exactly as before.",
+      "shot": "2026-11-16-timeline-pass7-0-fit-sc.png",
+      "referenceEdit": 60
     },
     {
       "do": "Pinch the timeline in to about seven minutes across.",

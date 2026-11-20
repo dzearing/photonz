@@ -3,12 +3,13 @@
   "epic": "video-perf",
   "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
   "summary": "Zooming the hour-long edit no longer redraws the Zoom lanes scrolled out of sight below the tracks, nor full clip bars and cuts just off either side of the window, and the Title track is painted like the others. A zoom frame went from about 25 ms to 15, its slowest frames from 77 to 37, and far in it now keeps up with the 120 Hz display. The timeline looks the same.",
-  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60 (the 6 minute one has a dozen Zoom lanes to scroll through).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
     {
-      "do": "Open the 60 minute reference edit and press Fit: the whole hour, titles on the top track, exactly as before.",
-      "shot": "2026-11-16-timeline-pass6-fit-sc.png"
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below and press Fit: the whole hour, titles on the top track, exactly as before.",
+      "shot": "2026-11-16-timeline-pass6-fit-sc.png",
+      "referenceEdit": 60
     },
     {
       "do": "Pinch the timeline in from Fit to about a quarter of the hour and back out, slowly.",

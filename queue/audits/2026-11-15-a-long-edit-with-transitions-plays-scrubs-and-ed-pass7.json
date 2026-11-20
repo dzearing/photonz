@@ -2,13 +2,23 @@
   "feature": "A long edit plays, scrubs and edits without a stutter (pass 7)",
   "epic": "video-perf",
   "summary": "On a video, an edit made with a key or a menu now draws the picture first and lets the timeline and panel follow a frame later, stopped as well as playing: a trim with a clip picked went from 54 ms to 31 to 44 ms. Picking a clip no longer makes the Library at the foot of the panel jump up and back once for every section that arrives.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "With nothing picked, click a clip on V1 and watch the Library row at the foot of the panel while its sections fill in.", "shot": "2026-11-15-long-edit-pass7-after-the-edits-sc.png" },
-    { "do": "Press Space to stop, then press B to cut the clip under the playhead." },
-    { "do": "Press Command Z, then trim a clip with a key and watch the timeline follow." },
-    { "do": "Press Space and make the same trim while it plays." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then with nothing picked, click a clip on V1 and watch the Library row at the foot of the panel while its sections fill in.",
+      "shot": "2026-11-15-long-edit-pass7-after-the-edits-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Press Space to stop, then press B to cut the clip under the playhead."
+    },
+    {
+      "do": "Press Command Z, then trim a clip with a key and watch the timeline follow."
+    },
+    {
+      "do": "Press Space and make the same trim while it plays."
+    }
   ],
   "evaluate": [
     "Does the Library row stay put at the foot of the panel while a clip's sections arrive?",

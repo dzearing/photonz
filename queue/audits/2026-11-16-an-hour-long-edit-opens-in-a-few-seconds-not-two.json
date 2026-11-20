@@ -2,14 +2,29 @@
   "feature": "A long edit opens without freezing",
   "epic": "video-perf",
   "summary": "The 6, 20 and 60 minute reference edits now open with no main thread pause over 100 ms, as the first window of a run. Worst pauses at the start of this task were 171, 185 and 230 ms; at the start of the whole task (2026-11-12) 2.9 s, 14 s and 135 s.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Scripts/perf/reference-edit.sh 6, 20 or 60 writes and opens the project.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 20 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Run Scripts/perf/reference-edit.sh 20 and watch the window appear.", "shot": "2026-11-16-twenty-min-edit-opens.png" },
-    { "do": "Click a clip on V1 as soon as the window appears." },
-    { "do": "Run Scripts/perf/reference-edit.sh 60 and click the ruler at 30:00 the moment it shows.", "shot": "2026-11-16-hour-edit-opens-2.png" },
-    { "do": "Open a large screenshot with File > Open and check the window comes up already sized to it." },
-    { "do": "Open a 6 minute edit (reference-edit.sh 6), press Space to play and Space to stop." }
+    {
+      "do": "Open the 20 minute reference edit in Photonz Dev with the button below and watch the window appear.",
+      "shot": "2026-11-16-twenty-min-edit-opens.png",
+      "referenceEdit": 20
+    },
+    {
+      "do": "Click a clip on V1 as soon as the window appears."
+    },
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below and click the ruler at 30:00 the moment it shows.",
+      "shot": "2026-11-16-hour-edit-opens-2.png",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Open a large screenshot with File > Open and check the window comes up already sized to it."
+    },
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, press Space to play and Space to stop.",
+      "referenceEdit": 6
+    }
   ],
   "evaluate": [
     "Does each window appear in one go, already sized and drawn, with no empty frame or jump in size?",

@@ -3,12 +3,13 @@
   "epic": "video-perf",
   "task": "a-long-edit-with-transitions-plays-scrubs-and-ed",
   "summary": "The 6 minute reference edit plays at full rate (4 dropped frames a minute at worst, none at any transition) and now scrubs with the picture 2 display frames behind your hand instead of 8, 4 at worst instead of 21. An edit while it plays still holds the app 80 to 230 ms; that is still this task's.",
-  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The numbers come from Scripts/perf/speed-walk.sh on the reference edit (Scripts/perf/reference-edit.sh 6).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). The numbers come from Scripts/perf/speed-walk.sh.",
   "switched": {},
   "try": [
     {
-      "do": "Run Scripts/perf/reference-edit.sh 6 and press Space.",
-      "shot": "2026-11-13-long-edit-plays-full-rate-sc.png"
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below and press Space.",
+      "shot": "2026-11-13-long-edit-plays-full-rate-sc.png",
+      "referenceEdit": 6
     },
     {
       "do": "Watch it play across the dissolves, the push and the cube for a minute."

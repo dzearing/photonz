@@ -2,15 +2,29 @@
   "feature": "Dragging the playhead fast across a long edit (pass 15)",
   "epic": "video-perf",
   "summary": "A fast drag of the playhead now shows each clip's own picture almost as the hand reaches it: on the 6 minute reference edit the picture is 2 refreshes behind in the middle and 34 at worst (honestly measured before this pass: 4 and 163). A slow hunt that starts from rest shows a picture from its first move.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open ~/Library/Caches/Photonz Reference Edit/Reference Edit 6 min.photonz (Scripts/perf/reference-edit.sh 6 writes it).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Open Reference Edit 6 min.photonz and press Home.", "shot": "2026-11-17-long-edit-pass15-sc.png" },
-    { "do": "Drag the playhead from one end of the timeline to the other in about two seconds." },
-    { "do": "Watch each cut you cross: the picture should be that clip's, never a frame from somewhere else in the recording." },
-    { "do": "Drag across a dissolve between two takes: both sides should show their own picture." },
-    { "do": "Let go, wait a moment, then hunt slowly forward across a few seconds." },
-    { "do": "Note how quickly the first move shows a new picture." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below and press Home.",
+      "shot": "2026-11-17-long-edit-pass15-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Drag the playhead from one end of the timeline to the other in about two seconds."
+    },
+    {
+      "do": "Watch each cut you cross: the picture should be that clip's, never a frame from somewhere else in the recording."
+    },
+    {
+      "do": "Drag across a dissolve between two takes: both sides should show their own picture."
+    },
+    {
+      "do": "Let go, wait a moment, then hunt slowly forward across a few seconds."
+    },
+    {
+      "do": "Note how quickly the first move shows a new picture."
+    }
   ],
   "evaluate": [
     "Does a fast drag ever flash a picture that is not in the clip under the playhead?",

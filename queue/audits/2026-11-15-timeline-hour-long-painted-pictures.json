@@ -3,12 +3,13 @@
   "epic": "video-perf",
   "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
   "summary": "On a long edit, clips that show pictures along them and sounds of their own (the Music track) are now painted as one layer per track instead of a view each, and a scroll slides that layer instead of painting it again. Zooming the hour-long edit near the whole-hour view went from about 92 ms a frame to 47, and a fast scroll from 27 ms to 17. The timeline looks the same.",
-  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60 (the 6 minute one shows the same pictures).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
     {
-      "do": "Open the 6 minute reference edit, press the zoom-in key four times so about 40 seconds show: the clips on V1 show their pictures, names in dark pills.",
-      "shot": "2026-11-15-painted-pictures-after-sc.png"
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, press the zoom-in key four times so about 40 seconds show: the clips on V1 show their pictures, names in dark pills.",
+      "shot": "2026-11-15-painted-pictures-after-sc.png",
+      "referenceEdit": 6
     },
     {
       "do": "Compare with the same view on the build before this change: pictures, names, bands and waveforms in the same places.",

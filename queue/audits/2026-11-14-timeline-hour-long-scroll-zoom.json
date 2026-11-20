@@ -3,14 +3,26 @@
   "epic": "video-perf",
   "task": "the-timeline-of-an-hour-long-edit-scrolls-zooms",
   "summary": "Scrolling along the hour-long reference edit's timeline went from about half a second a frame to about 50 ms, because the timeline now builds only the clips, cuts and gaps near what is on screen. Zooming near the whole-edit view is still slow (about 570 ms a frame), so this task stays open.",
-  "setup": "Photonz Probe built by Scripts/probe-app.sh, release Next, no flag changed from its default. The 60 minute reference edit: Scripts/perf/reference-edit.sh 60.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Run Scripts/perf/reference-edit.sh 60 and wait for the edit to open.", "shot": "2026-11-14-timeline-hour-long-fit-sc.png" },
-    { "do": "Pinch the timeline in until about a minute shows, then two-finger scroll along it end to end." },
-    { "do": "Pinch back out to the whole hour and watch how the timeline keeps up." },
-    { "do": "Press Space and watch the playhead run along the zoomed-in timeline." },
-    { "do": "Trim the end of a clip ahead of the playhead while it plays, then press Command-Z." }
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below and wait for the edit to open.",
+      "shot": "2026-11-14-timeline-hour-long-fit-sc.png",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Pinch the timeline in until about a minute shows, then two-finger scroll along it end to end."
+    },
+    {
+      "do": "Pinch back out to the whole hour and watch how the timeline keeps up."
+    },
+    {
+      "do": "Press Space and watch the playhead run along the zoomed-in timeline."
+    },
+    {
+      "do": "Trim the end of a clip ahead of the playhead while it plays, then press Command-Z."
+    }
   ],
   "evaluate": [
     "Does scrolling along the zoomed-in hour feel smooth enough to work in now?",

@@ -2,14 +2,27 @@
   "feature": "A busy lane on the hour-long timeline is painted into a picture once, and a zoom stretches the picture",
   "epic": "video-perf",
   "summary": "Each busy lane's clips and cuts are now laid into one picture when they change, and the picture is what is shown. A step of a zoom stretches that picture instead of drawing the lane's five hundred clips again, so near the whole-hour view a zoom frame is about 0.7 ms quicker and fewer frames are late. Nothing on screen changes.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Open the 60 minute reference edit. The timeline opens showing the whole hour.", "shot": "2026-11-19-timeline-pass14-fit-sc.png" },
-    { "do": "Pinch in slowly from the whole hour to about 8x and back out, a few times." },
-    { "do": "Zoom in nine steps with the zoom key and look at the lanes: pictures, cuts, bands, names and the Music lane's diamonds all in place and sharp.", "shot": "2026-11-19-timeline-pass14-zoomed-sc.png" },
-    { "do": "Scroll the zoomed timeline end to end with two fingers." },
-    { "do": "Pick a clip, right-click it and choose Rename: the name field opens on the clip as before." }
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below. The timeline opens showing the whole hour.",
+      "shot": "2026-11-19-timeline-pass14-fit-sc.png",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Pinch in slowly from the whole hour to about 8x and back out, a few times."
+    },
+    {
+      "do": "Zoom in nine steps with the zoom key and look at the lanes: pictures, cuts, bands, names and the Music lane's diamonds all in place and sharp.",
+      "shot": "2026-11-19-timeline-pass14-zoomed-sc.png"
+    },
+    {
+      "do": "Scroll the zoomed timeline end to end with two fingers."
+    },
+    {
+      "do": "Pick a clip, right-click it and choose Rename: the name field opens on the clip as before."
+    }
   ],
   "evaluate": [
     "Does a pinch near the whole hour feel smoother than yesterday's build?",

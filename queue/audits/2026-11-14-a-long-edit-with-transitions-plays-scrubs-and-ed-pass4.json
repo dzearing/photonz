@@ -2,15 +2,29 @@
   "feature": "Editing a long video while it plays (pass 4)",
   "epic": "video-perf",
   "summary": "On the 6 minute reference edit, a trim or a move made while it plays now holds the window about 18 to 33 ms instead of 87, the blade 85 instead of 223 and undo 62 instead of 119, and a minute of play drops 1 frame instead of 4. The picture changes in the edit's own frame; the timeline and the panel follow one frame later.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Build the reference edit with Scripts/perf/reference-edit.sh 6 and open it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Press Space to play the reference edit from about 0:15.", "shot": "2026-11-14-long-edit-pass4-after-the-edits-sc.png" },
-    { "do": "While it plays, pick a clip ahead of the playhead and drag its end in by half a second." },
-    { "do": "While it plays, press Command Z." },
-    { "do": "While it plays, press B over a recording." },
-    { "do": "Play a minute across the cross dissolves and pushes and watch for any hitch." },
-    { "do": "To measure it: Scripts/perf/speed-walk.sh (short form, about two minutes)." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then press Space to play the reference edit from about 0:15.",
+      "shot": "2026-11-14-long-edit-pass4-after-the-edits-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "While it plays, pick a clip ahead of the playhead and drag its end in by half a second."
+    },
+    {
+      "do": "While it plays, press Command Z."
+    },
+    {
+      "do": "While it plays, press B over a recording."
+    },
+    {
+      "do": "Play a minute across the cross dissolves and pushes and watch for any hitch."
+    },
+    {
+      "do": "To measure it: Scripts/perf/speed-walk.sh (short form, about two minutes)."
+    }
   ],
   "evaluate": [
     "Does a trim or Undo while playing leave the picture running without a hitch you can see?",

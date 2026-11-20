@@ -2,14 +2,27 @@
   "feature": "A long edit scrubs a refresh behind the hand, not two",
   "epic": "video-perf",
   "summary": "Dragging the playhead across the 6 minute reference edit now shows each picture one screen refresh after the hand in the middle of a drag, where it was two. Each picture of the edit draws in 4.2 ms, down from 5.6.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. The 6 minute reference edit: Scripts/perf/reference-edit.sh, then open it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Open the 6 minute reference edit.", "shot": "2026-11-19-long-edit-pass17-reference-edit.png" },
-    { "do": "Drag the playhead slowly across the first minute and watch the picture keep up with your hand." },
-    { "do": "Hunt back and forth over one cut, quickly, and watch for the picture lagging behind." },
-    { "do": "Press Space to play through a dissolve and the cube transition.", "shot": "2026-11-19-long-edit-pass17-playing.png" },
-    { "do": "Pause, pick a title and nudge it with the arrow keys: it should move at once." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below.",
+      "shot": "2026-11-19-long-edit-pass17-reference-edit.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Drag the playhead slowly across the first minute and watch the picture keep up with your hand."
+    },
+    {
+      "do": "Hunt back and forth over one cut, quickly, and watch for the picture lagging behind."
+    },
+    {
+      "do": "Press Space to play through a dissolve and the cube transition.",
+      "shot": "2026-11-19-long-edit-pass17-playing.png"
+    },
+    {
+      "do": "Pause, pick a title and nudge it with the arrow keys: it should move at once."
+    }
   ],
   "evaluate": [
     "Does a slow drag of the playhead feel attached to your hand?",

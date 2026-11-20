@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { watch, statSync } from 'node:fs';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { execFile } from 'node:child_process';
 const ROOT = dirname(fileURLToPath(import.meta.url)); // docs/design/mocks
 const TYPES = { '.html': 'text/html;charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
 // An audit's screenshots live beside its markdown in queue/audits/, outside
@@ -149,6 +150,20 @@ async function handleApi(req, res, url) {
       const { audit, anchor, quote, text, epic } = await readBody(req);
       const t = lib.addFeedback({ audit, anchor, quote, text, epic });
       return send(200, { id: t.id, title: t.title });
+    }
+    // A report's try step that starts from a long reference edit carries an
+    // "Open in Photonz Dev" button, and this is it: the script opens the
+    // person's own copy in the Dev app with `open -a`, never building or
+    // quitting it. Only the three lengths reach the shell.
+    if (req.method === 'POST' && url === '/api/open-reference-edit') {
+      const { minutes } = await readBody(req);
+      if (![6, 20, 60].includes(minutes)) return send(400, { ok: false, error: 'the reference edit is 6, 20 or 60 minutes' });
+      const repo = join(ROOT, '..', '..', '..');
+      return execFile(join(repo, 'Scripts', 'perf', 'reference-edit.sh'), [String(minutes), '--dev'],
+        { cwd: repo, timeout: 600000 }, (error, stdout, stderr) => {
+          if (error) return send(500, { ok: false, error: String(stderr || error.message).trim().split('\n').pop() });
+          send(200, { ok: true, said: String(stdout).trim() });
+        });
     }
     if (req.method === 'POST' && url === '/api/objectives') {
       const { epics } = await readBody(req);

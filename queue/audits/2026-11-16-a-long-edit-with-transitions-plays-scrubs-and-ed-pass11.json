@@ -2,15 +2,29 @@
   "feature": "A long edit plays, scrubs and edits without a stutter (pass 11)",
   "epic": "video-perf",
   "summary": "Picking a clip on the 6 minute edit now redraws only the track you picked on and the clip itself, not every track and every clip in sight. A pick from one clip to another while it plays went from 41 to 32 ms at worst of three. The speed walk now also times the most common click: picking a clip when nothing is picked.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 6 minute reference edit (Scripts/perf/reference-edit.sh 6).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Press Space to play the edit.", "shot": "2026-11-16-long-edit-pass11-after-the-edits-sc.png" },
-    { "do": "While it plays, click a clip on V1, then a different clip on V1." },
-    { "do": "Click a clip on V2, then click an empty part of the timeline." },
-    { "do": "Click a clip on V1 again, with nothing picked before it." },
-    { "do": "Click the V1 track header, then a clip on it." },
-    { "do": "Pick a keyed clip and check the diamond on its track header." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, then press Space to play the edit.",
+      "shot": "2026-11-16-long-edit-pass11-after-the-edits-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "While it plays, click a clip on V1, then a different clip on V1."
+    },
+    {
+      "do": "Click a clip on V2, then click an empty part of the timeline."
+    },
+    {
+      "do": "Click a clip on V1 again, with nothing picked before it."
+    },
+    {
+      "do": "Click the V1 track header, then a clip on it."
+    },
+    {
+      "do": "Pick a keyed clip and check the diamond on its track header."
+    }
   ],
   "evaluate": [
     "Does moving the pick from clip to clip while it plays feel instant?",

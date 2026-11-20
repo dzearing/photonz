@@ -375,6 +375,7 @@
   #dashboard .db-svgplay .db-svgcell svg{display:block}
   #dashboard .db-svgplay .db-svglab{font-size:10px;color:var(--faint);text-align:center;margin-top:2px}
   #dashboard .db-svgplay .db-svgnote{flex-basis:100%;font-size:10.5px;color:var(--faint)}
+  #dashboard .db-aopen{margin:6px 0 2px 26px}
   #dashboard .db-ashotnote{max-width:460px;margin-top:4px;font-size:10.5px;line-height:1.5;color:var(--faint)}
   #dashboard .db-acomposer{grid-column:1/-1;margin-top:var(--s2);display:flex;flex-direction:column;gap:var(--s2)}
   #dashboard .db-acta{display:flex;gap:var(--s2);justify-content:flex-end}
@@ -1863,6 +1864,13 @@
       h += '<div class="db-asec"><div class="mlabel"><i class="ic ic-play"></i>Try it · ' + a.try.length + ' steps</div>';
       a.try.forEach(function (st, i) {
         var inner = '<div class="db-arow"><span class="db-anum">' + (i + 1) + '</span><span class="db-ado">' + esc(st.do || '') + '</span></div>';
+        // A step that starts from one of the long reference edits opens it in
+        // Photonz Dev from here, so a report never asks anybody to run a
+        // script (Scripts/perf/reference-edit.sh --dev does the opening).
+        if ([6, 20, 60].indexOf(st.referenceEdit) >= 0) {
+          inner += '<div class="db-aopen"><button class="btn sm" data-act="open-ref-edit" data-minutes="' + st.referenceEdit + '">' +
+            '<i class="ic ic-play"></i>Open the ' + st.referenceEdit + ' minute edit in Photonz Dev</button></div>';
+        }
         if (st.shot) inner += auditMedia(st.shot);
         // A caption for the picture itself. It exists for the one thing a
         // reader cannot see in the picture: a capture taken while the Mac was
@@ -2277,6 +2285,16 @@
       return;
     }
     if (b.dataset.act === 'audit-cancel') { commentOn = null; refreshAuditBody(); return; }
+    if (b.dataset.act === 'open-ref-edit') {
+      var label = b.innerHTML;
+      b.disabled = true; b.textContent = 'Opening…';
+      fetch('/api/open-reference-edit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ minutes: Number(b.dataset.minutes) }) })
+        .then(function (r) { return r.json(); })
+        .then(function (res) { b.textContent = res.ok ? 'Opened in Photonz Dev' : 'Could not open it'; if (!res.ok) b.title = res.error || ''; })
+        .catch(function () { b.textContent = 'Could not open it'; })
+        .then(function () { setTimeout(function () { b.disabled = false; b.innerHTML = label; }, 4000); });
+      return;
+    }
     if (b.dataset.act === 'audit-send') {
       var ta2 = document.getElementById('db-ctext');
       var text = ta2 ? ta2.value.trim() : '';

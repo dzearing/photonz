@@ -2,14 +2,26 @@
   "feature": "Each picture of a long edit drawn in two thirds of the time (pass 16)",
   "epic": "video-perf",
   "summary": "Each picture of the 6 minute reference edit now takes about 5.5 ms to draw, down from 8.6, because recording frames and the moving background stay in the graphics chip's memory instead of being copied there again for every picture. Nothing drawn changed. Dragging the playhead is sometimes 1 refresh behind the hand now (bar: 1), but still 2 in most runs.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open ~/Library/Caches/Photonz Reference Edit/Reference Edit 6 min.photonz (Scripts/perf/reference-edit.sh 6 writes it).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Open Reference Edit 6 min.photonz and press Home.", "shot": "2026-11-18-long-edit-pass16-sc.png" },
-    { "do": "Press Space and let it play through the first minute, across the dissolves and the cube." },
-    { "do": "Drag the playhead from one end of the timeline to the other in about two seconds." },
-    { "do": "Hunt slowly back and forth across a few seconds around a cut." },
-    { "do": "Pick a title or the moving background and compare its look with yesterday's build." }
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below and press Home.",
+      "shot": "2026-11-18-long-edit-pass16-sc.png",
+      "referenceEdit": 6
+    },
+    {
+      "do": "Press Space and let it play through the first minute, across the dissolves and the cube."
+    },
+    {
+      "do": "Drag the playhead from one end of the timeline to the other in about two seconds."
+    },
+    {
+      "do": "Hunt slowly back and forth across a few seconds around a cut."
+    },
+    {
+      "do": "Pick a title or the moving background and compare its look with yesterday's build."
+    }
   ],
   "evaluate": [
     "Does the picture keep up with your hand more closely than before when you drag the playhead?",

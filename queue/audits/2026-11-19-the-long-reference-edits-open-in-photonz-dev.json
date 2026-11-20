@@ -1,0 +1,37 @@
+{
+  "feature": "The long reference edits open in Photonz Dev from a report",
+  "epic": "video-perf",
+  "summary": "A report whose steps start from the 6, 20 or 60 minute reference edit now has a button under that step that opens the edit in Photonz Dev, so you can try every speed fix without a terminal. You get your own copy, so the loop rewriting its copy never pulls the project out from under your window.",
+  "setup": "The dashboard (Ready to try) and Photonz Dev, release Next, no flag changed from its default. Your copies live in ~/Library/Caches/Photonz Reference Edit/Photonz Dev, which File > Open also reaches (Cmd-Shift-G and paste the folder).",
+  "switched": {},
+  "try": [
+    {
+      "do": "On the dashboard, open Ready to try and open \"A busy lane on the hour-long timeline is painted into a picture once\".",
+      "shot": "2026-11-19-reference-edit-button.png"
+    },
+    {
+      "do": "Click \"Open the 60 minute edit in Photonz Dev\" under step 1: it says Opened in Photonz Dev and the hour-long edit opens there."
+    },
+    {
+      "do": "Open any other speed report from 2026-11-13 to 11-19 and click its button: the 6 or 20 minute edit opens the same way.",
+      "shot": "2026-11-19-reference-edit-in-dev-6min-frame.png"
+    },
+    {
+      "do": "Make a change in the 6 minute edit, press Cmd-S, close it and click its button again: your change is still there."
+    },
+    {
+      "do": "In Photonz Dev choose File > Open, press Cmd-Shift-G, paste ~/Library/Caches/Photonz Reference Edit/Photonz Dev and open any of the three."
+    }
+  ],
+  "evaluate": [
+    "Is a button under the step the place you expected to find this, or would you rather it opened from the report's setup line?",
+    "Does keeping your own saved copy (rather than a fresh one every click) match what you want when you come back to a report?",
+    "Is the button's wording clear about which app it opens the edit in?"
+  ],
+  "rough": [
+    "The button was clicked for real in a browser, but against a second copy of the dashboard pointed at the loop's test app, not your Photonz Dev: a runner never opens windows in your app. The live dashboard has the route (it answered a bad request correctly after a restart), so your first click is the first time it opens in Dev itself.",
+    "The second picture is a frame of the 6 minute copy drawn by the app's own renderer after the button's script opened it in the test app; the terminal the runner works in has no Screen Recording grant, so there is no picture of the window itself.",
+    "A saved copy is never refreshed by itself. If the reference edit's recipe changes and you want the new one, delete the copy in that folder (or run the script with --fresh).",
+    "No mock covers the dashboard's report page, so there is no side-by-side here."
+  ]
+}

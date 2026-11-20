@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-17T15:37:26.539Z",
-  "updated": "2026-11-19T13:56:59.881Z",
+  "updated": "2026-11-20T04:33:27.774Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the digests of 2026-11-16 and 2026-11-17. Scripts/perf/reference-edit.sh opens with Scripts/probe-app.sh. The files: ~/Library/Caches/Photonz Reference Edit/Reference Edit 6 min.photonz (also 20, 60). The Dev app must never be rebuilt by a runner (CLAUDE.md, Three bundles); opening a file in it is fine.",
@@ -58,9 +58,13 @@
     {
       "t": "2026-11-19T13:56:59.880Z",
       "note": "seq 80 -> 50"
+    },
+    {
+      "t": "2026-11-20T04:33:27.766Z",
+      "note": "claimed by go loop"
     }
   ],
-  "started": "2026-11-18T19:57:03.610Z",
+  "started": "2026-11-20T04:33:27.765Z",
   "failures": 0,
   "lastError": {
     "at": "2026-11-18T19:57:12.188Z",

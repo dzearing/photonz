@@ -2,14 +2,27 @@
   "feature": "A busy lane on the hour-long timeline stops working out its painting again on frames where nothing about it changed",
   "epic": "video-perf",
   "summary": "On a scroll inside one painted stretch, or a zoom that holds its last painting, each busy lane now hands its painting the clips, cuts, gaps and gridlines it worked out last frame, instead of working them all out again and comparing them to find them the same. The ticks under recordings also stop copying a clip on every frame to ask whether it has clicks. Near Fit on the 60 minute reference edit a zoom frame is about 0.4 ms quicker and fewer frames are late; nothing on screen changes.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the 60 minute reference edit (Help > Reference Edit).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; once made, File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev).",
   "switched": {},
   "try": [
-    { "do": "Open the 60 minute reference edit. The timeline opens at Fit." },
-    { "do": "Pinch in slowly from Fit to about 8x and back out, a few times." },
-    { "do": "Stop at Fit and look at the lanes: they are exactly as they were before the pinching, pixel for pixel.", "shot": "2026-11-19-timeline-pass13-fit-after-zooms-sc.png" },
-    { "do": "Zoom in three steps, jump the playhead to three quarters and back to a quarter, and look at the lanes: clips, cuts, gaps and pictures all in place.", "shot": "2026-11-19-timeline-pass13-zoomed-after-jumps-sc.png" },
-    { "do": "Rest the pointer on a clip, scroll the timeline under it, then click: it picks what is under the pointer, as before." }
+    {
+      "do": "Open the 60 minute reference edit in Photonz Dev with the button below. The timeline opens at Fit.",
+      "referenceEdit": 60
+    },
+    {
+      "do": "Pinch in slowly from Fit to about 8x and back out, a few times."
+    },
+    {
+      "do": "Stop at Fit and look at the lanes: they are exactly as they were before the pinching, pixel for pixel.",
+      "shot": "2026-11-19-timeline-pass13-fit-after-zooms-sc.png"
+    },
+    {
+      "do": "Zoom in three steps, jump the playhead to three quarters and back to a quarter, and look at the lanes: clips, cuts, gaps and pictures all in place.",
+      "shot": "2026-11-19-timeline-pass13-zoomed-after-jumps-sc.png"
+    },
+    {
+      "do": "Rest the pointer on a clip, scroll the timeline under it, then click: it picks what is under the pointer, as before."
+    }
   ],
   "evaluate": [
     "Does a pinch near the whole hour feel any smoother than this morning's build?",
