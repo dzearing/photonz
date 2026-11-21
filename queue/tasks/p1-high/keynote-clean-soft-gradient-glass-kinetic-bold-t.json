@@ -2,14 +2,14 @@
   "id": "keynote-clean-soft-gradient-glass-kinetic-bold-t",
   "title": "Keynote Clean, Soft Gradient Glass, Kinetic Bold, Tech Terminal and Stacked Stagger are replaced by titles that look professionally designed",
   "goal": "Five built-in title pages look like clip art: stock purple and electric blue backgrounds, one system font, and nothing a designer would call a typographic idea. Replace each with a design that would sit comfortably in a high-end keynote, film or product launch, with refined colour pairings and real typographic treatment, so a person picking a title never lands on one that cheapens their video.",
-  "epic": "",
+  "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 35,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-21T16:11:18.363Z",
-  "updated": "2026-11-21T22:42:55.455Z",
+  "updated": "2026-11-21T23:43:20.052Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-21: \"I hate the 'keynote clean' title. should be replaced with something far more professionally designed and aethetically pleasing, looks like clipart. same with 'Soft gradient glass'. These purple colors are just not what you would see on high quality refined title slides. You would expect far better color pairings and typographical effects.\" Then: \"same with kinetic bold, tech terminal, stacked stagger\".\n\nWhere they live: BuiltInTitle cases keynote, softGlass, kinetic, terminal, stacked in Sources/PhotonzCore/TitlePresets.swift (names at ~197-210); page art in Sources/PhotonzCore/TitleSet.swift (keynote() ~287, softGlass() ~300, kinetic, terminal, stacked), motion in the TitleDesign switch near the top of TitleSet.swift (~53 onward). These are 'the set before' the calm set, under More Styles, already 'toned down' once on 2026-10-18 (task the-existing-title-pages-are-toned-down-to-calm), which is why toning down again is not the answer: the palettes are the problem.\n\nWhat I saw in the code: keynote is #050507 with specks in #5E6B8C/#8C7BB8/#4A6FA5 and SF Pro semibold; softGlass is a #16205E -> #3A2C8C -> #123A75 indigo-violet liquid gradient under a 14% white panel; kinetic is a #1A33D6 electric blue with #3D5BFF lights and Avenir Next Condensed caps; terminal is #3DFF8F green-on-black SF Mono; stacked is #0A0C1C -> #1B2050 -> #2A1240 -> #7C8CFF with a #7C8CFF mark. Everything but kinetic and terminal is plain SF Pro.\n\nThis is designed product content, not Ask output, so the no-hardcoded-content rule for Ask does not apply; but no pass may tune to one rubric case. The blind score is a check, not the goal: the user judges from the reel. If the existing tests pin these pages' exact colours or layer names, update them with the new design rather than keeping the old art to pass them. Targets Next; if the calm set's shelf order or the title presets walk (the-title-presets-walk-pulls-film-super-off-the, p2) depends on these names, keep that walk green.",
@@ -70,9 +70,41 @@
     {
       "t": "2026-11-21T22:42:55.454Z",
       "note": "Five redesigned and shipped (commit 76c9dacfc, audit 2026-11-21-keynote-clean-soft-gradient-glass-kinetic-bold-t.json, reel and scored grid in queue/audits). Bar not reached: in the final blind round Condensed Poster 7.08, Roman and Italic 6.92 and Command Line 6.75 sit under the calm median 7.21 (Main Title 7.58, Frosted Glass 7.50 clear it; every new one beats its old version by 1.0 to 2.7). Left: lift those three, then score the other seven More Styles titles against the bar and file the one follow-up."
+    },
+    {
+      "t": "2026-11-21T22:43:23.732Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T23:43:13.976Z",
+      "note": "Second pass. Round 4 (27 frames: old, new, calm, and the other seven of the set) dropped even the unchanged Main Title (7.58 to 7.00) while the calm median rose to 7.33: the scorer moves with the mix. Calm pages show real copy, the five showed 'Your Title'. Chose sample copy that fits each idea over blank placeholders because the calm set the user approved shows real words and a placeholder reads as a template on the shelf."
+    },
+    {
+      "t": "2026-11-21T23:43:14.055Z",
+      "note": "Round 5 (copy added, Roman and Italic indent reverted): calm median 7.13; Main 7.58, Frosted 7.25, Roman/Italic 7.00, Poster 6.92, Command Line 6.67. Then a design critique, applied within the rules (two sizes, contrast): Command Line one block with a rule as wide as its type, slate black ground, cooler ink; Poster stacked tight (DIN Condensed has 72 pt of its own leading a set line height does not take back, so 0.62 lands at about 0.82); Roman and Italic on a real oxblood, streams at 5, italic tucked up."
+    },
+    {
+      "t": "2026-11-21T23:43:14.138Z",
+      "note": "Round 6 (final): calm median 6.83; Main Title 7.58, Roman and Italic 7.42, Condensed Poster 7.33, Frosted Glass 7.17, Command Line 6.83 (ties it). Old 3.83 to 5.75. Other seven: Editorial Serif 6.17, Light Leak 5.67, Minimal Underline 5.25, Behind Glass 5.08, Pill Card 5.00, Gradient Glow 4.83, Split Wipe 4.50, filed as seven-more-built-in-titles-look-as-refined-as-th."
+    },
+    {
+      "t": "2026-11-21T23:43:14.218Z",
+      "note": "Looked at: scores grid (new five read refined, old five and the seven read stock violet/blue), old-new contact sheet (no headline at 0 ms, each comes in over 200 to 1100 ms; Command Line's caret floats ahead of the typed letters, as the old one did: filed a-typed-title-caret-follows-the-letters-as-they), the five window captures (real app, Screen Recording granted, unlocked), Frosted Glass at 0 ms (only footage). Filed line-spacing-set-on-a-font-with-built-in-leading with its measurement."
+    },
+    {
+      "t": "2026-11-21T23:43:14.297Z",
+      "note": "Fixed on the way: TitleRestyler.paintAccent gave a line its own colour as a fill on relayout (TitleRestyleTests.knobsTurnBack failed on Command Line's grey rule). Walks: the 7 owned walks and 21 others naming these titles run, all ok except clicking-a-timeline-item-moves-the-playhead-walk (an Add Key row, unrelated, already on walks-that-fail-in-the-full-sweep-27); three re-run after the restyle fix, ok. Scripts/test.sh green. Commit aa2b0424a."
+    },
+    {
+      "t": "2026-11-21T23:43:14.375Z",
+      "note": "Left rough (no task): a moving look lifts every light to strong colour, so no neutral moving ground exists; the Grid Horizon look always draws a synthwave sun (both from the first pass, unchanged)."
+    },
+    {
+      "t": "2026-11-21T23:43:20.050Z",
+      "note": "Five title pages redesigned and lifted to the bar (commit aa2b0424a, TitleSet.swift): Main Title, Frosted Glass, Condensed Poster, Command Line, Roman and Italic, each with sample copy. Final blind round (27 frames, 3 runs): calm median 6.83, the five 6.83 to 7.58 (Command Line ties it), old versions 3.83 to 5.75. Contrast 12.4 to 16.7:1, no headline at 0 ms, hold motion 0.12 to 0.39/255. Audit, reel, old-new sheet, scores grid and 5 window captures in queue/audits. 28 walks run (one unrelated known failure), Scripts/test.sh green. Follow-ups: seven-more-built-in-titles-look-as-refined-as-th, line-spacing-set-on-a-font-with-built-in-leading, a-typed-title-caret-follows-the-letters-as-they."
     }
   ],
-  "started": "2026-11-21T21:25:43.792Z",
+  "started": "2026-11-21T22:43:23.731Z",
   "walks": [
     "title-set-keynote-clean-walk",
     "title-set-soft-gradient-glass-walk",
@@ -81,5 +113,6 @@
     "title-set-stacked-stagger-walk",
     "title-tiles-play-walk",
     "editing-a-title-never-plays-walk"
-  ]
+  ],
+  "completed": "2026-11-21T23:43:20.051Z"
 }

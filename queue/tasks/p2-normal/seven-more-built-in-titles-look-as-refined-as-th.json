@@ -1,0 +1,28 @@
+{
+  "id": "seven-more-built-in-titles-look-as-refined-as-th",
+  "title": "Seven more built-in titles look as refined as the redesigned five",
+  "goal": "Editorial Serif, Light Leak, Behind Glass, Gradient Glow, and the Minimal Underline, Pill Card and Split Wipe name cards still use stock violet and electric blue, plain system type and \"Your Title\" placeholders, and score well below the five title pages redesigned on 2026-11-21 on the same blind test. Redesign them by the same colour and type rules so nothing on the titles shelf cheapens a video.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 4100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-21T23:22:52.142Z",
+  "updated": "2026-11-21T23:22:52.145Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Blind round 6 of task keynote-clean-soft-gradient-glass-kinetic-bold-t (2026-11-21, calm median 6.83, new five 6.83 to 7.58): Editorial Serif 6.17, Light Leak 5.67, Minimal Underline 5.25, Behind Glass 5.08, Pill Card 5.00, Gradient Glow 4.83, Split Wipe 4.50. Picture: queue/audits/2026-11-21-title-redesign-scores.png (bottom row). Frames and scorer setup: Tests/PhotonzMediaTests/TitleRedesignReelTests.swift writes others/hold-*.png beside the five (PHOTONZ_REEL=1 PHOTONZ_REDESIGN_PHASE=after PHOTONZ_REDESIGN_DIR=/tmp/redesign Scripts/test.sh --filter TitleRedesignReel). Code: Sources/PhotonzCore/TitleSet.swift (editorial, glass, lightLeak, gradientGlow, splitWipe, underline, pill). Keep TitleSetTests.movingLooks (looks shared by two at most, one light one dark) and twoSizes green. Name cards sit over footage: judge them there, legible over light and dark footage.",
+  "acceptance": [
+    "Each of the seven is redesigned from the colour and type rules in docs/design/video-titles-polish.md (no saturated violet or electric blue ground, a chosen face, one deliberate typographic idea, sample copy that fits it)",
+    "On a blind vision-model score (held frames shuffled under random codes, three runs, same rubric as the 2026-11-21 audit), every one scores at or above the calm set median and above its own old version; all scores in the audit",
+    "Old documents holding any of the seven still open as they were, and shelf entries naming them open the new design, with a test",
+    "A reel and an old-beside-new contact sheet under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-11-21T23:22:52.144Z",
+      "note": "created (manual)"
+    }
+  ]
+}
