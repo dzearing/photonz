@@ -10,58 +10,64 @@
   "date" : "2026-11-19T11:42:21Z",
   "edits" : [
     {
-      "callMS" : 3.5503751132637262,
+      "callMS" : 2.143708523362875,
+      "did" : "nothing done",
+      "edit" : "nothing",
+      "longestPassMS" : 4.231750033795834
+    },
+    {
+      "callMS" : 2.714666537940502,
       "did" : "half a second off the end of Take 2",
       "edit" : "trim",
-      "longestPassMS" : 16.468833200633526
+      "longestPassMS" : 16.164833679795265
     },
     {
-      "callMS" : 7.776416838169098,
-      "did" : "Take 1 cut at 0:22.4",
-      "edit" : "blade",
-      "longestPassMS" : 50.8267916738987
-    },
-    {
-      "callMS" : 1.193000003695488,
+      "callMS" : 2.543542068451643,
       "did" : "the last edit taken back",
       "edit" : "undo",
-      "longestPassMS" : 28.504749992862344
+      "longestPassMS" : 12.142124585807323
     },
     {
-      "callMS" : 1.6972501762211323,
-      "did" : "Take 2 picked",
-      "edit" : "pick",
-      "longestPassMS" : 29.34758341871202
-    },
-    {
-      "callMS" : 2.834708197042346,
-      "did" : "half a second off the end of Take 3",
-      "edit" : "trim, picked",
-      "longestPassMS" : 16.981083434075117
-    },
-    {
-      "callMS" : 3.9331666193902493,
-      "did" : "Take 2 cut at 0:31.2",
-      "edit" : "blade, picked",
-      "longestPassMS" : 38.07720821350813
-    },
-    {
-      "callMS" : 1.122083282098174,
-      "did" : "the last edit taken back",
-      "edit" : "undo, picked",
-      "longestPassMS" : 19.494375213980675
-    },
-    {
-      "callMS" : 0.4802499897778034,
-      "did" : "nothing picked",
-      "edit" : "unpick",
-      "longestPassMS" : 33.87437481433153
-    },
-    {
-      "callMS" : 1.962708542123437,
+      "callMS" : 5.506000015884638,
       "did" : "Take 3 picked",
       "edit" : "pick, from nothing",
-      "longestPassMS" : 46.874833293259144
+      "longestPassMS" : 52.06812545657158
+    },
+    {
+      "callMS" : 0.6044581532478333,
+      "did" : "nothing done",
+      "edit" : "nothing, picked",
+      "longestPassMS" : 4.98016644269228
+    },
+    {
+      "callMS" : 2.65362486243248,
+      "did" : "half a second off the end of Take 3",
+      "edit" : "trim, picked",
+      "longestPassMS" : 21.867166738957167
+    },
+    {
+      "callMS" : 1.1942083947360516,
+      "did" : "the last edit taken back",
+      "edit" : "undo, picked",
+      "longestPassMS" : 23.809874895960093
+    },
+    {
+      "callMS" : 4.6980413608253,
+      "did" : "Take 2 cut at 0:33.9",
+      "edit" : "blade, picked",
+      "longestPassMS" : 37.162375170737505
+    },
+    {
+      "callMS" : 0.6077084690332413,
+      "did" : "Take 3 picked, from Take 2",
+      "edit" : "pick",
+      "longestPassMS" : 31.297500245273113
+    },
+    {
+      "callMS" : 0.531916506588459,
+      "did" : "nothing picked",
+      "edit" : "unpick",
+      "longestPassMS" : 35.64024996012449
     }
   ],
   "export" : {
@@ -75,7 +81,7 @@
   },
   "form" : "short",
   "frameStepMS" : 33,
-  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18; edits from 3 runs on pass 19, 64db7ec53+changes (2026-11-19); scrub hunt frame and sight lags from 3 runs on pass 21, 853e5c7c4+changes (2026-11-20)",
+  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18; edits from 3 runs on pass 19, 64db7ec53+changes (2026-11-19); scrub hunt frame and sight lags from 3 runs on pass 21, 853e5c7c4+changes (2026-11-20); edits re-tallied by the real pick state with a nothing control, from 3 runs on pass 23, e768f184d+changes (2026-11-21)",
   "machine" : "Mac16,5, 16 cores, 64GB",
   "minutes" : 6,
   "plays" : [

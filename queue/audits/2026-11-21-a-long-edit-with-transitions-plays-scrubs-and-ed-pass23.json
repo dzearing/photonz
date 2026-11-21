@@ -1,0 +1,37 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 23: the edit numbers say what they measure)",
+  "epic": "video-perf",
+  "summary": "Nothing you see changes this pass. The speed check now times each edit with the window as it really is (a clip picked or not) and beside a do-nothing control, and the corrected numbers show that with nothing picked a trim and an undo already finish inside one frame while the 6 minute edit plays (13 to 16 ms and 11 to 13 ms). What is still slow is the right hand panel answering an edit when a clip is picked.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit (File > Open reaches it too: ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Numbers from Scripts/perf/speed-walk.sh --baseline 3 and two more green runs of the short speed walk; the panel and marker findings from one-off walks of 13 to 16 edits while playing, with sample on the probe's main thread (Instruments would not connect: the Mac's developer mode is off).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, and press Space to play.",
+      "referenceEdit": 6
+    },
+    {
+      "do": "With nothing picked, drag the end of a clip just ahead of the playhead to trim it, then press Cmd-Z.",
+      "shot": "2026-11-21-long-edit-pass23-after-the-edits-sc.png"
+    },
+    {
+      "do": "Click the clip under the playhead so its panel fills in, while it keeps playing."
+    },
+    {
+      "do": "Trim another clip ahead and press Cmd-Z again, with that clip still picked."
+    },
+    {
+      "do": "Press B to cut the picked clip at the playhead, then Cmd-Z."
+    }
+  ],
+  "evaluate": [
+    "With nothing picked, does a trim or an undo while it plays feel instant, with no hitch in the picture?",
+    "With a clip picked, can you feel the trim, undo or B as a hitch in the picture or the playhead?",
+    "Does clicking a clip while it plays make the playback stumble while the panel fills in?"
+  ],
+  "rough": [
+    "With a clip picked, edits are still over the 16 ms bar: trim 20 to 22, undo 22 to 24, B 28 to 37, picking another clip 29 to 31, picking from nothing 39 to 52 ms. It is the panel's sections answering the edit, mostly inside SwiftUI and AppKit rather than the app's own code. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Each frame landed while playing works out the whole document at that moment on the main thread, about 1.4 ms a frame (8 per cent of the main thread). It drops no frame today; it is what an hour long edit would feel first. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "A fast drag across the whole edit still swings run to run (frame under the hand 20 to 64 refreshes in the middle across today's runs, one of them failing the check). Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "No mock covers this: it is speed, not a surface."
+  ]
+}

@@ -555,6 +555,44 @@ struct SpeedWalkStepTests {
         #expect(PlaytestSpeedMeasure.tallyName("pick", picked: false, fromNothing: false) == "pick")
         #expect(PlaytestSpeedMeasure.tallyName("trim", picked: false, fromNothing: true) == "trim")
     }
+
+    @Test("Nothing is timed like an edit, so a walk says what the main thread does while it plays with no edit at all")
+    func nothingIsTheControl() throws {
+        let json = #"{"steps": [{"do": "speed", "measure": "edits", "edits": ["nothing", "pick", "nothing", "trim"]}]}"#
+        let script = try PlaytestScript.decode(Data(json.utf8))
+        guard case .speed(let step) = script.steps.first else {
+            Issue.record("not a speed step")
+            return
+        }
+        #expect(step.problem == nil)
+        // Never made unasked: an edits step that names none makes the six
+        // real edits, as it always has.
+        #expect(!PlaytestSpeedMeasure.edits.contains("nothing"))
+        #expect(PlaytestSpeedMeasure.controls == ["nothing"])
+        // With a clip picked the panel's sections are on screen and every
+        // pass costs more, so the floor beside a picked edit is its own number.
+        #expect(PlaytestSpeedMeasure.tallyName("nothing", picked: false) == "nothing")
+        #expect(PlaytestSpeedMeasure.tallyName("nothing", picked: true) == "nothing, picked")
+        // A name that is none of them is still refused, and the refusal lists the control.
+        let bad = PlaytestSpeedMeasure(measure: "edits", edits: ["nap"])
+        #expect(bad.problem?.field == "edits")
+        #expect(bad.problem?.reason.contains("nothing") == true)
+    }
+
+    @Test("An edit tallied twice keeps its worse number, so a lucky repeat never hides a slow one")
+    func aRepeatedTallyKeepsTheWorse() {
+        var tallies: [SpeedWalk.EditTally] = []
+        SpeedWalk.EditTally.keepWorse(SpeedWalk.EditTally(edit: "undo, picked", did: "a", callMS: 1, longestPassMS: 22), in: &tallies)
+        SpeedWalk.EditTally.keepWorse(SpeedWalk.EditTally(edit: "undo, picked", did: "b", callMS: 1, longestPassMS: 16), in: &tallies)
+        SpeedWalk.EditTally.keepWorse(SpeedWalk.EditTally(edit: "trim", did: "c", callMS: 1, longestPassMS: 13), in: &tallies)
+        #expect(tallies.map(\.edit) == ["undo, picked", "trim"])
+        #expect(tallies.first?.longestPassMS == 22)
+        SpeedWalk.EditTally.keepWorse(SpeedWalk.EditTally(edit: "trim", did: "d", callMS: 1, longestPassMS: 19), in: &tallies)
+        #expect(tallies.last?.did == "d")
+        // One not made never replaces one that was.
+        SpeedWalk.EditTally.keepWorse(SpeedWalk.EditTally(edit: "trim", did: "e", callMS: 0, longestPassMS: 0, made: false), in: &tallies)
+        #expect(tallies.last?.did == "d")
+    }
 }
 
 @Suite("Memory over a long play and scrub")

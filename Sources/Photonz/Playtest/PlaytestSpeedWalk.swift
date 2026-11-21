@@ -305,17 +305,7 @@ final class SpeedWalkProbe {
         editor.playDocument(rate: 1)
         try? await Task.sleep(for: .seconds(1))
         var lines: [String] = []
-        // Once a walk names `pick`, the edits after it are made with that
-        // clip picked, the way a person editing a clip has it, and counted
-        // under names of their own (`PlaytestSpeedMeasure.tallyName`).
-        var picked = false
-        // After `unpick` the next pick builds the panel from nothing, and is
-        // counted apart from one that moves the pick between clips.
-        var fromNothing = false
         for named in edits {
-            let edit = PlaytestSpeedMeasure.tallyName(named, picked: picked, fromNothing: fromNothing)
-            if named == "pick" { picked = true; fromNothing = false }
-            if named == "unpick" { picked = false; fromNothing = true }
             // A blade stops play. Starting it again is not part of the next
             // edit: a person presses Space, watches, then edits, so play has
             // a second to get going before the edit is counted. Until
@@ -325,18 +315,35 @@ final class SpeedWalkProbe {
                 editor.playDocument(rate: 1)
                 try? await Task.sleep(for: .seconds(1))
             }
+            // B cuts the clip in hand, so a person clicks the clip and then
+            // presses B. The click is a pick, timed as one when the walk
+            // names it, and never charged to the blade: until 2026-11-21 a
+            // blade with nothing picked was timed with the pick that filled
+            // the panel, and read 45 ms where the cut itself was 27 to 33.
+            if named == "blade", try handTheBladeItsClip(editor) {
+                try? await Task.sleep(for: .seconds(1.5))
+            }
+            // Every edit is counted under the state the window is really in
+            // when it is made (`PlaytestSpeedMeasure.tallyName`): with a clip
+            // picked the panel's sections answer the edit too and it costs
+            // more. Until 2026-11-21 the walk kept its own idea of the pick,
+            // and an undo after a blade, made with the blade's piece picked,
+            // was counted as an undo with nothing picked: 25 ms where one
+            // with nothing picked is 12.
+            let picked = editor.selectedLayerID != nil
+            let edit = PlaytestSpeedMeasure.tallyName(named, picked: picked, fromNothing: named == "pick" && !picked)
             MainThreadMeter.shared.reset()
             ViewBuildMeter.shared.reset()
             let began = CACurrentMediaTime()
             let did: String
             do {
-                did = try perform(named, on: editor, picked: picked)
+                did = try perform(named, on: editor)
             } catch let refused as Failure {
                 // One edit that finds nothing to act on does not cost the
                 // others their numbers: it is written down as not made.
-                run.edits.removeAll { $0.edit == edit }
-                run.edits.append(SpeedWalk.EditTally(edit: edit, did: "not made: \(refused.description)",
-                                                     callMS: 0, longestPassMS: 0, made: false))
+                SpeedWalk.EditTally.keepWorse(SpeedWalk.EditTally(edit: edit, did: "not made: \(refused.description)",
+                                                                  callMS: 0, longestPassMS: 0, made: false),
+                                              in: &run.edits)
                 lines.append("\(edit) not made: \(refused.description)")
                 continue
             }
@@ -344,8 +351,8 @@ final class SpeedWalkProbe {
             try? await Task.sleep(for: .seconds(1.5))
             let longest = max(MainThreadMeter.shared.longestMS, call)
             let stillPlaying = editor.isDocumentPlaying
-            run.edits.removeAll { $0.edit == edit }
-            run.edits.append(SpeedWalk.EditTally(edit: edit, did: did, callMS: call, longestPassMS: longest))
+            SpeedWalk.EditTally.keepWorse(SpeedWalk.EditTally(edit: edit, did: did, callMS: call, longestPassMS: longest),
+                                          in: &run.edits)
             // Which counted views the edit built again, so a slow edit names
             // where its time went rather than leaving it to a profile.
             let built = ViewBuildMeter.shared.countsReport
@@ -361,20 +368,57 @@ final class SpeedWalkProbe {
 
     /// One edit a person makes while the video plays, on something just
     /// ahead of the playhead so what they are watching is what changes next.
-    private func perform(_ edit: String, on editor: EditorState, picked: Bool) throws -> String {
-        guard let document = editor.document else { throw Failure(description: "no document") }
-        let playhead = editor.documentTimeMS
+    /// The recordings on each picture track, earliest first, and the main
+    /// ones: those on the picture track that holds the most.
+    private func recordings(in document: PhotonzDocument) -> (byTrack: [[Layer]], main: [Layer]) {
         let pictureTracks = document.timelineTracks.filter { $0.kind == .video }
-        func clips(onTrack index: Int) -> [Layer] {
-            guard pictureTracks.indices.contains(index) else { return [] }
-            return document.clipIDs(onTrack: pictureTracks[index].id).compactMap { document.layer(id: $0) }
+        let byTrack = pictureTracks.map { track in
+            document.clipIDs(onTrack: track.id).compactMap { document.layer(id: $0) }
                 .filter { $0.movie != nil }
                 .sorted { ($0.time?.inMS ?? 0) < ($1.time?.inMS ?? 0) }
         }
-        // The main recordings sit on the picture track that holds the most.
-        let byTrack = (0..<pictureTracks.count).map(clips(onTrack:))
-        let main = byTrack.max { $0.count < $1.count } ?? []
+        return (byTrack, byTrack.max { $0.count < $1.count } ?? [])
+    }
+
+    /// Picks the clip a blade will cut, the click a person makes before
+    /// pressing B, when it is not already the one picked: the picked clip if
+    /// the playhead runs through it with time to spare, else the first
+    /// recording under the playhead, else the next main recording, parked in.
+    /// True when it picked or parked anything, so the walk lets the window
+    /// settle before the blade is timed.
+    private func handTheBladeItsClip(_ editor: EditorState) throws -> Bool {
+        guard let document = editor.document else { throw Failure(description: "no document") }
+        let playhead = editor.documentTimeMS
+        let (byTrack, main) = recordings(in: document)
+        // Three seconds to spare, so the playhead is still inside it after
+        // the window settles.
+        func runsUnder(_ layer: Layer) -> Bool {
+            (layer.time?.inMS ?? 0) + 100 < playhead && playhead < (layer.time?.outMS ?? 0) - 3000
+        }
+        let held = editor.selectedLayerID.flatMap { document.layer(id: $0) }.flatMap { runsUnder($0) ? $0 : nil }
+        if held != nil { return false }
+        var under = (main + byTrack.flatMap { $0 }).first(where: runsUnder)
+        // Over a title page or a gap there is nothing to cut: a person
+        // parks on the next recording and plays on from there.
+        if under == nil, let next = main.first(where: { ($0.time?.inMS ?? 0) > playhead }), let time = next.time {
+            editor.moveDocumentPlayhead(toMS: time.inMS + time.lengthMS / 2)
+            editor.playDocument(rate: 1)
+            under = next
+        }
+        guard let clip = under else {
+            throw Failure(description: "no recording under or after the playhead at \(SpeedWalk.clock(playhead)) to cut")
+        }
+        if editor.selectedLayerID != clip.id { editor.selectLayer(clip.id) }
+        return true
+    }
+
+    private func perform(_ edit: String, on editor: EditorState) throws -> String {
+        guard let document = editor.document else { throw Failure(description: "no document") }
+        let playhead = editor.documentTimeMS
+        let (byTrack, main) = recordings(in: document)
         switch edit {
+        case "nothing":
+            return "nothing done"
         case "trim":
             guard let clip = main.first(where: { ($0.time?.inMS ?? 0) > playhead + 2000 }),
                   let session = ClipTrimSession(layer: clip) else {
@@ -407,6 +451,15 @@ final class SpeedWalkProbe {
             var under = main.first {
                 ($0.time?.inMS ?? 0) + 100 < playhead && playhead < ($0.time?.outMS ?? 0) - 6000
             }
+            // With a clip picked, a pick is a click on ANOTHER clip: the
+            // panel moves from one clip to the next. Picking the one already
+            // picked changes nothing and read 5 ms, so a walk that happened
+            // to land on it timed nothing (2026-11-21).
+            if let held = editor.selectedLayerID, under?.id == held || under == nil,
+               let other = main.first(where: { $0.id != held && ($0.time?.inMS ?? 0) > playhead }) {
+                editor.selectLayer(other.id)
+                return "\(other.name) picked, from \(document.layer(id: held)?.name ?? "another clip")"
+            }
             if under == nil, let next = main.first(where: { ($0.time?.inMS ?? 0) > playhead }), let time = next.time {
                 editor.moveDocumentPlayhead(toMS: time.inMS + 300)
                 editor.playDocument(rate: 1)
@@ -418,23 +471,11 @@ final class SpeedWalkProbe {
             editor.selectLayer(clip.id)
             return "\(clip.name) picked"
         case "blade":
-            func runsUnder(_ layer: Layer) -> Bool {
-                (layer.time?.inMS ?? 0) + 100 < playhead && playhead < (layer.time?.outMS ?? 0) - 100
+            // B cuts the clip in hand, picked untimed before this
+            // (`handTheBladeItsClip`), the way a person clicks it first.
+            guard let clip = editor.selectedLayerID.flatMap({ document.layer(id: $0) }) else {
+                throw Failure(description: "no clip in hand to cut at \(SpeedWalk.clock(playhead))")
             }
-            // With a clip picked, B cuts that clip while the playhead is on it.
-            let held = picked ? editor.selectedLayerID.flatMap { document.layer(id: $0) }.flatMap { runsUnder($0) ? $0 : nil } : nil
-            var under = held ?? (main + byTrack.flatMap { $0 }).first(where: runsUnder)
-            // Over a title page or a gap there is nothing to cut: a person
-            // parks on the next recording and plays on from there.
-            if under == nil, let next = main.first(where: { ($0.time?.inMS ?? 0) > playhead }), let time = next.time {
-                editor.moveDocumentPlayhead(toMS: time.inMS + time.lengthMS / 2)
-                editor.playDocument(rate: 1)
-                under = next
-            }
-            guard let clip = under else {
-                throw Failure(description: "no recording under or after the playhead at \(SpeedWalk.clock(playhead)) to cut")
-            }
-            if editor.selectedLayerID != clip.id { editor.selectLayer(clip.id) }
             guard editor.canSplitClipAtPlayhead else { throw Failure(description: "\(clip.name) cannot be cut there") }
             editor.splitClipAtPlayhead()
             return "\(clip.name) cut at \(SpeedWalk.clock(editor.documentTimeMS))"

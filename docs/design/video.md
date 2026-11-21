@@ -806,7 +806,12 @@ write every number into one `speed.json`:
   Sight lag is the scrub bar's number.
 - **edits**: trim, move, blade, undo, a transition and a title's words, each
   made just ahead of the playhead while it plays, with the longest main thread
-  pass from the edit to 1.5 s after.
+  pass from the edit to 1.5 s after. `nothing` is timed the same way and
+  changes nothing: the floor the edits stand on. Each edit is counted under
+  the pick the window really has when it is made (`trim` or `trim, picked`),
+  and a blade is made the way a person makes one, the clip clicked first and
+  B pressed once the panel has settled, so the click is never charged to the
+  cut. See "What an edit costs, by what is on screen" below.
 - **idleBuilds**: view bodies built per new picture while it plays untouched
   (`ViewBuildMeter`).
 - **timeline**: refresh times zooming in and out and scrolling end to end.
@@ -949,6 +954,37 @@ A trap found on the way: the pass marks at the start of every speed step
 show a pass of about 240 ms that is nearly all SwiftUI's accessibility focus
 walk. It is the walk taking its own markers down (`takeTheMarkersDownForATimedStep`),
 not the app, and it is never counted.
+
+**What an edit costs, by what is on screen (2026-11-21, pass 23).** Until
+this pass the walk kept its own idea of the pick, and its numbers mixed two
+costs. A blade with nothing picked was timed together with the click that
+picked its clip and filled the panel (45 ms, where the cut alone is 28 to 37),
+and the undo after it, made with the blade's piece picked, was counted as an
+undo with nothing picked (25 ms, where one really made with nothing picked is
+11 to 13). Counted honestly, worst of three runs on the 6 minute edit while it
+plays:
+
+| | nothing picked | a clip picked |
+|---|---|---|
+| nothing (the floor) | 4 | 5 |
+| trim | 13 to 16 | 20 to 22 |
+| undo | 11 to 13 | 22 to 24 |
+| blade | (B needs a clip) | 28 to 37 |
+| pick another clip | | 29 to 31 |
+| pick from nothing | 39 to 52 | |
+
+So with nothing picked a trim and an undo meet the 16 ms bar, and the floor
+under every edit is a few milliseconds: playing costs an edit nothing. What is
+over the bar is the panel's sections answering the edit (a trim and an undo
+with a clip picked come in three passes of about the same length, the middle
+one with no counted body built) and the panel's own changes of clip. Two
+things measured and ruled out on the way: the walk's own markers (every
+marker left off, the edits read the same within a run's noise) and an outside
+accessibility client (none asked the probe anything while it edited; SwiftUI's
+accessibility tree and its focus update are about an eighth of the main
+thread while editing, on without anyone asking). **When an edit reads slow,
+read it beside `nothing` and beside the same edit with the other pick state
+before looking for the cost in the edit.**
 
 **The reference edit's recordings need ids that differ in their first eight
 bytes.** A frame's picture id is its recording's id with the frame number

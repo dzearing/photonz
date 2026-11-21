@@ -482,6 +482,20 @@ public enum SpeedWalk {
             self.longestPassMS = longestPassMS
             self.made = made == false ? false : nil
         }
+
+        /// Files `tally` in `tallies`, where an edit made twice under one name
+        /// keeps the worse of its two numbers: a walk that undoes twice with a
+        /// clip picked says the slower undo, never whichever came last. One
+        /// that was not made never replaces one that was.
+        public static func keepWorse(_ tally: EditTally, in tallies: inout [EditTally]) {
+            guard let i = tallies.firstIndex(where: { $0.edit == tally.edit }) else {
+                tallies.append(tally)
+                return
+            }
+            let kept = tallies[i]
+            if tally.made == false, kept.made != false { return }
+            if kept.made == false || tally.longestPassMS >= kept.longestPassMS { tallies[i] = tally }
+        }
     }
 
     public struct MemoryTally: Codable, Equatable, Sendable {
@@ -975,6 +989,13 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     /// `unpick` picks nothing, so the next `pick` is a click on a clip with
     /// nothing picked, the one that builds the panel's sections from nothing.
     public static let namedOnlyEdits = ["pick", "unpick"]
+    /// Timed exactly like an edit and changing nothing: what the main thread
+    /// does in the same second and a half of playing with no edit made, so
+    /// an edit's number can be told from the floor it stands on. Measured on
+    /// 2026-11-21, the floor is 2 to 5 ms with or without a clip picked, and
+    /// a trim with nothing picked 13 to 15 against 17 to 19 with one picked:
+    /// the panel's sections answering the edit, not the edit.
+    public static let controls = ["nothing"]
 
     /// The name an edit's numbers are kept under. Made with a clip picked,
     /// an edit holds the panel's sections too and costs more, so it is a
@@ -1060,8 +1081,9 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
         if let bad = speeds.first(where: { !Self.speeds.contains($0) }) {
             return ("speeds", "\(bad) is not a speed: they are slow, medium and fling")
         }
-        if let bad = edits.first(where: { !Self.edits.contains($0) && !Self.namedOnlyEdits.contains($0) }) {
-            return ("edits", "\(bad) is not an edit: they are " + (Self.edits + Self.namedOnlyEdits).joined(separator: ", "))
+        let named = Self.edits + Self.namedOnlyEdits + Self.controls
+        if let bad = edits.first(where: { !named.contains($0) }) {
+            return ("edits", "\(bad) is not an edit: they are " + named.joined(separator: ", "))
         }
         if let seconds, seconds <= 0 { return ("seconds", "must be more than nothing") }
         if let form, form != "short", form != "long" { return ("form", "is short or long") }

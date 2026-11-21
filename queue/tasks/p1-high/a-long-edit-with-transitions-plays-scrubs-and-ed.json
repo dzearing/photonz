@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-20T22:49:06.969Z",
+  "updated": "2026-11-21T09:11:09.402Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,13 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-20T22:49:06.968Z",
-      "note": "... 69 earlier entries elided",
-      "elided": 69
-    },
-    {
-      "t": "2026-11-16T12:55:30.954Z",
-      "note": "Pass 12 landed b9dab2966: the panel fills in one piece per frame with a quiet frame after rows, so a pick from nothing while it plays peaks at 31 ms median (was 56; worst 89 -> 63) and a blade with nothing picked at 53 (was 89). Bars not reached (edits 16 ms, scrub 1 frame, 0 dropped). Stays open; pass 13 leads in the log."
+      "t": "2026-11-21T09:11:09.392Z",
+      "note": "... 70 earlier entries elided",
+      "elided": 70
     },
     {
       "t": "2026-11-16T13:17:06.921Z",
@@ -507,9 +503,13 @@
     {
       "t": "2026-11-20T22:49:06.967Z",
       "note": "From a-cross-fade-plays-smoothly-in-the-editor-the-wa (5b1effa70): a play pass fallen behind is no longer restarted when the restart would decode from the same key frame (MoviePlayPass.serves keyFrames), and a pass catching up skips converting frames the playhead passed. On screen recordings (key frames ~2s apart) restarts had piled up behind the decode gate; this may help long edits with transitions too."
+    },
+    {
+      "t": "2026-11-21T09:11:09.391Z",
+      "note": "claimed by go loop"
     }
   ],
-  "started": "2026-11-20T13:12:22.521Z",
+  "started": "2026-11-21T09:11:09.390Z",
   "walks": [
     "speed-walk",
     "scrub-never-blacks-out-walk"
