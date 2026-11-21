@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-11T16:15:21.510Z",
-  "updated": "2026-11-20T13:10:39.381Z",
+  "updated": "2026-11-21T02:44:10.883Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence (digest 2026-11-11): grep '\"sweep_pass\"' queue/history.jsonl | tail -6 -> complete:true on 11-02, 11-03, 11-04 (24,883 to 25,469 s each); then 11-05 interrupted at 951/1096, 11-08 at 854/1134, 11-11 at 620/1141 (began 11:38Z, i.e. 03:38 local, stopped 08:08 local when the user came back). queue/bin/sweep-resume.mjs only resumes a stopped run when nothing a walk runs has changed since; the loop lands app code several times a day, so in practice the resume never applies and the 72 hour floor then pushes the next try three more days out. Ideas, not decisions: let a stopped run's unanswered walks run first next time even on new code, and count the set complete when every walk has an answer inside one 72 hour window; or start the whole set early enough in the person's quiet hours to fit seven hours; or order the set so the walks least recently answered go first. Whatever the change, sweep.sh status and the dashboard should say how many days since every walk last had an answer.",
@@ -96,13 +96,39 @@
     {
       "t": "2026-11-20T13:10:39.380Z",
       "note": "seq 70 -> 20"
+    },
+    {
+      "t": "2026-11-21T02:26:56.288Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T02:30:43.470Z",
+      "note": "Plan: (1) a stopped whole-set run is carried on from even after code lands: the next run is the walks it never reached, the ones it saw fail, any whose own script changed since, and any whose answer is older than three days; the set counts complete when every walk has an answer inside one 72h window. New walks are simply unreached, so a grown set no longer throws the run away. (2) While a carry-on is owed and the person is at the Mac, rotating checks still run (today a resume reads as 'full' and would starve them). (3) Record why a run stopped (person came back / loop put down / killed) and say it. (4) A ledger of when each walk last had a whole-set answer, read by sweep.sh status and the dashboard. Chose carry-on-across-code over 'start the set earlier in the night' because the 11-17 and 11-20 runs got only 34 minutes before the person came back: the 72h floor counted from each start drifts later into the morning, so no start-time rule fixes it while every stop is thrown away."
+    },
+    {
+      "t": "2026-11-21T02:44:10.630Z",
+      "note": "Verified: sweep-resume-drill passes (rules, 72h window, ledger, and end to end on the real sweep.sh twice, the second with code landed and one walk script changed between parts: part two ran 122 walks, the remainder plus the rewritten walk, and closed the standing task). All other sweep drills and Scripts/test.sh pass. Live: sweep.sh why-not now says 'full: the whole-set run of 2026-11-20T15:21:13Z was stopped at 112 of 1184; code has landed since and its answers still count, so the 1072 walks it never answered, plus the 3 it saw fail, run to finish it', so the rest runs the next time the Mac is left alone for 15 minutes instead of on 11-23. Ledger seeded from the five run logs on disk: 309 of 1184 walks have no whole-set answer since 2026-11-08. latest.json for the 11-20 run was given stoppedBy=person from queue/loop.log line 180105."
+    },
+    {
+      "t": "2026-11-21T02:44:10.705Z",
+      "note": "Acceptance 1 (a week of the window holding) can only be watched, not run: the Answers: line of sweep.sh status and the dashboard sweep line (amber when outside the window) now show it. Left rough, not filed: go-loop.sh's comment above 'sweep.sh what' still says a stopped run is finished only when nothing a walk runs has changed; left alone because go-loop.sh is the running zsh loop and a comment is not worth an adoption. The dashboard server picks up the new answers and resume fields when it next loads queue-lib. Chose rerunning a walk whose script changed since the oldest part over tracking each walk's own commit, because rerunning a handful of recently edited walks is cheap and keeps the record small."
+    },
+    {
+      "t": "2026-11-21T02:44:10.793Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-21T02:44:10.881Z",
+      "note": "A stopped whole-set walk run is now carried on from even after code lands (the rest: unreached, failed, rewritten and over-72h walks), and the parts count as one run of the set when every walk has an answer inside one 72h window. Rotating checks still run while the rest waits for the Mac. Runs record why they stopped (person, loop, killed) and say it. sweep.sh status has an Answers: line and the dashboard says how many walks are unanswered. Commit 8f172d0e9; verified by sweep-resume-drill (incl. a code-landed end-to-end case), all sweep drills and Scripts/test.sh. Whether the window holds over a week is now visible on the Answers line."
     }
   ],
-  "started": "2026-11-18T22:58:08.344Z",
+  "started": "2026-11-21T02:26:56.287Z",
   "failures": 0,
   "lastError": {
     "at": "2026-11-18T22:58:14.988Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-  }
+  },
+  "walks": [],
+  "completed": "2026-11-21T02:44:10.882Z"
 }
