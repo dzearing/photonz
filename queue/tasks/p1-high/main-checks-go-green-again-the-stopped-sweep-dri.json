@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-21T09:13:45.386Z",
-  "updated": "2026-11-21T13:06:31.314Z",
+  "updated": "2026-11-21T14:22:58.981Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/44857516016 (306c82581). Fails: \"a commit the app has changed since was found to stand in for landed code\", then the schedule/loop-line checks, then ENOENT on <tmp>/sweep-resume-*/ran.2 at sweep-resume-drill.mjs:350 (endToEnd). Cause: sweep-resume-drill.mjs:~329 runs git rev-list --max-count=200 HEAD to find a commit the app changed since; .github/workflows/ci.yml line 110 uses actions/checkout@v4 with no fetch-depth (default 1). Reproduced: git clone --depth 1 file:///Users/dzearing/git/photonz /tmp/srd-shallow && cd /tmp/srd-shallow && node queue/bin/sweep-resume-drill.mjs -> EXIT 1 with those three FAILs and the ENOENT; same drill in the full repo -> all checks passed. Fix either fetch-depth: 0 (or 200) on that checkout, or have the drill make its own commits in a temp repo instead of reading the real history. Filed by the runner on a-long-edit-with-transitions-plays-scrubs-and-ed (pass 23).",
@@ -33,6 +33,10 @@
     {
       "t": "2026-11-21T13:06:31.313Z",
       "note": "triage 2026-11-21: reproduced. git clone --depth 1 file:///Users/dzearing/git/photonz /tmp/srd-shallow-triage && node queue/bin/sweep-resume-drill.mjs -> exit 1, FAIL 'a commit the app has changed since was found to stand in for landed code', FAIL 'the schedule now says the rest runs, and why', FAIL 'and the loop's line names the remainder', then ENOENT .../ran.2. Stays p1; seq 4030 -> 30 (right after the two focus tasks): main has been red since 02:44Z and a red main hides real breakage."
+    },
+    {
+      "t": "2026-11-21T14:22:58.980Z",
+      "note": "Still red on CI run 44907683675 (35790c9f4, 2026-11-21 13:14): same 3 FAILs then ENOENT ran.2 at sweep-resume-drill.mjs:350. Seen by pass 18 of the-timeline-of-an-hour-long-edit-scrolls-zooms."
     }
   ]
 }

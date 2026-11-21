@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-20T20:44:49.194Z",
+  "updated": "2026-11-21T15:26:30.696Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,29 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-20T20:44:49.193Z",
-      "note": "... 4 earlier entries elided",
-      "elided": 4
-    },
-    {
-      "t": "2026-11-14T22:36:46.938Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-15T00:04:08.282Z",
-      "note": "walks open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk -> open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk"
-    },
-    {
-      "t": "2026-11-15T00:04:25.758Z",
-      "note": "Pass 3 (2026-11-14): reproduced the cut-after-scroll click. New walk a-cut-slid-under-a-still-pointer-walk (6 min edit, Fit, V1 painted): rest on a clip at 1:45.25, zoom out with the pointer still so the plain cut at 3:30.5 is under it, click with no move -> picked Take 1. Fix: the lane keeps the pointer's resting x unobserved (PointerSpot) and re-reads what is under it on every ruler or lane width change (TimelineTrackRow.readPointer). Proven both ways on the same build: without the two onChange lines the walk fails, with them it picks the cut at 3:30.5. Chose zoom over scroll for the walk because on the 6 min edit a lane is only painted when the whole edit is in view, where there is nothing to scroll; both go through the same ruler change. Found on the way: no synthesized move reaches SwiftUI onContinuousHover (lane pointer stayed nil through hover, windowClick and a front walk), so pass 2's 'the pointer resting turns a clip into its full bar' was never exercised by a walk; the lane's hover is now playtestContinuousHover (marker the walk's pointer hands its point to). Harness: hover on lane/seconds, windowClick still:true, expectTimelinePick cut:<s>|false. Rule 8 written into docs/design/video.md 8f. 12 timeline walks green, Scripts/test.sh green. Audit queue/audits/2026-11-14-timeline-cut-under-a-still-pointer.json."
-    },
-    {
-      "t": "2026-11-15T00:04:25.837Z",
-      "note": "Left rough, not filed: zoomed to 3 minutes across on the 6 min edit, a 0.4 s transition band is 6 pt wide and both its end grips cover it, so a click there picks nothing (moving or still, painted or not; seen in /tmp tl3-moveclick2). Old behaviour of the full band view, nobody has reported it; a later pass on band hit targets should give the middle back to the pick."
-    },
-    {
-      "t": "2026-11-15T00:05:00.682Z",
-      "note": "Pass 3 landed 475c29a4e: a click on a cut that slid under a still pointer (after a zoom or scroll) picks the cut, not the clip; proven by a-cut-slid-under-a-still-pointer-walk failing without the fix and passing with it; rule 8 for painted busy lanes written into docs/design/video.md. Acceptance items 6 and 7 met. Still open, bars not reached: zoom/scroll ~50 ms a frame vs 8.3 on the 60 min edit, edits 150-245 ms vs 16. Next pass: paint clips that show pictures (the film strip), then Zoom lanes and click ticks."
+      "t": "2026-11-21T15:26:30.695Z",
+      "note": "... 9 earlier entries elided",
+      "elided": 9
     },
     {
       "t": "2026-11-15T13:16:49.891Z",
@@ -506,9 +486,29 @@
     {
       "t": "2026-11-20T20:44:49.192Z",
       "note": "Pass 17 landed 8153b42db: the ruler's walk markers come down for timed steps and are not hung in the dev app; near Fit 12.1 -> 11.3 ms a frame, scroll 9.3 -> 8.8, look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: fresh paintings laid off the main thread)."
+    },
+    {
+      "t": "2026-11-21T14:22:04.874Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T15:26:16.216Z",
+      "note": "Pass 18 (2026-11-21). Baseline at 35790c9f4 (60 min edit, timeline measure only, load ~4-5): near Fit 11.39 ms mean (held 9.10, fresh 14.60), zoom in 11.08, out 9.69, scroll 9.48 (slid 7.95, moved 12.58). Instruments would not attach (developer mode off, xctrace 'Cannot find process' even unsandboxed), so the timeline measure now labels its frames for PassSampler (frame number + near fit held/fresh, scroll slid/moved), pass-profile.sh keeps EVERY pass of it (PassSampler.keepsEveryPass), and the speed line says main thread busy a frame per measure (MainThreadMeter.takeBusy)."
+    },
+    {
+      "t": "2026-11-21T15:26:16.295Z",
+      "note": "Pass 18 tried and backed out (A/B on one build, throwaway defaults switch, 2 runs each): three groups of lanes (row index % 3) each holding its own painting and letting go on a step of its own (TimelinePaint.lettingGo: forced past 20% or uncovered, else the furthest past 8.5%, one a step; sliver 1/16 so a zoom out holds three steps; tests written and passing). Pictures laid near Fit 2.4 -> 1.8 a frame, but near Fit 11.03/11.57 staggered vs 10.92/11.32 together: every frame ~11 ms instead of one in three ~15. Pass 17's off-main-thread idea also not built: pictures are ~2.7 ms of a fresh frame (2.2 paint closures, 0.6 rasterise) = ~1.1 ms a frame averaged, and a held frame is already ~8 ms of main thread."
+    },
+    {
+      "t": "2026-11-21T15:26:16.373Z",
+      "note": "Pass 18 finding: near Fit the main thread is busy 8.98 ms a frame against an 8.3 ms refresh. Every-pass profile of a held frame: update pass 5.4 ms (lane bodies 1.3 spread thin: painting key 0.23, observation tracking 0.22, paintedBars 0.17, LanePaintingKept 0.19, nothing over 0.25; SwiftUI graph 1.6), layout+drawing pass 1.9, a trail of passes under 0.5. So the 8.3 ms bar cannot be reached by trimming: the lanes must leave SwiftUI's per-frame update (one CALayer per lane holding the picture as contents, slid/stretched by the ruler outside SwiftUI; full clip views and overlays stay SwiftUI). Written into docs/design/video.md 8f. Final build: near Fit 11.18 (held 9.25, fresh 13.87), zoom in 10.55, out 9.72, scroll 8.86 (p95 12.9, worst 23). Scripts/test.sh exit 0. Audit queue/audits/2026-11-21-timeline-hour-long-pass18-main-thread-floor.json. Main CI red is owned by main-checks-go-green-again-the-stopped-sweep-dri (logged there). Left rough, not filed: none new."
+    },
+    {
+      "t": "2026-11-21T15:26:30.694Z",
+      "note": "Pass 18 landed 48862dbbf: the speed walk now reports main thread busy a frame and profiles every pass; found near Fit is ~9 ms of main thread a frame, ~8 even when nothing is painted, so the bar needs the lanes out of SwiftUI's per-frame update. Lanes taking turns to repaint tried and backed out (no gain). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
     }
   ],
-  "started": "2026-11-20T20:11:44.590Z",
+  "started": "2026-11-21T14:22:04.873Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",

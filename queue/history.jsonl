@@ -18462,3 +18462,9 @@
 {"t":"2026-11-21T14:21:15.333Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-21T14:21:15.411Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-21T14:21:24.959Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 25 landed b77d1679f: an edit no longer re-runs the editor's whole layout and the timeline's grid (the layout read 'document != nil'; the dock never compared equal). Pick from nothing 47.6 -> 38-40 ms, undo 9.2 -> 8.2-8.7 on the 6 min edit. Bars not reached: edits with a clip picked <=16 ms (17-44), picks (29-40), worst scrub lag 1. Pass 26 leads in the log."}
+{"t":"2026-11-21T14:22:04.879Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-21T14:22:58.982Z","ev":"task_note","id":"main-checks-go-green-again-the-stopped-sweep-dri"}
+{"t":"2026-11-21T15:26:16.219Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-21T15:26:16.298Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-21T15:26:16.376Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-21T15:26:30.697Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 18 landed 48862dbbf: the speed walk now reports main thread busy a frame and profiles every pass; found near Fit is ~9 ms of main thread a frame, ~8 even when nothing is painted, so the bar needs the lanes out of SwiftUI's per-frame update. Lanes taking turns to repaint tried and backed out (no gain). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
