@@ -51,7 +51,7 @@ struct ImageEditorRootView: View {
             .background(WindowCloseGuard(editorState: editorState))
             .background(OpeningVeil(editorState: editorState))
             .onChange(of: editorState.hasUnsavedChanges) { _, dirty in
-                editorState.hostWindow?.isDocumentEdited = dirty
+                editorState.showEditedDot(dirty)
             }
             .task {
                 // The New window (`FrontDoorView`), said before the

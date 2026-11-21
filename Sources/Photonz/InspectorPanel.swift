@@ -347,7 +347,9 @@ struct InspectorPanel: View {
     /// the spot until then.
     @State private var watchedTimeFacts: PanelTimeFacts?
 
-    var body: some View {
+    var body: some View { readingALatePass { lateBody } }
+
+    @ViewBuilder private var lateBody: some View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.inspectorPanel)
         #endif

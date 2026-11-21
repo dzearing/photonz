@@ -22641,6 +22641,7 @@ final class MainThreadMeter {
         // trace of a walk can be cut into the very passes this meter reports
         // (`Scripts/perf/trace-bursts.py --passes`). Ending marks and not
         // intervals, because a pass is only known once it is over.
+        if d >= 0.006 { PassSampler.shared.passEnded(start: now - d, end: now) }
         if d >= 0.006 {
             let what = landed.joined(separator: ", ")
             Self.marks.emitEvent("pass", "\(d * 1000, format: .fixed(precision: 1), privacy: .public) \(what, privacy: .public)")

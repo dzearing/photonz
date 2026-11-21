@@ -304,8 +304,11 @@ final class SpeedWalkProbe {
         await settle(editor, frames: frames)
         editor.playDocument(rate: 1)
         try? await Task.sleep(for: .seconds(1))
+        // A profile of each edit's passes, when `pass-profile.sh` asks for one.
+        PassSampler.shared.startIfOn()
+        defer { PassSampler.label = ""; PassSampler.shared.dump() }
         var lines: [String] = []
-        for named in edits {
+        for (index, named) in edits.enumerated() {
             // A blade stops play. Starting it again is not part of the next
             // edit: a person presses Space, watches, then edits, so play has
             // a second to get going before the edit is counted. Until
@@ -334,6 +337,7 @@ final class SpeedWalkProbe {
             let edit = PlaytestSpeedMeasure.tallyName(named, picked: picked, fromNothing: named == "pick" && !picked)
             MainThreadMeter.shared.reset()
             ViewBuildMeter.shared.reset()
+            PassSampler.label = "\(index) \(edit)"
             let began = CACurrentMediaTime()
             let did: String
             do {
@@ -349,6 +353,7 @@ final class SpeedWalkProbe {
             }
             let call = (CACurrentMediaTime() - began) * 1000
             try? await Task.sleep(for: .seconds(1.5))
+            PassSampler.label = ""
             let longest = max(MainThreadMeter.shared.longestMS, call)
             let stillPlaying = editor.isDocumentPlaying
             SpeedWalk.EditTally.keepWorse(SpeedWalk.EditTally(edit: edit, did: did, callMS: call, longestPassMS: longest),

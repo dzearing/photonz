@@ -1,0 +1,37 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 24: an edit with a clip picked is drawn in smaller pieces)",
+  "epic": "video-perf",
+  "summary": "While the 6 minute edit plays, a trim or an undo now finishes inside one frame with nothing picked (trim 16 -> 14 ms, undo 12 -> 9 ms at worst), and with a clip picked the repeat trims and undos come down from 16 to 20 ms to 13 to 15. The panel catches up a frame after the timeline, and the close button's edited dot a quarter second after the edit, so neither lands in the edit's own frame.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 6 minute reference edit (File > Open reaches it too: ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Numbers from three runs of the short speed walk (Scripts/perf/speed-walk.sh --baseline) and from one-off walks of 12 to 16 edits while playing, profiled pass by pass with the new Scripts/perf/pass-profile.sh (Instruments would not connect: the Mac's developer mode is off).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, and press Space to play.",
+      "referenceEdit": 6
+    },
+    {
+      "do": "With nothing picked, trim the end of a clip just ahead of the playhead, then press Cmd-Z.",
+      "shot": "2026-11-21-long-edit-pass24-after-the-edits-sc.png"
+    },
+    {
+      "do": "Click the clip under the playhead, and trim another clip ahead of the playhead a few times, pressing Cmd-Z after each."
+    },
+    {
+      "do": "Watch the right hand panel's Time and Appearance values as you trim: they follow a frame after the timeline."
+    },
+    {
+      "do": "Press Cmd-S, trim once, and watch the close button's dot come in."
+    }
+  ],
+  "evaluate": [
+    "With a clip picked, do repeat trims and undos while it plays now feel like they leave the picture alone?",
+    "Can you see the panel's numbers arrive after the timeline, or does it read as one moment?",
+    "Does the edited dot in the close button come in quickly enough after the first edit since a save?"
+  ],
+  "rough": [
+    "Still over the 16 ms bar with a clip picked: the first edit after a save (its own frame also answers the Save menu and builds the timeline's grid again, 19 to 21 ms), a blade (29 to 41 ms) and its undo (22 to 24 ms), and picking clips (30 to 48 ms). Those are the edits that change what the panel shows. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "The worst-of-three edit numbers with a clip picked hardly moved in the speed walk (trim 22 -> 21 ms), because its trims each follow an undo back to the saved state: the repeat trims and undos the change was about are 13 to 15 ms in a walk of twelve. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Each frame landed while playing still works out the whole document on the main thread, about 1.4 ms a frame. Covered by this task (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "No mock covers this: it is speed, not a surface."
+  ]
+}

@@ -125,6 +125,36 @@ final class EditorState {
     /// now (`EditorState+WebPreview`).
     @ObservationIgnored var webPreview: WebPreview?
     @ObservationIgnored var webPreviewRewrite: Task<Void, Never>?
+    /// The edited dot waiting to be put in the close button (`showEditedDot`).
+    @ObservationIgnored private var editedDotWrite: Task<Void, Never>?
+
+    /// Puts the edited dot in the window's close button, or takes it out.
+    ///
+    /// Setting it re-tiles the title bar, and AppKit then works out again
+    /// which parts of the title bar a drag moves the window by, asking every
+    /// SwiftUI host whether it takes the keyboard, which walks every control
+    /// in the window: about 7 ms on the 6 minute reference edit, in the pass
+    /// after the first edit since a save or the undo back to it
+    /// (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 24). On
+    /// Next's videos, where the edit is already drawn in pieces
+    /// (`catchUpOnTheNextPassOnAVideo`), it goes in a quarter second later,
+    /// on a pass of its own; a pair of changes inside that time is one write,
+    /// or none. The dot only ever shows what `hasUnsavedChanges` already
+    /// says, which is what closing the window asks.
+    func showEditedDot(_ dirty: Bool) {
+        editedDotWrite?.cancel()
+        editedDotWrite = nil
+        guard documentHasTime, Experiments.shared.panelBuildsWhatYouSeeEnabled else {
+            hostWindow?.isDocumentEdited = dirty
+            return
+        }
+        editedDotWrite = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled, let self else { return }
+            self.editedDotWrite = nil
+            if self.hostWindow?.isDocumentEdited != dirty { self.hostWindow?.isDocumentEdited = dirty }
+        }
+    }
     /// True while a look section is building its body, so that every read of
     /// `document` in it watches `lookRowsRevision` rather than `history`
     /// (`readingForTheLookRows`).
@@ -236,16 +266,18 @@ final class EditorState {
             await NextRunLoopPass.start()
             guard let self else { return }
             self.followsAPassLater = false
-            if self.lookRowsOwed {
-                self.lookRowsOwed = false
-                self.lookRowsRevision &+= 1
-            }
             self.noteTheRulerGhost()
             if self.rulerOwed {
                 self.rulerOwed = false
                 self.rulerDocumentRevision &+= 1
             }
             self.moveTheLatePassOn()
+            guard self.lookRowsOwed else { return }
+            await NextRunLoopPass.start()
+            if self.lookRowsOwed {
+                self.lookRowsOwed = false
+                self.lookRowsRevision &+= 1
+            }
         }
     }
 

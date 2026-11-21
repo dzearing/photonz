@@ -16,22 +16,22 @@
       "longestPassMS" : 4.231750033795834
     },
     {
-      "callMS" : 2.714666537940502,
+      "callMS" : 4.304041620343924,
       "did" : "half a second off the end of Take 2",
       "edit" : "trim",
-      "longestPassMS" : 16.164833679795265
+      "longestPassMS" : 13.575667049735785
     },
     {
-      "callMS" : 2.543542068451643,
+      "callMS" : 1.2566251680254936,
       "did" : "the last edit taken back",
       "edit" : "undo",
-      "longestPassMS" : 12.142124585807323
+      "longestPassMS" : 9.190750308334827
     },
     {
-      "callMS" : 5.506000015884638,
-      "did" : "Take 3 picked",
+      "callMS" : 1.9429167732596397,
+      "did" : "Take 2 picked",
       "edit" : "pick, from nothing",
-      "longestPassMS" : 52.06812545657158
+      "longestPassMS" : 47.63050004839897
     },
     {
       "callMS" : 0.6044581532478333,
@@ -40,10 +40,10 @@
       "longestPassMS" : 4.98016644269228
     },
     {
-      "callMS" : 2.65362486243248,
+      "callMS" : 2.965083345770836,
       "did" : "half a second off the end of Take 3",
       "edit" : "trim, picked",
-      "longestPassMS" : 21.867166738957167
+      "longestPassMS" : 20.53700014948845
     },
     {
       "callMS" : 1.1942083947360516,
@@ -58,10 +58,10 @@
       "longestPassMS" : 37.162375170737505
     },
     {
-      "callMS" : 0.6077084690332413,
+      "callMS" : 0.8543753065168858,
       "did" : "Take 3 picked, from Take 2",
       "edit" : "pick",
-      "longestPassMS" : 31.297500245273113
+      "longestPassMS" : 30.57229146361351
     },
     {
       "callMS" : 0.531916506588459,
@@ -81,7 +81,7 @@
   },
   "form" : "short",
   "frameStepMS" : 33,
-  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18; edits from 3 runs on pass 19, 64db7ec53+changes (2026-11-19); scrub hunt frame and sight lags from 3 runs on pass 21, 853e5c7c4+changes (2026-11-20); edits re-tallied by the real pick state with a nothing control, from 3 runs on pass 23, e768f184d+changes (2026-11-21)",
+  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18; edits from 3 runs on pass 19, 64db7ec53+changes (2026-11-19); scrub hunt frame and sight lags from 3 runs on pass 21, 853e5c7c4+changes (2026-11-20); edits re-tallied by the real pick state with a nothing control, from 3 runs on pass 23, e768f184d+changes (2026-11-21); the edits that got faster (trim, undo, both picks, trim picked) from 3 runs on pass 24, 6c88cb927+changes (2026-11-21)",
   "machine" : "Mac16,5, 16 cores, 64GB",
   "minutes" : 6,
   "plays" : [

@@ -986,6 +986,43 @@ thread while editing, on without anyone asking). **When an edit reads slow,
 read it beside `nothing` and beside the same edit with the other pick state
 before looking for the cost in the edit.**
 
+**An edit's pieces each get a pass of their own (2026-11-21, pass 24).** An
+edit on a video is drawn in pieces (`catchUpOnTheNextPass`): the picture and
+the menu bar in the edit's own pass, Core Animation's commit of that in the
+next, then the timeline's tracks, then (since this pass) the panel's look
+sections a pass after the tracks, where until now they shared the tracks'
+pass. The panel's own body reads a pass late too (`InspectorPanel.body` inside
+`readingALatePass`), so a trim with a clip picked no longer builds it in the
+edit's own pass. Measured with the walk's edits alone on the 6 minute edit, a
+clip picked and the document already edited: the tracks' pass 13 to 20 ms ->
+9 to 16, the sections' new pass 6 to 11, the edit's own 15 to 18 -> 13 to 15.
+The close button's edited dot is put in a quarter second after the change on
+Next's videos (`EditorState.showEditedDot`): setting it re-tiles the title
+bar, and AppKit then asks every SwiftUI host whether it takes the keyboard to
+work out where a drag moves the window, which walks every control in the
+window (`-[NSWindow _resetDragMargins]` -> `NSHostingView.acceptsFirstResponder`
+-> `FocusNavigator.firstNavigableItem`), about 7 ms in the pass after the first
+edit since a save. What is left over the bar with a clip picked is the edit
+that changes what the panel shows (a blade, its undo, a pick) and the first
+edit after a save, whose own pass also answers the Save menu and builds the
+timeline's grid again (not yet found why).
+
+**Profiling a pass without Instruments.** With developer mode off Instruments
+will not attach, and `sample` cannot cut a profile by pass.
+`Scripts/perf/pass-profile.sh <walk.json>` runs a speed walk with
+`PassSampler` on (probe only): a thread that stops the main thread every half
+millisecond, walks its stack by frame pointers into a buffer allocated
+beforehand (nothing may allocate while the main thread is stopped: it may hold
+the allocator's lock, and the first try hung the probe that way), and keeps
+the samples inside each pass of 6 ms or more, labelled with the edit. lldb
+names the addresses against the live probe (`atos -p` is refused), and
+`Scripts/perf/pass-profile.py` prints each edit's passes split into SwiftUI's
+phases with the app's own functions. On pass 24 it read an edit's own pass as
+a third view bodies, a third SwiftUI's attribute graph with no view of ours
+under it, and the edit itself 2 to 3 ms: the cost is how much of the window an
+edit dirties, not one slow view. Its pictures are slightly slower than
+unprofiled ones; judge a fix with the speed walk.
+
 **The reference edit's recordings need ids that differ in their first eight
 bytes.** A frame's picture id is its recording's id with the frame number
 folded into the last eight (`MovieRef.frameID`). Until 2026-11-17 the
