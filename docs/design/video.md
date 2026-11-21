@@ -1253,12 +1253,28 @@ The rule, for any view added to the editor window:
      painting would not be equal to itself and would be painted anyway.
      Near Fit on the hour-long reference edit: 13.5 ms a frame, 12.3 after
      (2026-11-19).
+   - **A quick zoom holds its painting twice as far** (`TimelinePaint.quickHeldStretch`,
+     `quickHoldMS`, `zoomSliver`, 2026-11-21, pass 20): for the first 50 ms of
+     a hold the scale may move 17 per cent, and a zoom paints a twelfth of a
+     window either side so a zoom out is still covered three steps on. Since
+     pass 19 a held frame builds no lane, so the late frames are the ones
+     that paint afresh, and at four per cent a frame this holds four of five
+     instead of two of three. A hold older than 50 ms goes back to 8.5 per
+     cent: held for a slow pinch, a name would be seen growing a sixth wider
+     over a seventh of a second and springing back. Throwaway switch, one
+     build, two runs each: near Fit 11.5 to 11.9 ms a frame to 10.5 to 11.1,
+     late frames 239 to 293 of 648 to 166 to 194, zoom out late 41 to 68 of
+     240 to 17 to 29. A quarter was no better (each fresh painting is that
+     much wider), an eighth in between. Photographed held at 16 per cent
+     beside the same zoom painted afresh: names a sixth wider, pictures along
+     a clip falling slightly differently, nothing out of place.
    - **While a zoom paints the window, only a clip near the left edge has
      its name drawn live** (`TimelinePaint.leftEdgeWhileZooming`, 2026-11-20).
      A held painting lets go once the window leaves the sliver round what
-     was painted or the scale moves past 8.5 per cent, so the edge stays
-     between a thirty-second of a window before where it was painted and a
-     ninth after; that is the reach `nameFollowsTheEdge` is asked against
+     was painted or the scale moves past what the hold allows (17 per cent
+     at most, a quick zoom's), so the edge stays between a twelfth of a
+     window before where it was painted and a little under a third after
+     (a thirty-second and a ninth until 2026-11-21); that is the reach `nameFollowsTheEdge` is asked against
      (`timelineLeftEdgeRangeMS`), not the drawn stretch's whole step. With
      the step a whole window, near Fit every clip on screen, about 95 a
      lane, had its name drawn by `TimelinePaintedNames` on every frame.

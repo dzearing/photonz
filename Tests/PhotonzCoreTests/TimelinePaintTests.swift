@@ -184,7 +184,7 @@ import Testing
         let reach = TimelinePaint.leftEdgeWhileZooming(window: window)
         #expect(reach.lowerBound < window.startMS)
         #expect(reach.upperBound > window.startMS)
-        #expect(reach.upperBound - reach.lowerBound < window.spanMS / 6)
+        #expect(reach.upperBound - reach.lowerBound < window.spanMS / 3)
         // A clip in the middle of the window never meets the edge.
         let middle = window.startMS + window.spanMS / 2
         #expect(!TimelinePaint.nameFollowsTheEdge(fromMS: middle, toMS: middle + 10_000, leftEdgeMS: reach))
@@ -201,12 +201,12 @@ import Testing
         var checked = 0
         for anchorShare in stride(from: 0.0, through: 1.0, by: 0.05) {
             let anchor = painted.startMS + painted.spanMS * anchorShare
-            for by in stride(from: 0.9, through: 1.1, by: 0.0025) {
+            for by in stride(from: 0.8, through: 1.2, by: 0.0025) {
                 let window = Self.window(scale: 2 * by,
                                          startMS: anchor - (anchor - painted.startMS) / by)
                 for shift in stride(from: -0.05, through: 0.05, by: 0.01) {
                     let moved = Self.window(scale: 2 * by, startMS: window.startMS + painted.spanMS * shift)
-                    guard TimelinePaint.stretch(painted: painted, to: moved) != nil else { continue }
+                    guard TimelinePaint.stretch(painted: painted, to: moved, heldForMS: 0) != nil else { continue }
                     checked += 1
                     #expect(reach.contains(moved.startMS), "edge \(moved.startMS) outside \(reach)")
                 }
@@ -227,7 +227,7 @@ import Testing
         let painted = TimelinePaint.paintedMS(window: window, stretch: stretch, isZooming: true)
         #expect(painted.lowerBound <= window.startMS)
         #expect(painted.upperBound >= window.startMS + window.spanMS)
-        #expect(painted.upperBound - painted.lowerBound <= window.spanMS * 1.1)
+        #expect(painted.upperBound - painted.lowerBound <= window.spanMS * 1.2)
         #expect(painted.upperBound - painted.lowerBound < (stretch.upperBound - stretch.lowerBound) / 2)
     }
 
@@ -251,8 +251,8 @@ import Testing
         let anchor = painted.startMS + painted.spanMS / 2
         let inStep = Self.window(scale: 2 * 1.04, startMS: anchor - painted.spanMS / 1.04 / 2)
         let outStep = Self.window(scale: 2 / 1.04, startMS: anchor - painted.spanMS * 1.04 / 2)
-        let stretchIn = TimelinePaint.stretch(painted: painted, to: inStep)
-        let stretchOut = TimelinePaint.stretch(painted: painted, to: outStep)
+        let stretchIn = TimelinePaint.stretch(painted: painted, to: inStep, heldForMS: 200)
+        let stretchOut = TimelinePaint.stretch(painted: painted, to: outStep, heldForMS: 200)
         #expect(stretchIn.map { abs($0 - 1.04) < 1e-9 } == true)
         #expect(stretchOut.map { abs($0 - 1 / 1.04) < 1e-9 } == true)
     }
@@ -266,8 +266,31 @@ import Testing
             let by = pow(1.04, Double(n))
             return Self.window(scale: 2 * by, startMS: anchor - painted.spanMS / by / 2)
         }
-        #expect(TimelinePaint.stretch(painted: painted, to: steps(2)) != nil)
-        #expect(TimelinePaint.stretch(painted: painted, to: steps(3)) == nil)
+        #expect(TimelinePaint.stretch(painted: painted, to: steps(2), heldForMS: 200) != nil)
+        #expect(TimelinePaint.stretch(painted: painted, to: steps(3), heldForMS: 200) == nil)
+    }
+
+    /// A quick zoom holds its painting twice as far, for as long as a quick
+    /// zoom takes to get there: four steps of four per cent in and three out,
+    /// inside the first fifty milliseconds. A slow zoom that has held one
+    /// painting longer than that goes back to the slight stretch, so a name
+    /// is never seen growing a sixth wider and springing back. Near Fit on
+    /// the hour-long reference edit the frames that paint afresh are the late
+    /// ones: holding four of five instead of two of three took the mean
+    /// frame from 11.5 to 10.5-11.1 ms and the late frames from 239-293 of
+    /// 648 to 166-194 (2026-11-21).
+    @Test func aQuickZoomHoldsItsPaintingFurther() {
+        let painted = Self.window(scale: 2, startMS: 900_000)
+        let anchor = painted.startMS + painted.spanMS / 2
+        func steps(_ n: Int) -> MotionStripRuler {
+            let by = pow(1.04, Double(n))
+            return Self.window(scale: 2 * by, startMS: anchor - painted.spanMS / by / 2)
+        }
+        #expect(TimelinePaint.stretch(painted: painted, to: steps(4), heldForMS: 35) != nil)
+        #expect(TimelinePaint.stretch(painted: painted, to: steps(4), heldForMS: 80) == nil)
+        #expect(TimelinePaint.stretch(painted: painted, to: steps(5), heldForMS: 0) == nil)
+        #expect(TimelinePaint.stretch(painted: painted, to: steps(-3), heldForMS: 35) != nil)
+        #expect(TimelinePaint.stretch(painted: painted, to: steps(-4), heldForMS: 35) == nil)
     }
 
     /// A zoom out about the window's left edge uncovers more on the right
@@ -275,10 +298,10 @@ import Testing
     /// showing an unpainted strip.
     @Test func aWindowPastWhatWasPaintedPaintsAgain() {
         let painted = Self.window(scale: 2, startMS: 900_000)
-        let out = Self.window(scale: 2 / 1.04, startMS: painted.startMS)
-        #expect(TimelinePaint.stretch(painted: painted, to: out) == nil)
+        let out = Self.window(scale: 2 / 1.1, startMS: painted.startMS)
+        #expect(TimelinePaint.stretch(painted: painted, to: out, heldForMS: 0) == nil)
         let along = Self.window(scale: 2, startMS: painted.startMS + painted.spanMS / 8)
-        #expect(TimelinePaint.stretch(painted: painted, to: along) == nil)
+        #expect(TimelinePaint.stretch(painted: painted, to: along, heldForMS: 0) == nil)
     }
 
     /// A change of scale is a zoom; a move along at the same scale is not.

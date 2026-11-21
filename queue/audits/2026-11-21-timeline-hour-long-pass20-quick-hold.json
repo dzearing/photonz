@@ -1,0 +1,26 @@
+{
+  "feature": "A quick pinch on the hour-long timeline repaints its lanes half as often",
+  "epic": "video-perf",
+  "summary": "While you pinch the timeline quickly, each lane now keeps stretching its last picture for up to a sixth of a zoom before painting it again, instead of a twelfth. Near the whole-hour view about a third fewer frames are late; a slow pinch behaves as before.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Measured with a timeline-only speed walk on the probe; the before and after numbers come from one build with a throwaway switch, two runs each.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 60 },
+    { "do": "Press Backslash to see the whole hour." },
+    { "do": "Pinch the timeline in and out quickly, a few times, then stop.", "shot": "2026-11-21-timeline-hour-long-pass20-held-vs-fresh.png" },
+    { "do": "Pinch in slowly over a couple of seconds and watch the Moving Background name." },
+    { "do": "Rest, then look at the timeline: names, cuts and fade diamonds back at their true size.", "shot": "2026-11-21-timeline-hour-long-pass20-fresh-sc.png" }
+  ],
+  "evaluate": [
+    "Does a quick pinch near the whole-hour view feel smoother than before?",
+    "During a quick pinch, can you see clip names grow a little and snap back? (The picture shows the widest it gets, top, against the same zoom painted afresh, bottom.)",
+    "During a slow pinch, do names stay steady?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, one build with a throwaway switch, two runs each (load about 5): near Fit mean frame 11.5/11.9 to 10.5/11.1 ms, late frames 239/293 to 166/194 of 648; zoom out late 41/68 to 17/29 of 240; zoom in 54/61 to 45/52 late; scroll unchanged (it does not hold). The finished build on a quieter Mac (load about 3.5), three runs: near Fit 9.5 to 9.6 ms, 120 to 124 late of 648, zoom in 43 to 49 late of 240, zoom out 8 to 16, scroll 12 to 17 of 360, main thread busy near Fit 5.6 ms a frame; the morning's baseline at load 6 read near Fit 11.0 ms and 216 late, so part of that gap is the quieter Mac.",
+    "What a held frame looks like at its widest (the picture, top, held at 16 per cent; bottom, the same zoom painted afresh): a name such as Moving Background reads a sixth wider, the pictures along a V1 clip fall slightly differently, and the Music lane's fade diamonds, which show only once a clip is wide enough, appear when the lane paints afresh rather than a frame or two earlier. Nothing is out of place. A hold longer than 50 ms goes back to the old 8.5 per cent, so a slow pinch never shows the wider stretch.",
+    "Tried and not kept: a quarter instead of a sixth (no better: each fresh picture is a quarter wider and costs more), an eighth (in between).",
+    "Bars of the task not reached: near Fit still about a fifth of frames late (the 135 of 648 that paint afresh, about 14 ms each), zoom in about 45 of 240, edits (owned by a-long-edit-with-transitions-plays-scrubs-and-ed). The task stays open.",
+    "No mock covers the timeline's speed; nothing about the timeline's resting look changed."
+  ]
+}

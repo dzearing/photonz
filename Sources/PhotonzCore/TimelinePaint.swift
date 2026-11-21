@@ -164,44 +164,71 @@ public enum TimelinePaint {
     public static func paintedMS(window: MotionStripRuler, stretch: ClosedRange<Double>,
                                  isZooming: Bool) -> ClosedRange<Double> {
         guard isZooming else { return stretch }
-        let sliver = window.spanMS / 32
+        let sliver = window.spanMS * zoomSliver
         return (window.startMS - sliver)...(window.startMS + window.spanMS + sliver)
     }
 
     /// How far a zoom may stretch the painting a lane laid a frame or two
-    /// ago before the lane paints it again: a name or a corner drawn at most
-    /// this much wider or narrower than it is, for a frame or two. At the
-    /// speed walk's step of four per cent a frame, two frames of three are
-    /// held: 4.5 per cent (one of two held) took about 0.6 ms off a near-Fit
-    /// frame of the reference edit, 8.5 about 1 ms, and a held frame
-    /// photographed beside a fresh one at the same zoom differs only in where
-    /// the pictures along a clip fall, which a zoom lays out again on every
-    /// frame anyway (2026-11-19).
+    /// ago before the lane paints it again, once it has held that painting
+    /// longer than `quickHoldMS`: a name or a corner drawn at most this much
+    /// wider or narrower than it is. At the speed walk's step of four per
+    /// cent a frame, 4.5 per cent (one of two held) took about 0.6 ms off a
+    /// near-Fit frame of the reference edit, 8.5 about 1 ms, and a held
+    /// frame photographed beside a fresh one at the same zoom differs only
+    /// in where the pictures along a clip fall, which a zoom lays out again
+    /// on every frame anyway (2026-11-19).
     public static let heldStretch = 0.085
+
+    /// How far a quick zoom may stretch it, inside its first `quickHoldMS`.
+    /// At four per cent a frame that holds four frames of five instead of
+    /// two of three: on the hour-long reference edit near Fit the mean frame
+    /// went from 11.5-11.9 ms to 10.5-11.1 and the late frames from 239-293
+    /// of 648 to 166-194, the zoom out's from 41-68 of 240 to 17-29
+    /// (2026-11-21). A quarter was no better: each fresh painting is a
+    /// quarter wider. Held for a slow zoom the full sixth would show, a name
+    /// growing a sixth wider over a seventh of a second and springing back,
+    /// so a hold older than `quickHoldMS` goes back to `heldStretch`.
+    public static let quickHeldStretch = 0.17
+
+    /// How long a painting may be held at `quickHeldStretch`: about four
+    /// frames at 120 Hz with a busy frame or two among them.
+    public static let quickHoldMS = 50.0
+
+    /// What a zoom paints either side of the window, as a share of it, so a
+    /// held painting still covers the window a zoom out has grown to: a
+    /// twelfth, three steps of four per cent about the window's middle.
+    public static let zoomSliver = 1.0 / 12
+
+    /// The stretch a painting held `heldForMS` may be drawn at.
+    static func stretchAllowed(heldForMS: Double) -> Double {
+        heldForMS <= quickHoldMS ? quickHeldStretch : heldStretch
+    }
 
     /// Where the lane's left edge can reach while a painting laid under
     /// `window` during a zoom stands: `stretch` lets it go once the window
     /// leaves the sliver either side of what was painted or the scale
-    /// changes by more than `heldStretch`, so the edge stays between a
-    /// sliver before the painted window's start and a ninth of a window
-    /// after it. A name is drawn against the window only for a clip in
+    /// changes by more than `quickHeldStretch`, so the edge stays between a
+    /// sliver before the painted window's start and a little under a third
+    /// of a window after it. A name is drawn against the window only for a clip in
     /// this reach (`nameFollowsTheEdge`), every other one rides on the
     /// painting. The drawn stretch's own reach is a whole step wide, which
     /// near the whole-hour view put every clip in the window's name on the
     /// live layer, drawn again on every frame of a zoom (2026-11-20).
     public static func leftEdgeWhileZooming(window: MotionStripRuler) -> ClosedRange<Double> {
-        let sliver = window.spanMS / 32
+        let sliver = window.spanMS * zoomSliver
         // The narrowest window still held is the painted one over
-        // 1 + heldStretch, and it ends no further right than the sliver
+        // 1 + quickHeldStretch, and it ends no further right than the sliver
         // past what was painted.
-        let after = window.spanMS * (1 + 1.0 / 32 - 1 / (1 + heldStretch)) + 1
+        let after = window.spanMS * (1 + zoomSliver - 1 / (1 + quickHeldStretch)) + 1
         return (window.startMS - sliver - 1)...(window.startMS + after)
     }
 
     /// How much wider the painting laid under `painted` is drawn to stand
     /// for `window`, or nil when it must be painted again: the change of
-    /// scale is more than `heldStretch`, or the window reaches past what
-    /// was painted (`paintedMS` while zooming).
+    /// scale is more than a painting held `heldForMS` may stretch
+    /// (`stretchAllowed`), or the window reaches past what was painted
+    /// (`paintedMS` while zooming). Asked how far a painting already held
+    /// is drawn, pass 0: the window was let in when it was written.
     ///
     /// Time across a lane is linear, so a painting stretched about where it
     /// starts puts every clip, cut and gap exactly where a fresh one would;
@@ -210,10 +237,11 @@ public enum TimelinePaint {
     /// view of the reference edit a lane's painting cost about half of each
     /// frame of a zoom, all of it laid again for a change of four per cent
     /// (2026-11-19).
-    public static func stretch(painted: MotionStripRuler, to window: MotionStripRuler) -> Double? {
+    public static func stretch(painted: MotionStripRuler, to window: MotionStripRuler,
+                               heldForMS: Double) -> Double? {
         guard painted.spanMS > 0, window.spanMS > 0 else { return nil }
         let ratio = painted.spanMS / window.spanMS
-        guard abs(ratio - 1) <= heldStretch + 1e-9 else { return nil }
+        guard abs(ratio - 1) <= stretchAllowed(heldForMS: heldForMS) + 1e-9 else { return nil }
         let covered = paintedMS(window: painted, stretch: 0...0, isZooming: true)
         guard window.startMS >= covered.lowerBound - 1e-6,
               window.startMS + window.spanMS <= covered.upperBound + 1e-6 else { return nil }

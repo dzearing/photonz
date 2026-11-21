@@ -1,4 +1,5 @@
 import Foundation
+import QuartzCore
 import PhotonzCore
 
 // **Opening the timeline out** (`TimelineZoom.swift`,
@@ -86,7 +87,7 @@ extension EditorState {
     /// a zoom holds it.
     var timelinePaintStretch: CGFloat {
         guard let held = timelineHeldPainting else { return 1 }
-        return CGFloat(TimelinePaint.stretch(painted: paintRuler(held.zoom), to: motionStripRuler) ?? 1)
+        return CGFloat(TimelinePaint.stretch(painted: paintRuler(held.zoom), to: motionStripRuler, heldForMS: 0) ?? 1)
     }
 
     /// How far in the painting was painted, for how strongly a clip's
@@ -118,9 +119,11 @@ extension EditorState {
             letGoOfTheHeldPainting()
             return
         }
+        let now = CACurrentMediaTime()
         let held = timelineHeldPainting
-            ?? TimelineHeldPainting(zoom: timelineZoom, leftEdgeMS: timelineLeftEdgeRangeMS)
-        guard TimelinePaint.stretch(painted: paintRuler(held.zoom), to: paintRuler(newValue)) != nil else {
+            ?? TimelineHeldPainting(zoom: timelineZoom, leftEdgeMS: timelineLeftEdgeRangeMS, since: now)
+        guard TimelinePaint.stretch(painted: paintRuler(held.zoom), to: paintRuler(newValue),
+                                    heldForMS: (now - held.since) * 1000) != nil else {
             letGoOfTheHeldPainting()
             return
         }
@@ -666,6 +669,9 @@ extension EditorState {
 struct TimelineHeldPainting: Equatable {
     let zoom: TimelineZoom
     let leftEdgeMS: ClosedRange<Double>
+    /// When it was first held (`CACurrentMediaTime`): a quick zoom may
+    /// stretch it further than a slow one (`TimelinePaint.quickHoldMS`).
+    let since: CFTimeInterval
 
     /// How long after the last step of a zoom the lanes paint again.
     static let settleMS = 30
