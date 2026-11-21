@@ -1,0 +1,34 @@
+{
+  "id": "changing-an-arrow-s-look-while-typing-its-captio",
+  "title": "Changing an arrow's look while typing its caption repaints the pill straight away",
+  "goal": "While you type into an arrow's caption pill, changing the arrow's colour, style, or the caption's font or size should repaint the pill you are typing in at once, exactly as it will look when you finish. Today the pill keeps the look it had when you started typing until you click away.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-21T16:21:02.157Z",
+  "updated": "2026-11-21T16:21:07.795Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-21: \"when im drawing an arrow and typing some thing into the pill, an di change the appearance, it doesn't repaint with the new color or style until i'm done typing.\"\n\nLikely cause (read in code, not reproduced): the caption editor is a stand-in overlay whose look is copied ONCE when the session opens. Sources/Photonz/CanvasTextEditing.swift:87-122 (beginCaptionSession) seeds captionStyle from a.withSeededCaptionColors and stores captionLayer: layer and a CaptionPillView; refreshTextEditorDisplay (~513) says outright 'Caption sessions keep their fixed style; text sessions track the font picker's live style' (desired = session.captionStyle ?? textContent). Meanwhile the composite suppresses the real pill during the edit (EditorState.swift ~6401, caption set nil while editingCaptionLayerID), so the document's new look never shows until commit.\n\nFix direction (runner decides): on each render, re-read the arrow's annotation from the document by session.layerID, re-derive captionStyle and the pill view's fill, border and colours from it, and restyle the editor if they changed (as text sessions already do), keeping session.captionLayer current so placement planning (~434) uses the new look. Traps: restyling must not reset editor.string, the caret or the IME marked text; a size change can change the pill's planned placement, so don't let it jump unless the committed pill would too; AnnotationInspector.swift:664-676 has its own guard on editingCaptionLayerID, check panel edits actually reach the layer while editing.",
+  "acceptance": [
+    "Reproduced first in the probe at Next defaults: draw an arrow, type in its pill, then change the colour, the arrow style or preset, the caption text colour, pill fill, font, weight and size from the panel and the tool bar while the field is still open. Record which of them fail to repaint (picture per change in the audit).",
+    "After the fix every one of those changes repaints the pill being typed in, its text, fill, border and size, within one frame, with the caret, selection and typed text kept, and the field stays open.",
+    "Measured: the open pill compared to the committed pill after clicking away is the same (pixel difference under a stated small number, measured at 1x and 2x zoom) for at least three appearance changes made mid-typing; nothing jumps at commit.",
+    "Each appearance change made while typing is still one undo step, and undo while typing still works as it does today.",
+    "A walk or test that fails on today's code and passes after.",
+    "Audit under queue/audits/ with before and after pictures. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-21T16:21:02.159Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-21T16:21:07.794Z",
+      "note": "seq 4030 -> 40"
+    }
+  ]
+}
