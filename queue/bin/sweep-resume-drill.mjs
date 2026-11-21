@@ -330,6 +330,16 @@ exit 0
       .trim().split('\n').slice(1);
     const landedAt = commits.filter((c) => codeLandedBetween(c, L.head, REPO) === true);
     const old = landedAt.find((c) => changedWalks(c, REPO).some((w) => early.has(w))) || landedAt[0];
+    if (!old) {
+      // Not the sweep's fault: the history is too short to hold one. A depth-1
+      // checkout did exactly this on CI from 2026-11-21 (ci.yml fetches 200).
+      const shallow = execFileSync('git', ['rev-parse', '--is-shallow-repository'], { cwd: REPO, encoding: 'utf8' }).trim() === 'true';
+      check('a commit the app has changed since was found to stand in for landed code', false,
+        shallow ? `this is a shallow clone with ${commits.length + 1} commit(s) of history; the drill needs about 200 (fetch-depth: 200)` : old);
+      rmSync(box, { recursive: true, force: true });
+      console.log(`\n${failures} check(s) FAILED. Stopping here: everything after this needs that commit.`);
+      process.exit(1);
+    }
     check('a commit the app has changed since was found to stand in for landed code', !!old, old);
     changedSince = changedWalks(old, REPO);
     writeFileSync(join(sdir, 'latest.json'), JSON.stringify({ ...L, head: old }, null, 2) + '\n');

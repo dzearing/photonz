@@ -107,8 +107,15 @@ jobs:
       # Everything but queue/audits: 3.8 GB of audit pictures nothing here
       # reads, and fetching them was three of every run's minutes (2026-10-26).
       # A sparse checkout fetches only the blobs it writes out.
+      # fetch-depth 200: "A stopped sweep picks up where it stopped" below
+      # looks back through the last 200 commits for one the app has changed
+      # since, to stand in for code landing between two parts of a run. The
+      # default depth of 1 has no such commit, and main was red on that alone
+      # from 2026-11-21 02:44 until this. The sparse checkout makes it a
+      # blob-less fetch, so the extra history is commits and trees only.
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 200
           sparse-checkout: |
             /*
             !/queue/audits/
