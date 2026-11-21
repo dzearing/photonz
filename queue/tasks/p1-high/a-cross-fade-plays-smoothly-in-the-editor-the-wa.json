@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 25,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-20T15:56:44.058Z",
-  "updated": "2026-11-20T22:49:07.051Z",
+  "updated": "2026-11-21T00:08:32.672Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-20: \"i see a weird bug where on a video transition on i think a cross fade, playing it back in the editor mode had it flickering off and on. but cutting the exported video it was fine, i think there's a rendering bug.\" They were not sure it was a cross fade; check other transitions (push, 3D) too if the dissolve does not reproduce. I could not see their document (no document open over MCP), and did not reproduce it.\n\nWhy export and playback differ: export renders every frame and waits for both shots; live playback reads frames ahead through the play pass and frame queue (Sources/PhotonzCore/MoviePlayPass.swift, Sources/PhotonzCore/MovieFrameQueue.swift), which during a dissolve must hold frames for TWO places at once (MoviePlayPass.swift:28-31, 246, 337-340; MovieFrameQueue.swift:79-90, which already records 'a dissolve stuck that way, 2026-10-07').\n\nSuspect, not confirmed: when one side's frame is not decoded in time, the compositor draws that layer missing for a frame (on and off), rather than holding its last frame. Recent commits touching exactly this budget, worth bisecting: ad24392f4 (fast passes skip frames nothing depends on), cf12e8b00 and b9cf61d13 (hunt and frame budget, Next), c771adfbb (long edit plays). The fix must not be 'wait for the frame' if that drops playback frames; holding the newest decoded frame of the late side is the likely shape, plus fixing why it is late.\n\nOverlaps: a-long-edit-with-transitions-plays-scrubs-and-ed (p1, seq 10) is about speed on long edits with transitions; this one is about correctness of what is drawn. Keep them separate but say in both logs if one fix serves both. The rotating check's an-editing-session-walk fails on blank frames during play; say why it did not catch this (a dissolve may not be in it, or it checks only fully blank frames).",
@@ -57,10 +57,35 @@
     {
       "t": "2026-11-20T22:49:07.050Z",
       "note": "Two causes fixed and committed (5b1effa70): borrowed transition frames stand in from the borrowed stretch; no restart of a play pass onto the same key frame. Walk a-cross-fade-plays-as-exported-walk passes at Next defaults (1x, first frame, 0.5x, 2x; jump-cut and two-clip dissolves). Still open: the after-a-scrub item, Space right after a scrub ~1s past a key frame holds a slightly old frame for ~0.6s. Audit: queue/audits/2026-11-20-a-cross-fade-plays-smoothly-in-the-editor-the-wa.json"
+    },
+    {
+      "t": "2026-11-20T23:19:59.476Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T00:08:20.893Z",
+      "note": "Reproduced the open item on today's build (user's rec-a/rec-b, scrub landing 0.2s before the dissolve, Space 0.4s later): 14 of 24 looks stale, rec-a frame 175 for 179/180, then the borrowed side 181 for 183..191; the pass sat at 177 for ~0.45s decoding from the key frame. Did NOT reproduce on the repo fixture (3.6s), on a synthetic 10s 3456x2234 HEVC with 2.2s GOPs, or on the reference footage: all decode fast enough."
+    },
+    {
+      "t": "2026-11-21T00:08:20.968Z",
+      "note": "Chose: at sound speeds, play from rest waits until the frame under the playhead and the next 3 are in hand (max 0.8s; MoviePlayPass.startsWithFramesAhead / soundStartWaitMS, PhotonzDocument.readyToStartPlaying), and the sound starts with the clock (preRollWithSound; documentClockWaiting gates startAudio), over adopting the resting read into the play pass, because the resting read is rough-sized and cannot become a sharp pass, and waiting is what Premiere does. Not applied to a speed change or a scrub mid-play."
+    },
+    {
+      "t": "2026-11-21T00:08:21.048Z",
+      "note": "After: user's recording, 3 runs at 1x after a scrub plus 0.5x, 2x, from the first frame, from rest: every picture drawn from its own frame, mean diff 2.0, worst 2.7. Space waits 416ms after a scrub, 45ms from rest (41-60ms on the fixture). 15 playback walks pass (sound, speed, never-blinks, editing session). Full Scripts/test.sh green. Unit test readyToStartWithSound."
+    },
+    {
+      "t": "2026-11-21T00:08:21.124Z",
+      "note": "left rough: the committed walk's after-a-scrub cases pass on old code too (the fixture decodes too fast); only the unit test fails on old code. A slow-decoding public fixture did not earn a task."
+    },
+    {
+      "t": "2026-11-21T00:08:32.670Z",
+      "note": "All three causes fixed (5b1effa70, f599c5fdc): borrowed frames stand in from the borrowed stretch; no restart onto the same key frame; Space from rest at sound speeds waits for the frame under the playhead and the next 3 (max 0.8s) with the sound starting with the clock. Verified on the user's recording after a scrub at 1x (3 runs), 0.5x, 2x, from the first frame and from rest: every picture matches the export (mean 2.0/255, worst 2.7). Space waits 416ms after a scrub, 45ms from rest. Walk a-cross-fade-plays-as-exported-walk + 14 playback walks pass at Next defaults; unit test readyToStartWithSound; full test.sh green. Audit updated."
     }
   ],
-  "started": "2026-11-20T20:45:31.605Z",
+  "started": "2026-11-20T23:19:59.475Z",
   "walks": [
     "a-cross-fade-plays-as-exported-walk"
-  ]
+  ],
+  "completed": "2026-11-21T00:08:32.671Z"
 }
