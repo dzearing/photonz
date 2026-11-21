@@ -795,7 +795,9 @@ struct TitleRestyler {
         switch piece.content {
         case .annotation(var shape):
             if let own {
-                shape.fill = own
+                // A line has no fill: its own colour is its stroke alone, so
+                // laying the title out again leaves it as it landed.
+                if shape.fill != nil || shape.shape != .line { shape.fill = own }
                 shape.colorHex = own.hex
             } else if var paint = shape.fill, paint.isGradient, paint.stops.contains(where: { $0.hex.count == 9 }) {
                 // A glow fading to nothing takes the accent and keeps how see

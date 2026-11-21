@@ -257,6 +257,21 @@ follows these; a departure says which rule and why.
 7. Ornament is structural: a rule, a caret, a number, a crop; never a blob or
    a rounded square standing in for a logo.
 
+**Composition and copy** (added on the second pass, same day)
+
+1. One block, one spacing unit. Label, rule, headline and line under it are
+   spaced as one group; a label stranded at the top with the headline low reads
+   as two things.
+2. Lines of a stack touch: condensed caps stacked about a tenth of a capital
+   apart. DIN Condensed (and any face with its own line gap) needs a smaller
+   line spacing than the number says until `line-spacing-set-on-a-font-with-built-in-leading`
+   lands; Condensed Poster sets 0.62 for an effective 0.82.
+3. Sample copy that fits the idea ("The Long Way Home", "MAKE NOISE", "Ship
+   faster"), not "Your Title": a placeholder reads as a template on the shelf
+   and on the blind score, while the calm set's real copy reads as a design.
+4. A rule belongs to the type: as wide as the type area or the headline, never
+   a 1 px full-frame page header, which shimmers in video.
+
 Faces every Mac has that serve these: Didot, Bodoni 72, New York, Baskerville,
 Big Caslon, Iowan Old Style, Helvetica Neue, Avenir Next (and Condensed),
 Futura, DIN Condensed, SF Pro, SF Mono. An italic is named by its face

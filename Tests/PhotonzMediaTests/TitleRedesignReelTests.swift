@@ -32,6 +32,9 @@ struct TitleRedesignReelTests {
 
     static let canvas = CGSize(width: 1920, height: 1080)
     static let five: [BuiltInTitle] = [.keynote, .softGlass, .kinetic, .terminal, .stacked]
+    /// The other seven of the designed set: four More Styles pages and three
+    /// name cards.
+    static let rest: [BuiltInTitle] = [.editorial, .glass, .lightLeak, .gradientGlow, .splitWipe, .underline, .pill]
     /// The frames the sheet shows, in ms from the title's start.
     static let moments = [0, 200, 400, 700, 1100, 1600, 2400]
     static let hold = (2000, 2500)
@@ -78,6 +81,15 @@ struct TitleRedesignReelTests {
             let (doc, _) = try TitleMoreStylesCalmReelTests.titled(preset, over: footage, store: store)
             try TitleMoreStylesCalmReelTests.write(try render(doc, 2400),
                                                    to: calm.appendingPathComponent("hold-\(preset.rawValue).png"))
+        }
+        // The rest of the set the five belong to, held, so the same blind
+        // score can say which of them fall below the new bar.
+        let others = root.appendingPathComponent("others")
+        try FileManager.default.createDirectory(at: others, withIntermediateDirectories: true)
+        for preset in Self.rest {
+            let (doc, _) = try TitleMoreStylesCalmReelTests.titled(preset, over: footage, store: store)
+            try TitleMoreStylesCalmReelTests.write(try render(doc, 2400),
+                                                   to: others.appendingPathComponent("hold-\(preset.rawValue).png"))
         }
 
         // The reel: the five new ones, one after another, each labelled.

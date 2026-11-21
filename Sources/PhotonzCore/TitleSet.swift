@@ -301,9 +301,9 @@ extension BuiltInTitle {
         // projector's beam.
         let background = pen.fullFrame(live(.particles, ground: "#0B0A09",
                                             lights: ["#4A3A26", "#56442C", "#3F3222"], speed: 14, strength: 4))
-        let title = pen.centred("Title", "Your Title", font: "Didot", size: 168, weight: .regular,
+        let title = pen.centred("Title", "The Long Way Home", font: "Didot", size: 168, weight: .regular,
                                 color: "#EFE8DC", top: pen.canvas.height * 0.37, tracking: -0.012, lineHeight: 1.02)
-        let subtitle = pen.centred("Subtitle", "A SHORT LINE ABOUT IT", font: "Avenir Next", size: 24,
+        let subtitle = pen.centred("Subtitle", "A FILM BY JUNE HALE", font: "Avenir Next", size: 24,
                                    weight: .medium, color: "#B8A27C", top: title.frame.maxY + pen.u(30),
                                    tracking: 0.34, lineHeight: 1.2)
         return [background, title, TitleLook.shadedOverALook(subtitle)]
@@ -328,10 +328,10 @@ extension BuiltInTitle {
                             fill: Paint(hex: "#FFFFFF"), radius: pen.u(20))
         panel.style.opacity = 0.45
         panel.style.effects = [.blur(BlurEffect(radius: pen.u(24), kind: .background))]
-        let title = pen.centred("Title", "Your Title", font: "New York", size: 124, weight: .medium,
+        let title = pen.centred("Title", "Quiet Mornings", font: "New York", size: 124, weight: .medium,
                                 color: "#1F2620", top: panel.frame.minY + pen.u(110), tracking: -0.018,
                                 lineHeight: 1.04)
-        let subtitle = pen.centred("Subtitle", "A SHORT LINE ABOUT IT", font: "SF Pro", size: 24, weight: .semibold,
+        let subtitle = pen.centred("Subtitle", "A SHORT FILM ABOUT SLOWING DOWN", font: "SF Pro", size: 24, weight: .semibold,
                                    color: "#4C5644", top: title.frame.maxY + pen.u(26), tracking: 0.22,
                                    lineHeight: 1.2)
         // The light behind the glass may get darker than the small line
@@ -342,18 +342,23 @@ extension BuiltInTitle {
     private static func kinetic(_ pen: TitlePen) -> [Layer] {
         // Condensed Poster: condensed capitals stacked tight and flush left,
         // nine times the size of the line under them, ivory on a warm black
-        // with faint ember wind in it; the one colour is the vermilion of the
-        // small line, which the wind takes too.
+        // with ember wind barely in it; the one colour is the vermilion of
+        // the small line, which the wind takes too.
         let background = pen.fullFrame(live(.windStreams, ground: "#0F0E0D",
-                                            lights: ["#5A2A1E", "#4A241A", "#6A3022"], speed: 22, strength: 3))
+                                            lights: ["#5A2A1E", "#4A241A", "#6A3022"], speed: 22, strength: 2))
         let left = (pen.canvas.width * 0.125).rounded()
-        let title = pen.words("Title", "YOUR\nTITLE", font: "DIN Condensed", size: 330, weight: .bold,
-                              color: "#F1ECE2", origin: CGPoint(x: left, y: pen.canvas.height * 0.1),
-                              tracking: -0.004, lineHeight: 0.78)
-        let subtitle = pen.words("Subtitle", "A SHORT LINE ABOUT IT", font: "Avenir Next Condensed", size: 38,
-                                 weight: .semibold, color: "#FF5B3A",
-                                 origin: CGPoint(x: left + pen.u(6), y: title.frame.maxY + pen.u(18)),
-                                 tracking: 0.16, lineHeight: 1.2)
+        // DIN Condensed carries 72 points of its own leading at this size,
+        // which a set line height does not take back: 0.62 of the size plus
+        // that leading puts the lines a tenth of a capital apart. The box
+        // keeps room for letters past those tight lines, so the small line
+        // tucks back into it.
+        let title = pen.words("Title", "MAKE\nNOISE", font: "DIN Condensed", size: 360, weight: .bold,
+                              color: "#F1ECE2", origin: CGPoint(x: left, y: pen.canvas.height * 0.12),
+                              tracking: -0.012, lineHeight: 0.62)
+        let subtitle = pen.words("Subtitle", "LIVE IN BERLIN, MAY 14", font: "Avenir Next Condensed", size: 40,
+                                 weight: .bold, color: "#EE4B2B",
+                                 origin: CGPoint(x: left + pen.u(10), y: title.frame.maxY - pen.u(36)),
+                                 tracking: 0.08, lineHeight: 1.2)
         return [background, title, TitleLook.shadedOverALook(subtitle)]
     }
 
@@ -380,39 +385,39 @@ extension BuiltInTitle {
     }
 
     private static func terminal(_ pen: TitlePen) -> [Layer] {
-        // Command Line: a monospaced system, as a developer launch page sets
-        // one: a label, a big near-white mono headline typed onto near black,
-        // a grey mono line under it, all on one left edge. A trace of warm
-        // light moves through the dark (the grid look this stood on draws a
-        // synthwave sun, the clip art this replaced); the label, the caret
-        // and the rule are the one amber.
-        let background = pen.fullFrame(Paint(hex: "#0A0A0B", kind: .live,
-                                             stops: [GradientStop(hex: "#0A0A0B", position: 0),
-                                                     GradientStop(hex: "#4A3612", position: 1.0 / 3),
-                                                     GradientStop(hex: "#3E2D10", position: 2.0 / 3),
-                                                     GradientStop(hex: "#52401A", position: 1)],
+        // Command Line: a monospaced system on a grid, as a developer launch
+        // page sets one. Across the top, the amber label over a hairline the
+        // width of the type area; low on the left, a big near-white mono
+        // headline typed onto near black behind an amber caret, a grey mono
+        // line under it. A trace of slate light moves through the dark (the
+        // grid look draws a synthwave sun, the clip art this replaced).
+        let background = pen.fullFrame(Paint(hex: "#09090A", kind: .live,
+                                             stops: [GradientStop(hex: "#09090A", position: 0),
+                                                     GradientStop(hex: "#1B3640", position: 1.0 / 3),
+                                                     GradientStop(hex: "#203E48", position: 2.0 / 3),
+                                                     GradientStop(hex: "#18303A", position: 1)],
                                              live: LiveBackdrop(look: .liquidGradient, speed: 16, strength: 2,
                                                                 scale: 180, shape: 0)))
         let left = (pen.canvas.width * 0.125).rounded()
-        let amber = "#F5A623"
+        let amber = "#FFB547"
         let kicker = pen.words("Kicker", "RELEASE NOTES", font: "SF Mono", size: 24, weight: .medium, color: amber,
-                               origin: CGPoint(x: left + pen.u(4), y: pen.canvas.height * 0.36), tracking: 0.14,
+                               origin: CGPoint(x: left + pen.u(4), y: pen.canvas.height * 0.33), tracking: 0.14,
                                lineHeight: 1.2)
-        let title = pen.words("Title", "Your Title", font: "SF Mono", size: 144, weight: .semibold,
-                              color: "#EDEDED", origin: .zero, tracking: -0.04, lineHeight: 1.1)
+        let progress = pen.line("Progress", from: CGPoint(x: left + pen.u(4), y: kicker.frame.maxY + pen.u(22)),
+                                length: pen.canvas.width * 0.54, width: pen.u(2), color: "#2E3A45")
+        let title = pen.words("Title", "Ship faster", font: "SF Mono", size: 168, weight: .semibold,
+                              color: "#E6ECF1", origin: .zero, tracking: -0.05, lineHeight: 1.1)
         // A slim caret after the words, which the row keeps after them
         // however long they are typed.
-        let cursor = pen.box("Cursor", CGRect(x: 0, y: 0, width: pen.u(8), height: (title.frame.height * 0.74).rounded()),
+        let cursor = pen.box("Cursor", CGRect(x: 0, y: 0, width: pen.u(10), height: (title.frame.height * 0.74).rounded()),
                              fill: Paint(hex: amber))
-        let prompt = pen.stack([title, cursor], name: "Prompt", direction: .row, gap: pen.u(8),
-                               origin: CGPoint(x: left, y: kicker.frame.maxY + pen.u(14)),
+        let prompt = pen.stack([title, cursor], name: "Prompt", direction: .row, gap: pen.u(10),
+                               origin: CGPoint(x: left - pen.u(4), y: progress.frame.maxY + pen.u(40)),
                                placement: LayerPlacement(vertical: .center))
-        let subtitle = pen.words("Subtitle", "A SHORT LINE ABOUT IT", font: "SF Mono", size: 24, weight: .regular,
-                                 color: "#8E8E93", origin: CGPoint(x: left + pen.u(4), y: prompt.localBounds.maxY + pen.u(22)),
-                                 tracking: 0.12, lineHeight: 1.3)
-        let progress = pen.line("Progress", from: CGPoint(x: left + pen.u(4), y: subtitle.frame.maxY + pen.u(44)),
-                                length: pen.u(96), width: pen.u(2), color: amber)
-        return [background, TitleLook.shadedOverALook(kicker), prompt, TitleLook.shadedOverALook(subtitle), progress]
+        let subtitle = pen.words("Subtitle", "WHAT'S NEW IN VERSION 2.0", font: "SF Mono", size: 24, weight: .regular,
+                                 color: "#7D8A97", origin: CGPoint(x: left + pen.u(4), y: prompt.localBounds.maxY + pen.u(22)),
+                                 tracking: 0.1, lineHeight: 1.3)
+        return [background, TitleLook.shadedOverALook(kicker), progress, prompt, TitleLook.shadedOverALook(subtitle)]
     }
 
     private static func glass(_ pen: TitlePen) -> [Layer] {
@@ -482,26 +487,26 @@ extension BuiltInTitle {
         // Bodoni italic, as a fashion page sets a headline; ivory and blush on
         // an oxblood black, with faint streams of ember light drifting in it.
         // A short blush rule above, flush left on the same edge.
-        let background = pen.fullFrame(Paint(hex: "#160A09", kind: .live,
-                                             stops: [GradientStop(hex: "#160A09", position: 0),
+        let background = pen.fullFrame(Paint(hex: "#260A0E", kind: .live,
+                                             stops: [GradientStop(hex: "#260A0E", position: 0),
                                                      GradientStop(hex: "#3B1812", position: 1.0 / 3),
                                                      GradientStop(hex: "#4D2018", position: 2.0 / 3),
                                                      GradientStop(hex: "#6A2D21", position: 1)],
-                                             live: LiveBackdrop(look: .energyStreams, speed: 20, strength: 12)))
+                                             live: LiveBackdrop(look: .energyStreams, speed: 20, strength: 5)))
         let left = (pen.canvas.width * 0.125).rounded()
-        let blush = "#E2B4A0"
-        let mark = pen.box("Mark", CGRect(x: left + pen.u(4), y: (pen.canvas.height * 0.26).rounded(),
-                                          width: pen.u(72), height: pen.u(3)),
+        let blush = "#E9B096"
+        let mark = pen.box("Mark", CGRect(x: left + pen.u(6), y: (pen.canvas.height * 0.27).rounded(),
+                                          width: pen.u(96), height: pen.u(3)),
                            fill: Paint(hex: blush))
-        let title = pen.words("Title", "Your Title", font: "Helvetica Neue", size: 144, weight: .bold,
+        let title = pen.words("Title", "Made by Hand", font: "Helvetica Neue", size: 144, weight: .bold,
                               color: "#F4EEE8", origin: CGPoint(x: left, y: mark.frame.maxY + pen.u(34)),
                               tracking: -0.035, lineHeight: 1.0)
-        let second = pen.words("Line 2", "second line", font: "BodoniSvtyTwoITCTT-BookIta", size: 144,
-                               color: blush, origin: CGPoint(x: left, y: title.frame.maxY),
+        let second = pen.words("Line 2", "slowly, with care", font: "BodoniSvtyTwoITCTT-BookIta", size: 144,
+                               color: blush, origin: CGPoint(x: left + pen.u(4), y: title.frame.maxY - pen.u(16)),
                                tracking: -0.01, lineHeight: 1.0)
-        let subtitle = pen.words("Subtitle", "A SHORT LINE ABOUT IT", font: "Helvetica Neue", size: 24, weight: .medium,
-                                 color: "#B39A90", origin: CGPoint(x: left + pen.u(4), y: second.frame.maxY + pen.u(34)),
-                                 tracking: 0.2, lineHeight: 1.2)
+        let subtitle = pen.words("Subtitle", "THE AUTUMN COLLECTION", font: "Helvetica Neue", size: 24, weight: .medium,
+                                 color: "#C4A79B", origin: CGPoint(x: left + pen.u(6), y: second.frame.maxY + pen.u(30)),
+                                 tracking: 0.18, lineHeight: 1.2)
         return [background, mark, title, TitleLook.shadedOverALook(second), TitleLook.shadedOverALook(subtitle)]
     }
 

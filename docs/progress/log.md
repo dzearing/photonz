@@ -23359,3 +23359,11 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Keynote Clean, Soft Gradient Glass, Kinetic Bold, Tech Terminal and Stacked Stagger became Main Title, Frosted Glass, Condensed Poster, Command Line and Roman and Italic (`TitleSet.swift`); raw values kept, old documents draw as saved.
 - Fixed on the way: live-look shade colour opposes the ground (no white halos on mid-tone lines), a part keeps its own face through relayout (`TitleLookBase.font`), mask reveal hides ink taller than its line box.
 - Blind score: all five well above their old versions; Main Title and Frosted Glass above the calm set's median, the other three not yet. Task left pending for them and for scoring the rest of More Styles.
+
+## 2026-11-21 — Title redesign, second pass (task keynote-clean-soft-gradient-glass-kinetic-bold-t)
+
+- Command Line is one block (amber label, a rule as wide as the type, big mono headline, grey line) on slate black; Condensed Poster's stack locked tight; Roman and Italic on a true oxblood with quieter streams. All five show sample copy that fits them (The Long Way Home, Quiet Mornings, MAKE NOISE, Ship faster, Made by Hand) instead of "Your Title".
+- Blind round 6 (27 frames, three runs): calm median 6.83; Main Title 7.58, Roman and Italic 7.42, Condensed Poster 7.33, Frosted Glass 7.17, Command Line 6.83 (ties the median). The scorer moves about half a point between rounds (calm median 7.33 / 7.13 / 6.83 in rounds 4 to 6).
+- Fixed: laying a title out again gave a coloured line a fill it never had (`TitleRestyler.paintAccent`); caught by `knobsTurnBack` on Command Line's grey rule.
+- Rules added to `docs/design/video-titles-polish.md` (composition and copy). `TitleRedesignReelTests` also writes the other seven of the set for scoring.
+- Filed: `seven-more-built-in-titles-look-as-refined-as-th` (the other seven score 4.50 to 6.17), `line-spacing-set-on-a-font-with-built-in-leading` (DIN Condensed comes out 72 pt looser than set), `a-typed-title-caret-follows-the-letters-as-they`.
