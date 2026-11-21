@@ -18488,3 +18488,13 @@
 {"t":"2026-11-21T21:21:17.857Z","ev":"task_walks","id":"main-checks-go-green-again-the-stopped-sweep-dri","walks":[]}
 {"t":"2026-11-21T21:21:17.925Z","ev":"task_note","id":"main-checks-go-green-again-the-stopped-sweep-dri"}
 {"t":"2026-11-21T21:21:18.009Z","ev":"task_done","id":"main-checks-go-green-again-the-stopped-sweep-dri","from":"in_progress","note":"CI build job now fetches 200 commits (ci.yml, commented); the drill names a too-shallow clone in one line. Verified: depth-1 clone fails on that line, depth-200 clone and full repo pass, Scripts/test.sh green, and on CI run 44949142662 the step 'A stopped sweep picks up where it stopped' passed."}
+{"t":"2026-11-21T21:25:43.795Z","ev":"task_started","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t","title":"Keynote Clean, Soft Gradient Glass, Kinetic Bold, Tech Terminal and Stacked Stagger are replaced by titles that look professionally designed","priority":"p1-high"}
+{"t":"2026-11-21T22:41:33.727Z","ev":"task_walks","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t","walks":["title-set-keynote-clean-walk","title-set-soft-gradient-glass-walk","title-set-kinetic-bold-walk","title-set-tech-terminal-walk","title-set-stacked-stagger-walk","title-tiles-play-walk","editing-a-title-never-plays-walk"]}
+{"t":"2026-11-21T22:42:24.918Z","ev":"task_note","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t"}
+{"t":"2026-11-21T22:42:24.993Z","ev":"task_note","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t"}
+{"t":"2026-11-21T22:42:25.069Z","ev":"task_note","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t"}
+{"t":"2026-11-21T22:42:25.143Z","ev":"task_note","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t"}
+{"t":"2026-11-21T22:42:25.223Z","ev":"task_note","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t"}
+{"t":"2026-11-21T22:42:25.298Z","ev":"task_note","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t"}
+{"t":"2026-11-21T22:42:25.373Z","ev":"task_note","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t"}
+{"t":"2026-11-21T22:42:55.456Z","ev":"task_pending","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t","from":"in_progress","note":"Five redesigned and shipped (commit 76c9dacfc, audit 2026-11-21-keynote-clean-soft-gradient-glass-kinetic-bold-t.json, reel and scored grid in queue/audits). Bar not reached: in the final blind round Condensed Poster 7.08, Roman and Italic 6.92 and Command Line 6.75 sit under the calm median 7.21 (Main Title 7.58, Frosted Glass 7.50 clear it; every new one beats its old version by 1.0 to 2.7). Left: lift those three, then score the other seven More Styles titles against the bar and file the one follow-up."}
