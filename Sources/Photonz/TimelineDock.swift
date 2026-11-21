@@ -16,8 +16,16 @@ import SwiftUI
 /// had (carry, trim at an edge, pick a piece, drag a transition, the trim
 /// session, the sound's level line) is the same gesture here. An icon keeps
 /// `MotionStripView`: it has a lap, not a length, and none of this.
-struct TimelineDock: View {
+struct TimelineDock: View, Equatable {
     @Environment(EditorState.self) private var editorState
+
+    /// Equal while the window is as tall: everything else the dock shows it
+    /// reads for itself. Without this every run of the closure that lays the
+    /// window out built the dock and its whole grid again, because a value
+    /// holding a stored setting never compares equal on its own.
+    nonisolated static func == (lhs: TimelineDock, rhs: TimelineDock) -> Bool {
+        lhs.windowHeight == rhs.windowHeight
+    }
 
     /// The Blade: a click on a clip cuts it there, rather than picking it.
     /// Kept by the editor, because B picks it from the keyboard.
@@ -112,8 +120,9 @@ struct TimelineDock: View {
                 TimelineResizeEdge(onDrag: dragEdge(pointerMovedDown:),
                                    onEnd: endEdgeDrag,
                                    onReset: resetHeight)
-                    .panelReadout("timeline \(Int(bodyHeight.rounded())) tall, "
-                                  + (TimelineDockHeight.chosen(stored: storedHeight) == nil ? "default" : "chosen"))
+                    #if PHOTONZ_PLAYTEST
+                    .background { TimelineHeightReadout(fit: fit) }
+                    #endif
             }
         }
         .zIndex(1)
@@ -128,12 +137,7 @@ struct TimelineDock: View {
         // scale (`AudioHeadroom`). The mix meter used to ask for this. And
         // have the sound engine made, so the first press of play is not the
         // moment it gets built.
-        .task(id: editorState.audioPlan.count) {
-            if editorState.documentHasAudio {
-                editorState.loadSoundShapes()
-                editorState.readyAudio()
-            }
-        }
+        .background { TimelineSoundShapesReader() }
     }
 
     // MARK: - The transport
@@ -379,7 +383,9 @@ struct TimelineDock: View {
     // MARK: - The grid
 
     /// Whether a Captions track has captions on it, which is when its bar is up.
-    private var showsCaptionTrackBar: Bool {
+    private var showsCaptionTrackBar: Bool { Self.showsCaptionTrackBar(editorState) }
+
+    static func showsCaptionTrackBar(_ editorState: EditorState) -> Bool {
         editorState.timelineTrackRows.contains { $0.isCaptions && !$0.clips.isEmpty }
     }
 
@@ -586,7 +592,7 @@ struct TimelineDock: View {
                 .onAppear { editorState.arriveAfterTheWindowDraws() }
         }
         }
-        .frame(height: bodyHeight)
+        .modifier(TimelineGridHeight(fit: fit))
         .padding(.horizontal, 12)
         .padding(.top, 6)
     }
@@ -731,26 +737,23 @@ struct TimelineDock: View {
         return true
     }
 
-    /// The tracks area's height: where the top edge left it, or with nothing
-    /// chosen, as tall as the tracks it holds and no taller. Inside one track
-    /// and about 70% of the window either way (`TimelineDockHeight`).
-    private var bodyHeight: CGFloat {
-        guard windowHeight > 0 else { return naturalBodyHeight }
-        return sizing.body(chosen: draggedBody ?? TimelineDockHeight.chosen(stored: storedHeight),
-                           natural: naturalBodyHeight)
+    /// What the tracks area's height is worked out from that this view holds
+    /// itself: the window, the top edge and the chrome above the grid. The
+    /// part worked out from the tracks is read by `TimelineGridHeight`, its
+    /// own view, so an edit that changes no track's height (a trim, an undo)
+    /// re-runs that and not this whole body with the grid under it
+    /// (`a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 25).
+    private var fit: TimelineDockFit {
+        TimelineDockFit(windowHeight: windowHeight,
+                        chosen: draggedBody ?? TimelineDockHeight.chosen(stored: storedHeight),
+                        isChosen: TimelineDockHeight.chosen(stored: storedHeight) != nil,
+                        chrome: transportHeight + localBarHeight + 6)
     }
 
-    private var sizing: TimelineDockHeight {
-        // The grid sits 6 under the bar (`grid`'s top padding).
-        TimelineDockHeight(chrome: transportHeight + localBarHeight + 6,
-                           floor: bodyFloor, windowHeight: windowHeight)
-    }
+    /// The tracks area's height now, for a drag on the top edge.
+    private var bodyHeight: CGFloat { fit.bodyHeight(editorState) }
 
-    /// One track and no less: the ruler, one lane, and the scroller strip.
-    private var bodyFloor: CGFloat {
-        let captionBar = showsCaptionTrackBar ? CaptionTrackBarView.height + 4 : 0
-        return captionBar + cameraRow + Self.rulerHeight + Self.soundLaneHeight + 2 * Self.rowSpacing + Self.scrollerStrip
-    }
+    private var sizing: TimelineDockHeight { fit.sizing(editorState) }
 
     private func dragEdge(pointerMovedDown dy: CGFloat) {
         let base = dragStartBody ?? bodyHeight
@@ -782,7 +785,7 @@ struct TimelineDock: View {
     /// track's words are commands on the tracks themselves, so they still
     /// count. It rides the timeline's own zoom, which is what lets taller rows
     /// scroll inside it.
-    private var naturalBodyHeight: CGFloat {
+    static func naturalBodyHeight(_ editorState: EditorState) -> CGFloat {
         let ownLanesOnly = Experiments.shared.timelineZoomEnabled
         var rows: CGFloat = 0
         for row in editorState.timelineRows {
@@ -802,13 +805,20 @@ struct TimelineDock: View {
         }
         rows += TimelineAddTrackRow.height + Self.rowSpacing
         let content = Self.rulerHeight + rows + Self.rowSpacing
-        let captionBar = showsCaptionTrackBar ? CaptionTrackBarView.height + 4 : 0
-        return captionBar + cameraRow + min(Self.bodyCeiling, content) + Self.scrollerStrip
+        let captionBar = showsCaptionTrackBar(editorState) ? CaptionTrackBarView.height + 4 : 0
+        return captionBar + cameraRow(editorState) + min(Self.bodyCeiling, content) + Self.scrollerStrip
     }
 
     /// The Camera row and the space over it, where the camera is keyed.
-    private var cameraRow: CGFloat {
+    static func cameraRow(_ editorState: EditorState) -> CGFloat {
         editorState.showsCameraRow ? TimelineCameraRow.height + Self.rowSpacing : 0
+    }
+
+    /// One track and no less: the ruler, one lane, and the scroller strip.
+    static func bodyFloor(_ editorState: EditorState) -> CGFloat {
+        let captionBar = showsCaptionTrackBar(editorState) ? CaptionTrackBarView.height + 4 : 0
+        return captionBar + cameraRow(editorState) + Self.rulerHeight + Self.soundLaneHeight + 2 * Self.rowSpacing
+            + Self.scrollerStrip
     }
 
     /// One track's full height: its lane, the lanes of anything moving on
@@ -1800,5 +1810,80 @@ private struct TimelinePlayheadLine: View {
         let now = readingALatePass(fresh)
         last = now
         return now
+    }
+}
+
+// MARK: - The tracks area's height, read on its own
+
+/// What `TimelineDock` holds of the tracks area's height: the window, the top
+/// edge where a hand or the settings left it, and the transport and bar above
+/// the grid. The rest, how tall the tracks themselves are, is read from the
+/// editor where the height is applied (`TimelineGridHeight`).
+struct TimelineDockFit: Equatable {
+    let windowHeight: CGFloat
+    let chosen: CGFloat?
+    let isChosen: Bool
+    let chrome: CGFloat
+
+    @MainActor
+    func sizing(_ editorState: EditorState) -> TimelineDockHeight {
+        TimelineDockHeight(chrome: chrome, floor: TimelineDock.bodyFloor(editorState), windowHeight: windowHeight)
+    }
+
+    /// Where the top edge left it, or with nothing chosen, as tall as the
+    /// tracks it holds and no taller (`TimelineDockHeight`).
+    @MainActor
+    func bodyHeight(_ editorState: EditorState) -> CGFloat {
+        let natural = TimelineDock.naturalBodyHeight(editorState)
+        guard windowHeight > 0 else { return natural }
+        return sizing(editorState).body(chosen: chosen, natural: natural)
+    }
+}
+
+/// The grid's height, in a view of its own. It is worked out from the tracks,
+/// which read the document, and read in the dock's body it re-ran that body
+/// and its whole grid in the frame of every edit, a trim that changes no
+/// track's height included. Here only this re-runs, and the grid it is
+/// handed is the same value, so nothing under it is built again.
+struct TimelineGridHeight: ViewModifier {
+    @Environment(EditorState.self) private var editorState
+    let fit: TimelineDockFit
+
+    func body(content: Content) -> some View {
+        content.frame(height: fit.bodyHeight(editorState))
+    }
+}
+
+#if PHOTONZ_PLAYTEST
+/// How tall the tracks area is and whether the person chose it, for a walk.
+private struct TimelineHeightReadout: View {
+    @Environment(EditorState.self) private var editorState
+    let fit: TimelineDockFit
+
+    var body: some View {
+        Color.clear
+            .panelReadout("timeline \(Int(fit.bodyHeight(editorState).rounded())) tall, "
+                          + (fit.isChosen ? "chosen" : "default"))
+    }
+}
+#endif
+
+/// Reads the shape of every sound, so an export holds the mix down by what
+/// the files really peak at rather than by the safe guess of full scale
+/// (`AudioHeadroom`), and has the sound engine made, so the first press of
+/// play is not the moment it gets built. In a view of its own: the number of
+/// sounds is worked out from the whole document, and read in the dock's body
+/// it re-ran that body in the frame of every edit.
+private struct TimelineSoundShapesReader: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        Color.clear
+            .task(id: editorState.audioPlan.count) {
+                if editorState.documentHasAudio {
+                    editorState.loadSoundShapes()
+                    editorState.readyAudio()
+                }
+            }
     }
 }

@@ -1,0 +1,24 @@
+{
+  "feature": "A long edit plays and edits without a stutter: pass 25, an edit no longer rebuilds the whole window",
+  "epic": "video-perf",
+  "summary": "An edit to a video no longer re-runs the editor's whole layout and the timeline's grid: picking a clip with nothing picked while the 6 minute edit plays holds the window at most 38 to 40 ms, down from 48, and an undo 8 to 9 ms, down from 9 to 11.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Measured on the 6 minute reference edit with the speed walk (Scripts/perf/speed-walk.sh, three runs) and profiled pass by pass with Scripts/perf/pass-profile.sh. The edit's copy for File > Open is in ~/Library/Caches/Photonz Reference Edit/Photonz Dev.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 6 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 6 },
+    { "do": "Press Space to play it, and click a clip on the V1 track while it plays.", "shot": "2026-11-21-long-edit-pass25-after-the-edits-sc.png" },
+    { "do": "While it plays, drag the end of a clip ahead of the playhead in a little, then press Command Z." },
+    { "do": "Click an empty part of the timeline to let the clip go, then click another clip." },
+    { "do": "Drag the timeline's top edge up and down, then double-click it." }
+  ],
+  "evaluate": [
+    "Does the picture keep moving smoothly when you click a clip while it plays?",
+    "Does a trim and its undo while playing feel instant?",
+    "Does the timeline still grow and shrink with its top edge, and spring back on a double-click?"
+  ],
+  "rough": [
+    "Picking a clip still holds the window 38 to 40 ms at worst against the 16 ms bar: the panel fills in about 30 passes of 15 to 45 ms each, and about 17 ms of every pass is the window's own bookkeeping (laying out the panel, SwiftUI's accessibility walk over every control, the title bar's drag regions), not the section that landed. This task's own bar; it stays open.",
+    "Blade with a clip picked reads 30 to 44 ms and a trim with a clip picked 17 to 24: inside their run-to-run noise, so not claimed as faster.",
+    "No mock covers this: it changes how fast the window answers, not what it shows."
+  ]
+}

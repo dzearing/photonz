@@ -18,14 +18,22 @@ extension EditorState {
     /// chrome saying "nothing here" costs canvas and tells you what you already
     /// know by looking at the picture.
     var hasMotionStrip: Bool {
-        guard let document else { return false }
         // Two jobs, one strip, and two different switches. A document with a
         // duration has a row per clip whether or not anything on it is
         // animated, so its timeline is part of cutting a recording and cannot
         // depend on the Motion list existing — a video with the Motion flag off
         // would otherwise lose its timeline and with it the document
         // (`docs/design/video-surface.md` §2, §6).
-        if document.hasTime { return Experiments.shared.cutRecordingEnabled }
+        //
+        // Asked through the two answers that change only when they do, never
+        // the document: the window's layout asks this to decide whether the
+        // timeline is there, and reading the whole document for it re-ran
+        // that closure and the timeline's whole body in the frame of every
+        // edit to a video (`a-long-edit-with-transitions-plays-scrubs-and-ed`,
+        // pass 25).
+        guard hasDocument else { return false }
+        if documentHasTime { return Experiments.shared.cutRecordingEnabled }
+        guard let document else { return false }
         // A keyed picture has one from its first hollow moment, before
         // anything on it has moved.
         return Experiments.shared.motionStripEnabled && (document.hasMotion || document.isKeyedPicture)

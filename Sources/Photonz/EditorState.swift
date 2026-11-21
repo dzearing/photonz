@@ -868,8 +868,14 @@ final class EditorState {
     /// Whether the docked panel is actually on screen. The one answer the
     /// shell, the title bar's toggle and the canvas chrome all read, so they
     /// can never disagree about which state the button is showing.
+    ///
+    /// Asked through `hasDocument`, never the document: the editor's whole
+    /// layout reads this first, and `document != nil` made every edit re-run
+    /// that layout, the canvas's overlays, the tool bar and the timeline
+    /// under it included (`a-long-edit-with-transitions-plays-scrubs-and-ed`,
+    /// pass 25).
     var isInspectorShown: Bool {
-        document != nil && isLayersPanelVisible && !isInspectorAutoHidden && !isWatching
+        hasDocument && isLayersPanelVisible && !isInspectorAutoHidden && !isWatching
     }
     /// The panel built and out of sight while the window is in View, so it
     /// slides in with Edit rather than being built then (`EditModeArrival`).

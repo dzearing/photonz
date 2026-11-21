@@ -22,16 +22,16 @@
       "longestPassMS" : 13.575667049735785
     },
     {
-      "callMS" : 1.2566251680254936,
+      "callMS" : 1.3027084060013294,
       "did" : "the last edit taken back",
       "edit" : "undo",
-      "longestPassMS" : 9.190750308334827
+      "longestPassMS" : 8.672083262354136
     },
     {
-      "callMS" : 1.9429167732596397,
+      "callMS" : 3.8155000656843185,
       "did" : "Take 2 picked",
       "edit" : "pick, from nothing",
-      "longestPassMS" : 47.63050004839897
+      "longestPassMS" : 40.4838752001524
     },
     {
       "callMS" : 0.6044581532478333,
@@ -81,7 +81,7 @@
   },
   "form" : "short",
   "frameStepMS" : 33,
-  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18; edits from 3 runs on pass 19, 64db7ec53+changes (2026-11-19); scrub hunt frame and sight lags from 3 runs on pass 21, 853e5c7c4+changes (2026-11-20); edits re-tallied by the real pick state with a nothing control, from 3 runs on pass 23, e768f184d+changes (2026-11-21); the edits that got faster (trim, undo, both picks, trim picked) from 3 runs on pass 24, 6c88cb927+changes (2026-11-21)",
+  "head" : "9b7ecdc39+changes (worst of 3); play dropped and first picture from 3 runs on pass 18; edits from 3 runs on pass 19, 64db7ec53+changes (2026-11-19); scrub hunt frame and sight lags from 3 runs on pass 21, 853e5c7c4+changes (2026-11-20); edits re-tallied by the real pick state with a nothing control, from 3 runs on pass 23, e768f184d+changes (2026-11-21); the edits that got faster (trim, undo, both picks, trim picked) from 3 runs on pass 24, 6c88cb927+changes (2026-11-21); the edits that got faster (undo, pick from nothing) from 3 runs on pass 25, 35790c9f4+changes (2026-11-21)",
   "machine" : "Mac16,5, 16 cores, 64GB",
   "minutes" : 6,
   "plays" : [

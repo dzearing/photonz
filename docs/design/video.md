@@ -1023,6 +1023,38 @@ under it, and the edit itself 2 to 3 ms: the cost is how much of the window an
 edit dirties, not one slow view. Its pictures are slightly slower than
 unprofiled ones; judge a fix with the speed walk.
 
+**The window's layout never watches the document (2026-11-21, pass 25).**
+The editor's whole layout is one `GeometryReader` closure in `EditorView`
+(canvas and its overlays, the tool bar, the panel's frame, the timeline
+dock), and its first line asked `isInspectorShown`, which was
+`document != nil && ...`. So every edit re-ran that closure, and the dock it
+builds was a fresh value SwiftUI could not prove equal (a stored setting
+inside it never compares equal on its own), so the dock's body and its whole
+grid were built again in the edit's own pass: `timelineGrid` in every edit's
+counts, and a temporary per-read log showed nothing the dock watched had
+changed. Three reads did it, each now answered from what changes only when the
+answer does: `isInspectorShown` and `hasMotionStrip` ask `hasDocument` and
+`documentHasTime`; the dock's height (worked out from the tracks) is applied
+in a modifier of its own (`TimelineGridHeight`), as are its walk readout and
+its sound-shape loader; and `TimelineDock` is `Equatable` on the window's
+height. Three runs of the speed walk each: a pick from nothing 47.6 -> 38 to
+40 ms worst, undo 9.2 -> 8.2 to 8.7; trim, trim picked and blade moved inside
+their run-to-run noise. **Anything the window's layout, a menu command or a
+dock's own body reads answers through `hasDocument` / `documentHasTime` or a
+stored answer, never `document != nil`; a view a layout closure builds with
+plain inputs is `.equatable()` on them.**
+
+What a pick from nothing is still made of: about 30 passes over 0.7 s, one
+section or one set of rows a pass, with a floor of about 17 ms a pass whatever
+lands (layout of the dock's stack 4, SwiftUI's graph 4, accessibility 3, the
+title bar's drag regions 1.3). The accessibility share is SwiftUI walking every
+responder in the window for each new control it makes a node for
+(`AccessibilityNode.updateFocus` -> `ViewRendererHost.focusResponder(for:)`),
+so it grows with the timeline's controls times the panel's new ones; the drag
+regions are AppKit asking the window's host `acceptsFirstResponder` again
+whenever a section adds AppKit views (pass 19). Neither is reachable from app
+code short of fewer controls or a host of their own (pass 12).
+
 **The reference edit's recordings need ids that differ in their first eight
 bytes.** A frame's picture id is its recording's id with the frame number
 folded into the last eight (`MovieRef.frameID`). Until 2026-11-17 the
