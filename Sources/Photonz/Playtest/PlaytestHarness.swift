@@ -12535,12 +12535,19 @@ private final class Run {
             looks.append(TransitionLook(moment: moment, shown: small, drawn: drawn, present: present, near: near))
         }
         defer { editor.playtestPictureTap = nil; editor.playtestTapPresent = [:] }
+        let pressedAt = editor.documentTimeMS
         editor.playDocument(rate: rate)
         let began = Date()
+        // How long Space waited for its first frames before the playhead
+        // moved (`preRollWithSound`).
+        var waitedMS: Int?
         let limit = (Double(span.upperBound - start) / 1000 + 0.4) / rate + 3
         while editor.isDocumentPlaying, editor.documentTimeMS < span.upperBound + 150,
               Date().timeIntervalSince(began) < limit {
-            await sleep(0.02)
+            if waitedMS == nil, editor.documentTimeMS != pressedAt {
+                waitedMS = Int((Date().timeIntervalSince(began) * 1000).rounded())
+            }
+            await sleep(0.005)
         }
         editor.pauseDocument()
         editor.playtestPictureTap = nil
@@ -12704,6 +12711,7 @@ private final class Run {
                              + "pictures in it, each against the export's (%@-sheet.png), mean difference %.1f, "
                              + "worst %.1f", Double(span.lowerBound) / 1000, Double(span.upperBound) / 1000,
                              how, looks.count, name, mean, worst)
+            + (waitedMS.map { "; the playhead first moved \($0)ms after play" } ?? "")
         var staleSaid = ""
         if let stale {
             let which: [String] = late.prefix(6).map { index in "picture \(index + 1): " + cause(looks[index]) }

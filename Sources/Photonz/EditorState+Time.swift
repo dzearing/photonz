@@ -292,8 +292,9 @@ extension EditorState {
         // about to play, and a scrub over the top of it is the same sound
         // twice (`ScrubAudition.swift`).
         endScrubAudition()
-        restartDocumentClock()
-        if playsSoundAtRate { startAudio() }
+        // From rest the clock waits a moment for the frames it shows first,
+        // and the sound starts with it (`preRollWithSound`).
+        restartDocumentClock(fromRest: true)
     }
 
     func pauseDocument() {
@@ -308,6 +309,7 @@ extension EditorState {
         stopAudio()
         documentPlaybackTask?.cancel()
         documentPlaybackTask = nil
+        documentClockWaiting = false
         documentPlaybackStartedAt = nil
         catchUpOnQuietPictures()
         documentMomentChanged()
@@ -316,8 +318,9 @@ extension EditorState {
     /// The clock. Real time rather than a frame count, so a frame that takes
     /// too long to decode costs that frame and not the timing of everything
     /// after it: the playhead is always where the wall clock says it should be.
-    private func restartDocumentClock() {
+    private func restartDocumentClock(fromRest: Bool = false) {
         documentPlaybackTask?.cancel()
+        documentClockWaiting = false
         documentPlaybackStartedAt = Date()
         documentPlaybackStartedAtMS = documentTimeMS
         let rate = documentPlaybackRate
@@ -331,6 +334,9 @@ extension EditorState {
             // ...and forwards faster than double, which is silent, it waits
             // for its first frame the same way (`readyToPlayForward`).
             if rate > PlaybackSpeed.fastestWithSound { await self?.preRollForward() }
+            // ...and from rest at a speed with sound, for the frames just
+            // ahead too, with the sound starting when the clock does.
+            if fromRest, PlaybackSpeed.playsSound(atRate: rate) { await self?.preRollWithSound() }
             // Ticks on its own beat, not a frame after each tick's work
             // (`PlayClockPace`).
             let beat = ContinuousClock.now
@@ -410,6 +416,34 @@ extension EditorState {
         guard !Task.isCancelled else { return }
         documentPlaybackStartedAt = Date()
         documentPlaybackStartedAtMS = documentTimeMS
+    }
+
+    /// Hold a clock about to play forwards from rest at a speed with sound
+    /// where it is until the frame under the playhead and the next few are in
+    /// hand (`PhotonzDocument.readyToStartPlaying`), at most
+    /// `MoviePlayPass.soundStartWaitMS`, then start it, and the sound with it,
+    /// from there. Space right after a scrub found the frame under the
+    /// playhead read and the pass behind it still decoding from the key frame
+    /// a second back; the clock ran on, and a dissolve held a frame up to 10
+    /// behind for half a second (2026-11-20). Premiere waits the same way.
+    private func preRollWithSound() async {
+        let deadline = Date().addingTimeInterval(Double(MoviePlayPass.soundStartWaitMS) / 1000)
+        documentClockWaiting = true
+        documentMomentChanged()
+        while !Task.isCancelled, isDocumentPlaying, Date() < deadline,
+              let document = shownDocument,
+              !document.readyToStartPlaying(atTimeMS: documentTimeMS, inHand: movieFrames.inHand,
+                                            speed: documentPlaybackRate) {
+            try? await Task.sleep(for: .milliseconds(4))
+        }
+        // A clock cancelled while it waited: whoever cancelled it put the flag
+        // down already, and may have raised it again for a clock of its own.
+        guard !Task.isCancelled else { return }
+        documentClockWaiting = false
+        guard isDocumentPlaying else { return }
+        documentPlaybackStartedAt = Date()
+        documentPlaybackStartedAtMS = documentTimeMS
+        if playsSoundAtRate { startAudio() }
     }
 
     // MARK: Drawing the moment

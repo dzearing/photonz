@@ -639,7 +639,8 @@ extension EditorState {
     /// Start the sound with the picture. Called where playing starts, so the
     /// two are hung off the same press.
     func startAudio() {
-        guard documentHasAudio else { return }
+        // A clock waiting for its first frames starts the sound itself.
+        guard documentHasAudio, !documentClockWaiting else { return }
         loadSoundShapes()
         audioPlayer.setOutputGain(playerVolume.outputGain)
         cleanedSoundsHeard = SoundLibrary.shared.cleanedArrivals

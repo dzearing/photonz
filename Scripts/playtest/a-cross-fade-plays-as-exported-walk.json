@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-cross-fade-plays-as-exported-walk",
-  "seed": "A cross dissolve plays in the editor the way the export draws it, at Next defaults. Every picture the canvas is handed while a dissolve runs is held up against the export's picture of the same moment, and against the frames that moment shows: first a dissolve on a jump cut inside one full-screen Retina recording (key frames two seconds apart, as a Mac screen recording has), then one where that recording meets a second clip. Each is played from half a second before, from its very first frame, at half speed and at double. The user saw a dissolve flicker on and off in the editor on 2026-11-20 while the exported file was clean.",
+  "seed": "A cross dissolve plays in the editor the way the export draws it, at Next defaults. Every picture the canvas is handed while a dissolve runs is held up against the export's picture of the same moment, and against the frames that moment shows: first a dissolve on a jump cut inside one full-screen Retina recording (key frames two seconds apart, as a Mac screen recording has), then one where that recording meets a second clip. Each is played from half a second before, from its very first frame, at half speed, at double, and with Space pressed right after a scrub lands just before it. The user saw a dissolve flicker on and off in the editor on 2026-11-20 while the exported file was clean.",
   "setup": {
     "timelineOpen": true,
     "forget": ["all"],
@@ -27,6 +27,7 @@
     { "do": "expectTransitionPlaysAsExported", "name": "jump-cut-from-its-first-frame", "lead": 0 },
     { "do": "expectTransitionPlaysAsExported", "name": "jump-cut-half", "rate": 0.5 },
     { "do": "expectTransitionPlaysAsExported", "name": "jump-cut-double", "rate": 2 },
+    { "do": "expectTransitionPlaysAsExported", "name": "jump-cut-after-a-scrub", "scrub": true, "lead": 0.2 },
     { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1", "seconds": 2.2 },
     { "do": "wait", "seconds": 1.0 },
     { "do": "expectClip", "clip": "b-roll", "track": "V1", "count": 1 },
@@ -39,6 +40,7 @@
     { "do": "expectTransitionPlaysAsExported", "name": "two-clips-1x", "transition": 2 },
     { "do": "expectTransitionPlaysAsExported", "name": "two-clips-from-its-first-frame", "transition": 2, "lead": 0 },
     { "do": "expectTransitionPlaysAsExported", "name": "two-clips-half", "transition": 2, "rate": 0.5 },
-    { "do": "expectTransitionPlaysAsExported", "name": "two-clips-double", "transition": 2, "rate": 2 }
+    { "do": "expectTransitionPlaysAsExported", "name": "two-clips-double", "transition": 2, "rate": 2 },
+    { "do": "expectTransitionPlaysAsExported", "name": "two-clips-after-a-scrub", "transition": 2, "scrub": true, "lead": 0.2 }
   ]
 }

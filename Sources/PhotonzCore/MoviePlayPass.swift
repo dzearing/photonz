@@ -57,6 +57,20 @@ public enum MoviePlayPass {
     /// The most passes one recording reads at once: the stretch playing, the
     /// shot coming in over it during a dissolve, and the next cut.
     public static let passesPerRecording = 3
+    /// How many grid frames after the one under the playhead a clock starting
+    /// with sound waits to have in hand (`PhotonzDocument.readyToStartPlaying`).
+    /// The frame under the playhead is often there already (a scrub read it),
+    /// while the pass that reads the next ones is still decoding up from the
+    /// key frame; a few frames in hand means it has arrived and outruns the
+    /// clock from there.
+    public static let startsWithFramesAhead = 3
+    /// The longest a clock starting with sound waits for them. Space right
+    /// after a scrub that landed a second past a key frame of a 3456x2234 HEVC
+    /// screen recording took 614ms to decode its first frame (2026-11-20);
+    /// the clock ran on meanwhile and a dissolve held a frame up to 10 behind
+    /// for half a second. Long enough to cover that, short enough that Space
+    /// never feels ignored: the transport shows it playing at once.
+    public static let soundStartWaitMS = 800
 
     /// The grid frames a pass for a playhead on `frame` reads: from there to
     /// the end of the recording. It waits, rather than stops, so a long play
@@ -638,6 +652,30 @@ extension PhotonzDocument {
     /// silent: the first decode from a key frame took half a second on the
     /// reference edit, and at 4x the playhead ran 15 frames past it meanwhile
     /// (2026-11-13).
+    /// Whether a playhead at `ms` about to start playing forwards from rest
+    /// at `speed` has what it shows first in hand. Above double speed, which
+    /// is silent, the first frame it keeps (`readyToPlayForward`). At a speed
+    /// with sound, the frame under the playhead and the next
+    /// `MoviePlayPass.startsWithFramesAhead` grid frames of every recording on
+    /// at each of those moments, up to the end of the document: the frame
+    /// under it alone was often in hand from a scrub while the frames after it
+    /// were half a second of decoding away.
+    public func readyToStartPlaying(atTimeMS ms: Int, inHand: MovieFramesInHand, speed: Double) -> Bool {
+        guard PlaybackSpeed.playsSound(atRate: speed) else {
+            return readyToPlayForward(atTimeMS: ms, inHand: inHand, speed: speed)
+        }
+        let end = documentDurationMS
+        for step in 0...MoviePlayPass.startsWithFramesAhead {
+            let moment = ms + step * MovieRef.frameStepMS
+            guard moment < end || step == 0 else { break }
+            let ready = movieFrames(atTimeMS: moment).allSatisfy {
+                inHand.contains(movie: $0.movie.id, frameIndex: $0.movie.frameIndex(atSourceMS: $0.sourceMS))
+            }
+            if !ready { return false }
+        }
+        return true
+    }
+
     public func readyToPlayForward(atTimeMS ms: Int, inHand: MovieFramesInHand, speed: Double) -> Bool {
         let stride = MoviePlayBackward.stride(speed: speed)
         return movieFrames(atTimeMS: ms).allSatisfy {

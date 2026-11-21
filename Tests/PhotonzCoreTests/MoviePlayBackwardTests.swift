@@ -96,6 +96,50 @@ struct MoviePlayBackwardTests {
             .readyToPlayForward(atTimeMS: at, inHand: MovieFramesInHand(), speed: 4))
     }
 
+    // Space right after a scrub that landed a second past a key frame of the
+    // user's HEVC screen recording: the frame under the playhead was in hand
+    // (the scrub had read it), the frames after it were not, and the pass
+    // decoding up to them from the key frame took about half a second while
+    // the clock ran on. Both sides of a dissolve held a frame up to 10 behind
+    // at 14 of 24 looks (`a-cross-fade-plays-smoothly-in-the-editor-the-wa`,
+    // 2026-11-20). With sound too, the clock waits for the frames just ahead.
+    @Test("Playing with sound is ready once the frame under the playhead and the next few are in hand")
+    func readyToStartWithSound() {
+        let document = PhotonzDocument.recording(movie, name: "Take 1")
+        let at = 60 * MovieRef.frameStepMS
+        var hand = MovieFramesInHand()
+        hand.insert(movie: movie.id, frameIndex: 60)
+        // The frame under the playhead alone is what fast play waits for...
+        #expect(document.readyToPlayForward(atTimeMS: at, inHand: hand, speed: 4))
+        // ...but at a speed with sound the next frames have to be there too.
+        for speed in [0.5, 1, 2] {
+            #expect(!document.readyToStartPlaying(atTimeMS: at, inHand: hand, speed: speed))
+        }
+        let ahead = MoviePlayPass.startsWithFramesAhead
+        #expect(ahead >= 2)
+        for frame in 61..<(60 + ahead) { hand.insert(movie: movie.id, frameIndex: frame) }
+        #expect(!document.readyToStartPlaying(atTimeMS: at, inHand: hand, speed: 1))
+        hand.insert(movie: movie.id, frameIndex: 60 + ahead)
+        for speed in [0.5, 1, 2] {
+            #expect(document.readyToStartPlaying(atTimeMS: at, inHand: hand, speed: speed))
+        }
+        // Above double speed it is the fast rule, unchanged.
+        var under = MovieFramesInHand()
+        under.insert(movie: movie.id, frameIndex: 60)
+        #expect(document.readyToStartPlaying(atTimeMS: at, inHand: under, speed: 4))
+        // Near the last frame only the frames there are waited for.
+        let end = last * MovieRef.frameStepMS
+        var tail = MovieFramesInHand()
+        tail.insert(movie: movie.id, frameIndex: last)
+        #expect(document.readyToStartPlaying(atTimeMS: end, inHand: tail, speed: 1))
+        // A document with no recording in it has nothing to wait for.
+        #expect(PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
+            .readyToStartPlaying(atTimeMS: at, inHand: MovieFramesInHand(), speed: 1))
+        // The wait is bounded: longer than the half second the first decode
+        // took, never so long that pressing Space feels ignored.
+        #expect(MoviePlayPass.soundStartWaitMS > 614 && MoviePlayPass.soundStartWaitMS <= 1000)
+    }
+
     // Played backwards across a cut, the playhead jumps to the frame before
     // the cut, and a block opened only on arrival left the picture 22 frames
     // behind there, while the stretch playing read on past the cut into

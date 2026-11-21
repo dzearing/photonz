@@ -2302,6 +2302,9 @@ final class EditorState {
     /// dropped.
     @ObservationIgnored var documentPlaybackStartedAt: Date?
     @ObservationIgnored var documentPlaybackStartedAtMS: Int = 0
+    /// A clock starting from rest is waiting for its first frames
+    /// (`preRollWithSound`): the sound starts when it does, not before.
+    @ObservationIgnored var documentClockWaiting = false
     /// A hand is on the playhead: between `beginPlayheadDrag` and
     /// `endPlayheadDrag` (`EditorState+Time`).
     @ObservationIgnored var playheadInHand = false

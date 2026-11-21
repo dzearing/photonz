@@ -1,28 +1,43 @@
 {
   "feature": "A cross fade plays in the editor the way it looks in the export",
   "epic": "video-perf",
-  "summary": "Two causes of a dissolve showing the wrong frame while it plays are fixed. A frame the dissolve borrows from past a clip's end is now stood in for by the nearest borrowed frame, not by one from back inside the clip, which could be a second old. And a play pass is no longer started over when a restart would decode from the same key frame. Playing right after a scrub that lands far past a key frame still holds a slightly old frame for about half a second; that part is still open.",
+  "summary": "A cross fade now plays in the editor the way the exported file shows it, including when you press Space right after dragging the playhead to just before it. Three causes are fixed: a late borrowed frame was stood in for by one up to a second old, a play pass was restarted onto the same key frame over and over, and play started its clock before the frames just ahead of the playhead were read.",
   "setup": "Photonz Dev, release Next, no flag changed from its default. Any screen recording of yours works; the walk that measures it is a-cross-fade-plays-as-exported-walk (full-screen Retina fixture, key frames two seconds apart).",
   "switched": {},
   "try": [
-    { "do": "Open a long screen recording, drag a second recording onto V1 so it overlaps the end of the first, and pick the place where they meet.", "shot": "2026-11-20-cross-fade-1-two-clip-dissolve.png" },
-    { "do": "Put a Cross dissolve on that join from the transition picker." },
-    { "do": "Click the ruler about a second before the dissolve, wait a moment, and press Space. Watch the dissolve.", "shot": "2026-11-20-cross-fade-2-canvas-beside-export.png" },
-    { "do": "Play it again at 0.5x and at 2x from the speed menu beside play." },
-    { "do": "Drag the playhead quickly onto a spot just before the dissolve, let go, and press Space at once." },
-    { "do": "Export the edit as an MP4 and play the same stretch in the file beside the editor." }
+    {
+      "do": "Open a long screen recording, drag a second recording onto V1 so it overlaps the end of the first, and pick the place where they meet.",
+      "shot": "2026-11-20-cross-fade-1-two-clip-dissolve.png"
+    },
+    {
+      "do": "Put a Cross dissolve on that join from the transition picker."
+    },
+    {
+      "do": "Click the ruler about a second before the dissolve, wait a moment, and press Space. Watch the dissolve.",
+      "shot": "2026-11-20-cross-fade-2-canvas-beside-export.png"
+    },
+    {
+      "do": "Play it again at 0.5x and at 2x from the speed menu beside play."
+    },
+    {
+      "do": "Drag the playhead quickly onto a spot just before the dissolve, let go, and press Space at once. Watch both sides of the dissolve."
+    },
+    {
+      "do": "Export the edit as an MP4 and play the same stretch in the file beside the editor."
+    }
   ],
   "evaluate": [
     "Does the dissolve in the editor now look like the one in the exported file, with nothing blinking off and on?",
-    "After the quick drag and an immediate Space, is the half second where the picture holds a slightly old frame noticeable to you?",
+    "Right after a drag, Space now waits up to about half a second before the playhead moves, so the first frames are ready. Does that wait feel natural, the way Premiere's does, or does Space feel ignored?",
     "If you still see the flicker, which transition and which recordings was it, so the walk can be pointed at that exact shape?"
   ],
   "rough": [
     "What I could and could not reproduce: playing a dissolve from rest (1x, 0.5x, 2x, from its first frame) matched the export frame for frame on this Mac, on the fixture and on two of your own HEVC screen recordings, even with 14 of 16 cores busy. The failure that reproduced every time was playing right after a scrub: the old build drew a frame up to 34 frames (about a second) old for both sides of the dissolve; your recording showed a screenshot thumbnail in the corner that the right frame no longer has.",
     "Cause 1, the flicker: a frame a dissolve borrows from past a clip's end (or before its start) that was not read yet was stood in for by a frame from back inside the clip, then the next borrowed frame jumped forward again. The export never shows stand-ins, so it was clean. Now the nearest borrowed frame stands in. A unit test fails on the old code and passes now.",
     "Cause 2: a play pass that fell four frames behind was started over at the playhead, but on a screen recording (key frames about 2 seconds apart) the new pass decodes from the same key frame, so every restart threw the work away and none ever handed over a frame. Now it is kept when no key frame lies between, and frames the playhead has already passed are decoded but not turned into pictures.",
-    "Still open, and why the task stays open: pressing Space right after a scrub that lands about a second past a key frame needs about 0.6s to decode the first frame (measured 614ms on your 3456x2234 HEVC recording), and starting play cancels the read that was already decoding there. After the fix the frame held is a tenth of a second old instead of a second, but it is still held. Fixing it means play waits for its first frame or takes over the resting read; that is the next step on this task.",
-    "Pictures of your own recordings are not in this public repo. The before and after pair, and the readings, are in ~/Library/Caches/Photonz Cross Fade Evidence on this Mac. The reel here (2026-11-20-cross-fade-reel.mp4, canvas left, export right, 0.5x through the two-clip dissolve) and the sheets use the repo's fixture.",
+    "Cause 3, fixed in the second pass: pressing Space right after a scrub found the frame under the playhead already read (the scrub read it), while the frames after it needed about half a second of decoding up from the key frame a second back. The clock ran on meanwhile, so on your recording both sides of the dissolve held a frame up to 10 behind at 14 of 24 looks. Now, at speeds with sound, play waits until the frame under the playhead and the next 3 are read, at most 0.8s, and the sound starts with the clock. Measured on your recording: Space after a scrub waits 416ms, from rest 45ms; on the repo's recording 41 to 60ms. Afterwards every picture matched the export at 1x (three runs), 0.5x, 2x and from the dissolve's first frame (mean difference 2.0 of 255, worst 2.7).",
+    "The walk in the repo cannot fail on the old code for the after-a-scrub case: its 3.6 second recording, and a 10 second HEVC one made for this, decode fast enough that the old clock never got ahead. Only your own recordings showed it. What keeps it fixed in the repo is a unit test of the new rule (Space at 1x waits for the frames just ahead, not only the one under the playhead) plus two after-a-scrub cases in the walk, which pass.",
+    "Pictures of your own recordings are not in this public repo. The before and after sheets and readings are in ~/Library/Caches/Photonz Cross Fade Evidence on this Mac (scrub-space-wait-fix-* is the final one). The reel here (2026-11-20-cross-fade-reel.mp4, canvas left, export right, 0.5x through the two-clip dissolve) and the sheets use the repo's recording.",
     "No mock covers this; it is playback correctness, nothing on screen moved."
   ]
 }
