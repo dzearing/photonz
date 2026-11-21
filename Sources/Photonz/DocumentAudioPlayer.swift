@@ -43,6 +43,12 @@ final class DocumentAudioPlayer {
     /// already handed to it has been done.
     var isPlaying: Bool { engine.read { $0.isPlaying } }
 
+    /// Where the engine's start stands, for a walk that finds no sound:
+    /// how long a press has been waiting on its output (nil when none is),
+    /// whether it counts itself running and whether the engine agrees, how
+    /// many presses gave up on the output, and the cycles the output has run.
+    var startState: DocumentAudioEngine.StartState { engine.read { $0.startState } }
+
     /// How many pieces of sound are on the engine right now.
     var scheduledCount: Int { engine.read { $0.scheduledCount } }
 
@@ -157,6 +163,12 @@ final class DocumentAudioPlayer {
     func stop() {
         engine.run { $0.stop() }
     }
+
+    /// Hold the next start's first audio cycle up for `seconds`, as an output
+    /// device slow to wake does. For a walk (`soundHoldTheOutputUp`).
+    func holdTheOutputUp(seconds: Double) {
+        engine.run { $0.holdTheOutputUp(seconds: seconds) }
+    }
 }
 
 /// The engine, the open files and the nodes, all on one queue of their own.
@@ -269,10 +281,24 @@ final class DocumentAudioEngine: @unchecked Sendable {
     /// The rate `stretch` runs at, 1 without one.
     private(set) var speed: Float = 1
 
+    /// Counts the engine's audio cycles, so no player is started on it before
+    /// its output has turned over once (`OutputHeartbeat`).
+    private let heartbeat = OutputHeartbeat()
+    private var heartbeatNode: AVAudioSourceNode?
+    /// Seconds to hold the next start's first cycle up for: a walk's stand-in
+    /// for a slow output device (`holdTheOutputUp`). Nought otherwise.
+    private var holdNextStart = 0.0
+
     init() {
         // Build the engine and its output now rather than at the first press:
         // a player is made when a document with sound opens its timeline.
-        run { _ = $0.engine.mainMixerNode }
+        run { $0.heartbeatNode = $0.heartbeat.attach(to: $0.engine) }
+    }
+
+    /// The next start's first audio cycle held up for `seconds`, the way an
+    /// output device slow to wake holds it up. For a walk.
+    func holdTheOutputUp(seconds: Double) {
+        holdNextStart = seconds
     }
 
     /// Hand work to the engine and carry on.
@@ -298,7 +324,23 @@ final class DocumentAudioEngine: @unchecked Sendable {
     /// A playthrough is under way: the engine is running with its clock.
     /// Pieces come and go on it as the playhead moves, so between two
     /// sounds far apart it can be running with nothing on it.
-    var isPlaying: Bool { running && clock != nil }
+    struct StartState: Sendable {
+        let waitingSeconds: Double?
+        let running: Bool
+        let engineRunning: Bool
+        let gaveUp: Int
+        let outputCycles: Int
+    }
+
+    var startState: StartState {
+        StartState(waitingSeconds: waiting.map { Self.hostSecondsNow() - $0.since }, running: running,
+                   engineRunning: engine.isRunning, gaveUp: outputNeverTurnedOver,
+                   outputCycles: heartbeat.count)
+    }
+
+    /// Not while a press waits for the output to turn over: nothing is
+    /// coming out yet.
+    var isPlaying: Bool { running && clock != nil && waiting == nil }
     var scheduledCount: Int { playing.count }
     var scheduledSegments: [AudioMixSegment] { playing.values.map(\.segment) }
     var leftOutCount: Int { window.leftOut.count }
@@ -369,17 +411,78 @@ final class DocumentAudioEngine: @unchecked Sendable {
         clock = ticking
 
         engine.prepare()
+        if holdNextStart > 0 {
+            heartbeat.holdNextCycle(seconds: holdNextStart)
+            holdNextStart = 0
+        }
+        // Read before the start: two cycles past this is one whole cycle
+        // finished on THIS run, whatever the engine did before it stopped.
+        let beatsBefore = heartbeat.count
         guard (try? engine.start()) != nil else {
             stop()
             return
         }
         running = true
+        waiting = Waiting(attached: attached, clock: ticking, format: format, playhead: playhead,
+                          beatsBefore: beatsBefore, since: Self.hostSecondsNow())
+        startOnceTheOutputTurnsOver(startNumber)
+    }
+
+    /// A press whose engine is running but whose output has not yet finished
+    /// a cycle: its nodes, wired and waiting to be started.
+    private struct Waiting {
+        let attached: [(index: Int, node: AVAudioPlayerNode, file: AVAudioFile)]
+        let clock: AVAudioPlayerNode
+        let format: AVAudioFormat
+        let playhead: Playhead
+        let beatsBefore: Int
+        let since: Double
+    }
+    private var waiting: Waiting?
+    /// Which press is current: a stop or a later press moves it on, so a
+    /// check still queued for an earlier one does nothing.
+    private var startNumber = 0
+    /// How long a press waits for the output to turn over before it gives
+    /// up and stays silent. The player's own wait is about five seconds and
+    /// then it takes the app down; this one only ever costs the sound.
+    private static let outputWaitSeconds = 10.0
+    /// How many presses gave up waiting for the output, for a walk.
+    private(set) var outputNeverTurnedOver = 0
+
+    /// Start the press's nodes once the output has finished a cycle, checking
+    /// again every couple of milliseconds until it has.
+    ///
+    /// `AVAudioPlayerNode.play` waits for the engine's next cycle and raises
+    /// an exception nothing can catch when none comes within about five
+    /// seconds: right after the start, an output device slow to wake (or a
+    /// stopped process) took the probe down that way on 2026-11-20
+    /// (`OutputHeartbeat`). Waiting here, on the queue and without holding
+    /// it, costs nothing when the output is quick (its first cycle is done
+    /// about 10 ms after the start, which `play` used to spend blocked
+    /// anyway), and a slow one only makes the sound late. The moment it
+    /// opens on is reckoned when it really starts, so it is still in step
+    /// with the picture.
+    private func startOnceTheOutputTurnsOver(_ number: Int) {
+        guard number == startNumber, running, let press = waiting else { return }
+        guard heartbeat.hasTurnedOver(since: press.beatsBefore) else {
+            if Self.hostSecondsNow() - press.since > Self.outputWaitSeconds {
+                outputNeverTurnedOver += 1
+                stop()
+                return
+            }
+            queue.asyncAfter(deadline: .now() + .milliseconds(2)) { [weak self] in
+                self?.startOnceTheOutputTurnsOver(number)
+            }
+            return
+        }
+        waiting = nil
 
         // One host instant a little ahead, now the engine runs, that the
         // clock and every piece start at, so two sounds meant to start
         // together do whatever order they were scheduled in. The sound opens
         // on the moment the picture will be showing when that instant comes
         // out of the speaker, not the moment play was pressed.
+        let playhead = press.playhead
         let startsAt = Self.hostSecondsNow() + Self.leadSeconds
         clockFromMS = SoundStartMoment.documentMS(
             playheadMS: playhead.ms, playheadAtSeconds: playhead.atSeconds,
@@ -387,13 +490,13 @@ final class DocumentAudioEngine: @unchecked Sendable {
             pictureLagMS: SoundStartMoment.pictureLagMS)
         leadSeconds = 0
         let when = AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startsAt))
-        let rate = format.sampleRate
-        for item in attached {
+        let rate = press.format.sampleRate
+        for item in press.attached {
             schedule(item.node, file: item.file, segment: pieces[item.index].segment, fromMS: clockFromMS,
                      lead: AVAudioTime(sampleTime: 0, atRate: rate), rate: rate)
         }
-        for item in attached { item.node.play(at: when) }
-        ticking.play(at: when)
+        for item in press.attached { item.node.play(at: when) }
+        press.clock.play(at: when)
 
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now() + Self.tickSeconds, repeating: Self.tickSeconds,
@@ -552,6 +655,8 @@ final class DocumentAudioEngine: @unchecked Sendable {
     }
 
     func stop() {
+        startNumber += 1
+        waiting = nil
         tick?.cancel()
         tick = nil
         guard running || !playing.isEmpty || clock != nil else { return }

@@ -1711,6 +1711,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// that can be checked without ears, so a walk never photographs a playhead
     /// moving in silence and calls it playing.
     case soundExpectPlaying
+    /// The next time the sound starts, hold the engine's first audio cycle up
+    /// for six seconds: what an output device that is slow to wake (AirPlay,
+    /// headphones coming out of sleep) or a stopped process does to it. A
+    /// player started before the engine has run a cycle waits five seconds
+    /// for one and then takes the app down ("player did not see an IO
+    /// cycle", 2026-11-20), so a walk that presses play after this step and
+    /// is still running says the sound waited for the output instead.
+    case soundHoldTheOutputUp
     /// Write the mix out beside the walk's own pictures, and fail if nothing
     /// lands: the one step that proves an export really happened.
     case soundExportMix
@@ -1931,7 +1939,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsWordStretchLastLater, .captionsExpectWordDragsUndone, .captionsWordSplitAndMerge,
              .captionsNoteLines, .captionsJoinFirstLineWithNext, .captionsExpectLinesAsNoted,
              .captionsMoveSecondLineWordBack, .captionsExpectSRTMatchesLines,
-             .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
+             .soundExpectPlaying, .soundHoldTheOutputUp, .soundExportMix, .soundScrubAcrossIt,
              .soundExpectMixOver, .soundExpectMeterReads, .soundExpectCutCarried,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,

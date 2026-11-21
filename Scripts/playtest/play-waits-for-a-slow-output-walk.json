@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/play-waits-for-a-slow-output-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "The probe died on 2026-11-20 pressing play: AVAudioPlayerNode.play waits for the engine's next audio cycle and, when none comes within about five seconds, raises 'player did not see an IO cycle.', which nothing in Swift can catch. Right after the engine starts, that first cycle is the output device's to give, and one slow to wake (AirPlay, headphones out of sleep) or a stopped process takes longer. The engine now starts its players only once its output has turned over (OutputHeartbeat), so a slow output delays the sound rather than taking the app and the open document with it." },
+    { "do": "action", "action": "openLongRetinaTalk" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "describe", "stage": "slow-output", "note": "The next start's first audio cycle is held up for six seconds, a second past the player's own five second wait, then L plays. The window keeps answering, the picture plays on, and the sound comes on once the output turns over instead of the app going away." },
+    { "do": "action", "action": "soundHoldTheOutputUp" },
+    { "do": "key", "key": "l" },
+    { "do": "wait", "seconds": 1.0, "onTheClock": true, "longestUnderMS": 50 },
+    { "do": "describe", "stage": "held", "note": "A second in, the picture plays and no sound is out yet: the hold really is on. No picture here: a screen capture opens an audio clock of its own, and that waits on the very cycle the walk is holding up, which no real slow device does." },
+    { "do": "expectTimeline", "rate": 1, "sound": false },
+    { "do": "wait", "seconds": 7.0, "onTheClock": true, "longestUnderMS": 50 },
+    { "do": "action", "action": "soundExpectPlaying" },
+    { "do": "snapshot", "name": "sound-on-once-the-output-turned-over" },
+    { "do": "key", "key": "k" },
+    { "do": "wait", "seconds": 0.3 },
+
+    { "do": "describe", "stage": "ordinary-output", "note": "And a press with nothing held up starts the sound as it always did." },
+    { "do": "key", "key": "l" },
+    { "do": "wait", "seconds": 0.5, "longestUnderMS": 50 },
+    { "do": "action", "action": "soundExpectPlaying" },
+    { "do": "key", "key": "k" },
+    { "do": "wait", "seconds": 0.3 }
+  ]
+}

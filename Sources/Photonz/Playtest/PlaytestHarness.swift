@@ -6967,7 +6967,8 @@ private final class Run {
                 let sounding = audible.filter { $0.contains(ms: now) }
                 guard editor.audioPlayer.isPlaying else {
                     throw Failure(description: "the playhead is moving but the sound engine is not "
-                        + "running: \(sounding.count) piece(s) of sound should be playing and none are")
+                        + "running: \(sounding.count) piece(s) of sound should be playing and none are "
+                        + "(engine: \(Self.words(for: editor.audioPlayer.startState)))")
                 }
                 let held = Set(editor.audioPlayer.scheduledSegments)
                 let on = held.count
@@ -6979,6 +6980,15 @@ private final class Run {
                 }
                 note(number, step.name,
                      "sound: the engine is running with \(on) piece(s) of sound scheduled on it",
+                     state: describe())
+            case .soundHoldTheOutputUp:
+                guard editor.documentHasAudio else {
+                    throw Failure(description: "this document has no sound, so there is no output "
+                        + "to hold up")
+                }
+                editor.audioPlayer.holdTheOutputUp(seconds: 6)
+                note(number, step.name,
+                     "sound: the next start's first audio cycle is held up for 6 s, as a slow output device does",
                      state: describe())
             case .soundExportMix:
                 guard !editor.audioPlan.isEmpty else {
@@ -7933,7 +7943,7 @@ private final class Run {
             // Sound, handled in full above with the rest of the timeline, where
             // each one can refuse the walk rather than quietly doing nothing.
             case .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
-                 .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
+                 .soundExpectPlaying, .soundHoldTheOutputUp, .soundExportMix, .soundScrubAcrossIt,
                  .soundExpectMixOver, .soundExpectMeterReads, .soundExpectCutCarried,
                  .videoSeekStart: break
             // Captions, handled in full above for the same reason: each one
@@ -23627,6 +23637,21 @@ private struct ZoomReading: Equatable {
     }
 }
 
+extension Run {
+    /// Where the sound engine's start stands, in words, for a walk that
+    /// found no sound coming out.
+    static func words(for state: DocumentAudioEngine.StartState) -> String {
+        let cycles = "\(state.outputCycles) output cycles so far"
+        if let waiting = state.waitingSeconds {
+            return String(format: "waiting %.1f s for the output to turn over, ", waiting) + cycles
+        }
+        if state.running {
+            return "running, the engine itself " + (state.engineRunning ? "running" : "stopped") + ", " + cycles
+        }
+        return "stopped, \(state.gaveUp) press(es) gave up waiting for the output, " + cycles
+    }
+}
+
 #endif
 
 /// A reference that lets go when its object does, for registries that must
@@ -23635,3 +23660,4 @@ final class WeakRef<Value: AnyObject> {
     weak var value: Value?
     init(_ value: Value) { self.value = value }
 }
+

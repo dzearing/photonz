@@ -165,6 +165,14 @@ actor ScrubAudioEngine {
     private var lastPlayed = 0
     /// The loudest sample put on the engine since the last warm up.
     private(set) var loudestSample: Float = 0
+    /// Counts the engine's audio cycles: no grain is played until the output
+    /// has finished one since the start, because a player started before
+    /// that waits five seconds for it and then takes the app down
+    /// (`OutputHeartbeat`). A grain dropped while a slow output wakes is a
+    /// sliver of sound nobody misses.
+    private let heartbeat = OutputHeartbeat()
+    private var heartbeatNode: AVAudioSourceNode?
+    private var beatsAtStart = 0
 
     /// Open the files, wire a node per layer, start the engine. Called at the
     /// press, so the first grain a sixteenth of a second later has somewhere
@@ -185,7 +193,9 @@ actor ScrubAudioEngine {
             nodes[layer] = node
         }
         guard !nodes.isEmpty, !running else { return }
+        if heartbeatNode == nil { heartbeatNode = heartbeat.attach(to: engine) }
         engine.prepare()
+        beatsAtStart = heartbeat.count
         running = (try? engine.start()) != nil
     }
 
@@ -195,7 +205,7 @@ actor ScrubAudioEngine {
 
     /// Play one tick's worth: a grain per piece of sound under the playhead.
     func play(_ windows: [ScrubWindow], number: Int) {
-        guard running, number > lastPlayed else { return }
+        guard running, number > lastPlayed, heartbeat.hasTurnedOver(since: beatsAtStart) else { return }
         lastPlayed = number
         for window in windows {
             guard let file = files[window.sound.id],

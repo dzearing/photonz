@@ -324,6 +324,29 @@ grains of somebody talking, so the loudest sample played is checked too.
 Behind `next-hear-the-scrub`, which leans on `next-sound-on-the-timeline`:
 with no sound on the timeline there is nothing under the playhead to hear.
 
+### No player starts before the output has turned over (2026-11-20)
+
+`AVAudioPlayerNode.play` (with a time or without) waits for the engine's next
+audio cycle, and when none comes within about five seconds while the output
+counts as running it raises "player did not see an IO cycle.", an Objective-C
+exception nothing in Swift can catch. Right after `AVAudioEngine.start()` that
+first cycle is the output device's to give, and one slow to wake (AirPlay,
+headphones coming out of sleep, a process a debugger has stopped) can take
+longer: the probe died exactly so on 2026-11-20.
+
+So both engines carry an `OutputHeartbeat`, a silent source node on the main
+mixer that counts the cycles it is pulled in. Two counts since the start is one
+whole cycle finished. `DocumentAudioEngine` wires a press's nodes, starts the
+engine, and starts the nodes only once the heartbeat has turned over, checking
+every 2 ms on its own queue and giving up silently after 10 s; the moment the
+sound opens on is reckoned then, so a late start is still in step with the
+picture. `ScrubAudioEngine` drops grains until it has. The engine's own
+`lastRenderTime` cannot do this job: it is set as a cycle begins, and after a
+restart it reads a stale time from the run before.
+`play-waits-for-a-slow-output-walk` holds the first cycle up for six seconds
+(`soundHoldTheOutputUp`) and crashed the probe before this; it now finds the
+picture playing and no sound at one second, and the sound on at eight.
+
 ---
 
 ## 5c. How loud it adds up to
