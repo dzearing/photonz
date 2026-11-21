@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-21T15:57:06.048Z",
+  "updated": "2026-11-21T19:22:20.146Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,25 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-21T15:57:06.045Z",
-      "note": "... 10 earlier entries elided",
-      "elided": 10
-    },
-    {
-      "t": "2026-11-16T04:24:21.529Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-16T06:04:12.241Z",
-      "note": "Pass 4 (2026-11-15). Baseline at ee1b82d1d, 60 min edit, markers down: zoom in 42 ms/frame (p95 199), out 46 (p95 222), scroll 49 (p95 58, 16 clip bars built a frame); edits longest pass 84-178 ms. Floor experiments on the scroll (throwaway switches): as is 46, no Zoom lanes 37, no clip bars 22, bars+Zoom lanes+ticks+cuts out 8.3. Zoom lanes present but reading nothing: 37.5, so their cost was rebuilding (each read the window)."
-    },
-    {
-      "t": "2026-11-16T06:04:12.321Z",
-      "note": "Pass 4 landed c0e1a50b1: (1) a bar is handed the drawn stretch by its lane, cut to the clip, or its whole span when no wider than two windows (TimelineDrawnStretch.cut, tested), so bars in view are not rebuilt as the stretch moves; (2) a Zoom lane reads the window only when one of its zooms reaches EditorState.timelineRowsSight (TimelineSight.rows: window plus two either side, moved in steps of >= two windows, written in the timelineZoom setter, tested). After: scroll 41 ms (p95 50), bars built per scroll frame 4; zoom 42 unchanged; edits unchanged. Rule 9 written into docs/design/video.md 8f (ca51ed36a). 18 timeline/Zoom-lane walks + speed-walk + an-editing-session-walk green; Scripts/test.sh green. Audit queue/audits/2026-11-15-timeline-hour-long-scroll-rebuilds.json."
-    },
-    {
-      "t": "2026-11-16T06:04:12.397Z",
-      "note": "Still open, bars not reached (scroll/zoom ~41 ms vs 8.3, edits 90-180 vs 16). What is left on the scroll: a ten times slower scroll is 25 ms with bars vs 14 without, with 0 bars rebuilt, so ~11 ms/frame is bars SLIDING (profile: ~25% of the main thread in NSHostingView.layout -> ScrollView/StackLayout -> ZStack sizing of the lanes' ForEach items), and the rest of a fast scroll is bars CREATED as they enter sight (~4/frame). Next pass: paint clips that show pictures (ClipFilmstrip tiles drawn from ClipFilmstripFrames.cached, missing ones asked and a repaint on landing, the DrawnFilmstrips playtest report kept) and let a lane of a long edit paint whatever is in sight, not only 24+ clips (TimelinePaint.lanePaints); check pixel parity as pass 2 did. Left rough, not filed (same painting step): edits rebuild every bar in sight (77-157 clipBar bodies an edit) because each bar reads shownDocument(forClip:). Measuring: /tmp/tl60.json = long-60 timeline+idleBuilds+edits (~90 s); a release probe build after an EditorState change takes ~8 min."
+      "t": "2026-11-21T19:22:20.145Z",
+      "note": "... 14 earlier entries elided",
+      "elided": 14
     },
     {
       "t": "2026-11-16T06:04:16.254Z",
@@ -506,6 +490,22 @@
     {
       "t": "2026-11-21T15:57:06.044Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T19:21:55.382Z",
+      "note": "Pass 19 (2026-11-21). Baseline at e822ad2f2 (60 min edit, timeline measure, load ~3-5): near Fit 11.26 ms mean (held 9.17, fresh 14.19), busy 8.70; zoom in 10.65 (48 late), out 9.65 (35), scroll 9.07 (33 late). Built pass 18's structural step: TimelineLaneFrame (PhotonzCore, tested) is what a lane lays out against while the timeline moves (the held painting's window; a fresh zoom frame says the same as the hold after it; a scroll's frame is measured from the drawn stretch's anchor with sight margin 1.5), set by EditorState.noteTimelineLaneFrame on every window write and let go 30 ms after the last (timelineLaneFrameSettle), never while a hand is in a lane. TimelineLaneSlide slides/stretches the lane's timed content; children read it via the timelineLaneFrame environment value (ClipPiecesBar, SlidAlongTheTimeline, TimelineEditPointView, TimelineSpareStrips, ClickTicksView, TimelineClipView, TimelinePaintedHands). Fixed layers against the window: bare-lane marquee, quiet gridlines (TimelineWindowGridlines), Blade/Track Select, Range tool, drops/ghosts, edge names (TimelineEdgeNames); readPointer on window moves via TimelineWindowMoves. Found with a stack trace on the lane's observation: the lane rebuilt on every held frame because painting() read timelineHeldPainting; now read off the frame."
+    },
+    {
+      "t": "2026-11-21T19:21:55.474Z",
+      "note": "Pass 19 results. Lanes built a frame near Fit 4.17 -> 2.09, scroll 1.67 (stretch moves only). Back to back A/B (main e822ad2f2 vs change, 2 runs each): busy near Fit 9.14/9.07 -> 8.30/8.44 ms, zoom in 8.4 -> 8.2; mean frames within noise (near Fit 11.3-11.45 both). An earlier pair an hour apart read near Fit 11.26 -> 9.85-10.21 and late 225 -> 124-148, not repeated back to back (part of it was edge names drawn off screen in a buggy build; hiding names saves only ~0.4 ms busy). Look: lanes held on their frame 5 s (throwaway switch) through 8 timeline walks, all pass incl. clicks after scroll; pictures match at rest except a quiet lane's gap slot loses its dashed ends at the lane edges while moving. 17 timeline walks green on the final build; Scripts/test.sh exit 0. Rules written in docs/design/video.md 8f. Audit queue/audits/2026-11-21-timeline-hour-long-pass19-lane-frame.json."
+    },
+    {
+      "t": "2026-11-21T19:21:55.555Z",
+      "note": "Still open, bars not reached: zoom in ~55 late of 240 and near Fit ~225 of 648 vs 5%, scroll ~15-40 of 360 (noisy), edits (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). Next: frames that paint afresh (~14 ms vs ~9 held) still rebuild every lane and lay pictures; with the lane now frozen between frame changes, a fresh paint could swap a picture into the existing layout instead of rebuilding the lane (frame unchanged while only the picture changes). Left rough, not filed: the gap-slot dashed ends while moving (cosmetic, only during motion, matches how painted gaps already look). Main CI red is owned by main-checks-go-green-again-the-stopped-sweep-dri (not this change)."
+    },
+    {
+      "t": "2026-11-21T19:22:20.144Z",
+      "note": "Pass 19 landed b46306651: lanes lay out against a frame that holds still while the timeline moves and slide as one. Lanes rebuilt a frame near Fit 4.2 -> 2.1, main thread 9.1 -> 8.3 ms a frame; frame times within noise; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: fresh paints without rebuilding the lane)."
     }
   ],
   "started": "2026-11-21T15:57:06.043Z",

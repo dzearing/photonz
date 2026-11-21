@@ -18468,3 +18468,13 @@
 {"t":"2026-11-21T15:26:16.298Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-21T15:26:16.376Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-21T15:26:30.697Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 18 landed 48862dbbf: the speed walk now reports main thread busy a frame and profiles every pass; found near Fit is ~9 ms of main thread a frame, ~8 even when nothing is painted, so the bar needs the lanes out of SwiftUI's per-frame update. Lanes taking turns to repaint tried and backed out (no gain). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
+{"t":"2026-11-21T15:57:05.845Z","ev":"slice_pass","walks":12,"passed":12,"failed":0,"seconds":1803,"of":1184,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-21T15:57:06.049Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-21T16:11:18.367Z","ev":"task_created","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t","priority":"p1-high","title":"Keynote Clean, Soft Gradient Glass, Kinetic Bold, Tech Terminal and Stacked Stagger are replaced by titles that look professionally designed"}
+{"t":"2026-11-21T16:11:21.577Z","ev":"task_resequenced","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t","from":4030,"to":35}
+{"t":"2026-11-21T16:21:02.161Z","ev":"task_created","id":"changing-an-arrow-s-look-while-typing-its-captio","priority":"p1-high","title":"Changing an arrow's look while typing its caption repaints the pill straight away"}
+{"t":"2026-11-21T16:21:07.796Z","ev":"task_resequenced","id":"changing-an-arrow-s-look-while-typing-its-captio","from":4030,"to":40}
+{"t":"2026-11-21T19:21:55.385Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-21T19:21:55.477Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-21T19:21:55.558Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-21T19:22:20.147Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 19 landed b46306651: lanes lay out against a frame that holds still while the timeline moves and slide as one. Lanes rebuilt a frame near Fit 4.2 -> 2.1, main thread 9.1 -> 8.3 ms a frame; frame times within noise; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: fresh paints without rebuilding the lane)."}
