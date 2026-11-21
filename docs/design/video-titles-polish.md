@@ -214,6 +214,54 @@ Timings at Normal energy. "Knobs" is what the person can tweak.
     leave upward in reverse order. Knobs: direction pattern, stagger, logo,
     energy.
 
+## Colour and type rules for title pages
+
+Added 2026-11-21 (task `keynote-clean-soft-gradient-glass-kinetic-bold-t`),
+after the user called Keynote Clean, Soft Gradient Glass, Kinetic Bold, Tech
+Terminal and Stacked Stagger clip art: "These purple colors are just not what
+you would see on high quality refined title slides." Derived from a board of
+28 references (Apple keynotes and product pages, film main titles, Stripe,
+Linear, Vercel, editorial and broadcast design):
+`queue/audits/2026-11-21-title-reference-board.md`. Every new built-in title
+follows these; a departure says which rule and why.
+
+**Colour**
+
+1. The ground is a neutral with a temperature: warm black, cool black, ink
+   navy, off-white, warm paper, stone. A saturated hue never fills the frame.
+2. One accent at most, taking the ground's temperature (brass on warm black,
+   vermilion on ink, sage on stone, amber on graphite, blush on oxblood), on a
+   tenth of the frame or less and for one job.
+3. Never pure white on pure black: ivory, `#F5F5F7`, `#EDEDED`; ink, not black,
+   on light grounds.
+4. The secondary line is the headline's colour family lower in value, not a
+   new hue.
+5. Headline to ground 7:1 or better; small type 4.5:1 or better.
+6. Violet and electric blue only as light (a glow at a fifth over a deep
+   ground), never as the field.
+7. A moving ground reads as light, not pattern: dust in a beam, a slow change
+   of light, a grid noticed on the second look.
+
+**Type**
+
+1. One named typographic idea per title (Didone hairlines at display size,
+   roman against italic, a tight caps stack, a monospaced system, a serif over
+   tracked caps). Plain centred SF Pro over a grey line is not an idea.
+2. Tracking moves against size: display -1% to -3% (condensed caps about 0),
+   small caps labels +10% to +35%.
+3. Two sizes, about 3:1 to 8:1 apart.
+4. Two families at most, contrasted in structure (serif and sans, mono and
+   proportional, roman and italic).
+5. Display leading 0.85 to 1.05.
+6. Dead centre and symmetric, or flush left at about an eighth of the width.
+7. Ornament is structural: a rule, a caret, a number, a crop; never a blob or
+   a rounded square standing in for a logo.
+
+Faces every Mac has that serve these: Didot, Bodoni 72, New York, Baskerville,
+Big Caslon, Iowan Old Style, Helvetica Neue, Avenir Next (and Condensed),
+Futura, DIN Condensed, SF Pro, SF Mono. An italic is named by its face
+(`Didot-Italic`, `BodoniSvtyTwoITCTT-BookIta`).
+
 ## Making it easy to build
 
 **The model** (pure, in PhotonzCore)
