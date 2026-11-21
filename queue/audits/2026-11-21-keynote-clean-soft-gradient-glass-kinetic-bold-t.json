@@ -1,8 +1,8 @@
 {
   "feature": "Five title pages redesigned from a reference board",
-  "epic": "",
-  "summary": "Keynote Clean, Soft Gradient Glass, Kinetic Bold, Tech Terminal and Stacked Stagger are gone. In their places under More Styles: Main Title (Didot in ivory on a warm black with brass credit capitals), Frosted Glass (a serif in green ink on frosted glass over sage and stone light), Condensed Poster (huge condensed capitals stacked tight, one vermilion line), Command Line (an amber label, caret and rule with big mono type on near black) and Roman and Italic (a bold line over a Bodoni italic line, ivory and blush on oxblood). No purple, no electric blue.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Reel and pictures were made with the probe app and the renderer; the five real window pictures come from the title-set walks with Screen Recording granted and the screen unlocked.",
+  "epic": "video-titles-graphics",
+  "summary": "Keynote Clean, Soft Gradient Glass, Kinetic Bold, Tech Terminal and Stacked Stagger are gone. Under More Styles you now get Main Title (Didot in ivory on warm black, brass credit), Frosted Glass (a serif in green ink on frosted glass over sage and stone), Condensed Poster (huge condensed capitals locked tight, one vermilion line), Command Line (an amber label, rule and caret over big mono type on slate black) and Roman and Italic (bold grotesk over a Bodoni italic, ivory and blush on oxblood). Each shows sample copy that fits it instead of \"Your Title\". There is no purple and no electric blue.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The reel, contact sheet and blind score were made with the renderer (TitleRedesignReelTests). The five window pictures come from the title-set walks, taken with Screen Recording granted and the screen unlocked.",
   "switched": {},
   "try": [
     { "do": "File > New > Video, then in the panel's Library pick Catalog and scroll to Title Pages, More Styles.", "shot": "2026-11-21-title-redesign-old-new.png" },
@@ -10,26 +10,27 @@
     { "do": "Drag Main Title onto the timeline and press Space.", "shot": "2026-11-21-title-redesign-main-title-sc.png" },
     { "do": "Drag Frosted Glass onto the timeline above it and press Space.", "shot": "2026-11-21-title-redesign-frosted-glass-sc.png" },
     { "do": "Right-click a track header and choose Add Title Page > More Styles > Condensed Poster.", "shot": "2026-11-21-title-redesign-condensed-poster-sc.png" },
-    { "do": "Add Command Line the same way and watch the words type in behind the amber caret.", "shot": "2026-11-21-title-redesign-command-line-sc.png" },
+    { "do": "Add Command Line the same way, type your own headline and watch it type in behind the amber caret.", "shot": "2026-11-21-title-redesign-command-line-sc.png" },
     { "do": "Add Roman and Italic, then double click its italic line and type your own words.", "shot": "2026-11-21-title-redesign-roman-and-italic-sc.png" },
-    { "do": "Watch all five back to back in the reel, then compare scores in the grid.", "shot": "2026-11-21-title-redesign-scores.png" }
+    { "do": "Watch all five back to back in the reel, then compare the scores in the grid.", "shot": "2026-11-21-title-redesign-scores.png" }
   ],
   "evaluate": [
     "Would you put any of these five in front of a client without restyling it first?",
-    "Is Command Line still too plain, or is its quiet mono system what you want from a technical title?",
-    "Does the ember wind behind Condensed Poster add anything, or would you rather it stood on flat warm black?",
-    "Is the lowercase italic second line in Roman and Italic the right placeholder, or should it read as a proper second headline?",
+    "Does the sample copy (The Long Way Home, Quiet Mornings, MAKE NOISE, Ship faster, Made by Hand) help you see what each is for, or would you rather start from blank placeholders?",
+    "Does Command Line's label, rule and big mono headline read as a launch title now, or still as code?",
+    "Is the ember wind behind Condensed Poster worth keeping, or would you rather it stood on flat warm black?",
     "Do the new names say what each one is at a glance on the shelf?"
   ],
   "rough": [
-    "Not every title reaches the bar yet. The task's bar is a blind vision-model score at or above the calm set's median. In the final round (three runs, titles shuffled and unnamed, calm median 7.21): Main Title 7.58 and Frosted Glass 7.50 clear it; Condensed Poster 7.08, Roman and Italic 6.92 and Command Line 6.75 do not. Every new one is well above its old version (old: Keynote Clean 5.42, Soft Gradient Glass 4.67, Kinetic Bold 5.50, Tech Terminal 4.08, Stacked Stagger 5.92). Roman and Italic scored 7.67 against a median of 6.88 in the round before with no change to it, so the scorer moves about half a point between rounds; Command Line has been below the median in all three rounds. The task stays open for these three. All three rounds are in the task log.",
-    "No mock covers these five More Styles pages; the brief is the reference board (queue/audits/2026-11-21-title-reference-board.md), which was written from the published work and brand colours, not from downloaded frames, so its hex values are approximate.",
-    "Headline contrast to ground: Main Title 16.2:1, Frosted Glass 12.4:1 (on the glass), Condensed Poster 16.4:1, Command Line 16.9:1, Roman and Italic 16.9:1; every small line 6.1:1 or better. Ground chroma (CIELAB): 0.5, 3.1, 0.6, 0.4 and 4.6, against 43 for Soft Gradient Glass and 99 for Kinetic Bold.",
-    "Entrance and hold: no headline shows on its first frame (0% of its held ink at 0 ms for all five), each is at 90% or more by the end of its in, and the background's mean frame-to-frame difference while holding is 0.13 to 0.71 out of 255 (the old five: 0.70 to 2.71).",
-    "Command Line no longer stands on the grid look: that look always draws a synthwave sun and horizon glow, the clip art this task removes. It now shares the slow liquid light with Frosted Glass, one dark and one pale.",
-    "A moving look lifts every light it is given to a strong colour and swaps an all-grey set for teal, violet and blue, so a truly neutral moving ground cannot be made; the dark grounds here carry faint gold, ember and amber light instead.",
-    "Fixed on the way: the soft shade behind small lines on a moving look was white for any mid-tone colour, which put a glow round grey, brass and vermilion lines on dark looks (Gradient Glow's and Pill Card's grey lines too). It now takes the colour opposite the look's ground.",
-    "Fixed on the way: condensed capitals set tighter than their letters showed their tops on the first frame of a mask reveal.",
-    "A document that already holds one of the old five opens drawing it exactly as it was; a new drag of the same tile lands the new design."
+    "Blind score, final round (round 6: three runs, 27 held frames shuffled under random codes, scored on palette, type, hierarchy and would-a-designer-ship-it): calm set median 6.83. New: Main Title 7.58, Roman and Italic 7.42, Condensed Poster 7.33, Frosted Glass 7.17, Command Line 6.83. Old: Keynote Clean 4.83, Soft Gradient Glass 4.50, Kinetic Bold 5.08, Tech Terminal 3.83, Stacked Stagger 5.75. Every new one is at or above the median and 1.7 to 3.0 points above its old version.",
+    "Command Line clears the bar by nothing: it ties the median. The scorer also moves about half a point from round to round with no change to the pictures (the calm median read 7.33, 7.13 and 6.83 in rounds 4 to 6), so Command Line is the one to watch.",
+    "Part of the lift in this pass is sample copy. The calm set always showed real words, and \"Your Title\" scored as a template. Layout changes in the same pass: Command Line is one block with a rule as wide as its type; Condensed Poster's two lines are locked tight; Roman and Italic stands on a true oxblood with quieter streams.",
+    "The other seven of the designed set score below the new bar in the same round: Editorial Serif 6.17, Light Leak 5.67, Minimal Underline 5.25, Behind Glass 5.08, Pill Card 5.00, Gradient Glow 4.83, Split Wipe 4.50. They are filed as one task, seven-more-built-in-titles-look-as-refined-as-th.",
+    "While Command Line types, its caret waits where the finished words will end, not after the letters typed so far (the 400 and 700 ms frames in the contact sheet). The old Tech Terminal did the same. Filed as a-typed-title-caret-follows-the-letters-as-they.",
+    "A font with its own line gap (DIN Condensed) comes out a gap looser than the line spacing set, which is also true in the inspector. Condensed Poster sets 0.62 to land where 0.8 should. Filed as line-spacing-set-on-a-font-with-built-in-leading.",
+    "No mock covers these five More Styles pages; the brief is the reference board (queue/audits/2026-11-21-title-reference-board.md), and its rules plus this pass's composition and copy rules are in docs/design/video-titles-polish.md.",
+    "Headline contrast to ground: Main Title 16.2:1, Frosted Glass 12.4:1 (on the glass), Condensed Poster 16.4:1, Command Line 16.7:1, Roman and Italic 16.1:1. Every small line is 4.5:1 or better (held by TitleRedesignTests). Ground chroma (CIELAB): 0.5, 6.3, 0.6, 0.4 and 14.8, against 43 for Soft Gradient Glass and 99 for Kinetic Bold.",
+    "Entrance: no headline shows at 0 ms. The 12.6% that matched for Frosted Glass at 0 ms is dark footage under the ground as it fades in; there are no words in that frame. The share of the held headline on screen at 400, 700 and 1100 ms: Main Title 3, 78, 100; Frosted Glass 0, 0, 100; Condensed Poster 86, 86, 91; Command Line 24, 74, 100; Roman and Italic 4, 100, 100. The background's mean frame-to-frame difference while holding is 0.12 to 0.39 out of 255 (the old five: 0.70 to 2.71).",
+    "A document that already holds one of the old five opens drawing it exactly as it was; a new drag of the same tile lands the new design (TitleRedesignTests)."
   ]
 }
