@@ -1288,6 +1288,27 @@ The rule, for any view added to the editor window:
      cost about 14 ms against 9.3 held, the painting about 2.5 ms of that
      (waveforms the largest part, then clip outlines and transition
      bands), the rest SwiftUI graph upkeep in the lanes laid around it.
+   - **Every frame near Fit is about 8 ms of the main thread before
+     anything is painted** (2026-11-21, pass 18; the speed line's "main
+     thread busy a frame", and `pass-profile.sh` keeping every pass of the
+     timeline measure, labelled by frame and kind). Near Fit the main thread
+     is busy 9.0 ms a frame against an 8.3 ms refresh: the update pass 5.4
+     ms on a frame that holds every painting (track lane bodies 1.3, spread
+     thin: the painting's key, observation tracking, the bars, none over 0.25;
+     SwiftUI graph upkeep 1.6), the layout and drawing pass 1.9, and a trail
+     of passes under half a millisecond. A frame that lays its pictures adds
+     about 2.7 ms (2.2 of it the paint closures, 0.6 rasterising). So laying
+     the pictures off the main thread would leave a held frame's 8 ms, still
+     at the refresh: the bar needs the lanes out of SwiftUI's per-frame
+     update, a layer per lane its painting is the contents of, moved by the
+     ruler outside SwiftUI.
+   - **Lanes taking turns to let go of a held painting save nothing**:
+     tried on 2026-11-21 (pass 18). Three groups of lanes, each letting go on
+     a step of its own, so no frame laid more than a third of the pictures:
+     pictures laid near Fit fell from 2.4 a frame to 1.8, and the near-Fit
+     loop stayed at 11.0 to 11.6 ms against 10.9 to 11.3 all together, every
+     frame now near 11 instead of one in three near 15. A frame's cost is
+     mostly the 8 ms above, not the pictures.
    - **A painting in a layer of its own, or a drawing group, does not save
      its rasterising**: tried on 2026-11-19. A stretched or slid canvas is
      rasterised again either way; a nested hosting view per canvas took

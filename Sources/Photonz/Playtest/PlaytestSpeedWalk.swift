@@ -554,6 +554,9 @@ final class SpeedWalkProbe {
         editor.fitTimeline()
         await settle(editor, frames: frames)
         let viewsAtFit = Self.viewCensus(editor)
+        PassSampler.shared.startIfOn()
+        PassSampler.keepsEveryPass = true
+        defer { PassSampler.label = ""; PassSampler.keepsEveryPass = false; PassSampler.shared.dump() }
 
         // How many clip bars each frame built, per measure, for the line.
         var barsPerFrame: [String] = []
@@ -574,12 +577,19 @@ final class SpeedWalkProbe {
         // Along it, frames that moved the drawn stretch (every lane painted
         // again) against frames that only slid it (`timelineDrawnMS`).
         var movedSplit = ""
+        // The main thread's busy time a frame, per measure: a frame that
+        // misses its refresh with the main thread mostly idle is waiting on
+        // the drawing after it, not on the app's own work.
+        var busyPerFrame: [String] = []
         func film(_ label: String, moves: Int, _ move: () -> Bool) async -> SpeedWalk.FrameTimes {
             ViewBuildMeter.shared.reset()
             TimelinePaintedPicture.laidMS = 0
+            _ = MainThreadMeter.shared.takeBusy()
             var at: [Double] = []
             var octaves: [Int: [Double]] = [:]
             defer {
+                busyPerFrame.append(String(format: "%@ %.2fms", label,
+                                           MainThreadMeter.shared.takeBusy() * 1000 / Double(max(1, at.count - 1))))
                 let built = ViewBuildMeter.shared.count(.clipBar)
                 barsPerFrame.append(String(format: "%@ %.0f", label, Double(built) / Double(max(1, at.count - 1))))
                 let laid = ViewBuildMeter.shared.count(.paintedPicture)
@@ -606,7 +616,12 @@ final class SpeedWalkProbe {
                 let stretchMoved = editor.timelineDrawnMS != drawnBefore
                 let octave = max(0, Int(log2(max(1, editor.timelineZoom.scale)).rounded(.down)))
                 let isHeld = editor.timelineHeldPainting != nil
+                // The frame's passes, by what kind of frame it is, when
+                // `pass-profile.sh` asks for a profile.
+                PassSampler.label = "\(at.count) " + (label == "scroll" ? "scroll " + (stretchMoved ? "moved" : "slid")
+                    : label + " " + (isHeld ? "held" : "fresh"))
                 await frames.next()
+                PassSampler.label = ""
                 let now = (CACurrentMediaTime() - start) * 1000
                 octaves[octave, default: []].append(now - (at.last ?? 0))
                 if isHeld { held.append(now - (at.last ?? 0)) } else { fresh.append(now - (at.last ?? 0)) }
@@ -670,7 +685,8 @@ final class SpeedWalkProbe {
         run.timeline = [zoomIn, zoomOut, scroll]
         return "views at fit: \(viewsAtFit); views zoomed in: \(viewsZoomed); clip bars built a frame: "
             + barsPerFrame.joined(separator: ", ") + "; paintings laid a frame: " + picturesPerFrame.joined(separator: ", ")
-            + "; by zoom: " + byZoom.joined(separator: "; ") + "; mean frame: " + means.joined(separator: ", ") + heldSplit + movedSplit + "; "
+            + "; by zoom: " + byZoom.joined(separator: "; ") + "; mean frame: " + means.joined(separator: ", ")
+            + "; main thread busy a frame: " + busyPerFrame.joined(separator: ", ") + heldSplit + movedSplit + "; "
             + [zoomIn, zoomOut, nearFit, scroll].map {
             String(format: "%@: %d frames, median %.1fms, p95 %.1fms, worst %.0fms, %d late against %.1fms",
                    $0.label, $0.frames, $0.medianMS, $0.p95MS, $0.worstMS, $0.late, $0.refreshMS)

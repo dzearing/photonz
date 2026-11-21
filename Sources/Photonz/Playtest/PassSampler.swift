@@ -31,6 +31,9 @@ final class PassSampler: @unchecked Sendable {
     /// What the walk is timing now; a pass is kept only while there is one.
     /// Written and read on the main thread only.
     nonisolated(unsafe) static var label = ""
+    /// Every pass is kept, not only those of 6 ms or more: a frame of the
+    /// timeline's speed measure is several shorter passes (2026-11-21).
+    nonisolated(unsafe) static var keepsEveryPass = false
 
     /// Starts sampling, once, when the folder says to. Called on the main
     /// thread, which is the thread it samples.
@@ -101,7 +104,7 @@ final class PassSampler: @unchecked Sendable {
         guard !label.isEmpty else { return }
         lock.withLock {
             let inside = ring.filter { $0.t >= start && $0.t <= end }
-            if kept.count < 400 { kept.append((label, start, (end - start) * 1000, inside)) }
+            if kept.count < 12_000 { kept.append((label, start, (end - start) * 1000, inside)) }
         }
     }
 
