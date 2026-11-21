@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-21T09:13:45.386Z",
-  "updated": "2026-11-21T14:22:58.981Z",
+  "updated": "2026-11-21T21:21:18.008Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/44857516016 (306c82581). Fails: \"a commit the app has changed since was found to stand in for landed code\", then the schedule/loop-line checks, then ENOENT on <tmp>/sweep-resume-*/ran.2 at sweep-resume-drill.mjs:350 (endToEnd). Cause: sweep-resume-drill.mjs:~329 runs git rev-list --max-count=200 HEAD to find a commit the app changed since; .github/workflows/ci.yml line 110 uses actions/checkout@v4 with no fetch-depth (default 1). Reproduced: git clone --depth 1 file:///Users/dzearing/git/photonz /tmp/srd-shallow && cd /tmp/srd-shallow && node queue/bin/sweep-resume-drill.mjs -> EXIT 1 with those three FAILs and the ENOENT; same drill in the full repo -> all checks passed. Fix either fetch-depth: 0 (or 200) on that checkout, or have the drill make its own commits in a temp repo instead of reading the real history. Filed by the runner on a-long-edit-with-transitions-plays-scrubs-and-ed (pass 23).",
@@ -37,6 +37,25 @@
     {
       "t": "2026-11-21T14:22:58.980Z",
       "note": "Still red on CI run 44907683675 (35790c9f4, 2026-11-21 13:14): same 3 FAILs then ENOENT ran.2 at sweep-resume-drill.mjs:350. Seen by pass 18 of the-timeline-of-an-hour-long-edit-scrolls-zooms."
+    },
+    {
+      "t": "2026-11-21T20:49:53.371Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T21:21:17.855Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-21T21:21:17.923Z",
+      "note": "Reproduced: depth-1 clone of main -> sweep-resume-drill exit 1 (same 3 FAILs + ENOENT ran.2 as CI run 44945653382); depth-200 blob-less clone -> all checks passed. Fix f266f6369: ci.yml build-job checkout gets fetch-depth: 200 with a comment saying why (sparse checkout => blob:none, so commits+trees only). Drill now stops on one line naming a shallow clone instead of cascading into ENOENT. CI run 44949142662: 'A stopped sweep picks up where it stopped' completed success, as did every step after it up to the release build, and all three test slices."
+    },
+    {
+      "t": "2026-11-21T21:21:18.006Z",
+      "note": "CI build job now fetches 200 commits (ci.yml, commented); the drill names a too-shallow clone in one line. Verified: depth-1 clone fails on that line, depth-200 clone and full repo pass, Scripts/test.sh green, and on CI run 44949142662 the step 'A stopped sweep picks up where it stopped' passed."
     }
-  ]
+  ],
+  "started": "2026-11-21T20:49:53.370Z",
+  "walks": [],
+  "completed": "2026-11-21T21:21:18.007Z"
 }

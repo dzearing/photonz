@@ -18483,3 +18483,8 @@
 {"t":"2026-11-21T20:18:59.639Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-21T20:18:59.717Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-21T20:19:16.176Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 20 landed 28ec9f2bf: a quick pinch holds each lane's picture to 17 per cent for 50 ms; near Fit late frames 239-293 -> 166-194 of 648 (same build, switch), zoom out 41-68 -> 17-29 of 240. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: lay the next painting ahead in held frames)."}
+{"t":"2026-11-21T20:49:53.161Z","ev":"slice_pass","walks":12,"passed":12,"failed":0,"seconds":1806,"of":1184,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-21T20:49:53.373Z","ev":"task_started","id":"main-checks-go-green-again-the-stopped-sweep-dri","title":"Main checks go green again: the stopped-sweep drill runs on a full history","priority":"p1-high"}
+{"t":"2026-11-21T21:21:17.857Z","ev":"task_walks","id":"main-checks-go-green-again-the-stopped-sweep-dri","walks":[]}
+{"t":"2026-11-21T21:21:17.925Z","ev":"task_note","id":"main-checks-go-green-again-the-stopped-sweep-dri"}
+{"t":"2026-11-21T21:21:18.009Z","ev":"task_done","id":"main-checks-go-green-again-the-stopped-sweep-dri","from":"in_progress","note":"CI build job now fetches 200 commits (ci.yml, commented); the drill names a too-shallow clone in one line. Verified: depth-1 clone fails on that line, depth-200 clone and full repo pass, Scripts/test.sh green, and on CI run 44949142662 the step 'A stopped sweep picks up where it stopped' passed."}
