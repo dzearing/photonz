@@ -860,12 +860,15 @@ private struct TimelinePaintedHands: View {
     let laneWidth: CGFloat
     let laneHeight: CGFloat
 
+    /// The frame the lane lays out against while the timeline moves
+    /// (`TimelineLaneFrame`).
+    @Environment(\.timelineLaneFrame) private var laneFrame
     @State private var carried: UUID?
 
-    /// Where the canvas sits across the lane now, read when a hand arrives
-    /// rather than on every frame of a scroll.
+    /// Where the canvas sits across the lane now, in the lane's own points,
+    /// read when a hand arrives rather than on every frame of a scroll.
     private var offset: CGFloat {
-        canvas.offset(in: editorState.motionStripRuler, laneWidth: laneWidth, scale: displayScale)
+        canvas.offset(in: editorState.laneRuler(laneFrame), laneWidth: laneWidth, scale: displayScale)
     }
 
     var body: some View {
@@ -885,7 +888,9 @@ private struct TimelinePaintedHands: View {
                 }
                 // ...and the playhead to the moment clicked
                 // (`EditorState+TimelinePointing`).
-                editorState.playheadToTimelineClick(laneX: point.x + offset, laneWidth: laneWidth)
+                editorState.playheadToTimelineClick(
+                    laneX: editorState.windowX(ofLaneX: point.x + offset, frame: laneFrame, laneWidth: laneWidth),
+                    laneWidth: laneWidth)
             }
             .contextMenu { TimelinePaintedClipMenu(placed: placed) }
     }
@@ -896,8 +901,9 @@ private struct TimelinePaintedHands: View {
         DragGesture(minimumDistance: 3, coordinateSpace: .named(TimelineDock.tracksSpace))
             .onChanged { value in
                 if editorState.clipBarDrag == nil {
-                    let start = CGPoint(x: value.startLocation.x - TimelineDock.lanesLeading - offset,
-                                        y: value.startLocation.y)
+                    let laneX = editorState.laneX(ofWindowX: value.startLocation.x - TimelineDock.lanesLeading,
+                                                  frame: laneFrame, laneWidth: laneWidth)
+                    let start = CGPoint(x: laneX - offset, y: value.startLocation.y)
                     // Read across the lane only: a press in the lane is on
                     // the clip whose stretch it is in.
                     guard let hit = placed.last(where: {

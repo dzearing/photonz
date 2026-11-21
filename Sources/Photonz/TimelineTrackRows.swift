@@ -522,13 +522,20 @@ struct TimelineTrackRow: View {
         #if PHOTONZ_PLAYTEST
         ViewBuildMeter.shared.built(.trackLane)
         #endif
-        let ruler = editorState.motionStripRuler
+        // While the timeline moves, a lane that is not a Captions track lays
+        // everything in it out against a frame that holds still for frames
+        // at a time, and `TimelineLaneSlide` slides and stretches it to the
+        // window: this body is built again only when the frame moves
+        // (`TimelineLaneFrame`). At rest, and while a hand is on anything
+        // in a lane, the frame is the window itself.
+        let frame = row.isCaptions ? nil : editorState.timelineLaneFrameStanding
+        let ruler = frame?.ruler ?? editorState.motionStripRuler
         // Only what is in sight, and half a window each side, is built: on
         // the hour-long reference edit a lane of every clip, gap and cut made
         // each frame of a zoom or scroll cost most of a second
         // (`TimelineSight`). A clip picked, trimmed or in a hand keeps its
         // view wherever it is, since its drag lives there.
-        let sight = TimelineSight(ruler: ruler)
+        let sight = TimelineSight(ruler: ruler, margin: frame?.sightMargin ?? TimelineSight.margin)
         let kept = keptOutOfSight
         let clipsInSight = sight.clips(row.clips, keeping: kept)
         let linkedInSight = sight.clips(row.linked, keeping: kept)
@@ -540,22 +547,24 @@ struct TimelineTrackRow: View {
         // inside one stretch moves the painting without painting it again
         // (`TimelinePaint.Canvas`): what it paints is every clip reaching the
         // stretch, not only the ones in sight.
-        let stretch = editorState.timelineDrawnMS
+        let stretch = frame?.drawnMS ?? editorState.timelineDrawnMS
         // While the timeline zooms, only the window: every frame of a zoom
         // paints the canvas again, and the stretch is two and a half windows
         // (`TimelinePaint.paintedMS`).
         // While a zoom holds the last painting, it is laid against the window
         // it was painted at and stretched to this one, not painted again
         // (`EditorState.timelineHeldPainting`).
-        let paintRuler = editorState.timelinePaintRuler
-        let paintStretch = editorState.timelinePaintStretch
-        let paintedMS = TimelinePaint.paintedMS(window: paintRuler, stretch: stretch,
-                                                isZooming: editorState.timelinePaintsTheWindow)
+        // A frame is the window a held painting was laid at, so it is the
+        // painting's ruler, unstretched; the slide does the stretching.
+        let paintRuler = frame?.ruler ?? editorState.timelinePaintRuler
+        let paintStretch = frame == nil ? editorState.timelinePaintStretch : 1
+        let paintedMS = frame?.paintedMS ?? TimelinePaint.paintedMS(window: paintRuler, stretch: stretch,
+                                                                    isZooming: editorState.timelinePaintsTheWindow)
         let canvas = TimelinePaint.Canvas(drawnMS: paintedMS, ruler: paintRuler, laneWidth: laneWidth)
         let canvasX = canvas.offset(in: ruler, laneWidth: laneWidth, scale: displayScale)
         let document = editorState.document
         let laid = painting(document, clipsInSight: clipsInSight.count, kept: kept, ruler: paintRuler,
-                            alternates: alternates, stretch: paintedMS)
+                            alternates: alternates, stretch: paintedMS, frame: frame)
         let painting = laid.painting
         // Past the stretch the painting covers, a painting lane builds only
         // what somebody is working on: the sight reaches half a window
@@ -582,9 +591,10 @@ struct TimelineTrackRow: View {
             // thing from its name to the end of its lane.
             if isHeld { heldFill.allowsHitTesting(false) }
             // A lane that paints its clips draws its gridlines on the same
-            // canvas, under them (`TimelinePaintedClips.gridlines`).
+            // canvas, under them (`TimelinePaintedClips.gridlines`); a quiet
+            // lane's are drawn against the window, under the slid lane.
             if painting.bars.isEmpty {
-                TimelineGridlines(ruler: ruler, laneWidth: laneWidth, height: laneHeight)
+                TimelineWindowGridlines(laneWidth: laneWidth, height: laneHeight)
             }
             // An empty track says where a clip goes before anything is
             // carried (`TimelineEmptySlot`). A carried clip lights the whole
@@ -596,11 +606,129 @@ struct TimelineTrackRow: View {
             // box that picks the clips it touches, or with ⌥ a range on the
             // tracks it crosses (`EditorState+TrackRange`). A clip on top
             // takes its own presses first.
+            // Under the slid lane and read against the window, which the ruler
+            // is read from when the hand moves.
             Color.clear
                 .contentShape(Rectangle())
-                .gesture(TimelineLaneMarquee.gesture(editorState, ruler: ruler, laneWidth: laneWidth,
-                                                     trackID: track.id))
+                .gesture(TimelineLaneMarquee.gesture(editorState, ruler: editorState.motionStripRuler,
+                                                     laneWidth: laneWidth, trackID: track.id))
                 .contextMenu { TimelineTrackMenu(track: track, index: index, onTheLane: true) }
+            timed(sight: sight, gaps: gaps, paintsGaps: paintsGaps, painting: painting, laid: laid, canvas: canvas,
+                  canvasX: canvasX, paintedMS: paintedMS, paintStretch: paintStretch, stretch: stretch, ruler: ruler,
+                  frame: frame, clipsInSight: clipsInSight, linkedInSight: linkedInSight, kept: kept,
+                  alternates: alternates, carrying: carrying, document: document, builds: builds, drawn: drawn)
+                .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
+                .modifier(TimelineLaneSlide(frame: frame, laneWidth: laneWidth))
+            // The names that keep to the window's left edge, drawn against
+            // the window over the slid painting they belong to.
+            let following = painting.bars.filter(\.nameFollowsEdge)
+            if !following.isEmpty {
+                TimelineEdgeNames(bars: following, drawnMS: stretch, laneWidth: laneWidth, laneHeight: laneHeight)
+            }
+            // The Blade and Track Select over every clip, read against the
+            // window: with either in hand no cut is built, so nothing of the
+            // slid lane lies over them.
+            if isBlade, !track.isLocked {
+                ForEach(clipsInSight) { clip in
+                    TimelineBlade(group: clip, laneWidth: laneWidth)
+                        .frame(height: pictureHeight(of: clip, carrying: carrying))
+                }
+            }
+            if isTrackSelect, !track.isLocked {
+                ForEach(clipsInSight) { clip in
+                    TimelineTrackSelect(group: clip, laneWidth: laneWidth)
+                        .frame(height: pictureHeight(of: clip, carrying: carrying))
+                }
+            }
+            if (isBlade || isTrackSelect) && !track.isLocked {
+                ForEach(linkedInSight) { clip in
+                    if isBlade {
+                        TimelineBlade(group: clip, laneWidth: laneWidth, isLinkedSound: true)
+                            .frame(height: halves.sound)
+                            .padding(.top, halves.picture)
+                    }
+                    if isTrackSelect {
+                        TimelineTrackSelect(group: clip, laneWidth: laneWidth, isLinkedSound: true)
+                            .frame(height: halves.sound)
+                            .padding(.top, halves.picture)
+                    }
+                }
+            }
+            // The Range tool: a drag anywhere on the lane, over clips too,
+            // picks a stretch of time, as Final Cut's R does.
+            if isRangeTool {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .gesture(TimelineLaneMarquee.gesture(editorState, ruler: editorState.motionStripRuler,
+                                                         laneWidth: laneWidth, trackID: track.id))
+                    .contextMenu { TimelineTrackMenu(track: track, index: index, onTheLane: true) }
+            }
+            if track.isLocked { lockedHatch }
+            dropMark
+            if let hover = editorState.timelineFileHover, hover.landing.target == .onto(track.id) {
+                TimelineFileGhost(hover: hover, laneWidth: laneWidth, height: laneHeight)
+            }
+            if let kind = editorState.transitionSpotsLitKind, track.kind == .video {
+                TimelineTransitionSpots(kind: kind, trackID: track.id, laneWidth: laneWidth, height: laneHeight)
+            }
+            if let hover = editorState.timelineTransitionHover, hover.trackID == track.id {
+                TimelineTransitionGhost(hover: hover, laneWidth: laneWidth, height: laneHeight)
+            }
+        }
+        .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
+        // On a busy lane the clip under the pointer is drawn as its full bar.
+        // Read on the whole lane, so the bar that takes its place under the
+        // pointer does not end the hover that put it there.
+        .playtestContinuousHover("Lane \(track.name)") { phase in
+            if case .active(let point) = phase {
+                pointerSpot.x = point.x
+            } else {
+                pointerSpot.x = nil
+            }
+            readPointer()
+        }
+        // The pointer held still while the timeline scrolls or zooms under
+        // it: what it is over now is read again, so a cut that slid under it
+        // is the cut's own view by the time the click lands, as it would be
+        // had the pointer moved there. Read by a view of its own, so the
+        // window's every move does not build the lane again.
+        .background { TimelineWindowMoves { readPointer() } }
+        .onChange(of: laneWidth) { readPointer() }
+        .coordinateSpace(name: Self.laneSpace(track.id))
+        // A track of clips with their own sound dims its pictures alone:
+        // hiding the picture leaves the sound playing.
+        .opacity(row.isOff && row.linked.isEmpty ? 0.4 : 1)
+        .clipShape(TimelineEdgeClip())
+        .overlay(alignment: .top) { insertionLine(atTop: true) }
+        .overlay(alignment: .bottom) { insertionLine(atTop: false) }
+        .onGeometryChange(for: CGRect.self) { proxy in
+            proxy.frame(in: .named(TimelineDock.tracksSpace))
+        } action: { frame in
+            guard !isLifted else { return }
+            editorState.trackDropRows[track.id] = TrackDropRow(trackID: track.id, minY: frame.minY,
+                                                               maxY: frame.maxY)
+        }
+        .onDisappear { if !isLifted { editorState.trackDropRows[track.id] = nil } }
+    }
+
+    /// Everything in a lane that is placed in time, laid out against `ruler`:
+    /// the lane's frame while the timeline moves, the window at rest
+    /// (`TimelineLaneSlide` puts it in place).
+    @ViewBuilder
+    private func timed(sight: TimelineSight, gaps: [TimelineGap], paintsGaps: Bool,
+                       painting: LanePaintingKept.Painting, laid: LanePaintingKept.Laid,
+                       canvas: TimelinePaint.Canvas, canvasX: CGFloat, paintedMS: ClosedRange<Double>,
+                       paintStretch: CGFloat, stretch: ClosedRange<Double>, ruler: MotionStripRuler,
+                       frame: TimelineLaneFrame?, clipsInSight: [MotionStripGroup],
+                       linkedInSight: [MotionStripGroup], kept: Set<UUID>, alternates: Set<MotionStripGroup.ID>,
+                       carrying: Set<UUID>, document: PhotonzDocument?,
+                       builds: @escaping (MotionStripGroup) -> Bool,
+                       drawn: @escaping (MotionStripGroup) -> ClosedRange<Double>?) -> some View {
+        // Gaps are cut to the window at rest; laid against a frame, to the
+        // stretch it builds, which holds every window it stands for.
+        let lowX = frame == nil ? 0 : laneWidth * ruler.fraction(ofMS: sight.fromMS)
+        let highX = frame == nil ? laneWidth : laneWidth * ruler.fraction(ofMS: sight.toMS)
+        ZStack(alignment: .topLeading) {
             // Each gap between two clips is the same empty space, with its own
             // right-click menu that leads with Ripple Delete, as Premiere's
             // does (`EditorState+TimelineGap`). The press is read in the
@@ -610,8 +738,8 @@ struct TimelineTrackRow: View {
             // own, for its press and menu (`TimelinePaint.gapViews`).
             ForEach(TimelinePaint.gapViews(sight.gaps(gaps), lanePaints: paintsGaps, pointerGapMS: pointerGapMS),
                     id: \.range.lowerBound) { gap in
-                let x0 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.lowerBound))), 1)
-                let x1 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.upperBound))), 1)
+                let x0 = min(max(lowX, laneWidth * ruler.fraction(ofMS: Double(gap.range.lowerBound))), highX)
+                let x1 = min(max(lowX, laneWidth * ruler.fraction(ofMS: Double(gap.range.upperBound))), highX)
                 if x1 - x0 >= 1 {
                     // Drawn as an empty slot the height of a clip, so a hole
                     // left by a lift or a trim is plain to see.
@@ -624,8 +752,9 @@ struct TimelineTrackRow: View {
                         .contentShape(Rectangle())
                         .frame(width: x1 - x0, height: laneHeight)
                         .offset(x: x0)
-                        .gesture(TimelineLaneMarquee.gesture(editorState, ruler: ruler, laneWidth: laneWidth,
-                                                             trackID: track.id,
+                        // Read in the lane's own space, which is the window's.
+                        .gesture(TimelineLaneMarquee.gesture(editorState, ruler: editorState.motionStripRuler,
+                                                             laneWidth: laneWidth, trackID: track.id,
                                                              in: .named(Self.laneSpace(track.id))))
                         .contextMenu { TimelineTrackMenu(track: track, index: index, gap: gap) }
                 }
@@ -643,12 +772,6 @@ struct TimelineTrackRow: View {
                     .scaleEffect(x: paintStretch, y: 1, anchor: .topLeading)
                     .offset(x: canvasX)
                     .allowsHitTesting(!track.isLocked)
-                let following = painting.bars.filter(\.nameFollowsEdge)
-                if !following.isEmpty {
-                    TimelinePaintedNames(bars: following, ruler: ruler, drawnMS: stretch, laneWidth: laneWidth,
-                                         laneHeight: laneHeight)
-                        .equatable()
-                }
             }
             // A Captions track paints the cues nobody is working on as one
             // layer (`CaptionCuesLayer`) and draws only the rest as bars.
@@ -701,18 +824,6 @@ struct TimelineTrackRow: View {
                                    isLocked: track.isLocked)
                 }
             }
-            if isBlade, !track.isLocked {
-                ForEach(clipsInSight) { clip in
-                    TimelineBlade(group: clip, laneWidth: laneWidth)
-                        .frame(height: pictureHeight(of: clip, carrying: carrying))
-                }
-            }
-            if isTrackSelect, !track.isLocked {
-                ForEach(clipsInSight) { clip in
-                    TimelineTrackSelect(group: clip, laneWidth: laneWidth)
-                        .frame(height: pictureHeight(of: clip, carrying: carrying))
-                }
-            }
             // A clip's own sound: the bottom half of the clip, its bar a second
             // time as sound, so every drag on it is a drag on the clip and the
             // two never part until Detach Audio.
@@ -720,27 +831,17 @@ struct TimelineTrackRow: View {
             // or the track select tool reaches: an item for every painted
             // sound was five hundred empty items laid out near the
             // whole-hour view on every frame of a zoom.
+            // The Blade and Track Select over them are laid over the slid
+            // lane, against the window.
             let tools = (isBlade || isTrackSelect) && !track.isLocked
-            ForEach(tools ? linkedInSight : linkedInSight.filter { !painting.ids.contains($0.id) && builds($0) }) { clip in
-                if !painting.ids.contains(clip.id) {
-                    TimelineClipView(group: clip, laneWidth: laneWidth, height: halves.sound, half: .sound,
-                                     isLinkedSound: true, soundNumber: row.soundNumber,
-                                     soundIsMuted: row.soundIsMuted, soundIsOff: row.soundIsOff,
-                                     drawnMS: drawn(clip))
-                        .allowsHitTesting(!track.isLocked)
-                        .playtestField("Timing \(clip.layerName) sound")
-                        .padding(.top, halves.picture)
-                }
-                if isBlade, !track.isLocked {
-                    TimelineBlade(group: clip, laneWidth: laneWidth, isLinkedSound: true)
-                        .frame(height: halves.sound)
-                        .padding(.top, halves.picture)
-                }
-                if isTrackSelect, !track.isLocked {
-                    TimelineTrackSelect(group: clip, laneWidth: laneWidth, isLinkedSound: true)
-                        .frame(height: halves.sound)
-                        .padding(.top, halves.picture)
-                }
+            ForEach(linkedInSight.filter { !painting.ids.contains($0.id) && (tools || builds($0)) }) { clip in
+                TimelineClipView(group: clip, laneWidth: laneWidth, height: halves.sound, half: .sound,
+                                 isLinkedSound: true, soundNumber: row.soundNumber,
+                                 soundIsMuted: row.soundIsMuted, soundIsOff: row.soundIsOff,
+                                 drawnMS: drawn(clip))
+                    .allowsHitTesting(!track.isLocked)
+                    .playtestField("Timing \(clip.layerName) sound")
+                    .padding(.top, halves.picture)
             }
             if !isBlade, !isTrackSelect {
                 let all = document?.editPoints(onTrack: track.id) ?? []
@@ -765,60 +866,7 @@ struct TimelineTrackRow: View {
                         .allowsHitTesting(!track.isLocked)
                 }
             }
-            // The Range tool: a drag anywhere on the lane, over clips too,
-            // picks a stretch of time, as Final Cut's R does.
-            if isRangeTool {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .gesture(TimelineLaneMarquee.gesture(editorState, ruler: ruler, laneWidth: laneWidth,
-                                                         trackID: track.id))
-                    .contextMenu { TimelineTrackMenu(track: track, index: index, onTheLane: true) }
-            }
-            if track.isLocked { lockedHatch }
-            dropMark
-            if let hover = editorState.timelineFileHover, hover.landing.target == .onto(track.id) {
-                TimelineFileGhost(hover: hover, laneWidth: laneWidth, height: laneHeight)
-            }
-            if let kind = editorState.transitionSpotsLitKind, track.kind == .video {
-                TimelineTransitionSpots(kind: kind, trackID: track.id, laneWidth: laneWidth, height: laneHeight)
-            }
-            if let hover = editorState.timelineTransitionHover, hover.trackID == track.id {
-                TimelineTransitionGhost(hover: hover, laneWidth: laneWidth, height: laneHeight)
-            }
         }
-        .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
-        // On a busy lane the clip under the pointer is drawn as its full bar.
-        // Read on the whole lane, so the bar that takes its place under the
-        // pointer does not end the hover that put it there.
-        .playtestContinuousHover("Lane \(track.name)") { phase in
-            if case .active(let point) = phase {
-                pointerSpot.x = point.x
-            } else {
-                pointerSpot.x = nil
-            }
-            readPointer()
-        }
-        // The pointer held still while the timeline scrolls or zooms under
-        // it: what it is over now is read again, so a cut that slid under it
-        // is the cut's own view by the time the click lands, as it would be
-        // had the pointer moved there.
-        .onChange(of: ruler) { readPointer() }
-        .onChange(of: laneWidth) { readPointer() }
-        .coordinateSpace(name: Self.laneSpace(track.id))
-        // A track of clips with their own sound dims its pictures alone:
-        // hiding the picture leaves the sound playing.
-        .opacity(row.isOff && row.linked.isEmpty ? 0.4 : 1)
-        .clipShape(TimelineEdgeClip())
-        .overlay(alignment: .top) { insertionLine(atTop: true) }
-        .overlay(alignment: .bottom) { insertionLine(atTop: false) }
-        .onGeometryChange(for: CGRect.self) { proxy in
-            proxy.frame(in: .named(TimelineDock.tracksSpace))
-        } action: { frame in
-            guard !isLifted else { return }
-            editorState.trackDropRows[track.id] = TrackDropRow(trackID: track.id, minY: frame.minY,
-                                                               maxY: frame.maxY)
-        }
-        .onDisappear { if !isLifted { editorState.trackDropRows[track.id] = nil } }
     }
 
     // MARK: Painted clips
@@ -958,7 +1006,8 @@ struct TimelineTrackRow: View {
     /// worked out from has changed (`LanePaintingKept`): on a scroll inside
     /// one drawn stretch, or a zoom holding its last painting, nothing has.
     private func painting(_ document: PhotonzDocument?, clipsInSight: Int, kept: Set<UUID>, ruler: MotionStripRuler,
-                          alternates: Set<MotionStripGroup.ID>, stretch: ClosedRange<Double>) -> LanePaintingKept.Laid {
+                          alternates: Set<MotionStripGroup.ID>, stretch: ClosedRange<Double>,
+                          frame: TimelineLaneFrame?) -> LanePaintingKept.Laid {
         let paints = !row.isCaptions && !row.isOff && !isHeld && !row.soundIsMuted && !row.soundIsOff
             && lanePaints(clipsInSight: clipsInSight)
         var kept = kept
@@ -968,8 +1017,11 @@ struct TimelineTrackRow: View {
         }
         let switches = paintedFactsSwitches
         let groundsSounds = Experiments.shared.soundOnThePanelGroundEnabled
-        let leftEdge = editorState.timelinePaintLeftEdgeRangeMS
-        let zoom = editorState.timelinePaintScaleOnly
+        // Read off the lane's frame while there is one, which says what the
+        // held painting says, so the first frame of a hold is the same
+        // painting as the frame before it (`TimelineLaneFrame.zooming`).
+        let leftEdge = frame?.leftEdgeMS ?? editorState.timelinePaintLeftEdgeRangeMS
+        let zoom = frame.map { TimelineZoom(scale: $0.zoomScale) } ?? editorState.timelinePaintScaleOnly
         let carrying = keptPainting.carrying(row)
         let key = LanePaintingKept.Key(row: row, paints: paints, kept: kept, stretch: stretch, spanMS: ruler.spanMS,
                                        leftEdge: leftEdge, zoom: zoom, laneWidth: laneWidth, laneHeight: laneHeight,
@@ -1475,6 +1527,7 @@ struct TimelineTrackMenu: View {
 /// layer that has no times of its own, one bar the length of the document.
 struct TimelineClipView: View {
     @Environment(EditorState.self) private var editorState
+    @Environment(\.timelineLaneFrame) private var laneFrame
     let group: MotionStripGroup
     let laneWidth: CGFloat
     let height: CGFloat
@@ -1519,7 +1572,7 @@ struct TimelineClipView: View {
             // The window is read here and not above: a clip with a bar slides
             // itself along (`ClipPiecesBar`), and reading it for every clip
             // drew them all again on every frame of a scroll.
-            let ruler = editorState.motionStripRuler
+            let ruler = editorState.laneRuler(laneFrame)
             let drawn = group.drawnMS(documentLengthMS: editorState.documentLengthMS)
             let x0 = laneWidth * ruler.fraction(ofMS: Double(drawn.inMS))
             let x1 = laneWidth * ruler.fraction(ofMS: Double(drawn.outMS))

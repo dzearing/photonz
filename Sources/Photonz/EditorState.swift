@@ -2170,6 +2170,7 @@ final class EditorState {
             if !timelineZoomKeepsItsChoice {
                 timelineWholeRecordingScale = newValue.showsWholeDocument ? newValue.scale : nil
             }
+            noteTimelineLaneFrame()
         }
     }
     /// The share of the length the person last left the timeline at, when it
@@ -2213,6 +2214,12 @@ final class EditorState {
     /// zoom stops, so what rests on screen is always freshly painted.
     var timelineHeldPainting: TimelineHeldPainting?
     @ObservationIgnored var timelineHeldPaintingSettle: Task<Void, Never>?
+    /// What a busy lane lays out against while the timeline moves, which
+    /// holds still for frames at a time; nil while the lanes lay out against
+    /// the window, as they do at rest (`TimelineLaneFrame`,
+    /// `noteTimelineLaneFrame`).
+    var timelineLaneFrame: TimelineLaneFrame?
+    @ObservationIgnored var timelineLaneFrameSettle: Task<Void, Never>?
     /// What a row outside the lanes (a clip's Zoom lane) is culled by: a wide
     /// sight that holds still for windows of a scroll at a time
     /// (`TimelineSight.rows`). Nil until the window is first written, and

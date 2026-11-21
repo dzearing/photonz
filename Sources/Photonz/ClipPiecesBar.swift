@@ -38,6 +38,10 @@ enum ClipHalf: Equatable {
 struct ClipPiecesBar: View {
     @Environment(EditorState.self) private var editorState
     @Environment(\.colorScheme) private var colorScheme
+    /// The frame the lane round it lays out against while the timeline moves
+    /// (`TimelineLaneFrame`): the bar is laid out against it too, and slid
+    /// with the lane.
+    @Environment(\.timelineLaneFrame) private var laneFrame
     let layerID: UUID
     let layerName: String
     /// The stretch as the strip is SHOWING it, which is the landing while a
@@ -155,8 +159,9 @@ struct ClipPiecesBar: View {
         // it. It is cut down to the stretch either side of the window
         // (`timelineDrawnMS`), which moves once the window has gone half its
         // width.
-        let ruler = editorState.motionStripRuler(measuredFromMS: Double(bar.inMS))
-        let drawnMS = self.drawnMS ?? editorState.timelineDrawnMS
+        let ruler = laneFrame.map { $0.ruler.measured(fromMS: Double(bar.inMS)) }
+            ?? editorState.motionStripRuler(measuredFromMS: Double(bar.inMS))
+        let drawnMS = self.drawnMS ?? laneFrame?.drawnMS ?? editorState.timelineDrawnMS
         let drawn: ClosedRange<CGFloat> = laneWidth * CGFloat(ruler.fraction(ofMS: drawnMS.lowerBound))
             ... laneWidth * CGFloat(ruler.fraction(ofMS: drawnMS.upperBound))
         let pieces = shownPieces
@@ -295,7 +300,7 @@ struct ClipPiecesBar: View {
         ZStack(alignment: .topLeading) {
             if !isLinkedSound, let session = editorState.clipTransitionDrag, session.layerID == layerID,
                case .join(_, let index) = session.place, let cut = pieces.cut(at: index) {
-                let ruler = editorState.motionStripRuler
+                let ruler = editorState.laneRuler(laneFrame)
                 TransitionLengthBubble(
                     pointerX: laneX0(ruler) + laneWidth * ruler.fraction(
                         spanningMS: Double(cut.atMS + session.pointerFromCutMS)),
@@ -303,15 +308,15 @@ struct ClipPiecesBar: View {
             }
             if kind != nil, !isLinkedSound, let keyDrag {
                 capsule(MotionStripRuler.timecode(Double(keyDrag.toMS)),
-                        x: laneWidth * editorState.motionStripRuler.fraction(ofMS: Double(keyDrag.toMS)) + 10)
+                        x: laneWidth * editorState.laneRuler(laneFrame).fraction(ofMS: Double(keyDrag.toMS)) + 10)
                     .frame(height: barHeight)
             }
             if isBeingDragged, let readout = editorState.clipBarReadout {
-                capsule(readout, x: laneX0(editorState.motionStripRuler))
+                capsule(readout, x: laneX0(editorState.laneRuler(laneFrame)))
                     .frame(height: barHeight)
             }
             if editorState.renamingClipID == layerID, !isLinkedSound {
-                let ruler = editorState.motionStripRuler
+                let ruler = editorState.laneRuler(laneFrame)
                 ClipNameField(layerID: layerID, name: layerName)
                     .frame(width: max(90, min(180, laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS)) - 8)))
                     .frame(height: barHeight)
@@ -791,8 +796,8 @@ struct ClipPiecesBar: View {
         guard let movie = pictureMovie else { return 0 }
         // How far in, never where: nothing about this changes with a scroll.
         return Self.picturesOpacity(movie: movie, barHeight: barHeight, laneWidth: laneWidth,
-                                    spanMS: editorState.motionStripRuler(measuredFromMS: 0).spanMS,
-                                    zoom: editorState.timelineScaleOnly)
+                                    spanMS: laneFrame?.ruler.spanMS ?? editorState.motionStripRuler(measuredFromMS: 0).spanMS,
+                                    zoom: laneFrame.map { TimelineZoom(scale: $0.zoomScale) } ?? editorState.timelineScaleOnly)
     }
 
     /// How strongly a recording's pictures show along a bar this tall, at
@@ -1977,10 +1982,11 @@ private struct ProgressRing: View {
 /// nothing inside the bar is drawn again for it.
 private struct SlidAlongTheTimeline: ViewModifier {
     @Environment(EditorState.self) private var editorState
+    @Environment(\.timelineLaneFrame) private var laneFrame
     let fromMS: Int
     let laneWidth: CGFloat
 
     func body(content: Content) -> some View {
-        content.offset(x: laneWidth * editorState.motionStripRuler.fraction(ofMS: Double(fromMS)))
+        content.offset(x: laneWidth * editorState.laneRuler(laneFrame).fraction(ofMS: Double(fromMS)))
     }
 }

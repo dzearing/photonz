@@ -504,6 +504,9 @@ struct TimelineEditPointMenu: View {
 
 struct TimelineEditPointView: View {
     @Environment(EditorState.self) private var editorState
+    /// Laid out against its lane's frame while the timeline moves
+    /// (`TimelineLaneFrame`).
+    @Environment(\.timelineLaneFrame) private var laneFrame
     @Environment(\.colorScheme) private var colorScheme
     let point: TimelineEditPoint
     let laneWidth: CGFloat
@@ -534,7 +537,7 @@ struct TimelineEditPointView: View {
                 band(drawn)
                 if let session = editorState.clipTransitionDrag, session.place == place {
                     TransitionLengthBubble(
-                        pointerX: laneWidth * editorState.motionStripRuler.fraction(
+                        pointerX: laneWidth * editorState.laneRuler(laneFrame).fraction(
                             ofMS: Double(point.atMS + session.pointerFromCutMS)),
                         laneWidth: laneWidth, height: height)
                 }
@@ -548,7 +551,7 @@ struct TimelineEditPointView: View {
     /// real time between the two clips, drawn like a clip of its own under
     /// the band, because it is time the timeline now has.
     private func held(_ drawn: ClipTransition) -> some View {
-        let ruler = editorState.motionStripRuler
+        let ruler = editorState.laneRuler(laneFrame)
         let x = laneWidth * ruler.fraction(ofMS: Double(point.atMS))
         let width = max(2, laneWidth * ruler.fraction(spanningMS: Double(drawn.holdMS)))
         let isWhite = drawn.kind == .dipToWhite
@@ -577,7 +580,7 @@ struct TimelineEditPointView: View {
     }
 
     private var seam: some View {
-        let x = laneWidth * editorState.motionStripRuler.fraction(ofMS: Double(point.atMS))
+        let x = laneWidth * editorState.laneRuler(laneFrame).fraction(ofMS: Double(point.atMS))
         let picked = editorState.isEditPointPicked(point)
         let warn = VideoKit.Palette.warn
         let lit = picked || isHovered || editorState.editPointUnderGrip == place
@@ -698,7 +701,7 @@ struct TimelineEditPointView: View {
     /// cut as it was placed, never between them, so putting it on moved
     /// nothing. A dip that holds spans its fade down, the hold and its fade up.
     private func band(_ drawn: ClipTransition) -> some View {
-        let ruler = editorState.motionStripRuler
+        let ruler = editorState.laneRuler(laneFrame)
         let x0 = laneWidth * ruler.fraction(ofMS: Double(point.atMS - drawn.beforeMS))
         let width = max(6, laneWidth * ruler.fraction(spanningMS: Double(drawn.spanMS)))
         let picked = editorState.isEditPointPicked(point)
@@ -766,6 +769,7 @@ struct TimelineEditPointView: View {
 /// in a hold the time between them is black, not spare.
 struct TimelineSpareStrips: View {
     @Environment(EditorState.self) private var editorState
+    @Environment(\.timelineLaneFrame) private var laneFrame
     let point: TimelineEditPoint
     let laneWidth: CGFloat
     let height: CGFloat
@@ -796,7 +800,7 @@ struct TimelineSpareStrips: View {
     /// for the incoming one, with its length riding inside the clip body,
     /// `clearOfMS` along from the cut so a band over it does not cover it.
     private func strip(fromMS start: Int, lengthMS: Int, alongTop: Bool, clearOfMS: Int) -> some View {
-        let ruler = editorState.motionStripRuler
+        let ruler = editorState.laneRuler(laneFrame)
         let x0 = max(0, laneWidth * ruler.fraction(ofMS: Double(start)))
         let x1 = min(laneWidth, laneWidth * ruler.fraction(ofMS: Double(start + lengthMS)))
         let width = max(2, x1 - x0)

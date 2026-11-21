@@ -560,6 +560,10 @@ final class SpeedWalkProbe {
 
         // How many clip bars each frame built, per measure, for the line.
         var barsPerFrame: [String] = []
+        // How many track lanes each frame built again, per measure: a lane
+        // laid out against a frame that holds still is built only when the
+        // frame moves (`TimelineLaneFrame`).
+        var lanesPerFrame: [String] = []
         // How many lane paintings each frame laid into a
         // picture (`TimelinePaintedPicture`), per measure.
         var picturesPerFrame: [String] = []
@@ -592,6 +596,8 @@ final class SpeedWalkProbe {
                                            MainThreadMeter.shared.takeBusy() * 1000 / Double(max(1, at.count - 1))))
                 let built = ViewBuildMeter.shared.count(.clipBar)
                 barsPerFrame.append(String(format: "%@ %.0f", label, Double(built) / Double(max(1, at.count - 1))))
+                lanesPerFrame.append(String(format: "%@ %.2f", label, Double(ViewBuildMeter.shared.count(.trackLane))
+                                                / Double(max(1, at.count - 1))))
                 let laid = ViewBuildMeter.shared.count(.paintedPicture)
                 picturesPerFrame.append(String(format: "%@ %.1f (%.2fms each)", label, Double(laid) / Double(max(1, at.count - 1)),
                                                TimelinePaintedPicture.laidMS / Double(max(1, laid))))
@@ -684,7 +690,8 @@ final class SpeedWalkProbe {
         editor.fitTimeline()
         run.timeline = [zoomIn, zoomOut, scroll]
         return "views at fit: \(viewsAtFit); views zoomed in: \(viewsZoomed); clip bars built a frame: "
-            + barsPerFrame.joined(separator: ", ") + "; paintings laid a frame: " + picturesPerFrame.joined(separator: ", ")
+            + barsPerFrame.joined(separator: ", ") + "; lanes built a frame: " + lanesPerFrame.joined(separator: ", ")
+            + "; paintings laid a frame: " + picturesPerFrame.joined(separator: ", ")
             + "; by zoom: " + byZoom.joined(separator: "; ") + "; mean frame: " + means.joined(separator: ", ")
             + "; main thread busy a frame: " + busyPerFrame.joined(separator: ", ") + heldSplit + movedSplit + "; "
             + [zoomIn, zoomOut, nearFit, scroll].map {

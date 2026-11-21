@@ -10,6 +10,9 @@ import SwiftUI
 /// A hidden click keeps a faint tick, so it can be found and shown again.
 struct ClickTicksView: View {
     @Environment(EditorState.self) private var editorState
+    /// Laid out against its lane's frame while the timeline moves
+    /// (`TimelineLaneFrame`).
+    @Environment(\.timelineLaneFrame) private var laneFrame
     let layerID: UUID
     let laneWidth: CGFloat
     let height: CGFloat
@@ -24,7 +27,7 @@ struct ClickTicksView: View {
     var body: some View { readingALatePass { lateBody } }
 
     @ViewBuilder private var lateBody: some View {
-        let ruler = editorState.motionStripRuler
+        let ruler = editorState.laneRuler(laneFrame)
         let ticks = editorState.clickTicks(ofClip: layerID)
         ForEach(Array(ticks.enumerated()), id: \.element.mark.id) { index, tick in
             ClickTick(layerID: layerID, mark: tick.mark, ms: tick.ms, number: index + 1,

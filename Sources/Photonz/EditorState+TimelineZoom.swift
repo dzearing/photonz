@@ -134,6 +134,67 @@ extension EditorState {
         }
     }
 
+    /// Called each time the window is written: the lanes lay out against a
+    /// frame that holds still while the timeline moves, and go back to the
+    /// window once it has rested `TimelineHeldPainting.settleMS`
+    /// (`TimelineLaneFrame`). Near the whole-hour view of the hour-long
+    /// reference edit a lane laid out against the window built itself again
+    /// on every frame of a zoom or a scroll (2026-11-21). Never while a hand
+    /// is on something in a lane: a drag reads the window, and the edge
+    /// scroll moves it under the hand.
+    func noteTimelineLaneFrame() {
+        guard motionStripMeasuresADocument, canOpenOutTheTimeline, !timelineEdgeScroll.isFollowing,
+              !timelineLanesHaveAHandIn else {
+            letGoOfTheLaneFrame()
+            return
+        }
+        let length = timelineLengthForZoomMS
+        let frame: TimelineLaneFrame
+        if let held = timelineHeldPainting {
+            frame = .holding(paintRuler(held.zoom), leftEdgeMS: held.leftEdgeMS,
+                             zoomScale: TimelineZoom(scale: held.zoom.scale).clamped(documentMS: length).scale)
+        } else if timelinePaintsTheWindow {
+            frame = .zooming(motionStripRuler, leftEdgeMS: timelineLeftEdgeRangeMS,
+                             zoomScale: timelineScaleOnly.scale)
+        } else {
+            let visible = timelineScaleOnly.visibleMS(documentMS: length)
+            let edge = timelineDrawnStretch.leftEdgeMS(visibleMS: visible, documentMS: length)
+            frame = .scrolling(motionStripRuler, anchorMS: edge.lowerBound, drawnMS: timelineDrawnMS,
+                               leftEdgeMS: timelineLeftEdgeRangeMS, zoomScale: timelineScaleOnly.scale)
+        }
+        if frame != timelineLaneFrame { timelineLaneFrame = frame }
+        timelineLaneFrameSettle?.cancel()
+        timelineLaneFrameSettle = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(TimelineHeldPainting.settleMS))
+            guard !Task.isCancelled else { return }
+            self?.letGoOfTheLaneFrame()
+        }
+    }
+
+    /// The lanes back on the window.
+    func letGoOfTheLaneFrame() {
+        timelineLaneFrameSettle?.cancel()
+        timelineLaneFrameSettle = nil
+        if timelineLaneFrame != nil { timelineLaneFrame = nil }
+    }
+
+    /// The frame a lane lays out against now: nil at rest, and nil while a
+    /// hand is on anything in a lane, which reads the window
+    /// (`noteTimelineLaneFrame`). Read only while there is a frame, so a
+    /// lane at rest is not woken by every move of a drag.
+    var timelineLaneFrameStanding: TimelineLaneFrame? {
+        guard let frame = timelineLaneFrame, !timelineLanesHaveAHandIn else { return nil }
+        return frame
+    }
+
+    /// Something in a lane in a hand, being renamed, or a carried thing over
+    /// the lanes.
+    private var timelineLanesHaveAHandIn: Bool {
+        !clipBarInHandIDs.isEmpty || trimSession != nil || clipTransitionDrag != nil || renamingClipID != nil
+            || clipTrackDrop != nil || timelineFileHover != nil || timelineTransitionHover != nil
+            || partBarDrag != nil || titlePartDrag != nil || trackRangeInHand != nil || timelineGapInHand != nil
+    }
+
     private func letGoOfTheHeldPainting() {
         timelineHeldPaintingSettle?.cancel()
         timelineHeldPaintingSettle = nil

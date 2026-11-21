@@ -1302,6 +1302,48 @@ The rule, for any view added to the editor window:
      at the refresh: the bar needs the lanes out of SwiftUI's per-frame
      update, a layer per lane its painting is the contents of, moved by the
      ruler outside SwiftUI.
+   - **While the timeline moves, a lane is laid out against a frame that
+     holds still, and slid and stretched to the window**
+     (`TimelineLaneFrame`, `EditorState.noteTimelineLaneFrame`,
+     `TimelineLaneSlide`, 2026-11-21, pass 19). A lane read the window, so
+     it was built again on every frame of a scroll or a zoom, held painting
+     or not. Now each window write picks a frame: while a zoom holds its
+     painting, the window it was laid at; on a zoom frame that paints afresh,
+     the window itself, saying exactly what the hold that follows will say
+     (painted stretch, left edge's reach, how far in), so the first held
+     frame builds nothing; on a scroll, the window's scale measured from
+     where the drawn stretch's left edge can first be, with a sight of a
+     window and a half either side so every window inside the stretch has
+     its half window built past each edge. The lane and everything in it
+     that is placed in time read that frame (clip bars, cuts, spare strips,
+     click ticks, part marks, the painting), handed down as
+     `\.timelineLaneFrame` in the environment, so a bar in any other row
+     still reads the window. One modifier reads the window and moves the
+     lot. What must stay against the window sits outside the slid part and
+     reads it itself: the bare lane's press, a quiet lane's gridlines, the
+     Blade and Track Select, the Range tool, drop marks and ghosts, and the
+     names that keep to the left edge (drawn by a small view that reads the
+     window, so they are never stretched with a held painting). Rules for a new view in a lane: if it is placed
+     in time, read the ruler through `editorState.laneRuler(laneFrame)`;
+     if a press is read in the lane's own points and handed to something
+     that reads the window, convert it (`windowX(ofLaneX:)`). The frame is
+     let go 30 ms after the window last moved, and is never taken while a
+     hand is on anything in a lane (a drag, a trim, a rename, a carried
+     clip, file or transition, the edge scroll), so a hand always meets a
+     lane laid out against the window it sees. Held at rest for five
+     seconds on purpose, the timeline walks passed and photographed the
+     same as at rest, but a quiet lane's gap slot loses its dashed ends at
+     the lane's edges while the timeline moves (it is cut to the frame's
+     sight, not the window). Lanes built a frame near Fit went from 4.2 to
+     2.1 (only frames that paint afresh), scroll 1.7 (stretch moves only).
+     Measured on the hour-long reference edit, today's main and this change
+     built and run back to back, two runs each: main thread busy a frame
+     near Fit 9.1 to 8.3 ms, zoom in 8.4 to 8.2, scroll about the same
+     (6.9 to 7.0); mean frame times within the run-to-run noise (near Fit
+     11.3 to 11.5 both ways). An earlier pair on a quieter machine read
+     11.3 to 10.0 near Fit and 225 to 124 to 148 late frames of 648. What is
+     left near Fit is the frames that paint afresh (about 14 ms against 9
+     held), where the lane is still built again and the pictures laid.
    - **Lanes taking turns to let go of a held painting save nothing**:
      tried on 2026-11-21 (pass 18). Three groups of lanes, each letting go on
      a step of its own, so no frame laid more than a third of the pictures:

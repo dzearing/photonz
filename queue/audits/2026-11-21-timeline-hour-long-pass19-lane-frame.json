@@ -1,0 +1,25 @@
+{
+  "feature": "The hour-long timeline's lanes hold still while it scrolls or zooms, and slide as one",
+  "epic": "video-perf",
+  "summary": "While you scroll or pinch the timeline, each track lane is now laid out once and slid or stretched into place, instead of being worked out again on every frame. Near the whole-hour view that halves how often a lane is rebuilt and takes about 0.8 ms of work off every frame; nothing on screen changes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Measured with a timeline-only speed walk on the probe: today's main and this change built and run back to back, two runs each.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 60 },
+    { "do": "Pinch the timeline in and out quickly near the whole-hour view, then stop." },
+    { "do": "Scroll the timeline end to end with two fingers, then stop with the pointer resting on a cut." },
+    { "do": "Click the cut under the pointer straight away." },
+    { "do": "Zoom to about two minutes across and jump the playhead with the scrub bar; watch the name of a long clip stay at the timeline's left edge.", "shot": "2026-11-21-timeline-hour-long-pass19-after-jumps-sc.png" }
+  ],
+  "evaluate": [
+    "Does a pinch near the whole-hour view feel at least as smooth as before?",
+    "After a fast scroll, does a click land on what is under the pointer every time?",
+    "Do clip names, cuts, gaps and click ticks sit exactly where they did while the timeline moves?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, main then this change, two runs each, run back to back: main thread busy a frame near Fit 9.14/9.07 to 8.30/8.44 ms, zoom in 8.38/8.46 to 8.15/8.29, zoom out 7.25/7.36 to 7.07/7.01, scroll 7.03/6.90 to 6.97/6.97. Mean frame near Fit 11.45/11.29 to 11.20/11.35, zoom in 10.83/10.90 to 10.84/11.19, zoom out 9.70/9.91 to 9.94/9.42, scroll 8.69/8.65 to 8.70/8.75: within the noise. Lanes rebuilt a frame near Fit 4.2 to 2.1, scroll 1.7 (only when the drawn stretch moves). An earlier pair an hour apart on a quieter Mac read near Fit 11.3 to 10.0 ms and late frames 225 to 124-148 of 648; the back to back pair did not repeat that, so the honest gain is the main thread's 0.8 ms and the halved rebuilds.",
+    "Checked the look by holding the lanes on their frame for five seconds instead of 30 ms and running eight timeline walks: all passed, clicks after a scroll included, and their pictures match the normal run except that a quiet lane's gap slot does not draw its dashed ends at the lane's edges while the timeline is moving (it is cut to the lane's wider sight). Side by side: 2026-11-21-timeline-hour-long-pass19-rest-vs-frame.png (top of each pair at rest, below held on its frame, then what differs). The first try found the edge-following names drawn mid-lane; fixed before landing.",
+    "Bars of the task not reached: 95 per cent of zoom and scroll frames under 8.3 ms and none over 16 (zoom in still about 55 late of 240, near Fit about 225 of 648), and edits within 16 ms. Frames that paint afresh (about 14 ms against 9 held) are what is left near Fit. The task stays open.",
+    "No mock covers the timeline's speed; nothing about the timeline's look changed."
+  ]
+}
