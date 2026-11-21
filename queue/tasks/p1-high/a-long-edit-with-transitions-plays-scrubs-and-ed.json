@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-21T10:05:27.829Z",
+  "updated": "2026-11-21T12:54:55.757Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,49 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-21T10:05:27.828Z",
-      "note": "... 77 earlier entries elided",
-      "elided": 77
-    },
-    {
-      "t": "2026-11-17T11:04:32.047Z",
-      "note": "Pass 13 found the scrub measure generous: the canvas answers a move with the nearest frame in hand (MovieFramesInHand) stamped with the hand's moment, and the lag counted it as caught up. The speed walk now also reports the frame lag (picture drawn from the frames the moment shows; RenderScheduler tag, playtestShownExactMomentMS) and a 'hunt' speed (10 s of edit across 2 s). Baseline worst of 3: medium lag 2/5, frame lag 35/133; hunt lag 2/4, frame lag 5/63. Slow end to end (scratch run): frame lag 31/121."
-    },
-    {
-      "t": "2026-11-17T11:04:32.119Z",
-      "note": "Pass 13 verified: test.sh green (exit 0); speed-walk ok x3 and baseline rewritten; walks ok: an-editing-session, keyframe-anything, a-captured-window-s-shadow-is-light-and-editable, glow-effect, keys-on-a-later-shadow, a-title-reads-over-a-video, appearance-list. scrub-never-blacks-out-walk: with the change 1 crash, 1 timing fail (2 of 165 frames over one) and 4 ok in 6 runs; without it 1 timing fail and 4 ok in 5, so the timing miss is pre-existing. The crash (Photonz Probe-2026-11-17-024542.ips) is an AppKit exception in -[NSWindow _postWindowNeedsUpdateConstraints] from NSHostingView.updateWindowContentSizeExtremaIfNecessary, under HeldDragKeys' nextEvent; seen once, not reproduced in 9 more runs, left to the crash watch (left rough, not filed: unreproduced)."
-    },
-    {
-      "t": "2026-11-17T11:04:32.183Z",
-      "note": "Next for pass 14: (a) the picture lag 2 vs bar 1: composite 8.6 ms against an 8.3 ms refresh; GPU is 2.3 of it, ~2 ms is shader compiling every frame (CIRenderInfo compileTime: find what changes the graph's shape per frame), then the CGImage frame uploads and the readback (render into an IOSurface the layer shows directly); (b) the frame lag: 63 frames at the start of every hunt (the first read ~0.5 s) and 27-35 at the median end to end, where reading only keyframes while the hand moves fast is the Premiere-like answer; (c) play 1 dropped a minute. Audit queue/audits/2026-11-17-a-long-edit-with-transitions-plays-scrubs-and-ed-pass13.json. No new follow-up tasks: every cost left is one of this task's own unmet bars."
-    },
-    {
-      "t": "2026-11-17T11:04:32.250Z",
-      "note": "walks speed-walk, scrub-never-blacks-out-walk, keyframe-anything-walk -> speed-walk, scrub-never-blacks-out-walk, keyframe-anything-walk"
-    },
-    {
-      "t": "2026-11-17T11:04:32.318Z",
-      "note": "Pass 13 landed f87714cbc: an opaque clip's shadow is blurred once instead of every frame (composite 10.8 -> 8.6 ms, GPU 7.5 -> 2.3 ms), and the speed walk now measures the frame really under the hand: 5 display frames hunting, 35 dragging end to end. Bars not reached (scrub 1 frame: picture 2; 0 dropped: 1 a minute; edits 16 ms). Stays open; pass 14 leads in the log."
-    },
-    {
-      "t": "2026-11-17T11:23:53.285Z",
-      "note": "rotating check 2026-11-17T11:23:53Z, 31 walks run from 1124 onward in the rotation: speed-walk (its script changed since the last check) failing."
-    },
-    {
-      "t": "2026-11-17T11:25:56.773Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-17T14:56:34.492Z",
-      "note": "Pass 14 measured first (28d6e1cf8): the rotating check's speed-walk failure (medium frame lag 73 vs 35, gate 56) was this measure's noise: 41 on a rerun, 16-21 warm. Traced the scrub reads (temporary timers, removed): at medium speed up to 8 stretch reads ran at once, each 225-640 ms to its first frame, most cancelled before delivering; hunting, a read for the far side of a dissolve the hand had left kept the decoder 419 ms, and a stretch made pictures (3 ms each, 150-240 of a read's 190-250 ms) at the hand's own pace, so the first ~0.5 s of a hunt showed stand-ins."
-    },
-    {
-      "t": "2026-11-17T14:56:34.560Z",
-      "note": "Pass 14 new measure: sight lag (SpeedWalk.sightLags + handPath, SpeedWalkTests): refreshes between a look and the nearest time the hand was on the recording frames the picture is drawn from (frames in hand when drawn, stand-ins and key frames counted), along every grid moment the hand crossed. The exact-frame number cannot credit a key frame or a stand-in a frame off; sight lag is what a person sees and is now the scrub bar's number (docs/design/video.md 8e)."
-    },
-    {
-      "t": "2026-11-17T14:56:34.626Z",
-      "note": "Pass 14 fix (MovieFrames.swift, MovieSweep.swift, MovieKeyFrames.swift; MovieSweepTests, MovieKeyFramesTests): (1) a hand over 10 s of edit a second is shown the key frame nearest it, read at its exact moment from the file's sample table, one read at a time, newest next (~20 ms each; reading at the grid frame's moment missed the key frame and cost 100 ms); (2) a stretch makes pictures only of frames the hand has not passed (MovieSweep.worthShowing); (3) reads for a recording the hand left stop; (4) hunting looks a quarter second of its pace ahead for clips it will cross into (cutReachMS). A/B on one build, 2 runs each, sight lag median/worst: medium 8-22/54-95 -> 4-8/69-95; hunt 3/214-215 -> 2-3/16-28. Baseline short-6.json rewritten (worst of 3): medium sight 4/67, exact 34/131; hunt sight 2/15, exact 3/19 (was 5/63). Two glimpses at once did not pay (reverted to one)."
+      "t": "2026-11-21T12:54:55.756Z",
+      "note": "... 87 earlier entries elided",
+      "elided": 87
     },
     {
       "t": "2026-11-17T14:56:34.691Z",
@@ -507,9 +467,49 @@
     {
       "t": "2026-11-21T10:05:27.827Z",
       "note": "Pass 23 landed 3188f5120: the speed walk now times each edit under the real pick state beside a do-nothing control. Corrected: with nothing picked trim 13-16 and undo 11-13 ms meet the 16 ms bar; with a clip picked trim 20-22, undo 22-24, blade 28-37, pick 29-31, pick from nothing 39-52 (the panel answering the edit). Main red filed as main-checks-go-green-again-the-stopped-sweep-dri. Bars not reached: edits with a clip picked, worst scrub lag 1. Pass 24 leads in the log."
+    },
+    {
+      "t": "2026-11-21T10:36:03.437Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T12:54:07.605Z",
+      "note": "walks speed-walk -> speed-walk"
+    },
+    {
+      "t": "2026-11-21T12:54:21.814Z",
+      "note": "Pass 24, main red first: CI run 44892675208 (6c88cb927) still fails 'A stopped sweep picks up where it stopped', the shallow-checkout drill; folded into main-checks-go-green-again-the-stopped-sweep-dri, which owns it."
+    },
+    {
+      "t": "2026-11-21T12:54:21.900Z",
+      "note": "Pass 24 measured: Instruments still refused (developer mode off), so built a per-pass profiler: PassSampler (probe only) stops the main thread every 0.5 ms, walks its stack by frame pointers into a buffer allocated beforehand (the first try allocated while main was stopped and hung the probe on the allocator lock), keeps the samples inside each pass of 6 ms or more the main thread meter reports, labelled with the speed walk's edit; lldb names the addresses against the live probe (atos -p is refused). Scripts/perf/pass-profile.sh <walk> + pass-profile.py. An edit with a clip picked is 3 passes: own ~17.5 ms (a third view bodies, a third AttributeGraph with no view of ours under it, the edit 2-3 ms, menus and a pop-up's menu ~1 ms), the commit ~9 (window layout 2.7, accessibility 1.9, drawing 1.7), the catch-up ~15 (bodies 5, tracks and painted clips, the panel's sections)."
+    },
+    {
+      "t": "2026-11-21T12:54:22.004Z",
+      "note": "Pass 24 also found: the first edit since a save (and the undo back to it) sets the window's edited dot, which re-tiles the title bar, and AppKit then recomputes where a drag moves the window by asking every NSHostingView acceptsFirstResponder, which walks every focusable control (-[NSWindow _resetDragMargins] 100 samples vs 6 in a do-nothing run; lldb on _postWindowNeedsToResetDragMargins showed the source: _setDocumentEdited from EditorWindowRoots' onChange). Its pass: 14-16 ms toggling vs 7-9 already edited. Every trim in the speed walk follows an undo back to saved, so the walk pays it on every trim."
+    },
+    {
+      "t": "2026-11-21T12:54:22.082Z",
+      "note": "Pass 24 fixes (Sources/Photonz/EditorState.swift catchUpOnTheNextPass, InspectorPanel.swift body, EditorState.showEditedDot + EditorWindowRoots): (1) the panel's look sections catch up a pass after the tracks instead of in the same pass; (2) the panel's own body reads a pass late (readingALatePass), so it is no longer built in the edit's own pass; (3) on Next's videos the edited dot goes in 250 ms after the change, on a pass of its own. Edits-only walk, clip picked, document already edited: own pass 15-18 -> 13-15 ms, tracks' pass 13-20 -> 9-16, sections' new pass 6-11; toggling: commit pass 14-16 -> 10-13, the dot's own pass 6-7 ms ~280 ms later. Tried and reverted: the dock body reading late (rebuilt the dock on every edit) and moving its sound-shape task to its own view (no measured change)."
+    },
+    {
+      "t": "2026-11-21T12:54:22.160Z",
+      "note": "Pass 24 result, speed walk 3 runs (all green against the old baseline): trim 16.2 -> 13.6 ms, undo 12.1 -> 9.2 (both now inside 16 with nothing picked), trim picked 21.9 -> 20.5, pick from nothing 52 -> 48, pick 31 -> 31; undo picked 24 (it is the undo of a blade, which changes the pick), blade 29-41 (was 37). Baseline short-6.json: only the five edit numbers that got faster replaced. Composite path untouched (when the panel and title bar update, not what is drawn), so export is unchanged by construction."
+    },
+    {
+      "t": "2026-11-21T12:54:22.238Z",
+      "note": "Pass 24 verified: Scripts/test.sh exit 0; walks ok: a-video-edit-saves-as-a-project, an-editing-session, command-s-saves-a-video-project, every-section-header-opens, keyframe-anything, layer-pick-latency, opening-title-dissolve, pick-leaves-settings-alone, reference-edit-opens, save-is-live-after-a-trim, scrub-never-blacks-out, separated-rows-say-their-words, speed-walk x3. section-fold-motion-walk fails at step 14 (inspectorPanel built 2, allows 0) on main's app code with every change stashed too: folded into walks-that-fail-in-the-full-sweep-27. Looked at the speed walk's capture after the edits: Take 3 picked, panel 39.0s -> 50.1s, timeline drawn, title 'saved'. docs/design/video.md 8e: 'An edit's pieces each get a pass of their own' and 'Profiling a pass without Instruments'. Audit queue/audits/2026-11-21-a-long-edit-with-transitions-plays-scrubs-and-ed-pass24.json."
+    },
+    {
+      "t": "2026-11-21T12:54:22.316Z",
+      "note": "Next for pass 25: (a) the first edit since a save: its own pass also answers the Save menu (hasUnsavedChanges -> saveAffordance focused value -> menu commands) and builds the timeline's grid again on the first or second trim (not a document read: the dock body read late made it worse); find the read; (b) blade and its undo, and picks, are the panel changing its sections (29-48 ms): profile them with pass-profile.sh; (c) drawn(atTimeMS:) per landed frame on the main thread. Bars not reached: edits with a clip picked <=16 ms, worst scrub lag 1. Left rough, not filed: nothing beyond this task's own bars."
+    },
+    {
+      "t": "2026-11-21T12:54:55.755Z",
+      "note": "Pass 24 landed 655cf11b1: with a clip picked the panel's sections now follow a pass after the timeline and the panel no longer builds in the edit's own frame, and the edited dot goes in a quarter second later on Next's videos. Trim 16.2 -> 13.6 ms and undo 12.1 -> 9.2 with nothing picked; repeated trims and undos with a clip picked 16-20 -> 13-15 ms. New: Scripts/perf/pass-profile.sh profiles each pass without Instruments. Bars not reached: the first edit after a save (19-21), blade and its undo, picks (22-48 ms), worst scrub lag 1. Pass 25 leads in the log."
     }
   ],
-  "started": "2026-11-21T09:11:09.390Z",
+  "started": "2026-11-21T10:36:03.436Z",
   "walks": [
     "speed-walk"
   ],
