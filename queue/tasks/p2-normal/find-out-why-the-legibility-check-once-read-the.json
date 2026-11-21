@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T05:49:07.555Z",
-  "updated": "2026-11-20T13:10:39.310Z",
+  "updated": "2026-11-21T02:22:54.857Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/43367299841 (commit 610f1dc95), Test slice 1 of 3, step Run tests, after all 5535 tests passed: 'legibility: 1546 words and icons measured on 122 specimens, light and dark, in 43s' then 'legibility: UNREADABLE (the user: no white on white or black on black, ever): Caption preview, Lower third, still, dark: 1.00:1, #232323 on #232323, at 10,10 (caption-preview-lower-third-still-dark.png)' and exit 1. The next CI run, 43368952566 on b20245458 (a queue-only commit, same app code), passed. Not reproduced locally; the check lives in Scripts/test.sh (grep photonz-legibility). Filed by a-long-reference-edit-opens-in-the-probe-in-one, which does not touch captions. Epic is video-perf only because the queue requires a now-staged epic; it is a test-health item.",
@@ -139,14 +139,47 @@
     {
       "t": "2026-11-20T13:10:39.309Z",
       "note": "seq 60 -> 10"
+    },
+    {
+      "t": "2026-11-21T01:25:58.586Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T02:22:34.574Z",
+      "note": "walks none -> none"
+    },
+    {
+      "t": "2026-11-21T02:22:34.652Z",
+      "note": "Cause, title words: the CI VM's paravirtual GPU fails Metal command buffers under load ('Error: command buffer exited with error status ... Metal Performance Shaders operations encoded on it may not have completed', AppleParavirtCommandBuffer), and Core Image hands back the failed picture with no error, so ink reads near 0. Evidence: 16 of 17 title reds on main 2026-11-12..11-20 carry that line in the failing slice's log (54 to 5611 such lines per run; only 43467774822 had none); 0 of 15 green runs sampled across the same days carry it. Fault injection locally: blanking 1 GPU reading in 5 makes the old suite fail with 162 issues (shares 0.0, the CI signature); the new suite passes."
+    },
+    {
+      "t": "2026-11-21T02:22:34.728Z",
+      "note": "Cause, smoothed copy stall: reproduced locally (throwaway experiment, removed). The writer's read stops while every ordinary background thread of the process is taken: 120 global-queue threads held -> readerStalled after 63 s (two 30 s tries, the CI signature of 70 s); 40 or 60 held -> written in 0.3 s; 120 held then handed back after 5 s -> written in 5.2 s. Holding 15 of 16 Swift pool threads does not stall it (0.3 s). On CI the suite's other two writes also took 70 s only because ExportQueue queued them behind the stalled one; they ran at once after it gave up. Not explained: why all three recorded stalls (CI x2, local x1) were the two-range composition test."
+    },
+    {
+      "t": "2026-11-21T02:22:34.801Z",
+      "note": "Legibility: one red ever (2026-11-13, run 43367299841), not reproduced; its slice log had no GPU line, so the GPU is likely but unproven there. The reading's shape (ink box at the tile's corner, ink colour identical to what is behind) means the three drawings disagreed, which a failed draw does and a real low contrast does not."
+    },
+    {
+      "t": "2026-11-21T02:22:34.880Z",
+      "note": "Fixes (tests and the dev-only legibility check; no app behaviour changed): TextRevealUnclippedTests re-reads any frame that falls short (or reads no ink) on a software CIContext, the mask check reads on it, the canvas check redraws up to 3 times; new test aCutReadsShortOnTheProcessorToo shows a real cut still fails there; every reading forced onto the processor also passes the bar (30 s vs 11 s). LegibilitySheet redraws a failing specimen up to twice and reports only if every drawing fails (still 1552 readings). SmoothedCopyWriterTests routes its writes through a helper that waits out up to two more readerStalled, with the reason beside it. Verified: Scripts/test.sh --shard 1/3 x10 (smoothed + legibility) and --shard 2/3 x10 (titles) all green; full Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-21T02:22:34.955Z",
+      "note": "Acceptance 3 (app draws words blank when busy): not the app. The blank is the VM's GPU failing its work, which a real Mac's GPU does not do in normal use; the renderer was left alone. Left rough, no task: other GPU-drawn tests can be hit by the same CI failure (run 44298906354 also failed 'A shape drawn at 30 percent is the shade macOS draws its exported file'; 43853115475 the canvas check), but the title suite was 16 of 17 such reds because it reads the GPU thousands of times. If another suite starts going red with that line, it takes the same re-read."
+    },
+    {
+      "t": "2026-11-21T02:22:54.855Z",
+      "note": "Cause found and fixed in the checks (82ac17344). Title words: CI's virtual GPU fails Metal command buffers under load and Core Image returns the blank picture silently (16 of 17 title reds carry the error line, 0 of 15 green runs); the title check now re-reads short frames on the processor, and blanking 1 GPU reading in 5 fails the old check 162 times and passes the new one. Legibility: a failing tile is redrawn up to twice before it counts. Smoothed copy stall: reproduced locally when every background thread of the process is taken (readerStalled after 63 s, clears when freed); the suite waits out up to two more stalls. --shard 1/3 and 2/3 ten times each green, full test.sh green. No app behaviour changed."
     }
   ],
   "walks": [],
-  "started": "2026-11-18T21:27:37.017Z",
+  "started": "2026-11-21T01:25:58.585Z",
   "failures": 0,
   "lastError": {
     "at": "2026-11-18T21:27:43.846Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-  }
+  },
+  "completed": "2026-11-21T02:22:54.856Z"
 }
