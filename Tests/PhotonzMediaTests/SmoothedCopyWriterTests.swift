@@ -28,6 +28,33 @@ struct SmoothedCopyWriterTests {
         RecordingSmoothing.smoothed(image, reach: RecordingSmoothing.reachInRecordingPixels, grain: false)
     }
 
+    /// `SmoothedCopyWriter.write`, waiting out a stalled read: when the
+    /// writer says its read stalled (after its own one retry), it is asked
+    /// again, up to twice more.
+    ///
+    /// A stall is the test run's load, not this writer: a read here stops
+    /// for as long as every ordinary background thread of the process is
+    /// taken (120 held: `readerStalled` after 63 s, as on the check machine;
+    /// 60 held, or 120 handed back after 5 s: written in 0.3 s and 5.2 s,
+    /// measured 2026-11-20). On the check machine's three loaded cores the
+    /// read stalled twice in a row, 70 s in all, in runs 44108815173 and
+    /// 44641712737, and the suite's other writes, queued behind it, ran at
+    /// once when it gave up; on this Mac it did the same once in a full run
+    /// (2026-11-17).
+    @discardableResult
+    static func write(source: URL, ranges: [Range<Int>]?, filter: @escaping SmoothedCopyWriter.Filter = filter,
+                      to out: URL) async throws -> Int {
+        var stalls = 0
+        while true {
+            do {
+                return try await SmoothedCopyWriter.write(source: source, ranges: ranges, mix: [], soundURLs: [:],
+                                                          filter: filter, to: out)
+            } catch SmoothedCopyWriter.WriteError.readerStalled where stalls < 2 {
+                stalls += 1
+            }
+        }
+    }
+
     /// The gradient's column in the fixture, above and below its one-pixel
     /// line at y 500.
     static func gradient(of url: URL, at seconds: Double) async throws -> [Double] {
@@ -133,8 +160,7 @@ struct SmoothedCopyWriterTests {
         let out = FileManager.default.temporaryDirectory
             .appendingPathComponent("smoothed-\(UUID().uuidString).mp4")
         defer { try? FileManager.default.removeItem(at: out) }
-        let frames = try await SmoothedCopyWriter.write(source: Self.banded, ranges: nil, mix: [], soundURLs: [:],
-                                                        filter: Self.filter, to: out)
+        let frames = try await Self.write(source: Self.banded, ranges: nil, to: out)
         #expect(frames == 60)
 
         // Before: ten flat runs of 80 px, a whole shade (4 codes) apart. After:
@@ -230,8 +256,7 @@ struct SmoothedCopyWriterTests {
         // they are.
         let before = Self.tenBit(try await Self.column(of: source, at: 0.5, x: 320, rows: 130..<1170))
         #expect(before.longestFlatRun >= 100, "\(before)")
-        try await SmoothedCopyWriter.write(source: source, ranges: nil, mix: [], soundURLs: [:],
-                                           filter: Self.filter, to: out)
+        try await Self.write(source: source, ranges: nil, to: out)
         let afterColumn = try await Self.column(of: out, at: 0.5, x: 320, rows: 130..<1170)
         let after = Self.tenBit(afterColumn)
         let runs = Self.runs(afterColumn, from: 130)
@@ -245,8 +270,7 @@ struct SmoothedCopyWriterTests {
         let out = FileManager.default.temporaryDirectory
             .appendingPathComponent("identity-\(UUID().uuidString).mp4")
         defer { try? FileManager.default.removeItem(at: out) }
-        try await SmoothedCopyWriter.write(source: Self.banded, ranges: nil, mix: [], soundURLs: [:],
-                                           filter: { $0 }, to: out)
+        try await Self.write(source: Self.banded, ranges: nil, filter: { $0 }, to: out)
         let before = BandingReading.codes(try await Self.column(of: Self.banded, at: 1, x: 640), bits: 10)
         let after = BandingReading.codes(try await Self.column(of: out, at: 1, x: 640), bits: 10)
         let difference = Self.difference(before, after)
@@ -258,8 +282,7 @@ struct SmoothedCopyWriterTests {
         let out = FileManager.default.temporaryDirectory
             .appendingPathComponent("ranges-\(UUID().uuidString).mp4")
         defer { try? FileManager.default.removeItem(at: out) }
-        try await SmoothedCopyWriter.write(source: Self.banded, ranges: [0..<500, 1000..<1500],
-                                           mix: [], soundURLs: [:], filter: Self.filter, to: out)
+        try await Self.write(source: Self.banded, ranges: [0..<500, 1000..<1500], to: out)
         let seconds = try await AVURLAsset(url: out).load(.duration).seconds
         #expect(abs(seconds - 1) < 0.05, "\(seconds)")
     }

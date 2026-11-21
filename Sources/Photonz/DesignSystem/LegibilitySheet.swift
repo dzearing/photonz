@@ -194,48 +194,63 @@ enum LegibilitySheet {
                 for backdrop in specimen.ground.backdrops {
                     let place = "\(specimen.control), \(specimen.state), \(schemeName)"
                         + (specimen.ground.backdrops.count > 1 ? " over \(backdrop.name)" : "")
-                    guard let shownImage = render(framed(specimen, scheme: scheme, backdrop: backdrop.color,
-                                                         pass: .shown)),
-                          let bareImage = render(framed(specimen, scheme: scheme, backdrop: backdrop.color,
-                                                        pass: .bare)),
-                          let maskImage = render(framed(specimen, scheme: scheme, backdrop: backdrop.color,
-                                                        pass: .mask)),
-                          let shown = picture(shownImage), let bare = picture(bareImage),
-                          let mask = picture(maskImage),
-                          shown.width == bare.width, shown.width == mask.width,
-                          shown.height == bare.height, shown.height == mask.height else {
-                        failures.append("\(place): could not be drawn three ways alike")
-                        continue
-                    }
-                    let file = place.lowercased().map { $0.isLetter || $0.isNumber ? $0 : "-" }
-                    let name = String(file).replacingOccurrences(of: "--", with: "-")
-                    write(shownImage, to: out.appendingPathComponent("\(name).png"))
-                    if ProcessInfo.processInfo.environment["PHOTONZ_LEGIBILITY_PASSES"] != nil {
-                        write(bareImage, to: out.appendingPathComponent("\(name)-bare.png"))
-                        write(maskImage, to: out.appendingPathComponent("\(name)-mask.png"))
-                    }
-                    let readings = InkReading.read(shown: shown, bare: bare,
-                                                   mask: coverage(mask: mask, bare: bare))
-                    measured += readings.count
-                    if let only = ProcessInfo.processInfo.environment["PHOTONZ_LEGIBILITY_SHOW"],
-                       place.localizedCaseInsensitiveContains(only) {
-                        for reading in readings {
-                            print(String(format: "  read %@: %.2f:1, %@ on %@, at %d,%d, %dx%d", place,
-                                         reading.contrast, reading.ink.hexString, reading.behind.hexString,
-                                         reading.minX / 2, reading.minY / 2, (reading.maxX - reading.minX) / 2,
-                                         (reading.maxY - reading.minY) / 2))
+                    // A specimen that reads badly is drawn again before it
+                    // counts, up to twice: the check machine's stand-in
+                    // graphics chip now and then fails a batch of work under
+                    // load and hands back a picture with words missing, which
+                    // read once as a dark caption tile's words "#232323 on
+                    // #232323" (2026-11-13). A colour that really cannot be
+                    // read is unreadable on every drawing.
+                    var found: [String] = []
+                    var read = 0
+                    for _ in 0..<3 {
+                        found = []
+                        guard let shownImage = render(framed(specimen, scheme: scheme, backdrop: backdrop.color,
+                                                             pass: .shown)),
+                              let bareImage = render(framed(specimen, scheme: scheme, backdrop: backdrop.color,
+                                                            pass: .bare)),
+                              let maskImage = render(framed(specimen, scheme: scheme, backdrop: backdrop.color,
+                                                            pass: .mask)),
+                              let shown = picture(shownImage), let bare = picture(bareImage),
+                              let mask = picture(maskImage),
+                              shown.width == bare.width, shown.width == mask.width,
+                              shown.height == bare.height, shown.height == mask.height else {
+                            found.append("\(place): could not be drawn three ways alike")
+                            continue
                         }
+                        let file = place.lowercased().map { $0.isLetter || $0.isNumber ? $0 : "-" }
+                        let name = String(file).replacingOccurrences(of: "--", with: "-")
+                        write(shownImage, to: out.appendingPathComponent("\(name).png"))
+                        if ProcessInfo.processInfo.environment["PHOTONZ_LEGIBILITY_PASSES"] != nil {
+                            write(bareImage, to: out.appendingPathComponent("\(name)-bare.png"))
+                            write(maskImage, to: out.appendingPathComponent("\(name)-mask.png"))
+                        }
+                        let readings = InkReading.read(shown: shown, bare: bare,
+                                                       mask: coverage(mask: mask, bare: bare))
+                        read = readings.count
+                        if let only = ProcessInfo.processInfo.environment["PHOTONZ_LEGIBILITY_SHOW"],
+                           place.localizedCaseInsensitiveContains(only) {
+                            for reading in readings {
+                                print(String(format: "  read %@: %.2f:1, %@ on %@, at %d,%d, %dx%d", place,
+                                             reading.contrast, reading.ink.hexString, reading.behind.hexString,
+                                             reading.minX / 2, reading.minY / 2, (reading.maxX - reading.minX) / 2,
+                                             (reading.maxY - reading.minY) / 2))
+                            }
+                        }
+                        let inks = Set(readings.map { "\($0.minX),\($0.minY)" }).count
+                        if inks < specimen.inks {
+                            found.append("\(place): \(inks) of the \(specimen.inks) words or icons it carries were found")
+                        }
+                        for reading in readings where !Legibility.isLegible(reading, disabled: specimen.disabled) {
+                            found.append(String(
+                                format: "%@: %.2f:1, %@ on %@, at %d,%d (%@.png)", place, reading.contrast,
+                                reading.ink.hexString, reading.behind.hexString,
+                                reading.minX / 2, reading.minY / 2, name))
+                        }
+                        if found.isEmpty { break }
                     }
-                    let inks = Set(readings.map { "\($0.minX),\($0.minY)" }).count
-                    if inks < specimen.inks {
-                        failures.append("\(place): \(inks) of the \(specimen.inks) words or icons it carries were found")
-                    }
-                    for reading in readings where !Legibility.isLegible(reading, disabled: specimen.disabled) {
-                        failures.append(String(
-                            format: "%@: %.2f:1, %@ on %@, at %d,%d (%@.png)", place, reading.contrast,
-                            reading.ink.hexString, reading.behind.hexString,
-                            reading.minX / 2, reading.minY / 2, name))
-                    }
+                    measured += read
+                    failures += found
                 }
             }
         }

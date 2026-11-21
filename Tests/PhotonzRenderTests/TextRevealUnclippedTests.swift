@@ -40,15 +40,40 @@ struct TextRevealUnclippedTests {
         }]
     }
 
+    /// The same reading drawn on the processor, which no graphics chip can
+    /// get wrong. The check machine's stand-in graphics chip fails a batch of
+    /// its work now and then under load ("command buffer exited with error
+    /// status" in the log), and a picture it failed reads as little or no
+    /// ink: 16 of the 17 times this suite went red on main between 2026-11-12
+    /// and 11-20, that line was in the same slice's log, and it was in none
+    /// of the green runs. So a frame that reads short on the graphics chip is
+    /// read again here before it counts. A real cut is in the picture itself
+    /// and reads just as short here (`aCutReadsShortOnTheProcessorToo`).
+    static let processor = CIContext(options: [.useSoftwareRenderer: true, .workingColorSpace: NSNull(),
+                                               .outputColorSpace: NSNull(),
+                                               .workingFormat: NSNumber(value: CIFormat.RGBAf.rawValue)])
+
     /// The total alpha in `image`, over its whole extent.
-    static func ink(_ image: CIImage) -> Double {
+    static func ink(_ image: CIImage, on chosen: CIContext? = nil) -> Double {
         let extent = image.extent
         guard extent.width >= 1, extent.height >= 1, extent.width.isFinite, extent.height.isFinite else { return 0 }
         let average = image.applyingFilter("CIAreaAverage", parameters: [kCIInputExtentKey: CIVector(cgRect: extent)])
         var pixel = [Float](repeating: 0, count: 4)
-        context.render(average, toBitmap: &pixel, rowBytes: 16, bounds: CGRect(x: 0, y: 0, width: 1, height: 1),
-                       format: .RGBAf, colorSpace: nil)
+        (chosen ?? context).render(average, toBitmap: &pixel, rowBytes: 16,
+                                   bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBAf, colorSpace: nil)
         return Double(pixel[3]) * Double(extent.width * extent.height)
+    }
+
+    /// The share of `full`'s ink that `drawn` holds: read on the graphics
+    /// chip, and read again on the processor whenever that falls short of the
+    /// bar or finds nothing to measure, so a failed batch on the chip can
+    /// never read as a cut. Nil when the piece has no ink to measure.
+    static func share(drawn: CIImage, full: CIImage) -> Double? {
+        let quick = (full: ink(full), drawn: ink(drawn))
+        if quick.full > 1, quick.drawn / quick.full >= whole { return quick.drawn / quick.full }
+        let sure = (full: ink(full, on: processor), drawn: ink(drawn, on: processor))
+        guard sure.full > 1 else { return nil }
+        return sure.drawn / sure.full
     }
 
     /// For each piece of `pieces` that is on screen `elapsed` ms into
@@ -66,12 +91,11 @@ struct TextRevealUnclippedTests {
             let shifted = elapsed - ranks[index] * reveal.staggerMS
             let pose = reveal.pose(rank: ranks[index], atElapsedMS: elapsed, place: piece.place)
             guard pose.opacity > 0.02, pose.shown > 0.0001 else { continue }
-            let full = ink(TextRevealCompositor.image(alone, reveal: reveal, elapsedMS: shifted,
-                                                      shutterMS: shutterMS, reach: room))
-            guard full > 1 else { continue }
-            let drawn = ink(TextRevealCompositor.image(alone, reveal: reveal, elapsedMS: shifted,
-                                                       shutterMS: shutterMS, reach: reach))
-            out.append(drawn / full)
+            let full = TextRevealCompositor.image(alone, reveal: reveal, elapsedMS: shifted,
+                                                  shutterMS: shutterMS, reach: room)
+            let drawn = TextRevealCompositor.image(alone, reveal: reveal, elapsedMS: shifted,
+                                                   shutterMS: shutterMS, reach: reach)
+            if let share = share(drawn: drawn, full: full) { out.append(share) }
         }
         return out
     }
@@ -142,7 +166,10 @@ struct TextRevealUnclippedTests {
         let early = TextRevealCompositor.image(pieces, reveal: mask, elapsedMS: mask.lengthMS / 6,
                                               reach: TextRevealCompositor.reach(of: pieces, reveal: mask))
         let rest = TextRevealCompositor.image(pieces, reveal: mask, elapsedMS: mask.lengthMS(count: 3) + 1)
-        #expect(Self.ink(early) < Self.ink(rest) * 0.9)
+        // Read on the processor: two readings, and a failed batch on the
+        // check machine's graphics chip turned this one red once
+        // (`processor`).
+        #expect(Self.ink(early, on: Self.processor) < Self.ink(rest, on: Self.processor) * 0.9)
         // A plain fade, a wipe and a typewriter never leave their box, so the
         // picture is exactly the box's.
         for style in [TextRevealStyle.wipe, .typewriter] {
@@ -150,6 +177,29 @@ struct TextRevealUnclippedTests {
         }
         #expect(TextRevealCompositor.reach(of: pieces, reveal: TextReveal(style: .riseAndFade, unit: .word,
                                                                           amount: 0)) == 0)
+    }
+
+    @Test("A word cut at its box reads short on the processor too, so reading again there never excuses a cut")
+    func aCutReadsShortOnTheProcessorToo() throws {
+        let pieces = try Self.tight(.word)
+        // A rise of a whole em with no room past the box: the cut this suite
+        // exists to catch, as it was before the fix.
+        let reveal = TextReveal(style: .riseAndFade, unit: .word, amount: 100, direction: .up)
+        var worst = 1.0
+        for elapsed in stride(from: 0, through: reveal.lengthMS(count: pieces.pieces.count), by: 66) {
+            for piece in pieces.pieces {
+                let alone = TextRevealPieces(pieces: [piece], pixelSize: pieces.pixelSize, emPixels: pieces.emPixels,
+                                             plate: nil)
+                let room = max(pieces.pixelSize.width, pieces.pixelSize.height) * 2
+                let full = Self.ink(TextRevealCompositor.image(alone, reveal: reveal, elapsedMS: elapsed, reach: room),
+                                    on: Self.processor)
+                guard full > 1 else { continue }
+                let cut = Self.ink(TextRevealCompositor.image(alone, reveal: reveal, elapsedMS: elapsed, reach: 0),
+                                   on: Self.processor)
+                worst = min(worst, cut / full)
+            }
+        }
+        #expect(worst < 0.9, "a word cut at its box read \(Self.percent(worst)) on the processor")
     }
 
     // MARK: - The built-in titles, as placed
@@ -203,27 +253,43 @@ struct TextRevealUnclippedTests {
         // The canvas draws at the document's size; an export can draw the same
         // frame bigger, with the very same renderer.
         for scale in [1, 2] as [CGFloat] {
-            let image = try #require(scale == 1 ? DocumentRenderer().render(doc, store: ImageStore())
-                                                : DocumentRenderer().render(doc, store: ImageStore(), scale: scale))
-            let width = image.width, height = image.height
-            var bytes = [UInt8](repeating: 0, count: width * height * 4)
-            let context = try #require(CGContext(data: &bytes, width: width, height: height, bitsPerComponent: 8,
-                                                 bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
-                                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
-            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
-            // Half way up a rise of an em, the word's feet are half an em under
-            // where they rest, past the bottom of the box: rows under the box
-            // (top-left origin in the document, so bitmap rows counted from the
-            // top) hold ink.
-            let pixels = CGFloat(width) / canvas.width
-            let below = Int((box.maxY + 2) * pixels)..<Int((box.maxY + 80 * 0.4) * pixels)
-            var lit = 0
-            for row in below {
-                for column in Int(box.minX * pixels)..<Int(box.maxX * pixels) {
-                    if bytes[(row * width + column) * 4] > 40 { lit += 1 }
-                }
+            var lit = 0, pixels: CGFloat = 1
+            // Drawn up to three times: the check machine's stand-in graphics
+            // chip now and then fails a batch of work under load and hands
+            // back a blank frame (`processor`). A word really drawn inside its
+            // box is short of ink under it on every drawing.
+            for _ in 0..<3 {
+                (lit, pixels) = try Self.litUnderTheBox(doc, box: box, canvas: canvas, scale: scale)
+                if lit > Int(50 * pixels * pixels) { break }
             }
             #expect(lit > Int(50 * pixels * pixels), "only \(lit) lit pixels under the box at \(scale)x")
         }
+    }
+
+    /// Lit pixels in the rows just under `box` of `doc` drawn at `scale`, and
+    /// how many pixels a document point is there.
+    static func litUnderTheBox(_ doc: PhotonzDocument, box: CGRect, canvas: CGSize,
+                               scale: CGFloat) throws -> (lit: Int, pixels: CGFloat) {
+        let image = try #require(scale == 1 ? DocumentRenderer().render(doc, store: ImageStore())
+                                            : DocumentRenderer().render(doc, store: ImageStore(), scale: scale))
+        let width = image.width, height = image.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let context = try #require(CGContext(data: &bytes, width: width, height: height, bitsPerComponent: 8,
+                                             bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        // Half way up a rise of an em, the word's feet are half an em under
+        // where they rest, past the bottom of the box: rows under the box
+        // (top-left origin in the document, so bitmap rows counted from the
+        // top) hold ink.
+        let pixels = CGFloat(width) / canvas.width
+        let below = Int((box.maxY + 2) * pixels)..<Int((box.maxY + 80 * 0.4) * pixels)
+        var lit = 0
+        for row in below {
+            for column in Int(box.minX * pixels)..<Int(box.maxX * pixels) {
+                if bytes[(row * width + column) * 4] > 40 { lit += 1 }
+            }
+        }
+        return (lit, pixels)
     }
 }
