@@ -1,0 +1,35 @@
+{
+  "id": "keynote-clean-soft-gradient-glass-kinetic-bold-t",
+  "title": "Keynote Clean, Soft Gradient Glass, Kinetic Bold, Tech Terminal and Stacked Stagger are replaced by titles that look professionally designed",
+  "goal": "Five built-in title pages look like clip art: stock purple and electric blue backgrounds, one system font, and nothing a designer would call a typographic idea. Replace each with a design that would sit comfortably in a high-end keynote, film or product launch, with refined colour pairings and real typographic treatment, so a person picking a title never lands on one that cheapens their video.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 35,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-21T16:11:18.363Z",
+  "updated": "2026-11-21T16:11:21.576Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-21: \"I hate the 'keynote clean' title. should be replaced with something far more professionally designed and aethetically pleasing, looks like clipart. same with 'Soft gradient glass'. These purple colors are just not what you would see on high quality refined title slides. You would expect far better color pairings and typographical effects.\" Then: \"same with kinetic bold, tech terminal, stacked stagger\".\n\nWhere they live: BuiltInTitle cases keynote, softGlass, kinetic, terminal, stacked in Sources/PhotonzCore/TitlePresets.swift (names at ~197-210); page art in Sources/PhotonzCore/TitleSet.swift (keynote() ~287, softGlass() ~300, kinetic, terminal, stacked), motion in the TitleDesign switch near the top of TitleSet.swift (~53 onward). These are 'the set before' the calm set, under More Styles, already 'toned down' once on 2026-10-18 (task the-existing-title-pages-are-toned-down-to-calm), which is why toning down again is not the answer: the palettes are the problem.\n\nWhat I saw in the code: keynote is #050507 with specks in #5E6B8C/#8C7BB8/#4A6FA5 and SF Pro semibold; softGlass is a #16205E -> #3A2C8C -> #123A75 indigo-violet liquid gradient under a 14% white panel; kinetic is a #1A33D6 electric blue with #3D5BFF lights and Avenir Next Condensed caps; terminal is #3DFF8F green-on-black SF Mono; stacked is #0A0C1C -> #1B2050 -> #2A1240 -> #7C8CFF with a #7C8CFF mark. Everything but kinetic and terminal is plain SF Pro.\n\nThis is designed product content, not Ask output, so the no-hardcoded-content rule for Ask does not apply; but no pass may tune to one rubric case. The blind score is a check, not the goal: the user judges from the reel. If the existing tests pin these pages' exact colours or layer names, update them with the new design rather than keeping the old art to pass them. Targets Next; if the calm set's shelf order or the title presets walk (the-title-presets-walk-pulls-film-super-off-the, p2) depends on these names, keep that walk green.",
+  "acceptance": [
+    "Before any design work, a reference board under queue/audits/: at least 25 real title slides and title cards from high-quality sources (Apple keynotes and WWDC sessions, film and TV main titles, Stripe, Linear, Vercel, editorial and broadcast design), each with a note on its palette (hex values), typeface and size ratios, tracking, layout grid and the one typographic idea it carries. Derive from it written rules for colour pairing and typography; those rules go in the video design notes in docs/design so later titles follow them.",
+    "Each of the five is redesigned from those rules, not tweaked: its own palette from the board's kind of pairings (no saturated purple, violet or electric blue ground unless the board shows a refined use of it and the audit cites which), a typeface choice beyond plain SF Pro where it serves (a serif, a condensed or wide cut, a mono with real character; only fonts that ship with macOS or are bundled with a licence that allows it), and at least one deliberate typographic effect (scale contrast, mixed weights or italics, tight display tracking, a rule or kicker system, outline or fill play, a mask or crop) that the old one lacks. They may get new names that say what they are; the old names do not have to survive.",
+    "Old documents and saved shelf entries that name keynote, softGlass, kinetic, terminal or stacked still open (BuiltInTitle raw values are read back in TitlePresetShelf.swift:102); they open as the new design or as before, the audit says which, and a test covers it.",
+    "Measured bar the old five fail: put each old and new title in one contact sheet beside board references and the calm set (keynoteSection, filmSuper and the rest). Score them blind with a vision model rubric (palette refinement, type quality, hierarchy, would-a-designer-ship-it), titles shuffled and unnamed, each scored three times; every new title scores at or above the calm set's median and clearly above its old version; all scores in the audit. Also report each new palette's chroma and the contrast of headline to ground (WCAG ratio at least 7 for headlines).",
+    "Motion stays as refined as the look: each keeps an entrance with a measured bar (how much of the headline shows at frame 0 against the hold) and no flicker in its live background (mean frame to frame difference during the hold under a stated small number).",
+    "A reel under queue/audits/ (a short MP4 or GIF of each new title playing, plus the contact sheet old beside new) named in the audit for the user to look at. Try path: a new video in Photonz Next, Library, Titles, More Styles, drag each onto the timeline.",
+    "In the audit, list any OTHER title in the set that falls below the new bar on the same blind score; file those as one follow-up task rather than redesigning them here. Anything else left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-21T16:11:18.365Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-21T16:11:21.575Z",
+      "note": "seq 4030 -> 35"
+    }
+  ]
+}

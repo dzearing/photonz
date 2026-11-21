@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-21T15:26:30.696Z",
+  "updated": "2026-11-21T15:57:06.048Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,13 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-21T15:26:30.695Z",
-      "note": "... 9 earlier entries elided",
-      "elided": 9
-    },
-    {
-      "t": "2026-11-15T13:16:49.891Z",
-      "note": "seq 50 -> 40"
+      "t": "2026-11-21T15:57:06.045Z",
+      "note": "... 10 earlier entries elided",
+      "elided": 10
     },
     {
       "t": "2026-11-16T04:24:21.529Z",
@@ -506,9 +502,13 @@
     {
       "t": "2026-11-21T15:26:30.694Z",
       "note": "Pass 18 landed 48862dbbf: the speed walk now reports main thread busy a frame and profiles every pass; found near Fit is ~9 ms of main thread a frame, ~8 even when nothing is painted, so the bar needs the lanes out of SwiftUI's per-frame update. Lanes taking turns to repaint tried and backed out (no gain). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+    },
+    {
+      "t": "2026-11-21T15:57:06.044Z",
+      "note": "claimed by go loop"
     }
   ],
-  "started": "2026-11-21T14:22:04.873Z",
+  "started": "2026-11-21T15:57:06.043Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
