@@ -18454,3 +18454,11 @@
 {"t":"2026-11-21T13:11:46.559Z","ev":"task_resequenced","id":"a-spotlight-draws-the-border-shadow-and-blur-it","from":570,"to":540}
 {"t":"2026-11-21T13:11:50.869Z","ev":"triage","summary":"0 merged, 0 dropped, 1 moved (standing walk task p2 to p1 after re-running its 19 walks: 14 still fail), 1 resequenced p1 bug (main red, reproduced in a depth-1 clone), 0 reset, p2 renumbered 10..540, 3 tasks logged with evidence; open 63 -> 63"}
 {"t":"2026-11-21T13:12:09.370Z","ev":"digest","file":"2026-11-21.md"}
+{"t":"2026-11-21T13:12:26.146Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-21T14:21:15.011Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-21T14:21:15.089Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-21T14:21:15.166Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-21T14:21:15.254Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-21T14:21:15.333Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-21T14:21:15.411Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-21T14:21:24.959Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 25 landed b77d1679f: an edit no longer re-runs the editor's whole layout and the timeline's grid (the layout read 'document != nil'; the dock never compared equal). Pick from nothing 47.6 -> 38-40 ms, undo 9.2 -> 8.2-8.7 on the 6 min edit. Bars not reached: edits with a clip picked <=16 ms (17-44), picks (29-40), worst scrub lag 1. Pass 26 leads in the log."}
