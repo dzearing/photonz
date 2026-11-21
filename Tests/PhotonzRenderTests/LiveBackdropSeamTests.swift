@@ -9,7 +9,7 @@ import Testing
 /// on (task `the-keynote-clean-title-page-draws-its-starfield`).
 ///
 /// Particles are scattered one to a cell of a grid. A glow that spills past
-/// its own cell was cut off at the cell's edge, so the Keynote Clean page
+/// its own cell was cut off at the cell's edge, so the Main Title page
 /// drew a dark box round many of its specks of light, at 1920 by 1080 and at
 /// Retina size, in the very frames export writes.
 ///
@@ -105,7 +105,7 @@ struct LiveBackdropSeamTests {
         CGImageDestinationFinalize(out)
     }
 
-    /// A video `size` big holding a Keynote Clean page from the start.
+    /// A video `size` big holding a Main Title page from the start.
     static func keynote(_ size: CGSize) throws -> PhotonzDocument {
         var doc = PhotonzDocument(canvasSize: size)
         doc.durationMS = 6000
@@ -114,7 +114,7 @@ struct LiveBackdropSeamTests {
         return doc
     }
 
-    @Test("A Keynote Clean page 2.5 s in has no box round any glow, at 1080p and at Retina size",
+    @Test("A Main Title page 2.5 s in has no box round any glow, at 1080p and at Retina size",
           arguments: [CGSize(width: 1920, height: 1080), CGSize(width: 3456, height: 2234)])
     func keynoteHasNoBoxes(_ size: CGSize) throws {
         let image = try Self.frame(Self.keynote(size), atMS: 2500)

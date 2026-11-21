@@ -111,22 +111,27 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
     // look (task `title-text-visibly-comes-in-and-every-built-in-t`), toned
     // down to the calm set's restraint on 2026-10-18 (task
     // `the-existing-title-pages-are-toned-down-to-calm`).
-    /// Near black with a few specks of light drifting slowly in depth, a
-    /// headline whose words rise a few points into place one after another,
-    /// and a light line under it. Apple's keynote slide.
+    /// Main Title: a film's. Didot in ivory on a warm black with dust
+    /// drifting in it, its words rising a few points into place one after
+    /// another, and a credit line in brass capitals tracked wide. Raw value
+    /// kept from Keynote Clean, which it replaced on 2026-11-21 (task
+    /// `keynote-clean-soft-gradient-glass-kinetic-bold-t`).
     case keynote
-    /// A liquid gradient flowing slowly under a frosted panel, each word
-    /// sharpening out of a soft focus inside it.
+    /// Frosted Glass: sage and stone light flowing slowly under a frosted
+    /// panel, a New York headline in green ink sharpening word by word out of
+    /// a soft focus inside it. Replaced Soft Gradient Glass on 2026-11-21.
     case softGlass
-    /// Big condensed capitals sliding up word by word out of their own line,
-    /// on a deep blue with faint wind drifting through it.
+    /// Condensed Poster: huge condensed capitals stacked tight and flush
+    /// left, sliding up word by word out of their own line, ivory on a warm
+    /// black with one vermilion line. Replaced Kinetic Bold on 2026-11-21.
     case kinetic
     /// Warm paper a faint sketch draws itself across, a small kicker, a serif
     /// headline rising out of its own baseline, and a hairline rule drawing
     /// itself under it.
     case editorial
-    /// A faint green grid running to a horizon in the dark, the words typed
-    /// in a letter at a time, a blinking cursor and a progress line.
+    /// Command Line: near-white mono typed in a letter at a time on graphite,
+    /// a fine grey grid running to a horizon, a blinking amber caret and rule,
+    /// and a mono capitals label. Replaced Tech Terminal on 2026-11-21.
     case terminal
     /// The recording under the title, blurred, dimmed and slowly settling,
     /// the words sharpening out of a soft focus, and the footage racking back
@@ -139,8 +144,10 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
     /// A large headline filled with a slowly sliding violet gradient and a
     /// faint glow, settling from a touch larger, over a faint aurora.
     case gradientGlow
-    /// Two lines of two weights rising into place one after the other, then
-    /// a small mark settling in, over faint streams of light.
+    /// Roman and Italic: a bold grotesk line over a Bodoni italic line at the
+    /// same size, ivory and blush on an oxblood black with faint ember
+    /// streams, rising one after the other under a short rule. Replaced
+    /// Stacked Stagger on 2026-11-21.
     case stacked
     /// A colour bar with faint rays across it wipes in and the name and role
     /// are revealed behind its edge: the broadcast lower third.
@@ -194,15 +201,15 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         case .gradientWord: "Gradient Word"
         case .bigNumber: "Big Number"
         case .endCard: "End Card"
-        case .keynote: "Keynote Clean"
-        case .softGlass: "Soft Gradient Glass"
-        case .kinetic: "Kinetic Bold"
+        case .keynote: "Main Title"
+        case .softGlass: "Frosted Glass"
+        case .kinetic: "Condensed Poster"
         case .editorial: "Editorial Serif"
-        case .terminal: "Tech Terminal"
+        case .terminal: "Command Line"
         case .glass: "Behind Glass"
         case .lightLeak: "Light Leak"
         case .gradientGlow: "Gradient Glow"
-        case .stacked: "Stacked Stagger"
+        case .stacked: "Roman and Italic"
         case .splitWipe: "Split Wipe"
         case .underline: "Minimal Underline"
         case .pill: "Pill Card"

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-set-kinetic-bold-walk",
-  "seed": "One of the designed set, end to end at Next defaults with no switch touched: Kinetic Bold, a title page, found on the Library's Catalog by searching, inserted at the playhead, its words typed in, photographed as it lands, coming in and holding, and the whole edit written out as an MP4 that runs 11.9s, the page then the whole recording.",
+  "seed": "One of the designed set, end to end at Next defaults with no switch touched: Condensed Poster, a title page, found on the Library's Catalog by searching, inserted at the playhead, its words typed in, photographed as it lands, coming in and holding, and the whole edit written out as an MP4 that runs 11.9s, the page then the whole recording.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -54,7 +54,7 @@
     },
     {
       "do": "type",
-      "text": "Kinetic Bold"
+      "text": "Condensed Poster"
     },
     {
       "do": "wait",
@@ -63,7 +63,7 @@
     },
     {
       "do": "press",
-      "control": "Kinetic Bold"
+      "control": "Condensed Poster"
     },
     {
       "do": "wait",
@@ -105,7 +105,7 @@
     {
       "do": "describe",
       "stage": "1-landed",
-      "note": "Kinetic Bold inserted from its Library tile at 0:00 with Insert Before Clip, in front of the recording on V1, at Next defaults, and its words typed straight in as 'Ship it faster': the playhead waits where every part has arrived"
+      "note": "Condensed Poster inserted from its Library tile at 0:00 with Insert Before Clip, in front of the recording on V1, at Next defaults, and its words typed straight in as 'Ship it faster': the playhead waits where every part has arrived"
     },
     {
       "do": "snapshot",
@@ -130,7 +130,7 @@
     {
       "do": "describe",
       "stage": "2-coming-in",
-      "note": "Half a second in: Kinetic Bold's parts still arriving, each on its own beat"
+      "note": "Half a second in: Condensed Poster's parts still arriving, each on its own beat"
     },
     {
       "do": "snapshot",
@@ -151,7 +151,7 @@
     {
       "do": "describe",
       "stage": "3-holding",
-      "note": "Two and a half seconds in: Kinetic Bold holding, with the typed words in place"
+      "note": "Two and a half seconds in: Condensed Poster holding, with the typed words in place"
     },
     {
       "do": "snapshot",

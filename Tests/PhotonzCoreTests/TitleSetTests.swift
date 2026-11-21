@@ -23,8 +23,8 @@ struct TitleSetTests {
     /// pages of these twelve sit under More Styles below it.
     static let twelve = BuiltInTitle.shelved.filter { !$0.isCalm }
 
-    static let names = ["Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif",
-                        "Tech Terminal", "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
+    static let names = ["Main Title", "Frosted Glass", "Condensed Poster", "Editorial Serif",
+                        "Command Line", "Behind Glass", "Light Leak", "Gradient Glow", "Roman and Italic",
                         "Split Wipe", "Minimal Underline", "Pill Card"]
 
     /// The preset placed at one second over a ten second recording of `hex`.
@@ -131,13 +131,23 @@ struct TitleSetTests {
             #expect(preset.hasMovingBackdrop == (live || frosted), "\(preset.name) says it moves: \(preset.hasMovingBackdrop)")
         }
         #expect(still == [.underline], "standing on something still: \(still.map(\.name))")
-        // Ten looks, and the set uses most of them, not the same one twice
-        // over.
-        let looks = Self.twelve.compactMap {
-            TitleDesign.find("Background", in: $0.layer(in: Self.canvas))?.annotation?.fill?.live?.look
+        // Ten looks, and the set uses most of them. Since 2026-11-21 (task
+        // `keynote-clean-soft-gradient-glass-kinetic-bold-t`) Command Line
+        // shares the liquid gradient with Frosted Glass, dark under one and
+        // pale under the other: the grid it stood on draws a synthwave sun.
+        // A look shared is shared by two at most, one light and one dark.
+        let grounds = Self.twelve.compactMap { preset -> (LiveLook, Bool)? in
+            guard let fill = TitleDesign.find("Background", in: preset.layer(in: Self.canvas))?.annotation?.fill,
+                  let live = fill.live else { return nil }
+            return (live.look, LivePalette(fill).lightGround)
         }
-        #expect(Set(looks).count == looks.count, "a look is used twice: \(looks)")
-        #expect(looks.count >= 9)
+        let looks = grounds.map(\.0)
+        #expect(Set(looks).count >= 9, "only \(Set(looks).count) looks: \(looks)")
+        for look in Set(looks) {
+            let sharing = grounds.filter { $0.0 == look }
+            #expect(sharing.count <= 2, "\(look) is used \(sharing.count) times")
+            if sharing.count == 2 { #expect(sharing[0].1 != sharing[1].1, "\(look) twice, both \(sharing[0].1 ? "light" : "dark")") }
+        }
     }
 
     @Test("Two type sizes at most")

@@ -261,7 +261,7 @@ struct LiveBackdropTests {
 
     @Test("A moving look keeps the headline its own colour: words are read against what the look can draw, not its lights")
     func wordsKeepTheirInk() throws {
-        // Keynote Clean's own theme: black, near-white words, no colour at all.
+        // Main Title's own theme: black, near-white words, no colour at all.
         var (doc, id) = try Self.placed(.keynote)
         let ink = doc.layer(id: id).flatMap { TitleDesign.find("Title", in: $0) }?.text?.colorHex
         for kind in LiveLook.allCases.map(TitleBackgroundKind.init(look:)) {
@@ -278,7 +278,7 @@ struct LiveBackdropTests {
                                  GradientStop(hex: "#1C1C1E", position: 0.5),
                                  GradientStop(hex: "#F5F5F7", position: 1)])
         for light in LivePalette(grey).lights { #expect(light.hsl.saturation > 0.4) }
-        // Keynote Clean's own: black, black, and its near-white words as accent.
+        // Main Title's own: black, black, and its near-white words as accent.
         let keynote = Paint(hex: "#000000", kind: .live,
                             stops: [GradientStop(hex: "#000000", position: 0), GradientStop(hex: "#000000", position: 0.5),
                                     GradientStop(hex: "#F5F5F7", position: 1)])

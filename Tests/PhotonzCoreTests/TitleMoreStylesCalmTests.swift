@@ -10,7 +10,7 @@ import Testing
 /// Apple-level pages landed: "The existing title pages are far too busy so i
 /// think we need to audit them and tone them down to make them a little more
 /// presentable and more subtle." Each of the twelve keeps its own identity
-/// (Editorial stays editorial, Tech Terminal stays a terminal) and takes the
+/// (Editorial stays editorial, Command Line stays a terminal) and takes the
 /// approved mock's restraint (`docs/design/mocks/pages/video-titles-apple.html`,
 /// held for the ten by `TitleCalmSetTests`): one move per part, travel under
 /// 24 points, nothing that springs, flips or turns in depth, ins under a second

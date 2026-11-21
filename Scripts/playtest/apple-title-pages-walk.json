@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/apple-title-pages-walk",
-  "seed": "The title pages that look like Apple designed them, end to end at Next defaults with no switch touched: the Library's Catalog searched for Keynote shows Keynote Section under Title Pages and Keynote Clean under More Styles; Keynote Section inserted in front of the recording, its headline typed, photographed a quarter second in (still sharpening out of its soft focus), half a second in and holding, and the edit written out as an MP4.",
+  "seed": "The title pages that look like Apple designed them, end to end at Next defaults with no switch touched: the Library's Catalog searched for Keynote shows Keynote Section under Title Pages and Main Title under More Styles; Keynote Section inserted in front of the recording, its headline typed, photographed a quarter second in (still sharpening out of its soft focus), half a second in and holding, and the edit written out as an MP4.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -64,7 +64,7 @@
     {
       "do": "describe",
       "stage": "0-searched",
-      "note": "Searching the Catalog for Keynote: Keynote Section under the Title Pages header, and the old Keynote Clean below it under More Styles"
+      "note": "Searching the Catalog for Keynote: Keynote Section under the Title Pages header, and the old Main Title below it under More Styles"
     },
     {
       "do": "snapshot",

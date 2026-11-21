@@ -69,7 +69,7 @@
     },
     {
       "do": "expect",
-      "control": "Keynote Clean",
+      "control": "Main Title",
       "present": false
     },
     {

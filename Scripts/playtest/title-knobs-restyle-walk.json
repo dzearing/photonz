@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/title-knobs-restyle-walk",
- "seed": "A few knobs restyle a title, at Next defaults with no switch touched: a Keynote Clean title page put at the start and typed, then its Theme set to Sunset from the swatches, its Font Pair to Editorial, its Energy to Punchy and Calm (each photographed at the same 0.4 s into its in), its Background to Liquid Gradient from the Background tiles, and its headline picked from the Part menu with its In changed to Blur In and replayed.",
+ "seed": "A few knobs restyle a title, at Next defaults with no switch touched: a Main Title title page put at the start and typed, then its Theme set to Sunset from the swatches, its Font Pair to Editorial, its Energy to Punchy and Calm (each photographed at the same 0.4 s into its in), its Background to Liquid Gradient from the Background tiles, and its headline picked from the Part menu with its In changed to Blur In and replayed.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -48,7 +48,7 @@
   {
    "do": "rightClick",
    "on": "Track V2",
-   "choose": "Add Title Page > More Styles > Keynote Clean"
+   "choose": "Add Title Page > More Styles > Main Title"
   },
   {
    "do": "wait",
@@ -89,7 +89,7 @@
   {
    "do": "describe",
    "stage": "title-picked",
-   "note": "A Keynote Clean title page typed and put down, at Next defaults with no switch touched: the panel leads with a Title section (Theme, Font Pair, Energy, Intensity, Background, Part)"
+   "note": "A Main Title title page typed and put down, at Next defaults with no switch touched: the panel leads with a Title section (Theme, Font Pair, Energy, Intensity, Background, Part)"
   },
   {
    "do": "expect",
@@ -335,7 +335,7 @@
     "centre"
    ],
    "choose": "Line",
-   "comment": "Keynote Clean's headline comes in by word; By picked with the pointer on its face, to Line."
+   "comment": "Main Title's headline comes in by word; By picked with the pointer on its face, to Line."
   },
   {
    "do": "wait",

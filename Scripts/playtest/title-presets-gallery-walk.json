@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-presets-gallery-walk",
-  "seed": "Every built-in preset of the designed set, photographed as it lands at Next defaults: a track added above the recording, then each title page (Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal, Light Leak, Gradient Glow, Stacked Stagger) and each name card (Split Wipe, Minimal Underline, Pill Card) put on it from its right-click at one second, photographed at rest, and undone before the next. Behind Glass lies over the recording rather than on a track of its own, and has its own walk.",
+  "seed": "Every built-in preset of the designed set, photographed as it lands at Next defaults: a track added above the recording, then each title page (Main Title, Frosted Glass, Condensed Poster, Editorial Serif, Command Line, Light Leak, Gradient Glow, Roman and Italic) and each name card (Split Wipe, Minimal Underline, Pill Card) put on it from its right-click at one second, photographed at rest, and undone before the next. Behind Glass lies over the recording rather than on a track of its own, and has its own walk.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -52,7 +52,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > More Styles > Keynote Clean"
+      "choose": "Add Title Page > More Styles > Main Title"
     },
     {
       "do": "wait",
@@ -84,7 +84,7 @@
     {
       "do": "describe",
       "stage": "title-page-keynote-clean",
-      "note": "Title Page preset Keynote Clean, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
+      "note": "Title Page preset Main Title, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
@@ -113,7 +113,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > More Styles > Soft Gradient Glass"
+      "choose": "Add Title Page > More Styles > Frosted Glass"
     },
     {
       "do": "wait",
@@ -145,7 +145,7 @@
     {
       "do": "describe",
       "stage": "title-page-soft-gradient-glass",
-      "note": "Title Page preset Soft Gradient Glass, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
+      "note": "Title Page preset Frosted Glass, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
@@ -174,7 +174,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > More Styles > Kinetic Bold"
+      "choose": "Add Title Page > More Styles > Condensed Poster"
     },
     {
       "do": "wait",
@@ -206,7 +206,7 @@
     {
       "do": "describe",
       "stage": "title-page-kinetic-bold",
-      "note": "Title Page preset Kinetic Bold, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
+      "note": "Title Page preset Condensed Poster, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
@@ -296,7 +296,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > More Styles > Tech Terminal"
+      "choose": "Add Title Page > More Styles > Command Line"
     },
     {
       "do": "wait",
@@ -328,7 +328,7 @@
     {
       "do": "describe",
       "stage": "title-page-tech-terminal",
-      "note": "Title Page preset Tech Terminal, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
+      "note": "Title Page preset Command Line, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
@@ -479,7 +479,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > More Styles > Stacked Stagger"
+      "choose": "Add Title Page > More Styles > Roman and Italic"
     },
     {
       "do": "wait",
@@ -511,7 +511,7 @@
     {
       "do": "describe",
       "stage": "title-page-stacked-stagger",
-      "note": "Title Page preset Stacked Stagger, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
+      "note": "Title Page preset Roman and Italic, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",

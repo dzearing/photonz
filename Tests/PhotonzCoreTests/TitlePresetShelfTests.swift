@@ -33,8 +33,8 @@ struct TitlePresetShelfTests {
         #expect(shelf.count == BuiltInTitle.shelved.count + ChartKind.allCases.count)
         #expect(shelf.map(\.name) == ["Keynote Section", "Film Super", "Session Title", "Chapter Card", "Editorial",
                                       "Sessions Stage", "Launch", "Gradient Word", "Big Number", "End Card",
-                                      "Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
-                                      "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
+                                      "Main Title", "Frosted Glass", "Condensed Poster", "Editorial Serif", "Command Line",
+                                      "Behind Glass", "Light Leak", "Gradient Glow", "Roman and Italic",
                                       "Split Wipe", "Minimal Underline", "Pill Card",
                                       "Bar Chart", "Horizontal Bars", "Line Chart", "Donut", "Big Number", "Comparison"])
         // A release without charts offers the titles alone.
@@ -47,8 +47,8 @@ struct TitlePresetShelfTests {
         let shelf = TitlePreset.shelf(saved: [card, page], charts: false)
         #expect(shelf.map(\.name) == ["Intro", "Keynote Section", "Film Super", "Session Title", "Chapter Card", "Editorial",
                                       "Sessions Stage", "Launch", "Gradient Word", "Big Number", "End Card",
-                                      "Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
-                                      "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
+                                      "Main Title", "Frosted Glass", "Condensed Poster", "Editorial Serif", "Command Line",
+                                      "Behind Glass", "Light Leak", "Gradient Glow", "Roman and Italic",
                                       "Team Card", "Split Wipe", "Minimal Underline", "Pill Card"])
     }
 
@@ -75,7 +75,7 @@ struct TitlePresetShelfTests {
 
     @Test func searchFindsAPresetByItsName() {
         let entries = TitlePreset.shelf(saved: []).map(\.entry)
-        #expect(LibrarySearch.filter(entries, query: "terminal").map(\.name) == ["Tech Terminal"])
+        #expect(LibrarySearch.filter(entries, query: "command").map(\.name) == ["Command Line"])
     }
 
     // MARK: - Where a drop lands

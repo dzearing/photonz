@@ -500,8 +500,17 @@ public enum TextRevealCompositor {
     private static func slid(_ piece: TextRevealPieces.Piece, pose: TextRevealPose, em: CGFloat) -> CGPoint {
         guard pose.slide > 0 else { return .zero }
         let keep = mask(of: piece, pose: pose, em: em)
-        let vertical = pose.direction == .up || pose.direction == .down
-        let span = vertical ? keep.height : keep.width
+        // Far enough that the whole of its ink starts outside the mask: words
+        // set tighter than their letters (condensed capitals stacked at 0.78)
+        // stand taller than their line box, and slid by the box alone their
+        // tops showed before their beat.
+        let ink = piece.rect
+        let span: CGFloat = switch pose.direction {
+        case .up: max(keep.height, ink.maxY - keep.minY)
+        case .down: max(keep.height, keep.maxY - ink.minY)
+        case .left: max(keep.width, keep.maxX - ink.minX)
+        case .right: max(keep.width, ink.maxX - keep.minX)
+        }
         // Coming UP means it starts below; Core Image's y runs up.
         let shift = CGFloat(pose.slide) * span
         return switch pose.direction {

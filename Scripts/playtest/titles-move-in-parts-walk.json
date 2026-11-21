@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/titles-move-in-parts-walk",
- "seed": "Titles move in parts, at Next defaults with no switch touched: a title page (Keynote Clean) put at the start from an empty track's right-click and a name card (Split Wipe) put over the recording at six seconds, each photographed frame by frame through its in with the right arrow, so the separate beats of the background, the words and the accent can be seen.",
+ "seed": "Titles move in parts, at Next defaults with no switch touched: a title page (Main Title) put at the start from an empty track's right-click and a name card (Split Wipe) put over the recording at six seconds, each photographed frame by frame through its in with the right arrow, so the separate beats of the background, the words and the accent can be seen.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -48,7 +48,7 @@
   {
    "do": "rightClick",
    "on": "Track V2",
-   "choose": "Add Title Page > More Styles > Keynote Clean"
+   "choose": "Add Title Page > More Styles > Main Title"
   },
   {
    "do": "wait",
@@ -57,7 +57,7 @@
   {
    "do": "describe",
    "stage": "page-landed",
-   "note": "Add Title Page > More Styles > Keynote Clean from the empty track's right-click, at Next defaults. The playhead moves on to where its LAST part has arrived, once the subtitle's last word is in, with its title open for typing"
+   "note": "Add Title Page > More Styles > Main Title from the empty track's right-click, at Next defaults. The playhead moves on to where its LAST part has arrived, once the subtitle's last word is in, with its title open for typing"
   },
   {
    "do": "snapshot",

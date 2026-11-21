@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/timeline-sub-layer-rows-walk",
- "seed": "Anything made of parts opens on the timeline the way it opens in the layers list, at Next defaults with no switch touched. A plain recording's row has no arrow. A Keynote Clean title page put on its own track opens by the arrow on its header into a row per part, and nothing zooms when it opens; the Subtitle's start is dragged half a second later; closed again, the title is one row with faint marks where its parts' timings fall. Then three rectangles are drawn and grouped two levels deep; the group's track opens, the inner group opens by its own arrow one step further in, and a grandchild rectangle's bar is slid a second later, its row alone moving, and no zoom changes through any of it. Option-click on the track's arrow closes every level, and again opens every level at once.",
+ "seed": "Anything made of parts opens on the timeline the way it opens in the layers list, at Next defaults with no switch touched. A plain recording's row has no arrow. A Main Title title page put on its own track opens by the arrow on its header into a row per part, and nothing zooms when it opens; the Subtitle's start is dragged half a second later; closed again, the title is one row with faint marks where its parts' timings fall. Then three rectangles are drawn and grouped two levels deep; the group's track opens, the inner group opens by its own arrow one step further in, and a grandchild rectangle's bar is slid a second later, its row alone moving, and no zoom changes through any of it. Option-click on the track's arrow closes every level, and again opens every level at once.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -54,7 +54,7 @@
   {
    "do": "rightClick",
    "on": "Track V2",
-   "choose": "Add Title Page > More Styles > Keynote Clean"
+   "choose": "Add Title Page > More Styles > Main Title"
   },
   {
    "do": "wait",

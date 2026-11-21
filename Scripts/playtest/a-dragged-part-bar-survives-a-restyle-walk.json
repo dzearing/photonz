@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/a-dragged-part-bar-survives-a-restyle-walk",
- "seed": "A title part's own movement bar, dragged by hand, stays where it was put when the title is restyled, at Next defaults with no switch touched: a Keynote Clean title page on a new track, its parts opened, the Headline's Opacity bar dragged 0.3 s earlier, then the Subtitle's start dragged later, the Theme set to Sunset, the Energy to Punchy and the Intensity lowered. After each, the Headline's Opacity keys are still at the moments the hand left them (task a-title-part-move-dragged-by-hand-on-the-timelin).",
+ "seed": "A title part's own movement bar, dragged by hand, stays where it was put when the title is restyled, at Next defaults with no switch touched: a Main Title title page on a new track, its parts opened, the Headline's Opacity bar dragged 0.3 s earlier, then the Subtitle's start dragged later, the Theme set to Sunset, the Energy to Punchy and the Intensity lowered. After each, the Headline's Opacity keys are still at the moments the hand left them (task a-title-part-move-dragged-by-hand-on-the-timelin).",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -48,7 +48,7 @@
   {
    "do": "rightClick",
    "on": "Track V2",
-   "choose": "Add Title Page > More Styles > Keynote Clean"
+   "choose": "Add Title Page > More Styles > Main Title"
   },
   {
    "do": "wait",

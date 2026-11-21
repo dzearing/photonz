@@ -313,9 +313,12 @@ public struct TitleLookBase: Hashable, Codable, Sendable {
     public var ink: String?
     /// Words' own weight, where it is not the font pair's for their role.
     public var weight: TextWeight?
+    /// Words' own face, where it is not the font pair's for their role: a
+    /// second line set in an italic under a roman one (Roman and Italic).
+    public var font: String?
 
     public init(path: String, grain: Double? = nil, blur: Double? = nil, glow: Double? = nil,
-                paint: Paint? = nil, ink: String? = nil, weight: TextWeight? = nil) {
+                paint: Paint? = nil, ink: String? = nil, weight: TextWeight? = nil, font: String? = nil) {
         self.path = path
         self.grain = grain
         self.blur = blur
@@ -323,6 +326,7 @@ public struct TitleLookBase: Hashable, Codable, Sendable {
         self.paint = paint
         self.ink = ink
         self.weight = weight
+        self.font = font
     }
 }
 
@@ -603,8 +607,10 @@ extension TitleRecipe {
                 if let text = piece.text {
                     let ink = part.role == .headline ? theme.primary : theme.secondary
                     let weight = part.role == .headline ? fonts.displayWeight : fonts.textWeight
+                    let face = part.role == .headline ? fonts.display : fonts.text
                     if text.colorHex != ink { base.ink = text.colorHex }
                     if text.weight != weight { base.weight = text.weight }
+                    if text.fontName != face { base.font = text.fontName }
                 }
             case .background:
                 break
@@ -663,10 +669,12 @@ struct TitleRestyler {
                 case .accent:
                     paintAccent(&piece, theme.accent, own: own(part.path)?.paint)
                 case .headline:
-                    setWords(&piece, color: own(part.path)?.ink ?? theme.primary, font: recipe.fonts.display,
+                    setWords(&piece, color: own(part.path)?.ink ?? theme.primary,
+                             font: ownFont(part.path) ?? recipe.fonts.display,
                              weight: ownWeight(part.path) ?? recipe.fonts.displayWeight)
                 case .subtitle, .kicker:
-                    setWords(&piece, color: own(part.path)?.ink ?? theme.secondary, font: recipe.fonts.text,
+                    setWords(&piece, color: own(part.path)?.ink ?? theme.secondary,
+                             font: ownFont(part.path) ?? recipe.fonts.text,
                              weight: ownWeight(part.path) ?? recipe.fonts.textWeight)
                 }
                 scaleLooks(&piece, path: part.path)
@@ -699,6 +707,13 @@ struct TitleRestyler {
     private func ownWeight(_ path: String) -> TextWeight? {
         guard recipe.fonts.id == TitleFontPair.originalID else { return nil }
         return recipe.looks.first { $0.path == path }?.weight
+    }
+
+    /// The face a preset gave a line of its own, while its faces are still
+    /// the preset's own.
+    private func ownFont(_ path: String) -> String? {
+        guard recipe.fonts.id == TitleFontPair.originalID else { return nil }
+        return recipe.looks.first { $0.path == path }?.font
     }
 
     // MARK: Paint
@@ -953,7 +968,8 @@ struct TitleRestyler {
                SegmentInk.contrast(ink, ground) >= 4.5 {
                 let needed = text.fontSize >= 60 * unit ? 3.0 : 4.5
                 if worst(ink) < needed, piece.style.shadows.isEmpty {
-                    piece.style.shadows = [TitleLook.liveScrim(forColorHex: text.colorHex, fontSize: text.fontSize)]
+                    piece.style.shadows = [TitleLook.liveScrim(forColorHex: text.colorHex, fontSize: text.fontSize,
+                                                               overLightGround: LivePalette(paint).lightGround)]
                 }
                 return piece
             }

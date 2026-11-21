@@ -13,7 +13,7 @@ import Testing
 /// bottom line of a title that is under the bottom of the box the words are
 /// laid out in: the picture of the words was cut at that box, so the word
 /// arrived sliced across its feet, and only the depth flips were given room
-/// past it. Measured before the fix on Keynote Clean, the headline's rising
+/// past it. Measured before the fix on Main Title, the headline's rising
 /// words had as little as half of their ink on screen in the first frames of
 /// the move.
 ///

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-words-turn-in-depth-walk",
-  "seed": "A Keynote Clean title page put down at Next defaults with no switch touched, its headline picked from the Part menu and its In set in turn to Swing In, Flip Up, Fly In From Depth and Tilt Settle, by word, each photographed part way in; then Swing In for the headline whole.",
+  "seed": "A Main Title title page put down at Next defaults with no switch touched, its headline picked from the Part menu and its In set in turn to Swing In, Flip Up, Fly In From Depth and Tilt Settle, by word, each photographed part way in; then Swing In for the headline whole.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -48,7 +48,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > More Styles > Keynote Clean"
+      "choose": "Add Title Page > More Styles > Main Title"
     },
     {
       "do": "wait",

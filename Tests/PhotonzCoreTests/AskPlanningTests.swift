@@ -672,8 +672,8 @@ struct AskPlanningTests {
 
     @Test("A video's title styles handed over up front are in the instructions")
     func titlesUpFront() {
-        let talk = AskConversation(request: "add a title", documentRead: "{}", titles: #"[{"style":"Keynote Clean"}]"#)
-        #expect(talk.messages.first?["content"]?.stringValue?.contains("Keynote Clean") == true)
+        let talk = AskConversation(request: "add a title", documentRead: "{}", titles: #"[{"style":"Main Title"}]"#)
+        #expect(talk.messages.first?["content"]?.stringValue?.contains("Main Title") == true)
     }
 
     @Test("A step with nothing else to say reads by the name it gives its layer")

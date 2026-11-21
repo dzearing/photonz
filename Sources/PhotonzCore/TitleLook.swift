@@ -59,9 +59,16 @@ public enum TitleLook {
     /// colour, so the words keep the colour they were designed in. Its exact
     /// shape is how the title knows it put it there (`isLiveScrim`), and takes
     /// it off again when the background stops moving.
-    public static func liveScrim(forColorHex hex: String, fontSize: CGFloat) -> ShadowStyle {
+    ///
+    /// Its colour is the opposite of the look's ground, not of the words: the
+    /// shade is there to hold back the look's brightest light over a dark
+    /// ground (or its darkest over a light one). Until 2026-11-21 it opposed
+    /// the words, which put a white glow round any line darker than half way
+    /// (a brass, vermilion or grey line) over a dark look.
+    public static func liveScrim(forColorHex hex: String, fontSize: CGFloat,
+                                 overLightGround: Bool = false) -> ShadowStyle {
         ShadowStyle(radius: fontSize * liveScrimShareOfSize, offset: .zero,
-                    colorHex: TextBuilder.autoContrastShadow(forColorHex: hex).colorHex,
+                    colorHex: overLightGround ? "#FFFFFF" : "#000000",
                     opacity: liveScrimOpacity)
     }
 
@@ -71,10 +78,11 @@ public enum TitleLook {
     /// Words as they land over a moving look they would not stand out from
     /// everywhere: wearing the shade a restyle would give them, so laying
     /// the title out again changes nothing.
-    public static func shadedOverALook(_ words: Layer) -> Layer {
+    public static func shadedOverALook(_ words: Layer, overLightGround: Bool = false) -> Layer {
         guard case .text(let text) = words.content else { return words }
         var shaded = words
-        shaded.style.shadows = [liveScrim(forColorHex: text.colorHex, fontSize: text.fontSize)]
+        shaded.style.shadows = [liveScrim(forColorHex: text.colorHex, fontSize: text.fontSize,
+                                          overLightGround: overLightGround)]
         return shaded
     }
 

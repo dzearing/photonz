@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/live-title-backgrounds-walk",
- "seed": "Title backgrounds that are alive, at Next defaults with no switch touched: a Keynote Clean title page put at the start and typed, its Background row opened as tiles that play, Aurora picked and photographed a second apart, its knobs read, then Architectural Sketch picked and undone.",
+ "seed": "Title backgrounds that are alive, at Next defaults with no switch touched: a Main Title title page put at the start and typed, its Background row opened as tiles that play, Aurora picked and photographed a second apart, its knobs read, then Architectural Sketch picked and undone.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -48,7 +48,7 @@
   {
    "do": "rightClick",
    "on": "Track V2",
-   "choose": "Add Title Page > More Styles > Keynote Clean"
+   "choose": "Add Title Page > More Styles > Main Title"
   },
   {
    "do": "wait",

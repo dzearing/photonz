@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/a-part-in-a-title-rows-across-the-title-walk",
- "seed": "A part picked inside a title shows its row across the title only, at Next defaults with no switch touched: a Keynote Clean title page put on a new track over the recording from the empty track's right-click, then its Background picked by double-clicking into the title on the canvas, and the timeline photographed. The Background row's bar starts and ends with the Title Page bar above it, not at the end of the recording.",
+ "seed": "A part picked inside a title shows its row across the title only, at Next defaults with no switch touched: a Main Title title page put on a new track over the recording from the empty track's right-click, then its Background picked by double-clicking into the title on the canvas, and the timeline photographed. The Background row's bar starts and ends with the Title Page bar above it, not at the end of the recording.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -17,7 +17,7 @@
   { "do": "wait", "seconds": 0.6 },
   { "do": "rightClick", "on": "Track V1", "choose": "Add Track Above" },
   { "do": "wait", "seconds": 0.6 },
-  { "do": "rightClick", "on": "Track V2", "choose": "Add Title Page > More Styles > Keynote Clean" },
+  { "do": "rightClick", "on": "Track V2", "choose": "Add Title Page > More Styles > Main Title" },
   { "do": "wait", "seconds": 1.2 },
   { "do": "key", "key": "escape" },
   { "do": "wait", "seconds": 0.4 },

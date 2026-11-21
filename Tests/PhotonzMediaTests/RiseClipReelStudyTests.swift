@@ -12,7 +12,7 @@ import UniformTypeIdentifiers
 /// built-in titles' words travelling in, BEFORE (the picture cut at the box the
 /// words are laid out in, which is what the renderer drew until this task) over
 /// AFTER (the picture given room for the whole move), with that box drawn
-/// faintly round both so the cut is plain to see. Then Keynote Clean as the
+/// faintly round both so the cut is plain to see. Then Main Title as the
 /// real renderer draws and exports it.
 ///
 /// Not part of the suite: it writes files the audit carries. Run it with
@@ -146,7 +146,7 @@ struct RiseClipReelStudyTests {
         #expect(CGImageDestinationFinalize(destination))
     }
 
-    @Test("Film before and after, and Keynote Clean as exported")
+    @Test("Film before and after, and Main Title as exported")
     func film() async throws {
         let directory = URL(fileURLWithPath: ProcessInfo.processInfo.environment["PHOTONZ_REEL_DIR"]
                             ?? FileManager.default.temporaryDirectory.path)
@@ -183,14 +183,14 @@ struct RiseClipReelStudyTests {
             sheet.append((item.name, stills))
             print("[reel] \(item.name) reach \(item.reach): \(mp4.lastPathComponent)")
         }
-        // Keynote Clean as the app draws it and an export writes it.
+        // Main Title as the app draws it and an export writes it.
         let (doc, id) = try Self.placed(.keynote)
         let start = try #require(doc.layer(id: id)?.time).inMS
         let store = ImageStore()
         let whole = [150, 300, 450, 700, 1400].compactMap {
             DocumentRenderer().render(doc.drawn(atTimeMS: start + $0), store: store)
         }
-        sheet.append(("Keynote Clean, exported", whole))
+        sheet.append(("Main Title, exported", whole))
         let movie = directory.appendingPathComponent("\(prefix)-keynote-exported.mp4")
         try? FileManager.default.removeItem(at: movie)
         try await DocumentMovieWriter.write(plan: DocumentVideoExport.plan(durationMS: 2600, canvasSize: Self.canvas,

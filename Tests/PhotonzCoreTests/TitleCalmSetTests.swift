@@ -21,8 +21,8 @@ struct TitleCalmSetTests {
     static let names = ["Keynote Section", "Film Super", "Session Title", "Chapter Card", "Editorial",
                         "Sessions Stage", "Launch", "Gradient Word", "Big Number", "End Card"]
 
-    static let moreStyles = ["Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif",
-                             "Tech Terminal", "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger"]
+    static let moreStyles = ["Main Title", "Frosted Glass", "Condensed Poster", "Editorial Serif",
+                             "Command Line", "Behind Glass", "Light Leak", "Gradient Glow", "Roman and Italic"]
 
     static func placed(_ preset: BuiltInTitle) throws -> (PhotonzDocument, UUID) {
         var doc = PhotonzDocument(canvasSize: canvas)
