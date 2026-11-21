@@ -9,7 +9,9 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readCatalog, flagDefaults, forcedOn } from './flag-defaults.mjs';
-import { DEFAULTS as SWEEP_DEFAULTS } from './sweep-schedule.mjs';
+import { DEFAULTS as SWEEP_DEFAULTS, walkNames as sweepWalkNames } from './sweep-schedule.mjs';
+import { answerAges, answerSentence } from './sweep-answers.mjs';
+import { resumable as sweepResumable } from './sweep-resume.mjs';
 import { readCiMain, ciLine, failingWhere } from './ci-main.mjs';
 import { mockDifferences, auditNamesIn } from './mock-differences.mjs';
 
@@ -1664,17 +1666,51 @@ export function sweepState(history = null) {
       couldNotRun: latest.couldNotRun || 0,
       total: latest.total || 0,
       // A run that was CUT SHORT, and which of the two ways. Interrupted means
-      // whoever was running it went away: on 2026-09-18 the loop was killed 126
+      // something stopped it (stoppedBy says what: the person came back, the
+      // loop was put down, or it was killed): on 2026-09-18 the loop was killed 126
       // walks into a sweep and the page said nothing at all, because the record
       // was only ever written at the end. Both now reach the page, and both say
       // how much of the set they covered rather than a bare number of walks.
       interrupted: !!latest.interrupted,
+      stoppedBy: latest.stoppedBy || null,
       timedOut: !!latest.timedOut,
+      // Carried on from a stopped run: how many parts the record is in.
+      parts: Array.isArray(latest.parts) ? latest.parts.length : 1,
     } : null,
+    // How long since every walk last had an answer from a whole-set run
+    // (queue/bin/sweep-answers.mjs). From 2026-11-04 to 11-20 the set did not
+    // finish once and nothing on the page said so.
+    answers: sweepAnswers(floorHours),
+    // The rest of a stopped run, owed as soon as the Mac is free rather than at
+    // the floor: without it the page said "next full in 61h" while 1075 walks
+    // were due that evening. Read without git (the walks whose script changed
+    // are the schedule's business), so it is the size of the rest, give or
+    // take a rewritten walk.
+    resume: sweepResume(latest, floorHours),
     // When the app last had a whole-app check behind it: null unless the screen
     // is locking sweeps out right now.
     blindSince: screenLocked ? lockedRunBegan(latest, history) : null,
   };
+}
+
+function sweepResume(latest, windowHours) {
+  try {
+    if (!latest || latest.complete !== false || !latest.interrupted) return null;
+    const p = sweepResumable({ record: latest, set: sweepWalkNames(), head: latest.head || 'unknown', now: Date.now(), windowHours });
+    return p.ok ? { walks: p.walks.length, of: p.of } : null;
+  } catch { return null; }
+}
+
+function sweepAnswers(windowHours) {
+  try {
+    const a = answerAges(readJSON(join(SWEEP, 'answers.json'), { walks: {} }), sweepWalkNames(), Date.now());
+    return {
+      of: a.of, unanswered: a.unanswered, oldestAt: a.oldestAt, oldestWalk: a.oldestWalk,
+      oldestHours: a.oldestHours, since: a.since, windowHours,
+      inWindow: a.unanswered === 0 && a.oldestHours !== null && a.oldestHours <= windowHours,
+      sentence: answerSentence(a, windowHours),
+    };
+  } catch { return null; }
 }
 
 // The start of the unbroken run of locked sweeps: walk the recorded sweeps back

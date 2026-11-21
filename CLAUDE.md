@@ -72,13 +72,17 @@ The schedule now:
   task per check, naming only the walks it saw fail
   (`queue/bin/sweep-slice-record.mjs`, drilled by
   `queue/bin/slice-owner-drill.mjs`).
-* **A whole-set run that is stopped part way picks up where it stopped.** When
-  the person comes back and the run is put down, the next one, if nothing a walk
-  runs has changed since, runs only the walks it never answered plus the ones it
-  saw fail, as soon as the Mac is free again, and the two are written down as
-  one run of the set that can close the standing walk task. When code has landed
-  since, it says so and the whole set runs again when the floor is up
-  (`queue/bin/sweep-resume.mjs`, drilled by `queue/bin/sweep-resume-drill.mjs`).
+* **A whole-set run that is stopped part way picks up where it stopped, code
+  landed or not.** When the person comes back and the run is put down, the next
+  one runs only the walks it never answered, the ones it saw fail, any whose
+  script changed since and any whose answer is over three days old, as soon as
+  the Mac is free again (rotating checks carry on until then), and the parts are
+  written down as one run of the set that can close the standing walk task once
+  every walk has an answer inside one three day window. Until 2026-11-21 landed
+  code threw the stopped run away, and six runs in a row were (5 to 20
+  November). `queue/bin/sweep.sh status` says on its `Answers:` line how long
+  since every walk last had an answer (`queue/bin/sweep-resume.mjs`,
+  `queue/bin/sweep-answers.mjs`, drilled by `queue/bin/sweep-resume-drill.mjs`).
 * **A change every walk touches can jump the floor**:
   `queue/bin/sweep.sh request --now "<why the whole set, right now>"`.
 

@@ -158,6 +158,7 @@ const { result, recorded, older, handedBack } = recordSweep({
   began: began || ended, ended, seconds,
   runlogRel: claim.logRel || null,
   interrupted: true,
+  stoppedBy: 'killed',
   total: Number(claim.total) || 0,
   head: claim.head || null,
 });

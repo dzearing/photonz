@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Records what a sweep run found, in one place, for every shape a run can end
 // in: covered the set, ran only the part a locked screen cannot touch, was
-// refused outright, was stopped on the clock, or was INTERRUPTED because
-// whoever was running it went away.
+// refused outright, was stopped on the clock, or was INTERRUPTED: the person
+// came back to the Mac, the loop was put down, or the run was killed and is
+// being recovered. Which of the three is `stoppedBy` (person, loop, killed).
 //
 // It also decides what happens to the requests the run claimed. A sweep that
 // COVERED THE SET has served them and they are gone. A sweep that did not, for
@@ -16,11 +17,12 @@
 // downstream has to know which one happened.
 //
 //   queue/bin/sweep-record.mjs <runlog> <latest.json> <claimed.json> <requested.json> \
-//       <began> <ended> <seconds> <runlogRelPath> <timedOut 0|1> <totalWalks> <headSha> [<interrupted 0|1>]
+//       <began> <ended> <seconds> <runlogRelPath> <timedOut 0|1> <totalWalks> <headSha> [<interrupted 0|1>] [<stoppedBy person|loop>]
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { parseSweepLog, sweepSentences } from './sweep-parse.mjs';
 import { mergeRuns } from './sweep-resume.mjs';
+import { recordAnswers } from './sweep-answers.mjs';
 
 // Record one run and settle its requests. Returns what it wrote and what it
 // decided, so a caller can say it out loud rather than guessing.
@@ -28,8 +30,15 @@ export function recordSweep({
   logText, latest, claimed, req,
   began, ended, seconds, runlogRel,
   timedOut = false, interrupted = false, total = 0, head = null,
+  // Why an interrupted run stopped: 'person' (somebody came back to the Mac),
+  // 'loop' (the loop was asked to stop), 'killed' (recovered after a SIGKILL).
+  // Until 2026-11-21 every one read "whoever was running it went away", which
+  // for the commonest of them, the person coming back, says the opposite.
+  stoppedBy = null,
   // Where a run that went blind is written down instead of latest.json.
   blindFile = null,
+  // When the set's window is (sweep-resume.mjs); the schedule's floor.
+  windowHours = undefined,
 }) {
   const r = parseSweepLog(logText, { total: Number(total) || 0, timedOut, interrupted });
 
@@ -61,6 +70,7 @@ export function recordSweep({
     requests, log: runlogRel,
     complete: r.complete, timedOut: r.timedOut,
     interrupted: r.interrupted, unfinished: r.unfinished,
+    ...(r.interrupted && stoppedBy ? { stoppedBy } : {}),
     screenLocked: r.screenLocked, partial: r.partial,
     // Which commit this ran against. While the screen stays locked the loop runs
     // the lock-safe part again only once new code has landed, so a partial sweep
@@ -103,7 +113,14 @@ export function recordSweep({
   // answered nothing is not merged into anything; the stopped run stays the
   // record, exactly as it would with no carrying-on at all.
   const merged = Boolean(resumeOf && !wentBlind && !nothingToSay);
-  if (merged) result = mergeRuns(resumeOf, result, set);
+  // Every walk this part answered goes in the ledger of when each walk last had
+  // an answer (sweep-answers.mjs), whatever else happens to the record: a blind
+  // run's early answers and an out-of-order replay are still answers.
+  if (!nothingToSay && r.ranWalks && r.ranWalks.length) {
+    try { recordAnswers(dirname(latest), { ranWalks: r.ranWalks, failed: r.failed, at: began }); }
+    catch { /* the ledger is a reading aid; never lose the record over it */ }
+  }
+  if (merged) result = mergeRuns(resumeOf, result, set, windowHours ? { windowHours } : {});
 
   // latest.json ONLY EVER MOVES FORWARD. Nothing older than what is already
   // recorded is written over it, whoever is writing and for whatever reason.
@@ -157,14 +174,15 @@ export function recordSweep({
 // ---- the command line ------------------------------------------------------
 const invokedDirectly = process.argv[1] && process.argv[1].endsWith('sweep-record.mjs');
 if (invokedDirectly) {
-  const [logFile, latest, claimed, req, began, ended, seconds, runlogRel, timedOut, total, head, interrupted] =
+  const [logFile, latest, claimed, req, began, ended, seconds, runlogRel, timedOut, total, head, interrupted, stoppedBy] =
     process.argv.slice(2);
 
   const { result, recorded, older, handedBack, blind, merged } = recordSweep({
     logText: existsSync(logFile) ? readFileSync(logFile, 'utf8') : '',
     latest, claimed, req, began, ended, seconds, runlogRel,
     timedOut: timedOut === '1', interrupted: interrupted === '1',
-    total, head,
+    total, head, stoppedBy: stoppedBy || null,
+    windowHours: Number(process.env.PHOTONZ_SWEEP_FLOOR_HOURS) || undefined,
   });
 
   if (blind) {

@@ -66,7 +66,16 @@ check('and that walk is in neither the pass list nor the fail list',
 r.ended = '2026-09-18T15:09:00Z'; r.seconds = 1550;
 let said = sweepSentences(r).join(' ');
 check('it says how much of the set it covered', /reached 3 of 532 walks/.test(said), said);
-check('it says WHY it stopped', /whoever was running it went away/.test(said), said);
+check('a stop with no reason written down says it was stopped, never who went away',
+  /the run was stopped part way/.test(said) && !/went away/.test(said), said);
+// The reason the run stopped is the real one (2026-11-21): the person coming
+// BACK to the Mac read "whoever was running it went away" for six runs.
+check('a run stopped because the person came back says so',
+  /stopped because somebody came back to the Mac/.test(sweepSentences({ ...r, stoppedBy: 'person' }).join(' ')));
+check('a run stopped because the loop was put down says so',
+  /stopped because the loop was put down/.test(sweepSentences({ ...r, stoppedBy: 'loop' }).join(' ')));
+check('a run killed and picked up afterwards says so',
+  /killed part way and picked up afterwards/.test(sweepSentences({ ...r, stoppedBy: 'killed' }).join(' ')));
 check('and that its failures are not confirmed', /UNCONFIRMED/.test(said), said);
 check('and that the request is pending again', /pending again/.test(said), said);
 

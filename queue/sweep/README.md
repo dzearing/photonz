@@ -48,6 +48,7 @@ Drills: `node queue/bin/sweep-schedule-drill.mjs`, `node queue/bin/loop-day-dril
 | `rotation.json` | the loop, via `queue/bin/sweep.sh slice` | where the rotating check has got to in the set, and the commit it last checked. |
 | `last-slice.json` | the same | what the last rotating check ran and found. Never the state of the walk set. |
 | `latest.json` | the loop, via `queue/bin/sweep.sh run` | the last sweep: how long it took, how many walks passed, and the name of every walk that failed. Only runs that could SEE land here: a run that went blind does not, so this stays the last run that really covered the set. **It only ever moves forward**, see below. |
+| `answers.json` | `sweep-record.mjs`, for every whole-set run and every part of one | when each walk last had an answer from a whole-set run, and whether it passed. `sweep.sh status` (its `Answers:` line) and the dashboard read it to say how long the set has gone without one. Seeded from the logs on disk with `queue/bin/sweep-answers.mjs --backfill`. |
 | `blind.json` | the same | the last run that WENT BLIND, if there was one: where the app stopped launching, how many walks that cost, and what it did answer before it. `sweep.sh status` leads with it while it is newer than `latest.json`. |
 | `<date>-<time>.log` | the same run | the full output, one line per walk. The last ten are kept. |
 | `.claimed.json` | `sweep.sh run`, at the moment it starts | the requests this run is serving, plus who is running it, when it began, which log it is writing and how big the set is. Deleted when the run is written down. One left behind means a run that never finished. |
@@ -98,7 +99,10 @@ Drill: `node queue/bin/sweep-blind-drill.mjs`.
 A run can end five ways, and only the first is the state of the walk set:
 it covered the set, a locked screen let only part of it through, the app
 stopped launching and it went blind, it hit its own clock cap, or it was
-INTERRUPTED because whoever was running it went away.
+INTERRUPTED: somebody came back to the Mac, the loop was put down, or the run
+was killed and picked up afterwards. The record says which as `stoppedBy`
+(`person`, `loop`, `killed`); until 2026-11-21 all three read "whoever was
+running it went away", which for the person coming BACK said the opposite.
 
 The last one used to lose everything twice over. The requests are claimed at
 the START of a run (one arriving during a sweep belongs to the next one) and
@@ -145,28 +149,39 @@ to the Mac. What it reached was kept, but none of it counted: the record read
 whole-set run was going to start again at walk one, five more hours of the Mac
 for twenty two walks nobody had answered.
 
-Now the next whole-set run, **when nothing a walk runs has changed since**
-(the same `Sources`, `Scripts`, `Resources`, `Vendor` and package files rule as
-"landed code"), runs only the rest (`queue/bin/sweep-resume.mjs`):
+Now the next whole-set run, **code landed or not**, runs only the rest
+(`queue/bin/sweep-resume.mjs`):
 
 * **the remainder** is every walk the stopped run never answered (the one in
-  flight, the ones after it, any a lock refused) plus every walk it saw FAIL.
-  Those failures are unconfirmed, because a stop takes the probe down with it,
-  so they run again rather than being counted;
+  flight, the ones after it, any a lock refused, any new to the set) plus every
+  walk it saw FAIL, every walk whose own script changed since, and every walk
+  whose answer is older than the three day window. Those failures are
+  unconfirmed, because a stop takes the probe down with it, so they run again
+  rather than being counted;
 * it runs **as soon as the Mac has been left alone for fifteen minutes**, inside
-  the once-a-day floor: it is the rest of the day's run, not a second one. The
+  the three day floor: it is the rest of the set's run, not a second one. The
   merged record keeps the stopped run's `began`, so the next whole-set run is
-  still counted from when the day's run started;
+  still counted from when the stopped run started. While it waits for the Mac,
+  the rotating check after a landed change still runs (the decision's
+  `meanwhile`);
 * the two parts are written to `latest.json` as **one run of the set**, with
-  `parts` saying how it was made up. It reads complete only when every walk in
-  the set has an answer and the part that finished it was not itself cut short,
-  and only then can it close the standing walk task. A remainder that is
-  stopped too is merged the same way and carried on from again;
-* **when code has landed since**, nothing is carried on: what the stopped run
-  reached is about code that is gone. The schedule's line says so, and the whole
-  set runs again when the day is up, as before. Running the remainder plus "the
-  walks the change touched" was weighed and turned down: any change under
-  `Sources` can reach any walk, and nothing here can tell which ones it did;
+  `parts` saying how it was made up and `answeredIn` which part answered each
+  walk. It reads complete only when every walk in the set has an answer, every
+  answer sits inside one three day window, and the part that finished it was
+  not itself cut short; only then can it close the standing walk task. A
+  remainder that is stopped too is merged the same way and carried on from
+  again;
+* **code landing between the parts does not throw the stopped run away.** Until
+  2026-11-21 it did, and the loop lands app code several times a day, so it
+  always did: the runs of 5, 8, 11, 14, 17 and 20 November were each stopped
+  when the user came back (951, 854, 620, 238, 118 and 112 walks in) and each
+  was started again from walk one, and the whole set did not finish for over
+  two weeks. The three day floor counted from each start had walked the start
+  from 03:38 to 07:21, half an hour before the person sat down. The promise now
+  is every walk answered inside one three day window; a change that breaks a
+  walk already answered is what the rotating check after every landed change
+  catches. When every answer the stopped run holds is older than the window,
+  the whole set runs again from the start;
 * a run stopped on its own clock (a wedged probe, usually) and a screen that is
   locked now are not carried on from either;
 * the event the loop logs for a remainder carries that part's own walks and

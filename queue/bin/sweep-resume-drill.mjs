@@ -7,16 +7,21 @@
 // (queue/bin/sweep-resume.mjs) honest in three parts:
 //
 //   1. the rules, pure: what the remainder is, when carrying on is sound and
-//      when it is not (code landed, a run stopped on its clock, a lock, a set
-//      that moved), and how two parts merge into one record;
+//      when it is not (a run stopped on its clock, a lock, answers older than
+//      the three day window), that code landing or the set growing no longer
+//      throws a stopped run away (2026-11-21: six runs in a row from 11-05 to
+//      11-20 were, and the set did not finish for over two weeks), and how two
+//      parts merge into one record;
 //   2. the schedule: the remainder runs as soon as the Mac is free, inside the
-//      once-a-day floor, and when code has landed it says why it is not
-//      carrying on;
+//      floor, and while it waits for the Mac the rotating check still runs;
 //   3. end to end, on a scratch queue with a stand-in walk runner: the REAL
 //      sweep.sh runs the whole set and is stopped part way, the next
 //      `sweep.sh run` hands the runner only the remainder, the merged record
 //      reads complete, and the standing walk task the first run opened is
-//      closed by it.
+//      closed by it. Then again with CODE LANDED between the two parts: the
+//      second part is still only the remainder, plus the walks whose own
+//      script changed, and the set still closes. And `sweep.sh status` says
+//      how long since every walk last had an answer.
 //
 //   node queue/bin/sweep-resume-drill.mjs
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync, rmSync, chmodSync } from 'node:fs';
@@ -25,7 +30,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { remainderOf, resumable, mergeRuns } from './sweep-resume.mjs';
-import { decide as decideAt, walkNames } from './sweep-schedule.mjs';
+import { decide as decideAt, walkNames, changedWalks, codeLandedBetween } from './sweep-schedule.mjs';
+import { noteAnswers, answerAges, answerSentence } from './sweep-answers.mjs';
 // Written against a one-day floor (the rule being drilled, not today's floor,
 // which is 72 hours since 2026-11-05: sweep-schedule-drill.mjs checks that).
 const decide = (o) => decideAt({ floorHours: 24, ...o });
@@ -57,28 +63,52 @@ check('the walks it saw fail are run again, because a stop takes the probe down 
 check('in the order of the set', rest.walks.join() === 'walk-02,walk-08,walk-09,walk-10,walk-11', rest.walks);
 
 console.log('when carrying on is sound');
-const ok = (o) => resumable({ record: stopped, set: SET, head: 'abc', ...o });
+const NOW = Date.parse('2026-10-22T17:00:00Z');   // 5.7h after the stopped run began
+const ok = (o) => resumable({ record: stopped, set: SET, head: 'abc', now: NOW, ...o });
 check('same commit: carry on', ok({}).ok === true, ok({}));
 check('a later commit that changed nothing a walk runs: carry on',
   ok({ head: 'def', codeSince: false }).ok === true);
-check('code landed since: the whole set, and it says why',
-  ok({ head: 'def', codeSince: true }).ok === false
-  && ok({ head: 'def', codeSince: true }).because === 'code'
-  && /code has landed/.test(ok({ head: 'def', codeSince: true }).why), ok({ head: 'def', codeSince: true }));
-check('not knowing whether code landed is not the same code',
-  ok({ head: 'def', codeSince: null }).ok === false);
+// The heart of 2026-11-21: code lands several times a day, so a stop thrown
+// away whenever it did meant the set never finished again.
+let landed = ok({ head: 'def', codeSince: true });
+check('code landed since: STILL carry on, and it says code landed',
+  landed.ok === true && /code has landed since/.test(landed.why) && landed.walks.join() === rest.walks.join(), landed);
+check('not knowing whether code landed: carry on too',
+  ok({ head: 'def', codeSince: null }).ok === true);
+landed = ok({ head: 'def', codeSince: true, changed: ['walk-03', 'walk-10', 'walk-gone'] });
+check('a walk whose own script changed since is run again, even one it passed',
+  landed.ok === true && landed.changed.join() === 'walk-03' && landed.walks.includes('walk-03')
+  && /1 whose script changed since/.test(landed.why), landed);
+check('...and a changed walk it never reached is counted once, as never reached',
+  landed.unreached.includes('walk-10') && !landed.changed.includes('walk-10'), landed);
 check('a run stopped on its own clock is a wedge, not a person, and is not carried on from',
-  resumable({ record: { ...stopped, interrupted: false, timedOut: true }, set: SET, head: 'abc' }).ok === false);
+  resumable({ record: { ...stopped, interrupted: false, timedOut: true }, set: SET, head: 'abc', now: NOW }).ok === false);
 check('a run that covered the set leaves nothing to carry on from',
-  resumable({ record: { ...stopped, complete: true }, set: SET, head: 'abc' }).ok === false);
-check('a set that grew is not carried on from',
-  resumable({ record: stopped, set: [...SET, 'walk-new'], head: 'abc' }).because === 'set');
+  resumable({ record: { ...stopped, complete: true }, set: SET, head: 'abc', now: NOW }).ok === false);
+landed = resumable({ record: stopped, set: [...SET, 'walk-new'], head: 'abc', now: NOW });
+check('a set that grew is carried on from, the new walk as one it never reached',
+  landed.ok === true && landed.unreached.includes('walk-new'), landed);
+landed = resumable({ record: stopped, set: SET.filter((w) => w !== 'walk-01'), head: 'abc', now: NOW });
+check('a set that lost a walk is carried on from too', landed.ok === true && !landed.walks.includes('walk-01'), landed);
+console.log('the three day window');
+const later = NOW + 70 * 3600e3;   // 75.7h after the stopped run began
+landed = resumable({ record: stopped, set: SET, head: 'abc', now: later });
+check('every answer older than the window: nothing to carry on from, the whole set runs again',
+  landed.ok === false && landed.because === 'stale' && /more than 72 hours old/.test(landed.why), landed);
+// A record in two parts, the first part older than the window.
+const twoParts = { ...stopped, ranWalks: SET.slice(0, 10), walks: 10, failed: [],
+  parts: [{ began: stopped.began, walks: 6, head: 'abc' }, { began: '2026-10-24T20:00:00Z', walks: 4, head: 'abc' }],
+  answeredIn: Object.fromEntries(SET.slice(0, 10).map((w, i) => [w, i < 6 ? 0 : 1])) };
+landed = resumable({ record: twoParts, set: SET, head: 'abc', now: later });
+check('answers from a part older than the window are run again, the fresh part\'s are kept',
+  landed.ok === true && landed.stale.join() === SET.slice(0, 6).join() && !landed.walks.includes('walk-07')
+  && /6 whose answer is over 72 hours old/.test(landed.why), landed);
 check('a locked screen waits for the unlock rather than refusing most of the remainder',
   ok({ screenLocked: true }).because === 'locked');
 check('a carrying-on run that went blind on this code is not tried again',
   ok({ blind: { began: '2026-10-22T17:00:00Z', head: 'abc' } }).because === 'blind');
 check('a record from before runs wrote down what they reached is not guessed at',
-  resumable({ record: { ...stopped, ranWalks: undefined }, set: SET, head: 'abc' }).ok === false);
+  resumable({ record: { ...stopped, ranWalks: undefined }, set: SET, head: 'abc', now: NOW }).ok === false);
 
 console.log('two parts, one run of the set');
 const part2 = {
@@ -113,7 +143,8 @@ m = mergeRuns(stopped, part2Stopped, SET);
 check('a carrying-on run that is itself stopped is NOT complete', m.complete === false && m.interrupted === true, m);
 check('...and the walks still unanswered are still the remainder',
   remainderOf(m, SET).unreached.join() === 'walk-09,walk-10,walk-11', remainderOf(m, SET));
-check('...and it can be carried on from again', resumable({ record: m, set: SET, head: 'abc' }).ok === true);
+check('...and it can be carried on from again', resumable({ record: m, set: SET, head: 'abc', now: NOW }).ok === true);
+check('...and it says which part answered each walk', m.answeredIn['walk-00'] === 0 && m.answeredIn['walk-02'] === 1, m.answeredIn);
 const m3 = mergeRuns(m, { ...part2, ranWalks: ['walk-02', 'walk-09', 'walk-10', 'walk-11'], walks: 4, passed: 4, failed: [] }, SET);
 check('three parts make one complete run', m3.complete === true && m3.parts.length === 3 && m3.failed.length === 0, m3);
 
@@ -123,20 +154,51 @@ m = mergeRuns(stopped, { ...part2, ranWalks: ['walk-02', 'walk-08', 'walk-09', '
 check('a walk with no answer anywhere keeps the merged run from reading complete',
   m.complete === false && m.walks === 11, m);
 
+// Code landed between the parts: a walk added, a walk removed.
+const SET2 = [...SET.filter((w) => w !== 'walk-05'), 'walk-12'];
+m = mergeRuns(stopped, { ...part2, head: 'def', ranWalks: ['walk-02', 'walk-08', 'walk-09', 'walk-10', 'walk-11', 'walk-12'], walks: 6, passed: 5 }, SET2);
+check('across code: complete against the set as it is now, the removed walk dropped',
+  m.complete === true && m.walks === SET2.length && !m.ranWalks.includes('walk-05') && m.total === SET2.length, m);
+check('...and it knows the parts ran on different code', m.acrossCode === true && m.parts[1].head === 'def', m.parts);
+said = sweepSentences(m).join(' ');
+check('...and says code landed between the parts, never "on the same code"',
+  /with code landing between the parts/.test(said) && !/same code/.test(said), said);
+// Parts spread wider than the window do not make one run of the set.
+m = mergeRuns(stopped, { ...part2, began: '2026-10-26T00:00:00Z', ended: '2026-10-26T00:06:00Z' }, SET);
+check('parts further apart than the window are not one run of the set',
+  m.complete === false && m.resumed.outOfWindow === true, m.resumed);
+
+console.log('when each walk last had an answer');
+let ledger = noteAnswers({ walks: {} }, { ranWalks: SET.slice(0, 9), failed: ['walk-02'], at: '2026-10-22T11:15:14Z' });
+ledger = noteAnswers(ledger, { ranWalks: SET.slice(9), at: '2026-10-22T18:00:00Z' });
+ledger = noteAnswers(ledger, { ranWalks: ['walk-00'], at: '2026-10-20T00:00:00Z' });
+check('an older run never moves a walk\'s answer back', ledger.walks['walk-00'].t === '2026-10-22T11:15:14.000Z', ledger.walks['walk-00']);
+let ages = answerAges(ledger, SET, NOW);
+check('every walk answered: the oldest answer is the stopped run\'s start',
+  ages.unanswered === 0 && ages.oldestWalk === 'walk-00' && Math.abs(ages.oldestHours - 5.75) < 0.01, ages);
+check('...and the sentence says it is inside the window', /^Inside the 72 hour window: .*last 6 hours/.test(answerSentence(ages)), answerSentence(ages));
+ages = answerAges(ledger, [...SET, 'walk-new'], NOW + 4 * 24 * 3600e3);
+check('a walk with no answer on record is counted, and the sentence says the window is broken',
+  ages.unanswered === 1 && /^OUTSIDE the 72 hour window: 1 of 13 walks have no answer/.test(answerSentence(ages)), answerSentence(ages));
+
 // ---- 2. the schedule ---------------------------------------------------------
 console.log('the schedule');
-const now = Date.parse('2026-10-22T17:00:00Z');   // 5.7h after the stopped run began
+const now = NOW;
 let d = decide({ now, latest: stopped, head: 'abc', codeSinceFull: false, set: SET });
 check('inside the once-a-day floor, the rest of a stopped run is due straight away',
   d.run === 'full' && d.resume === true && d.walks === 5, d);
 check('and it says what it is finishing', /stopped at 9 of 12/.test(d.why), d.why);
 d = decide({ now, latest: stopped, head: 'def', codeSinceFull: true, codeSinceCheck: true,
   rotation: { lastHead: 'abc' }, set: SET });
-check('with code landed, inside the floor: the rotating check, and the line says why the stopped run was not carried on',
-  d.run === 'slice' && !d.resume && /code has landed since the last whole-set run was stopped/.test(d.why), d);
+check('with code landed, inside the floor: the rest of the stopped run is still what is due',
+  d.run === 'full' && d.resume === true && d.walks === 5 && /code has landed since/.test(d.why), d);
+check('...and while it waits for the Mac to be free, the rotating check still runs',
+  d.meanwhile && d.meanwhile.run === 'slice', d.meanwhile);
+d = decide({ now, latest: stopped, head: 'abc', codeSinceFull: false, set: SET, rotation: { lastHead: 'abc' } });
+check('...and on the same code, already checked, nothing runs meanwhile', d.resume && d.meanwhile.run === 'nothing', d.meanwhile);
 d = decide({ now: now + 24 * 3600e3, latest: stopped, head: 'def', codeSinceFull: true, set: SET });
-check('with code landed, past the floor: the whole set, and it says why',
-  d.run === 'full' && !d.resume && /stopped, so what it reached is about code that is gone/.test(d.why), d);
+check('past the window: the whole set from the start, and it says why',
+  d.run === 'full' && !d.resume && /more than 24 hours old, so the whole set runs again/.test(d.why), d);
 d = decide({ now, latest: m3, head: 'abc', codeSinceFull: false, set: SET });
 check('once finished, nothing more runs on that code', d.run === 'nothing', d);
 d = decide({ now, latest: stopped, head: 'abc', codeSinceFull: false });
@@ -154,6 +216,12 @@ if (locked) {
 } else if (set.length < 50) {
   console.log('  skip end to end: fewer than fifty walks in this checkout');
 } else {
+  await endToEnd({ landed: false });
+  await endToEnd({ landed: true });
+}
+
+async function endToEnd({ landed }) {
+  console.log(landed ? '...and again with code landed between the two parts' : '...on the same code');
   const box = mkdtempSync(join(tmpdir(), 'sweep-resume-'));
   const qdir = join(box, 'queue');
   for (const p of ['p0-critical', 'p1-high', 'p2-normal', 'p3-low']) mkdirSync(join(qdir, 'tasks', p), { recursive: true });
@@ -250,12 +318,31 @@ exit 0
     L.interrupted === true && L.complete === false && L.walks === HANG - 1 && L.total === set.length,
     { interrupted: L.interrupted, walks: L.walks, total: L.total });
   check('its two failures are written down, unconfirmed', L.failed.length === 2, L.failed);
+  check('it says the loop was put down, the reason it really stopped', L.stoppedBy === 'loop', L.stoppedBy);
+  // Code lands: the record is moved back to a commit the app has changed
+  // since, exactly what the loop's next task leaves behind it.
+  let changedSince = [];
+  if (landed) {
+    // One whose walk scripts changed too, for a walk part one passed, so the
+    // rule that a rewritten walk runs again is really exercised.
+    const early = new Set(L.ranWalks.filter((w) => !L.failed.includes(w)));
+    const commits = execFileSync('git', ['rev-list', '--max-count=200', 'HEAD'], { cwd: REPO, encoding: 'utf8' })
+      .trim().split('\n').slice(1);
+    const landedAt = commits.filter((c) => codeLandedBetween(c, L.head, REPO) === true);
+    const old = landedAt.find((c) => changedWalks(c, REPO).some((w) => early.has(w))) || landedAt[0];
+    check('a commit the app has changed since was found to stand in for landed code', !!old, old);
+    changedSince = changedWalks(old, REPO);
+    writeFileSync(join(sdir, 'latest.json'), JSON.stringify({ ...L, head: old }, null, 2) + '\n');
+    L = latest();
+  }
   check('the standing walk task is opened with them', standing().length === 1
     && standing()[0].status === 'pending', standing().map((t) => t.status));
   const status1 = execFileSync('queue/bin/sweep.sh', ['why-not'], { cwd: REPO, env: envFor('x'), encoding: 'utf8' });
   check('the schedule now says the rest runs, and why', /^full: .*stopped at \d+ of \d+/.test(status1), status1);
   const what = execFileSync('queue/bin/sweep.sh', ['what'], { cwd: REPO, env: envFor('x'), encoding: 'utf8' }).trim();
-  const want = set.length - (HANG - 1) + 2;
+  const passedInOne = new Set(L.ranWalks.filter((w) => !L.failed.includes(w)));
+  const rewritten = changedSince.filter((w) => passedInOne.has(w));
+  const want = set.length - (HANG - 1) + 2 + rewritten.length;
   check('and the loop\'s line names the remainder, not five hours', new RegExp(`rest of the stopped walk sweep \\(${want} of ${set.length}`).test(what), what);
 
   // Part two: the next run. Everything passes this time.
@@ -266,14 +353,21 @@ exit 0
   check(`part two runs only the remainder: ${want} walks`, ran2.length === want, ran2.length);
   check('...which is every walk part one never answered', set.slice(HANG - 1).every((w) => ran2.includes(w)));
   check('...plus the two it saw fail', ran2.includes(early) && ran2.includes(casualty));
-  check('...and nothing part one already passed', !ran2.includes(set[0]) && !ran2.includes(set[HANG - 3]));
+  const rewrittenSet = new Set(rewritten);
+  check('...and nothing part one already passed, unless its script changed since',
+    ran2.filter((w) => passedInOne.has(w)).every((w) => rewrittenSet.has(w)), ran2.filter((w) => passedInOne.has(w) && !rewrittenSet.has(w)).slice(0, 5));
+  if (landed) check(`...plus the ${rewritten.length} walk(s) whose script changed since`, rewritten.length > 0 && rewritten.every((w) => ran2.includes(w)), rewritten.length);
   check('part two exits 0', p2.code === 0, { code: p2.code, tail: p2.out.slice(-800) });
   L = latest();
   check('the merged record is ONE complete run of the set',
     L.complete === true && L.walks === set.length && L.passed === set.length && L.failed.length === 0 && L.parts.length === 2,
     { complete: L.complete, walks: L.walks, passed: L.passed, failed: L.failed, parts: (L.parts || []).length });
   check('...counted from the day\'s start, so the once-a-day floor is unchanged', L.began === L.parts[0].began);
-  check('the run says it finished the set', /That is the whole set, on one code/.test(p2.out), p2.out.slice(-800));
+  check('the run says it finished the set', /That is the whole set, every walk answered inside one three day window/.test(p2.out), p2.out.slice(-800));
+  if (landed) check('...and that code landed between the parts', /with code landing between the parts/.test(p2.out), p2.out.slice(-800));
+  const status = execFileSync('queue/bin/sweep.sh', ['status'], { cwd: REPO, env: envFor('x'), encoding: 'utf8' });
+  check('sweep.sh status says how long since every walk last had an answer',
+    /^Answers: Inside the 72 hour window: every walk in the set has had an answer from a whole-set run in the last \d+ hours?\.$/m.test(status), status);
   const t = standing()[0];
   check('the standing walk task reads the merged result and is closed by it',
     t && t.status === 'done' && /covered the whole set/.test((t.log || []).map((l) => l.note).join('\n')),

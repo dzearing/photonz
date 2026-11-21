@@ -141,8 +141,13 @@ slice-due)
   # those is skipped on its own while somebody is here (Scripts/probe-app.sh).
   LOCKED_FLAG=""
   screen_locked && LOCKED_FLAG="--locked"
+  # A stopped whole-set run still owed reads as "full", and it waits for the
+  # Mac to be left alone (due, above). Until then the loop does what it would
+  # have done with nothing to carry on from, which is the decision's
+  # `meanwhile`: without this a remainder owed all day starved the rotating
+  # check after every landed change (queue/bin/sweep-resume.mjs).
   RUN=$(queue/bin/sweep-schedule.mjs --decide $LOCKED_FLAG 2>/dev/null \
-        | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).run)}catch{console.log("nothing")}})')
+        | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const d=JSON.parse(s);console.log(d.run==="full"&&d.resume&&d.meanwhile?d.meanwhile.run:d.run)}catch{console.log("nothing")}})')
   [[ "$RUN" == "slice" ]]
   ;;
 
@@ -172,7 +177,7 @@ what)
   LOCKED_FLAG=""
   screen_locked && LOCKED_FLAG="--locked"
   queue/bin/sweep-schedule.mjs --resume-plan $LOCKED_FLAG 2>/dev/null \
-    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const p=JSON.parse(s); if(p.ok) console.log(`the rest of the stopped walk sweep (${p.walks} of ${p.of} walks: ${p.unreached} it never reached and ${p.rerun} it saw fail)`)}catch{}})'
+    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const p=JSON.parse(s); if(p.ok){const more=[p.changed?`${p.changed} whose script changed`:"",p.stale?`${p.stale} answered over three days ago`:""].filter(Boolean); console.log(`the rest of the stopped walk sweep (${p.walks} of ${p.of} walks: ${p.unreached} it never reached and ${p.rerun} it saw fail${more.length?", "+more.join(", "):""})`)}}catch{}})'
   ;;
 
 # ---------------------------------------------------------------- why-not ----
@@ -351,6 +356,10 @@ status)
       console.log("A rotating check is a slice of the set, never the state of it.");
     ' "$SDIR/last-slice.json"
   fi
+  # How long since every walk last had an answer from a whole-set run, parts
+  # included (queue/bin/sweep-answers.mjs). The set promises one inside each
+  # three day window; this is the line that says whether it is keeping it.
+  echo "Answers: $(queue/bin/sweep-answers.mjs 2>/dev/null || echo 'the ledger of answers could not be read')"
   if [[ -s "$REQ" ]]; then
     N=$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).requests.length)}catch{console.log(0)}' "$REQ")
     echo "$N sweep request(s) pending."
@@ -388,7 +397,7 @@ summary)
       // sweep-size.mjs divides seconds by walks, and the merged count over the time of one
       // part would read as a walk taking under a second.
       const part = r.resumed ? { walks: r.resumed.ran, seconds: r.resumed.seconds, resumed: true, answered: r.walks, parts: (r.parts || []).length } : { walks: r.walks, seconds: r.seconds };
-      console.log(JSON.stringify({ ...part, passed: r.passed, failed: r.failed.length, complete: r.complete !== false, total: r.total || 0, ...(r.blind ? { blind: true, blindFrom: r.blind.from, blindWalks: r.blind.count } : {}), ...(r.interrupted ? { interrupted: true } : {}), ...(r.timedOut ? { timedOut: true } : {}), ...(r.screenLocked ? { screenLocked: true, couldNotRun: r.couldNotRun || 0, partial: !!r.partial } : {}) }));
+      console.log(JSON.stringify({ ...part, passed: r.passed, failed: r.failed.length, complete: r.complete !== false, total: r.total || 0, ...(r.blind ? { blind: true, blindFrom: r.blind.from, blindWalks: r.blind.count } : {}), ...(r.interrupted ? { interrupted: true, ...(r.stoppedBy ? { stoppedBy: r.stoppedBy } : {}) } : {}), ...(r.timedOut ? { timedOut: true } : {}), ...(r.screenLocked ? { screenLocked: true, couldNotRun: r.couldNotRun || 0, partial: !!r.partial } : {}) }));
     ' "$LATEST" "$BLIND"
   else
     echo '{}'
@@ -445,9 +454,9 @@ run)
       RESUME=1
       RUN_WALKS=$(wc -l < "$RESUME_PICK" | tr -d ' ')
       echo "==> Carrying on from a stopped whole-set run: $(node -e 'console.log(JSON.parse(process.argv[1]).why)' "$PLAN")."
-      echo "    This runs $RUN_WALKS of $TOTAL_WALKS walks; the rest already have their answer from the stopped run, on this same code."
+      echo "    This runs $RUN_WALKS of $TOTAL_WALKS walks; the rest already have their answer from the stopped run, inside the three day window."
     else
-      WHY_NOT=$(node -e 'try{const p=JSON.parse(process.argv[1]); if(["code","set","locked","blind"].includes(p.because)) console.log(p.why)}catch{}' "$PLAN")
+      WHY_NOT=$(node -e 'try{const p=JSON.parse(process.argv[1]); if(["stale","locked","blind"].includes(p.because)) console.log(p.why)}catch{}' "$PLAN")
       [[ -n "$WHY_NOT" ]] && echo "==> Not carrying on from the stopped run: $WHY_NOT."
     fi
   fi
@@ -585,8 +594,13 @@ run)
   # the pile. A SIGKILL still gets no say, which is what
   # queue/bin/sweep-recover.mjs is for.
   INTERRUPTED=0
+  # Why it stopped, written into the record: "person" or "loop". The standing
+  # walk task read "whoever was running it went away" for the person coming
+  # back until 2026-11-21, which is the opposite of what happened.
+  STOPPED_BY=""
   on_signal() {
     INTERRUPTED=1
+    [[ -z "$STOPPED_BY" ]] && STOPPED_BY=loop
     echo "!! Asked to stop. Putting the sweep down and writing down what it reached (up to 15s)."
   }
   trap on_signal INT TERM HUP
@@ -628,6 +642,7 @@ run)
     # their Mac. What it reached is kept and its request goes back on the pile.
     if (( ! INTERRUPTED && ! STAND_IN )) && queue/bin/person-at-mac.sh here 3; then
       INTERRUPTED=1
+      STOPPED_BY=person
       echo "!! Somebody is using the Mac: stopping the walk sweep so it stops driving the probe."
     fi
     # playtest-all prints one padded line per walk, ending in "ok", "FAILED" or
@@ -679,7 +694,7 @@ run)
     echo "   The request stays pending; the loop runs a full one once the screen is unlocked."
   fi
   queue/bin/sweep-record.mjs "$RUNLOG" "$LATEST" "$CLAIMED" "$REQ" \
-    "$began" "$(now)" "$took" "queue/sweep/$stamp.log" "$TIMED_OUT" "$SET_SIZE" "$HEAD_SHA" "$INTERRUPTED"
+    "$began" "$(now)" "$took" "queue/sweep/$stamp.log" "$TIMED_OUT" "$SET_SIZE" "$HEAD_SHA" "$INTERRUPTED" "$STOPPED_BY"
 
   rm -f "$CLAIMED"
   trap - INT TERM HUP
@@ -746,9 +761,9 @@ run)
   if (( RESUME )); then
     echo "==> The rest of the stopped walk sweep took $((took / 60))m $((took % 60))s. With the stopped run, $REACHED$OF_SET walks have an answer, $FAILCOUNT of them failing."
     if (( COMPLETE )); then
-      echo "    That is the whole set, on one code, so it counts as the day's full run."
+      echo "    That is the whole set, every walk answered inside one three day window, so it counts as a full run of the set."
     else
-      echo "    That is NOT the whole set yet. What is still unanswered is unknown, not passing; on the same code the loop carries on from here again."
+      echo "    That is NOT the whole set yet. What is still unanswered is unknown, not passing; the next time the Mac is free the loop carries on from here again."
     fi
   elif (( INTERRUPTED )); then
     echo "==> Walk sweep INTERRUPTED after $((took / 60))m $((took % 60))s: it reached $REACHED$OF_SET walks, $FAILCOUNT of them failing."

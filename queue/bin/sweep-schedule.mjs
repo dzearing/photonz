@@ -113,6 +113,9 @@ export function decide({
   // The walk names as they are now. Only needed to carry on from a stopped
   // whole-set run (queue/bin/sweep-resume.mjs); without it nothing resumes.
   set = null,
+  // The walks whose own script changed since the stopped run's oldest part:
+  // their answers are about a walk that is gone, so they run again.
+  changedSinceStopped = [],
 } = {}) {
   const pending = Array.isArray(requests) ? requests : [];
 
@@ -130,23 +133,38 @@ export function decide({
   if (hoursSince === null) return out('full', 'no whole-set run has ever been recorded');
 
   // The last whole-set run was STOPPED part way (the person came back to the
-  // Mac, the loop was put down) and nothing a walk runs has changed since: the
-  // next whole-set run is only what it left unanswered, and it runs as soon as
-  // the Mac is free rather than a day later. It is the rest of the day's run,
-  // not a second one, so the floor does not hold it back and its record keeps
-  // the stopped run's start (queue/bin/sweep-resume.mjs). On 2026-10-22 a run
-  // stopped at 989 of 1011 was due to start again from walk one.
+  // Mac, the loop was put down): the next whole-set run is only what it left
+  // unanswered, and it runs as soon as the Mac is free rather than three days
+  // later. It is the rest of the set's run, not a second one, so the floor does
+  // not hold it back and its record keeps the stopped run's start
+  // (queue/bin/sweep-resume.mjs). On 2026-10-22 a run stopped at 989 of 1011
+  // was due to start again from walk one; from 2026-11-05 to 11-20 six runs in
+  // a row were stopped and, code having landed each time, thrown away.
+  //
+  // It waits for the Mac to be left alone like the whole set does (sweep.sh
+  // due), and until then the loop does what it would have done with nothing
+  // to carry on from: `meanwhile` is that answer, so a remainder owed all day
+  // never starves the rotating check after a landed change.
   const codeSinceFullKnown = latest && latest.head && head
     ? (latest.head === head ? false : codeSinceFull) : codeSinceFull;
   const rest = Array.isArray(set)
-    ? resumable({ record: latest, set, head, codeSince: codeSinceFullKnown, screenLocked, blind })
+    ? resumable({ record: latest, set, head, codeSince: codeSinceFullKnown, screenLocked, blind,
+      changed: changedSinceStopped, now, windowHours: floorHours })
     : null;
   if (rest && rest.ok) {
-    return out('full', rest.why, { resume: true, walks: rest.walks.length, unreached: rest.unreached.length, rerun: rest.rerun.length });
+    const meanwhile = decide({
+      now, requests, latest, blind, blindCodeUnchanged, rotation, head, codeSinceFull, codeSinceCheck,
+      screenLocked, floorHours, lastSliceEnded, sliceFloorHours, set: null,
+    });
+    return out('full', rest.why, {
+      resume: true, walks: rest.walks.length, unreached: rest.unreached.length, rerun: rest.rerun.length,
+      changed: rest.changed.length, stale: rest.stale.length,
+      meanwhile: { run: meanwhile.run, why: meanwhile.why },
+    });
   }
   // Said whenever a stopped run could NOT be carried on from, so nobody reads
   // a whole-set run of five hours as the loop forgetting what it had reached.
-  const notResumed = rest && rest.because === 'code' ? `; ${rest.why}` : '';
+  const notResumed = rest && rest.because === 'stale' ? `; ${rest.why}` : '';
 
   // A runner that changed something every walk touches can say so.
   if (pending.some((r) => r && r.now)) {
@@ -364,6 +382,16 @@ export function codeLandedBetween(a, b, repo = REPO) {
   } catch { return true; }
 }
 
+// The walks whose script changed since the oldest part of a stopped run: the
+// commit its first part ran on, so a walk rewritten between two parts is run
+// again even when the later part did not reach it.
+export function changedSinceRecord(record, to = null, repo = REPO) {
+  if (!record || record.complete !== false) return [];
+  const parts = Array.isArray(record.parts) && record.parts.length ? record.parts : [record];
+  const base = (parts.find((p) => p && p.head) || {}).head || record.head || null;
+  return changedWalks(base, repo, to || 'HEAD');
+}
+
 // The decision, read off the disk: the files under `dir` and the commits in
 // `repo`. The CLI is this and a print; the drill calls it on a scratch repo.
 export function decideFromDisk({
@@ -392,15 +420,16 @@ export function decideFromDisk({
     lastSliceEnded: lastSlice && lastSlice.ended ? lastSlice.ended : null,
     sliceFloorHours: Number(process.env.PHOTONZ_SLICE_FLOOR_HOURS || DEFAULTS.sliceFloorHours),
     set: walkNames(repo),
+    changedSinceStopped: changedSinceRecord(latest, at, repo),
   });
 }
 
 // Walk scripts that changed since `base`. A walk rewritten an hour ago is the
 // likeliest thing in the set to be wrong and the cheapest thing to be sure
 // about, so it never waits for the rotation to come round to it.
-export function changedWalks(base, repo = REPO) {
+export function changedWalks(base, repo = REPO, to = 'HEAD') {
   if (!base) return [];
-  const out = git(['diff', '--name-only', base, 'HEAD', '--', 'Scripts/playtest'], repo);
+  const out = git(['diff', '--name-only', base, to || 'HEAD', '--', 'Scripts/playtest'], repo);
   if (!out) return [];
   return out.split('\n')
     .filter((f) => /^Scripts\/playtest\/[^/]+\.json$/.test(f))
@@ -430,6 +459,8 @@ if (isMain) {
     const plan = resumable({
       record: latest, set, head,
       codeSince: latest ? codeLandedBetween(latest.head, head) : null,
+      changed: changedSinceRecord(latest, head),
+      windowHours: floorHours,
       screenLocked: argv.includes('--locked'),
       blind: readJSON(join(dir, 'blind.json')),
     });
@@ -438,7 +469,8 @@ if (isMain) {
     const claimFile = arg('--claim', null);
     if (plan.ok && claimFile) writeFileSync(claimFile, JSON.stringify({ resumeOf: latest, set }) + '\n');
     console.log(JSON.stringify({ ok: plan.ok, why: plan.why, because: plan.because || null,
-      walks: plan.walks.length, unreached: plan.unreached.length, rerun: plan.rerun.length, of: set.length }));
+      walks: plan.walks.length, unreached: plan.unreached.length, rerun: plan.rerun.length,
+      changed: plan.changed.length, stale: plan.stale.length, of: set.length }));
     process.exit(0);
   }
 
@@ -514,10 +546,11 @@ if (isMain) {
   on a card does not count: the standing task takes that walk too.
 
   A whole-set run that is stopped part way (the person came back) picks up
-  where it stopped: if nothing a walk runs has changed since, the next one runs
-  only the walks it never answered and the ones it saw fail, as soon as the Mac
-  is free, and the two count as one run of the set. If code has landed since,
-  the whole set runs again when the day is up.
+  where it stopped, code landed or not: as soon as the Mac is free the next
+  one runs only the walks it never answered, the ones it saw fail, any whose
+  script changed since and any whose answer is over ${f} hours old, and the
+  parts count as one run of the set once every walk has an answer inside one
+  ${f} hour window. Until the Mac is free the rotating check carries on.
 
   A runner that changed something every walk touches can jump the floor:
       queue/bin/sweep.sh request --now "<why the whole set, right now>"

@@ -928,14 +928,28 @@
     // reads like a number somebody chose; "126 of 532" says how much of the app
     // went unchecked, which is the whole point of saying it was cut short.
     if (!W.last.complete) {
-      t = 'walk sweep ' + (W.last.interrupted ? 'interrupted' : 'cut short')
+      t = 'walk sweep ' + (W.last.interrupted
+          ? (W.last.stoppedBy === 'person' ? 'stopped when you came back' : 'interrupted')
+          : 'cut short')
         + ' at ' + W.last.walks + (W.last.total ? ' of ' + W.last.total : '') + ' walks ' + rel(W.last.ended);
     }
     else if (W.last.failed) t += ' · ' + W.last.failed + ' failing';
+    // How long the set has gone without an answer: the promise is every walk
+    // inside one three day window, and from 2026-11-04 to 11-20 it was broken
+    // for over two weeks with nothing here saying so.
+    var A = W.answers;
+    if (A && A.of) {
+      if (A.unanswered) t += ' · ' + A.unanswered + ' walks unanswered' + (A.since ? ' since ' + rel(A.since) : '');
+      else if (A.oldestHours !== null) t += ' · every walk answered within ' + (A.oldestHours >= 48
+        ? Math.floor(A.oldestHours / 24) + 'd' : Math.max(1, Math.round(A.oldestHours)) + 'h');
+      if (!A.inWindow) cls = 'db-sweep waiting';
+    }
     // What is happening in the gap: how long until the next full one, and what
     // the rotating check covered last. The rotating check is a slice of the set
     // and says so, so its green can never be read as the set passing.
-    if (W.pending && W.nextFullInHours > 0) {
+    if (W.resume && W.resume.walks) {
+      t += ' · ' + W.resume.walks + ' more run when the Mac is free';
+    } else if (W.pending && W.nextFullInHours > 0) {
       t += ' · next full ' + (W.nextFullInHours >= 1
         ? 'in ' + Math.round(W.nextFullInHours) + 'h'
         : 'within the hour');
@@ -946,8 +960,8 @@
       t += ' · rotating check ' + W.rotating.walks + ' of ' + W.rotating.of + ' ' + rel(W.rotating.ended)
         + (W.rotating.failed ? ', ' + W.rotating.failed + ' failing' : '');
     }
-    return '<span class="' + cls + '" title="The full set runs at most once every '
-      + (W.floorHours || 12) + ' hours. In between the loop runs a rotating check of about ten minutes: every walk whose script changed, then the next chunk of the set. A rotating check is a slice, never the state of the walk set.">' + t + '</span>';
+    return '<span class="' + cls + '" title="' + (A && A.sentence ? esc(A.sentence) + ' ' : '') + 'The full set runs at most once every '
+      + (W.floorHours || 12) + ' hours. A run stopped part way carries on from where it stopped the next time the Mac is free. In between the loop runs a rotating check of about ten minutes: every walk whose script changed, then the next chunk of the set. A rotating check is a slice, never the state of the walk set.">' + t + '</span>';
   }
 
   // The walks are the only check that says whether what the loop just built

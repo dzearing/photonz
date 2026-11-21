@@ -201,8 +201,8 @@ export function parseSweepLog(text, { total = 0, timedOut = false, interrupted =
     complete: Boolean(counts) && !timedOut && !interrupted && couldNotRun === 0
       && blindWalks.length === 0,
     timedOut: Boolean(timedOut),
-    // The run did not stop itself: whoever was running it went away. On
-    // 2026-09-18 the loop was killed 126 walks into a sweep and every one of
+    // The run did not stop itself: something stopped it (sweep-record.mjs
+    // says what, as stoppedBy). On 2026-09-18 the loop was killed 126 walks into a sweep and every one of
     // those answers was thrown away, along with the request that asked for it.
     interrupted: Boolean(interrupted),
     // The walk that was in flight when the stop landed, if the log ends
@@ -213,12 +213,20 @@ export function parseSweepLog(text, { total = 0, timedOut = false, interrupted =
 
 const took = (seconds) => (seconds >= 60 ? `${Math.round(seconds / 60)}m` : `${seconds}s`);
 
-// Why a run stopped part way. The two reasons read very differently: a sweep
-// that hit its own clock cap is usually a wedged probe, while a sweep that was
-// interrupted says nothing about the app at all, only that whoever was running
-// it went away.
+// Why a run stopped part way. The reasons read very differently: a sweep that
+// hit its own clock cap is usually a wedged probe, while a sweep that was
+// interrupted says nothing about the app at all. Which interruption it was is
+// `stoppedBy`, written since 2026-11-21; until then every one read "whoever was
+// running it went away", and the commonest, the person coming BACK to the Mac
+// (queue/loop.log: "Somebody is using the Mac: stopping the walk sweep"), was
+// described as the opposite of what happened.
 export function cutShortBecause(r) {
-  if (r.interrupted) return ' (the run was interrupted: whoever was running it went away)';
+  if (r.interrupted) {
+    if (r.stoppedBy === 'person') return ' (stopped because somebody came back to the Mac)';
+    if (r.stoppedBy === 'loop') return ' (stopped because the loop was put down)';
+    if (r.stoppedBy === 'killed') return ' (the run was killed part way and picked up afterwards)';
+    return ' (the run was stopped part way)';
+  }
   if (r.timedOut) return ' (stopped on the clock)';
   return '';
 }
@@ -293,14 +301,15 @@ function sweepSentencesPlain(r) {
             + (r.unfinished ? ` ${r.unfinished} never finished at all.` : '')
           : ''),
       r.interrupted
-        ? `The request that asked for this sweep is pending again; on the same code the loop runs only the walks it left unanswered, and the whole set again once code lands.`
+        ? `The request that asked for this sweep is pending again. The next time the Mac is free the loop runs only the walks it left unanswered (and any it saw fail, any whose script changed and any answered over three days ago), and the parts count as one run of the set.`
         : `The request that asked for this sweep is pending again; the loop runs another one.`,
     ];
   }
   if (parts) {
     const first = r.parts[0];
     return [`Last sweep ${when}: ${r.passed}/${r.walks} walks passed in ${took(r.seconds || 0)}${inParts}: `
-      + `it was stopped at ${first.walks} walks and carried on from there on the same code.`];
+      + `it was stopped at ${first.walks} walks and carried on from there`
+      + `${r.acrossCode ? ', with code landing between the parts' : ' on the same code'}.`];
   }
   return [`Last sweep ${when}: ${r.passed}/${r.walks} walks passed in ${took(r.seconds || 0)}.`];
 }
