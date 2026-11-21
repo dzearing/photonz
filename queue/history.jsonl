@@ -18478,3 +18478,8 @@
 {"t":"2026-11-21T19:21:55.477Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-21T19:21:55.558Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-21T19:22:20.147Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 19 landed b46306651: lanes lay out against a frame that holds still while the timeline moves and slide as one. Lanes rebuilt a frame near Fit 4.2 -> 2.1, main thread 9.1 -> 8.3 ms a frame; frame times within noise; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: fresh paints without rebuilding the lane)."}
+{"t":"2026-11-21T19:22:52.093Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-21T20:18:59.562Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-21T20:18:59.639Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-21T20:18:59.717Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-21T20:19:16.176Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 20 landed 28ec9f2bf: a quick pinch holds each lane's picture to 17 per cent for 50 ms; near Fit late frames 239-293 -> 166-194 of 648 (same build, switch), zoom out 41-68 -> 17-29 of 240. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: lay the next painting ahead in held frames)."}

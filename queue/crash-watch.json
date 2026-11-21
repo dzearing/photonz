@@ -58,7 +58,9 @@
     "Photonz Probe-2026-11-19-190057.ips": "probe|NSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) < static PhotonzApp.$main() < Photonz_main",
     "Photonz Probe-2026-11-19-190549.ips": "probe|NSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) < static PhotonzApp.$main() < Photonz_main",
     "Photonz Probe-2026-11-19-190716.ips": "probe|NSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) < static PhotonzApp.$main() < Photonz_main",
-    "Photonz Probe-2026-11-19-192418.ips": "probe|NSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) < static PhotonzApp.$main() < Photonz_main"
+    "Photonz Probe-2026-11-19-192418.ips": "probe|NSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-11-20-054350.ips": "probe|DocumentAudioEngine.play(_:playhead:speed:) < closure #4 in DocumentAudioPlayer.play(_:fromMS:speed:playhead:) < closure #1 in DocumentAudioEngine.run(_:)",
+    "Photonz Probe-2026-11-20-163414.ips": "runner diagnostic: the-app-crashed-in-documentaudioengine-play-2 crashed the probe on purpose, running play-waits-for-a-slow-output-walk against the engine before its fix to show the walk fails first (the walk holds the output's first cycle up 6 s; AVAudioPlayerNode.play raised 'player did not see an IO cycle.'). probe|DocumentAudioEngine.play(_:playhead:speed:) < closure #4 in DocumentAudioPlayer.play(_:fromMS:speed:playhead:) < closure #1 in DocumentAudioEngine.run(_:)"
   },
   "signatures": {
     "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter",
@@ -66,7 +68,8 @@
     "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter",
     "probe|Run.pickUpTile(_:to:number:) < Run.perform(_:number:) < Run.start()": "the-app-crashed-in-run-pickuptile",
     "probe|DocumentAudioEngine.play(_:fromMS:speed:) < closure #4 in DocumentAudioPlayer.play(_:fromMS:speed:) < closure #1 in DocumentAudioEngine.run(_:)": "the-app-crashed-in-documentaudioengine-play",
-    "probe|NSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-nsapplication-photonz-nexteve"
+    "probe|NSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-nsapplication-photonz-nexteve",
+    "probe|DocumentAudioEngine.play(_:playhead:speed:) < closure #4 in DocumentAudioPlayer.play(_:fromMS:speed:playhead:) < closure #1 in DocumentAudioEngine.run(_:)": "the-app-crashed-in-documentaudioengine-play-2"
   },
   "faults": {
     "probe|macos-ax-notify": {
