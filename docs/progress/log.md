@@ -23352,3 +23352,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Fix: `OutputHeartbeat` (silent source node counting cycles) in both sound engines. `DocumentAudioEngine` starts a press's nodes only once the output has turned over (checked every 2 ms on its own queue, given up silently after 10 s); `ScrubAudioEngine` drops grains until then.
 - Walk `play-waits-for-a-slow-output-walk` with new action `soundHoldTheOutputUp` (probe only): CRASHED with the report's stack before the fix, passes after. Eight existing sound walks and the speed walk pass; sync median 5 to 6 ms, worst -17 to +29 ms.
 - Left: a process stopped for 5 s or more while a player is starting (a debugger) can still trip it; only catching the Objective-C exception would cover that.
+
+## 2026-11-21 — Five clip-art title pages redesigned (task keynote-clean-soft-gradient-glass-kinetic-bold-t)
+
+- Reference board of 28 refined title slides and the colour and type rules it yields: `queue/audits/2026-11-21-title-reference-board.md`, rules in `docs/design/video-titles-polish.md` ("Colour and type rules for title pages").
+- Keynote Clean, Soft Gradient Glass, Kinetic Bold, Tech Terminal and Stacked Stagger became Main Title, Frosted Glass, Condensed Poster, Command Line and Roman and Italic (`TitleSet.swift`); raw values kept, old documents draw as saved.
+- Fixed on the way: live-look shade colour opposes the ground (no white halos on mid-tone lines), a part keeps its own face through relayout (`TitleLookBase.font`), mask reveal hides ink taller than its line box.
+- Blind score: all five well above their old versions; Main Title and Frosted Glass above the calm set's median, the other three not yet. Task left pending for them and for scoring the rest of More Styles.
