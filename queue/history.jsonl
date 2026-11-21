@@ -18396,3 +18396,14 @@
 {"t":"2026-11-21T00:08:21.050Z","ev":"task_note","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa"}
 {"t":"2026-11-21T00:08:21.126Z","ev":"task_note","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa"}
 {"t":"2026-11-21T00:08:32.673Z","ev":"task_done","id":"a-cross-fade-plays-smoothly-in-the-editor-the-wa","from":"in_progress","note":"All three causes fixed (5b1effa70, f599c5fdc): borrowed frames stand in from the borrowed stretch; no restart onto the same key frame; Space from rest at sound speeds waits for the frame under the playhead and the next 3 (max 0.8s) with the sound starting with the clock. Verified on the user's recording after a scrub at 1x (3 runs), 0.5x, 2x, from the first frame and from rest: every picture matches the export (mean 2.0/255, worst 2.7). Space waits 416ms after a scrub, 45ms from rest. Walk a-cross-fade-plays-as-exported-walk + 14 playback walks pass at Next defaults; unit test readyToStartWithSound; full test.sh green. Audit updated."}
+{"t":"2026-11-21T00:09:00.970Z","ev":"task_started","id":"the-app-crashed-in-documentaudioengine-play-2","title":"The app crashed in DocumentAudioEngine.play","priority":"p1-high"}
+{"t":"2026-11-21T00:35:50.329Z","ev":"task_note","id":"the-app-crashed-in-documentaudioengine-play-2"}
+{"t":"2026-11-21T00:35:50.419Z","ev":"task_note","id":"the-app-crashed-in-documentaudioengine-play-2"}
+{"t":"2026-11-21T00:35:50.499Z","ev":"task_note","id":"the-app-crashed-in-documentaudioengine-play-2"}
+{"t":"2026-11-21T00:35:50.580Z","ev":"task_note","id":"the-app-crashed-in-documentaudioengine-play-2"}
+{"t":"2026-11-21T01:25:20.678Z","ev":"task_walks","id":"the-app-crashed-in-documentaudioengine-play-2","walks":["play-waits-for-a-slow-output-walk"]}
+{"t":"2026-11-21T01:25:20.757Z","ev":"task_note","id":"the-app-crashed-in-documentaudioengine-play-2"}
+{"t":"2026-11-21T01:25:20.836Z","ev":"task_note","id":"the-app-crashed-in-documentaudioengine-play-2"}
+{"t":"2026-11-21T01:25:20.913Z","ev":"task_note","id":"the-app-crashed-in-documentaudioengine-play-2"}
+{"t":"2026-11-21T01:25:20.990Z","ev":"task_note","id":"the-app-crashed-in-documentaudioengine-play-2"}
+{"t":"2026-11-21T01:25:21.081Z","ev":"task_done","id":"the-app-crashed-in-documentaudioengine-play-2","from":"in_progress","note":"Cause: AVAudioPlayerNode.play raises 'player did not see an IO cycle.' when the engine's output has not run a cycle within ~5 s of starting (a debugger held the probe; a slow-to-wake output does it to a person). Fixed in fdb598d92: both sound engines wait for a silent heartbeat node to count one finished cycle before starting players (document sound polls off the main thread, gives up silently after 10 s; scrub drops grains). New walk play-waits-for-a-slow-output-walk crashed with the report's stack before and passes after; 8 sound walks, the speed walk and Scripts/test.sh green. The week-long crash-watch item is left to crash-watch, which refiles on this signature."}

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 4020,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-20T15:20:56.248Z",
-  "updated": "2026-11-20T15:20:56.251Z",
+  "updated": "2026-11-21T01:25:21.080Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-20-054350.ips\nException: EXC_CRASH SIGABRT\nMessages: \nStack (app frames):\nDocumentAudioEngine.play(_:playhead:speed:) (DocumentAudioPlayer.swift:395)\nclosure #4 in DocumentAudioPlayer.play(_:fromMS:speed:playhead:) (DocumentAudioPlayer.swift:93)\nclosure #1 in DocumentAudioEngine.run(_:) (DocumentAudioPlayer.swift:280)",
@@ -22,6 +22,55 @@
     {
       "t": "2026-11-20T15:20:56.250Z",
       "note": "created (crash-watch)"
+    },
+    {
+      "t": "2026-11-21T00:09:00.966Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T00:35:50.327Z",
+      "note": "Where it happened: the pass-22 runner's walk /tmp/p22/picks2-walk.json (6 min reference edit, speed step picking/unpicking/blading while it plays) with lldb attached to the probe by /tmp/p22/count.py (regex breakpoints, auto-continue, then Stop/Detach about 60 s in). The audio code it ran was HEAD's (e4ade3fb4, 2026-11-19 15:55); the runner's temporary edits were in MovieFrames/EditorState, not the sound. Without a debugger the same walk ran 3 of 3 clean on HEAD."
+    },
+    {
+      "t": "2026-11-21T00:35:50.417Z",
+      "note": "Cause, read off the report and AVFAudio's own code: the exception was raised at AVAudioPlayerNodeImpl::StartImpl+2484, which disassembles (lldb disassemble -n StartImpl) to +[NSException raise:format:] with reason 'player did not see an IO cycle.'. play/play(at:) waits for the engine's next audio cycle; if none comes within about 5 s while the IO unit counts as running, it raises (only when called with no error pointer, which the public Swift API always is). Standalone repro (/tmp/dae/exp/stall.swift): a source node that sleeps on its first render after engine.start(); stall 4.5 s -> ok after 4.5 s, stall 5/5.5/6/12 s -> 'player did not see an IO cycle.' abort. Plain play() (the pre-11-19 code) dies the same way, so the exposure is older than e4ade3fb4. A debugger stopping the process tripped it here; a person trips it with an output device slow to start its first cycle (AirPlay, Bluetooth waking)."
+    },
+    {
+      "t": "2026-11-21T00:35:50.497Z",
+      "note": "Ruled out on the way: a stopped engine, a host time in the past or 10 s ahead, and the graph's attach/detach pattern (400 rounds of stress, whole chain checked) all play fine; a player whose path to the output is broken anywhere raises a different reason ('player started when in a disconnected state'). engine.outputNode.lastRenderTime cannot gate it: it is set as a cycle BEGINS (valid 8 ms in, during a 7 s stall) and reads a stale time after a restart (26624 frames right after the second start)."
+    },
+    {
+      "t": "2026-11-21T00:35:50.578Z",
+      "note": "Reproduced in the app before the fix: new walk play-waits-for-a-slow-output-walk (action soundHoldTheOutputUp holds the next start's first cycle up 6 s, then L): Verdict CRASHED EXC_CRASH (SIGABRT) in DocumentAudioEngine.play(_:playhead:speed:) < closure #4 in DocumentAudioPlayer.play < closure #1 in DocumentAudioEngine.run, report Photonz Probe-2026-11-20-163414.ips, StartImpl+2484 again."
+    },
+    {
+      "t": "2026-11-21T01:25:20.676Z",
+      "note": "owns these walks: play-waits-for-a-slow-output-walk"
+    },
+    {
+      "t": "2026-11-21T01:25:20.755Z",
+      "note": "Fixed in fdb598d92: OutputHeartbeat (Sources/Photonz/OutputHeartbeat.swift), a silent AVAudioSourceNode on the main mixer counting cycles (Atomic). DocumentAudioEngine.play wires nodes, starts the engine, then startOnceTheOutputTurnsOver polls every 2 ms on the queue until two beats since the start (one whole cycle done), gives up silently after 10 s (outputNeverTurnedOver), and reckons clockFromMS at the real start. stop() moves startNumber on so a queued check for an old press does nothing; isPlaying is false while waiting. ScrubAudioEngine drops grains until its heartbeat has turned over. Chose a heartbeat over catching the NSException (needs an ObjC target, unwinds through Swift frames) or calling the private playAtTime:error: because both lean on things Swift does not promise."
+    },
+    {
+      "t": "2026-11-21T01:25:20.834Z",
+      "note": "After the fix: play-waits-for-a-slow-output-walk passes 4 of 4 (picture playing and expectTimeline sound:false at 1 s on the clock, soundExpectPlaying at 8 s, no main pass at or over 50 ms, then an ordinary press plays at once). first-press-of-play, hear-the-scrub, transport-volume, playback-speed, sound-on-the-timeline, mix-says-how-loud, transition-carries-the-sound, a-long-captioned-recording-plays all ok; the original crashing walk (picks/blades while playing on the 6 min edit) ok; speed-walk sync median 5.0 to 6.1 ms, earliest -16 to -17, latest +20 to +29 ms over 3 runs, 0 pieces left out, 0 silent looks (no same-day sync baseline on file; inside ITU-R BT.1359). Scripts/test.sh exit 0. Crash report 2026-11-20-163414 (the walk before the fix) marked a runner diagnostic in queue/crash-watch.json."
+    },
+    {
+      "t": "2026-11-21T01:25:20.911Z",
+      "note": "Walk note: the hold sleeps inside a render, so a screen capture during it waits ~5 s on Core Audio's device lock (sampled: SCStream init > CMAudioDeviceClockCreate > HALB_Mutex::Lock); the walk takes its picture after the hold. A real slow device is not inside a render, so that wait is the simulation's, not the app's. Also: the walk's plain wait ends when the app goes quiet, so the checks use onTheClock waits."
+    },
+    {
+      "t": "2026-11-21T01:25:20.988Z",
+      "note": "Left rough (no task: needs a debugger or SIGSTOP, not a person): a process stopped 5 s or more while a player is starting can still trip the same raise, since every play waits a fresh cycle (measured about 10 ms each, even at a sample time). Only catching the ObjC exception would cover that. Acceptance item 3 (a week of walks with no new report of this signature) cannot be seen in one run: crash-watch maps this signature to this task and files again if it comes back."
+    },
+    {
+      "t": "2026-11-21T01:25:21.078Z",
+      "note": "Cause: AVAudioPlayerNode.play raises 'player did not see an IO cycle.' when the engine's output has not run a cycle within ~5 s of starting (a debugger held the probe; a slow-to-wake output does it to a person). Fixed in fdb598d92: both sound engines wait for a silent heartbeat node to count one finished cycle before starting players (document sound polls off the main thread, gives up silently after 10 s; scrub drops grains). New walk play-waits-for-a-slow-output-walk crashed with the report's stack before and passes after; 8 sound walks, the speed walk and Scripts/test.sh green. The week-long crash-watch item is left to crash-watch, which refiles on this signature."
     }
-  ]
+  ],
+  "started": "2026-11-21T00:09:00.965Z",
+  "walks": [
+    "play-waits-for-a-slow-output-walk"
+  ],
+  "completed": "2026-11-21T01:25:21.079Z"
 }
