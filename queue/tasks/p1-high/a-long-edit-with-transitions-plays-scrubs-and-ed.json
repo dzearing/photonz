@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-21T09:11:09.402Z",
+  "updated": "2026-11-21T10:05:27.829Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,37 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-21T09:11:09.392Z",
-      "note": "... 70 earlier entries elided",
-      "elided": 70
-    },
-    {
-      "t": "2026-11-16T13:17:06.921Z",
-      "note": "seq 30 -> 10"
-    },
-    {
-      "t": "2026-11-16T13:17:07.377Z",
-      "note": "digest 2026-11-16: passes 7 to 12 all went to edit and pick costs (trim 32 -> 15-20 ms, blade picked 42 -> 26-51, pick from nothing longest median 56 -> 31), and they paid. But two of the three bars have not moved since pass 7: scrub is still 2 display frames behind (bar 1) and play still drops about 1 frame a minute (bar 0). Dragging the playhead is what a person feels first on a long edit, so before pass 13 takes another panel lead, weigh the scrub bar: say in the log which of the three it works on and why. Also seen in passes 9, 11 and 12: a floor of window-wide work on every pass that adds or moves controls (AccessibilityNode.updateFocus, AccessibilityViewGraph, NSWindow _resetDragMargins, about 4-5 ms a pass, 16-21% of long passes) that no view-level fix reaches; worth one pass of its own rather than a share of each."
-    },
-    {
-      "t": "2026-11-17T04:07:26.774Z",
-      "note": "from playing-a-five-minute-captioned-recording-never (2026-11-16): on the five minute captioned talk (one recording, 191 captions, Next defaults, window shown), playback keeps the main thread busy 6.4 to 7.6 s of every 20 s across about 10,000 run loop passes (about 500 a second), though no single pass passes 32 ms. Worth finding what turns the run loop over that often while a single clip plays (a-long-captioned-recording-plays-walk prints it on its two clock waits)."
-    },
-    {
-      "t": "2026-11-17T09:09:36.453Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-17T09:09:56.692Z",
-      "note": "Pass 13 works on the scrub bar (2 display frames behind vs 1): it has not moved since pass 3, dragging the playhead is what a person feels first on a long edit (digest 2026-11-16), and passes 7-12 already took the edit/pick leads."
-    },
-    {
-      "t": "2026-11-17T11:04:31.910Z",
-      "note": "Pass 13 measured first (51275c719): scrub 2/4 display frames, composite 10.8 ms median. Split with temporary timers in renderLocked: graph build 0.3 ms, CIContext.render 10.5 ms, copy 0.04 ms; CIRenderInfo: 7.5 ms of GPU kernels over 5 passes and 10.1 M pixels for a 1.9 M pixel canvas, ~2 ms of shader compiling every frame, the rest uploads and readback. Cutting the moving background at shown size paid nothing (Core Image already pushes the shrink down; reverted)."
-    },
-    {
-      "t": "2026-11-17T11:04:31.978Z",
-      "note": "Pass 13 fix (f87714cbc): an opaque picture's drop shadow is cast from a white stand-in bitmap of the same size taken through the same steps (DocumentRenderer.opaqueCastStandIn), so Core Image keeps the blur across frames. GPU 7.5 -> 2.3 ms, passes 5 -> 3, pixels 10.1 -> 5.8 M; composite median 10.8 -> 8.6 ms (worst of 3). Exported stills at 6 moments, off vs on: 5 moments at most 5 px by 1 level; 0:15 mid-zoom 425 of 7.7 M px by up to 21 on the clip's own corner, crisper (it is no longer drawn through an intermediate shared with the shadow). A CIImage(color:) stand-in gave the same; the bitmap is kept anyway so crop/clamp algebra matches a frame's."
+      "t": "2026-11-21T10:05:27.828Z",
+      "note": "... 77 earlier entries elided",
+      "elided": 77
     },
     {
       "t": "2026-11-17T11:04:32.047Z",
@@ -507,12 +479,39 @@
     {
       "t": "2026-11-21T09:11:09.391Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-21T10:05:27.356Z",
+      "note": "Pass 23, main red first: CI run 44857516016 fails 'A stopped sweep picks up where it stopped' because sweep-resume-drill.mjs reads git history and CI checks out depth 1. Reproduced in a depth-1 clone (3 FAILs + ENOENT), passes in the full repo. No open task owned it: filed main-checks-go-green-again-the-stopped-sweep-dri (p1, unmanned-loop)."
+    },
+    {
+      "t": "2026-11-21T10:05:27.433Z",
+      "note": "Pass 23 measured: walk markers ruled out (probe build with every marker off, confirmed by a press-by-name walk finding no controls: trim 20->19, blade 45->46, undo 25->22, pick 34->33, unpick 41->38, same within noise). No outside accessibility client queried the probe while editing (sample: no AX request frames); SwiftUI's accessibility tree update ~6% and its focus update ~5% of the main thread while editing, on without anyone asking. App code is under 5% of the window layout time. Instruments would not connect (DTServiceHub; DevToolsSecurity says developer mode disabled), so profiles were taken with sample, which cannot cut by pass."
+    },
+    {
+      "t": "2026-11-21T10:05:27.510Z",
+      "note": "Pass 23 found the walk's edit numbers mixed two costs: blade with nothing picked was timed with the pick that filled the panel (45 ms vs the cut's 28-37), and the undo after it (blade's piece picked) was counted as nothing-picked (25 vs 11-13). A do-nothing control reads 4 ms (5 picked): playing costs an edit nothing. Fixed in the walk (3188f5120): 'nothing' control (PlaytestSpeedMeasure.controls, tests first in SpeedWalkTests), tallies by editor.selectedLayerID, B's clip picked untimed then 1.5 s settle, pick with a clip picked picks another clip, repeated tallies keep the worse (EditTally.keepWorse). short-6 baseline: only edits replaced, worst of 3. docs/design/video.md 8e 'What an edit costs, by what is on screen'."
+    },
+    {
+      "t": "2026-11-21T10:05:27.587Z",
+      "note": "Pass 23 result: with nothing picked trim 13-16 and undo 11-13 ms, inside the 16 ms bar; with a clip picked trim 20-22, undo 22-24 (three passes of ~17-20 ms each, the middle one bodiless), blade 28-37, pick another clip 29-31, pick from nothing 39-52, unpick 34-37. Verified: Scripts/test.sh exit 0; speed walk 3 baseline runs + 2 more green (one baseline run and one check run failed on scrub medium worst/frame-lag median, 8 vs 3 and 64 vs 40, a number this pass did not touch that read 20-52 today before the change too). Looked at the capture after the edits: Take 3 picked, panel and timeline drawn right. Long-form walks (Scripts/perf/walks) use the default edit set: their blade now picks first and their old 'blade' baseline key is no longer judged. Audit queue/audits/2026-11-21-a-long-edit-with-transitions-plays-scrubs-and-ed-pass23.json."
+    },
+    {
+      "t": "2026-11-21T10:05:27.662Z",
+      "note": "Left rough, not filed (this task's own): PhotonzDocument.drawn(atTimeMS:framesInHand:) runs on the main thread for every landed frame (EditorState.movieFrameLanded -> submit -> displayDocument), ~8% of the main thread, ~1.4 ms a frame on the 6 min edit; no dropped frame today, but it scales with the document. Next for pass 24: (a) why a trim/undo with a clip picked takes three ~18 ms passes (pass 1 panel+menu bar+grid, pass 2 nothing counted, pass 3 tracks+sections): find what defers the tracks two passes and whether pass 2 can go; (b) picking another clip's single ~30 ms pass; (c) move drawn(atTimeMS:) off the main thread or index it by time. Needs Instruments back (developer mode on) to cut by pass. Bars not reached: edits with a clip picked <=16 ms, worst scrub lag 1."
+    },
+    {
+      "t": "2026-11-21T10:05:27.748Z",
+      "note": "walks speed-walk, scrub-never-blacks-out-walk -> speed-walk"
+    },
+    {
+      "t": "2026-11-21T10:05:27.827Z",
+      "note": "Pass 23 landed 3188f5120: the speed walk now times each edit under the real pick state beside a do-nothing control. Corrected: with nothing picked trim 13-16 and undo 11-13 ms meet the 16 ms bar; with a clip picked trim 20-22, undo 22-24, blade 28-37, pick 29-31, pick from nothing 39-52 (the panel answering the edit). Main red filed as main-checks-go-green-again-the-stopped-sweep-dri. Bars not reached: edits with a clip picked, worst scrub lag 1. Pass 24 leads in the log."
     }
   ],
   "started": "2026-11-21T09:11:09.390Z",
   "walks": [
-    "speed-walk",
-    "scrub-never-blacks-out-walk"
+    "speed-walk"
   ],
   "failures": 0,
   "lastError": {
