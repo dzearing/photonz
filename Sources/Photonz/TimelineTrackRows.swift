@@ -563,7 +563,7 @@ struct TimelineTrackRow: View {
         let canvas = TimelinePaint.Canvas(drawnMS: paintedMS, ruler: paintRuler, laneWidth: laneWidth)
         let canvasX = canvas.offset(in: ruler, laneWidth: laneWidth, scale: displayScale)
         let document = editorState.document
-        let laid = painting(document, clipsInSight: clipsInSight.count, kept: kept, ruler: paintRuler,
+        let laid = painting(document, clipsInSight: clipsInSight.count, ruler: paintRuler,
                             alternates: alternates, stretch: paintedMS, frame: frame)
         let painting = laid.painting
         // Past the stretch the painting covers, a painting lane builds only
@@ -1005,16 +1005,29 @@ struct TimelineTrackRow: View {
     /// What the lane paints, worked out again only when something it is
     /// worked out from has changed (`LanePaintingKept`): on a scroll inside
     /// one drawn stretch, or a zoom holding its last painting, nothing has.
-    private func painting(_ document: PhotonzDocument?, clipsInSight: Int, kept: Set<UUID>, ruler: MotionStripRuler,
+    private func painting(_ document: PhotonzDocument?, clipsInSight: Int, ruler: MotionStripRuler,
                           alternates: Set<MotionStripGroup.ID>, stretch: ClosedRange<Double>,
                           frame: TimelineLaneFrame?) -> LanePaintingKept.Laid {
         let paints = !row.isCaptions && !row.isOff && !isHeld && !row.soundIsMuted && !row.soundIsOff
             && lanePaints(clipsInSight: clipsInSight)
-        var kept = kept
-        for id in [pointerClipID, editorState.renamingClipID, editorState.freezeAsk?.layerID,
+        // A clip only picked, or only under the pointer, stays in the
+        // painting and has its full bar built on top of it, where the bar
+        // covers it exactly: a pick or a hover then changes nothing painted,
+        // and the lane's picture is not laid again. Laying the 6 minute
+        // reference edit's main lane again was 3 to 4 ms of a pick's own
+        // pass, and of every move of the pointer onto another clip
+        // (2026-11-22). A clip in a hand, trimmed, renamed or being given a
+        // transition leaves the painting, since its bar moves away from where
+        // the painting has it.
+        var kept = editorState.clipBarInHandIDs
+        if let trimmed = editorState.trimSession?.layerID { kept.insert(trimmed) }
+        for id in [editorState.renamingClipID, editorState.freezeAsk?.layerID,
                    editorState.clipTransitionDrag?.layerID] {
             if let id { kept.insert(id) }
         }
+        var onTop = pick.picked
+        if let pointerClipID { onTop.insert(pointerClipID) }
+        onTop.subtract(kept)
         let switches = paintedFactsSwitches
         let groundsSounds = Experiments.shared.soundOnThePanelGroundEnabled
         // Read off the lane's frame while there is one, which says what the
@@ -1026,7 +1039,7 @@ struct TimelineTrackRow: View {
         let key = LanePaintingKept.Key(row: row, paints: paints, kept: kept, stretch: stretch, spanMS: ruler.spanMS,
                                        leftEdge: leftEdge, zoom: zoom, laneWidth: laneWidth, laneHeight: laneHeight,
                                        scheme: colorScheme, switches: switches, groundsSounds: groundsSounds)
-        return keptPainting.laid(key, document: document) {
+        var laid = keptPainting.laid(key, document: document) {
             var waits = false
             let painting = paintedBars(document, paints: paints, kept: kept, ruler: ruler, leftEdge: leftEdge,
                                        zoom: zoom, alternates: alternates, carryingSound: carrying,
@@ -1037,6 +1050,9 @@ struct TimelineTrackRow: View {
             return (.init(painting: painting, gaps: gaps.map(\.range), gridlines: ruler.secondTickMS(across: stretch)),
                     waits)
         }
+        // Painted, and built on top as well.
+        if !onTop.isEmpty { laid.painting.ids.subtract(onTop) }
+        return laid
     }
 
     /// The switches what `TimelinePaintedFacts` keeps was read under.

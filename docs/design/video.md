@@ -1055,6 +1055,31 @@ regions are AppKit asking the window's host `acceptsFirstResponder` again
 whenever a section adds AppKit views (pass 19). Neither is reachable from app
 code short of fewer controls or a host of their own (pass 12).
 
+**A pick or a hover never changes what a lane paints (2026-11-22, pass 27).**
+A busy lane paints its plain clips as one picture (`TimelinePaintedClips`,
+`TimelinePaintedPicture`) and builds a full bar for each clip somebody is
+working on. Until pass 27 a clip that was only picked, or only under the
+pointer, also left the painting, so every pick, unpick, blade and every move
+of the pointer onto another clip laid the 6 minute edit's whole V1 lane again
+on the main thread (3 to 4 ms, an `ImageRenderer` of about fifty clips). Now
+such a clip stays painted and its bar is built on top, covering it exactly;
+only a clip in a hand, being trimmed, renamed, frozen or given a transition
+leaves the painting, since its bar moves away from where the painting has it.
+The pick's own pass, nine picks from nothing each way: 23 to 32 ms (mean 27)
+-> 15 to 29 (mean 23); a pick from one clip to another 29 to 31 -> 25 to 31;
+unpick 33 to 37 -> 30 to 33; blade 25 to 43 -> 23 to 24. **What a lane paints
+is keyed only on what the document and the view say about the clips, never on
+the pick or the pointer: anything shown for a pick or a hover is a view on top
+of the painting.**
+
+Also measured in pass 27: SwiftUI's accessibility work in the probe is real
+work a person pays too, not the walk's doing. It is switched on by a request
+from another process on the Mac (`NSHostingView.accessibilityEnabled` set from
+`_AXXMIGCopyMultipleAttributeValues`, caught with lldb), the way any running
+accessibility client switches it on in Photonz Dev. One of its focus walks
+visits about 956 responders, 170 of them AppKit controls, and a pick from
+nothing makes about ten of them.
+
 **The panel does not follow a clip playing past (2026-11-22, pass 26).** With
 nothing picked the panel is about the clip under the playhead
 (`clipInHandID`), so the clock carrying play into a clip of another kind (a

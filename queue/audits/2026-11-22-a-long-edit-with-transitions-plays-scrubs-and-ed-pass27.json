@@ -1,0 +1,24 @@
+{
+  "feature": "Picking a clip no longer repaints its whole track (pass 27)",
+  "epic": "video-perf",
+  "summary": "On a busy track, picking a clip, unpicking it, cutting it or moving the pointer onto another clip no longer redraws the picture of every clip on that track. The window's own work for a pick dropped by about 4 ms, and an unpick and a blade by a few more.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Measured on the probe with an edits-only speed walk on the 6 minute reference edit, three runs with the change and three without, and the speed walk against its baseline. The reference edit's folder for File > Open: ~/Library/Caches/Photonz Reference Edit/Photonz Dev",
+  "switched": {},
+  "try": [
+    { "do": "Open the 6 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 6 },
+    { "do": "Press Space to play, then click a clip on V1 while it plays.", "shot": "2026-11-22-long-edit-pass27-a-picked-clip-on-the-painted-lane-sc.png" },
+    { "do": "Look closely at the picked clip: one name, one blue ring, its grips, nothing doubled behind it.", "shot": "2026-11-22-long-edit-pass27-the-picked-clip-close-sc.png" },
+    { "do": "Click a different clip on V1, then click an empty spot in the timeline." },
+    { "do": "Slide the pointer slowly along V1 over several clips while it plays." }
+  ],
+  "evaluate": [
+    "Does a picked or hovered clip on V1 look exactly as it did before, with no ghost of its name or edges behind it?",
+    "Does play stay smooth while you slide the pointer along a busy track?",
+    "Does picking a clip while it plays feel any quicker to you, or is the hitch still there?"
+  ],
+  "rough": [
+    "Edits with a clip picked still miss the 16 ms bar: a pick's own pass is 15 to 29 ms, a pick from one clip to another 25 to 31, unpick 30 to 33, blade 23 to 24, and the longest pass of a pick from nothing is a later one where a panel section lands (33 to 50 ms). That is this task's own bar (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "The rest of a pick is spread thin across SwiftUI: its accessibility layer walks about 956 responders for each new control (about ten walks a pick), and AppKit rechecks the title bar's drag area whenever the panel adds controls. That accessibility work is switched on by a system accessibility client on the Mac, not by the walk, so a person pays it too. No single app piece left is over 2 ms.",
+    "Worst scrub lag 1 is still not reached; this pass did not work on scrubbing (a-long-edit-with-transitions-plays-scrubs-and-ed)."
+  ]
+}
