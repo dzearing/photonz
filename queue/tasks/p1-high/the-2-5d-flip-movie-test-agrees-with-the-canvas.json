@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-22T22:15:03.565Z",
-  "updated": "2026-11-22T22:15:03.568Z",
+  "updated": "2026-11-22T23:20:07.104Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/45074019141 (commit da5d5fad6), Test slice 2 of 3:\n✘ Test \"Three moments of a flip: the file's frame and the canvas's agree\" recorded an issue at Space3DExportTests.swift:87:13: Expectation failed: (far → 776) < (pixels / 100 → 768)\nRecent nearby commits: 924fa8d8e The frame shown at a whole second is the one that starts there; 959ef8eeb A new video keeps the length it was given. Filed by the runner of a-chart-or-title-keeps-what-you-set-by-hand-when, which does not touch export.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-11-22T22:15:03.567Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-22T23:20:07.103Z",
+      "note": "Failed again the same way on run 45076579800 (commit 8a40d9fdf, slice 1 of 3 this time): far 776 against 768. Exactly the same count twice suggests a steady drift rather than noise."
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:22:21.166Z",
-  "updated": "2026-11-22T13:27:03.851Z",
+  "updated": "2026-11-22T23:20:07.180Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From two audit rough lines nobody filed: queue/audits/2026-10-17-animated-charts.json ('Changing the data or the theme lays the chart's pieces out again: a key or an effect set by hand on one bar is lost (the pieces keep their ids, and a part's retimed in and out are kept)') and queue/audits/2026-10-19-a-title-part-move-dragged-by-hand-on-the-timelin.json ('On a chart, an effect the drawing gave a bar and that you then edited (rather than added) still goes back to the theme's on a restyle; only effects you added are kept'). The model to copy is commit 56d7c8e5 (hand-dragged title part bars survive a restyle). Not reproduced by the manager, so p2 with reproduction as the first item.",
@@ -132,6 +132,31 @@
     {
       "t": "2026-11-22T13:27:03.850Z",
       "note": "seq 100 -> 90"
+    },
+    {
+      "t": "2026-11-22T22:14:30.862Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T22:20:16.530Z",
+      "note": "Reproduced in PhotonzCore (probe test, Next defaults, Bar chart and keynote/lightLeak titles): a bar's hand-set opacity 0.6 and corner radius 3 come back as 1.0 and 0 after one number changes; removing row 1 leaves row 1's hand rotation key on the bar that now shows old row 2 (pieces follow their slot name Bar N, not their row), and old row 2's keys move to old row 3. A hand key added to a bar's opacity keys and an added glow DO survive numbers, theme and an added row (already covered). Title: keynote Subtitle shadow edited to radius 30 red goes back to radius 7.2 white on a theme change; lightLeak Title glow radius edited to 77 snaps back to 18 on an energy or font pair change (every restyle rescales it from the preset)."
+    },
+    {
+      "t": "2026-11-22T23:19:29.792Z",
+      "note": "owns these walks: hand-work-survives-new-numbers-and-a-restyle-walk"
+    },
+    {
+      "t": "2026-11-22T23:19:29.859Z",
+      "note": "Built: chart rows told apart by their labels (ChartSpec.rowSources), so a bar's keys, opacity, corners and blending follow its row through new numbers, a theme and a removed row, and a removed row takes only its own. A title remembers the effects its drawing gave every piece (TitleRecipe.drawnEffects); the restyle works on those and then puts back any effect the person edited, added or removed (LayerEffect.keepingHandEdits). Covers shades, glow and grain size under intensity, and the motion blur shutter under energy. Chose keeping an edited effect whole over keeping only the changed field, because a field-by-field merge needs a record per field and the person sees the effect as one thing. Chose matching rows by label with leftovers paired by position (a rename, or a whole table pasted) over adding an id to every row, because rows are typed and pasted as plain text and a stored id would not survive a paste. Walk hand-work-survives-new-numbers-and-a-restyle-walk at Next defaults fails on the old code (step 46: the shadow keys did not survive the number change) and passes now. Neighbouring walks a-dragged-part-bar-survives-a-restyle, animated-charts and chart-from-pasted-data pass. Scripts/test.sh exit 0. Looked at all five pictures: the bar of Q2 is dimmed with its shadow after Q1 is removed and Q3/Q4 are plain; the Sunset title is legible. The missing word Home in picture 6 is the same on the old code (core probe identical); filed a-main-title-headline-keeps-its-second-line-afte. Left rough, under the bar: duplicate labels pair in order; an edited effect no longer follows intensity. Both are in the audit's rough list. Main was red before I started (Space3DExportTests on CI slice 2, unrelated); filed the-2-5d-flip-movie-test-agrees-with-the-canvas at p1."
+    },
+    {
+      "t": "2026-11-22T23:20:07.178Z",
+      "note": "A chart's bar keeps its hand-set keys, opacity, corners and blending through new numbers, a theme and a removed row (rows told apart by label; a removed row takes only its own). A title keeps any effect the person edited, added or removed through theme, font pair, energy and intensity (the recipe remembers what its drawing gave each piece). Unit tests in HandWorkSurvivesRestyleTests, walk hand-work-survives-new-numbers-and-a-restyle-walk at Next defaults (fails on the old code, passes now), neighbouring walks green, Scripts/test.sh exit 0. Commit 675ebb05d. CI on main was already red from an unrelated flip export test, filed as the-2-5d-flip-movie-test-agrees-with-the-canvas, so CI has not verified this."
     }
-  ]
+  ],
+  "started": "2026-11-22T22:14:30.861Z",
+  "walks": [
+    "hand-work-survives-new-numbers-and-a-restyle-walk"
+  ],
+  "completed": "2026-11-22T23:20:07.179Z"
 }
