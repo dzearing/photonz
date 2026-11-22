@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-22T11:52:33.974Z",
-  "updated": "2026-11-22T13:27:03.573Z",
+  "updated": "2026-11-22T19:30:56.217Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-22-031236.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)\nNSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) (HeldDragKeys.swift:111)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)",
@@ -38,6 +38,33 @@
     {
       "t": "2026-11-22T13:27:03.572Z",
       "note": "seq 4060 -> 50"
+    },
+    {
+      "t": "2026-11-22T19:09:38.614Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T19:10:45.723Z",
+      "note": "Read the crash against pass 27's session transcript (bc978243): the probe launched 03:08:16 by /tmp/pz27-nodes-run.sh, which attached lldb to it with three breakpoints in SwiftUI's accessibility focus walk and a Python callback that ran EvaluateExpression(object_getClassName) on the main thread at every visit; perl's 250 s alarm killed lldb (log: 'Alarm clock: 14', walk exit 4) at 03:12:3x, the crash is stamped 03:12:26. The stack shows MultiViewResponder.visit 'calling' Photonz_main and then App.main > runApp > precondition: that is lldb's injected-call return address (the executable's entry point) being run for real once the debugger died mid-expression, so SwiftUI's runApp ran a second time and trapped (ESR brk 1). Theory: debugger artefact, not app code. Now checking it on the shipped probe."
+    },
+    {
+      "t": "2026-11-22T19:30:50.344Z",
+      "note": "Reproduction on today's probe (main 122e997ad, built by the first speed-walk run, Grants: Screen Recording granted, screen unlocked): (a) the exact walk the probe was running when it died, /tmp/pz27-ax-walk.json recreated (6 min reference edit, 20 s of play, speed edits nothing/pick/unpick/pick), 3 runs, exit 0 each; (b) Scripts/playtest.sh Scripts/playtest/speed-walk.json, 3 runs, exit 0 each; (c) Scripts/playtest-all.sh --no-build painted-clips-take-a-hand painted-gap a-transition-is-picked-at-the-cut a-click-on-a-clip-piece several-picked-clips-change-track a-long-edit-has-one-zoom-lane reference-edit-opens an-editing-session scrub-never-blacks-out the-panel-catches-up a-cut-slid-under-a-still-pointer every-handle-lights-on-hover clip-bar (pass 27's own list, 12 walks), 3 rounds, '12 passed, 0 failed' each, 0 CRASHED. No new Photonz report in ~/Library/Logs/DiagnosticReports (newest is still the 03:12 one), and grep for 'closure #1 in closure #1 in runApp' or 'AccessibilityNode.updateFocus' across every .ips there finds only this one report."
+    },
+    {
+      "t": "2026-11-22T19:30:50.419Z",
+      "note": "Correction to triage: the probe was NOT built from an unfinished tree. Pass 27's transcript shows its first source edit (TimelineTrackRows.swift) at 03:16:51, after the crash. What it was doing at 03:08 to 03:12 was /tmp/pz27-nodes-run.sh: lldb attached to the probe with breakpoints in ViewRendererHost.focusResponder and ResponderNode.visitFocusResponders, a Python callback running frame.EvaluateExpression(object_getClassName) on the main thread, and perl 'alarm 250' killing lldb (its output: 'Alarm clock: 14', walk exit 4). lldb's injected call returns to the executable's entry point, which is why the stack has Photonz_main/$main sitting ABOVE MultiViewResponder.visit and then App.main > runApp > precondition: the debugger died mid-expression and the thread ran the app's main a second time. A person cannot get there. Logged the finding on a-crash-in-a-runner-s-own-half-built-probe-is-lo, whose dirty-tree stamp would not have caught this one."
+    },
+    {
+      "t": "2026-11-22T19:30:50.610Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-22T19:30:56.215Z",
+      "note": "Not an app bug and a person cannot hit it. The 03:12 probe crash was pass 27's lldb experiment: the debugger was attached with Python callbacks evaluating expressions in SwiftUI's focus walk and was killed mid-expression by a 250 s alarm, so the thread returned into the app's entry point and SwiftUI's runApp ran a second time (that is why Photonz_main sits mid-stack). The probe was built from committed code (first edit came at 03:16). On today's probe (main 122e997ad) the exact walk it was running, speed-walk and pass 27's 12 timeline walks each ran 3 times: all green, 0 CRASHED, no new crash report. Finding logged on a-crash-in-a-runner-s-own-half-built-probe-is-lo with a new checklist item for debugger-attached probes."
     }
-  ]
+  ],
+  "started": "2026-11-22T19:09:38.613Z",
+  "walks": [],
+  "completed": "2026-11-22T19:30:56.216Z"
 }
