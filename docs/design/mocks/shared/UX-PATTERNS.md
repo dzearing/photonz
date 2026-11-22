@@ -114,8 +114,8 @@ menu and the layer's right-click. `pages/video-animate.html` still draws the
 older bar beside the layer; the user's words above replace it, and the mock is
 left as drawn.
 
-**A request that names a system look gets one filmed card, not a second
-build.** When a request names a system look or material (Liquid Glass, "the
+**A request that names a system look gets one filmed comparison, not a
+second build.** When a request names a system look or material (Liquid Glass, "the
 Mac's own control", "like Finder's"), build it once, then film the system's own
 version beside ours in the same place, light and dark, at rest and moving, and
 put both films side by side in the audit before building any other variant. Neither
@@ -126,8 +126,11 @@ gliding thumb, one pane of system glass, the system glass thumb everywhere,
 then the Mac's own control, commits `dbf9de22` to `5a81d5a3`), and the user
 sent the Mac's own back ("this IS the native slider, but it's ugly and I want
 to go back to our custom one") for our drawn control with the picked choice a
-tinted glass chip (`a42eacb8`, "The one segmented control" below). One card
-with two films would have asked that question on the first day.
+tinted glass chip (`a42eacb8`, "The one segmented control" below). One side by side comparison
+with two films would have asked that question on the first day. It is a
+comparison in the audit, not a decision card (cards are rare since 2026-10-19,
+`queue/bin/runner-prompt.md`): the runner films both, chooses, and writes
+`Chose ... because ...` in the task log.
 
 **A look or a motion is done when a measured bar says so, and the user has seen
 the reel.** Work whose value is how something looks or moves (a title, a
@@ -1315,8 +1318,11 @@ popovers, toasts, empty states and status pills.
 - **An empty state is empty, or ONE short label.** "No captures" at most, never
   a line of instructions.
 - **Mock text that reads like a debug value is not copied.** A mock is the
-  floor for layout and controls, but a readout like `.kfread` is raised as a
-  decision card before it is built, not shipped because the mock drew it.
+  floor for layout and controls, but a readout like `.kfread` is not shipped
+  because the mock drew it: the runner puts a label or value inside the budget
+  in its place, logs `Chose ... because ...`, and names the departure in the
+  audit's `rough` with "(UX-PATTERNS §4)". It is not a decision card (cards are
+  rare since 2026-10-19, `queue/bin/runner-prompt.md`).
 
 #### When the mock prints a sentence longer than the budget
 
@@ -3227,7 +3233,14 @@ asks for:
 4. **A clip can move between tracks.** Every clip is a layer of the document:
    the canvas selects it, the panel shows its properties, and dragging it up or
    down the timeline moves it to another track of its kind. Dropping it between
-   two tracks makes a new track there. On video tracks the higher track draws
+   two tracks makes a new track there. A file carried over the timeline (from
+   Finder or the History) has two more places to land, and these three are the
+   only ones: a dashed **New track** row that appears at the top of the tracks
+   while the file is in the air, which makes a track over all the others, and
+   the space below the last track, where a clip-shaped ghost is drawn on the
+   lane its new track will take (2026-10-28, `TimelineNewTrackGhost`,
+   `a-history-clip-gets-a-new-track-at-the-top-walk`). A new drop builds on
+   these rather than inventing a fourth. On video tracks the higher track draws
    over the lower one, so track order is stacking order.
 5. **Switches on every header.** Hide (video) or mute (audio), solo, and lock,
    on the track header where a Premiere editor looks for them. Adding a track is

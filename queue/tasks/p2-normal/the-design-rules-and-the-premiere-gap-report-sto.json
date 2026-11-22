@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-10-20T13:58:02.156Z",
-  "updated": "2026-11-21T13:11:42.721Z",
+  "updated": "2026-11-22T07:26:43.728Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-10-20 digest's rule review. The cards were taken as recommended in 624a8e3a; runner-prompt.md and manager-prompt.md were updated then, the design documents were not. Docs only: no app code, so no walk check is started by it.",
@@ -127,6 +127,11 @@
     {
       "t": "2026-11-21T13:11:42.720Z",
       "note": "seq 80 -> 60"
+    },
+    {
+      "t": "2026-11-22T07:26:43.724Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-11-22T07:26:43.723Z"
 }

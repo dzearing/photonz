@@ -7,7 +7,8 @@ below is the real window.
 What was edited:
 
 - **The standing session walk** (`Scripts/playtest/an-editing-session-walk.json`):
-  the 17 second Sample Talk, cut with Command K twice and Delete, a second clip,
+  the 17 second Sample Talk, cut with Command B twice and Delete (Command K
+  until 2026-10-24, when Command K became Ask), a second clip,
   a cross dissolve from the picker, a title moved from A to B, a 21 second
   play-through, an MP4 export. It passes.
 - **A real five minute recording**: 2880 x 1800 at 30 fps, H.264, 1018 spoken
@@ -49,7 +50,7 @@ with real window captures.
 | 7 | No key for the usual transition | Command D (Final Cut: Command T) puts the default dissolve on the nearest cut | Click the cut, pick a tile, every time; Command D is Deselect | [picker](video-vs-premiere/transition-picker.jpg) | Medium | `one-key-puts-the-usual-transition-on-the-cut-at` | **Closed.** Command T (Final Cut's key; Command D stays Deselect) puts the default dissolve on the cut ([picture](video-vs-premiere/closed-7-command-t.jpg)); `default-transition-key-walk` |
 | 8 | Export can't make a smaller video | 1080p, 720p and more | Format, Quality and Captions only. A 2880 x 1800 recording can only come out at full size, estimated 678 MB for five minutes | [sheet](video-vs-premiere/export-sheet-5-min.jpg) | Medium | `the-export-sheet-lets-you-pick-the-size-of-the-v` | **Closed.** Size row: Full, 1080p, 720p ([picture](video-vs-premiere/closed-8-export-1080p.jpg)); `export-a-video-at-1080p-walk` |
 | 9 | Snapping can't be switched off | S, and a magnet button | Always on | none | Low | `s-switches-timeline-snapping-off-and-on` | **Closed.** S and a magnet button ([off](video-vs-premiere/closed-9-snapping-off.jpg)); `snapping-switches-with-s-walk` |
-| 10 | A long clip is a blank bar | Frames drawn along each clip | One gradient bar. At Fit, five minutes of captions is a comb of 173 tiny pills. The mock also draws plain bars, so this is the user's call | [five minutes at Fit](video-vs-premiere/five-minutes-at-fit.jpg) | Medium | `clips-on-the-timeline-show-pictures-of-what-is-i` (decision card) | Open: waiting on the user's answer to the decision card |
+| 10 | A long clip is a blank bar | Frames drawn along each clip | One gradient bar. At Fit, five minutes of captions is a comb of 173 tiny pills. The mock also draws plain bars, so this is the user's call | [five minutes at Fit](video-vs-premiere/five-minutes-at-fit.jpg) | Medium | `clips-on-the-timeline-show-pictures-of-what-is-i` | **Closed.** The user answered on 2026-09-25: pictures only when zoomed in. At Fit the mock's bars; from the first zoom step frames fade in along each video clip (shipped 2026-09-27); `clip-pictures-when-zoomed-in-walk` |
 | 11 | No key marks a whole clip | X marks the clip under the playhead; Shift I and Shift O go to the In and the Out | Marking a piece to extract it took the playhead to each end in turn, I at one and O at the other; X was only the fill swap and Shift I and Shift O did nothing (found 2026-10-06) | none | Medium | `x-marks-a-clip-and-shift-i-and-shift-o-go-to-the` | **Closed.** X marks the piece under the playhead while the timeline has the keyboard (the topmost picture, a picked clip first), one undo step; Shift I and Shift O go to the marks; Sequence carries Mark Clip, Go to In and Go to Out. After a click on the picture X swaps the fills again ([picture](video-vs-premiere/closed-11-x-marks-the-piece.jpg)); `x-marks-the-clip-walk`, `mark-clip-menu-rows-walk` |
 | 12 | No key for a clip's speed | Command R opens Speed/Duration for the picked clip | Command R did nothing on a video; the speed meant finding the panel's Speed dropdown or Clip ▸ Speed (found 2026-10-06) | none | Medium | `command-r-changes-a-picked-clip-s-speed-as-in-pr` | **Closed.** Command R opens the panel's Speed list for the picked piece (else the one under the playhead, which it picks), bringing the panel back and unfolding Time if they were put away; a held frame opens its Hold list. With no clip it says No clip picked. Clip ▸ Change Speed… carries the key ([picture](video-vs-premiere/closed-12-command-r-speed.jpg)); `command-r-opens-the-speed-walk`, `command-r-with-no-clip-walk` |
 
@@ -64,7 +65,7 @@ with real window captures.
 - A video gets the whole 16 button picture tool bar and no Blade: `on-a-video-the-tool-bar-holds-the-video-tools-an`.
 - Layers repeats the timeline: `on-a-video-the-timeline-is-the-layer-list-and-th`.
 - A (Track Select Forward) is still the Arrow tool: `a-picks-everything-after-a-clip-and-moves-it-as`.
-- The media pool (Library) is hidden on a video: `a-video-document-shows-the-library-in-its-dock` (decision card).
+- The media pool (Library) was hidden on a video: `a-video-document-shows-the-library-in-its-dock`. **Closed** 2026-10-20 (`a9944834`): its card was taken as recommended, and a recording shows the Library folded at the foot of the dock; `video-library-folded-walk`.
 
 ### Seen, not filed
 
@@ -140,6 +141,9 @@ Trimming the head of a clip to the playhead: click, Q. **2 actions**, as in
 Premiere.
 
 ### Before the gaps closed (2026-09-24 morning)
+
+The blade was Command K then; it has been Command B since 2026-10-24, with
+Command K now Ask. The counts are the same with either key.
 
 - One stretch: click the timeline's Select button (once), move, Command K,
   move, Command K, click the middle piece, Delete. 6 actions plus the first
