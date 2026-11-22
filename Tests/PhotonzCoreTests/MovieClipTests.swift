@@ -38,8 +38,12 @@ struct MovieClipTests {
         let ref = Self.movie()
         // Everything inside one frame's worth of time is the same frame.
         #expect(ref.frameSourceMS(atSourceMS: 0) == 0)
-        #expect(ref.frameSourceMS(atSourceMS: MovieRef.frameStepMS - 1) == 0)
-        #expect(ref.frameSourceMS(atSourceMS: MovieRef.frameStepMS) == MovieRef.frameStepMS)
+        // Frame 1 of thirty a second starts at 33.33ms: its first whole
+        // millisecond is 34, and 33 is still frame 0.
+        #expect(ref.frameSourceMS(atSourceMS: 33) == 0)
+        #expect(ref.frameSourceMS(atSourceMS: 34) == 34)
+        #expect(ref.frameSourceMS(atSourceMS: 66) == 34)
+        #expect(ref.frameSourceMS(atSourceMS: 67) == 67)
         // And it never asks for a frame past the last one there is.
         #expect(ref.frameSourceMS(atSourceMS: 99_000) <= ref.durationMS)
         #expect(ref.frameSourceMS(atSourceMS: -50) == 0)
@@ -114,9 +118,10 @@ struct MovieClipTests {
         let clip = doc.layers[0]
         #expect(clip.movieFrameSourceMS(atTimeMS: 0) == 0)
         // Rounded to the frame grid, because that is the frame that gets
-        // fetched: four seconds in is the 121st frame, which starts at 3993.
+        // fetched: four seconds in is frame 120, which starts at four seconds.
         #expect(clip.movieFrameSourceMS(atTimeMS: 4000) == movie.frameSourceMS(atSourceMS: 4000))
-        #expect(clip.movieFrameSourceMS(atTimeMS: 4000) == 3993)
+        #expect(clip.movieFrameSourceMS(atTimeMS: 4000) == 4000)
+        #expect(clip.movieFrameSourceMS(atTimeMS: 4020) == 4000)
         // Off the end of the clip there is no frame of it to show.
         #expect(clip.movieFrameSourceMS(atTimeMS: 9000) == nil)
     }
@@ -128,8 +133,8 @@ struct MovieClipTests {
             $0.time = LayerTime(inMS: 3000, outMS: 5000, sourceInMS: 1000, sourceLengthMS: 8000)
         }
         let clip = doc.layers[0]
-        #expect(clip.movieFrameSourceMS(atTimeMS: 3000) == 990)
-        #expect(clip.movieFrameSourceMS(atTimeMS: 4000) == 1980)
+        #expect(clip.movieFrameSourceMS(atTimeMS: 3000) == 1000)
+        #expect(clip.movieFrameSourceMS(atTimeMS: 4000) == 2000)
         #expect(clip.movieFrameSourceMS(atTimeMS: 2999) == nil)
     }
 

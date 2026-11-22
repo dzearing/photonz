@@ -58,14 +58,16 @@ public struct VideoFramePlan: Hashable, Sendable {
     /// How long one picture is on screen for.
     public var frameDelay: TimeInterval { 1 / fps }
 
-    /// The moment of the document the picture at `index` is taken at.
+    /// The moment of the document the picture at `index` is taken at: the
+    /// first whole millisecond of its slot, so a movie's picture `k` is grid
+    /// frame `k` (`MovieRef.gridMS(ofFrame:)`) and never the one before it.
     ///
     /// Never past the last drawable moment: asking for the frame AT the
     /// duration asks for one past the last one there is, and an empty final
     /// frame reads as the video having broken rather than as it having ended
     /// (`DocumentTime.lastDrawableTimeMS`).
     public func timeMS(at index: Int) -> Int {
-        let raw = Int((Double(max(0, index)) * 1000 / fps).rounded())
+        let raw = Int((Double(max(0, index)) * 1000 / fps).rounded(.up))
         return min(raw, max(0, durationMS - 1))
     }
 
@@ -82,10 +84,11 @@ public enum DocumentVideoExport {
     /// How fast a written movie runs.
     ///
     /// Thirty, which is the grid a clip's frames are fetched on
-    /// (`MovieRef.frameStepMS` is 33ms) and finer than any screen recording the
+    /// (`MovieRef.framesPerSecond`) and finer than any screen recording the
     /// app makes. Asking for more would photograph the same decoded frame twice
-    /// and make the file bigger for it.
-    public static let movieFPS: Double = 1000 / Double(MovieRef.frameStepMS)
+    /// and make the file bigger for it. It was 1000/33, 30.3 a second, until
+    /// 2026-11-22, which photographed one grid frame twice every hundred.
+    public static let movieFPS = Double(MovieRef.framesPerSecond)
 
     /// Which moments to photograph and how big, for a document of this length.
     ///

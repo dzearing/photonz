@@ -16,14 +16,14 @@ struct ScrubFramesTests {
                  pixelSize: CGSize(width: 3456, height: 2234), durationMS: 8000)
     }
 
-    static func ms(_ frame: Int) -> Int { frame * MovieRef.frameStepMS }
+    static func ms(_ frame: Int) -> Int { MovieRef.gridMS(ofFrame: frame) }
 
     // MARK: - Reading a drawn frame back
 
     @Test("A frame's reference reads back as the frame it is")
     func aFrameReadsBack() {
         let movie = Self.movie()
-        for frame in [0, 1, 17, 240] {
+        for frame in [0, 1, 17, 239] {
             #expect(movie.frameIndex(ofFrameID: movie.frameRef(atSourceMS: Self.ms(frame)).id) == frame)
         }
     }

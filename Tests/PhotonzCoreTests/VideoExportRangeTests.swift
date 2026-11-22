@@ -68,7 +68,7 @@ struct VideoExportRangeTests {
         #expect(plan.timeMS(at: 0) == 0)
         // ...and each of its pictures is the document's at the In plus that.
         #expect(plan.documentTimeMS(at: 0) == 2000)
-        #expect(plan.documentTimeMS(at: 1) == 2033)
+        #expect(plan.documentTimeMS(at: 1) == 2034)
         for index in 0..<plan.frameCount {
             #expect(plan.documentTimeMS(at: index) >= 2000)
             #expect(plan.documentTimeMS(at: index) < 6000)

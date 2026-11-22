@@ -20,7 +20,7 @@ struct PlaybackNeverBlinksTests {
         MovieRef(pixelSize: canvas, durationMS: 8000)
     }
 
-    static func ms(_ frame: Int) -> Int { frame * MovieRef.frameStepMS }
+    static func ms(_ frame: Int) -> Int { MovieRef.gridMS(ofFrame: frame) }
 
     static func file(_ movie: MovieRef, frame: Int, hex: String, in store: ImageStore,
                      size: CGSize = canvas) throws {

@@ -20,7 +20,7 @@ struct MovingFrameOnASurfaceTests {
     static let canvas = CGSize(width: 64, height: 40)
 
     static func movie() -> MovieRef { MovieRef(pixelSize: canvas, durationMS: 8000) }
-    static func ms(_ frame: Int) -> Int { frame * MovieRef.frameStepMS }
+    static func ms(_ frame: Int) -> Int { MovieRef.gridMS(ofFrame: frame) }
 
     /// A frame with a different colour on each half, so the way up shows.
     static func file(_ movie: MovieRef, frame: Int, top: String, bottom: String,

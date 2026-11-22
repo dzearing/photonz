@@ -773,8 +773,8 @@ private struct KeyLaneView: View {
         let caught = KeySnap.snapped(landing, to: editorState.graphKeySnapMoments(layerID: layerID, leaving: key.ref),
                                      withinMS: reach)
         if caught != landing { return caught - key.documentMS }
-        let frame = MovieRef.frameStepMS
-        return Int((Double(landing) / Double(frame)).rounded()) * frame - key.documentMS
+        let frame = (Double(landing) * Double(MovieRef.framesPerSecond) / 1000).rounded()
+        return MovieRef.gridMS(ofFrame: Int(frame)) - key.documentMS
     }
 
     // MARK: The line on the open graph

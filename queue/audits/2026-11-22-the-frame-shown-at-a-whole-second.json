@@ -1,0 +1,25 @@
+{
+  "feature": "The frame shown at a whole second is the one that starts there",
+  "epic": "video-cutting",
+  "summary": "At exactly 10 seconds into a 30 frames a second recording the editor, a written video and the agent tools now all show frame 300, the one that starts at 10 seconds. Before, they showed frame 299, one frame early, at almost every whole second. Stepping a frame with the arrow keys always moves exactly one frame.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Checked in the probe on a 15 second 30fps test recording that prints its own timecode and frame number on every frame (ffmpeg testsrc2), with the agent's set_playhead tool and window snapshots.",
+  "switched": {},
+  "try": [
+    { "do": "Open a 30 fps video that shows its own timecode, or any video where you know what is on a given frame.", "shot": "2026-11-22-whole-second-frame-at-10s.png" },
+    { "do": "Put the playhead at exactly 10 seconds and look at the picture: it is the frame stamped 10.000, not 9.967.", "shot": "2026-11-22-whole-second-frame-timecodes.png" },
+    { "do": "Press Right Arrow a few times: every press moves on exactly one frame, none repeats." },
+    { "do": "Press Left Arrow back past a whole second: every press moves back exactly one frame." },
+    { "do": "Export the video and open the file: the frame at 10 seconds in the file is the frame the editor showed there." }
+  ],
+  "evaluate": [
+    "Does the picture at a whole second match what you expected to see there?",
+    "Does stepping with the arrow keys ever show the same frame twice or skip one?",
+    "Does a written video still play smoothly, with no frame shown twice?"
+  ],
+  "rough": [
+    "No mock covers this: it changes which frame is drawn, not how anything looks.",
+    "Written videos now run at exactly 30 frames a second. They ran at 30.3 before, which showed one frame twice in every hundred.",
+    "Motion Blur's shutter is now measured against a frame of 33.33ms, not 33ms, so a title with motion blur smears a hair more (180 degrees is 16.67ms, was 16.5ms).",
+    "Only 30 and 60 fps files land on the grid exactly. On a 24, 25 or 29.97 fps file, or a screen recording with uneven frame times, the written file may still pick a different frame from the editor at some moments. That is not seen yet and is filed as find-out-whether-an-export-of-a-screen-recording."
+  ]
+}

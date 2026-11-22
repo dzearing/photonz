@@ -636,8 +636,9 @@ extension PhotonzDocument {
     /// rest. At a speed that keeps only some frames, the kept frame at or
     /// below that one. True where nothing is behind it to show.
     public func readyToPlayBackward(atTimeMS ms: Int, inHand: MovieFramesInHand, speed: Double = 1) -> Bool {
-        let behind = ms - MovieRef.frameStepMS
-        guard behind >= 0 else { return true }
+        let frame = MovieRef.gridFrame(atMS: ms)
+        guard frame > 0 else { return true }
+        let behind = MovieRef.gridMS(ofFrame: frame - 1)
         let stride = MoviePlayBackward.stride(speed: speed)
         return movieFrames(atTimeMS: behind).allSatisfy {
             let frame = $0.movie.frameIndex(atSourceMS: $0.sourceMS)
@@ -666,7 +667,9 @@ extension PhotonzDocument {
         }
         let end = documentDurationMS
         for step in 0...MoviePlayPass.startsWithFramesAhead {
-            let moment = ms + step * MovieRef.frameStepMS
+            // On by grid frames, never by 33ms, which falls short of a
+            // frame once every hundred and would look one frame too few ahead.
+            let moment = step == 0 ? ms : MovieRef.gridMS(steppedFrom: ms, byFrames: step)
             guard moment < end || step == 0 else { break }
             let ready = movieFrames(atTimeMS: moment).allSatisfy {
                 inHand.contains(movie: $0.movie.id, frameIndex: $0.movie.frameIndex(atSourceMS: $0.sourceMS))
@@ -713,13 +716,13 @@ extension PhotonzDocument {
     /// picture 22 frames behind there, and the stretch playing read on past
     /// the cut into frames never shown (2026-10-08).
     public func moviePlayBackPlaces(atTimeMS ms: Int, speed: Double) -> [MovieBackPlace] {
-        // A step further than the reads reach: the clock's step is a hair
-        // shorter than a grid frame, so twenty steps fall short of twenty frames.
+        // A step further than the reads reach, so the stretch on the far
+        // side of a cut is always seen.
         let span = MoviePlayBackward.reach(speed: speed) + MoviePlayBackward.blockLength(speed: speed) + 1
         var places: [MovieBackPlace] = []
         var previous: [Int] = []
         for step in 0...span {
-            let moment = ms - step * MovieRef.frameStepMS
+            let moment = step == 0 ? ms : MovieRef.gridMS(ofFrame: MovieRef.gridFrame(atMS: ms) - step)
             guard moment >= 0 else { break }
             for request in movieFrames(atTimeMS: moment) {
                 let frame = request.movie.frameIndex(atSourceMS: request.sourceMS)

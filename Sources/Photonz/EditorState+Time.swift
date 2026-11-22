@@ -197,10 +197,11 @@ extension EditorState {
     }
 
     /// One frame on, or back with a negative count. The step is the grid frames
-    /// are fetched on, so stepping always lands on a frame that can be drawn.
+    /// are fetched on, so stepping always lands on a frame that can be drawn,
+    /// and on the next one however far into its own frame the playhead was.
     func stepDocument(byFrames frames: Int) {
         pauseDocument()
-        scrubDocument(toMS: documentTimeMS + frames * MovieRef.frameStepMS)
+        scrubDocument(toMS: MovieRef.gridMS(steppedFrom: documentTimeMS, byFrames: frames))
     }
 
     func goToDocumentStart() {

@@ -59,7 +59,8 @@ enum TestClip {
     /// would fail `notCopyable` only in a full run.
     static func write(to url: URL, seconds: Double, size: CGSize = CGSize(width: 160, height: 120),
                       likeAScreenRecording: Bool = false,
-                      profile: String = AVVideoProfileLevelH264HighAutoLevel) async throws {
+                      profile: String = AVVideoProfileLevelH264HighAutoLevel,
+                      bits: Int = codeBits) async throws {
         let (writer, (input, adaptor)) = try await HardwareEncoder.start(
             at: url, wouldNotStart: { $0 ?? CocoaError(.fileWriteUnknown) }
         ) { hardware in
@@ -97,7 +98,7 @@ enum TestClip {
                 try await Task.sleep(for: .milliseconds(5))
             }
             guard let pool = adaptor.pixelBufferPool,
-                  let buffer = makePixelBuffer(pool: pool, size: size, index: index) else {
+                  let buffer = makePixelBuffer(pool: pool, size: size, index: index, bits: bits) else {
                 continue
             }
             adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(index),
@@ -114,7 +115,7 @@ enum TestClip {
     /// One frame: its number written across the picture in black and white
     /// stripes, low bit on the left.
     private static func makePixelBuffer(pool: CVPixelBufferPool, size: CGSize,
-                                        index: Int) -> CVPixelBuffer? {
+                                        index: Int, bits: Int) -> CVPixelBuffer? {
         var buffer: CVPixelBuffer?
         guard CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer) == kCVReturnSuccess,
               let buffer else { return nil }
@@ -132,8 +133,8 @@ enum TestClip {
         ctx.setFillColor(red: 0, green: 0, blue: 0, alpha: 1)
         ctx.fill(CGRect(origin: .zero, size: size))
         ctx.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
-        let stripe = size.width / CGFloat(codeBits)
-        for bit in 0..<codeBits where (index >> bit) & 1 == 1 {
+        let stripe = size.width / CGFloat(bits)
+        for bit in 0..<bits where (index >> bit) & 1 == 1 {
             ctx.fill(CGRect(x: CGFloat(bit) * stripe, y: 0, width: stripe, height: size.height))
         }
         return buffer
@@ -167,8 +168,13 @@ enum TestClip {
 
     /// The stripe code painted into one frame.
     static func frameCode(of image: CGImage) -> FrameCode? {
+        frameCode(of: image, bits: codeBits)
+    }
+
+    /// The same, for a clip written with `bits` stripes (`write`).
+    static func frameCode(of image: CGImage, bits: Int) -> FrameCode? {
         let width = image.width
-        guard width >= codeBits * 2 else { return nil }
+        guard width >= bits * 2 else { return nil }
         var row = [UInt8](repeating: 0, count: width * 4)
         let drew = row.withUnsafeMutableBytes { raw -> Bool in
             guard let space = CGColorSpace(name: CGColorSpace.sRGB),
@@ -185,10 +191,10 @@ enum TestClip {
 
         var index = 0
         var margin = 0.5
-        for bit in 0..<codeBits {
+        for bit in 0..<bits {
             // The middle of the stripe, so a blurred edge between two stripes
             // never decides a bit.
-            let x = Int((Double(bit) + 0.5) * Double(width) / Double(codeBits))
+            let x = Int((Double(bit) + 0.5) * Double(width) / Double(bits))
             let level = Double(row[x * 4]) / 255.0
             if level > 0.5 { index |= 1 << bit }
             margin = min(margin, abs(level - 0.5))

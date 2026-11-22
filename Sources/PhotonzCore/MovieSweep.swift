@@ -298,14 +298,23 @@ public struct MovieSweepGrid: Sendable {
     /// itself by (`MoviePlayPass`).
     public var nextFrame: Int { next }
 
+    /// How late a sample may start and still be the one on screen at a grid
+    /// frame's moment: a millisecond, for a time stamp rounded on its way
+    /// into the file. Half a grid frame until 2026-11-22, when the grid ran
+    /// up to a frame behind a 30fps file's own frames and the sample due had
+    /// to be let in late; on a grid of exact thirtieths it let the NEXT sample
+    /// of a 60fps file in instead, a frame later than a single frame sought
+    /// at the same moment shows.
+    public static let lateSampleMS = 1.0
+
     /// A sample starting at `ms` arrived. Answers the grid frames the sample
     /// BEFORE it fills, which are the ones this one starts too late for. None
     /// before the first sample: those grid frames show something the pass
     /// never read.
     public mutating func arrived(atMS ms: Double) -> [Int] {
         var filled: [Int] = []
-        let slack = Double(MovieRef.frameStepMS) / 2
-        while next <= frames.upperBound, Double(next * MovieRef.frameStepMS) + slack < ms {
+        let slack = Self.lateSampleMS
+        while next <= frames.upperBound, Double(MovieRef.gridMS(ofFrame: next)) + slack < ms {
             if hasPrevious { filled.append(next) }
             next += 1
         }

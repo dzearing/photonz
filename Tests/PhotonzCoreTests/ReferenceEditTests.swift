@@ -162,8 +162,8 @@ struct ReferenceEditTests {
         var total = 0
         for footage in ReferenceEdit.footage {
             let movie = footage.movie
-            for frame in 0...(movie.durationMS / MovieRef.frameStepMS) {
-                seen.insert(movie.frameRef(atSourceMS: frame * MovieRef.frameStepMS).id)
+            for frame in 0...MovieRef.gridFrame(atMS: movie.durationMS) {
+                seen.insert(movie.frameRef(atFrame: frame).id)
                 total += 1
             }
         }

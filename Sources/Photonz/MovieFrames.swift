@@ -323,7 +323,7 @@ actor MovieDecoder {
         // Half a frame either way: exact seeking makes every frame a full
         // decode from the nearest keyframe, and half a frame of slop is
         // invisible while costing a fraction of the time.
-        let slop = CMTime(value: CMTimeValue(MovieRef.frameStepMS / 2), timescale: 1000)
+        let slop = CMTime(value: CMTimeValue(MovieRef.seekSlopMS), timescale: 1000)
         generator.requestedTimeToleranceBefore = slop
         generator.requestedTimeToleranceAfter = slop
         // Read at the size it is shown, never bigger than the recording: a
@@ -440,10 +440,9 @@ enum MovieSweeper {
               let orientation = orientation(of: transform),
               let reader = try? AVAssetReader(asset: asset)
         else { return false }
-        let step = MovieRef.frameStepMS
         reader.timeRange = CMTimeRange(
-            start: CMTime(value: CMTimeValue(frames.lowerBound * step), timescale: 1000),
-            end: CMTime(value: CMTimeValue((frames.upperBound + 1) * step), timescale: 1000))
+            start: CMTime(value: CMTimeValue(MovieRef.gridMS(ofFrame: frames.lowerBound)), timescale: 1000),
+            end: CMTime(value: CMTimeValue(MovieRef.gridMS(ofFrame: frames.upperBound + 1)), timescale: 1000))
         // The decoder's own format: asking for RGB made the pass three times
         // slower, and only the frames kept are converted. A 10-bit recording
         // is read at 10 bits (`MovieDecodeFormat`): squeezed to 8 on the way,
@@ -1087,7 +1086,7 @@ final class MovieFrameFetcher {
             // to follow it (`MovieSweep.restingPass`), but not again once it
             // stopped waiting.
             guard restRead[movie.id] != place.frame
-                    || window.contains(where: { !has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) })
+                    || window.contains(where: { !has(movie.frameRef(atFrame: $0)) })
             else { continue }
             restRead[movie.id] = place.frame
             let token = UUID()
@@ -1189,7 +1188,7 @@ final class MovieFrameFetcher {
         if backward, running?.follows == true { running = nil }
         guard let frames = MovieSweep.next(
             handFrame: frame, backward: backward, movie: movie,
-            inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) },
+            inHand: { [self] in has(movie.frameRef(atFrame: $0)) },
             running: running?.frames, glimpse: glimpse, follows: follows || waitsForHand)
         else { return }
         sweeps[movie.id]?.task.cancel()
@@ -1268,7 +1267,7 @@ final class MovieFrameFetcher {
                          slot: UUID, size: CGSize) -> Bool {
         guard let (key, keyMS) = keyFrame(near: frame, within: within, of: movie, url: url) else { return false }
         glimpseNext.removeAll { $0.slot == slot }
-        let ref = movie.frameRef(atSourceMS: key * MovieRef.frameStepMS)
+        let ref = movie.frameRef(atFrame: key)
         if has(ref) || glimpseReads.values.contains(where: { $0.ref == ref.id }) { return true }
         if glimpseRunning.count >= Self.glimpsesAtOnce {
             glimpseNext.append((slot, movie.id, { [weak self] in
@@ -1360,7 +1359,7 @@ final class MovieFrameFetcher {
         // is worth starting over (`MoviePlayPass.serves`).
         learnKeyFrames(of: movie, at: url)
         let plan = MoviePlayPass.plan(now: now, coming: next, passes: passes.map(\.running),
-                                      inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) },
+                                      inHand: { [self] in has(movie.frameRef(atFrame: $0)) },
                                       speed: speed, keyFrames: keyFrames[movie.id])
         var kept: [PlayPass] = []
         for (index, pass) in passes.enumerated() {
@@ -1442,7 +1441,7 @@ final class MovieFrameFetcher {
             return false
         }
         let sharp: (Int) -> Bool = { [self] in
-            filedWidth(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)).map { $0 >= CGFloat(width) - 1 } ?? false
+            filedWidth(movie.frameRef(atFrame: $0)).map { $0 >= CGFloat(width) - 1 } ?? false
         }
         for place in places where blocks.count < MoviePlayBackward.blocksPerRecording {
             if let frames = MoviePlayBackward.next(playhead: place.head, floor: place.floor, speed: speed,
@@ -1510,7 +1509,7 @@ final class MovieFrameFetcher {
     /// Played `backward`, the frames gone by are the ones above the playhead,
     /// so it is one at or above it that redraws.
     private func filePlayed(_ frame: SurfaceFrame, movie: MovieRef, frameIndex: Int, backward: Bool = false) {
-        let ref = movie.frameRef(atSourceMS: frameIndex * MovieRef.frameStepMS)
+        let ref = movie.frameRef(atFrame: frameIndex)
         if let filed = filedWidth(ref), filed >= CGFloat(frame.image.width) - 1 { return }
         let first = !resident.contains { $0.movie == movie.id }
         store.register(frame.image, as: ref, surface: frame.surface)
@@ -1536,7 +1535,7 @@ final class MovieFrameFetcher {
 
     private func fileRough(_ image: CGImage, surface: CVPixelBuffer? = nil, movie: MovieRef, frameIndex: Int,
                            quiet: Bool = false) {
-        let ref = movie.frameRef(atSourceMS: frameIndex * MovieRef.frameStepMS)
+        let ref = movie.frameRef(atFrame: frameIndex)
         if let filed = filedWidth(ref), filed >= CGFloat(image.width) { return }
         if let surface {
             store.register(image, as: ref, surface: surface)

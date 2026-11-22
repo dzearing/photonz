@@ -19,7 +19,7 @@ struct FramesInHandTests {
                  durationMS: durationMS)
     }
 
-    static func ms(_ frame: Int) -> Int { frame * MovieRef.frameStepMS }
+    static func ms(_ frame: Int) -> Int { MovieRef.gridMS(ofFrame: frame) }
 
     static func clipRef(_ document: PhotonzDocument) -> ImageRef? {
         guard case .image(let ref) = document.layers.first?.content else { return nil }
@@ -194,7 +194,7 @@ struct FramesInHandTests {
             return ref
         }
         let wantedHeld = requests.map {
-            movie.frameRef(atSourceMS: (movie.frameIndex(atSourceMS: $0.sourceMS) - 2) * MovieRef.frameStepMS)
+            movie.frameRef(atFrame: movie.frameIndex(atSourceMS: $0.sourceMS) - 2)
         }
         #expect(Set(refs) == Set(wantedHeld))
     }

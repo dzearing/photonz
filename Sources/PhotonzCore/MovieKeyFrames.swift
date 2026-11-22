@@ -29,7 +29,7 @@ public struct MovieKeyFrames: Equatable, Sendable {
     public init(sourceMS: [Int]) {
         let sorted = Array(Set(sourceMS)).sorted()
         self.sourceMS = sorted
-        self.frames = sorted.map { $0 / MovieRef.frameStepMS }
+        self.frames = sorted.map { MovieRef.gridFrame(atMS: $0) }
     }
 
     /// The key frame nearest `frame` inside `within` (grid frames: the

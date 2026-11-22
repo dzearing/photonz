@@ -64,10 +64,10 @@ struct MotionBlurTests {
         #expect(AddableEffect.motionBlur.kind == .motionBlur)
         #expect(AddableEffect.motionBlur.title == "Motion Blur")
         #expect(AddableEffect.motionBlur.newEffect == .motionBlur(MotionBlurEffect()))
-        // 180 degrees is half a frame of the movie an export writes (33ms).
-        #expect(abs(MotionBlurEffect.frameMS - 33) < 0.01)
-        #expect(abs(blur.shutterMS - 16.5) < 0.01)
-        #expect(abs(MotionBlurEffect(shutterAngle: 360).shutterMS - 33) < 0.01)
+        // 180 degrees is half a frame of the movie an export writes (33.33ms).
+        #expect(abs(MotionBlurEffect.frameMS - 1000.0 / 30) < 0.01)
+        #expect(abs(blur.shutterMS - 500.0 / 30) < 0.01)
+        #expect(abs(MotionBlurEffect(shutterAngle: 360).shutterMS - 1000.0 / 30) < 0.01)
     }
 
     @Test("It saves legibly and reads back the same, and magnifying a document leaves it alone")
@@ -265,7 +265,7 @@ struct MotionBlurTests {
         doc.layers = [group]
         doc.durationMS = 4_000
         let shown = try #require(doc.drawn(atTimeMS: 100).layer(id: words.id)?.text)
-        #expect(abs((shown.revealShutterMS ?? 0) - 33 * 0.75) < 0.01)
+        #expect(abs((shown.revealShutterMS ?? 0) - 1000.0 / 30 * 0.75) < 0.01)
         // Without a motion blur over it, nothing is said.
         words.style.effects = []
         group.style.effects = []

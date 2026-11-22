@@ -63,7 +63,7 @@ struct MoviePlayBackwardTests {
     @Test("Playing backwards is ready once the frame behind the playhead is in hand")
     func ready() {
         let document = PhotonzDocument.recording(movie, name: "Take 1")
-        let at = 90 * MovieRef.frameStepMS
+        let at = MovieRef.gridMS(ofFrame: 90)
         var hand = MovieFramesInHand()
         hand.insert(movie: movie.id, frameIndex: 90)
         #expect(!document.readyToPlayBackward(atTimeMS: at, inHand: hand))
@@ -81,7 +81,7 @@ struct MoviePlayBackwardTests {
     @Test("Playing fast forwards is ready once the first frame it keeps at or after the playhead is in hand")
     func readyForwards() {
         let document = PhotonzDocument.recording(movie, name: "Take 1")
-        let at = 91 * MovieRef.frameStepMS
+        let at = MovieRef.gridMS(ofFrame: 91)
         var hand = MovieFramesInHand()
         hand.insert(movie: movie.id, frameIndex: 90)
         #expect(!document.readyToPlayForward(atTimeMS: at, inHand: hand, speed: 4))
@@ -106,7 +106,7 @@ struct MoviePlayBackwardTests {
     @Test("Playing with sound is ready once the frame under the playhead and the next few are in hand")
     func readyToStartWithSound() {
         let document = PhotonzDocument.recording(movie, name: "Take 1")
-        let at = 60 * MovieRef.frameStepMS
+        let at = MovieRef.gridMS(ofFrame: 60)
         var hand = MovieFramesInHand()
         hand.insert(movie: movie.id, frameIndex: 60)
         // The frame under the playhead alone is what fast play waits for...
@@ -128,7 +128,7 @@ struct MoviePlayBackwardTests {
         under.insert(movie: movie.id, frameIndex: 60)
         #expect(document.readyToStartPlaying(atTimeMS: at, inHand: under, speed: 4))
         // Near the last frame only the frames there are waited for.
-        let end = last * MovieRef.frameStepMS
+        let end = MovieRef.gridMS(ofFrame: last)
         var tail = MovieFramesInHand()
         tail.insert(movie: movie.id, frameIndex: last)
         #expect(document.readyToStartPlaying(atTimeMS: end, inHand: tail, speed: 1))
@@ -158,7 +158,7 @@ struct MoviePlayBackwardTests {
         let step = MovieRef.frameStepMS
         let cutFrame = long.frameIndex(atSourceMS: 5000)
         // Five frames after the cut on the clock, going backwards.
-        let places = document.moviePlayBackPlaces(atTimeMS: 3000 + 5 * step, speed: 1)
+        let places = document.moviePlayBackPlaces(atTimeMS: MovieRef.gridMS(steppedFrom: 3000, byFrames: 5), speed: 1)
         #expect(places.count == 2)
         #expect(places.first?.head == cutFrame + 5)
         #expect(places.first?.floor == cutFrame)
@@ -254,7 +254,7 @@ struct MoviePlayBackwardTests {
     func readyAtEightTimes() {
         let document = PhotonzDocument.recording(movie, name: "Take 1")
         // The frame behind 92 is 91, and the kept frame at or below it is 90.
-        let at = 92 * MovieRef.frameStepMS
+        let at = MovieRef.gridMS(ofFrame: 92)
         var hand = MovieFramesInHand()
         hand.insert(movie: movie.id, frameIndex: 92)
         #expect(!document.readyToPlayBackward(atTimeMS: at, inHand: hand, speed: 8))

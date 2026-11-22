@@ -25,15 +25,55 @@ import Foundation
 /// bargain `ImageRef` already strikes with `ImageStore`.
 public struct MovieRef: Hashable, Codable, Sendable {
 
-    /// How far apart the frames a clip is willing to ask for are.
+    /// How many frames a second the grid a clip asks for frames on holds.
     ///
     /// Frames are asked for on a grid rather than at the exact millisecond the
     /// playhead is on, for one reason: a scrub that asked for a new moment
-    /// every pixel would decode a frame per pixel and cache none of them. At
-    /// 33ms the grid is about thirty frames a second, which is finer than
-    /// anything a screen recording holds and coarse enough that dragging along
-    /// a second of timeline asks for thirty frames rather than nine hundred.
+    /// every pixel would decode a frame per pixel and cache none of them.
+    /// Thirty a second is finer than anything a screen recording holds and
+    /// coarse enough that dragging along a second of timeline asks for thirty
+    /// frames rather than a thousand.
+    ///
+    /// Exactly thirty, so grid frame `k` starts at `k / 30` seconds, where a
+    /// 30fps recording's own frame `k` does. It was a step of 33ms until
+    /// 2026-11-22, which against 33.33ms frames put every whole second a hair
+    /// short of the frame starting there: asked for 10s, the grid asked the
+    /// file for 9.999s and the canvas drew frame 299 (`MovieFrameGridTests`,
+    /// `WholeSecondFrameTests`).
+    public static let framesPerSecond = 30
+
+    /// About one grid frame, in whole milliseconds: what a span counted in
+    /// frames, a pause or a lead is measured with. Never the moment of a grid
+    /// frame, which `gridMS(ofFrame:)` gives exactly; thirty of these are a
+    /// hair short of a second.
     public static let frameStepMS = 33
+
+    /// How far either way a single frame sought on its own may land from the
+    /// moment asked for: half a frame, so it is still that frame.
+    public static let seekSlopMS = frameStepMS / 2
+
+    /// The grid frame a moment falls in: the frame of a 30fps recording that
+    /// is showing at it. A moment before nought is in frame -1 and before.
+    public static func gridFrame(atMS ms: Int) -> Int {
+        let scaled = ms * framesPerSecond
+        return scaled >= 0 ? scaled / 1000 : -((999 - scaled) / 1000)
+    }
+
+    /// The first whole millisecond of a grid frame. Never before the frame
+    /// starts, so it is that frame and not the one before it whichever way a
+    /// reader rounds.
+    public static func gridMS(ofFrame frame: Int) -> Int {
+        let scaled = frame * 1000
+        return scaled >= 0 ? (scaled + framesPerSecond - 1) / framesPerSecond : -(-scaled / framesPerSecond)
+    }
+
+    /// The moment `frames` grid frames on from the frame `ms` is in (back,
+    /// counted negative), never before nought: what stepping a frame lands on,
+    /// so a step always reaches the next frame however far into its own the
+    /// playhead was.
+    public static func gridMS(steppedFrom ms: Int, byFrames frames: Int) -> Int {
+        max(0, gridMS(ofFrame: gridFrame(atMS: ms) + frames))
+    }
 
     public let id: UUID
     /// The recording's own picture size, in pixels.
@@ -76,17 +116,20 @@ public struct MovieRef: Hashable, Codable, Sendable {
                   hasSound: try c.decodeIfPresent(Bool.self, forKey: .hasSound) ?? false)
     }
 
-    /// Which frame of the grid a moment of the file falls on.
+    /// Which frame of the grid a moment of the file falls on. A moment at or
+    /// past the end is the last frame there is: the one showing a millisecond
+    /// before the end, since a 30fps file's own length ends exactly where a
+    /// grid frame it does not have would start.
     public func frameIndex(atSourceMS ms: Int) -> Int {
-        let inside = min(max(0, ms), durationMS)
-        return inside / Self.frameStepMS
+        let inside = min(max(0, ms), max(0, durationMS - 1))
+        return Self.gridFrame(atMS: inside)
     }
 
     /// The moment of the file the frame under `ms` actually starts at. This is
     /// what gets decoded, and two moments inside one frame answer the same
     /// thing, which is what makes the cache worth having.
     public func frameSourceMS(atSourceMS ms: Int) -> Int {
-        frameIndex(atSourceMS: ms) * Self.frameStepMS
+        Self.gridMS(ofFrame: frameIndex(atSourceMS: ms))
     }
 
     /// The picture reference the frame at a moment is registered under.
@@ -95,8 +138,12 @@ public struct MovieRef: Hashable, Codable, Sendable {
     /// the same reference in every window, every render and every run — which
     /// is what lets a frame be fetched once and drawn by anything.
     public func frameRef(atSourceMS ms: Int) -> ImageRef {
-        ImageRef(id: MovieRef.frameID(movie: id, frameIndex: frameIndex(atSourceMS: ms)),
-                 pixelSize: pixelSize)
+        frameRef(atFrame: frameIndex(atSourceMS: ms))
+    }
+
+    /// The picture reference grid frame `frame` is registered under.
+    public func frameRef(atFrame frame: Int) -> ImageRef {
+        ImageRef(id: MovieRef.frameID(movie: id, frameIndex: frame), pixelSize: pixelSize)
     }
 
     /// Which frame of this recording a picture reference is, or nil when it is

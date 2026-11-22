@@ -19,11 +19,14 @@ struct DocumentVideoExportTests {
         let plan = DocumentVideoExport.plan(durationMS: 2000,
                                             canvasSize: CGSize(width: 1280, height: 720),
                                             format: .mp4, quality: .standard)
-        // 33ms apart, which is the grid `MovieRef.frameStepMS` decodes on: a
-        // faster export would photograph the same decoded frame twice.
+        // Thirty a second, which is the grid a clip's frames are decoded on
+        // (`MovieRef.framesPerSecond`): a faster export would photograph the
+        // same decoded frame twice. Each picture at the first whole
+        // millisecond of its grid frame, so picture 1 is frame 1, at 34ms.
         #expect(plan.fps == DocumentVideoExport.movieFPS)
-        #expect(plan.frameCount == 61)
-        #expect(plan.timeMS(at: 1) == 33)
+        #expect(plan.frameCount == 60)
+        #expect(plan.timeMS(at: 1) == 34)
+        #expect(plan.timeMS(at: 30) == 1000)
         #expect(plan.size == CGSize(width: 1280, height: 720))
         #expect(plan.durationMS == 2000)
     }

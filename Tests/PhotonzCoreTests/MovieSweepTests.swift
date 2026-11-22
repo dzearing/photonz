@@ -305,15 +305,15 @@ struct MovieKeyFramesTests {
 
     @Test("The nearest key frame either side, a tie going to the one behind")
     func nearest() {
-        let step = MovieRef.frameStepMS
-        let keys = MovieKeyFrames(sourceMS: [0, 59 * step, 118 * step, 177 * step])
+
+        let keys = MovieKeyFrames(sourceMS: [0, MovieRef.gridMS(ofFrame: 59), MovieRef.gridMS(ofFrame: 118), MovieRef.gridMS(ofFrame: 177)])
         #expect(keys.nearest(to: 0)?.frame == 0)
         #expect(keys.nearest(to: 20)?.frame == 0)
         #expect(keys.nearest(to: 40)?.frame == 59)
         #expect(keys.nearest(to: 59)?.frame == 59)
         #expect(keys.nearest(to: 90)?.frame == 118)
         #expect(keys.nearest(to: 300)?.frame == 177)
-        #expect(MovieKeyFrames(sourceMS: [10 * step, 20 * step]).nearest(to: 15)?.frame == 10)
+        #expect(MovieKeyFrames(sourceMS: [MovieRef.gridMS(ofFrame: 10), MovieRef.gridMS(ofFrame: 20)]).nearest(to: 15)?.frame == 10)
         #expect(MovieKeyFrames(sourceMS: []).nearest(to: 15) == nil)
     }
 
@@ -323,14 +323,14 @@ struct MovieKeyFramesTests {
     /// was nowhere near (2026-11-17).
     @Test("The nearest key frame the clip plays, or the nearest at all where it plays none")
     func nearestWithin() {
-        let step = MovieRef.frameStepMS
-        let keys = MovieKeyFrames(sourceMS: [0, 59 * step, 118 * step, 177 * step])
+
+        let keys = MovieKeyFrames(sourceMS: [0, MovieRef.gridMS(ofFrame: 59), MovieRef.gridMS(ofFrame: 118), MovieRef.gridMS(ofFrame: 177)])
         #expect(keys.nearest(to: 65, within: 60...150)?.frame == 118)
         #expect(keys.nearest(to: 170, within: 60...150)?.frame == 118)
         #expect(keys.nearest(to: 100, within: 60...150)?.frame == 118)
         #expect(keys.nearest(to: 65, within: nil)?.frame == 59)
         // Two inside: the one nearer the hand, never the outside one beyond.
-        let close = MovieKeyFrames(sourceMS: [59 * step, 118 * step, 160 * step, 177 * step])
+        let close = MovieKeyFrames(sourceMS: [MovieRef.gridMS(ofFrame: 59), MovieRef.gridMS(ofFrame: 118), MovieRef.gridMS(ofFrame: 160), MovieRef.gridMS(ofFrame: 177)])
         #expect(close.nearest(to: 172, within: 60...170)?.frame == 160)
         #expect(close.nearest(to: 120, within: 60...170)?.frame == 118)
         // A clip shorter than the gap between two key frames has none of its

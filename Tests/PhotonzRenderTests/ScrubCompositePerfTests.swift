@@ -54,7 +54,7 @@ struct ScrubCompositePerfTests {
             var inHand = MovieFramesInHand()
             for frame in 0..<30 {
                 let image = try #require(ScrubCompositePerfTests.busyFrame(decoded, seed: frame * 7))
-                store.register(image, as: movie.frameRef(atSourceMS: frame * MovieRef.frameStepMS))
+                store.register(image, as: movie.frameRef(atFrame: frame))
                 inHand.insert(movie: movie.id, frameIndex: frame)
             }
             self.document = document
@@ -64,7 +64,7 @@ struct ScrubCompositePerfTests {
 
         /// What one refresh of the scrub at `frame` composites, at `scale`.
         func shown(_ frame: Int, scale: CGFloat) -> PhotonzDocument {
-            var drawn = document.drawn(atTimeMS: frame * MovieRef.frameStepMS, framesInHand: inHand)
+            var drawn = document.drawn(atTimeMS: MovieRef.gridMS(ofFrame: frame), framesInHand: inHand)
             // The first box travels with the playhead, the way a keyed one does.
             drawn.updateLayer(id: document.layers[1].id) { $0.frame.origin.x = CGFloat(frame * 9) }
             guard scale < 1 else { return drawn }

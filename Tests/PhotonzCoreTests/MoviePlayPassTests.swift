@@ -117,11 +117,12 @@ struct MoviePlayPassTests {
     @Test("The latest key frame at or before a frame")
     func keyFrameAtOrBefore() {
         let keys = screenRecordingKeys
-        #expect(keys.frames == [0, 79, 146, 213])
-        #expect(keys.latest(atOrBefore: 186) == 146)
-        #expect(keys.latest(atOrBefore: 146) == 146)
-        #expect(keys.latest(atOrBefore: 145) == 79)
-        #expect(keys.latest(atOrBefore: 500) == 213)
+        // 2.625s, 4.85s and 7.033s of thirty frames a second.
+        #expect(keys.frames == [0, 78, 145, 210])
+        #expect(keys.latest(atOrBefore: 186) == 145)
+        #expect(keys.latest(atOrBefore: 145) == 145)
+        #expect(keys.latest(atOrBefore: 144) == 78)
+        #expect(keys.latest(atOrBefore: 500) == 210)
         #expect(MovieKeyFrames(sourceMS: [100]).latest(atOrBefore: 1) == nil)
     }
 
@@ -169,8 +170,9 @@ struct MovieSweepGridReachTests {
     func next() {
         var grid = MovieSweepGrid(frames: 10...20)
         #expect(grid.nextFrame == 10)
-        _ = grid.arrived(atMS: 330)
-        _ = grid.arrived(atMS: 347)
+        // Frame 10 starts at 333.3ms, frame 11 at 366.7ms.
+        _ = grid.arrived(atMS: 333.33)
+        _ = grid.arrived(atMS: 366.67)
         #expect(grid.nextFrame == 11)
     }
 }
