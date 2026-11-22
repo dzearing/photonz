@@ -1,0 +1,27 @@
+{
+  "id": "ci-test-slices-stop-crashing-on-the-runner-s-gpu",
+  "title": "CI test slices stop crashing on the runner's GPU running out of memory",
+  "goal": "Main's check run sometimes goes red because the CI machine's graphics memory runs out while many picture-drawing tests run at once, and the test process dies. A red main for a reason that is not a bug hides real failures and makes every runner doubt its own work.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 4030,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-22T05:31:21.059Z",
+  "updated": "2026-11-22T05:31:21.062Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Second sighting. 2026-11-22 run 44986068360 (commit b50d7af0b, queue-only commit), Test slice 2 of 3, step Run tests: `gh run view 44986068360 --log-failed | tail -60` shows dozens of 'Error: command buffer exited with error status. ... Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory) <AppleParavirtCommandBuffer> label = com.apple.CoreImage device = Apple Paravirtual device' then 'MPSLibrary.mm:639: failed assertion `MPSKernel MTLComputePipelin... Compilation failed: (null)' and 'Process completed with exit code 1'. Tests in flight at 04:48:47: 'Every built-in title's travelling words are all on screen at every frame of their entrance' (parameterised over presets .endCard, .keynote, .softGlass, ...), right after 'A write that leaves nothing behind is an error' passed. First sighting: run 43238687651 on 2026-11-12 (logged in task a-saved-stroke-tile-on-the-styles-shelf-counts-e, next run passed, nothing filed). The previous run 44982487084 on main was green, so this is a flake of the runner's paravirtual GPU, not a code regression. Ideas: cap CI parallelism for CoreImage-heavy suites, share a CIContext, or serialize the title-entrance parameterised test.",
+  "acceptance": [
+    "The cause is named: which tests were drawing on the GPU at the moment of the crash, and how much GPU memory a slice uses on the CI runner",
+    "CI test slices no longer die with kIOGPUCommandBufferCallbackErrorOutOfMemory / MPSLibrary failed assertion, shown by ten green main runs in a row or a drill that loads the runner the same way",
+    "If the fix is to draw fewer pictures at once on CI, a local Scripts/test.sh run is no slower than before"
+  ],
+  "log": [
+    {
+      "t": "2026-11-22T05:31:21.061Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T19:23:32.679Z",
-  "updated": "2026-11-21T13:11:42.563Z",
+  "updated": "2026-11-22T05:43:14.778Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in freeze-frame-asks-how-long-walk picture 2 (2026-10-17): Sample Talk frozen 10s at 0:03 with This track; the Captions track cues stayed at 8s while the clip they transcribe moved to 18s, and the cue across 0:03 reads 10s out. Captions carry no link to the clip they were heard off (grep captionSource in PhotonzCore finds nothing), so HoldPush.pushHeldTime(.thisTrack) only sees layerIDs(onTracks: [the clip track]). Premiere moves captions only with sync lock; here they are the clip's own words, which a person expects to follow it.",
@@ -133,7 +133,51 @@
     {
       "t": "2026-11-21T13:11:42.562Z",
       "note": "seq 60 -> 40"
+    },
+    {
+      "t": "2026-11-22T05:05:28.608Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T05:31:35.662Z",
+      "note": "Review before building: a Premiere editor freezing a talking shot expects the clip's own captions to stay over the speaker (Premiere needs sync lock for that; here they are the clip's own words). Risk: a clip whose sound was taken off it keeps talking under the still, so its captions must stay with the sound, not the picture; a locked captions track never moves."
+    },
+    {
+      "t": "2026-11-22T05:31:35.741Z",
+      "note": "Chose to remember on the Captions layer which recording it was heard off (new saved field heardOff, written only on captions) over guessing from where cues sit, because a guess by time breaks the moment two clips overlap. Captions written before this follow the one recording the document listened to, when it listened to exactly one."
+    },
+    {
+      "t": "2026-11-22T05:31:35.825Z",
+      "note": "Built: HoldPush.heldWithClip = own track + captions heard off the clip (captionLayerIDs(heardOffClip:)), used by pushHeldTime(.thisTrack) and setHoldPush; rippleTime now also shifts the words after the moment inside a caption the moment falls in (so the cue across the freeze waits AND its later words land after it, in Every track too); holdDrifts skips a hold's own captions. App passes sound.id to landCaptions. New walk action captionsExpectInStepWithPicture (no drift mark, no word over its own clip's still, via captionWordsOverOwnStills)."
+    },
+    {
+      "t": "2026-11-22T05:31:35.904Z",
+      "note": "TDD: CaptionsFollowTheirClipTests (12 tests) written first; with the HoldPush change taken out 4 of them fail (cue across 0:03 stays 2.6-4.0s, cue after it stays at 5s, drift mark on the clip's own cue), with it all pass."
+    },
+    {
+      "t": "2026-11-22T05:31:35.983Z",
+      "note": "walks none -> freeze-frame-asks-how-long-walk"
+    },
+    {
+      "t": "2026-11-22T05:42:54.052Z",
+      "note": "Verified: freeze-frame-asks-how-long-walk green with 5 real captures; new captionsExpectInStepWithPicture step passes at 10s still (last caption 26.68s, was 16.68s), at 4s (20.68s) and after Delete (16.68s). a-held-frame-reads-as-a-still-walk and the-quiet-under-a-hold-is-a-bare-slot-walk green. Scripts/test.sh green (15000 + 1446 + 201 + 112 + 25 tests). Picture 2 checked by eye: the cue across 0:03 runs through the striped still, the second clip's captions sit under it at 18s, only Sample Music carries 10s out."
+    },
+    {
+      "t": "2026-11-22T05:42:54.129Z",
+      "note": "left rough (audit rough, under the bar): captions written before this build have no heardOff and follow only when the document listened to exactly one recording; rewriting captions once fixes it. The line on screen at the freeze stays up for the whole still, which is what the checklist asked."
+    },
+    {
+      "t": "2026-11-22T05:42:54.209Z",
+      "note": "Main was red on run 44986068360: GPU out-of-memory on the CI runner (MPS kIOGPUCommandBufferCallbackErrorOutOfMemory), not this change; second sighting, filed as ci-test-slices-stop-crashing-on-the-runner-s-gpu."
+    },
+    {
+      "t": "2026-11-22T05:43:14.776Z",
+      "note": "A one-track freeze now takes the clip's own captions with it: the cue across the freeze waits through the still, later words and lines land the still's length later, no drift mark on them; music and other captions run on. Captions remember the recording they were heard off. CaptionsFollowTheirClipTests (12), freeze-frame-asks-how-long-walk with new captionsExpectInStepWithPicture step green with real captures, two related freeze walks green, Scripts/test.sh green. Commit 8304fdad1. Audit queue/audits/2026-11-22-captions-follow-frozen-clip.json."
     }
   ],
-  "walks": []
+  "walks": [
+    "freeze-frame-asks-how-long-walk"
+  ],
+  "started": "2026-11-22T05:05:28.607Z",
+  "completed": "2026-11-22T05:43:14.777Z"
 }

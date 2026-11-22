@@ -18555,3 +18555,14 @@
 {"t":"2026-11-22T04:56:20.188Z","ev":"task_note","id":"stop-while-ask-s-model-is-still-loading-lets-the"}
 {"t":"2026-11-22T05:04:49.996Z","ev":"task_walks","id":"stop-while-ask-s-model-is-still-loading-lets-the","walks":["ask-stops-a-running-request-walk"]}
 {"t":"2026-11-22T05:05:03.541Z","ev":"task_done","id":"stop-while-ask-s-model-is-still-loading-lets-the","from":"in_progress","note":"A stopped request no longer waits out the model load: AbandonableWait (PhotonzCore, tested) in AskModelServer.ready and AskPictureServer.ready; the load carries on for the next request. ask-stops-a-running-request-walk failed cold at step 19 before, passes cold after (40 steps, circle working 0.6s after Stop while the model was still loading). Full Scripts/test.sh green. Audit queue/audits/2026-11-21-ask-stop-during-load.json. Commit dc00ebb4f."}
+{"t":"2026-11-22T05:05:28.613Z","ev":"task_started","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo","title":"Captions of a clip move with it when a freeze moves only its track","priority":"p2-normal"}
+{"t":"2026-11-22T05:31:21.063Z","ev":"task_created","id":"ci-test-slices-stop-crashing-on-the-runner-s-gpu","priority":"p1-high","title":"CI test slices stop crashing on the runner's GPU running out of memory"}
+{"t":"2026-11-22T05:31:35.664Z","ev":"task_note","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo"}
+{"t":"2026-11-22T05:31:35.743Z","ev":"task_note","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo"}
+{"t":"2026-11-22T05:31:35.827Z","ev":"task_note","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo"}
+{"t":"2026-11-22T05:31:35.906Z","ev":"task_note","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo"}
+{"t":"2026-11-22T05:31:35.985Z","ev":"task_walks","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo","walks":["freeze-frame-asks-how-long-walk"]}
+{"t":"2026-11-22T05:42:54.054Z","ev":"task_note","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo"}
+{"t":"2026-11-22T05:42:54.131Z","ev":"task_note","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo"}
+{"t":"2026-11-22T05:42:54.211Z","ev":"task_note","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo"}
+{"t":"2026-11-22T05:43:14.779Z","ev":"task_done","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo","from":"in_progress","note":"A one-track freeze now takes the clip's own captions with it: the cue across the freeze waits through the still, later words and lines land the still's length later, no drift mark on them; music and other captions run on. Captions remember the recording they were heard off. CaptionsFollowTheirClipTests (12), freeze-frame-asks-how-long-walk with new captionsExpectInStepWithPicture step green with real captures, two related freeze walks green, Scripts/test.sh green. Commit 8304fdad1. Audit queue/audits/2026-11-22-captions-follow-frozen-clip.json."}
