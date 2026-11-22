@@ -351,22 +351,33 @@ struct ChartPen {
 
     /// `group` laid out again from `spec`: its background kept as the
     /// restyle left it, every other piece drawn afresh, each keeping the id
-    /// of the piece of its name it replaces.
-    func rebuilt(_ group: Layer, _ spec: ChartSpec, drawnBefore: [String: Layer] = [:]) -> Layer {
+    /// of the piece it replaces. `sources` says which row of the data it was
+    /// drawn from each row is (`ChartSpec.rowSources`), so a bar stays the
+    /// bar of its row when a row before it is taken away; nil matches pieces
+    /// by name.
+    func rebuilt(_ group: Layer, _ spec: ChartSpec, drawnBefore: [String: Layer] = [:],
+                 sources: [Int?]? = nil) -> Layer {
         guard let background = group.children.first(where: { $0.name == "Background" }) else { return group }
         let offset = background.frame.origin
         let was = Dictionary(group.children.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
         let drawn = pieces(spec).map { piece -> Layer in
             var piece = piece
             piece.frame = piece.frame.offsetBy(dx: offset.x, dy: offset.y)
-            guard let old = was[piece.name] else { return piece }
+            guard let formerName = sources.map({ Self.renamed(piece.name, $0) }) ?? piece.name,
+                  let old = was[formerName] else { return piece }
             // Freshly drawn, so its name, content, frame and style are all it
             // has, but for what a hand set on it: its keys (the design's own
-            // are already off it and are written again after), and an effect
-            // the drawing it had did not give it.
+            // are already off it and are written again after), and its
+            // opacity, corners and blending where they are not what the
+            // drawing gave it. Its effects are sorted out after the restyle
+            // (`TitlePieces.keepingHandEdits`).
             var style = piece.style
-            if let before = drawnBefore[piece.name] {
-                style.effects += old.style.effects.filter { !before.style.effects.contains($0) }
+            if let before = drawnBefore[formerName]?.style {
+                if old.style.opacity != before.opacity { style.opacity = old.style.opacity }
+                if old.style.cornerRadii != before.cornerRadii { style.cornerRadii = old.style.cornerRadii }
+                if old.style.blendMode != before.blendMode { style.blendMode = old.style.blendMode }
+                if old.style.key != before.key { style.key = old.style.key }
+                if old.style.matte != before.matte { style.matte = old.style.matte }
             }
             var redrawn = Layer(id: old.id, name: piece.name, content: piece.content, frame: piece.frame,
                                 style: style, isVisible: piece.isVisible)
@@ -826,18 +837,26 @@ struct ChartPen {
 
     /// `design(spec)`, keeping the in, hold and out somebody gave any part
     /// that is still there (dragged on the timeline, set in the Part section).
-    static func design(_ spec: ChartSpec, keeping old: TitleDesign) -> TitleDesign {
+    static func design(_ spec: ChartSpec, keeping old: TitleDesign, from oldSpec: ChartSpec? = nil) -> TitleDesign {
         var fresh = design(spec)
-        let before = Dictionary(old.parts.map { ($0.path, $0) }, uniquingKeysWith: { first, _ in first })
-        let defaults = Dictionary(design(spec).parts.map { ($0.path, $0) }, uniquingKeysWith: { first, _ in first })
-        for index in fresh.parts.indices {
-            let path = fresh.parts[index].path
-            guard let was = before[path] else { continue }
-            // Only what was changed from how the chart would have built it:
-            // a stagger that follows the row count stays the chart's own.
-            if let usual = defaults[path], was.in == usual.in, was.out == usual.out, was.hold == usual.hold {
+        let destinations = oldSpec.map { spec.rowDestinations(from: $0) }
+        // How the chart built each part then: only what was changed from it
+        // is kept, so a stagger that follows the row count stays the chart's
+        // own.
+        let usual = Dictionary((oldSpec.map { design($0) } ?? fresh).parts.map { ($0.path, $0) },
+                               uniquingKeysWith: { first, _ in first })
+        var before: [String: TitlePart] = [:]
+        for part in old.parts {
+            if let built = usual[part.path], part.in == built.in, part.out == built.out, part.hold == built.hold {
                 continue
             }
+            // A row's part follows its row.
+            guard let path = destinations.map({ renamed(part.path, $0) }) ?? part.path,
+                  before[path] == nil else { continue }
+            before[path] = part
+        }
+        for index in fresh.parts.indices {
+            guard let was = before[fresh.parts[index].path] else { continue }
             fresh.parts[index].in = was.in
             fresh.parts[index].hold = was.hold
             fresh.parts[index].out = was.out
@@ -898,25 +917,30 @@ extension PhotonzDocument {
         spec = spec.tidied
         guard spec != old else { return false }
         recipe.chart = spec
-        recipe.design = ChartPen.design(spec, keeping: recipe.design)
+        recipe.design = ChartPen.design(spec, keeping: recipe.design, from: old)
         return restyleTitle(layerID: layerID) { $0 = recipe }
     }
 
     /// The chart's pieces drawn again from its data in the recipe's colours
     /// and faces, where `group` is a chart: what every restyle ends on.
     /// Whatever somebody set by hand on a piece (`from` is the recipe it was
-    /// drawn from) comes along: its own keys, and any effect the old drawing
-    /// did not give it.
+    /// drawn from) comes along on the piece of the same row: its own keys,
+    /// and its opacity, corners and blending where they are not what the old
+    /// drawing gave it.
     func chartRedrawn(_ group: Layer, recipe: TitleRecipe, from old: TitleRecipe? = nil) -> Layer {
         guard let spec = recipe.chart else { return group }
         let chartPen = ChartPen(canvas: canvasSize, theme: recipe.theme, fonts: recipe.fonts,
                                 overFootage: !recipe.showsBackground)
-        var drawnBefore: [String: Layer] = [:]
-        if let old, let was = old.chart {
-            let oldPen = ChartPen(canvas: canvasSize, theme: old.theme, fonts: old.fonts,
-                                  overFootage: !old.showsBackground)
-            drawnBefore = Dictionary(oldPen.pieces(was).map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
-        }
-        return chartPen.rebuilt(group, spec, drawnBefore: drawnBefore)
+        let sources = old?.chart.map { spec.rowSources(from: $0) }
+        return chartPen.rebuilt(group, spec, drawnBefore: old.map(chartDrawing) ?? [:], sources: sources)
+    }
+
+    /// The pieces of the chart `recipe` draws, by name, as it draws them:
+    /// empty for anything that is not a chart.
+    func chartDrawing(_ recipe: TitleRecipe) -> [String: Layer] {
+        guard let spec = recipe.chart else { return [:] }
+        let pen = ChartPen(canvas: canvasSize, theme: recipe.theme, fonts: recipe.fonts,
+                           overFootage: !recipe.showsBackground)
+        return Dictionary(pen.pieces(spec).map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
     }
 }

@@ -1,0 +1,27 @@
+{
+  "id": "the-2-5d-flip-movie-test-agrees-with-the-canvas",
+  "title": "The 2.5D flip movie test agrees with the canvas on CI as it does on this Mac",
+  "goal": "A check that a turning card exported to a movie looks the same as on the canvas failed on main in CI by a hair (776 off pixels against a limit of 768), turning main red. Find out whether the export really drifted (two recent commits changed which frame a time lands on) or the bar is too tight for compression, and fix whichever it is.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 4060,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-22T22:15:03.565Z",
+  "updated": "2026-11-22T22:15:03.568Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CI run https://github.com/dzearing/photonz/actions/runs/45074019141 (commit da5d5fad6), Test slice 2 of 3:\n✘ Test \"Three moments of a flip: the file's frame and the canvas's agree\" recorded an issue at Space3DExportTests.swift:87:13: Expectation failed: (far → 776) < (pixels / 100 → 768)\nRecent nearby commits: 924fa8d8e The frame shown at a whole second is the one that starts there; 959ef8eeb A new video keeps the length it was given. Filed by the runner of a-chart-or-title-keeps-what-you-set-by-hand-when, which does not touch export.",
+  "acceptance": [
+    "The cause is named in the log: a real drift between file and canvas, or compression noise at the edge",
+    "Space3DExportTests passes on CI slice 2 and on this Mac",
+    "main goes green"
+  ],
+  "log": [
+    {
+      "t": "2026-11-22T22:15:03.567Z",
+      "note": "created (manual)"
+    }
+  ]
+}

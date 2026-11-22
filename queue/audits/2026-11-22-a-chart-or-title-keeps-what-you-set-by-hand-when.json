@@ -1,0 +1,28 @@
+{
+  "feature": "A chart or title keeps what you set by hand when you change its numbers or style",
+  "epic": "video-titles-graphics",
+  "summary": "A key or effect you set by hand on a chart's bar now stays on that bar when you change a number or the theme. Removing a row takes only that row's work with it. An effect a title drew that you then edited (a shade, a glow's size, the motion blur's shutter) keeps your values through a theme, font pair, energy or intensity change.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Proved by the walk hand-work-survives-new-numbers-and-a-restyle-walk, which fails on the code before this change.",
+  "switched": {},
+  "try": [
+    { "do": "Open a video, double click Bar Chart in Library > Catalog > Animated Charts, then press Escape.", "shot": "2026-11-22-hand-work-2-bar2-hand-sc.png" },
+    { "do": "Open the chart's parts with the arrow on its track header, click Bar 2's row, move the playhead to 3 s and type 40 in Opacity. Then add a Shadow under Effects and drag its Distance." },
+    { "do": "Type a new number for Q2 in the Chart section, then click the Forest theme swatch.", "shot": "2026-11-22-hand-work-3-new-number-and-theme-sc.png" },
+    { "do": "Click the minus beside Q1 to remove that row.", "shot": "2026-11-22-hand-work-4-row-1-removed-sc.png" },
+    { "do": "Double click Main Title in the Library, press Escape twice, open its parts and click the Subtitle row. Under Effects, set its Shadow's Kind to Inner.", "shot": "2026-11-22-hand-work-5-subtitle-shade-inner-sc.png" },
+    { "do": "Click the Sunset theme, pick Editorial in Font Pair, then click Punchy.", "shot": "2026-11-22-hand-work-6-title-restyled-sc.png" }
+  ],
+  "evaluate": [
+    "After removing Q1, is Q2's bar (now first) still dimmed at 3 s with its shadow, while Q3's bar is plain?",
+    "Through the number and theme change, did Bar 2 keep both its Opacity key and its Shadow distance keys on the timeline?",
+    "After Sunset, Editorial and Punchy, is the Subtitle's shade still Inner, where before it went back to a Drop shade?",
+    "Is it right that a shade you never touched still changes with the theme, while one you edited stays yours?"
+  ],
+  "rough": [
+    "Rows are told apart by their labels. With two rows of the same label, removing one keeps the work on the first ones in order, which may be the wrong bar.",
+    "A whole new table pasted over the old keeps each bar's work in its slot as far as both go, as before. A paste is not a row moving.",
+    "An effect you edited is kept as a whole. If you change one value of a drawn glow, the intensity slider no longer resizes that glow. Picking the effect again does not undo that.",
+    "A title made before this change has no memory of what it drew, so its first restyle still treats every effect as drawn. From then on it remembers.",
+    "Not about this change: in the last picture the Main Title headline shows only 'The Long Way'. 'Home' is missing after Sunset, Editorial and Punchy. Old code gives the same headline. Filed as a-main-title-headline-keeps-its-second-line-afte."
+  ]
+}

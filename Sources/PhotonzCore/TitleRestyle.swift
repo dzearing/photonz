@@ -362,6 +362,11 @@ public struct TitleRecipe: Hashable, Codable, Sendable {
     /// from one a trim simply left where it was. Nil on a title from before,
     /// which is read against the stretch it has now.
     public var keyedOver: TitleKeyedSpan? = nil
+    /// The effects the title's own drawing last gave each piece, by where it
+    /// sits (`TitlePieces`), so a restyle can tell an effect it drew from one
+    /// somebody edited (`TitleHandEdits.swift`). Nil on a title from before,
+    /// whose effects are all taken as drawn until its next restyle.
+    public var drawnEffects: [String: [LayerEffect]]? = nil
 
     public static let intensityRange: ClosedRange<Double> = 0...200
 
@@ -427,6 +432,7 @@ extension PhotonzDocument {
         guard let group = layer(id: layerID), group.group != nil else { return false }
         var recipe = TitleRecipe.reading(group, design: design)
         recipe.keyedOver = group.time.map(TitleKeyedSpan.init)
+        recipe.drawnEffects = TitlePieces.effects(group)
         updateLayer(id: layerID) { edited in
             guard case .group(var content) = edited.content else { return }
             content.titleRecipe = recipe
@@ -506,12 +512,22 @@ extension PhotonzDocument {
     private mutating func refitTitle(layerID: UUID, from old: TitleRecipe, to recipe: TitleRecipe) {
         let kept = handReveals(layerID: layerID, from: old, to: recipe)
         let moves = handMoves(layerID: layerID, from: old, to: recipe)
+        guard let hand = layer(id: layerID) else { return }
         clearTitleDesign(old.compiled, layerID: layerID)
         guard var group = layer(id: layerID) else { return }
         var recipe = recipe
         recipe.keyedOver = group.time.map(TitleKeyedSpan.init)
+        // The restyle works on the effects its drawing gave, so what it
+        // writes is its own; whatever somebody edited, added or took away
+        // goes back on after.
+        group = TitlePieces.wearing(old.drawnEffects, group)
         group = TitleRestyler(recipe: recipe, unit: titleUnit).restyled(group)
         group = chartRedrawn(group, recipe: recipe, from: old)
+        recipe.drawnEffects = TitlePieces.effects(group)
+        let chartDrawn = chartDrawing(old)
+        group = TitlePieces.keepingHandEdits(hand, in: group, remembered: old.drawnEffects) { piece in
+            chartDrawn[piece.name]?.style.effects
+        }
         if case .group(var content) = group.content {
             content.titleRecipe = recipe
             group.content = .group(content)
@@ -539,7 +555,7 @@ extension PhotonzDocument {
         let compiled = old.compiled.parts
         var kept: [(UUID, TextReveal)] = []
         for (index, part) in old.design.parts.enumerated() where compiled.indices.contains(index) {
-            guard let now = recipe.design.parts.first(where: { $0.path == part.path }), now.in == part.in,
+            guard let now = recipe.part(following: part, from: old), now.untouched || now.part.in == part.in,
                   let piece = TitleDesign.find(part.path, in: group), let reveal = piece.text?.reveal else { continue }
             let written = TitleCompiler(piece: piece, lengthMS: span.lengthMS, clock: span.clockMS,
                                         unit: titleUnit).wordReveal(for: compiled[index])

@@ -48,7 +48,7 @@ extension PhotonzDocument {
         let compiled = old.compiled.parts
         var moves: [TitleHandMove] = []
         for (index, part) in old.design.parts.enumerated() where compiled.indices.contains(index) {
-            guard recipe.design.parts.first(where: { $0.path == part.path }) == part,
+            guard recipe.part(following: part, from: old)?.untouched == true,
                   let piece = TitleDesign.find(part.path, in: group), let motions = piece.motions else { continue }
             let compiler = TitleCompiler(piece: piece, lengthMS: span.lengthMS, clock: span.clockMS,
                                          unit: titleUnit)

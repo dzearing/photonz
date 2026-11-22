@@ -1,0 +1,516 @@
+{
+ "out": "/tmp/photonz-playtest/hand-work-survives-new-numbers-and-a-restyle-walk",
+ "seed": "What somebody sets by hand on a chart's bar or a title's part survives a change of numbers and a restyle, at Next defaults with no switch touched (task a-chart-or-title-keeps-what-you-set-by-hand-when). A Bar Chart is landed from the Library and its Bar 2 picked from its part row: at 3 s its Opacity is typed to 40, keying it, and a Shadow added with its Distance dragged out, keying that too. Q2's number is changed and the theme set to Forest: Bar 2 keeps both. Row 1 is removed: the bar that was Q2's is Bar 1 now and wears both keys, and the new Bar 2 (Q3's) has only the keys the chart draws. A Main Title is landed from the Library and its Subtitle's own shade turned to Inner: Theme Sunset, Font Pair Editorial and Energy Punchy leave it Inner, where a restyle used to put the theme's drop shade back.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "showLibrary"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Catalog"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "press",
+   "control": "Animated Charts"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "press",
+   "control": "Bar Chart",
+   "count": 2
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "windowClick",
+   "on": "Parts Title",
+   "comment": "The arrow on the chart's track header, clicked at its face, opens a row per piece."
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "reveal",
+   "control": "Row Bar 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "windowClick",
+   "on": "Row Bar 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Bar 2"
+   ]
+  },
+  {
+   "do": "describe",
+   "stage": "1-bar2-picked",
+   "note": "A Bar Chart landed from the Library, its Bar 2 picked from its own row under the Title track's parts"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 2",
+   "row": "Opacity",
+   "remember": "drawn",
+   "comment": "Bar 2's keys as the chart draws them, before anybody touches it."
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 3.0
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "focus",
+   "field": "Opacity"
+  },
+  {
+   "do": "type",
+   "text": "40"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 2",
+   "row": "Opacity",
+   "remember": "hand"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "reveal",
+   "control": "Slider",
+   "in": "@shadow, Distance"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Slider",
+   "in": "@shadow, Distance",
+   "across": 0.8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 2",
+   "row": "Shadow distance",
+   "remember": "shade"
+  },
+  {
+   "do": "describe",
+   "stage": "2-bar2-hand",
+   "note": "THE FIRST TEST: Bar 2's Opacity keyed to 40 at 3 s, and a Shadow added to it with its Distance dragged out, which keys it"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-bar2-hand"
+  },
+  {
+   "do": "focus",
+   "field": "Row 2 Value"
+  },
+  {
+   "do": "type",
+   "text": "3000"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expect",
+   "field": "Row 2 Value",
+   "reads": "3000"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 2",
+   "row": "Opacity",
+   "keptSince": "hand"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 2",
+   "row": "Shadow distance",
+   "keptSince": "shade"
+  },
+  {
+   "do": "press",
+   "control": "Theme Forest"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expect",
+   "field": "Title Theme",
+   "reads": "Forest"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 2",
+   "row": "Opacity",
+   "keptSince": "hand"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 2",
+   "row": "Shadow distance",
+   "keptSince": "shade"
+  },
+  {
+   "do": "describe",
+   "stage": "3-new-number-and-theme",
+   "note": "THE SECOND TEST: Q2 changed to 3000 and the theme set to Forest; Bar 2 still has its hand keys on Opacity and Shadow distance"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-new-number-and-theme"
+  },
+  {
+   "do": "press",
+   "control": "Remove Row",
+   "in": "Chart Row 1",
+   "comment": "Row 1 taken away. Before, every bar's work stayed in its slot, so Q2's keys stayed on Bar 2, which is now Q3's."
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expect",
+   "field": "Row 1 Label",
+   "reads": "Q2"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 1",
+   "row": "Opacity",
+   "keptSince": "hand"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 1",
+   "row": "Shadow distance",
+   "keptSince": "shade"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Bar 2",
+   "row": "Opacity",
+   "keptSince": "drawn"
+  },
+  {
+   "do": "describe",
+   "stage": "4-row-1-removed",
+   "note": "THE THIRD TEST: row 1 removed; Q2's bar is Bar 1 now and wears both hand keys, and the new Bar 2 (Q3's) has only the chart's own keys"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-row-1-removed"
+  },
+  {
+   "do": "action",
+   "action": "showLibrary"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "focus",
+   "field": "Search library"
+  },
+  {
+   "do": "type",
+   "text": "Main Title"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "press",
+   "control": "Main Title",
+   "count": 2
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "expectClip",
+   "clip": "Title Page",
+   "count": 1
+  },
+  {
+   "comment": "Out of typing its words, which a title just added waits in.",
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "windowClick",
+   "on": "Parts V1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "reveal",
+   "control": "Row Subtitle"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "windowClick",
+   "on": "Row Subtitle"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Subtitle"
+   ]
+  },
+  {
+   "do": "reveal",
+   "control": "Inner",
+   "in": "@shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Inner",
+   "in": "@shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Kind",
+   "in": "@shadow",
+   "reads": "Inner"
+  },
+  {
+   "do": "describe",
+   "stage": "5-subtitle-shade-inner",
+   "note": "A Main Title landed from the Library, its Subtitle picked, and the shade the title drew on it turned from Drop to Inner by hand"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-subtitle-shade-inner"
+  },
+  {
+   "do": "press",
+   "control": "Theme Sunset"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expect",
+   "field": "Title Theme",
+   "reads": "Sunset"
+  },
+  {
+   "do": "expect",
+   "control": "Kind",
+   "in": "@shadow",
+   "reads": "Inner"
+  },
+  {
+   "do": "expect",
+   "control": "Switch",
+   "in": "@shadow.2",
+   "present": false
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Title Font Pair",
+   "at": [
+    "centre"
+   ],
+   "choose": "Editorial"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expect",
+   "field": "Title Font Pair",
+   "reads": "Editorial"
+  },
+  {
+   "do": "expect",
+   "control": "Kind",
+   "in": "@shadow",
+   "reads": "Inner"
+  },
+  {
+   "do": "expect",
+   "control": "Switch",
+   "in": "@shadow.2",
+   "present": false
+  },
+  {
+   "do": "press",
+   "control": "Punchy"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "expect",
+   "field": "Title Energy",
+   "reads": "Punchy"
+  },
+  {
+   "do": "expect",
+   "control": "Kind",
+   "in": "@shadow",
+   "reads": "Inner"
+  },
+  {
+   "do": "expect",
+   "control": "Switch",
+   "in": "@shadow.2",
+   "present": false
+  },
+  {
+   "do": "describe",
+   "stage": "6-title-restyled",
+   "note": "THE FOURTH TEST: Theme Sunset, Font Pair Editorial and Energy Punchy, one after another; the Subtitle's shade is still the one Inner shade the hand left"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-title-restyled"
+  }
+ ]
+}
