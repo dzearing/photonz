@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-22T08:32:29.773Z",
-  "updated": "2026-11-22T13:27:03.362Z",
+  "updated": "2026-11-22T18:08:16.976Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Repro: gh run view 44998427631 --log-failed (commit 6d4e30f90, a queue-only commit, so app code unchanged from the green run 44995299075 before it). Output: '✘ Test \"Exporting the same recording twice gives the same file to look at\" recorded an issue at VideoExportBudgetTests.swift:354:9: Expectation failed: (worst.apart → 7) <= 6'. The test already retries 3 times and keeps the closest pair (8e6b4769d); 2026-10-27 GitHub read 7 vs 6 once before. Options: compare a small average over the frame rather than one squeezed pixel, or a tolerance of 8 with a separate gross-change check. Filed by the long-edit perf task's pass 26 (main red, not its code).",
@@ -34,6 +34,29 @@
     {
       "t": "2026-11-22T13:27:03.361Z",
       "note": "seq 4040 -> 20"
+    },
+    {
+      "t": "2026-11-22T17:14:39.006Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T17:26:25.883Z",
+      "note": "Reproduction: could not get a 7 on this Mac, and found why the check is fragile. Measured (temporary experiment test, removed) two exports of the 2s busy source at 0.2/1.0/1.8s: the hardware encoder alone, quiet or with five exports beside it, read 0 to 1 on the old one-pixel sample but single pixels up to 33 levels apart; the software encoder alone was byte-identical; a hardware write against a software write (the fallback HardwareEncoder.start takes when the hardware is full) read single pixels up to 31 apart and the old sample 2. The old colour(of:) draws the frame into 1x1 at low interpolation, so it reads about one pixel and lands on encoder wobble at random: GitHub's 7 is that. On the average of each 32 pixel square the same pairs read at most 1.83; one frame later reads 16.5 to 17.7; red +20 reads 20. Chose 32 pixel squares with the bar kept at 6 over raising the one-pixel bar to 8, because the squares separate wobble from change by a factor of 8 while a one-pixel bar of 8 would still sit inside the 20-33 single-pixel wobble."
+    },
+    {
+      "t": "2026-11-22T17:26:25.952Z",
+      "note": "Shipped 42e9102a2: VideoExportBudgetTests.twiceIsTheSameFile compares patches(of:atSeconds:) (32px square RGB averages) via PictureGap, bar samePictureLevels = 6, retry kept. New test aChangedPictureReadsFarApart: a real export with frame 29 cut out reads 16.4 at 1.5s against the whole export, red +20 reads 20.0, frame against itself 0; both must exceed 12 (twice the bar). Scripts/test.sh exit 0 (full suite, 2026-11-22)."
+    },
+    {
+      "t": "2026-11-22T17:26:26.036Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-22T18:08:16.974Z",
+      "note": "Shipped 42e9102a2: the export-twice test now compares the average colour of each 32 pixel square of the frame instead of one squeezed pixel, bar still 6 levels. Measured locally: single pixels wobble 20 to 33 levels between two writes of one file (hardware under load, hardware vs software), squares at most 1.8; one dropped frame reads 16.4 and red +20 reads 20.0. New test 'A picture that really changed reads far apart' proves both still fail the bar on real exports. Scripts/test.sh exit 0. GitHub CI run 45049403395 on 42e9102a2 green on three attempts in a row (1, 2, 3), the export-twice test passing in each."
     }
-  ]
+  ],
+  "started": "2026-11-22T17:14:39.005Z",
+  "walks": [],
+  "completed": "2026-11-22T18:08:16.975Z"
 }
