@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-21T14:21:24.958Z",
+  "updated": "2026-11-22T02:30:41.421Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,13 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-21T14:21:24.957Z",
-      "note": "... 95 earlier entries elided",
-      "elided": 95
-    },
-    {
-      "t": "2026-11-17T18:21:55.208Z",
-      "note": "Pass 15 verified: test.sh exit 0; speed-walk ok x3 (baseline run) plus 5 runs during the work; walks ok: hear-the-scrub, opening-title-dissolve, playing-a-recording-never-blinks, reference-edit-opens, scrubbing-shows-the-zoom, the-scrubber-knob-clears-the-times, scrub-never-blacks-out (first run lost its 3 window captures to ScreenCaptureKit error -3811, ok on rerun). shorten-the-cut-for-a-dissolve-walk fails at step 34 (no 'Spare before strip' field) twice; last ok in the 2026-11-05 sweep, timeline painting changed since in other tasks, this diff touches no timeline code; not rebuilt without the change; folded into walks-that-fail-in-the-full-sweep-27. Main red CI (SmoothedCopyWriterTests readerStalled) folded into find-out-why-the-legibility-check-once-read-the. Audit queue/audits/2026-11-17-a-long-edit-with-transitions-plays-scrubs-and-ed-pass15.json."
+      "t": "2026-11-22T02:30:41.420Z",
+      "note": "... 96 earlier entries elided",
+      "elided": 96
     },
     {
       "t": "2026-11-17T18:21:55.281Z",
@@ -507,6 +503,10 @@
     {
       "t": "2026-11-21T14:21:24.956Z",
       "note": "Pass 25 landed b77d1679f: an edit no longer re-runs the editor's whole layout and the timeline's grid (the layout read 'document != nil'; the dock never compared equal). Pick from nothing 47.6 -> 38-40 ms, undo 9.2 -> 8.2-8.7 on the 6 min edit. Bars not reached: edits with a clip picked <=16 ms (17-44), picks (29-40), worst scrub lag 1. Pass 26 leads in the log."
+    },
+    {
+      "t": "2026-11-22T02:30:41.419Z",
+      "note": "rotating check 2026-11-22T02:30:41Z, 31 walks run from 157 onward in the rotation: speed-walk (its script changed since the last check) failing."
     }
   ],
   "started": "2026-11-21T13:12:26.141Z",
