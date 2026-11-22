@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-03T01:28:27.560Z",
-  "updated": "2026-11-21T13:11:42.401Z",
+  "updated": "2026-11-22T04:39:58.829Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in .ask-eval/runs/20261103-003200-skill/component-table/result.png (the render_picture the eval takes). Counted stray non-white pixels in each header row outside every top-level layer frame (inset 3), threshold min channel < 255, using a small CoreGraphics scan (/tmp/inkprobe/ghost.swift, not kept):\n  skill 003200: row 780 (Toggle) 1269, row 1460 (Checkbox) 385, row 1596 (Radio) 225, every other row 59 to 84 (antialias halo)\n  ask 002713: every row 25 to 40\n  skill 20261024-121624: 8 in all\nread.json lists only the Off/On headers and the full-canvas locked Background image in that area, so the marks are not layers. Contrast-stretched crop: rectangles of about #F2F2F2 right after Off (x 250 to 300 and 330 to 355) and after On (490 to 520), the word Disabled positions of Off Disabled and On Disabled headers in columns 0 and 1. The sheet lays out again on every labelled add_component, deleting and re-adding its headers (AgentComponentSheet.swift), and since 3c95a980 Toggle, Checkbox and Radio each get their own header row, so their headers move more between layouts. Not reproduced outside that one run: suspect a render cache of deleted text layers, or the Background image extended at canvas growth (EditorState+Crop.swift setCanvasSize).",
@@ -82,6 +82,37 @@
     {
       "t": "2026-11-21T13:11:42.400Z",
       "note": "seq 40 -> 20"
+    },
+    {
+      "t": "2026-11-22T03:51:33.836Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T04:39:27.227Z",
+      "note": "Reproduced on today's code by replaying the run's 19 tool calls into the probe (/tmp script over Scripts/ask-eval/mcp.mjs): at 1600 on the longest side (the eval's look) the Toggle/Checkbox/Radio header rows had 1109/346/232 stray pixels, matching the original 1269/385/225; at 1:1, 1700 or 1500 none. Pixels were 254 against 255."
+    },
+    {
+      "t": "2026-11-22T04:39:27.314Z",
+      "note": "Cause: not removed words. Moving the Off header away left the box where it was, and hiding the page showed nothing drawn there. Next composites in extended sRGB (DocumentRenderer.webContext) and Core Image keeps in-between pictures in half floats; a big graph splits into several passes and white loses a fraction of a step per pass, landing at 254 in rectangles that move whenever anything else changes (hiding just the 8 sheet rules, or the components, made them vanish). Reproduced in a unit test: webContext with workingFormat RGBAf -> 0 off-white pixels, RGBAh (default) -> 6946; light mixing was clean."
+    },
+    {
+      "t": "2026-11-22T04:39:27.392Z",
+      "note": "Chose full float only for still pictures (export, copy, render_picture, the export tool, SVG exports) over the whole web context because RGBAf made a 12 MP ten layer render 18ms against 4.8ms, which would break the canvas budget, while the canvas's one-step loss cannot be seen. DocumentRenderer(forStills:) picks stillWebContext; EditorState.stillRenderer feeds ExportSizer and Copy. Light mixing (Current) unchanged byte for byte (tested). Video export frames left on the fast path."
+    },
+    {
+      "t": "2026-11-22T04:39:27.472Z",
+      "note": "Verified: StillPictureStaysWhiteTests (fixture of the run's calls; 0 off-white at 1740/1650/1600/1550 vs 15527 at canvas precision); probe replay after the fix: 0 faint regions at every size; skill eval 20261122-042648-skill component-table 86.4, none of 9 judge looks names ghost marks (the one 'faint' is about hover vs pressed). Full Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-22T04:39:27.549Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-22T04:39:58.827Z",
+      "note": "Cause found: not removed words but Next's extended-sRGB compositing losing a step of white through Core Image's half-float passes on a big picture (254 patches that move with the page). Still pictures (export, Copy, render_picture, export tool, SVG) now use a full-float context (DocumentRenderer(forStills:)); canvas and video keep half floats for speed; Current unchanged. Verified by StillPictureStaysWhiteTests, a probe replay of the run (0 faint regions at every size), and skill eval 20261122-042648 (no judge names ghost marks). Commit e246cda13. Audit queue/audits/2026-11-21-still-picture-white.json."
     }
-  ]
+  ],
+  "started": "2026-11-22T03:51:33.835Z",
+  "walks": [],
+  "completed": "2026-11-22T04:39:58.828Z"
 }
