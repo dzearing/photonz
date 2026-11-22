@@ -93,6 +93,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         set { storedDurationMS = (newValue ?? 0) > 0 ? newValue : nil }
     }
     private var storedDurationMS: Int? { didSet { derived = DocumentDerived() } }
+    /// The length File > New Video was given, or nil for every document that
+    /// was not started that way (`ChosenVideoLength.swift`). A floor, not a
+    /// length: the video runs at least this long however short what is on it
+    /// is, and longer when something longer lands.
+    public internal(set) var chosenLengthMS: Int?
     /// What the app has read off the pictures in this document, so a separated
     /// run's row says its words the moment the file opens rather than after a
     /// second of background reading (`ReadWords.swift`).
@@ -160,7 +165,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         case gridOriginX, gridOriginY, motionCycleMS, keyLap, readWords, durationMS
         case tracks, trackGroups, media, markers, markInMS, markOutMS
         case captionLook, captionsListenedTo, componentOriginals, camera, madeAsIcon, iconPictureGrid
-        case svgPlayback
+        case svgPlayback, chosenLengthMS
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -189,6 +194,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // A document with no time in it writes no duration, so every picture
         // saved before time existed is byte for byte what it was.
         if let durationMS { try c.encode(durationMS, forKey: .durationMS) }
+        // ...and only a video started with New Video says what length it was
+        // given.
+        try c.encodeIfPresent(chosenLengthMS, forKey: .chosenLengthMS)
         // A document nothing has been read off writes no readings key, so one
         // saved before the app kept its reading is byte for byte what it was.
         if !readWords.isEmpty { try c.encode(readWords, forKey: .readWords) }
@@ -251,6 +259,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // Nothing written means no time in the document, which is what every
         // document written before this did.
         storedDurationMS = try c.decodeIfPresent(Int.self, forKey: .durationMS)
+        chosenLengthMS = try c.decodeIfPresent(Int.self, forKey: .chosenLengthMS)
         // Nothing written means nothing has been read off this document's
         // pictures yet, which is what every document written before this did:
         // it is read in the background on open, exactly as it was.

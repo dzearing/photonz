@@ -1,0 +1,196 @@
+{
+  "out": "/tmp/photonz-playtest/new-video-keeps-its-length-walk",
+  "seed": "A new video keeps the length it was given until something longer lands on it, at Next defaults with no switch touched. File > New, Video, answered as Return answers it, makes a ten second video. Main Title, a four second title page, put on it from the Library's Catalog at the playhead leaves it ten seconds long. A recording dropped four seconds in makes it twelve; deleting the recording takes it back to ten, not to the four the title fills, and the whole edit written out as an MP4 runs ten seconds.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blankVideo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectTimeline",
+      "tracks": [
+        "V1",
+        "Audio"
+      ],
+      "lengthMS": 10000,
+      "open": true
+    },
+    {
+      "do": "press",
+      "control": "Catalog"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Search library"
+    },
+    {
+      "do": "type",
+      "text": "Main Title"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "press",
+      "control": "Main Title"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "Photographing the picked tile also lets the Library settle so Insert at Playhead is in view: a plain wait does not.",
+      "do": "snapshot",
+      "name": "0-main-title-picked"
+    },
+    {
+      "do": "press",
+      "control": "Insert at Playhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "type",
+      "text": "Ten seconds"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "startsAt": 0.0,
+      "endsAt": 4.0,
+      "count": 1
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 10000
+    },
+    {
+      "do": "describe",
+      "stage": "1-title-on-a-ten-second-video",
+      "note": "A four second Main Title on a ten second new video: the video is still ten seconds long, the six seconds after the title are the person's"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-title-on-a-ten-second-video"
+    },
+    {
+      "do": "importPicks",
+      "files": [
+        "scratch/b-roll.mp4"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "importMedia"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "press",
+      "control": "Media"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "b-roll.mp4",
+      "track": "V1",
+      "seconds": 4.0
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "startsAt": 4.0,
+      "count": 1
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 12000
+    },
+    {
+      "do": "describe",
+      "stage": "2-a-longer-recording",
+      "note": "A recording dropped four seconds in runs past ten, so the video grows to twelve seconds to hold it"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-a-longer-recording"
+    },
+    {
+      "do": "selectRow",
+      "row": "b-roll"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "count": 0
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 10000
+    },
+    {
+      "do": "describe",
+      "stage": "3-back-to-ten",
+      "note": "The recording deleted: the video goes back to the ten seconds it was made with, not the four the title fills"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-back-to-ten"
+    },
+    {
+      "do": "writeVideo",
+      "name": "ten-seconds",
+      "format": "mp4",
+      "range": "whole",
+      "seconds": 10.0,
+      "within": 0.2,
+      "estimateFactor": 2
+    }
+  ]
+}

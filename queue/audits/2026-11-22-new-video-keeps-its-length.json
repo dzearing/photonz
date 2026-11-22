@@ -1,0 +1,24 @@
+{
+  "feature": "A new video keeps the length it was given",
+  "epic": "video-titles-graphics",
+  "summary": "A video made with File > New Video at ten seconds stays ten seconds when a shorter title page goes on it. Something longer still makes it longer, and taking that away goes back to ten, not to the title's four.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Checked with the walk new-video-keeps-its-length-walk on the probe, screen unlocked, Screen Recording granted.",
+  "switched": {},
+  "try": [
+    { "do": "File > New > Video, and press Return to take 1920 by 1080 at ten seconds." },
+    { "do": "In the Library, open Catalog, pick Main Title and click Insert at Playhead. The title bar still says 0:10 and the ruler still runs to 10s.", "shot": "2026-11-22-new-video-keeps-length-1-title-on-a-ten-second-video.png" },
+    { "do": "File > Import Media, then drag the recording from the Library onto the timeline four seconds in. The video grows to 0:12.", "shot": "2026-11-22-new-video-keeps-length-2-a-longer-recording.png" },
+    { "do": "Click the recording on the timeline and press Delete. The video goes back to 0:10.", "shot": "2026-11-22-new-video-keeps-length-3-back-to-ten.png" },
+    { "do": "File > Export as an MP4. The file runs ten seconds: the title, then the six seconds after it." }
+  ],
+  "evaluate": [
+    "Is ten seconds still what you expect after the title goes on, rather than four?",
+    "After deleting the longer recording, is going back to ten (not four) what you wanted?",
+    "Should the six seconds after the title export as the title's last frame held, or would you rather they were black?"
+  ],
+  "rough": [
+    "Only a video started with New Video remembers a chosen length. A recording, a cut or an opened movie is still exactly as long as what is on it.",
+    "There is no way to change the chosen length after the video is made; the New Video sheet is the only place it is set.",
+    "In the walk the recording dragged at the empty V1 landed on a new V2 track instead, with the title's rows above it. Not this task; noted in its log."
+  ]
+}

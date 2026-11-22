@@ -87,6 +87,7 @@ extension PhotonzDocument {
     public static func emptyVideo(size: CGSize, lengthMS: Int) -> PhotonzDocument {
         var doc = PhotonzDocument(canvasSize: BlankVideo.normalized(size))
         doc.durationMS = min(max(lengthMS, BlankVideo.shortestLengthMS), BlankVideo.longestLengthMS)
+        doc.chosenLengthMS = doc.durationMS
         doc.tracks = [
             DocumentTrack(name: freeTrackName(.video, used: []), kind: .video),
             DocumentTrack(name: freeTrackName(.audio, used: []), kind: .audio),

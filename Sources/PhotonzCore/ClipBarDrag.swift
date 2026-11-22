@@ -357,6 +357,7 @@ extension PhotonzDocument {
     mutating func refreshDuration() {
         guard durationMS != nil else { return }
         durationMS = allLayers.compactMap { $0.time?.outMS }.max()
+        keepChosenLength()
     }
 }
 

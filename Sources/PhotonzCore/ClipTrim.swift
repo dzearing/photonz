@@ -160,6 +160,7 @@ extension PhotonzDocument {
         // the ruler and everywhere else that reads the clock.
         if durationMS != nil {
             durationMS = allLayers.compactMap { $0.time?.outMS }.max()
+            keepChosenLength()
         }
         return true
     }

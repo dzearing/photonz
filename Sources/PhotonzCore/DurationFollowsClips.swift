@@ -28,5 +28,6 @@ extension PhotonzDocument {
               let endedAt = before.lastClipEndMS, endedAt >= was,
               let endsAt = lastClipEndMS, endsAt != written else { return }
         durationMS = endsAt
+        keepChosenLength()
     }
 }
