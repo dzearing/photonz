@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T18:35:27.890Z",
-  "updated": "2026-11-22T13:27:03.708Z",
+  "updated": "2026-11-22T21:22:24.246Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-10-19 by an agent session in the try path of an-agent-can-reach-the-running-app-read-the-open (transcript: queue/audits/2026-10-19-agent-mcp-transcript.md). Reproduction: a 30 fps test recording made with `ffmpeg -f lavfi -i testsrc2=size=1280x800:rate=30:duration=15 -c:v libx264 -pix_fmt yuv420p \"Demo recording.mp4\"`; the agent tool video_frame at seconds 10 and 10.02 both drew the frame stamped 00:00:09.967 (frame 299), and 10.04 drew 00:00:10.000 (frame 300). video_frame draws through DocumentFrames, the video export path. Cause, read in code not proven: MovieRef.frameStepMS is 33 (MovieClip.swift:36) and frameIndex(atSourceMS:) is ms / 33, so 10000 ms -> index 303 -> 9999 ms, which the decoder resolves to the frame before 10.000. A 33 ms grid against 33.33 ms frames lands just short of every whole second. Check whether the decoder takes the frame AT or BEFORE the asked moment before changing the grid.",
@@ -122,6 +122,41 @@
     {
       "t": "2026-11-22T13:27:03.707Z",
       "note": "seq 80 -> 70"
+    },
+    {
+      "t": "2026-11-22T20:30:09.837Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T21:17:28.525Z",
+      "note": "Reproduced 2026-11-22 against a real decode (scratch test on TestClip, 30fps): asked 10000ms, the 33ms grid asked the file for 9999ms; the canvas's seek (16ms slop) drew frame 299 and the export's stream drew 300, so the two readers also disagreed. At 10040: seek 300, stream 301."
+    },
+    {
+      "t": "2026-11-22T21:17:28.594Z",
+      "note": "Cause: a 33ms grid can never fit 33.33ms frames; at 600s the grid cell starts 27ms early, so no decode rule fixes it. Chose a grid of exact thirtieths (MovieRef.framesPerSecond, gridFrame(atMS:), gridMS(ofFrame:)) over re-rounding the 33ms grid, because only an exact grid puts frame N at N/30 s at every length."
+    },
+    {
+      "t": "2026-11-22T21:17:28.660Z",
+      "note": "Knock-ons fixed: export now 30fps exactly (was 1000/33 = 30.3, one frame doubled per hundred) with picture k at gridMS(k); frame step snaps to the grid (33ms steps would repeat a frame once per hundred); readyToStartPlaying / readyToPlayBackward / moviePlayBackPlaces step by grid frames; MovieSweepGrid late-sample slack 16.5ms -> 1ms (it let a 60fps file's NEXT sample in); frameIndex clamps to durationMS-1 (frame at the end moment of a 30fps file is one it does not have); key snap in the key lanes onto the 30fps grid; key frames filed by gridFrame. Motion blur frameMS follows movieFPS (33.33): saved-titles fixture re-fingerprinted with the new PHOTONZ_WRITE_SAVED_TITLES=fingerprints mode, saved list byte-identical, 21 of 80 fingerprints moved, and with frameMS forced back to 33 the old fixture passed, so the shutter is the only change."
+    },
+    {
+      "t": "2026-11-22T21:17:28.727Z",
+      "note": "Verified: MovieFrameGridTests (arithmetic to an hour) and WholeSecondFrameTests (real decode of an 18015-frame clip at 1, 10, 60, 600s through seek, stream and sweep: all frame N). Full Scripts/test.sh green (16,824 tests). Probe walk on an ffmpeg testsrc2 30fps clip: 9.99s->299, 1.000s->30, Right Arrow->31, 10.000s->300, 10.020s->300. Walks green: scrub-never-blacks-out, an-editing-session, playing-a-recording-backwards-keeps-up, playing-backwards-fast-keeps-moving, scrubbing-shows-the-zoom, export-a-video-at-1080p, history-keeps-up-with-a-held-arrow."
+    },
+    {
+      "t": "2026-11-22T21:17:28.801Z",
+      "note": "Follow-up filed (p2, unreproduced): find-out-whether-an-export-of-a-screen-recording (stream picks nearest frame, canvas the on-screen one; agree on 30fps, maybe not on VFR/24/25). Unrelated red main (MainComponentsKeptTests ratio 6.09 > 6 on CI) filed p1 as the-component-copies-speed-test-passes-on-a-busy."
+    },
+    {
+      "t": "2026-11-22T21:17:28.883Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-22T21:22:24.244Z",
+      "note": "Frame grid is now exact thirtieths of a second (MovieRef.gridFrame/gridMS), so frame N is drawn at N/30 s at every length; export runs at 30fps exactly with picture k = grid frame k; frame steps, play-readiness checks, sweep slack and end-of-file frame follow the grid. Verified by MovieFrameGridTests (to an hour), WholeSecondFrameTests (real decode at 1/10/60/600s via seek, stream and sweep, all frame N), full Scripts/test.sh green, and a probe walk on a 30fps testsrc2 clip (10.000s and 10.020s show frame 300, was 299). Commit ce69dc74b. Audit queue/audits/2026-11-22-the-frame-shown-at-a-whole-second.json."
     }
-  ]
+  ],
+  "started": "2026-11-22T20:30:09.836Z",
+  "walks": [],
+  "completed": "2026-11-22T21:22:24.245Z"
 }

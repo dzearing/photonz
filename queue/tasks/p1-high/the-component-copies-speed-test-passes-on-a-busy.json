@@ -1,0 +1,26 @@
+{
+  "id": "the-component-copies-speed-test-passes-on-a-busy",
+  "title": "The component copies speed test passes on a busy CI runner as well as on this Mac",
+  "goal": "A test that checks that keeping component copies in step grows in proportion to the number of copies failed main on GitHub at a ratio of 6.09 against its limit of 6, though it reads about 3.4 here. Main goes red on a reading that only shows a busy runner, not slow code.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 4050,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-22T20:30:53.951Z",
+  "updated": "2026-11-22T20:30:53.954Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CI run https://github.com/dzearing/photonz/actions/runs/45061203079 (commit 8cb9f46fd), Test slice 3 of 3: `gh run view 45061203079 --log-failed | grep ✘` printed: Test \"Putting copies in step costs in proportion to the copies, not their square\" recorded an issue at MainComponentsKeptTests.swift:119:9: Expectation failed: (ratio → 6.093243101327336) < (6 → 6.0). The test reads thread CPU time fastest of 5 runs; a one-shot ratio against a flat 6 is close to the noise on a shared runner. Options: compare against a quadratic reference measured beside it, take more rounds, or move it to a .serialized ...PerfTests suite per CLAUDE.md. Filed by the runner on the-frame-shown-at-a-whole-second-is-the-one-tha, which does not touch this code.",
+  "acceptance": [
+    "MainComponentsKeptTests syncGrowsWithTheCopies tells linear from quadratic growth (3.4 against 8.9 measured on 2026-11-18) without failing on a busy GitHub runner",
+    "The fix still fails on the quadratic version (checked by putting it back on purpose)"
+  ],
+  "log": [
+    {
+      "t": "2026-11-22T20:30:53.953Z",
+      "note": "created (manual)"
+    }
+  ]
+}

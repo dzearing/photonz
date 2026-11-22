@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-21T23:22:52.142Z",
-  "updated": "2026-11-22T20:29:23.176Z",
+  "updated": "2026-11-22T20:29:42.148Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blind round 6 of task keynote-clean-soft-gradient-glass-kinetic-bold-t (2026-11-21, calm median 6.83, new five 6.83 to 7.58): Editorial Serif 6.17, Light Leak 5.67, Minimal Underline 5.25, Behind Glass 5.08, Pill Card 5.00, Gradient Glow 4.83, Split Wipe 4.50. Picture: queue/audits/2026-11-21-title-redesign-scores.png (bottom row). Frames and scorer setup: Tests/PhotonzMediaTests/TitleRedesignReelTests.swift writes others/hold-*.png beside the five (PHOTONZ_REEL=1 PHOTONZ_REDESIGN_PHASE=after PHOTONZ_REDESIGN_DIR=/tmp/redesign Scripts/test.sh --filter TitleRedesignReel). Code: Sources/PhotonzCore/TitleSet.swift (editorial, glass, lightLeak, gradientGlow, splitWipe, underline, pill). Keep TitleSetTests.movingLooks (looks shared by two at most, one light one dark) and twoSizes green. Name cards sit over footage: judge them there, legible over light and dark footage.",
@@ -63,6 +63,10 @@
     {
       "t": "2026-11-22T20:29:23.175Z",
       "note": "Looked at: scores grid (new seven read as designed, none violet/blue; old seven stock violet/blue with placeholders), old-new contact sheet (no title at 0 ms, all in by 1100 ms), the seven window captures from the walks (real app, Screen Recording granted, unlocked) and a close crop of the three cards (Pill's lines were tight after typing a name: gap widened 2 -> 8). Walks: 7 title-set walks ok on a rebuilt probe; 12 others naming these titles ok except title-presets-library-shelf-walk (Film Super tile, already owned by the-title-presets-walk-pulls-film-super-off-the, logged there). Scripts/test.sh green (full suite)."
+    },
+    {
+      "t": "2026-11-22T20:29:42.146Z",
+      "note": "Seven titles redesigned (commit 71a7bdb37, Sources/PhotonzCore/TitleSet.swift): Editorial Serif, Behind Glass, Light Leak, Gradient Glow, Split Wipe, Minimal Underline, Pill Card, each with a chosen face, a neutral ground, one accent and sample copy. Final blind round (3 runs, 29 frames): calm median 6.30, new 6.63-7.80, old 3.40-4.93. TitleRedesignSevenTests holds the rules, shelf entries and old documents; StretchedPieceShrinksBackTests covers the stretched-rule fix found on the way. Reel, old-new sheet, scores grid and 7 window captures in queue/audits. 19 walks run (one known unrelated failure, logged on its owner); full Scripts/test.sh green."
     }
   ],
   "started": "2026-11-22T19:31:15.193Z",
@@ -74,5 +78,6 @@
     "title-set-split-wipe-walk",
     "title-set-minimal-underline-walk",
     "title-set-pill-card-walk"
-  ]
+  ],
+  "completed": "2026-11-22T20:29:42.147Z"
 }
