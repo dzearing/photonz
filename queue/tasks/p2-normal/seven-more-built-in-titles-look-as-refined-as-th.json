@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-21T23:22:52.142Z",
-  "updated": "2026-11-22T13:27:03.642Z",
+  "updated": "2026-11-22T20:29:23.176Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blind round 6 of task keynote-clean-soft-gradient-glass-kinetic-bold-t (2026-11-21, calm median 6.83, new five 6.83 to 7.58): Editorial Serif 6.17, Light Leak 5.67, Minimal Underline 5.25, Behind Glass 5.08, Pill Card 5.00, Gradient Glow 4.83, Split Wipe 4.50. Picture: queue/audits/2026-11-21-title-redesign-scores.png (bottom row). Frames and scorer setup: Tests/PhotonzMediaTests/TitleRedesignReelTests.swift writes others/hold-*.png beside the five (PHOTONZ_REEL=1 PHOTONZ_REDESIGN_PHASE=after PHOTONZ_REDESIGN_DIR=/tmp/redesign Scripts/test.sh --filter TitleRedesignReel). Code: Sources/PhotonzCore/TitleSet.swift (editorial, glass, lightLeak, gradientGlow, splitWipe, underline, pill). Keep TitleSetTests.movingLooks (looks shared by two at most, one light one dark) and twoSizes green. Name cards sit over footage: judge them there, legible over light and dark footage.",
@@ -31,6 +31,48 @@
     {
       "t": "2026-11-22T13:27:03.641Z",
       "note": "seq 4100 -> 60"
+    },
+    {
+      "t": "2026-11-22T19:31:15.194Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T19:55:35.267Z",
+      "note": "owns these walks: title-set-editorial-serif-walk, title-set-behind-glass-walk, title-set-light-leak-walk, title-set-gradient-glow-walk, title-set-split-wipe-walk, title-set-minimal-underline-walk, title-set-pill-card-walk"
+    },
+    {
+      "t": "2026-11-22T19:55:35.335Z",
+      "note": "Adversarial review before building: these sit on the shelf as tiles that play, so they must read at tile size and frame 0; walks and tests find them by name and part path, so raw values, names and part paths (Title, Subtitle, Kicker, Rule, Gradient, Headline, Name, Role, Edge, Mark, Shade, Background) are kept and only the drawing changes. Name cards sit over the person's footage, so legibility over light and dark footage is the floor (TitleSetTests.legible, TitleSetFramesTests). A moving look lifts every light to strong colour, so each look runs at a low strength in one warm or sage temperature. Pill Card's round gradient mark is a blob standing in for a logo (rule 7): it becomes a short sage rule."
+    },
+    {
+      "t": "2026-11-22T19:55:35.406Z",
+      "note": "Chose keeping the seven names over renaming them because each still says what it is (Split Wipe, Pill Card, Gradient Glow still has a sliding gradient, now champagne) and 18 walks find them by name. Chose a short sage rule over an initials monogram for Pill Card's mark because a monogram needs a third type size and a person's own initials to mean anything."
+    },
+    {
+      "t": "2026-11-22T20:29:22.959Z",
+      "note": "Blind score rounds (3 runs each, 29 frames, fresh random codes each round). Round 1: calm median 6.30; new 6.37-7.87 (Pill 6.37, Glass 6.47 marginal); old 3.47-5.17. Round 2 (after calming Editorial's sketch and Pill's bubbles): calm median 6.72; Glass 6.00, Pill 5.90, Split Wipe 6.20, Gradient Glow 6.57 under it, Glass unchanged since round 1 so ~0.5 is scorer noise. Third pass on those four (Glass as a low flush-left chapter card, ivory Pill with no mark, quieter rays and glow, Futura Medium). Round 3 (final): calm median 6.30; Editorial 7.80, Light Leak 7.77, Gradient Glow 7.27, Underline 7.10, Glass 7.07, Pill 6.77, Split Wipe 6.63; old 3.40-4.93."
+    },
+    {
+      "t": "2026-11-22T20:29:23.029Z",
+      "note": "Chose an ivory pill over a dark one for Pill Card because the critics read the dark pill as muddy with its bubbles and mark, and a light pill with a soft shadow is the one card of the three that stands apart from the footage. Chose a flush-left low chapter card for Behind Glass over centred type because centred Avenir read as generic in two rounds."
+    },
+    {
+      "t": "2026-11-22T20:29:23.102Z",
+      "note": "Fixed on the way: a stack measured a piece stretched across it when working out its own width, so Minimal Underline's rule stayed as long as the widest font pair's words after turning a font pair back (TitleRestyleTests.knobsTurnBack failed on it; StretchedPieceShrinksBackTests reproduces it on a bare column). GroupFlow.stacked now leaves cross-stretched pieces out of the cross extent, as GroupFlow.size already did. TitleSetFramesTests now judges a name card's 'shows something while it holds' on its corner, as it already photographs it: a dark card with fine type over dark footage vanished in a 160x90 thumbnail."
+    },
+    {
+      "t": "2026-11-22T20:29:23.175Z",
+      "note": "Looked at: scores grid (new seven read as designed, none violet/blue; old seven stock violet/blue with placeholders), old-new contact sheet (no title at 0 ms, all in by 1100 ms), the seven window captures from the walks (real app, Screen Recording granted, unlocked) and a close crop of the three cards (Pill's lines were tight after typing a name: gap widened 2 -> 8). Walks: 7 title-set walks ok on a rebuilt probe; 12 others naming these titles ok except title-presets-library-shelf-walk (Film Super tile, already owned by the-title-presets-walk-pulls-film-super-off-the, logged there). Scripts/test.sh green (full suite)."
     }
+  ],
+  "started": "2026-11-22T19:31:15.193Z",
+  "walks": [
+    "title-set-editorial-serif-walk",
+    "title-set-behind-glass-walk",
+    "title-set-light-leak-walk",
+    "title-set-gradient-glow-walk",
+    "title-set-split-wipe-walk",
+    "title-set-minimal-underline-walk",
+    "title-set-pill-card-walk"
   ]
 }

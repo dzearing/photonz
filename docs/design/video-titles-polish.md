@@ -272,6 +272,20 @@ follows these; a departure says which rule and why.
 4. A rule belongs to the type: as wide as the type area or the headline, never
    a 1 px full-frame page header, which shimmers in video.
 
+**The seven that followed** (2026-11-22, task
+`seven-more-built-in-titles-look-as-refined-as-th`), each by the rules above
+and with sample copy: Editorial Serif (Baskerville in ink on warm paper, a rust
+kicker, a rule as wide as the headline, an italic standfirst), Behind Glass (a
+documentary chapter card, flush left and low: tracked capitals over Avenir Next
+in ivory over the frosted recording), Light Leak (Big Caslon in ivory over
+amber leaks on a warm black, a Futura credit in brass), Gradient Glow (Futura
+filled with sliding champagne light over a warm aurora), Split Wipe (a graphite
+bar with an amber edge, condensed capitals over a tracked role), Minimal
+Underline (an Iowan Old Style name over a brass hairline) and Pill Card (an
+ivory pill, ink Seravek, no mark: the round blob was rule 7's clip art). A
+stretched rule in a name card now follows its column back down when the words
+narrow (`StretchedPieceShrinksBackTests`).
+
 Faces every Mac has that serve these: Didot, Bodoni 72, New York, Baskerville,
 Big Caslon, Iowan Old Style, Helvetica Neue, Avenir Next (and Condensed),
 Futura, DIN Condensed, SF Pro, SF Mono. An italic is named by its face

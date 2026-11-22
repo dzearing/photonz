@@ -125,38 +125,44 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
     /// left, sliding up word by word out of their own line, ivory on a warm
     /// black with one vermilion line. Replaced Kinetic Bold on 2026-11-21.
     case kinetic
-    /// Warm paper a faint sketch draws itself across, a small kicker, a serif
-    /// headline rising out of its own baseline, and a hairline rule drawing
-    /// itself under it.
+    /// A magazine feature's opening page: Baskerville in ink on warm paper a
+    /// faint sketch draws itself across, a rust kicker in small capitals, a
+    /// hairline rule as wide as the headline and an italic standfirst.
+    /// Redesigned on 2026-11-22.
     case editorial
     /// Command Line: near-white mono typed in a letter at a time on graphite,
     /// a fine grey grid running to a horizon, a blinking amber caret and rule,
     /// and a mono capitals label. Replaced Tech Terminal on 2026-11-21.
     case terminal
     /// The recording under the title, blurred, dimmed and slowly settling,
-    /// the words sharpening out of a soft focus, and the footage racking back
-    /// into focus as the title leaves: the Photonz signature, which ties the
-    /// intro to the content.
+    /// Avenir Next in ivory over small capitals sharpening out of a soft
+    /// focus, and the footage racking back into focus as the title leaves:
+    /// the Photonz signature, which ties the intro to the content.
     case glass
-    /// Warm light leaking softly across the dark, and capitals closing up
-    /// from slightly open tracking with a faint glow.
+    /// Amber light leaking softly across a warm black, Big Caslon in ivory
+    /// closing up from open tracking with a faint glow, a Futura credit in
+    /// brass. Redesigned on 2026-11-22.
     case lightLeak
-    /// A large headline filled with a slowly sliding violet gradient and a
-    /// faint glow, settling from a touch larger, over a faint aurora.
+    /// A large Futura headline filled with a slowly sliding champagne light
+    /// and a faint glow, settling from a touch larger, over a faint warm
+    /// aurora. Redesigned on 2026-11-22.
     case gradientGlow
     /// Roman and Italic: a bold grotesk line over a Bodoni italic line at the
     /// same size, ivory and blush on an oxblood black with faint ember
     /// streams, rising one after the other under a short rule. Replaced
     /// Stacked Stagger on 2026-11-21.
     case stacked
-    /// A colour bar with faint rays across it wipes in and the name and role
-    /// are revealed behind its edge: the broadcast lower third.
+    /// A graphite bar with faint amber rays and an amber edge wipes in and a
+    /// name in condensed capitals and a tracked role are revealed behind its
+    /// edge: the broadcast lower third.
     case splitWipe
-    /// No backing, the deliberately bare one: the name rises a few points, a
-    /// line draws itself under it, and the role follows.
+    /// No backing, the deliberately bare one: a serif name rises a few
+    /// points, a brass hairline draws itself under it, and the role in small
+    /// capitals follows.
     case underline
-    /// A rounded pill with colour blooming faintly inside it and a round
-    /// mark, settling in, the name's words fading up one after another.
+    /// A graphite pill with sage light blooming faintly inside it and a
+    /// short sage rule for a mark, settling in, the name's words fading up
+    /// one after another over a role in small capitals.
     case pill
 
     // Retired from the shelf.

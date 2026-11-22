@@ -1,0 +1,34 @@
+{
+  "feature": "Seven more built-in titles redesigned by the same colour and type rules",
+  "epic": "video-titles-graphics",
+  "summary": "Editorial Serif, Behind Glass, Light Leak, Gradient Glow, Split Wipe, Minimal Underline and Pill Card no longer use stock violet and electric blue, plain system type or \"Your Title\". Each now has a chosen face, one typographic idea, a neutral ground with one warm or sage accent, and sample copy that fits it, so nothing left on the titles shelf looks like clip art.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The reel, contact sheet and blind score were made with the renderer (TitleRedesignReelTests with PHOTONZ_REDESIGN_SET=seven). The seven window pictures come from the title-set walks, taken with Screen Recording granted and the screen unlocked.",
+  "switched": {},
+  "try": [
+    { "do": "File > New > Video, then in the panel's Library pick Catalog and search Editorial Serif; drag it onto the timeline and press Space.", "shot": "2026-11-22-seven-titles-editorial-serif-sc.png" },
+    { "do": "Drag Behind Glass over a recording and press Space: the footage frosts, the chapter card comes in low on the left.", "shot": "2026-11-22-seven-titles-behind-glass-sc.png" },
+    { "do": "Add Light Leak and Gradient Glow the same way and watch each one hold.", "shot": "2026-11-22-seven-titles-light-leak-sc.png" },
+    { "do": "Search Name Cards and drop Split Wipe, Minimal Underline and Pill Card over the recording.", "shot": "2026-11-22-seven-titles-pill-card-sc.png" },
+    { "do": "Double click a name card's name and type your own name; the card, rule or pill follows the words.", "shot": "2026-11-22-seven-titles-minimal-underline-sc.png" },
+    { "do": "Compare old and new frame by frame in the contact sheet, and all seven back to back in the reel (2026-11-22-seven-titles-reel.mp4).", "shot": "2026-11-22-seven-titles-old-new.png" },
+    { "do": "Look at the scored grid: new seven, old seven, the calm set and the five from yesterday.", "shot": "2026-11-22-seven-titles-scores.png" }
+  ],
+  "evaluate": [
+    "Would you put any of the seven in front of a client without restyling it first?",
+    "Is Behind Glass as a low, flush-left chapter card better than a centred title over your recording?",
+    "Is the ivory Pill Card right over dark footage, or would you rather it were dark like the other two cards?",
+    "Does Gradient Glow's champagne light read as a product launch, or is a gradient in the words still too much?",
+    "Should the name cards carry sample names (Maya Okafor, Sam Rivera, Priya Natarajan) or blank labels?"
+  ],
+  "rough": [
+    "Blind score, final round (round 3 of this task: three runs, 29 held frames shuffled under fresh random codes, scored on palette, type, hierarchy and would-a-designer-ship-it): calm set median 6.30. New: Editorial Serif 7.80, Light Leak 7.77, Gradient Glow 7.27, Minimal Underline 7.10, Behind Glass 7.07, Pill Card 6.77, Split Wipe 6.63. Old: 4.83, 4.93, 4.13, 4.17, 4.10, 3.80, 3.40. Every new one is above the median and 2.3 to 3.4 points above its old version.",
+    "The scorer moves about half a point with no change to the pictures: round 1 put the calm median at 6.30, round 2 at 6.72, round 3 at 6.30, and Behind Glass read 6.47 then 6.00 unchanged. Round 2 had Behind Glass, Pill Card, Split Wipe and Gradient Glow under its median, which is why round 3 followed a third design pass on those four (below). Split Wipe clears round 3's median by 0.33, inside that noise: it is the one to watch.",
+    "Third pass, from the critics' notes: Behind Glass became a low flush-left chapter card (it read as generic centred type); Pill Card became an ivory pill and lost its mark (a round blob, then a thin sage rule the critic called arbitrary); Split Wipe's rays and Gradient Glow's glow were turned down and its headline went from Futura Bold to Medium (\"slightly loud\"). After round 3 the gap between Pill Card's name and role was widened from 2 to 8 points, seen in the window capture after typing a name; the scored frame had the tighter gap.",
+    "Behind Glass is judged over the stock test recording, which is blue and violet: that colour is the footage, not the design, and the critics still mark it down. Over a person's own recording it takes that recording's colour.",
+    "Fixed on the way: a rule stretched across a name card stayed as wide as the widest words it had ever stood under. Pick a font pair with wider type and turn it back, and Minimal Underline's line ran past the name. The stack measured the stretched line when deciding its own width (StretchedPieceShrinksBackTests).",
+    "Kept all seven names: each still says what it is, and 18 walks find them by name. Pill Card's mark was removed (rule 7: no blob standing in for a logo).",
+    "No mock covers these More Styles pages and name cards; the brief is the reference board and the rules in docs/design/video-titles-polish.md.",
+    "Entrances: nothing of any title is on its 0 ms frame; every headline is complete by 1100 ms (contact sheet). Background motion while holding is 0.0 to 0.97 out of 255 (Light Leak highest), against 0.0 to 1.44 before.",
+    "A document that already holds one of the old seven opens drawing it exactly as it was; a new drag of the same tile lands the new design (TitleRedesignSevenTests)."
+  ]
+}

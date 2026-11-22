@@ -891,10 +891,16 @@ enum GroupFlow {
         // The cross axis runs across the room inside the group's own width, once
         // both of that axis' edges have taken theirs; where the group has no
         // size of its own, across the widest thing in it, which is what that
-        // group's box IS.
+        // group's box IS. A piece stretched across that axis is not measured
+        // on it, as the group's own size does not measure it (`size(of:)`):
+        // it is trying to be the width of the column, so a line that once
+        // grew with wider words would hold the column open at its own width
+        // after they narrowed. Where every piece stretches there is nothing
+        // else to go on, and they are measured after all.
+        let across = items.filter { (horizontal ? $0.vertical : $0.horizontal) != .stretch }
         let crossExtent = room(horizontal ? bounds.height : bounds.width,
                                between: horizontal ? padding.vertical : padding.horizontal)
-            ?? (items.map { horizontal ? $0.box.height : $0.box.width }.max() ?? 0)
+            ?? ((across.isEmpty ? items : across).map { horizontal ? $0.box.height : $0.box.width }.max() ?? 0)
         // The lines this stack ended up with. A stack that is not wrapping has
         // exactly one, holding everything, which is every stack that existed
         // before a row could wrap.

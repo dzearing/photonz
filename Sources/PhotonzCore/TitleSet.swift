@@ -231,15 +231,12 @@ extension BuiltInTitle {
                           out: off(.fade, 160, 300)),
             ])
         case .pill:
-            // The pill settles in from a touch smaller, the mark after it,
-            // then the name fades up word by word.
+            // The pill settles in from a touch smaller, then the name fades
+            // up word by word.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
                           in: B(.scaleFrom, delayMS: 0, lengthMS: 700, amount: 96, curve: expo),
                           out: off(.fade, 0, 320)),
-                TitlePart(path: "Mark", role: .accent,
-                          in: B(.scaleFrom, delayMS: 120, lengthMS: 650, amount: 94, curve: expo),
-                          out: off(.fade, 60, 300)),
                 TitlePart(path: "Name", role: .headline,
                           in: B(.fade, delayMS: 250, lengthMS: 800, curve: cubic, by: .word, staggerMS: 70),
                           out: off(.fade, 80, 420)),
@@ -362,23 +359,32 @@ extension BuiltInTitle {
         return [background, title, TitleLook.shadedOverALook(subtitle)]
     }
 
+    // The seven below were redesigned on 2026-11-22 by the same rules (task
+    // `seven-more-built-in-titles-look-as-refined-as-th`): each scored under
+    // the calm set on the blind test for stock violet and electric blue,
+    // plain SF Pro and "Your Title".
+
     private static func editorial(_ pen: TitlePen) -> [Layer] {
-        // Warm paper a faint architect's sketch draws itself across, slowly,
-        // in the kicker's own rust and brown.
+        // Editorial Serif, a magazine feature's opening page: Baskerville at
+        // display size in ink on warm paper, flush left, a rust kicker in
+        // small capitals tracked open above it, a hairline rule as wide as
+        // the headline, and a standfirst in Baskerville's italic. A faint
+        // architect's sketch draws itself across the paper, slowly.
         let background = pen.fullFrame(live(.sketch, ground: "#F4F1EA",
-                                            lights: ["#9A4A26", "#B07A55", "#7A5A3A"], speed: 30, strength: 25))
-        let left = (pen.canvas.width * 0.12).rounded()
-        let kicker = pen.words("Kicker", "CHAPTER ONE", font: "SF Pro", size: 28, weight: .semibold,
-                               color: "#9A4A26", origin: CGPoint(x: left, y: pen.canvas.height * 0.33),
-                               tracking: 0.12, lineHeight: 1)
-        let title = pen.words("Title", "Your Title", font: "Georgia", size: 120, weight: .regular,
-                              color: "#1A1A1A", origin: CGPoint(x: left, y: kicker.frame.maxY + pen.u(14)),
-                              tracking: -0.012, lineHeight: 1.06)
-        let rule = pen.line("Rule", from: CGPoint(x: left, y: title.frame.maxY + pen.u(26)),
-                            length: pen.u(360), width: pen.u(2), color: "#1A1A1A")
-        let subtitle = pen.words("Subtitle", "A short line about it", font: "SF Pro", size: 28,
-                                 color: "#55524C", origin: CGPoint(x: left, y: rule.frame.maxY + pen.u(24)),
-                                 tracking: 0, lineHeight: 1.3)
+                                            lights: ["#9A4A26", "#B07A55", "#7A5A3A"], speed: 26, strength: 9))
+        let left = (pen.canvas.width * 0.125).rounded()
+        let ink = "#1C1A17"
+        let kicker = pen.words("Kicker", "CHAPTER ONE", font: "Avenir Next", size: 30, weight: .semibold,
+                               color: "#9A3F1F", origin: CGPoint(x: left + pen.u(4), y: pen.canvas.height * 0.34),
+                               tracking: 0.2, lineHeight: 1)
+        let title = pen.words("Title", "Notes from the Coast", font: "Baskerville", size: 128, weight: .regular,
+                              color: ink, origin: CGPoint(x: left, y: kicker.frame.maxY + pen.u(18)),
+                              tracking: -0.018, lineHeight: 1.02)
+        let rule = pen.line("Rule", from: CGPoint(x: left + pen.u(4), y: title.frame.maxY + pen.u(28)),
+                            length: max(pen.u(120), title.frame.width - pen.u(8)), width: pen.u(2), color: ink)
+        let subtitle = pen.words("Subtitle", "in which we leave the city behind", font: "Baskerville-Italic", size: 30,
+                                 color: "#5A5248", origin: CGPoint(x: left + pen.u(2), y: rule.frame.maxY + pen.u(26)),
+                                 tracking: 0, lineHeight: 1.25)
         // Paper is a light ground: the shade under the small lines is light.
         return [background, TitleLook.shadedOverALook(kicker, overLightGround: true), title, rule,
                 TitleLook.shadedOverALook(subtitle, overLightGround: true)]
@@ -421,63 +427,74 @@ extension BuiltInTitle {
     }
 
     private static func glass(_ pen: TitlePen) -> [Layer] {
-        // Black at 55% over the recording, the recording itself softened
-        // behind it and drawn 2% larger, which the hold eases back to 100%.
-        // Dim enough that white words read over a white screenshot.
-        var background = pen.fullFrame(Paint(hex: "#000000"))
+        // Behind Glass, the Photonz signature: the recording itself softened
+        // behind a warm black at 55%, drawn 2% larger, which the hold eases
+        // back to 100%. Over it, a chapter card as a documentary sets one:
+        // flush left at an eighth of the width, low in the frame, a label in
+        // small capitals tracked open over the chapter's name in Avenir Next,
+        // ivory, set tight. Dim enough that ivory words read over a white
+        // screenshot; the small line wears a soft shade as well.
+        var background = pen.fullFrame(Paint(hex: "#0C0A08"))
         background.style.opacity = TitleLook.glassDim
         background.style.effects = [.blur(BlurEffect(radius: pen.u(36), kind: .background, zoom: 102))]
-        let title = pen.centred("Title", "Your Title", font: "SF Pro", size: 112, weight: .semibold,
-                                color: "#FFFFFF", top: pen.canvas.height * 0.38, tracking: -0.022, lineHeight: 1.04)
-        let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 40,
-                                   weight: .medium, color: "#FFFFFF", top: title.frame.maxY + pen.u(20),
-                                   tracking: -0.004, lineHeight: 1.2)
+        let left = (pen.canvas.width * 0.125).rounded()
+        let subtitle = pen.words("Subtitle", "PART ONE", font: "Avenir Next", size: 26, weight: .semibold,
+                                 color: "#E6E0D6", origin: CGPoint(x: left + pen.u(6), y: pen.canvas.height * 0.55),
+                                 legibleOverVideo: true, tracking: 0.32, lineHeight: 1.2)
+        let title = pen.words("Title", "Getting Started", font: "Avenir Next", size: 140, weight: .semibold,
+                              color: "#F4F1EC", origin: CGPoint(x: left, y: subtitle.frame.maxY + pen.u(10)),
+                              tracking: -0.024, lineHeight: 1.0)
         return [background, title, subtitle]
     }
 
     private static func lightLeak(_ pen: TitlePen) -> [Layer] {
-        // Warm light leaking slowly and softly across the dark: deeper
-        // lights at a low strength, since the leaks overlap and a brighter
-        // light only fills the frame with orange.
-        let background = pen.fullFrame(live(.lightLeaks, ground: "#08070B",
-                                            lights: ["#C8602A", "#C04A5A", "#C88A48"], speed: 30, strength: 12))
-        var title = pen.centred("Title", "YOUR TITLE", font: "Avenir Next", size: 88, weight: .medium,
-                                color: "#FFF6EE", top: pen.canvas.height * 0.42, tracking: 0.06, lineHeight: 1)
-        title.style.effects = [.glow(GlowEffect(colorHex: "#FFB58A", radius: pen.u(14), size: pen.u(1), opacity: 0.2))]
-        let subtitle = pen.centred("Subtitle", "A short line about it", font: "Avenir Next", size: 30,
-                                   color: "#D8CEC6", top: title.frame.maxY + pen.u(22), tracking: 0.01,
+        // Light Leak, a film's golden hour: amber light leaking slowly and
+        // softly across a warm black, one temperature, low, so it reads as
+        // light on the lens and never fills the frame with orange. Big
+        // Caslon in ivory closing up from open tracking, a faint warm glow
+        // round it, a credit in Futura capitals tracked wide in brass.
+        let background = pen.fullFrame(live(.lightLeaks, ground: "#0B0908",
+                                            lights: ["#C98A4A", "#B8683A", "#D4A060"], speed: 26, strength: 8))
+        var title = pen.centred("Title", "Golden Hour", font: "Big Caslon", size: 156, weight: .medium,
+                                color: "#F2E9DA", top: pen.canvas.height * 0.37, tracking: -0.012, lineHeight: 1.02)
+        title.style.effects = [.glow(GlowEffect(colorHex: "#E0A868", radius: pen.u(18), size: pen.u(1), opacity: 0.14))]
+        let subtitle = pen.centred("Subtitle", "A SUMMER IN LISBON", font: "Futura", size: 24, weight: .medium,
+                                   color: "#C2A783", top: title.frame.maxY + pen.u(30), tracking: 0.34,
                                    lineHeight: 1.2)
         return [background, title, TitleLook.shadedOverALook(subtitle)]
     }
 
     private static func gradientGlow(_ pen: TitlePen) -> [Layer] {
-        // A faint aurora rippling slowly low in the black, in the violet of
-        // the words, so the page holds one colour.
-        let background = pen.fullFrame(live(.aurora, ground: "#000000",
-                                            lights: ["#9A5CF0", "#B060E0", "#8A5CFF"], speed: 30, strength: 18))
-        let title = pen.centred("Title", "Your Title", font: "SF Pro", size: 150, weight: .semibold,
-                                color: "#FFFFFF", top: pen.canvas.height * 0.36, tracking: -0.03, lineHeight: 1.05)
+        // Gradient Glow, a product launch: Futura set tight and large, filled
+        // with a slowly sliding champagne light, as a metal catches it, with
+        // a faint warm glow; a faint aurora of the same warm light low in a
+        // warm black, so the page holds one colour. The line under it in
+        // small capitals tracked open, the headline's family lower in value.
+        let background = pen.fullFrame(live(.aurora, ground: "#0A0908",
+                                            lights: ["#C9A46A", "#B5874E", "#D8B47E"], speed: 26, strength: 10))
+        let title = pen.centred("Title", "Forged in Light", font: "Futura", size: 156, weight: .medium,
+                                color: "#FFFFFF", top: pen.canvas.height * 0.37, tracking: -0.02, lineHeight: 1.02)
         // The colours, cut to the shape of the words under them and twice
         // their width, so the hold can slide them along.
         var gradient = pen.box("Gradient", CGRect(x: title.frame.minX, y: title.frame.minY - pen.u(10),
                                                   width: title.frame.width * 2,
                                                   height: title.frame.height + pen.u(20)),
-                               fill: Paint(hex: "#8A5CFF", kind: .linear,
-                                           stops: [GradientStop(hex: "#8A5CFF", position: 0),
-                                                   GradientStop(hex: "#C77DFF", position: 0.35),
-                                                   GradientStop(hex: "#F07AE6", position: 0.65),
-                                                   GradientStop(hex: "#8A5CFF", position: 1)],
+                               fill: Paint(hex: "#F3ECE0", kind: .linear,
+                                           stops: [GradientStop(hex: "#F3ECE0", position: 0),
+                                                   GradientStop(hex: "#D9BD90", position: 0.35),
+                                                   GradientStop(hex: "#C2A272", position: 0.65),
+                                                   GradientStop(hex: "#F3ECE0", position: 1)],
                                            angle: 90))
         gradient.style.matte = .shape
         // One picture of the coloured words, so its glow is theirs.
         var headline = TitlePen.grouped([title, gradient], name: "Headline")
-        headline.style.effects = [.glow(GlowEffect(colorHex: "#B07CFF", radius: pen.u(20), size: pen.u(2),
-                                                   opacity: 0.22))]
+        headline.style.effects = [.glow(GlowEffect(colorHex: "#E2C08A", radius: pen.u(24), size: pen.u(1),
+                                                   opacity: 0.08))]
         // The aurora behind is lit in the same colours as the words, so the
         // coloured words throw a soft dark shade of their own to stand on.
         headline.style.shadows = [TitleLook.liveScrim(forColorHex: "#FFFFFF", fontSize: title.text?.fontSize ?? pen.u(150))]
-        let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 40, weight: .medium,
-                                   color: "#A1A1A6", top: title.frame.maxY + pen.u(24), tracking: -0.004,
+        let subtitle = pen.centred("Subtitle", "AVAILABLE THIS AUTUMN", font: "Avenir Next", size: 24, weight: .medium,
+                                   color: "#A89D8D", top: title.frame.maxY + pen.u(30), tracking: 0.3,
                                    lineHeight: 1.2)
         return [background, headline, TitleLook.shadedOverALook(subtitle)]
     }
@@ -513,71 +530,75 @@ extension BuiltInTitle {
     // MARK: Name cards, in title safe
 
     private static func splitWipe(_ pen: TitlePen) -> Layer {
+        // Split Wipe, the broadcast lower third: a graphite bar with faint
+        // amber rays sweeping slowly across it and an amber edge, a name in
+        // condensed capitals locked tight over a role in small capitals
+        // tracked open, the name's ivory lower in value.
         let edge = pen.u(6), padX = pen.u(32), padY = pen.u(18)
-        // Faint rays of light sweeping slowly across the colour bar.
         var bar = pen.box("Background", pen.surfaceStart,
-                          fill: live(.lightRays, ground: "#1A4DFF", lights: ["#4D70FF", "#6E8BFF", "#3D63FF"],
-                                     speed: 30, strength: 30))
+                          fill: live(.lightRays, ground: "#17191D", lights: ["#C8913E", "#B87A32", "#D6A453"],
+                                     speed: 14, strength: 2))
         bar.placement = .fill
-        var lip = pen.box("Edge", CGRect(x: 0, y: 0, width: edge, height: edge), fill: Paint(hex: "#FFFFFF"))
+        var lip = pen.box("Edge", CGRect(x: 0, y: 0, width: edge, height: edge), fill: Paint(hex: "#E9A23B"))
         lip.placement = LayerPlacement(horizontal: .left, vertical: .stretch)
-        let name = pen.words("Name", "Your Name", font: "SF Pro", size: 48, weight: .semibold,
-                             color: "#FFFFFF", origin: .zero, tracking: -0.012, lineHeight: 1.1)
-        let role = pen.words("Role", "Role or title", font: "SF Pro", size: 30, weight: .medium,
-                             color: "#E3EAFF", origin: .zero, tracking: -0.004, lineHeight: 1.2)
-        return pen.card([bar, lip, name, TitleLook.shadedOverALook(role)], name: TitleKind.nameCard.name, gap: pen.u(2),
-                        padding: GroupPadding(top: padY, right: padX, bottom: padY, left: edge + padX - pen.u(4)),
+        let name = pen.words("Name", "MAYA OKAFOR", font: "Avenir Next Condensed", size: 60, weight: .bold,
+                             color: "#F3F0EA", origin: .zero, tracking: 0.01, lineHeight: 1.05)
+        let role = pen.words("Role", "SENIOR CORRESPONDENT", font: "Avenir Next", size: 22, weight: .semibold,
+                             color: "#BDB6AA", origin: .zero, tracking: 0.22, lineHeight: 1.2)
+        return pen.card([bar, lip, name, TitleLook.shadedOverALook(role)], name: TitleKind.nameCard.name, gap: pen.u(4),
+                        padding: GroupPadding(top: padY, right: padX, bottom: padY + pen.u(2), left: edge + padX - pen.u(4)),
                         corner: pen.safeCorner)
     }
 
     private static func underline(_ pen: TitlePen) -> Layer {
-        let name = pen.words("Name", "Your Name", font: "SF Pro", size: 54, weight: .semibold,
-                             color: "#FFFFFF", origin: .zero, legibleOverVideo: true, tracking: -0.014,
-                             lineHeight: 1.1)
-        let role = pen.words("Role", "Role or title", font: "SF Pro", size: 30, weight: .medium,
-                             color: "#F2F2F2", origin: .zero, legibleOverVideo: true, tracking: -0.004,
+        // Minimal Underline: no backing, a name in Iowan Old Style over a
+        // brass hairline as long as the words, the role under it in small
+        // capitals tracked open. A soft dark shade behind the words keeps
+        // them reading over a white screenshot.
+        let name = pen.words("Name", "Sam Rivera", font: "Iowan Old Style", size: 64, weight: .regular,
+                             color: "#F5F1EA", origin: .zero, legibleOverVideo: true, tracking: -0.01,
+                             lineHeight: 1.08)
+        let role = pen.words("Role", "PRODUCT DESIGNER", font: "Helvetica Neue", size: 22, weight: .medium,
+                             color: "#E4DED4", origin: .zero, legibleOverVideo: true, tracking: 0.24,
                              lineHeight: 1.2)
         // As long as the words: the column stretches it to its own width.
         var line = pen.box("Rule", CGRect(x: 0, y: 0, width: pen.u(120), height: pen.u(4)),
-                           fill: Paint(hex: "#FFD60A"))
+                           fill: Paint(hex: "#D6A85A"))
         line.placement = LayerPlacement(horizontal: .stretch)
-        line.style.shadows = TitleLook.shadows(forColorHex: "#FFD60A", fontSize: pen.u(30))
-        // No backing, only a soft dark shade behind the words, so white words
-        // still read over a white screenshot.
+        line.style.shadows = TitleLook.shadows(forColorHex: "#D6A85A", fontSize: pen.u(30))
         var shade = pen.box("Shade", pen.surfaceStart, fill: Paint(hex: "#000000"))
         shade.placement = .fill
         shade.style.opacity = 0.7
         shade.style.effects = [.blur(BlurEffect(radius: pen.u(24)))]
-        return pen.card([shade, name, line, role], name: TitleKind.nameCard.name, gap: pen.u(10),
+        return pen.card([shade, name, line, role], name: TitleKind.nameCard.name, gap: pen.u(12),
                         padding: GroupPadding(top: pen.u(14), right: pen.u(24), bottom: pen.u(14), left: pen.u(24)),
                         corner: pen.safeCorner)
     }
 
     private static func pill(_ pen: TitlePen) -> Layer {
-        // Faint bubbles of colour blooming slowly inside the dark pill.
+        // Pill Card: an ivory pill with faint sage light blooming slowly
+        // inside it, lifted off the footage by a soft shadow, the name in
+        // Seravek in ink over the role in small capitals tracked open, a sage
+        // grey. No mark: a round blob standing in for a logo was the clip art
+        // it replaced (rule 7), and a pill needs nothing beside the words.
         var pill = pen.box("Background", pen.surfaceStart,
-                           fill: live(.colorBubbles, ground: "#15171C", lights: ["#6E8BFF", "#8C7BFF", "#3D8BFF"],
-                                      speed: 30, strength: 25),
-                           radius: pen.u(64))
+                           fill: live(.colorBubbles, ground: "#F3F0EA", lights: ["#8FAF8A", "#A3B488", "#7FA294"],
+                                      speed: 24, strength: 6),
+                           radius: pen.u(72))
         pill.placement = .fill
-        // Solid, so white words on it read over white footage too.
+        // Solid, so ink words on it read over any footage.
         pill.style.opacity = 1
-        pill.style.shadows = [ShadowStyle(radius: pen.u(20), offset: CGSize(width: 0, height: pen.u(6)),
-                                          colorHex: "#000000", opacity: 0.3)]
-        let mark = pen.oval("Mark", CGRect(x: 0, y: 0, width: pen.u(64), height: pen.u(64)),
-                            fill: Paint(hex: "#6E8BFF", kind: .linear,
-                                        stops: [GradientStop(hex: "#6E8BFF", position: 0),
-                                                GradientStop(hex: "#8C7BFF", position: 1)],
-                                        angle: 135))
-        let name = pen.words("Name", "Your Name", font: "SF Pro", size: 42, weight: .semibold,
-                             color: "#FFFFFF", origin: .zero, tracking: -0.012, lineHeight: 1.1)
-        let role = pen.words("Role", "Role or title", font: "SF Pro", size: 28, color: "#B4BAC6",
-                             origin: .zero, tracking: -0.004, lineHeight: 1.2)
-        let words = pen.stack([name, TitleLook.shadedOverALook(role)], name: "Words",
-                              direction: .column, gap: 0, origin: .zero,
+        pill.style.shadows = [ShadowStyle(radius: pen.u(24), offset: CGSize(width: 0, height: pen.u(8)),
+                                          colorHex: "#000000", opacity: 0.35)]
+        let name = pen.words("Name", "Priya Natarajan", font: "Seravek", size: 60, weight: .medium,
+                             color: "#1D1C1A", origin: .zero, tracking: -0.012, lineHeight: 1.05)
+        let role = pen.words("Role", "HEAD OF RESEARCH", font: "Seravek", size: 22, weight: .medium, color: "#5E6658",
+                             origin: .zero, tracking: 0.2, lineHeight: 1.2)
+        let words = pen.stack([name, TitleLook.shadedOverALook(role, overLightGround: true)], name: "Words",
+                              direction: .column, gap: pen.u(8), origin: .zero,
                               placement: LayerPlacement(horizontal: .left))
-        return pen.card([pill, mark, words], name: TitleKind.nameCard.name, gap: pen.u(18),
-                        padding: GroupPadding(top: pen.u(14), right: pen.u(40), bottom: pen.u(14), left: pen.u(14)),
+        return pen.card([pill, words], name: TitleKind.nameCard.name, gap: pen.u(22),
+                        padding: GroupPadding(top: pen.u(18), right: pen.u(52), bottom: pen.u(20), left: pen.u(52)),
                         direction: .row, corner: pen.safeCorner)
     }
 }

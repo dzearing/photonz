@@ -83,12 +83,19 @@ struct TitleSetFramesTests {
                 var row: [CGImage] = []
                 for (index, ms) in Self.moments(doc, id).enumerated() {
                     let image = try #require(DocumentRenderer().render(doc.drawn(atTimeMS: ms), store: store))
-                    if index == 1 {
-                        #expect(Self.differs(image, from: bare), "\(preset.name) shows nothing while it holds")
-                    }
                     // A card is small on the whole frame: its corner, larger.
                     let corner = CGRect(x: 0, y: image.height * 2 / 5, width: image.width * 3 / 5,
                                         height: image.height * 3 / 5)
+                    if index == 1 {
+                        // A card is judged on its corner too: shrunk whole to
+                        // a thumbnail, fine type on a dark bar over dark
+                        // footage blurs into the footage.
+                        let shown = preset.kind == .nameCard
+                            ? Self.differs(try #require(image.cropping(to: corner)),
+                                           from: try #require(bare.cropping(to: corner)))
+                            : Self.differs(image, from: bare)
+                        #expect(shown, "\(preset.name) shows nothing while it holds")
+                    }
                     row.append(preset.kind == .nameCard ? try #require(image.cropping(to: corner)) : image)
                 }
                 rows.append(row)

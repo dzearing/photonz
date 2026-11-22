@@ -38,6 +38,15 @@ struct TitleRedesignReelTests {
     /// The frames the sheet shows, in ms from the title's start.
     static let moments = [0, 200, 400, 700, 1100, 1600, 2400]
     static let hold = (2000, 2500)
+    /// The titles filmed, and the ones held beside them for the blind score.
+    /// `PHOTONZ_REDESIGN_SET=seven` films the other seven (task
+    /// `seven-more-built-in-titles-look-as-refined-as-th`) and holds the five.
+    static var filmed: [BuiltInTitle] {
+        ProcessInfo.processInfo.environment["PHOTONZ_REDESIGN_SET"] == "seven" ? rest : five
+    }
+    static var heldBeside: [BuiltInTitle] {
+        ProcessInfo.processInfo.environment["PHOTONZ_REDESIGN_SET"] == "seven" ? five : rest
+    }
 
     @Test("Film the five")
     func film() async throws {
@@ -54,7 +63,7 @@ struct TitleRedesignReelTests {
         }
         var docs: [(BuiltInTitle, PhotonzDocument)] = []
         var motion: [String: Double] = [:]
-        for preset in Self.five {
+        for preset in Self.filmed {
             let (doc, id) = try TitleMoreStylesCalmReelTests.titled(preset, over: footage, store: store)
             docs.append((preset, doc))
             let bare = try TitleMoreStylesCalmReelTests.backgroundOnly(doc, id)
@@ -86,7 +95,7 @@ struct TitleRedesignReelTests {
         // score can say which of them fall below the new bar.
         let others = root.appendingPathComponent("others")
         try FileManager.default.createDirectory(at: others, withIntermediateDirectories: true)
-        for preset in Self.rest {
+        for preset in Self.heldBeside {
             let (doc, _) = try TitleMoreStylesCalmReelTests.titled(preset, over: footage, store: store)
             try TitleMoreStylesCalmReelTests.write(try render(doc, 2400),
                                                    to: others.appendingPathComponent("hold-\(preset.rawValue).png"))
@@ -119,7 +128,7 @@ struct TitleRedesignReelTests {
         let before = root.appendingPathComponent("before")
         guard FileManager.default.fileExists(atPath: before.path) else { return }
         var rows: [(String, [CGImage])] = []
-        for preset in Self.five {
+        for preset in Self.filmed {
             for (side, folder) in [("old", before), ("new", directory)] {
                 let frames = Self.moments.compactMap { ms in
                     TitleMoreStylesCalmReelTests.load(folder.appendingPathComponent("\(preset.rawValue)-\(ms).png"))
