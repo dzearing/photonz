@@ -307,6 +307,113 @@ struct SpeedRampTests {
         #expect(clip == whole)
     }
 
+    // MARK: - Trimming into a freeze
+
+    /// Every frame from `from` to `to` on the clip's own clock, a tenth of a
+    /// second apart.
+    static func frames(_ clip: ClipPieces, from: Int = 0, to: Int, by step: Int = 100) -> [Int?] {
+        stride(from: from, through: to, by: step).map { clip.sourceMS(atMS: $0) }
+    }
+
+    @Test func aTrimPartWayIntoAFreezeHoldsOnlyWhatIsLeftOfIt() throws {
+        let whole = Self.frozenForASecond()
+        var clip = whole
+        let r = clip.trimStart(ofPiece: 0, byMS: 6500)
+        #expect(r)
+        let piece = try #require(clip.piece(at: 0))
+        #expect(piece.sourceInMS == 3000)
+        #expect(piece.lengthMS == 10500)
+        // Half a second of the hold was cut away, so half a second is left...
+        #expect(piece.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 500)
+        #expect(clip.sourceMS(atMS: 400) == 3000)
+        #expect(clip.sourceMS(atMS: 700) != 3000)
+        // ...and it still ends on the recording's last frame.
+        #expect(piece.sourceOutMS == 8000)
+        #expect(Self.frames(clip, to: 10500) == Self.frames(whole, from: 6500, to: 17000))
+    }
+
+    @Test func aTrimIntoAFreezeAndBackOutGivesTheIdenticalClip() throws {
+        let whole = Self.frozenForASecond()
+        var clip = whole
+        _ = clip.trimStart(ofPiece: 0, byMS: 6500)
+        // The whole of what was cut away can be pulled back out...
+        let range = try #require(clip.trimStartRange(ofPiece: 0))
+        #expect(range.out == -6500)
+        let r = clip.trimStart(ofPiece: 0, byMS: -6500)
+        #expect(r)
+        // ...and what comes back is the clip it was.
+        #expect(clip == whole)
+    }
+
+    @Test func pullingBackPartOfACutHoldGivesTheHoldBackFirst() throws {
+        let whole = Self.frozenForASecond()
+        var clip = whole
+        _ = clip.trimStart(ofPiece: 0, byMS: 6800)
+        _ = clip.trimStart(ofPiece: 0, byMS: -300)
+        let piece = try #require(clip.piece(at: 0))
+        #expect(piece.sourceInMS == 3000)
+        #expect(piece.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 500)
+        #expect(Self.frames(clip, to: 10500) == Self.frames(whole, from: 6500, to: 17000))
+        _ = clip.trimStart(ofPiece: 0, byMS: -6500)
+        #expect(clip == whole)
+    }
+
+    @Test func trimmingInStepsIntoAFreezeAndBackGivesTheIdenticalClip() throws {
+        let whole = Self.frozenForASecond()
+        var clip = whole
+        for step in [6000, 400, 300, 100] { _ = clip.trimStart(ofPiece: 0, byMS: step) }
+        #expect(clip.piece(at: 0)?.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 200)
+        #expect(clip.piece(at: 0)?.sourceOutMS == 8000)
+        #expect(Self.frames(clip, to: 10200) == Self.frames(whole, from: 6800, to: 17000))
+        for step in [-100, -300, -400, -6000] { _ = clip.trimStart(ofPiece: 0, byMS: step) }
+        #expect(clip == whole)
+    }
+
+    @Test func aTrimWhereAFreezeBeginsHoldsTheWholeOfIt() throws {
+        let whole = Self.frozenForASecond()
+        var clip = whole
+        _ = clip.trimStart(ofPiece: 0, byMS: 6000)
+        #expect(clip.piece(at: 0)?.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 1000)
+        #expect(Self.frames(clip, to: 11000) == Self.frames(whole, from: 6000, to: 17000))
+        _ = clip.trimStart(ofPiece: 0, byMS: -6000)
+        #expect(clip == whole)
+    }
+
+    @Test func aTrimToWhereAFreezeEndsHoldsNothingAndGivesItAllBack() throws {
+        let whole = Self.frozenForASecond()
+        var clip = whole
+        _ = clip.trimStart(ofPiece: 0, byMS: 7000)
+        #expect(clip.piece(at: 0)?.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 0)
+        #expect(clip.piece(at: 0)?.sourceOutMS == 8000)
+        #expect(clip.sourceMS(atMS: 100) != 3000)
+        _ = clip.trimStart(ofPiece: 0, byMS: -400)
+        #expect(clip.piece(at: 0)?.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 400)
+        _ = clip.trimStart(ofPiece: 0, byMS: -6600)
+        #expect(clip == whole)
+    }
+
+    @Test func theTailOfACutInAFreezeCanBePulledBackOutToTheWholePiece() throws {
+        let whole = Self.frozenForASecond()
+        var clip = whole
+        _ = clip.split(atMS: 6500)
+        _ = clip.remove(at: 0)
+        let range = try #require(clip.trimStartRange(ofPiece: 0))
+        #expect(range.out == -6500)
+        let r = clip.trimStart(ofPiece: 0, byMS: -6500)
+        #expect(r)
+        #expect(clip == whole)
+    }
+
+    @Test func aPieceTrimmedIntoAFreezeReadsBackTheSame() throws {
+        var clip = Self.frozenForASecond()
+        _ = clip.trimStart(ofPiece: 0, byMS: 6500)
+        let read = try JSONDecoder().decode(ClipPieces.self, from: JSONEncoder().encode(clip))
+        #expect(read == clip)
+        var back = read
+        _ = back.trimStart(ofPiece: 0, byMS: -6500)
+        #expect(back == Self.frozenForASecond())
+    }
+
     @Test func aTrimPulledInAndBackOutLandsOnTheSameFrame() throws {
         var clip = Self.rampedToFour()
         let r18 = clip.trimStart(ofPiece: 0, byMS: 500)

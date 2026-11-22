@@ -100,10 +100,21 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// length, and `speedPercent` is the one speed Reset Ramp goes back to.
     public private(set) var speedRamp: SpeedRamp?
 
+    /// How much of the freeze on the frame this piece starts from was trimmed
+    /// off its front: played before the piece begins, and so taken off that
+    /// stop's hold in `speedRamp`. Nought everywhere else.
+    ///
+    /// It is written down because it cannot be worked out: a freeze left
+    /// holding half a second looks the same whether it was set to half a
+    /// second or set to one and half of it trimmed away, and pulling the start
+    /// back out has to give that half second back before it walks back into
+    /// the ramp.
+    public private(set) var startHoldSpentMS: Int
+
     public init(sourceInMS: Int, lengthMS: Int, speedPercent: Int = ClipPiece.asRecordedPercent,
                 transitionIn: ClipTransition? = nil, push: HoldPush? = nil,
                 pictureHidden: Bool = false, noiseReduction: NoiseReduction? = nil,
-                speedRamp: SpeedRamp? = nil) {
+                speedRamp: SpeedRamp? = nil, startHoldSpentMS: Int = 0) {
         self.sourceInMS = max(0, sourceInMS)
         self.lengthMS = max(Self.shortestMS, lengthMS)
         self.speedPercent = speedPercent == 0
@@ -117,6 +128,11 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         // A held frame reads no stretch of the recording, so it has no speed
         // to change across it.
         self.speedRamp = self.speedPercent == 0 ? nil : speedRamp
+        // Only a freeze on the very frame the piece starts from can have been
+        // trimmed into.
+        let start = self.sourceInMS
+        let startsOnFreeze = self.speedRamp?.stops.contains { $0.sourceMS == start && $0.isFreeze } ?? false
+        self.startHoldSpentMS = startsOnFreeze ? max(0, startHoldSpentMS) : 0
     }
 
     /// The same piece with its picture off, or back on.
@@ -247,7 +263,9 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         guard to > from else { return 0 }
         guard let speedRamp else { return Self.timelineMS(forSourceMS: to - from, atPercent: speedPercent) }
         let exact = speedRamp.timelineMS(fromSourceMS: Double(from), toSourceMS: Double(to))
-        return max(0, Int((exact - 1e-6).rounded(.down)))
+        // Down to the whole millisecond, but not past one the sum only missed
+        // by its own rounding: from a stop, 6000 is 6000 and not 5999.
+        return max(0, Int((exact + 1e-6).rounded(.down)))
     }
 
     /// The same frames under other stops, or none: as long as those stops
@@ -262,7 +280,7 @@ public struct ClipPiece: Hashable, Codable, Sendable {
             length = Self.unscaled(source.1 - source.0, byPercent: speedPercent)
         }
         return marking(ClipPiece(sourceInMS: source.0, lengthMS: length, speedPercent: speedPercent,
-                                 transitionIn: transitionIn, speedRamp: ramp))
+                                 transitionIn: transitionIn, speedRamp: ramp, startHoldSpentMS: startHoldSpentMS))
     }
 
     // MARK: - Editing
@@ -275,27 +293,51 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         guard offset >= Self.shortestMS, lengthMS - offset >= Self.shortestMS else { return nil }
         // The head still arrives the way this piece did; the new join between
         // them is a hard cut until somebody puts something on it.
+        let tail = carriedOn(fromOffsetMS: offset)
         return (marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: offset, speedPercent: speedPercent,
-                                  transitionIn: transitionIn, push: push, speedRamp: speedRamp)),
-                marking(ClipPiece(sourceInMS: sourceMS(atOffsetMS: offset),
+                                  transitionIn: transitionIn, push: push, speedRamp: speedRamp,
+                                  startHoldSpentMS: startHoldSpentMS)),
+                marking(ClipPiece(sourceInMS: tail.sourceMS,
                                   lengthMS: lengthMS - offset, speedPercent: speedPercent, push: push,
-                                  speedRamp: speedRampCarriedOn(fromOffsetMS: offset))))
+                                  speedRamp: tail.ramp, startHoldSpentMS: tail.spentMS)))
     }
 
     /// The stops a piece carrying straight on from `offset` into this one
-    /// plays by: the same stops, except that a freeze the offset lands part
-    /// way through holds only what is left of it. A hold is spent on the frame
-    /// a piece starts from, so a tail given the whole of it would freeze over
-    /// again and run out of timeline before the recording's last frame.
+    /// plays by (`carriedOn(fromOffsetMS:)`).
     func speedRampCarriedOn(fromOffsetMS offset: Int) -> SpeedRamp? {
-        guard let speedRamp, !isHeld else { return speedRamp }
-        let frame = sourceMS(atOffsetMS: offset)
-        guard let index = speedRamp.index(ofStopAtSourceMS: frame) else { return speedRamp }
-        let stop = speedRamp.stops[index]
-        guard stop.holdMS > 0 else { return speedRamp }
-        let reached = speedRamp.timelineMS(fromSourceMS: Double(sourceInMS), toSourceMS: Double(frame))
-        let spent = min(max(0, Int((Double(offset) - reached).rounded())), stop.holdMS)
-        return speedRamp.replacing(stop: index, with: stop.holding(stop.holdMS - spent)) ?? speedRamp
+        carriedOn(fromOffsetMS: offset).ramp
+    }
+
+    /// Where a piece carrying straight on from `offset` into this one starts
+    /// reading, the stops it plays by, and how much of a freeze on that frame
+    /// it begins part way through. A negative offset is a moment before this
+    /// piece starts, which is where a start edge pulled back out lands.
+    ///
+    /// The same stops, except that a freeze the offset lands part way through
+    /// holds only what is left of it. A hold is spent on the frame a piece
+    /// starts from, so a piece given the whole of it would freeze over again
+    /// and run out of timeline before the recording's last frame. Every other
+    /// freeze holds the whole of its hold, the one this piece starts on
+    /// included, given back whatever was trimmed off it.
+    func carriedOn(fromOffsetMS offset: Int) -> (sourceMS: Int, ramp: SpeedRamp?, spentMS: Int) {
+        guard let speedRamp, !isHeld else {
+            return (sourceMS(atOffsetMS: offset, runningOn: true), speedRamp, 0)
+        }
+        // The stops as they were before any of this piece's first freeze was
+        // trimmed away, and how far into them the offset is.
+        var whole = speedRamp
+        if startHoldSpentMS > 0, let index = speedRamp.index(ofStopAtSourceMS: sourceInMS) {
+            let stop = speedRamp.stops[index]
+            whole = speedRamp.replacing(stop: index, with: stop.holding(stop.holdMS + startHoldSpentMS)) ?? speedRamp
+        }
+        let into = startHoldSpentMS + offset
+        let frame = max(0, Self.rampedSourceMS(whole, from: sourceInMS, after: into))
+        guard let index = whole.index(ofStopAtSourceMS: frame), whole.stops[index].holdMS > 0
+        else { return (frame, whole, 0) }
+        let stop = whole.stops[index]
+        let reached = whole.timelineMS(fromSourceMS: Double(sourceInMS), toSourceMS: Double(frame))
+        let spent = min(max(0, Int((Double(into) - reached).rounded())), stop.holdMS)
+        return (frame, whole.replacing(stop: index, with: stop.holding(stop.holdMS - spent)) ?? whole, spent)
     }
 
     /// Whether `next` plays on exactly where this piece stops: the same
@@ -313,20 +355,35 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// Trimming never destroys anything: the frames either side are still in
     /// the file, they are merely not being played, and moving the edge back
     /// gives back the identical piece.
+    ///
+    /// Moved into a freeze, the piece holds only what is left of it; moved
+    /// back out, it gives the hold back before it reads any earlier frame.
     public func trimmedStart(byMS delta: Int) -> ClipPiece {
-        let start = speedRamp != nil
-            ? sourceMS(atOffsetMS: delta, runningOn: true)
-            : sourceInMS + (isHeld ? 0 : Self.scaled(delta, byPercent: speedPercent))
+        if speedRamp != nil, !isHeld {
+            let start = carriedOn(fromOffsetMS: delta)
+            return marking(ClipPiece(sourceInMS: start.sourceMS, lengthMS: lengthMS - delta,
+                                     speedPercent: speedPercent, transitionIn: transitionIn, push: push,
+                                     speedRamp: start.ramp, startHoldSpentMS: start.spentMS))
+        }
+        let start = sourceInMS + (isHeld ? 0 : Self.scaled(delta, byPercent: speedPercent))
         return marking(ClipPiece(sourceInMS: start, lengthMS: lengthMS - delta,
                                  speedPercent: speedPercent, transitionIn: transitionIn, push: push,
                                  speedRamp: speedRamp))
+    }
+
+    /// The most timeline a start edge can be pulled back out by before the
+    /// recording runs out behind it: every frame before the piece, and
+    /// whatever of the freeze it starts on was trimmed away.
+    func spareTimelineBeforeStartMS() -> Int {
+        spareTimelineMS(fromSourceMS: 0, toSourceMS: sourceInMS) + startHoldSpentMS
     }
 
     /// The same piece with its end edge moved later by `delta` (earlier, for a
     /// negative one).
     public func trimmedEnd(byMS delta: Int) -> ClipPiece {
         marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + delta, speedPercent: speedPercent,
-                          transitionIn: transitionIn, push: push, speedRamp: speedRamp))
+                          transitionIn: transitionIn, push: push, speedRamp: speedRamp,
+                          startHoldSpentMS: startHoldSpentMS))
     }
 
     /// This piece and the one after it as ONE, where they are two halves of
@@ -337,7 +394,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         guard carriesOn(into: next), next.transitionIn == nil,
               pictureHidden == next.pictureHidden, noiseReduction == next.noiseReduction else { return nil }
         return marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + next.lengthMS,
-                                 speedPercent: speedPercent, transitionIn: transitionIn, speedRamp: speedRamp))
+                                 speedPercent: speedPercent, transitionIn: transitionIn, speedRamp: speedRamp,
+                                 startHoldSpentMS: startHoldSpentMS))
     }
 
     /// The same stretch of recording, played at another speed.
@@ -393,6 +451,7 @@ public struct ClipPiece: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case sourceInMS, lengthMS, speedPercent, transitionIn, push, pictureHidden, noiseReduction, speedRamp
+        case startHoldSpentMS
     }
 
     /// A piece playing at the speed it was recorded writes two numbers. The
@@ -414,6 +473,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         if let noiseReduction { try c.encode(noiseReduction, forKey: .noiseReduction) }
         // ...and speed stops only on a piece that has them.
         if let speedRamp { try c.encode(speedRamp, forKey: .speedRamp) }
+        // ...and what a trim took off a freeze only where it took any.
+        if startHoldSpentMS > 0 { try c.encode(startHoldSpentMS, forKey: .startHoldSpentMS) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -426,7 +487,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
                   push: try c.decodeIfPresent(HoldPush.self, forKey: .push),
                   pictureHidden: try c.decodeIfPresent(Bool.self, forKey: .pictureHidden) ?? false,
                   noiseReduction: try c.decodeIfPresent(NoiseReduction.self, forKey: .noiseReduction),
-                  speedRamp: try c.decodeIfPresent(SpeedRamp.self, forKey: .speedRamp))
+                  speedRamp: try c.decodeIfPresent(SpeedRamp.self, forKey: .speedRamp),
+                  startHoldSpentMS: try c.decodeIfPresent(Int.self, forKey: .startHoldSpentMS) ?? 0)
     }
 }
 
@@ -695,7 +757,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         let joined = ClipPiece(sourceInMS: out.sourceInMS, lengthMS: out.lengthMS + cut.incoming.lengthMS,
                                speedPercent: out.speedPercent, transitionIn: out.transitionIn,
                                pictureHidden: out.pictureHidden, noiseReduction: out.noiseReduction,
-                               speedRamp: out.speedRamp)
+                               speedRamp: out.speedRamp, startHoldSpentMS: out.startHoldSpentMS)
         pieces.replaceSubrange((index - 1)...index, with: [joined])
         settleFirstArrival()
         return true
@@ -732,7 +794,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         guard let piece = piece(at: index) else { return nil }
         let out: Int? = piece.isHeld
             ? nil
-            : -piece.spareTimelineMS(fromSourceMS: 0, toSourceMS: piece.sourceInMS)
+            : -piece.spareTimelineBeforeStartMS()
         return (out, piece.lengthMS - ClipPiece.shortestMS)
     }
 
@@ -760,8 +822,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         guard let piece = piece(at: index), delta != 0 else { return false }
         guard delta <= piece.lengthMS - ClipPiece.shortestMS else { return false }
         if delta < 0, !piece.isHeld {
-            let spare = piece.spareTimelineMS(fromSourceMS: 0, toSourceMS: piece.sourceInMS)
-            guard -delta <= spare else { return false }
+            guard -delta <= piece.spareTimelineBeforeStartMS() else { return false }
         }
         pieces[index] = piece.trimmedStart(byMS: delta)
         return true
