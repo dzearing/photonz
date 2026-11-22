@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-22T15:11:34.782Z",
+  "updated": "2026-11-22T16:27:40.139Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,29 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-22T15:11:34.781Z",
-      "note": "... 29 earlier entries elided",
-      "elided": 29
-    },
-    {
-      "t": "2026-11-16T16:44:29.163Z",
-      "note": "Pass 7 landed 358502609: (1) TimelinePaintedFacts (app, on EditorState, @ObservationIgnored) keeps each painted clip's document facts and each painted cut's mark until the document's layers/tracks are written (new PhotonzDocument.sharesWorkedOutAnswers, tested) or a switch flips (key clock, cut recording, picture fades, transitions); (2) DocumentDerived keeps gaps per track and timelineChildMarks per clip (tested); (3) alternateClips skips its sort when clips are in order; (4) fitted names kept per words/size/ink/scheme/scale; (5) waveform and level line laid with Path.addLines; (6) the film-picture .task keyed by [Key] in strip order, the distance sort moved inside the task. After (3 runs): zoom in 13.2-13.5 (p95 27-28), out 13.7-14.7, 1x 26-28, 16x 17-19; scroll 12.9-13.6 (p95 21.5-24); edits trim 48 / move 35 / blade 72 / undo 50 / transition 89 / title 39. Pixel check on the 60 min edit (/tmp walk = titles-parity at Fit, 8x, 64x) against a HEAD build made the same hour: Fit identical; zoomed, only film pictures landing. 11 task/timeline walks green; key-lanes-walk's picture differs from this morning's but is identical on HEAD built today (not this change). Scripts/test.sh green. Rule added to docs/design/video.md 8f (rule 8, facts kept per document). Audit queue/audits/2026-11-16-timeline-hour-long-painted-facts-kept.json."
-    },
-    {
-      "t": "2026-11-16T16:44:29.234Z",
-      "note": "Still open, bars not reached (zoom/scroll ~13 ms median vs 8.3, near Fit 26-28; edits 35-89 vs 16). Floor experiments on one build (throwaway file switches): five track lanes emptied -> every zoom and scroll frame 8.3 ms (Zoom lanes and ruler still there), so everything left is inside the lanes; painted clips view removed -> scroll 8.3, view kept but painting nothing -> 12.2; Zoom lanes ~2 ms (4 at 4x-16x); ruler 1-3 ms; gaps, gridlines, marquee, names within noise. Lane bodies are lean (counted: a lane builds 0-1 clip views, 0-3 gaps a frame). A fast scroll moves the drawn stretch every ~2 frames and each move rebuilds every lane's whole painting. Next: paint in fixed pieces of time (each an Equatable canvas keyed by its piece), so a stretch move paints only the piece coming in; for the zoom, cheaper paint per clip (waveform columns per frame are the largest app leaf). Left rough, not filed: hasClickMarks and soundCleaningProgress each copy a Layer per clip per frame (~1%). Measuring: /tmp/tl60.json (timeline+idleBuilds+edits), runs vary +-1 ms."
-    },
-    {
-      "t": "2026-11-16T16:44:29.305Z",
-      "note": "Pass 7 landed 358502609: painted clips and cuts are read off the document once, not every frame. Zoom 16.6 -> 13.3 ms a frame (near Fit 35 -> 27), scroll 15.9 -> 13.2, edits a little faster, look unchanged. Bars not reached (8.3 ms zoom/scroll, 16 ms edits); stays open for painting in fixed pieces of time."
-    },
-    {
-      "t": "2026-11-16T20:25:53.897Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-16T20:26:20.174Z",
-      "note": "Main red at start of pass 8: run 43930690711 slice 2, TextRevealUnclippedTests again (sessionsStage worst.share 0.011), already owned by find-out-why-the-legibility-check-once-read-the. Nothing here touches titles' entrances."
+      "t": "2026-11-22T16:27:40.138Z",
+      "note": "... 34 earlier entries elided",
+      "elided": 34
     },
     {
       "t": "2026-11-16T21:42:23.497Z",
@@ -506,9 +486,29 @@
     {
       "t": "2026-11-22T15:11:34.780Z",
       "note": "Pass 22 landed 85922f62c: a video no longer runs a picture's motion loop (it redrew the whole edit 30 times a second after opening); zoom in late frames 44-48 -> 19-22 of 240, mean 10.1 -> 9.0 ms (same build, switch). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+    },
+    {
+      "t": "2026-11-22T15:19:24.331Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T16:27:31.012Z",
+      "note": "Pass 23 (2026-11-22). Main red at start: run 45032918386 slice 1 exited 4, parked (every test sat ~784 s, none failed), not this task; folded into a-test-slice-on-github-that-crashes-once-still-f. Baseline at 1f9984666 (60 min edit, timeline measure, load 2-5): zoom in 14 late of 240 (worst 44 ms), out 11 (25), near Fit 82 of 648 (42), scroll 13 of 360 (27). Per-frame split of the pass sampler (frame labels): the worst zoom in frame is frame 1, a 27.8 ms pass: TimelinePaintedPicture.lay 9.3 ms + lane getter 5.3. Traced why: at rest after Fit each lane's canvas is the drawn stretch (0..7.2M ms, 3112 pt); the first zoom step holds a window+sliver canvas at the SAME scale, so pass 21's late lay (scale changes only) did not apply and every lane rebuilt."
+    },
+    {
+      "t": "2026-11-22T16:27:31.084Z",
+      "note": "Pass 23 change: (1) TimelineLaneFrame.isZoom (holding/zooming true, scrolling false; tested): on a zoom's frame a picture moving to any new canvas lays late. (2) A hold begun from lanes painting the drawn stretch keeps it (TimelineHeldPainting.paintedMS, read in the timelineZoom setter before the write; TimelineLaneFrame.holding(painted:), tested), so frame 1 is the at-rest lane stretched and LanePaintingKept hits. (3) TimelinePaintedPicture.asked (a number per painting view build): a body run only because the lane frame changed keeps its picture. A/B one build, throwaway switches, alternating: late lay alone zoom in late 24/18/15 -> 13/14/14, worst unchanged; both: zoom in worst 42-44 -> 26/28, near Fit late 84-95 -> 74/77 (final build 90/90, so noise), first frame pass 28 -> ~20 ms under the profiler (lanes 2.6 ms, no lays). 13 walks green (task's 10 + an-editing-session, timeline-zooms-out-past-the-end, hour-long open); speed-walk ok; Scripts/test.sh exit 0. Looked at Fit and after-pinch captures of the 60 min edit: lanes filled, cuts, names, fade diamonds in place (the first zoom frame cannot be photographed: snapshots land after the 30 ms settle). Rule in docs/design/video.md 8f. Audit queue/audits/2026-11-22-timeline-hour-long-pass23-first-zoom-frame.json. Landed be620f3e0."
+    },
+    {
+      "t": "2026-11-22T16:27:31.158Z",
+      "note": "Still open, bars not reached: worst zoom frame 26-33 ms vs 16 (frame 1's pass is now SwiftUI graph upkeep for the frame change, ~20 ms profiled), near Fit ~12% late vs 5%, zoom in ~6%, edits (a-long-edit-with-transitions-plays-scrubs-and-ed). Next: frame 1 still invalidates every lane (timelineLaneFrame nil -> holding); find what observes it beyond the lane body (TimelinePaintedHands/Names, ClickTicks, ClipPiecesBar read the env) and whether a standing frame at rest could equal the first hold. Left rough, not filed: none new."
+    },
+    {
+      "t": "2026-11-22T16:27:40.137Z",
+      "note": "Pass 23 landed be620f3e0: a pinch from rest no longer rebuilds every lane and lays every picture on its first frame; zoom in worst frame 42-44 -> 26-28 ms (same build, switches), first pass 28 -> ~20 ms. Bars of 8.3 ms zoom/scroll (95%, none over 16) and 16 ms edits not reached; stays open (next: the frame change still invalidates every lane)."
     }
   ],
-  "started": "2026-11-22T14:27:44.736Z",
+  "started": "2026-11-22T15:19:24.330Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",

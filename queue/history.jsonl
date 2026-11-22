@@ -18697,3 +18697,9 @@
 {"t":"2026-11-22T15:11:34.632Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-22T15:11:34.701Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-22T15:11:34.783Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 22 landed 85922f62c: a video no longer runs a picture's motion loop (it redrew the whole edit 30 times a second after opening); zoom in late frames 44-48 -> 19-22 of 240, mean 10.1 -> 9.0 ms (same build, switch). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
+{"t":"2026-11-22T15:19:24.336Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-22T15:19:57.517Z","ev":"task_note","id":"a-test-slice-on-github-that-crashes-once-still-f"}
+{"t":"2026-11-22T16:27:31.015Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-22T16:27:31.087Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-22T16:27:31.161Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-22T16:27:40.140Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 23 landed be620f3e0: a pinch from rest no longer rebuilds every lane and lays every picture on its first frame; zoom in worst frame 42-44 -> 26-28 ms (same build, switches), first pass 28 -> ~20 ms. Bars of 8.3 ms zoom/scroll (95%, none over 16) and 16 ms edits not reached; stays open (next: the frame change still invalidates every lane)."}
