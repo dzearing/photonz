@@ -31,6 +31,36 @@ import Testing
                 == TimelineLaneFrame.holding(painted, leftEdgeMS: edge, zoomScale: 2))
     }
 
+    /// A hold begun from a lane at rest that painted the drawn stretch (after
+    /// a scroll, or as a file opens) keeps that stretch as its painting and
+    /// its bars' stretch, so the first frame of the zoom paints nothing again
+    /// and lays no new picture: the at-rest lane, stretched (pass 23).
+    @Test func aHoldFromRestKeepsTheStretchTheLanePainted() {
+        let rest = window(scale: 1, startMS: 0)
+        let stretch = 0.0...7_200_000
+        let frame = TimelineLaneFrame.holding(rest, leftEdgeMS: 0...3_600_000, zoomScale: 1, painted: stretch)
+        #expect(frame.ruler == rest)
+        #expect(frame.paintedMS == stretch)
+        #expect(frame.drawnMS == stretch)
+        #expect(frame.sightMargin == TimelineSight.margin)
+        #expect(frame.isZoom)
+        // Without one, the window and its sliver, as a fresh zoom frame paints.
+        let plain = TimelineLaneFrame.holding(rest, leftEdgeMS: 0...0, zoomScale: 1)
+        #expect(plain.paintedMS == TimelinePaint.paintedMS(window: rest, stretch: 0...0, isZooming: true))
+    }
+
+    /// A zoom's frames say they are a zoom's and a scroll's say they are not:
+    /// a lane's picture moving to a new canvas on a zoom shows the last one
+    /// for the frame the new one takes to lay, and on a scroll's step lays
+    /// at once (`TimelinePaintedPicture`, pass 23).
+    @Test func aZoomsFrameSaysItIsAZoom() {
+        let now = window(scale: 2, startMS: 600_000)
+        #expect(TimelineLaneFrame.holding(now, leftEdgeMS: 0...0, zoomScale: 2).isZoom)
+        #expect(TimelineLaneFrame.zooming(now, leftEdgeMS: 0...0, zoomScale: 2).isZoom)
+        #expect(!TimelineLaneFrame.scrolling(now, anchorMS: 590_000, drawnMS: 560_000...1_490_000,
+                                             leftEdgeMS: 590_000...1_000_000, zoomScale: 2).isZoom)
+    }
+
     /// Every moment slid and stretched from a held frame lands where the
     /// window puts it, to well inside a point: time across a lane is linear.
     @Test func aHeldFrameStretchedLandsWhereTheWindowPutsIt() {

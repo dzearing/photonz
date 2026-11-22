@@ -41,15 +41,22 @@ public struct TimelineLaneFrame: Hashable, Sendable {
     public let leftEdgeMS: ClosedRange<Double>
     /// How far in, for how strongly a clip's pictures show.
     public let zoomScale: Double
+    /// A zoom's frame, not a scroll's. A lane's picture that moves to a new
+    /// canvas on a zoom shows the last one for the frame the new one takes to
+    /// lay, the first frame of a zoom from rest included (it moves from the
+    /// drawn stretch to the window at the same scale); on a scroll's step it
+    /// lays at once (`TimelinePaintedPicture`, pass 23).
+    public let isZoom: Bool
 
     public init(ruler: MotionStripRuler, paintedMS: ClosedRange<Double>, drawnMS: ClosedRange<Double>,
-                sightMargin: Double, leftEdgeMS: ClosedRange<Double>, zoomScale: Double) {
+                sightMargin: Double, leftEdgeMS: ClosedRange<Double>, zoomScale: Double, isZoom: Bool = false) {
         self.ruler = ruler
         self.paintedMS = paintedMS
         self.drawnMS = drawnMS
         self.sightMargin = sightMargin
         self.leftEdgeMS = leftEdgeMS
         self.zoomScale = zoomScale
+        self.isZoom = isZoom
     }
 
     /// How far a scroll's frame builds past each side of its window: its
@@ -60,11 +67,21 @@ public struct TimelineLaneFrame: Hashable, Sendable {
 
     /// The frame while a zoom stretches the painting laid under `held`, the
     /// window it was laid at, with the edge's reach then.
+    ///
+    /// `painted` is what the lane painted at rest when the hold began from a
+    /// lane painting the drawn stretch (after a scroll, or as a file opens):
+    /// kept as the painting and the bars' stretch, the first frame of a zoom
+    /// lays out and paints exactly what the lane at rest did, and nothing is
+    /// built or laid again for it. The first zoom frame from Fit on the
+    /// hour-long reference edit built every lane and laid every picture
+    /// again for a stretch it then threw away, a 28 ms pass (2026-11-22,
+    /// pass 23). Nil paints the window and a sliver, as a fresh zoom frame.
     public static func holding(_ held: MotionStripRuler, leftEdgeMS: ClosedRange<Double>,
-                               zoomScale: Double) -> TimelineLaneFrame {
-        let painted = TimelinePaint.paintedMS(window: held, stretch: 0...0, isZooming: true)
+                               zoomScale: Double, painted kept: ClosedRange<Double>? = nil) -> TimelineLaneFrame {
+        let painted = kept ?? TimelinePaint.paintedMS(window: held, stretch: 0...0, isZooming: true)
         return TimelineLaneFrame(ruler: held, paintedMS: painted, drawnMS: painted,
-                                 sightMargin: TimelineSight.margin, leftEdgeMS: leftEdgeMS, zoomScale: zoomScale)
+                                 sightMargin: TimelineSight.margin, leftEdgeMS: leftEdgeMS, zoomScale: zoomScale,
+                                 isZoom: true)
     }
 
     /// The frame of a zoom frame that paints afresh: the window itself,

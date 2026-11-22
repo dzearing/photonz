@@ -173,7 +173,8 @@ struct TimelinePaintedClips: View, Equatable {
                     // zoom holding it stretches without drawing it again
                     // (`TimelinePaintedPicture`).
                     TimelinePaintedPicture(width: canvas.width, height: laneHeight, scale: displayScale,
-                                           scheme: colorScheme, canvas: canvas, laneWidth: laneWidth) { context in
+                                           scheme: colorScheme, canvas: canvas, laneWidth: laneWidth,
+                                           asked: TimelinePaintedPicture.ask()) { context in
                         paint(&context, Date.timeIntervalSinceReferenceDate)
                     }
                 } else {
@@ -997,7 +998,7 @@ struct TimelinePaintedCuts: View, Equatable {
         let ruler = canvas.ruler
         // Laid into a picture once, as the clips are (`TimelinePaintedPicture`).
         TimelinePaintedPicture(width: canvas.width, height: height, scale: displayScale, scheme: scheme,
-                               canvas: canvas, laneWidth: laneWidth) { context in
+                               canvas: canvas, laneWidth: laneWidth, asked: TimelinePaintedPicture.ask()) { context in
             let scale = max(1, context.environment.displayScale)
             func snap(_ v: CGFloat) -> CGFloat { (v * scale).rounded() / scale }
             for mark in marks {
@@ -1087,8 +1088,7 @@ struct TimelinePaintedCuts: View, Equatable {
 /// whole-hour view, every one of those frames late (2026-11-22, pass 21). So
 /// while the lane has a frame (`TimelineLaneFrame`: the timeline is moving
 /// and no hand is in a lane) and the picture moves to a canvas of another
-/// scale, that
-/// frame shows the last picture placed on the new canvas
+/// scale, or to any other canvas on a zoom's frame, that frame shows the last picture placed on the new canvas
 /// (`TimelinePaint.Canvas.place(ofPictureLaidOn:laneWidth:)`), as a held
 /// zoom already shows it, and the new one is laid once the frame is out
 /// (`AfterTheFrame`). At rest a picture is always laid on the frame that asks
@@ -1096,6 +1096,11 @@ struct TimelinePaintedCuts: View, Equatable {
 /// nothing a late lay missed outlives the movement. A scroll's step lays at
 /// once: laid late it showed no gain on the frame that steps and cost the
 /// frame after (16 to 27 late frames of 360 against 9 to 13).
+///
+/// **A zoom's frame that changes nothing painted keeps the picture.** The lane
+/// frame is read from the environment, so this body runs again when a zoom
+/// begins even when the painting view above it did not change; `asked` says
+/// so, and the picture laid for that painting stands (2026-11-22, pass 23).
 struct TimelinePaintedPicture: View {
     let width: CGFloat
     let height: CGFloat
@@ -1106,6 +1111,11 @@ struct TimelinePaintedPicture: View {
     /// every picture at once.
     var canvas: TimelinePaint.Canvas? = nil
     var laneWidth: CGFloat = 0
+    /// Which build of the painting view asked for this picture
+    /// (`TimelinePaintedPicture.ask()`): the same number when only the
+    /// lane's frame changed and this body runs again for it, a new one when
+    /// the painting was built again and may paint something else.
+    var asked = 0
     let paint: (inout GraphicsContext) -> Void
 
     @Environment(\.timelineLaneFrame) private var laneFrame
@@ -1114,6 +1124,13 @@ struct TimelinePaintedPicture: View {
     @State private var landings = 0
 
     static let margin: CGFloat = 12
+    @MainActor private static var asks = 0
+    /// A new number for each build of a painting view, handed to its picture
+    /// as `asked`.
+    @MainActor static func ask() -> Int {
+        asks &+= 1
+        return asks
+    }
     #if PHOTONZ_PLAYTEST
     /// How long laying pictures took, for the speed walk's line.
     @MainActor static var laidMS: Double = 0
@@ -1134,8 +1151,10 @@ struct TimelinePaintedPicture: View {
         }
         var picture: CGImage?
         var shape: Shape?
+        /// The `asked` the picture was laid for.
+        var asked: Int?
         /// The painting a late lay lays, the newest asked for.
-        var waiting: (shape: Shape, paint: (inout GraphicsContext) -> Void)?
+        var waiting: (shape: Shape, asked: Int, paint: (inout GraphicsContext) -> Void)?
         /// A late picture landed and not shown yet.
         var landed = false
         /// The picture shown was laid late, so it is laid again at rest.
@@ -1169,11 +1188,22 @@ struct TimelinePaintedPicture: View {
             kept.landed = false
             if kept.shape == shape, kept.waiting == nil { return (kept.picture, unmoved) }
         }
+        // A zoom beginning, or a frame that changes nothing this picture
+        // paints: only the lane's frame moved, so the picture laid for this
+        // same painting stands, slid and stretched with the lane. The first
+        // frame of a zoom from rest laid every lane's picture again for the
+        // same painting, about 9 ms on the hour-long reference edit
+        // (2026-11-22, pass 23). Laid again at rest, like any other.
+        if laneFrame?.isZoom == true, kept.asked == asked, kept.shape == shape, kept.waiting == nil,
+           let picture = kept.picture {
+            return (picture, unmoved)
+        }
         if laneFrame != nil, let canvas, laneWidth > 0, let picture = kept.picture, let last = kept.shape,
            let lastCanvas = last.canvas, last.height == height, last.scale == scale, last.scheme == scheme,
-           lastCanvas.ruler.spanMS != canvas.ruler.spanMS, fits {
+           lastCanvas.ruler.spanMS != canvas.ruler.spanMS || (laneFrame?.isZoom == true && lastCanvas != canvas),
+           fits {
             let first = kept.waiting == nil
-            kept.waiting = (shape, paint)
+            kept.waiting = (shape, asked, paint)
             if first { layLate() }
             #if PHOTONZ_PLAYTEST
             Self.laidLate += 1
@@ -1188,6 +1218,7 @@ struct TimelinePaintedPicture: View {
         kept.laidLate = false
         kept.picture = picture
         kept.shape = shape
+        kept.asked = asked
         return (picture, unmoved)
     }
 
@@ -1205,6 +1236,7 @@ struct TimelinePaintedPicture: View {
             let s = waiting.shape
             kept.picture = Self.lay(waiting.paint, width: s.width, height: s.height, scale: s.scale, scheme: s.scheme)
             kept.shape = s
+            kept.asked = waiting.asked
             kept.landed = true
             kept.laidLate = true
             landings.wrappedValue &+= 1

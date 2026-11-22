@@ -113,7 +113,8 @@ extension EditorState {
     /// any other move, paints at the window. A zoom a step at a time near
     /// the whole-hour view of the reference edit painted every lane again on
     /// every frame, for a change of scale of four per cent (2026-11-19).
-    func holdTimelinePainting(to newValue: TimelineZoom, isZoom: Bool) {
+    func holdTimelinePainting(to newValue: TimelineZoom, isZoom: Bool,
+                              atRest: (stretch: ClosedRange<Double>, leftEdge: ClosedRange<Double>)? = nil) {
         if !isZoom, newValue == timelineZoom { return }
         guard isZoom, motionStripMeasuresADocument, canOpenOutTheTimeline else {
             letGoOfTheHeldPainting()
@@ -121,7 +122,8 @@ extension EditorState {
         }
         let now = CACurrentMediaTime()
         let held = timelineHeldPainting
-            ?? TimelineHeldPainting(zoom: timelineZoom, leftEdgeMS: timelineLeftEdgeRangeMS, since: now)
+            ?? TimelineHeldPainting(zoom: timelineZoom, leftEdgeMS: atRest?.leftEdge ?? timelineLeftEdgeRangeMS,
+                                    since: now, paintedMS: atRest?.stretch)
         guard TimelinePaint.stretch(painted: paintRuler(held.zoom), to: paintRuler(newValue),
                                     heldForMS: (now - held.since) * 1000) != nil else {
             letGoOfTheHeldPainting()
@@ -155,7 +157,8 @@ extension EditorState {
         let frame: TimelineLaneFrame
         if let held = timelineHeldPainting {
             frame = .holding(paintRuler(held.zoom), leftEdgeMS: held.leftEdgeMS,
-                             zoomScale: TimelineZoom(scale: held.zoom.scale).clamped(documentMS: length).scale)
+                             zoomScale: TimelineZoom(scale: held.zoom.scale).clamped(documentMS: length).scale,
+                             painted: held.paintedMS)
         } else if timelinePaintsTheWindow {
             frame = .zooming(motionStripRuler, leftEdgeMS: timelineLeftEdgeRangeMS,
                              zoomScale: timelineScaleOnly.scale)
@@ -672,6 +675,12 @@ struct TimelineHeldPainting: Equatable {
     /// When it was first held (`CACurrentMediaTime`): a quick zoom may
     /// stretch it further than a slow one (`TimelinePaint.quickHoldMS`).
     let since: CFTimeInterval
+    /// What the lanes painted at rest when the hold began from lanes
+    /// painting the drawn stretch: the held painting keeps it, so the first
+    /// frame of the zoom is the lane at rest stretched, with nothing built
+    /// or laid again (`TimelineLaneFrame.holding`, pass 23). Nil when the
+    /// lanes were already painting the window, as a zoom does.
+    var paintedMS: ClosedRange<Double>? = nil
 
     /// How long after the last step of a zoom the lanes paint again.
     static let settleMS = 30

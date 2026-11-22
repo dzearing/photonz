@@ -2151,12 +2151,16 @@ final class EditorState {
             // A change of scale is a zoom, and the painting lanes paint only
             // the window until the next move along (`TimelinePaint.paintedMS`).
             let isZoom = TimelinePaint.isZoom(from: timelineZoom, to: newValue)
+            // What the lanes painted at rest, read before this write moves
+            // it, for a hold that begins here (`TimelineHeldPainting.paintedMS`).
+            let painted = isZoom && timelineHeldPainting == nil && !timelinePaintsTheWindow
+                ? (stretch: timelineDrawnMS, leftEdge: timelineLeftEdgeRangeMS) : nil
             if isZoom {
                 if !timelinePaintsTheWindow { timelinePaintsTheWindow = true }
             } else if newValue.startMS != timelineZoomStartMS, timelinePaintsTheWindow {
                 timelinePaintsTheWindow = false
             }
-            holdTimelinePainting(to: newValue, isZoom: isZoom)
+            holdTimelinePainting(to: newValue, isZoom: isZoom, atRest: painted)
             if newValue.scale != timelineZoomScale { timelineZoomScale = newValue.scale }
             if newValue.startMS != timelineZoomStartMS { timelineZoomStartMS = newValue.startMS }
             let stretch = TimelineDrawnStretch(windowStartMS: newValue.startMS,

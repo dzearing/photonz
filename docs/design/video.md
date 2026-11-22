@@ -1478,6 +1478,22 @@ The rule, for any view added to the editor window:
      scroll's step late (no gain on the step, 16 to 27 late frames of 360
      against 9 to 13). Laying the picture into a Core Graphics context of our
      own instead of `ImageRenderer.cgImage` is four times slower.
+   - **A zoom from rest begins with the lanes as they rest** (`TimelineHeldPainting.paintedMS`,
+     `TimelineLaneFrame.holding(painted:)`, `TimelineLaneFrame.isZoom`,
+     `TimelinePaintedPicture.asked`, 2026-11-22, pass 23). At rest after a
+     scroll or on opening, a lane paints the wide drawn stretch; the first
+     step of a zoom from there held a painting of the window and a sliver
+     instead, so that one frame built every lane again and laid every
+     lane's picture again at the same scale (the late lay above only
+     covered a change of scale): a 28 ms pass, the worst frame of every zoom
+     in (38 to 53 ms). Now a hold that begins from lanes painting the drawn
+     stretch keeps that stretch as its painting and its bars' stretch, so
+     the first frame is the lane at rest stretched; a picture whose painting
+     view did not change keeps its picture when only the lane's frame does;
+     and on a zoom's frame a move to any new canvas lays late. Zoom in's
+     worst frame 42 to 44 ms fell to 26 to 28 (one build, switches), its
+     first pass to about 20 ms, now SwiftUI graph upkeep for the frame
+     change rather than lanes or pictures.
    - **A video never runs a picture's motion loop** (`hasALoopToPlay`,
      2026-11-22, pass 22). A picture that arrives with motion in it arrives
      moving, on a thirty-a-second loop that redraws the canvas

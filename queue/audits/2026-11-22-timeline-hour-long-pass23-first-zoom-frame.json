@@ -1,0 +1,26 @@
+{
+  "feature": "The first frame of a pinch on the hour-long timeline no longer hitches",
+  "epic": "video-perf",
+  "summary": "Starting to zoom the timeline of the 60 minute edit from rest used to rebuild every track and redraw every track's picture on the very first frame, a visible catch of about 40 ms. That first frame now shows the timeline as it was, stretched, and the worst frame of a zoom in fell to about 30 ms.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Measured with a timeline-only speed walk on the probe: one build with throwaway switches, two or three runs each way, then two runs on the final build.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 60 },
+    { "do": "Press Backslash to see the whole hour, and wait a moment.", "shot": "2026-11-22-timeline-hour-long-pass23-fit-sc.png" },
+    { "do": "Pinch the timeline in, starting from still, and watch the very start of the pinch." },
+    { "do": "Stop, then pinch again from still, a few times.", "shot": "2026-11-22-timeline-hour-long-pass23-after-pinch-sc.png" },
+    { "do": "Scroll along a little, stop, and pinch from there." }
+  ],
+  "evaluate": [
+    "Does the start of a pinch from still feel as smooth as the middle of one?",
+    "At the start of a pinch, do the clips, cuts and names stay where you expect, with nothing blinking?",
+    "When you stop, does the timeline settle to sharp names and pictures straight away?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, one build with switches, alternating (load 2 to 5): zoom in worst frame 42/42/42 (old) and 44/43 (late lay only) to 26/28 (both changes); its first frame's main thread pass went from 28 ms (9 ms laying pictures, 5 ms rebuilding lanes) to 20 ms (2.6 ms of lanes, no pictures) under the profiler. Near Fit late frames 84 to 95 to 74 to 77 of 648 on that build, but 90 and 90 on two runs of the final build, so read it as noise. Zoom in late 24/18/15 to 13/14/14 of 240 with the late lay alone, 10 to 16 with both. Zoom out and scroll unchanged.",
+    "Two changes: a zoom's frame lays a lane's new picture after the frame whenever the picture moves to a new canvas, not only when the scale changes (the first zoom step from rest moves from the wide stretch to the window at the same scale), and a zoom that begins from rest holds exactly what the lanes painted at rest, so the first frame builds and lays nothing new.",
+    "The first frame of a zoom cannot be photographed by a walk (the picture is taken after the zoom settles), so the pictures here are before and after a pinch; the first frame shows the at-rest painting stretched, which is what every held zoom frame shows.",
+    "Bars of the task not reached: the worst zoom frame is still 26 to 33 ms against 16 (its first pass is now SwiftUI graph upkeep for the frame change), near Fit about 12 per cent of frames late against 5, zoom in about 6 per cent, edits (owned by a-long-edit-with-transitions-plays-scrubs-and-ed). The task stays open.",
+    "No mock covers the timeline's speed; nothing about how the timeline looks at rest changed."
+  ]
+}
