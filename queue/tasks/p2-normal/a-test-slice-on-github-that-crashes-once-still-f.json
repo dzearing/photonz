@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-22T10:55:50.886Z",
-  "updated": "2026-11-22T15:19:57.516Z",
+  "updated": "2026-11-22T18:35:33.162Z",
   "deps": [],
   "blockedBy": [],
   "notes": "gh run view 45003209864 --log-failed: line ~18324 'swiftpm-testing-helper ... --filter ^PhotonzRenderTests... exited with unexpected signal code 11' at 08:43:33 (6 min into the slice, 346 s of tests), then '==> The test helper did not fail, it DIED ... Throwing .build away and running again from scratch', 'Building for debugging... [0/110]', still compiling PhotonzCoreTests at 09:02:04, then '##[error]The action Run tests has timed out after 25 minutes' at 09:02:22. Checked the last 12 failed main runs: this is the only one with a signal 10/11 or a timeout. Ideas, not checked: on CI the .build comes from actions/cache restore, so a half-built cache is plausible; the wrapper could rerun the slice without throwing away the whole .build first (rebuild only the test product), or CI could carry a longer timeout for the retry. Scripts/test.sh owns the retry.",
@@ -38,6 +38,33 @@
     {
       "t": "2026-11-22T15:19:57.515Z",
       "note": "Also on 2026-11-22: run 45032918386 (commit 93fbf8874, a queue-only commit) slice 1 ended red with exit 4, 'Stopped: the run was parked, not failing': from 14:37:47 to 14:50:52 every running test sat ~784 s (e.g. 'Several failed steps stay one line...', 'Motion blur, as drawn' suite 871 s) and no test failed. A second way a GitHub slice goes red without a failing test; the next run (45036979984) was started on the following commit."
+    },
+    {
+      "t": "2026-11-22T18:08:33.176Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T18:22:58.477Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-22T18:22:58.551Z",
+      "note": "Acceptance 2, found out: the signal 11 in run 45003209864 was a real crash in a test, not a half-built folder. The run restored .build from 6d4e30f90's run, whose slice 3 ran the same test bundle through all 5624 tests without dying (it failed only the MP4 expectation since fixed). Between the two, only Sources/Photonz (the app module) changed: the Build step compiled 'Photonz' alone (430 Compiling Photonz lines, Linking Photonz, no test module compiled or relinked), and no test target depends on Photonz. So the crashed bundle was byte for byte the one that had passed, and the rebuild could only have made it again. No GPU out-of-memory lines this time (unlike ci-test-slices-stop-crashing-on-the-runner-s-gpu). In flight when it died, from the helper's last lines: BrushDynamicsRenderingTests.whatTheHandSeesIsWhatLands over every medium, and the end of FrameOnASurfaceTests; the runner kept no crash report, so the frame is not known. Next time it is: the log prints the report's frames and CI keeps the .ips as an artifact."
+    },
+    {
+      "t": "2026-11-22T18:22:58.622Z",
+      "note": "Fix: Scripts/test.sh on GitHub (GITHUB_ACTIONS=true) reruns the slice once on the same build instead of rm -rf .build: green with a ::warning:: naming the crash, or red with an ::error:: naming it. Both paths print what macOS wrote (Scripts/crash-report.mjs --process swiftpm-testing-helper, new; drill case added). ci.yml/release.yml: Run tests 25 -> 30 min, job 45 -> 55, because the slowest of 21 green slices was 689 s and twice that plus the report wait is 23.6 min, too close to 25. CI also uploads swiftpm-testing-helper*.ips (always, ignore if none). Verified locally: GITHUB_ACTIONS=true PHOTONZ_TEST_CRASH_DRILL=1 (exit 0 in 33 s, no rebuild, warning line), plus PHOTONZ_TEST_CRASH_DRILL_TWICE=1 (exit 1 in 19 s, error line, .build kept), and a REAL segfaulting throwaway test: crash-once-then-pass exit 0 in 93 s with the warning naming 'EXC_BAD_ACCESS (SIGSEGV) in ZZTemporaryCrashProbeTests.diesOnSignal11()', crash-twice exit 1 naming it. Found on the way: macOS wrote a helper's report 8 s after the crash, so the wait is 20 s and the first crash is looked up again after the retry. Full Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-22T18:22:58.692Z",
+      "note": "Left rough (not filed): the other way a slice goes red with no failing test, a parked run on the runner (exit 4, run 45032918386), is not changed here; once seen, logged above. It reruns nothing and says parked, which is honest."
+    },
+    {
+      "t": "2026-11-22T18:35:33.160Z",
+      "note": "On GitHub, Scripts/test.sh now reruns a slice whose test helper dies on signal 10/11 on the SAME build (no 19 min rebuild): green with a ::warning:: naming the crash, or red with an ::error:: naming it, both with the crash report's frames (crash-report.mjs --process swiftpm-testing-helper, drilled). Run tests 30 min / job 55 in ci.yml and release.yml so twice the slowest slice (689 s) fits; helper .ips kept as an artifact. Run 45003209864's crash was real, not a stale build: only the app module was rebuilt and no test target uses it, so the bundle was the one that had passed slice 3 before. Verified with the drill both ways and a real segfaulting throwaway test both ways (exit 0 in 93 s / exit 1, crash named); full Scripts/test.sh green; CI run 45054778101 on 4240af574 green on all four jobs."
     }
-  ]
+  ],
+  "started": "2026-11-22T18:08:33.175Z",
+  "walks": [],
+  "completed": "2026-11-22T18:35:33.161Z"
 }
