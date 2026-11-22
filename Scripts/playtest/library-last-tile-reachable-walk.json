@@ -145,15 +145,14 @@
       "count": 1
     },
     {
-      "do": "waitFor",
-      "condition": "sectionHeaderInView",
-      "value": "Library",
-      "timeout": 4
+      "comment": "The shelf was scrolled 600 points down to reach this tile, so its header is above the pane by the hand's own scroll; what must hold is that the tile double clicked is still in view where the hand left it (2026-11-21).",
+      "do": "expectInView",
+      "field": "Grid Horizon"
     },
     {
       "do": "describe",
       "stage": "2-deepest-tile-added",
-      "note": "Grid Horizon, the last background, scrolled to on the shelf and double clicked, is on the timeline, and the Library is still on screen"
+      "note": "Grid Horizon, the last background, scrolled to on the shelf and double clicked, is on the timeline, and its tile is still in view on the shelf"
     },
     {
       "do": "snapshot",

@@ -133,9 +133,34 @@ import SwiftUI
         }
     }
 
+    /// Where each section drawn in the Library's pane sits inside that pane's
+    /// scroller, as the pane measures it for its own reveal.
+    var shelfFrames: [InspectorSectionID: CGRect] = [:]
+    /// The sections the Library's pane is drawing, as it says itself.
+    var shelfVisible: [InspectorSectionID] = []
+
     /// The visible sections with a measurement, in draw order.
+    ///
+    /// A section in the Library's pane is placed from where it sits in the
+    /// pane plus where the pane sits in the panel. Its own frame against the
+    /// whole panel is not re-measured when only the pane moves (the scroller
+    /// hosts its content apart), so after a pick reshaped the panel the
+    /// Library read 300 to 644 for good while its pane was at 478 to 641 and
+    /// its header plainly on screen (library-last-tile-reachable-walk and
+    /// opening-a-section-folds-the-near-side-walk, 2026-11-21).
     var measured: [Section] {
-        visible.compactMap { frames[$0] }
+        // The Library's pane says what it holds itself: the list the rest of
+        // the panel hands over is built where only the pick redraws, and in
+        // about one run in three after View > Library it never heard that the
+        // pane had gained the Library.
+        let drawn = visible.filter { !shelfVisible.contains($0) } + shelfVisible
+        return drawn.compactMap { id in
+            guard id == .library, let inPane = shelfFrames[id], let shelfBand else { return frames[id] }
+            // Some runs never get the panel-wide report at all, only this one
+            // (about one in three after View > Library on a recording).
+            return Section(id: id, title: frames[id]?.title ?? "Library",
+                           frame: inPane.offsetBy(dx: 0, dy: shelfBand.lowerBound))
+        }
     }
 
     /// The empty panel inside the Layers pane under its last list: the
@@ -177,6 +202,12 @@ import SwiftUI
 @MainActor func recordInspectorSection(_ id: InspectorSectionID, title: String, frame: CGRect) {
     InspectorLayoutProbe.shared.frames[id] =
         InspectorLayoutProbe.Section(id: id, title: title, frame: frame)
+}
+
+/// A section drawn in the Library's pane, where it sits in the pane's own
+/// scroller (`InspectorLayoutProbe.measured`).
+@MainActor func recordInspectorShelfSection(_ id: InspectorSectionID, inPane frame: CGRect) {
+    InspectorLayoutProbe.shared.shelfFrames[id] = frame
 }
 
 @MainActor func recordInspectorViewportHeight(_ height: CGFloat) {
@@ -248,11 +279,22 @@ extension View {
             InspectorLayoutProbe.shared.visible = ids
         }
     }
+
+    /// Tells the probe which sections the Library's pane is drawing.
+    func inspectorShelfProbe(sections: [InspectorSectionID]) -> some View {
+        onChange(of: sections, initial: true) { _, ids in
+            InspectorLayoutProbe.shared.shelfVisible = ids
+        }
+        // No pane, nothing in it: the Library put away must not read as
+        // still drawn.
+        .onDisappear { InspectorLayoutProbe.shared.shelfVisible = [] }
+    }
 }
 
 #else
 
 @MainActor func recordInspectorSection(_ id: InspectorSectionID, title: String, frame: CGRect) {}
+@MainActor func recordInspectorShelfSection(_ id: InspectorSectionID, inPane frame: CGRect) {}
 @MainActor func recordInspectorViewportHeight(_ height: CGFloat) {}
 @MainActor func recordInspectorDockFrame(_ frame: CGRect) {}
 @MainActor func recordInspectorBelowBand(_ band: ClosedRange<CGFloat>) {}
@@ -273,6 +315,7 @@ extension View {
 
 extension View {
     func inspectorLayoutProbe(sections: [InspectorSectionID]) -> some View { self }
+    func inspectorShelfProbe(sections: [InspectorSectionID]) -> some View { self }
 }
 
 #endif

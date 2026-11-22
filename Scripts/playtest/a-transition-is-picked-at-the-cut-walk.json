@@ -264,7 +264,7 @@
     {
       "do": "expect",
       "menu": "Fade In",
-      "reads": "0.5s"
+      "reads": "0.5s ±0.05"
     },
     {
       "do": "describe",

@@ -3271,8 +3271,18 @@ private final class Run {
 
         case .press(let control, let row, let count, let modifiers, let across, let longestUnderMS,
                     let stallMS):
+            // A timed press can be profiled pass by pass, like a speed walk's
+            // edits, when `Scripts/perf/pass-profile.sh` asks for it.
+            if longestUnderMS != nil {
+                PassSampler.shared.startIfOn()
+                PassSampler.label = "\(number) press \(control)"
+            }
             try await pressControl(control, in: row, count: count, modifiers: modifiers,
                                    across: across, stallMS: stallMS, number: number)
+            if longestUnderMS != nil, !PassSampler.label.isEmpty {
+                PassSampler.label = ""
+                PassSampler.shared.dump()
+            }
             // A click told to stall that reads shorter than its stall is a
             // meter blind to the click it is guarding.
             if let stallMS, MainThreadMeter.shared.longestMS < stallMS {
@@ -15699,14 +15709,29 @@ private final class Run {
         // walk makes never passes it, so it is offered by hand, first, as the
         // monitor would (`EditorState+TimelinePointing`).
         let onTheTracks = TimelineRightPress.offer(at: target.point, in: window)
-        guard let (menu, view) = PlaytestPanelMenu.menu(rightClickingAt: target.point, in: content,
+        guard var (menu, view) = PlaytestPanelMenu.menu(rightClickingAt: target.point, in: content,
                                                         window: window) else {
             throw Failure(description: "right clicking \"\(target.name)\" raises no menu: nothing under that "
                 + "point offers one. Is there a `.contextMenu` on it?")
         }
         // The menu, built, has picked what it is about; the pick lands a turn
         // later, which for a person is long before they choose a row.
-        if onTheTracks { await sleep(0.05) }
+        if onTheTracks {
+            await sleep(0.05)
+            // A menu read WITHOUT opening it can keep the rows of the menu's
+            // last build: SwiftUI runs the menu's body again inside
+            // `menu(for:)` for this press, but hands back an NSMenu whose
+            // items it refreshes only as the menu opens. So a clip's menu,
+            // after a split, a click on its second piece at 2.36 s, an undo and
+            // the playhead parked at 2.00 s, read "Split at 0:02.36" while the
+            // same menu opened for a person read "Split at 0:02.00"
+            // (clicking-a-timeline-item-moves-the-playhead-walk, 2026-11-21).
+            // Asked again once the press has landed, the menu comes back with
+            // the rows a person sees when it opens.
+            if let again = PlaytestPanelMenu.menu(rightClickingAt: target.point, in: content, window: window) {
+                (menu, view) = again
+            }
+        }
         let shotURL = shot.map { out.appendingPathComponent("\($0)-sc.png") }
         let noteURL = out.appendingPathComponent("row-menu-shot.txt")
         // The old picture goes FIRST, so afterwards the file being there is

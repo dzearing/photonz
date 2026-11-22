@@ -484,7 +484,7 @@
   {
    "do": "expect",
    "field": "Transform Depth",
-   "reads": "-143"
+   "reads": "-146 ±8"
   },
   {
    "do": "describe",

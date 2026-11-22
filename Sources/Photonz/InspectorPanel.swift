@@ -1019,6 +1019,7 @@ struct InspectorPanel: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                 shelfReveal.viewportHeight = $0
             }
+            .inspectorShelfProbe(sections: shelf)
             .playtestHover("library pane", perform: pointerInShelfPane)
             // Where the pane sits in the panel, for a walk reading what is
             // in view in it.
@@ -1120,6 +1121,7 @@ struct InspectorPanel: View {
             // started.
             if drag.section == nil { dragScratch.frames[id] = frame }
             guard id == .library else { return }
+            if scratch === shelfReveal { recordInspectorShelfSection(id, inPane: frame) }
             scratch.libraryFrame = frame
             if scratch.isPending { revealer(proxy, scratch: scratch).applyLibrary() }
         }

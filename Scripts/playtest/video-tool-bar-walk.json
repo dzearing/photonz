@@ -77,14 +77,14 @@
     { "do": "click", "at": [720, 300] },
     { "do": "wait", "seconds": 0.3 },
     { "do": "expectTimeline", "keyboard": "canvas" },
-    { "do": "key", "key": "k" },
+    { "comment": "K is Add Key since 2026-11-05 (the card on picture keys, option a: the Lens has no letter), so the Lens is picked from the bar.", "do": "tool", "tool": "lens" },
     { "do": "waitFor", "condition": "tool", "value": "lens", "timeout": 2 },
-    { "do": "toolBar", "stage": "6-k-on-the-canvas", "lit": "Lens" },
+    { "do": "toolBar", "stage": "6-lens-on-the-canvas", "lit": "Lens" },
     { "do": "key", "key": "b" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "expectTimeline", "blade": true, "keyboard": "canvas" },
     { "do": "toolBar", "stage": "6-b-from-the-canvas", "lit": "Blade" },
-    { "do": "describe", "stage": "6-canvas-keys", "note": "after a click on the picture K, which the timeline uses, reached the Lens; B from the canvas armed the Blade" },
+    { "do": "describe", "stage": "6-canvas-keys", "note": "after a click on the picture, with the Lens in hand, B from the canvas armed the Blade" },
     { "do": "snapshot", "name": "6-keys-from-the-canvas" }
   ]
 }

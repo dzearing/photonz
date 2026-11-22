@@ -59,6 +59,14 @@ struct ToolSettingsCapsule: View {
     /// same one the right hand panel uses, so a person who learned it in one
     /// place recognises it in the other.
     @ViewBuilder private func field(_ setting: ToolSetting) -> some View {
+        // Read again HERE, not only in `body`: SwiftUI builds each setting in
+        // the ForEach as a piece of its own and runs it again only when what
+        // IT read changes. The lens rows read the tool's memory out of
+        // UserDefaults, which nothing observes, so with the counter read only
+        // above, picking Greyscale left the capsule saying Blur and Strength
+        // while the panel said Greyscale and Amount
+        // (tool-and-library-dropdowns-open-on-a-click-walk, 2026-11-21).
+        let _ = editorState.lensToolRevision
         if let spec = brushSpec(setting) {
             // The brush's own: named by the setting the brush declares, since
             // which one it is changes with the brush.

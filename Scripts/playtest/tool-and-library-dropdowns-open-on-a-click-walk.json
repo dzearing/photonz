@@ -609,6 +609,12 @@
       "timeout": 2
     },
     {
+      "comment": "The capsule slides in over the tool bar when N arms the tool; a click the moment the tool changes lands where the dropdown is going to be, not where it is (2026-11-21).",
+      "do": "wait",
+      "seconds": 0.6,
+      "onTheClock": true
+    },
+    {
       "do": "panelMenu",
       "menu": "Tool Component",
       "at": [
