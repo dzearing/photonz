@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T18:35:09.386Z",
-  "updated": "2026-11-22T08:30:49.628Z",
+  "updated": "2026-11-22T08:31:12.396Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-19 while building the agent channel (an-agent-can-reach-the-running-app-read-the-open). Commands, run twice with the same result:\n\n  Scripts/probe-app.sh --quit; open -g -a \"$PWD/dist/Photonz Probe.app\" \"/tmp/photonz-agent-try/Demo recording.mp4\"; sleep 10\n  then the agent tool list_documents (printf the tools/call line | PHOTONZ_APP=probe Scripts/photonz-mcp.sh) answers []\n\nThe same with Busy screenshot 800x500.png answers one picture document (after the agent registry also notes editors in canvasDidMoveToWindow). Opening the same recording AFTER launch (open_document, which calls AppCoordinator.openFileWindow) opens it fine, in a new 1728x990 window. Likely cause, not confirmed: AppCoordinator.openRecording has `guard openWindowAction != nil else { NSWorkspace.shared.activateFileViewerSelecting([url]); return }`, and openWindowAction is captured from the menu-bar scene in a .task (PhotonzApp.swift ~199), which may not have run when the launch-time open arrives. A picture goes through EditorView.onOpenURL -> openPicked -> openImage into the window SwiftUI made, so it never needs openWindowAction. Fix idea: hold the URL and open it once openWindowAction is set, instead of revealing in Finder.",
@@ -146,10 +146,15 @@
     {
       "t": "2026-11-22T08:30:49.627Z",
       "note": "owns these walks: opening-a-recording-walk"
+    },
+    {
+      "t": "2026-11-22T08:31:12.394Z",
+      "note": "A recording opened from Finder or the Dock while Photonz is quit now opens in one editor window (was: shown in Finder, empty window left). AppCoordinator holds it until the window opener is set; the empty hand-over window closes (also fixed with the app running). Verified: Scripts/launch-open-drill.sh fails on old code, passes now for a recording and a picture; 4 recording walks ok; Scripts/test.sh green. Commit db69d1472."
     }
   ],
   "started": "2026-11-22T07:29:08.584Z",
   "walks": [
     "opening-a-recording-walk"
-  ]
+  ],
+  "completed": "2026-11-22T08:31:12.395Z"
 }
