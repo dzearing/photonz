@@ -1,6 +1,7 @@
 import CoreGraphics
 import CoreImage
 import Foundation
+import Metal
 import os
 import PhotonzCore
 @testable import PhotonzRender
@@ -27,8 +28,11 @@ struct TextRevealUnclippedTests {
 
     /// A few contexts taken in turn: a context renders one picture at a
     /// time, and with one for the whole suite the cases running side by side
-    /// spent most of their time waiting on its lock (2026-10-27).
-    static let contexts = (0..<8).map { _ in
+    /// spent most of their time waiting on its lock (2026-10-27). Each one
+    /// keeps the graphics memory of the biggest pictures it has drawn, so
+    /// four, not eight: 1.5 GB against 2.7 GB for the suite, in the same
+    /// time (5.7 s against 5.4 s on the M4 Max, 2026-11-22).
+    static let contexts = (0..<4).map { _ in
         CIContext(options: [.workingColorSpace: NSNull(), .outputColorSpace: NSNull(),
                             .workingFormat: NSNumber(value: CIFormat.RGBAf.rawValue)])
     }
@@ -61,7 +65,35 @@ struct TextRevealUnclippedTests {
         var pixel = [Float](repeating: 0, count: 4)
         (chosen ?? context).render(average, toBitmap: &pixel, rowBytes: 16,
                                    bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBAf, colorSpace: nil)
+        GraphicsMemory.note()
         return Double(pixel[3]) * Double(extent.width * extent.height)
+    }
+
+    /// The most graphics memory this test process has held after one of
+    /// this suite's readings, printed on the check machine each time it
+    /// passes another quarter gigabyte, beside what the machine's graphics
+    /// chip says it can hold (`PHOTONZ_GPU_PEAK=1` prints it anywhere). Its
+    /// slice died twice with that chip out of memory, both times while this
+    /// suite was drawing (2026-11-12, 11-22), so the number is kept in the
+    /// log where the next one can be read against it.
+    enum GraphicsMemory {
+        static let device = MTLCreateSystemDefaultDevice()
+        static let printing = ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true"
+            || ProcessInfo.processInfo.environment["PHOTONZ_GPU_PEAK"] == "1"
+        static let printed = OSAllocatedUnfairLock(initialState: 0)
+        static func note() {
+            guard printing, let device else { return }
+            let held = device.currentAllocatedSize
+            let step = 256 << 20
+            let passed = printed.withLock { last -> Bool in
+                guard held >= last + step else { return false }
+                last = held / step * step
+                return true
+            }
+            guard passed else { return }
+            print("[gpu] words that travel: the process holds \(held >> 20) MB of graphics memory; "
+                  + "\(device.name) recommends at most \(device.recommendedMaxWorkingSetSize >> 20) MB")
+        }
     }
 
     /// The share of `full`'s ink that `drawn` holds: read on the graphics
@@ -76,12 +108,29 @@ struct TextRevealUnclippedTests {
         return sure.drawn / sure.full
     }
 
+    /// How far past the box the reference picture reaches: twice what the
+    /// renderer asks for, and an em more, never less than three ems. A cut
+    /// the renderer makes lands in the band between its picture's edge and
+    /// this one's, so it reads short; a reach of nought where the words
+    /// travel an em still has three ems of reference round it.
+    ///
+    /// It was twice the box's longer side on every side, which no move
+    /// needs: a picture 25 times the box's area, up to 5270 by 4363 pixels
+    /// of four floats each, read thousands of times. The suite held 16 to
+    /// 30 GB of graphics memory doing it (2026-11-22, on the M4 Max), and the
+    /// check machine's slice died with its graphics chip out of memory while
+    /// this suite drew, on 2026-11-12 and 11-22. Sized on the reach it holds
+    /// 1.5 GB, and runs in half the time.
+    static func referenceRoom(_ pieces: TextRevealPieces, reach: CGFloat) -> CGFloat {
+        max(reach, pieces.emPixels) * 2 + pieces.emPixels
+    }
+
     /// For each piece of `pieces` that is on screen `elapsed` ms into
     /// `reveal`, the share of its posed ink that a picture with `reach` holds.
     static func shares(_ pieces: TextRevealPieces, reveal: TextReveal, elapsed: Int, shutterMS: Double? = nil,
                        reach: CGFloat) -> [Double] {
         let ranks = reveal.ranks(count: pieces.pieces.count)
-        let room = max(pieces.pixelSize.width, pieces.pixelSize.height) * 2
+        let room = referenceRoom(pieces, reach: reach)
         var out: [Double] = []
         for (index, piece) in pieces.pieces.enumerated() {
             // One piece alone, at its own beat: a piece on rank r is where a
