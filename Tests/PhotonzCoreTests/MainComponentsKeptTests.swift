@@ -93,30 +93,47 @@ struct MainComponentsKeptTests {
 
     @Test("Putting copies in step costs in proportion to the copies, not their square")
     func syncGrowsWithTheCopies() {
+        // Eight times the copies: about seven times the work when each copy
+        // costs the same, about thirty one when each copy walks the whole
+        // sheet (7.0 against 31 on this Mac, 2026-11-22, with the mains kept
+        // and with them put back to a walk per ask). The bar sits between
+        // them with about twice the room on either side.
+        //
+        // Until 2026-11-22 this read four times the copies against a bar of
+        // 6: 3.5 kept against 8.9 not, so a busy GitHub runner reading the
+        // kept version at 6.1 turned main red (6.81 ms against 41.49 ms,
+        // when eight green runs that day read the larger sheet at 22 to
+        // 38 ms). Three things keep a busy machine out of it now: the wider
+        // step, the two sheets timed turn and turn about so a slow spell
+        // lands on both, and a second and third reading only when the first
+        // misses, since a busy machine only ever makes a reading worse and
+        // the square version misses every time.
         let small = Self.sheet(kinds: 6, copies: 24)
-        let large = Self.sheet(kinds: 6, copies: 96)
-        func cost(_ doc: PhotonzDocument) -> Double {
-            var fastest = Double.infinity
-            for _ in 0..<5 {
-                var working = doc
-                // A write first, as every edit makes one, so nothing the last
-                // round worked out is still kept.
-                working.updateLayer(id: working.layers[0].id) { $0.name += " " }
-                let start = Self.threadCPUSeconds()
-                working.syncComponentInstances()
-                fastest = min(fastest, Self.threadCPUSeconds() - start)
-            }
-            return fastest
+        let large = Self.sheet(kinds: 6, copies: 192)
+        func once(_ doc: PhotonzDocument) -> Double {
+            var working = doc
+            // A write first, as every edit makes one, so nothing the last
+            // round worked out is still kept.
+            working.updateLayer(id: working.layers[0].id) { $0.name += " " }
+            let start = Self.threadCPUSeconds()
+            working.syncComponentInstances()
+            return Self.threadCPUSeconds() - start
         }
-        let a = cost(small), b = cost(large)
-        let ratio = b / a
-        print(String(format: "[perf] sync of 24 copies %.2fms, of 96 copies %.2fms, ratio %.1f",
-                     a * 1000, b * 1000, ratio))
-        // Four times the copies: about four times the work when each copy
-        // costs the same, about sixteen when each copy walks the whole sheet.
-        // Read from one machine at one moment, so a busy Mac moves both. It
-        // read 8.9 before the mains were kept and 3.4 after (2026-11-18).
-        #expect(ratio < 6)
+        let bar = 16.0
+        var best = Double.infinity
+        for attempt in 1...3 {
+            var a = Double.infinity, b = Double.infinity
+            for _ in 0..<9 {
+                a = min(a, once(small))
+                b = min(b, once(large))
+            }
+            let ratio = b / a
+            print(String(format: "[perf] sync of 24 copies %.2fms, of 192 copies %.2fms, ratio %.1f (reading %d)",
+                         a * 1000, b * 1000, ratio, attempt))
+            best = min(best, ratio)
+            if best < bar { break }
+        }
+        #expect(best < bar)
     }
 
     private static func threadCPUSeconds() -> Double {
