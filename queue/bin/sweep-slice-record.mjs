@@ -58,7 +58,11 @@ const record = {
   // standing task as broken.
   blind: r.blind, blindWalks: r.blindWalks,
   of: Number(of) || 0, asked: Number(ran) || 0,
-  from: pick.from || 0, to: pick.nextCursor || 0,
+  // Where the rotation really went: past what this check answered
+  // (sweep-schedule.mjs --advance writes `settled` into the pick first).
+  from: pick.from || 0,
+  to: pick.settled ? pick.settled.to : (pick.nextCursor || 0),
+  moved: pick.settled ? pick.settled.moved : (pick.rotated || []).length,
   changed: pick.changed || [],
   rotating: true,
   timedOut: cutShort,

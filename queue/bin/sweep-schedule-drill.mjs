@@ -9,9 +9,10 @@
 // a runner had asked, and a runner asks after every task.
 //
 //   node queue/bin/sweep-schedule-drill.mjs
-import { decide as decideAt, pickSlice, DEFAULTS, decideFromDisk as decideFromDiskAt, codeLandedBetween, WALK_PATHS, sliceWalkSeconds, sliceWalkSecondsFromDisk } from './sweep-schedule.mjs';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { decide as decideAt, pickSlice, DEFAULTS, decideFromDisk as decideFromDiskAt, codeLandedBetween, WALK_PATHS, sliceWalkSeconds, sliceWalkSecondsFromDisk, settleSlice, answeredInLog, walkSecondsFromLogs, lapEstimate } from './sweep-schedule.mjs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, utimesSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 
@@ -225,6 +226,180 @@ check('the cursor still moves on by what ran and wraps, so no walk is skipped fo
   } finally {
     rmSync(q, { recursive: true, force: true });
   }
+}
+
+console.log('a check sized by what its own walks cost (2026-11-20: Ask walks at 100 to 390s planned at the 19.8s median)');
+// From position 157 the set holds a block of Ask walks at 100 to 390s each.
+// Planned at the median pace, thirty of them went in, and eight checks out of
+// nine were stopped on the thirty minute clock.
+{
+  const set = Array.from({ length: 100 }, (_, i) => `walk-${String(i).padStart(3, '0')}`);
+  const slow = {};
+  for (let i = 10; i < 30; i++) slow[set[i]] = 200;
+  let p = pickSlice({ walks: set, cursor: 10, changed: [], always: [], minutes: 10, perWalkSeconds: 20, walkSeconds: slow });
+  check('three 200s walks fill ten minutes, not thirty walks at the median', p.walks.length === 3 && p.nextCursor === 13, p.walks);
+  check('...and the plan says it ends inside the ten minutes', p.estimatedSeconds <= 600, p.estimatedSeconds);
+  p = pickSlice({ walks: set, cursor: 0, changed: [], always: [], minutes: 10, perWalkSeconds: 20, walkSeconds: slow });
+  check('a walk with no time on record is costed at the measured pace, and the plan stops before a slow walk that would not fit',
+    p.walks.length === 12 && p.nextCursor === 12, { n: p.walks.length, next: p.nextCursor });
+  p = pickSlice({ walks: set, cursor: 10, changed: [], always: [], minutes: 10, perWalkSeconds: 20, walkSeconds: { 'walk-010': 900 } });
+  check('a single walk longer than the whole budget still runs, so the rotation always moves', p.walks.length === 1 && p.nextCursor === 11, p);
+  p = pickSlice({ walks: set, cursor: 0, changed: ['walk-090', 'walk-091', 'walk-092', 'walk-093'], always: [], minutes: 10, perWalkSeconds: 20, walkSeconds: { 'walk-090': 200, 'walk-091': 200, 'walk-092': 200, 'walk-093': 20 } });
+  check('changed walks take at most half the check: the rest wait for the next one',
+    p.changed.length === 2 && p.owed.length === 2 && p.rotated.length > 0, { changed: p.changed, owed: p.owed, rotated: p.rotated.length });
+  check('...a small changed walk still fits in beside a big one', p.changed.includes('walk-093'), p.changed);
+  p = pickSlice({ walks: set, cursor: 0, owed: ['walk-092'], changed: ['walk-095'], always: [], minutes: 10, perWalkSeconds: 20 });
+  check('what an earlier check owes runs ahead of newer changes', p.walks[0] === 'walk-092' && p.changed[1] === 'walk-095', p.walks.slice(0, 3));
+  p = pickSlice({ walks: set, cursor: 0, changed: Array.from({ length: 27 }, (_, i) => set[50 + i]), always: [], minutes: 10, perWalkSeconds: 20 });
+  check('twenty seven changed walks no longer fill the check and leave the rotation standing (2026-11-21)',
+    p.rotated.length >= 10 && p.owed.length > 0, { rotated: p.rotated.length, owed: p.owed.length });
+}
+
+console.log('a check stopped on the clock moves on past what it finished');
+{
+  const set = Array.from({ length: 100 }, (_, i) => `walk-${String(i).padStart(3, '0')}`);
+  const pick = { ...pickSlice({ walks: set, cursor: 20, changed: ['walk-090'], always: ['walk-000'], minutes: 10, perWalkSeconds: 60 }), from: 20 };
+  // walk-000 (every check), walk-090 (changed), walk-020..walk-027 (rotation)
+  const log = [
+    '==> Building the probe bundle...',
+    'walk-000                   16s  ok',
+    'walk-020                   61s  ok',
+    'walk-021                   70s  FAILED  step 3 (expect): no',
+    'walk-022                   12s  DEFERRED  somebody is using the Mac, and this walk photographs an open menu',
+    'walk-023                  ',
+  ].join('\n');
+  const answered = answeredInLog(log);
+  check('the log answers the walks with a verdict, a failure and a deferral included',
+    ['walk-000', 'walk-020', 'walk-021', 'walk-022'].every((w) => answered.has(w)), [...answered]);
+  check('...and not the walk the stop caught part way', !answered.has('walk-023'), [...answered]);
+  check('a walk that found no app to run in is not answered', !answeredInLog('walk-001   0s  COULD NOT START  the probe did not launch').has('walk-001'));
+  let r = settleSlice(pick, answered);
+  check('the cursor moves past the three rotation walks it finished, to the one it was in', r.cursor === 23 && r.moved === 3, r);
+  check('...the changed walk it never reached is owed to the next check', JSON.stringify(r.owed) === '["walk-090"]', r.owed);
+  check('...and it does not read as a check that got through', r.complete === false, r);
+  const next = pickSlice({ walks: set, cursor: r.cursor, owed: r.owed, changed: [], always: ['walk-000'], minutes: 10, perWalkSeconds: 60 });
+  check('the next check starts at the walk that was cut off', next.rotated[0] === 'walk-023' && next.walks.includes('walk-090'), next.walks);
+  r = settleSlice(pick, answeredInLog(pick.walks.map((w) => `${w}   10s  ok`).join('\n')));
+  check('a check that answered everything moves on to where the plan said', r.cursor === pick.nextCursor && r.complete && !r.owed.length, r);
+  r = settleSlice(pick, null);
+  check('with no log at all it trusts the plan, as before', r.cursor === pick.nextCursor, r);
+  r = settleSlice(pick, new Set());
+  check('a check that answered nothing leaves the cursor where it was', r.cursor === 20 && r.moved === 0, r);
+  const wrap = { ...pickSlice({ walks: set, cursor: 97, changed: [], always: [], minutes: 10, perWalkSeconds: 60 }), from: 97 };
+  r = settleSlice(wrap, new Set(['walk-097', 'walk-098', 'walk-099', 'walk-000']));
+  check('a stop after the wrap lands past the wrap and counts the lap', r.cursor === 1 && r.lap === true, r);
+  r = settleSlice(wrap, new Set(['walk-097']));
+  check('a stop before the wrap does not count a lap', r.cursor === 98 && r.lap === false, r);
+}
+
+console.log('three checks in a row through a block of slow walks');
+// The deadlock of 2026-11-20 to 11-22, replayed: walks 10 to 33 are Ask walks
+// at 100 to 390s. Each check is run against a thirty minute clock by a stand-in
+// runner that takes each walk's real time.
+{
+  const set = Array.from({ length: 200 }, (_, i) => `walk-${String(i).padStart(3, '0')}`);
+  const own = {};
+  const times = [146, 327, 179, 16, 154, 59, 70, 24, 283, 6, 260, 146, 178, 387, 219, 120, 100, 300, 390, 150, 210, 160, 100, 140];
+  times.forEach((t, k) => { own[set[10 + k]] = t; });
+  const always = ['walk-000', 'walk-001'];
+  own['walk-000'] = 68; own['walk-001'] = 34;
+  const cap = 1800;
+  const run = (p) => {
+    let t = 0; const lines = [];
+    for (const w of [...p.walks].sort()) {
+      const cost = own[w] || 20;
+      if (t + cost > cap) { lines.push(w); return { log: lines.join('\n'), stopped: true, seconds: cap }; }
+      t += cost; lines.push(`${w}  ${cost}s  ok`);
+    }
+    return { log: lines.join('\n'), stopped: false, seconds: t };
+  };
+  // Before: every walk at the 19.8s median, and a stop moves nothing.
+  let cursor = 10; const before = [];
+  for (let k = 0; k < 3; k++) {
+    const p = pickSlice({ walks: set, cursor, changed: [], always, minutes: 10, perWalkSeconds: 19.8 });
+    const o = run(p); before.push(o.stopped);
+    if (!o.stopped) cursor = p.nextCursor;
+  }
+  check('replayed the old way, every check is stopped on the clock and the cursor never moves', before.every(Boolean) && cursor === 10, { before, cursor });
+  cursor = 10; const starts = []; const stops = []; const took = [];
+  for (let k = 0; k < 3; k++) {
+    starts.push(cursor);
+    const p = { ...pickSlice({ walks: set, cursor, changed: [], always, minutes: 10, perWalkSeconds: 19.8, walkSeconds: own }), from: cursor };
+    const o = run(p); stops.push(o.stopped); took.push(o.seconds);
+    cursor = settleSlice(p, answeredInLog(o.log)).cursor;
+  }
+  check('now each of three checks starts further on than the last', starts[0] < starts[1] && starts[1] < starts[2] && cursor > starts[2], { starts, cursor });
+  check('...none is stopped on the clock', stops.every((x) => !x), stops);
+  check('...and each ends inside about ten minutes', took.every((t) => t <= 600), took);
+  // And if the times on record are wrong, a stop still moves the cursor.
+  cursor = 10;
+  const p = { ...pickSlice({ walks: set, cursor, changed: [], always, minutes: 30, perWalkSeconds: 19.8 }), from: cursor };
+  const o = run(p);
+  check('with times too low to trust, the check is stopped and still moves on past what it finished',
+    o.stopped && settleSlice(p, answeredInLog(o.log)).cursor > 10, settleSlice(p, answeredInLog(o.log)));
+}
+
+console.log('a check that still owes walks');
+check('a stopped check is due again after the floor with no new code',
+  decide({ now, requests: [], latest: swept(2), head: 'same', codeSinceCheck: false, rotation: { cursor: 5, lastHead: 'same', cutShort: true } }).run === 'slice',
+  decide({ now, requests: [], latest: swept(2), head: 'same', codeSinceCheck: false, rotation: { cursor: 5, lastHead: 'same', cutShort: true } }));
+check('...and so is one that carried changed walks over',
+  decide({ now, requests: [], latest: swept(2), head: 'same', rotation: { cursor: 5, lastHead: 'same', owed: ['walk-9'] } }).run === 'slice');
+check('...and it says why',
+  /owes 1 changed walk/.test(decide({ now, requests: [], latest: swept(2), head: 'same', rotation: { cursor: 5, lastHead: 'same', owed: ['walk-9'] } }).why));
+check('...but not inside the four hour floor',
+  decide({ now, requests: [], latest: swept(2), head: 'same', lastSliceEnded: ago(1), rotation: { cursor: 5, lastHead: 'same', cutShort: true } }).run === 'nothing');
+check('...and not when a whole-set run has covered this code since',
+  decide({ now, requests: [], latest: swept(1, { head: 'same' }), head: 'same', rotation: { cursor: 5, lastHead: 'same', cutShort: true } }).run === 'nothing');
+check('a check that got through everything is not due again without new code',
+  decide({ now, requests: [], latest: swept(2), head: 'same', rotation: { cursor: 5, lastHead: 'same', owed: [], cutShort: false } }).run === 'nothing');
+
+console.log('each walk\'s own time, read off the sweep\'s logs');
+{
+  const d = mkdtempSync(join(tmpdir(), 'sweep-walk-times-'));
+  try {
+    const put = (f, text, t) => { writeFileSync(join(d, f), text); utimesSync(join(d, f), t, t); };
+    put('2026-11-20-184435.log', 'ask-a-walk   300s  ok\nplain-walk   20s  ok\nold-walk   50s  ok\n', 1000);
+    put('slice-2026-11-21-1.log', 'ask-a-walk   150s  ok\nplain-walk   18s  FAILED  step 2: no\n', 2000);
+    put('slice-2026-11-22-1.log', 'ask-a-walk   160s  ok\nplain-walk    0s  DEFERRED  somebody is here\nask-b-walk  ', 3000);
+    put('notes.txt', 'nope-walk   999s  ok\n', 4000);
+    const w = walkSecondsFromLogs(d);
+    check('a walk is costed at the larger of its last two answers', w['ask-a-walk'] === 160, w);
+    check('...a deferral is not an answer about what it costs', w['plain-walk'] === 20, w);
+    check('...a walk seen once keeps that time', w['old-walk'] === 50, w);
+    check('...a walk cut off part way and files that are not logs give nothing', !('ask-b-walk' in w) && !('nope-walk' in w), w);
+    check('no sweep folder is no times, not a crash', Object.keys(walkSecondsFromLogs(join(d, 'missing'))).length === 0);
+  } finally { rmSync(d, { recursive: true, force: true }); }
+}
+
+console.log('how long a lap of the set takes, from the numbers');
+{
+  const set = Array.from({ length: 600 }, (_, i) => `w${i}`);
+  const lap = lapEstimate({ walks: set, perWalkSeconds: 20, minutes: 10, always: [], sliceFloorHours: 4 });
+  check('600 walks at 20s, thirty a check, is twenty checks', lap.checks === 20 && lap.perCheck === 30, lap);
+  check('...and at six checks a day, a little over three days', Math.abs(lap.days - 20 / 6) < 0.01, lap);
+  const slow = lapEstimate({ walks: set, perWalkSeconds: 20, walkSeconds: { w5: 2000 }, minutes: 10, always: [], sliceFloorHours: 4 });
+  check('a walk longer than a check costs a check of its own, and the lap still ends', slow.checks > lap.checks && slow.checks < 30, slow);
+}
+
+console.log('the CLI moves rotation.json by what the log answered');
+{
+  const d = mkdtempSync(join(tmpdir(), 'sweep-advance-'));
+  try {
+    mkdirSync(join(d, 'sweep'), { recursive: true });
+    const set = Array.from({ length: 50 }, (_, i) => `walk-${String(i).padStart(3, '0')}`);
+    const pick = { ...pickSlice({ walks: set, cursor: 10, changed: ['walk-040'], always: [], minutes: 10, perWalkSeconds: 60 }), from: 10, of: 50, laps: 3, head: 'abc' };
+    writeFileSync(join(d, 'pick.json'), JSON.stringify(pick));
+    writeFileSync(join(d, 'run.log'), 'walk-010   61s  ok\nwalk-011   61s  ok\nwalk-012  \n');
+    const script = join(dirname(fileURLToPath(import.meta.url)), 'sweep-schedule.mjs');
+    const out = execFileSync('node', [script, '--advance', join(d, 'pick.json'), '--log', join(d, 'run.log')],
+      { env: { ...process.env, PHOTONZ_QUEUE_DIR: d }, encoding: 'utf8' });
+    const rot = JSON.parse(readFileSync(join(d, 'sweep', 'rotation.json'), 'utf8'));
+    check('rotation.json moves to the first walk the check did not finish', rot.cursor === 12 && rot.lastHead === 'abc', rot);
+    check('...owes the changed walk and says it was cut short', JSON.stringify(rot.owed) === '["walk-040"]' && rot.cutShort === true, rot);
+    check('...and prints where it went', JSON.parse(out).to === 12 && JSON.parse(out).moved === 2, out);
+    check('...and writes that back into the pick for the check\'s record', JSON.parse(readFileSync(join(d, 'pick.json'), 'utf8')).settled.to === 12);
+  } finally { rmSync(d, { recursive: true, force: true }); }
 }
 
 console.log('on disk, moving the clock and HEAD through a real repo');

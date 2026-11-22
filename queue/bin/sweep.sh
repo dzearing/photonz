@@ -211,6 +211,17 @@ slice)
   CHANGED=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).changed.length)' "$SLICE_JSON")
   PACE=$(node -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); console.log(o.perWalkSeconds ? `${o.perWalkSeconds}s a walk, ${o.perWalkFrom}` : "")' "$SLICE_JSON" 2>/dev/null)
   ALWAYS=$(node -e 'console.log((JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).always || []).length)' "$SLICE_JSON")
+  # How the check was sized: each walk at its own recent time where it has one,
+  # the rest at the measured pace, and any changed walks carried to the next.
+  PLAN=$(node -e '
+    const o = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    const est = Math.round((o.estimatedSeconds || 0) / 60);
+    const rest = o.walks.length - (o.timed || 0);
+    let s = `about ${est} minute${est === 1 ? "" : "s"} planned, ${o.timed || 0} walk(s) at their own recent time`;
+    if (rest > 0) s += `, ${rest} at ${o.perWalkSeconds}s, ${o.perWalkFrom}`;
+    if ((o.owed || []).length) s += `; ${o.owed.length} changed walk(s) wait for the next check`;
+    console.log(s);
+  ' "$SLICE_JSON" 2>/dev/null)
   if (( N == 0 )); then
     echo "==> Rotating check: no walks to run."
     exit 0
@@ -220,7 +231,7 @@ slice)
   began_s=$SECONDS
   began=$(now)
   echo "==> Rotating check: $N of $OF walks, from $FROM in the rotation, $ALWAYS run in every check, $CHANGED because their script changed."
-  [[ -n "$PACE" ]] && echo "    Sized to ${PHOTONZ_SLICE_MINUTES:-10} minutes at $PACE."
+  [[ -n "$PACE" ]] && echo "    Sized to ${PHOTONZ_SLICE_MINUTES:-10} minutes: $PLAN."
   echo "    This is NOT the full sweep. What it does not run is unknown, not passing."
   Q note "rotating walk check: $N of $OF walks" >/dev/null 2>&1
   AWAKE_PIDFILE="$SDIR/.awake.pid"
@@ -265,16 +276,23 @@ slice)
   [[ -s "$RUNLOG" && -n "$(tail -c1 "$RUNLOG" 2>/dev/null)" ]] && echo
   took=$(( SECONDS - began_s ))
   if (( SLICE_TIMED_OUT )); then
-    echo "!! The rotating check was stopped on the clock after $((took / 60))m $((took % 60))s. What it reached is above; the rest of its walks never ran, and the rotation stays where it was so they run next time."
+    echo "!! The rotating check was stopped on the clock after $((took / 60))m $((took % 60))s. What it reached is above; the rest of its walks never ran, and they run first next time."
   elif (( SLICE_CODE == 3 )); then
     echo "==> Some of these walks could not run: the Mac's screen is locked, so a walk that looks a control up by name was refused. The ones that ran are real."
   fi
-  # Advance the rotation only once the run is over, and never past ground a
-  # stopped run never covered: a check cut off on the clock runs the same walks
-  # again next time rather than skipping them.
-  if (( SLICE_TIMED_OUT == 0 )); then
-    queue/bin/sweep-schedule.mjs --advance "$SLICE_JSON" >/dev/null 2>&1
-  fi
+  # Advance the rotation only once the run is over, and only past the walks its
+  # log says were answered (sweep-schedule.mjs settleSlice). A check cut off on
+  # the clock moves on by what it finished, and the walk it was in and every
+  # one after it run first next time: nothing is skipped and nothing finished
+  # is run twice. Until 2026-11-22 a stopped check moved nothing, so the next
+  # one ran the same slow walks and was stopped again, eight checks in a row.
+  SETTLED=$(queue/bin/sweep-schedule.mjs --advance "$SLICE_JSON" --log "$RUNLOG" 2>/dev/null)
+  node -e '
+    let o; try { o = JSON.parse(process.argv[1]); } catch { process.exit(0); }
+    const owed = o.owed ? `; ${o.owed} changed walk(s) carried to the next check` : "";
+    if (o.moved === o.of) console.log(`==> The rotation moves on from ${o.from} to ${o.to}${owed}.`);
+    else console.log(`==> The rotation moves on from ${o.from} to ${o.to}, past the ${o.moved} of its ${o.of} walks this check answered; the next check starts at the first it did not${owed}.`);
+  ' "$SETTLED" 2>/dev/null
   queue/bin/sweep-slice-record.mjs "$RUNLOG" "$SDIR/last-slice.json" "$began" "$(now)" "$took" "$N" "$OF" "$SLICE_JSON" "$SLICE_TIMED_OUT"
   # Keep the last five rotating-check logs; they are small but there are many.
   ls -t "$SDIR"/slice-*.log 2>/dev/null | tail -n +6 | while IFS= read -r old; do rm -f "$old"; done
@@ -303,7 +321,9 @@ slice-summary)
       const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
       // couldNotRun and timedOut let the next check be planned only on runs
       // that really ran their walks (sweep-schedule.mjs sliceWalkSeconds).
-      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, of: r.of, couldNotRun: r.couldNotRun || 0, timedOut: !!r.timedOut, rotating: true }));
+      // from, to and moved say how far the rotation went, so how long a lap
+      // of the set really takes can be read back off the history.
+      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, of: r.of, couldNotRun: r.couldNotRun || 0, timedOut: !!r.timedOut, rotating: true, from: r.from, to: r.to, moved: r.moved }));
     ' "$SDIR/last-slice.json"
   else
     echo '{}'

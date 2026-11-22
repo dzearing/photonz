@@ -16,11 +16,14 @@
 //   only when code has landed since the last one. Requests pile up in between
 //   and are all served by the next run.
 //
-//   Between those, after any task that landed code, the loop runs a ROTATING
-//   CHECK: about ten minutes of walks, made of every walk whose script changed
-//   since the last check plus the next chunk of the set in rotation. The cursor
-//   carries on where it stopped, so the whole set is covered by rotation about
-//   once a day anyway, spread out in ten minute pieces instead of two hour ones.
+//   Between those, after a task that landed code and at most once every
+//   SLICE FLOOR HOURS (4), the loop runs a ROTATING CHECK: about ten minutes of
+//   walks, made of every walk whose script changed since the last check plus
+//   the next chunk of the set in rotation. The cursor carries on where it
+//   stopped, so the rotation works through the set in ten minute pieces: at
+//   six checks a day a lap takes days, not one (lapEstimate prints the number
+//   from the walks' own times). A check stopped on the clock moves on past the
+//   walks it finished and owes the rest to the next one (settleSlice).
 //
 //   Landed code IS the ask. Neither check waits for a request: "code" is
 //   anything under WALK_PATHS (the app, the walk scripts, the package), so a
@@ -53,12 +56,12 @@ export const DEFAULTS = {
   // task that landed code, and a "ten minute" check was taking about thirty
   // (14 walks in 30 minutes that evening), so the user kept finding the loop
   // between tasks and asked for it less often: at most one every four hours.
-  // The whole set still runs once a day and catches the rest.
+  // The whole set, every three days, catches the rest.
   sliceFloorHours: 4,
-  // How long a rotating check is allowed to take, in walks-worth of time. Ten
-  // minutes is short enough that it never reads as the loop stalling; at the
-  // measured cost of a walk (about 18s on 2026-10-06) it is about thirty five
-  // walks, so the rotation still comes round the set in about a day of checks.
+  // How long a rotating check is planned to take. Ten minutes is short enough
+  // that it never reads as the loop stalling. It is filled walk by walk at each
+  // walk's own recent time (pickSlice): about thirty walks of the usual kind,
+  // or two or three of the slow Ask ones.
   sliceMinutes: 10,
   // Only the last resort. A check is planned at what walks cost in the last
   // rotating checks (sliceWalkSecondsFromDisk), then in the last whole-set runs,
@@ -224,65 +227,226 @@ export function decide({
   // Inside the floor: the rotating check, once per change of code. A whole-set
   // run counts as having checked its code too, so a full sweep is never
   // followed straight away by a rotating check over the same code.
-  if (head && (checkedCode || sameCode)) {
+  // A check that did not get through what it picked (stopped on the clock, or
+  // changed walks carried over for want of room) still owes those walks, so it
+  // is due again once the floor below has passed, new code or not. Its
+  // rotation.json has already moved lastHead on, so without this a stopped
+  // check's walks would wait for the next landed change.
+  const owes = !!(rotation && ((Array.isArray(rotation.owed) && rotation.owed.length) || rotation.cutShort));
+  if (head && (sameCode || (checkedCode && !owes))) {
     return out('nothing', 'nothing new has landed since the last walk check');
   }
   const sinceSlice = lastSliceEnded ? (now - Date.parse(lastSliceEnded)) / HOUR : Infinity;
   if (Number.isFinite(sinceSlice) && sinceSlice < sliceFloorHours) {
     return out('nothing', `the last rotating check was ${sinceSlice.toFixed(1)}h ago; the next waits until ${sliceFloorHours}h have passed`);
   }
+  if (checkedCode && owes) {
+    const n = Array.isArray(rotation.owed) ? rotation.owed.length : 0;
+    return out('slice', `the last rotating check did not get through its walks${n ? ` and owes ${n} changed walk(s)` : ''}, so the next one runs${asked}${notResumed}`);
+  }
   return out('slice', `code has landed since the last walk check and it is ${hoursSince.toFixed(1)}h since the last whole-set run, so the rotating check runs${asked}${notResumed}`);
 }
 
 // Which walks a rotating check covers: the walks named for every check, then
-// everything whose script changed, then the next chunk of the set in rotation,
-// up to the time budget.
+// everything whose script changed (and what an earlier check still owes), then
+// the next chunk of the set in rotation, up to the time budget.
+//
+// The budget is TIME, not a count. Each walk is costed at its own recent time
+// where one is on record (`walkSeconds`, read off the sweep's logs by
+// walkSecondsFromLogs), and only a walk with no record at the measured pace of
+// a whole check (`perWalkSeconds`). Until 2026-11-22 every walk was costed at
+// the median pace, about 20s, so thirty walks went in whatever they were; from
+// position 157 those thirty held a block of Ask walks at 100 to 390s each, and
+// eight checks in a row out of nine were stopped on the thirty minute clock.
+//
+// Changed walks take at most `changedShare` of what is left after the walks
+// every check runs (always at least one of them), and the rest are carried to
+// the next check in `owed`, so a day of rewritten walks can never fill a check
+// and leave the rotation standing: on 2026-11-21 twenty seven changed walks
+// filled all thirty one places and the cursor did not move. The rotation, for
+// its part, always takes at least one walk, so every check moves it on.
 export function pickSlice({
   walks = [],
   cursor = 0,
   changed = [],
+  owed = [],
   always = DEFAULTS.everyCheck,
   minutes = DEFAULTS.sliceMinutes,
   perWalkSeconds = DEFAULTS.perWalkSeconds,
+  walkSeconds = null,
+  changedShare = 0.5,
 } = {}) {
   const set = walks.slice();
-  if (!set.length) return { walks: [], nextCursor: 0, changed: [], always: [], rotated: [], lap: false, budget: 0 };
+  const empty = { walks: [], nextCursor: 0, changed: [], owed: [], always: [], rotated: [], rotatedAt: [], lap: false, budget: 0, budgetSeconds: 0, estimatedSeconds: 0 };
+  if (!set.length) return empty;
 
   const per = Number(perWalkSeconds) > 0 ? Number(perWalkSeconds) : DEFAULTS.perWalkSeconds;
-  const budget = Math.max(1, Math.floor((Number(minutes) * 60) / per));
+  const budgetSeconds = Math.max(1, Number(minutes) * 60);
+  const cost = (name) => {
+    const own = walkSeconds ? Number(walkSeconds[name]) : NaN;
+    return own > 0 ? own : per;
+  };
   const inSet = new Set(set);
 
-  // A walk whose own script changed is the one most likely to be broken and the
-  // cheapest thing to be sure about, so it goes first however far away the
-  // cursor is.
   const picked = [];
   const seen = new Set();
+  let used = 0;
+  const take = (name) => { seen.add(name); picked.push(name); used += cost(name); };
+
+  // The walks every check runs go in first, inside the budget.
   const alwaysPicked = [];
   for (const name of always || []) {
-    if (!inSet.has(name) || seen.has(name) || picked.length >= budget) continue;
-    seen.add(name); picked.push(name); alwaysPicked.push(name);
-  }
-  const changedPicked = [];
-  for (const name of changed) {
     if (!inSet.has(name) || seen.has(name)) continue;
-    seen.add(name); picked.push(name); changedPicked.push(name);
-    if (picked.length >= budget) break;
+    if (alwaysPicked.length && used + cost(name) > budgetSeconds) continue;
+    take(name); alwaysPicked.push(name);
   }
 
+  // A walk whose own script changed is the one most likely to be broken and the
+  // cheapest thing to be sure about, so it goes ahead of the rotation however
+  // far away the cursor is, up to its share. What an earlier check owes comes
+  // first, so nothing waits behind newer changes for ever.
+  const changedPicked = [];
+  const owedNext = [];
+  const share = Math.max(0, budgetSeconds - used) * changedShare;
+  let changedUsed = 0;
+  const wanted = [];
+  for (const name of [...(owed || []), ...(changed || [])]) {
+    if (!inSet.has(name) || seen.has(name) || wanted.includes(name)) continue;
+    wanted.push(name);
+  }
+  for (const name of wanted) {
+    if (changedPicked.length && changedUsed + cost(name) > share) { owedNext.push(name); continue; }
+    changedUsed += cost(name);
+    take(name); changedPicked.push(name);
+  }
+
+  // Then the set in order from the cursor, stopping at the first walk that
+  // does not fit: the cursor never jumps a walk it did not run.
   const rotated = [];
+  const rotatedAt = [];
   let i = cursor % set.length;
   if (i < 0) i += set.length;
   let stepped = 0;
   let lap = false;
-  while (picked.length < budget && stepped < set.length) {
+  while (stepped < set.length) {
     const name = set[i];
-    if (!seen.has(name)) { seen.add(name); picked.push(name); rotated.push(name); }
+    if (!seen.has(name)) {
+      if (rotated.length && used + cost(name) > budgetSeconds) break;
+      take(name); rotated.push(name); rotatedAt.push(i);
+    }
     i = (i + 1) % set.length;
     stepped++;
     if (i === 0) lap = true;
   }
 
-  return { walks: picked, nextCursor: i, changed: changedPicked, always: alwaysPicked, rotated, lap, budget };
+  return {
+    walks: picked, nextCursor: i, changed: changedPicked, owed: owedNext, always: alwaysPicked,
+    rotated, rotatedAt, lap,
+    // `budget` is the old count of walks the minutes held at the median pace,
+    // kept for anything that still prints it.
+    budget: Math.max(1, Math.floor(budgetSeconds / per)),
+    budgetSeconds, estimatedSeconds: Math.round(used),
+  };
+}
+
+// The walks a run's log says were answered: a line with a time and a verdict
+// (ok, FAILED, CRASHED, DEFERRED, COULD NOT RUN). A walk the stop caught part
+// way is a bare name with no verdict and is not answered, and neither is one
+// that said COULD NOT START: there was no app to run it in.
+const ANSWER_LINE = /^([a-z0-9][a-z0-9-]*) +(\d+)s {2}([A-Z][A-Z ]*[A-Z]|ok)\b/;
+export function answeredInLog(text = '') {
+  const done = new Set();
+  for (const line of String(text).split('\n')) {
+    const m = line.match(ANSWER_LINE);
+    if (m && m[3] !== 'COULD NOT START') done.add(m[1]);
+  }
+  return done;
+}
+
+// Where the rotation goes after a check, from what it actually answered.
+// `answered` null means every walk it picked was answered (the old rule, kept
+// for a pick nothing logged). The cursor moves past the walks of the rotation
+// it answered, in order, and stops at the first it did not: a walk cut off part
+// way, and every walk after it, run again next time, and nothing is skipped.
+// Until 2026-11-22 a check stopped on the clock moved the cursor nowhere at
+// all, so the next one ran the same slow walks first and was stopped again: the
+// cursor sat at 157 from 2026-11-20 07:55Z through eight checks.
+// Changed walks it did not answer join what it already owed.
+export function settleSlice(pick = {}, answered = null) {
+  const did = (n) => !answered || answered.has(n);
+  const rotated = Array.isArray(pick.rotated) ? pick.rotated : [];
+  const at = Array.isArray(pick.rotatedAt) ? pick.rotatedAt : [];
+  const from = Number(pick.from) || 0;
+  let moved = 0;
+  while (moved < rotated.length && did(rotated[moved])) moved++;
+  let cursor;
+  let lap;
+  if (moved === rotated.length || at[moved] === undefined) {
+    cursor = Number(pick.nextCursor) || 0;
+    lap = !!pick.lap;
+    if (moved < rotated.length) { cursor = from; lap = false; } // no positions on record: stay put
+  } else {
+    cursor = at[moved];
+    lap = cursor < from;
+  }
+  const owed = [];
+  for (const n of [...(pick.owed || []), ...(pick.changed || []).filter((w) => !did(w))]) {
+    if (!owed.includes(n)) owed.push(n);
+  }
+  const unanswered = (pick.walks || []).filter((w) => !did(w));
+  return { cursor, lap, moved, of: rotated.length, owed, unanswered, complete: unanswered.length === 0 };
+}
+
+// What each walk has really cost lately, read off the run logs the sweep keeps
+// (queue/sweep/*.log: the whole-set runs and the last rotating checks). A walk
+// is costed at the larger of its last two answers, because Ask walks wander
+// (ask-draws-a-dog-walk took 151s on one check and 260s on another) and a
+// check planned on the low one is a check stopped on the clock.
+export function walkSecondsFromLogs(dir = sweepDir(), { keep = 2 } = {}) {
+  if (!existsSync(dir)) return {};
+  const files = readdirSync(dir).filter((f) => f.endsWith('.log'))
+    .map((f) => ({ f, t: statSync(join(dir, f)).mtimeMs }))
+    .sort((a, b) => a.t - b.t);
+  const seen = new Map();
+  for (const { f } of files) {
+    let text = '';
+    try { text = readFileSync(join(dir, f), 'utf8'); } catch { continue; }
+    for (const line of text.split('\n')) {
+      const m = line.match(ANSWER_LINE);
+      // A walk that was turned away (DEFERRED, COULD NOT RUN or START) cost
+      // nothing and says nothing about what running it costs.
+      if (!m || !['ok', 'FAILED', 'CRASHED'].includes(m[3])) continue;
+      if (!seen.has(m[1])) seen.set(m[1], []);
+      seen.get(m[1]).push(Number(m[2]));
+    }
+  }
+  const out = {};
+  for (const [name, times] of seen) out[name] = Math.max(...times.slice(-keep));
+  return out;
+}
+
+// How long a lap of the set takes at the rotating check's pace, read from the
+// numbers: the checks a lap needs, planned walk by walk at each walk's own time
+// exactly the way pickSlice plans them (the walks every check runs included,
+// with nothing changed), and at most one check every sliceFloorHours.
+export function lapEstimate({
+  walks = [], walkSeconds = null, perWalkSeconds = DEFAULTS.perWalkSeconds,
+  minutes = DEFAULTS.sliceMinutes, always = DEFAULTS.everyCheck,
+  sliceFloorHours = DEFAULTS.sliceFloorHours,
+} = {}) {
+  if (!walks.length) return { checks: 0, perCheck: 0, days: 0, checksPerDay: 24 / sliceFloorHours };
+  let cursor = 0;
+  let checks = 0;
+  let covered = 0;
+  while (covered < walks.length && checks < walks.length) {
+    const s = pickSlice({ walks, cursor, changed: [], always, minutes, perWalkSeconds, walkSeconds });
+    const step = s.lap ? walks.length - cursor + s.nextCursor : s.nextCursor - cursor;
+    covered += Math.max(1, step);
+    cursor = s.nextCursor;
+    checks++;
+  }
+  const checksPerDay = 24 / sliceFloorHours;
+  return { checks, perCheck: Math.round(walks.length / checks), days: checks / checksPerDay, checksPerDay };
 }
 
 // What a walk costs inside a rotating check, measured off the checks that ran.
@@ -338,7 +502,7 @@ export function sliceWalkSecondsFromDisk(repo = REPO) {
 // ---------------------------------------------------------------- the CLI ----
 // Reading the state off disk lives here rather than in sweep.sh, so the shell
 // asks one question and gets one answer.
-import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, statSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -484,44 +648,92 @@ if (isMain) {
     const pace = forced > 0
       ? { seconds: forced, from: 'given with --per-walk' }
       : sliceWalkSecondsFromDisk();
+    // What an earlier check owes is answered by a whole-set run that began
+    // after it, so a full run clears the debt.
+    const fullSince = latest && latest.complete !== false && latest.began && rotation.at
+      && Date.parse(latest.began) > Date.parse(rotation.at);
+    const own = forced > 0 ? null : walkSecondsFromLogs(dir);
     const s = pickSlice({
       walks,
       cursor: Number(rotation.cursor) || 0,
       changed: changedWalks(base),
+      owed: fullSince ? [] : (rotation.owed || []),
       minutes: Number(arg('--minutes', process.env.PHOTONZ_SLICE_MINUTES || DEFAULTS.sliceMinutes)),
       perWalkSeconds: pace.seconds,
+      walkSeconds: own,
     });
-    if (argv.includes('--json')) console.log(JSON.stringify({ ...s, of: walks.length, from: Number(rotation.cursor) || 0, laps: Number(rotation.laps) || 0, head, perWalkSeconds: +pace.seconds.toFixed(1), perWalkFrom: pace.from }));
+    const timed = own ? s.walks.filter((w) => own[w] > 0).length : 0;
+    if (argv.includes('--json')) console.log(JSON.stringify({ ...s, of: walks.length, from: Number(rotation.cursor) || 0, laps: Number(rotation.laps) || 0, head, perWalkSeconds: +pace.seconds.toFixed(1), perWalkFrom: pace.from, timed }));
     else for (const w of s.walks) console.log(w);
     process.exit(0);
   }
 
   // Move the rotation on, from the pick that was actually run rather than from
   // a second guess at it. Picking twice would be one env var away from
-  // advancing the cursor past walks nobody ran.
+  // advancing the cursor past walks nobody ran. With --log, only past what the
+  // run's log says was answered (settleSlice): a check stopped on the clock
+  // moves on by the walks it finished, and owes the changed ones it did not.
+  // Prints what it did as one JSON line, and writes it back into the pick
+  // (`settled`) so the record of the check can say where the cursor went.
   if (argv.includes('--advance')) {
-    const pick = readJSON(arg('--advance'));
+    const pickFile = arg('--advance');
+    const pick = readJSON(pickFile);
     if (!pick) { console.error('!! nothing to advance from'); process.exit(1); }
+    const logFile = arg('--log', null);
+    const answered = logFile ? answeredInLog(existsSync(logFile) ? readFileSync(logFile, 'utf8') : '') : null;
+    const r = settleSlice(pick, answered);
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'rotation.json'), JSON.stringify({
-      cursor: pick.nextCursor || 0,
+      cursor: r.cursor,
       lastHead: pick.head || head,
-      laps: (Number(pick.laps) || 0) + (pick.lap ? 1 : 0),
-      ran: (pick.walks || []).length,
+      laps: (Number(pick.laps) || 0) + (r.lap ? 1 : 0),
+      ran: (pick.walks || []).length - r.unanswered.length,
       changed: pick.changed || [],
+      owed: r.owed,
+      // Whether it got through every walk it picked. One that did not is due
+      // again after the four hour floor even with no new code (decide).
+      cutShort: !r.complete,
       of: pick.of || 0,
       at: new Date().toISOString(),
     }, null, 2) + '\n');
+    const settled = { from: Number(pick.from) || 0, to: r.cursor, moved: r.moved, of: r.of, owed: r.owed.length, unanswered: r.unanswered.length, lap: r.lap };
+    try { writeFileSync(pickFile, JSON.stringify({ ...pick, settled }) + '\n'); } catch { /* the record falls back on nextCursor */ }
+    console.log(JSON.stringify(settled));
     process.exit(0);
   }
 
   // Printed by `queue/bin/sweep.sh schedule`, so there is one copy of these
   // sentences and it is the one the code runs off.
   const f = DEFAULTS.floorHours;
+  const sf = Number(process.env.PHOTONZ_SLICE_FLOOR_HOURS || DEFAULTS.sliceFloorHours);
+  const perDay = 24 / sf;
   const pace = sliceWalkSecondsFromDisk();
+  const own = walkSecondsFromLogs(dir);
+  const set = walkNames();
+  const lap = lapEstimate({ walks: set, walkSeconds: own, perWalkSeconds: pace.seconds, sliceFloorHours: sf });
+  const timed = set.filter((w) => own[w] > 0).length;
+  const days = (n) => (n < 1.5 ? 'about a day' : `about ${Math.round(n)} days`);
+  // What the checks really did lately, once the history says how far they went.
+  const moves = [];
+  const hist = join(REPO, 'queue', 'history.jsonl');
+  if (existsSync(hist)) {
+    for (const line of readFileSync(hist, 'utf8').split('\n')) {
+      if (!line.includes('"slice_pass"') || !line.includes('"moved"')) continue;
+      try { const o = JSON.parse(line); if (Number.isFinite(o.moved)) moves.push(o.moved); } catch { /* torn */ }
+    }
+  }
+  const recent = moves.slice(-12);
+  let seen = '';
+  if (recent.length >= 3) {
+    const per = recent.reduce((a, b) => a + b, 0) / recent.length;
+    seen = `\n  The last ${recent.length} checks moved the rotation on ${per.toFixed(0)} walks each; at that\n  pace a lap takes ${per > 0 ? days(set.length / per / perDay) : 'for ever'}.`;
+  }
+  const everyDays = f % 24 === 0
+    ? (f === 24 ? 'once a day' : `every ${['', '', 'two', 'three', 'four', 'five', 'six', 'seven'][f / 24] || f / 24} days`)
+    : `${f} hours apart`;
   console.log(`The walk sweep's schedule
 
-  The full set runs at most once every ${f} hours, so ${f % 24 === 0 ? (f === 24 ? 'once a day' : `every ${['', '', 'two', 'three', 'four', 'five', 'six', 'seven'][f / 24] || f / 24} days`) : `${f} hours apart`}, and only when
+  The full set runs at most once every ${f} hours, so ${everyDays}, and only when
   code has landed since the last one. Asking for a sweep does not start one: the
   requests pile up and the next run serves them all.
 
@@ -529,15 +741,26 @@ if (isMain) {
   under ${WALK_PATHS.join(', ')}; a commit of only the queue's
   own files, docs or unit tests starts nothing.
 
-  In between, after any task that lands code, the loop runs a rotating check of
-  about ${DEFAULTS.sliceMinutes} minutes: the walks every check runs (${DEFAULTS.everyCheck.join(', ')}),
-  every walk whose script changed since the last check, then the next chunk of
-  the set in rotation, carrying on where it stopped. Over a day the rotation
-  covers the whole set anyway, in pieces.
+  In between, after a task that lands code, the loop runs a rotating check of
+  about ${DEFAULTS.sliceMinutes} minutes, at most one every ${sf} hours: the walks every check runs
+  (${DEFAULTS.everyCheck.join(', ')}),
+  every walk whose script changed since the last check (at most half the
+  check; the rest wait for the next one), then the next chunk of the set in
+  rotation, carrying on where it stopped.
 
-  How many walks fit in those minutes is measured, not guessed: right now
-  ${pace.seconds.toFixed(1)}s a walk, ${pace.from}, so about
-  ${Math.max(1, Math.floor(DEFAULTS.sliceMinutes * 60 / pace.seconds))} walks a check.
+  How many walks fit is measured, not guessed: each walk is planned at its own
+  recent time from the run logs (${timed} of ${set.length} walks have one), and a walk
+  with none at ${pace.seconds.toFixed(1)}s, ${pace.from}. With no
+  changed walks a check moves the rotation on about ${lap.perCheck} walks on average, many
+  of the quick ones or two or three of the slow Ask ones. At ${+perDay.toFixed(1)} checks a day at
+  most, a lap of the ${set.length} walks takes ${lap.checks} checks, ${days(lap.days)}, so most walks are
+  answered by the whole set, every ${f / 24 === 3 ? 'three' : f / 24} days, before the rotation reaches them.${seen}
+
+  A check stopped on the clock (three times its budget) keeps what it
+  finished: the rotation moves on past the walks it answered, the walk it was
+  in and every one after it run first next time, and a changed walk it never
+  reached is carried over. Such a check is due again after ${sf} hours even if no
+  new code has landed.
 
   A rotating check is not a sweep. It never closes the standing walk task and
   its green is never the state of the walk set. A walk it finds broken goes

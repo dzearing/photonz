@@ -191,6 +191,14 @@ jobs:
           node queue/bin/sweep-size.mjs --check
           node queue/bin/sweep-size-drill.mjs
 
+      # The rotating walk check sat at walk 157 for two days (2026-11-20 to
+      # 11-22): a check stopped on the clock moved the rotation nowhere, and
+      # every check was planned at the median pace however slow its walks.
+      # This holds the schedule's arithmetic: when each check runs, which
+      # walks it takes, and where a stopped one leaves the rotation.
+      - name: The rotating walk check moves on through the set
+        run: node queue/bin/sweep-schedule-drill.mjs
+
       # Main failed CI on every push from 2026-11-03 to 11-10 and nothing the
       # loop showed or a runner read said so. This holds the reading of the
       # last finished run, and the words the dashboard, the loop and every

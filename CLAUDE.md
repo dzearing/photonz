@@ -62,6 +62,17 @@ The schedule now:
   any blank frame while it plays), every walk whose script changed since the
   last check, and the next chunk of the set, carrying on where it stopped, so
   the rotation works through the whole set in ten minute pieces between runs.
+  Each walk is planned at its own recent time, so a check holds about thirty
+  quick walks or two or three slow Ask ones, and at six checks a day a lap of
+  the set takes about eleven days (measured 2026-11-22; `queue/bin/sweep.sh
+  schedule` prints today's number): most walks are answered by the whole set
+  first. Changed walks take at most half a check and the rest wait for the
+  next one.
+* **A check stopped on the clock keeps what it finished.** The rotation moves
+  on past the walks it answered, the walk it was in and every one after it run
+  first next time, and a changed walk it never reached is carried over. Until
+  2026-11-22 a stop moved nothing, so the next check ran the same slow Ask
+  walks and was stopped again: the rotation sat at walk 157 for two days.
 * **A rotating check is not a sweep.** It never closes the standing walk task,
   and thirty walks passing is never the state of seven hundred. A walk it finds
   broken lands on a task the same day: onto the open task that owns it (it said

@@ -27,7 +27,13 @@ rules:
 * in between, after any task that lands code, a **rotating check** of about ten
   minutes: every walk whose script changed since the last check, then the next
   chunk of the set, carrying on from `rotation.json`, at most one every four
-  hours. The rotation works through the whole set in pieces between full runs;
+  hours. The rotation works through the whole set in pieces between full runs,
+  each walk planned at its own recent time from the run logs here, so a lap
+  takes days (about eleven on 2026-11-22; `sweep.sh schedule` prints today's).
+  A check stopped on the clock moves `rotation.json` past the walks it
+  answered and no further, carries the changed walks it never reached in
+  `owed`, and marks itself `cutShort` so the next check is due after four
+  hours even with no new code;
 * a rotating check is **not a sweep**. It never clears a request, never closes
   the standing walk task, and says so in its own output. A walk it finds broken
   is written onto the standing walk task the same day;
@@ -45,7 +51,7 @@ Drills: `node queue/bin/sweep-schedule-drill.mjs`, `node queue/bin/loop-day-dril
 | File | Written by | What it is |
 | --- | --- | --- |
 | `requested.json` | a task runner, via `queue/bin/sweep.sh request` | who asked for a sweep and why. Several asks before the next sweep collapse into the one run that serves them all. Asking does not start one: see the schedule above. |
-| `rotation.json` | the loop, via `queue/bin/sweep.sh slice` | where the rotating check has got to in the set, and the commit it last checked. |
+| `rotation.json` | the loop, via `queue/bin/sweep.sh slice` | where the rotating check has got to in the set, the commit it last checked, the changed walks it still owes (`owed`) and whether the last check got through its walks (`cutShort`). |
 | `last-slice.json` | the same | what the last rotating check ran and found. Never the state of the walk set. |
 | `latest.json` | the loop, via `queue/bin/sweep.sh run` | the last sweep: how long it took, how many walks passed, and the name of every walk that failed. Only runs that could SEE land here: a run that went blind does not, so this stays the last run that really covered the set. **It only ever moves forward**, see below. |
 | `answers.json` | `sweep-record.mjs`, for every whole-set run and every part of one | when each walk last had an answer from a whole-set run, and whether it passed. `sweep.sh status` (its `Answers:` line) and the dashboard read it to say how long the set has gone without one. Seeded from the logs on disk with `queue/bin/sweep-answers.mjs --backfill`. |
