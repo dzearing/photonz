@@ -18601,3 +18601,13 @@
 {"t":"2026-11-22T10:53:11.648Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-22T10:53:11.718Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-22T10:53:23.359Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 26 landed 43188e737: playing with nothing picked no longer rebuilds the panel at each clip crossing (longest main thread pass while playing 12-14 -> 6-7 ms, now judged by the speed walk); the 0-3 dropped frames a minute left are the Mac's display refresh with the app idle (a bare window shows them too). Bars not reached: edits with a clip picked <=16 ms (24-42), worst scrub lag 1. Pass 27 leads in the log."}
+{"t":"2026-11-22T10:53:55.510Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-22T10:55:50.890Z","ev":"task_created","id":"a-test-slice-on-github-that-crashes-once-still-f","priority":"p1-high","title":"A test slice on GitHub that crashes once still finishes inside its time"}
+{"t":"2026-11-22T10:55:59.663Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T11:51:52.445Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T11:51:52.516Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T11:51:52.586Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T11:51:52.654Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T11:51:52.729Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T11:52:08.995Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 27 landed e9df3bc47: a picked or hovered clip stays in its track's painting, so a pick, unpick, blade or pointer move no longer repaints the whole lane (the pick's own pass mean 27 -> 23 ms, unpick 33-37 -> 30-33, blade 25-43 -> 23-24). Bars not reached: edits with a clip picked <=16 ms, worst scrub lag 1. Pass 28 leads in the log."}
+{"t":"2026-11-22T11:52:33.978Z","ev":"task_created","id":"the-app-crashed-in-static-photonzapp-main","priority":"p1-high","title":"The app crashed in static PhotonzApp.$main"}

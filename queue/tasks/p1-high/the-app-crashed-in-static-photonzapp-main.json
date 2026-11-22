@@ -1,0 +1,27 @@
+{
+  "id": "the-app-crashed-in-static-photonzapp-main",
+  "title": "The app crashed in static PhotonzApp.$main",
+  "goal": "Crash watch caught a crash in the loop's probe app at 2026-11-22 03:12:36.00 -0800: EXC_BREAKPOINT (SIGTRAP) in static PhotonzApp.$main() < Photonz_main < NSApplication.photonz_nextEvent(matching:until:inMode:deque…. Read the report, reproduce it, fix the cause, and add a test that would have caught it.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 4060,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-22T11:52:33.974Z",
+  "updated": "2026-11-22T11:52:33.977Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-22-031236.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)\nNSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) (HeldDragKeys.swift:111)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)",
+  "acceptance": [
+    "Reproduced (or the exact conditions shown from the report) before the fix",
+    "The cause fixed in Photonz code, with a test or walk that fails before and passes after",
+    "crash-watch shows no new report with this signature for a week of walks"
+  ],
+  "log": [
+    {
+      "t": "2026-11-22T11:52:33.976Z",
+      "note": "created (crash-watch)"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "a-test-slice-on-github-that-crashes-once-still-f",
+  "title": "A test slice on GitHub that crashes once still finishes inside its time",
+  "goal": "On 2026-11-22 GitHub's third test slice crashed part way through, and the test script then rebuilt everything from scratch to try again. The rebuild ran past the job's 25 minute limit, so main showed red without saying whether the crash was real. A crash on GitHub should either be retried in time or reported as a crash, never end as a timeout.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 4050,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-22T10:55:50.886Z",
+  "updated": "2026-11-22T10:55:50.889Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "gh run view 45003209864 --log-failed: line ~18324 'swiftpm-testing-helper ... --filter ^PhotonzRenderTests... exited with unexpected signal code 11' at 08:43:33 (6 min into the slice, 346 s of tests), then '==> The test helper did not fail, it DIED ... Throwing .build away and running again from scratch', 'Building for debugging... [0/110]', still compiling PhotonzCoreTests at 09:02:04, then '##[error]The action Run tests has timed out after 25 minutes' at 09:02:22. Checked the last 12 failed main runs: this is the only one with a signal 10/11 or a timeout. Ideas, not checked: on CI the .build comes from actions/cache restore, so a half-built cache is plausible; the wrapper could rerun the slice without throwing away the whole .build first (rebuild only the test product), or CI could carry a longer timeout for the retry. Scripts/test.sh owns the retry.",
+  "acceptance": [
+    "A slice whose test helper dies on signal 10 or 11 on GitHub ends inside the job's time limit, either green after its retry or red naming the crash",
+    "Whether the signal 11 in run 45003209864 is a real crash in a test (it came up during PhotonzRenderTests, near FrameOnASurfaceTests) or a half-built folder is found out and written in this task",
+    "Main's CI is green again on the next code commit"
+  ],
+  "log": [
+    {
+      "t": "2026-11-22T10:55:50.888Z",
+      "note": "created (runner)"
+    }
+  ]
+}
