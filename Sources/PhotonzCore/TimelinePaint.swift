@@ -106,6 +106,16 @@ public enum TimelinePaint {
             let scale = max(1, scale)
             return (laneWidth * window.fraction(ofMS: ruler.startMS) * scale).rounded() / scale
         }
+
+        /// Where a picture laid on `laid` sits on this canvas: its left edge
+        /// across this canvas, in points, and how much wider it is drawn. A
+        /// lane that moves on to a new canvas while the timeline moves shows
+        /// its last picture so for the frame the new one takes to lay
+        /// (`TimelinePaintedPicture`).
+        public func place(ofPictureLaidOn laid: Canvas, laneWidth: CGFloat) -> (x: CGFloat, stretch: CGFloat) {
+            guard ruler.spanMS > 0 else { return (0, 1) }
+            return (laneWidth * ruler.fraction(ofMS: laid.ruler.startMS), laid.ruler.spanMS / ruler.spanMS)
+        }
     }
 
     /// Whether a clip's name may be pushed along by the lane's left edge

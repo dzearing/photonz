@@ -594,6 +594,7 @@ final class SpeedWalkProbe {
         func film(_ label: String, moves: Int, _ move: () -> Bool) async -> SpeedWalk.FrameTimes {
             ViewBuildMeter.shared.reset()
             TimelinePaintedPicture.laidMS = 0
+            TimelinePaintedPicture.laidLate = 0
             _ = MainThreadMeter.shared.takeBusy()
             var at: [Double] = []
             var octaves: [Int: [Double]] = [:]
@@ -605,8 +606,10 @@ final class SpeedWalkProbe {
                 lanesPerFrame.append(String(format: "%@ %.2f", label, Double(ViewBuildMeter.shared.count(.trackLane))
                                                 / Double(max(1, at.count - 1))))
                 let laid = ViewBuildMeter.shared.count(.paintedPicture)
-                picturesPerFrame.append(String(format: "%@ %.1f (%.2fms each)", label, Double(laid) / Double(max(1, at.count - 1)),
-                                               TimelinePaintedPicture.laidMS / Double(max(1, laid))))
+                picturesPerFrame.append(String(format: "%@ %.1f (%.2fms each, %d a frame late)",
+                                               label, Double(laid) / Double(max(1, at.count - 1)),
+                                               TimelinePaintedPicture.laidMS / Double(max(1, laid)),
+                                               TimelinePaintedPicture.laidLate))
                 if octaves.count > 1 {
                     byZoom.append(label + " " + octaves.keys.sorted().map { octave in
                         let times = (octaves[octave] ?? []).sorted()

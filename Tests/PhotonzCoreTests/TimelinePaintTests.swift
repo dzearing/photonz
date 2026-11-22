@@ -152,6 +152,35 @@ import Testing
         }
     }
 
+    /// A picture laid on one canvas, shown on the next for the one frame its
+    /// own picture takes to lay, puts every moment where the new canvas has
+    /// it: zoomed in, zoomed out, and stepped along by a scroll.
+    @Test func aPictureLaidOnOneCanvasLandsWhereTheNextHasEveryMoment() {
+        let laneWidth: CGFloat = 1463
+        let old = TimelinePaint.Canvas(drawnMS: 600_000...1_500_000, ruler: Self.window(scale: 4, startMS: 600_000),
+                                       laneWidth: laneWidth)
+        let next = [
+            TimelinePaint.Canvas(drawnMS: 650_000...1_400_000, ruler: Self.window(scale: 4.7, startMS: 650_000),
+                                 laneWidth: laneWidth),
+            TimelinePaint.Canvas(drawnMS: 500_000...1_700_000, ruler: Self.window(scale: 3.4, startMS: 500_000),
+                                 laneWidth: laneWidth),
+            TimelinePaint.Canvas(drawnMS: 900_000...1_800_000, ruler: Self.window(scale: 4, startMS: 900_000),
+                                 laneWidth: laneWidth),
+        ]
+        for canvas in next {
+            let place = canvas.place(ofPictureLaidOn: old, laneWidth: laneWidth)
+            for ms in stride(from: 600_000.0, through: 1_500_000, by: 37_000) {
+                let onOld = laneWidth * old.ruler.fraction(ofMS: ms)
+                let shown = place.x + onOld * place.stretch
+                let onNew = laneWidth * canvas.ruler.fraction(ofMS: ms)
+                #expect(abs(shown - onNew) < 1e-6)
+            }
+        }
+        // The same canvas shows it as it was laid.
+        let same = old.place(ofPictureLaidOn: old, laneWidth: laneWidth)
+        #expect(same.x == 0 && same.stretch == 1)
+    }
+
     @Test func theCanvasIsAsWideAsTheStretch() {
         let window = Self.window(scale: 4, startMS: 0)
         let canvas = TimelinePaint.Canvas(drawnMS: 1000...(1000 + window.spanMS * 2), ruler: window,

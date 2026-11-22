@@ -1461,6 +1461,23 @@ The rule, for any view added to the editor window:
      lands on whole pixels. While a picture or strip fades in, the lane is a
      Canvas again, painted each frame until the fade is done. A painting
      wider than 16,000 pixels stays a Canvas.
+   - **A zoom lays a lane's new picture a frame late** (`TimelinePaintedPicture`,
+     `AfterTheFrame`, 2026-11-22, pass 21). The frame a zoom lets go of its
+     held painting builds every lane again and laid their pictures too,
+     2.6 ms of a 10.6 ms pass. Now, while the lane has a frame and its
+     canvas changes scale, that frame shows the last picture placed on the
+     new canvas (`TimelinePaint.Canvas.place(ofPictureLaidOn:laneWidth:)`),
+     which is what a held frame shows anyway, and the new picture is laid
+     when the main run loop next wakes, between that frame and the next. Near
+     Fit late frames fell from 122 to 129 of 648 to 89 to 113, the loop from
+     9.6 ms to 9.2. At rest a picture is laid on the frame that asks, and
+     every picture is laid again on the frame the timeline stops, so nothing
+     a late lay missed outlives the movement. Two things that did not work:
+     a main queue block for the late lay (it ran before the frame was handed
+     over, so the frame was no shorter and a scroll got worse), and laying a
+     scroll's step late (no gain on the step, 16 to 27 late frames of 360
+     against 9 to 13). Laying the picture into a Core Graphics context of our
+     own instead of `ImageRenderer.cgImage` is four times slower.
    - **A drawing group round the whole lane is faster still, and cannot be
      used**: on 2026-11-19 it took the near-Fit loop to 11.1 ms and a
      scroll's p95 from 12 ms to 9.5, but a drawing group cannot hold an

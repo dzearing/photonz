@@ -1,0 +1,26 @@
+{
+  "feature": "A pinch on the hour-long timeline lays each lane's new picture between frames",
+  "epic": "video-perf",
+  "summary": "When a pinch moves the timeline on to a new scale, each lane now shows its last picture for that one frame and draws the new one in the gap before the next frame. Near the whole-hour view about a fifth fewer frames are late. Nothing about how the timeline looks at rest changed.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Measured with a timeline-only speed walk on the probe, one build with a throwaway switch, three runs each way.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 60 },
+    { "do": "Press Backslash to see the whole hour." },
+    { "do": "Pinch the timeline in quickly, a few times.", "shot": "2026-11-22-timeline-hour-long-pass21-mid-pinch-sc.png" },
+    { "do": "Pinch in again quickly, then stop.", "shot": "2026-11-22-timeline-hour-long-pass21-at-rest-sc.png" },
+    { "do": "Scroll sideways along the timeline with two fingers." }
+  ],
+  "evaluate": [
+    "Does a quick pinch near the whole-hour view feel smoother than yesterday?",
+    "When the pinch stops, do clip names, cuts and the Music lane's fade diamonds settle at once, with no flash?",
+    "Does sideways scrolling feel as it did before?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, one build, throwaway switch, three runs each way (load about 3.5): near Fit late frames 122/129/124 to 113/94/89 of 648, mean frame 9.60/9.59/9.70 to 9.27/9.26/9.01 ms, p95 16.7 to 15.9/15.9/14.8; zoom out late 21/15/13 to 14/12/10 of 240; zoom in unchanged (46/40/47 to 42/46/49); scroll unchanged (9/12/14 to 10/13/10 of 360).",
+    "Tried and not kept: laying the late picture from a main queue block (it ran before the frame went out, so the frame was no shorter and scroll got worse, 9 to 13 late to 82 to 89); laying a scroll's step late too (16 to 27 late against 9 to 13); drawing pictures into a Core Graphics context of our own (four times slower than the renderer in use).",
+    "Every lane's picture is drawn again on the frame the timeline stops moving, a one-off cost of about 3 ms at the stop, so nothing a late picture missed stays on screen.",
+    "Bars of the task not reached: near Fit still about 15 per cent of frames late (the frames that let go of a held painting, about 13 ms each, now mostly SwiftUI rebuilding the lanes), zoom in about 45 of 240, edits (owned by a-long-edit-with-transitions-plays-scrubs-and-ed). The task stays open.",
+    "No mock covers the timeline's speed; nothing about the timeline's resting look changed."
+  ]
+}
