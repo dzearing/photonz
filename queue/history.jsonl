@@ -18579,3 +18579,13 @@
 {"t":"2026-11-22T06:47:04.311Z","ev":"task_note","id":"trimming-a-clip-start-into-a-speed-stop-freeze-k"}
 {"t":"2026-11-22T06:47:04.390Z","ev":"task_walks","id":"trimming-a-clip-start-into-a-speed-stop-freeze-k","walks":[]}
 {"t":"2026-11-22T06:47:04.474Z","ev":"task_done","id":"trimming-a-clip-start-into-a-speed-stop-freeze-k","from":"in_progress","note":"Trimming a ramped clip's start into a freeze now holds only the rest of the freeze, still ends on the recording's last frame, and pulling the edge back out by the same amount gives the identical clip (also for a split tail). Core fix in ClipPieces.swift (commit c4e766487); 8 new SpeedRampTests, Scripts/test.sh green (exit 0). No UI change, so no walk or audit."}
+{"t":"2026-11-22T07:26:43.521Z","ev":"slice_pass","walks":11,"passed":11,"failed":0,"seconds":1806,"of":1185,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-22T07:26:43.729Z","ev":"task_started","id":"the-design-rules-and-the-premiere-gap-report-sto","title":"The design rules and the Premiere gap report stop pointing at cards that are already answered","priority":"p2-normal"}
+{"t":"2026-11-22T07:28:42.275Z","ev":"task_walks","id":"the-design-rules-and-the-premiere-gap-report-sto","walks":[]}
+{"t":"2026-11-22T07:28:42.352Z","ev":"task_note","id":"the-design-rules-and-the-premiere-gap-report-sto"}
+{"t":"2026-11-22T07:28:42.427Z","ev":"task_note","id":"the-design-rules-and-the-premiere-gap-report-sto"}
+{"t":"2026-11-22T07:28:42.503Z","ev":"task_note","id":"the-design-rules-and-the-premiere-gap-report-sto"}
+{"t":"2026-11-22T07:28:42.579Z","ev":"task_note","id":"the-design-rules-and-the-premiere-gap-report-sto"}
+{"t":"2026-11-22T07:28:42.658Z","ev":"task_note","id":"the-design-rules-and-the-premiere-gap-report-sto"}
+{"t":"2026-11-22T07:28:42.733Z","ev":"task_note","id":"the-design-rules-and-the-premiere-gap-report-sto"}
+{"t":"2026-11-22T07:28:50.314Z","ev":"task_done","id":"the-design-rules-and-the-premiere-gap-report-sto","from":"in_progress","note":"UX-PATTERNS: system look is a filmed comparison in the audit (not a card), debug-looking mock text is replaced and named under §4 (runner-prompt.md matches), D18 names the New track row and the ghost below the tracks. video-vs-premiere.md: row 10 and the video Library closed with their answers, session walk cuts with Command B. Verified by the acceptance grep (only the dashboard's own card UI matches). Docs only, commits 03aa77d3 and 24ededcf, pushed."}
