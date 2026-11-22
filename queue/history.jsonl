@@ -18611,3 +18611,13 @@
 {"t":"2026-11-22T11:51:52.729Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-22T11:52:08.995Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 27 landed e9df3bc47: a picked or hovered clip stays in its track's painting, so a pick, unpick, blade or pointer move no longer repaints the whole lane (the pick's own pass mean 27 -> 23 ms, unpick 33-37 -> 30-33, blade 25-43 -> 23-24). Bars not reached: edits with a clip picked <=16 ms, worst scrub lag 1. Pass 28 leads in the log."}
 {"t":"2026-11-22T11:52:33.978Z","ev":"task_created","id":"the-app-crashed-in-static-photonzapp-main","priority":"p1-high","title":"The app crashed in static PhotonzApp.$main"}
+{"t":"2026-11-22T12:22:53.963Z","ev":"slice_pass","walks":13,"passed":13,"failed":0,"seconds":1803,"of":1186,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-22T12:22:54.165Z","ev":"task_started","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","title":"A long edit with transitions plays, scrubs and edits without a stutter: measure it, then make it fast","priority":"p1-high"}
+{"t":"2026-11-22T13:21:43.519Z","ev":"task_walks","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","walks":["speed-walk","the-panel-catches-up-when-play-stops-walk","cutting-while-playing-keeps-playing-walk"]}
+{"t":"2026-11-22T13:21:43.586Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T13:21:43.652Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T13:21:43.721Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T13:21:43.790Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T13:21:43.856Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T13:22:11.898Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
+{"t":"2026-11-22T13:22:11.968Z","ev":"task_pending","id":"a-long-edit-with-transitions-plays-scrubs-and-ed","from":"in_progress","note":"Pass 28 landed 465cc1ade (cut while playing keeps playing; blade's window-server wait gone). Bars not reached: edits with a clip picked <=16 ms, worst scrub lag 1."}

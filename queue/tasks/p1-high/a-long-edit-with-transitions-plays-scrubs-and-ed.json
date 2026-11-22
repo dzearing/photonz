@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-22T11:52:08.994Z",
+  "updated": "2026-11-22T13:22:11.967Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,45 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-22T11:52:08.993Z",
-      "note": "... 112 earlier entries elided",
-      "elided": 112
-    },
-    {
-      "t": "2026-11-18T11:31:11.008Z",
-      "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-    },
-    {
-      "t": "2026-11-18T11:31:11.691Z",
-      "note": "ran out of turn with 10 file(s) still changed: Sources/Photonz/EditorState+Time.swift, Sources/Photonz/EditorState.swift, Sources/Photonz/Playtest/PlaytestSpeedWalk.swift, Sources/PhotonzRender/RenderScheduler.swift, Tests/PhotonzRenderTests/PlaybackNeverBlinksTests.swift, Tests/PhotonzRenderTests/RenderSchedulerTests.swift, Tests/PhotonzRenderTests/ShownSizeCompositeTests.swift, Sources/Photonz/Pass17Timing.swift, Sources/PhotonzCore/ScrubPictureAsks.swift, Tests/PhotonzCoreTests/ScrubPictureAsksTests.swift. Put aside so the next task started clean; restore with `git stash apply ce7ea1d5454a77742f9def9fe5db1565cf690214` before carrying on."
-    },
-    {
-      "t": "2026-11-18T11:31:45.834Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-18T11:31:45.839Z",
-      "note": "a previous attempt at this task left 10 file(s) changed; they are set aside. Restore them with `git stash apply ce7ea1d5454a77742f9def9fe5db1565cf690214` and carry on, or start over and leave the stash alone."
-    },
-    {
-      "t": "2026-11-18T11:31:54.165Z",
-      "note": "runner failed (exit 1, attempt 2): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-    },
-    {
-      "t": "2026-11-19T10:41:17.467Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-19T11:48:55.919Z",
-      "note": "Pass 17 restored the previous attempt's stash (ce7ea1d54) and finished it. The stash had a compile error (a designated init delegating in RenderScheduler, now a class); the first speed walk this pass therefore measured a stale probe and served as today's before (composite 5.4 ms, scrub lag median medium 1 / hunt 2). With the stash alone (scheduler off the actor, ScrubPictureAsks), 3 runs: lag unchanged (hunt 2), composite 5.5. A temporary timing log (removed) split a hunt picture: 1.1 ms main thread before asking, 0.4 waiting its turn, 5.8 drawing, ~0.2-1 delivery: just over a 8.3 ms refresh."
-    },
-    {
-      "t": "2026-11-19T11:48:55.994Z",
-      "note": "Pass 17 fix (fc28facc9): DocumentRenderer.renderInteractiveFrame draws a video's whole picture onto a pooled IOSurface (CVPixelBufferPool of BGRA, 3+) and makes a VT CGImage of it; RenderScheduler.Frame carries the surface; CanvasNSView.showPlayingPicture puts the surface itself up while playing or scrubbing. Still pictures never use it; a patch after a surface frame draws the whole picture into the bitmap once (bufferHoldsLastFrame). Checked: the pool marks every buffer it vends in use and never recycles one whose IOSurface use count someone else raised (as CA does while it is up), measured with a scratch program. Tests MovingFrameOnASurfaceTests (same pixels as read back within 1, upright, patch after surface right, still picture stays in bitmap, <=4 surfaces for 24 pictures)."
-    },
-    {
-      "t": "2026-11-19T11:48:56.070Z",
-      "note": "Pass 17 result, short speed walk, 6 runs with the change, baseline rewritten (worst of 3): composite median 5.6 -> 4.2 ms (hunt draw 5.8 -> 3.4); scrub lag median medium 2 -> 1, hunt 2 -> 1 in every run; sight lag median 1; worst lag still 3. Play: 1 dropped a minute (same), edits 15-63 ms (same, main thread untouched). Verified: test.sh exit 0; walks ok: playing-a-recording-never-blinks, scrub-never-blacks-out, soft-gradients-in-a-recording-play-smooth, playing-a-recording-backwards-keeps-up, a-recording-opens-sharp, scrubbing-shows-the-zoom, an-editing-session, hear-the-scrub, reference-edit-opens, redline, playback-speed-keeps-pace, opening-title-dissolve, title-tiles-play, keyframe-anything; speed-walk ok x3 against the new baseline. Looked at the speed walk capture and the playing capture: colours, way up and layers right. Design note appended to docs/design/video.md 'What a composite may hold between frames'. Audit queue/audits/2026-11-19-a-long-edit-with-transitions-plays-scrubs-and-ed-pass17.json."
+      "t": "2026-11-22T13:22:11.966Z",
+      "note": "... 121 earlier entries elided",
+      "elided": 121
     },
     {
       "t": "2026-11-19T11:48:56.144Z",
@@ -507,12 +471,49 @@
     {
       "t": "2026-11-22T11:52:08.992Z",
       "note": "Pass 27 landed e9df3bc47: a picked or hovered clip stays in its track's painting, so a pick, unpick, blade or pointer move no longer repaints the whole lane (the pick's own pass mean 27 -> 23 ms, unpick 33-37 -> 30-33, blade 25-43 -> 23-24). Bars not reached: edits with a clip picked <=16 ms, worst scrub lag 1. Pass 28 leads in the log."
+    },
+    {
+      "t": "2026-11-22T12:22:54.160Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T13:21:43.516Z",
+      "note": "walks speed-walk, the-panel-catches-up-when-play-stops-walk -> speed-walk, the-panel-catches-up-when-play-stops-walk, cutting-while-playing-keeps-playing-walk"
+    },
+    {
+      "t": "2026-11-22T13:21:43.583Z",
+      "note": "Pass 28 measured (pass-profile.sh, edits-only walks on the 6 min edit): every blade, and only blades, had a 19-21 ms pass that was all Core Animation commit waiting on the window server for a fence (_CASCreateFencePort under +[_NSCGSTransaction currentTransaction]'s commit handler; 3 of 3 blades, 4 of 4 in a second walk, including a blade after a trim, so not the edited dot). What blade does that trim does not: splitClipAtPlayhead called pauseDocument. Also: PanelFieldRowLayout ~24 ms of a pick from nothing; InspectorPanel.availableSections 9 ms a pick, 13 of its 55 samples showsTransitionsGroup copying every clip (timelineClipLayers.contains)."
+    },
+    {
+      "t": "2026-11-22T13:21:43.649Z",
+      "note": "Pass 28 fixes: (1) Chose a cut while playing keeps playing over stopping because Final Cut's Blade (Command B, this app's key) and Premiere's Add Edit both keep playing, and the stop was the fence pass; Next-only switch next-blade-keeps-playing, on by default (FeatureCatalog, BladeKeepsPlayingFlagTests first), EditorState+ClipBar.splitClipAtPlayhead. (2) PhotonzDocument.hasTimelineClip(where:) asks without copying (TimelineClipQuestionTests first); showsTransitionsGroup uses it: availableSections 27 -> 22 ms over 3 picks. Tried and reverted: a Layout cache for PanelFieldRowLayout's zero-width measure, 72 -> 78 ms (SwiftUI's size cache already answers the repeat)."
+    },
+    {
+      "t": "2026-11-22T13:21:43.718Z",
+      "note": "Pass 28 result, profiled walk 4 blades each way: fence pass gone from every blade; blade's own pass 22-25 -> 18-20 ms, second pass 13-17 -> 7-9; whole blade 122-145 -> 114-131 ms; longest pass 23-26 -> 21-24 (now the editPoint section landing). Speed walk 3 runs: run 1 failed only on scrub medium frame lag median 65 vs limit 63 (the number pass 26 saw read 20-81 on unchanged code; scrub untouched here), runs 2 and 3 green (medium 37). Baseline not rewritten (gains inside margin). Composite path untouched, so export unchanged by construction."
+    },
+    {
+      "t": "2026-11-22T13:21:43.787Z",
+      "note": "Pass 28 verified: Scripts/test.sh exit 0; new walk cutting-while-playing-keeps-playing-walk (real click picks the clip, Space, Command B twice while playing: 2 then 3 pieces at rate 1, undo twice whole) green at Next defaults; also green: a-transition-is-picked-at-the-cut, an-editing-session, clicking-a-timeline-item-moves-the-playhead, join-through-edit, join-through-edit-from-the-menu-bar, right-click-keeps-the-playhead, scrub-never-blacks-out, the-panel-catches-up-when-play-stops, timeline-right-click-menus, transitions-group, transition-tile-comes-away, reference-edit-opens, speed-walk x2. Looked at both captures: cut at 1.0 s with Piece 1 of 2 picked and Pause showing, playhead at 2.7 s; then 3 pieces, Piece 2 of 3, stopped. Rule in docs/design/video.md 8e 'An edit made while it plays never stops play'. Audit queue/audits/2026-11-22-a-long-edit-with-transitions-plays-scrubs-and-ed-pass28.json."
+    },
+    {
+      "t": "2026-11-22T13:21:43.853Z",
+      "note": "Next for pass 29: bars not reached are edits with a clip picked <=16 ms (blade 21-24 now a section landing; pick 25-33, unpick 29-37, pick from nothing 24-45) and worst scrub lag 1. The objective's list is trim, move, blade, undo, add a transition, change a title: the speed walk has no move; adding one would measure it. Floor of a landing pass ~15 ms of SwiftUI layout, accessibility focus walk and drag regions with no app frame over 2 ms. Left rough, not filed: nothing beyond this task's own bars."
+    },
+    {
+      "t": "2026-11-22T13:22:11.895Z",
+      "note": "Pass 28 landed 465cc1ade: a cut made while a video plays keeps it playing (Next), so blades no longer pay a 20 ms window server wait (whole blade 122-145 -> 114-131 ms); the Transitions group stops copying every clip each panel pass. Bars not reached: edits with a clip picked <=16 ms (blade 21-24, picks 24-45, unpick 29-37), worst scrub lag 1. Pass 29 leads in the log."
+    },
+    {
+      "t": "2026-11-22T13:22:11.965Z",
+      "note": "Pass 28 landed 465cc1ade (cut while playing keeps playing; blade's window-server wait gone). Bars not reached: edits with a clip picked <=16 ms, worst scrub lag 1."
     }
   ],
-  "started": "2026-11-22T10:53:55.504Z",
+  "started": "2026-11-22T12:22:54.159Z",
   "walks": [
     "speed-walk",
-    "the-panel-catches-up-when-play-stops-walk"
+    "the-panel-catches-up-when-play-stops-walk",
+    "cutting-while-playing-keeps-playing-walk"
   ],
   "failures": 0,
   "lastError": {
