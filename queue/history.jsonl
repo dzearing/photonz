@@ -18687,3 +18687,8 @@
 {"t":"2026-11-22T13:27:45.136Z","ev":"task_note","id":"a-long-edit-with-transitions-plays-scrubs-and-ed"}
 {"t":"2026-11-22T13:27:45.160Z","ev":"triage","summary":"0 merged, 0 dropped, 3 moved p1 to p2 (two one-off CI reds with main green since, one probe crash with no repro command, retitled as a question), 1 re-tagged (MP4 CI check video-perf to unmanned-loop), 2 moved up in p2 (rotating check still stuck at cursor 157; seven more titles, follow-up of the user ask), 0 reset, 0 leftovers, p2 renumbered 10..540, 61 open (p1 5 to 2, p2 51 to 54, p3 5)"}
 {"t":"2026-11-22T13:28:49.149Z","ev":"digest","file":"2026-11-22.md"}
+{"t":"2026-11-22T13:29:11.098Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-22T14:26:54.066Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-22T14:26:54.136Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-22T14:26:54.204Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-22T14:27:19.131Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 21 landed 2b678edf0: a pinch lays each lane's new picture between frames instead of on the frame that lets go of a held painting; near Fit late frames 122-129 -> 89-113 of 648 (same build, switch), mean 9.6 -> 9.2 ms; scroll and zoom in unchanged; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
