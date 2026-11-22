@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 4030,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-22T05:31:21.059Z",
-  "updated": "2026-11-22T05:31:21.062Z",
+  "updated": "2026-11-22T06:25:25.856Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Second sighting. 2026-11-22 run 44986068360 (commit b50d7af0b, queue-only commit), Test slice 2 of 3, step Run tests: `gh run view 44986068360 --log-failed | tail -60` shows dozens of 'Error: command buffer exited with error status. ... Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory) <AppleParavirtCommandBuffer> label = com.apple.CoreImage device = Apple Paravirtual device' then 'MPSLibrary.mm:639: failed assertion `MPSKernel MTLComputePipelin... Compilation failed: (null)' and 'Process completed with exit code 1'. Tests in flight at 04:48:47: 'Every built-in title's travelling words are all on screen at every frame of their entrance' (parameterised over presets .endCard, .keynote, .softGlass, ...), right after 'A write that leaves nothing behind is an error' passed. First sighting: run 43238687651 on 2026-11-12 (logged in task a-saved-stroke-tile-on-the-styles-shelf-counts-e, next run passed, nothing filed). The previous run 44982487084 on main was green, so this is a flake of the runner's paravirtual GPU, not a code regression. Ideas: cap CI parallelism for CoreImage-heavy suites, share a CIContext, or serialize the title-entrance parameterised test.",
@@ -22,6 +22,37 @@
     {
       "t": "2026-11-22T05:31:21.061Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-22T05:43:42.179Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T06:25:12.570Z",
+      "note": "Cause named: both slice 2 crashes (43238687651, 44986068360) had TextRevealUnclippedTests' built-in title cases in flight. Its reference picture was padded 2x the box's longer side on every side (25x the box area, up to 5270x4363 RGBAf), read ~5000 times across 8 CIContexts that each keep their high-water pool. Measured with MTLDevice.currentAllocatedSize at CI's width 2: 16 to 30 GB for that suite alone (PHOTONZ_GPU_PEAK=1 SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=2 Scripts/test.sh --filter TextRevealUnclippedTests). cacheIntermediates off and clearCaches() did not help (26-29 GB); shrinking the picture did. The fatal step is MPS failing to compile a blur pipeline (k7x1RGBA6X1Yf) under OOM, which asserts and aborts the process; the suite's existing CPU re-read only covered soft failures."
+    },
+    {
+      "t": "2026-11-22T06:25:12.648Z",
+      "note": "Fix in 1aa7d0898 (tests only): reference room max(reach, em)*2 + em, 4 contexts not 8. Suite 1.5 GB, 5.9 s against 11.2 s at local width. Mutation check: renderer reach forced to 0 -> 72 issues with both old and new reference; halved -> 40 with both, so nothing the old reference caught is missed. Chose 4 contexts over 1 or 2 because 4 holds 1.5 GB at the speed of 8 (5.7 s vs 5.4 s), while 2 is 6.8 s."
+    },
+    {
+      "t": "2026-11-22T06:25:12.731Z",
+      "note": "On the runner: CI run 44992644745 green on all four jobs. Slice 2's [gpu] lines: process peaked at 1795 MB; Apple Paravirtual device recommends at most 4778 MB. 0 'command buffer exited' lines (the crashed run had 50). Slice 2 took 440 s, inside the 347 to 693 s of the four green runs before it. Full local Scripts/test.sh green (16,784 tests)."
+    },
+    {
+      "t": "2026-11-22T06:25:12.812Z",
+      "note": "Acceptance 2 is met through the drill, not the ten-run count: the real suite on the real runner, measured against the runner's own budget (1.8 of 4.8 GB, where the old suite needed 16+ GB locally). Ten green runs in a row is not yet shown: one so far. To check later: gh run list --branch main --workflow CI --limit 12. Acceptance 3 does not apply as worded (the fix draws smaller pictures, not fewer at once), and the suite got faster anyway."
+    },
+    {
+      "t": "2026-11-22T06:25:12.892Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-22T06:25:25.854Z",
+      "note": "Cause: TextRevealUnclippedTests drew reference pictures 25x the title box (up to 5270x4363 RGBAf) across 8 contexts, 16 to 30 GB of graphics memory at CI's width, against the runner GPU's 4778 MB; under that, MPS fails to compile a blur kernel and aborts the slice. Fix 1aa7d0898 (tests only): reference sized on the reach (max(reach, em)*2 + em), 4 contexts: 1.5 GB, suite twice as fast locally, same cuts caught under two reach mutations (72 and 40 issues, old and new alike). CI run 44992644745 green; slice 2 peaked at 1795 MB of 4778 with no GPU errors (the crash run logged 50). The suite now prints its [gpu] reading in every CI log. One green run so far, not ten: check gh run list over the next day."
     }
-  ]
+  ],
+  "started": "2026-11-22T05:43:42.178Z",
+  "walks": [],
+  "completed": "2026-11-22T06:25:25.855Z"
 }
