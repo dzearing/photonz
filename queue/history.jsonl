@@ -18692,3 +18692,8 @@
 {"t":"2026-11-22T14:26:54.136Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-22T14:26:54.204Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-22T14:27:19.131Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 21 landed 2b678edf0: a pinch lays each lane's new picture between frames instead of on the frame that lets go of a held painting; near Fit late frames 122-129 -> 89-113 of 648 (same build, switch), mean 9.6 -> 9.2 ms; scroll and zoom in unchanged; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}
+{"t":"2026-11-22T14:27:44.741Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-22T15:05:32.302Z","ev":"task_created","id":"undo-backs-a-title-page-inserted-before-a-clip-o","priority":"p1-high","title":"Undo backs a title page inserted before a clip out in one step again"}
+{"t":"2026-11-22T15:11:34.632Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-22T15:11:34.701Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-22T15:11:34.783Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 22 landed 85922f62c: a video no longer runs a picture's motion loop (it redrew the whole edit 30 times a second after opening); zoom in late frames 44-48 -> 19-22 of 240, mean 10.1 -> 9.0 ms (same build, switch). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."}

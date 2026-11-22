@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-22T14:27:19.130Z",
+  "updated": "2026-11-22T15:11:34.782Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,25 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-22T14:27:19.129Z",
-      "note": "... 25 earlier entries elided",
-      "elided": 25
-    },
-    {
-      "t": "2026-11-16T14:34:21.064Z",
-      "note": "Still open, bars not reached: zoom near Fit 26-36 ms vs 8.3 (p95 37), scroll 14.7 vs 8.3, edits 36-95 ms vs 16 (mostly the inspector, see a-long-edit-with-transitions-plays-scrubs-and-ed). Profile of the heavy zoom frames now: TimelineTrackRow.lateBody 17.5% (paintedBars 7%: every painted bar worked out from the document again on each zoom frame, layer(id:) 4%), TimelinePaintedClips.paint 15% (names and their fitting ~5%, waveforms ~4%), the rest SwiftUI graph and Core Animation. Next: keep each painted bar's document facts (kind, keys, drift, level, waveform, fades) between frames keyed by document and clip so a zoom frame only places them, and cache fitted names by width step. Left rough, not filed (no one would notice yet): a Zoom lane more than ~5 rows below the fold draws nothing until scrolled near, so a very fast fling down the tracks might show its bars a frame late."
-    },
-    {
-      "t": "2026-11-16T14:34:21.139Z",
-      "note": "Pass 6 landed c103c62a6: nothing off screen is redrawn while the hour-long timeline zooms (Zoom lanes below the fold, full views past the painted stretch) and titles are painted. Zoom 24.8 -> 14.8 ms a frame (p95 77 -> 37), far in 8-9 ms, scroll 18.4 -> 14.7. Bars not reached (8.3 ms zoom/scroll near Fit, 16 ms edits); stays open for caching painted bars between zoom frames."
-    },
-    {
-      "t": "2026-11-16T14:34:55.156Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-16T16:44:29.088Z",
-      "note": "Pass 7 (2026-11-16). Baseline at aa73ceb75 (same app code as c103c62a6), 60 min edit, markers down: zoom in 16.6 ms/frame (p95 39.6), out 16.5 (p95 35.6), by zoom 1x 35 / 8x 34 / 16x 33; scroll 15.9 (p95 25); edits longest pass trim 53 / move 35 / blade 81 / undo 64 / transition 93 / title 45. Profile near Fit: paintedBars + layer(id:) + paintedCuts/documentCut + timelineChildMarks ~20% of the frame, all document answers that do not change while zooming."
+      "t": "2026-11-22T15:11:34.781Z",
+      "note": "... 29 earlier entries elided",
+      "elided": 29
     },
     {
       "t": "2026-11-16T16:44:29.163Z",
@@ -506,9 +490,25 @@
     {
       "t": "2026-11-22T14:27:19.128Z",
       "note": "Pass 21 landed 2b678edf0: a pinch lays each lane's new picture between frames instead of on the frame that lets go of a held painting; near Fit late frames 122-129 -> 89-113 of 648 (same build, switch), mean 9.6 -> 9.2 ms; scroll and zoom in unchanged; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+    },
+    {
+      "t": "2026-11-22T14:27:44.737Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T15:11:34.629Z",
+      "note": "Pass 22 (2026-11-22). Baseline at 93fbf8874 (60 min edit, timeline measure, load ~4-10): zoom in 44-48 late of 240, mean 10.1 ms, busy 6.2; by zoom its slow frames were 1x-8x. Every-pass profile of zoom in (pass-profile.sh --match 'zoom in'): 460 samples in restartMotionPreview's loop calling EditorState.submit -> displayDocument -> drawn(atTimeMS:), up to 5.5 ms a pass. The picture motion preview (EditorState+Motion, 30 fps) started on open for ANY document with motion, a video included (titles/zooms), and a video's window has nothing to stop it (Space goes to the transport). Fix: PhotonzDocument.hasALoopToPlay (LayerMotion.swift, tested in DocumentTimeTests.onlyAPictureHasALoopToPlay) is false with hasTime; canPlayMotion reads it. A/B one build, throwaway defaults switch, 3 alternating runs: zoom in late 44/45/48 -> 19/20/22, mean 10.1 -> 9.0 ms, p95 ~20 -> ~15, busy 6.2 -> 4.9; near Fit 84/82/71 -> 76/77/75 late of 648 (within noise), zoom out and scroll unchanged. 17 walks (task's 11 + an-editing-session, hour-long open, 4 video title walks): 16 green; insert-a-title-before-a-clip-walk fails identically on main with the change stashed, filed undo-backs-a-title-page-inserted-before-a-clip-o. Scripts/test.sh exit 0. Looked at the at-rest capture of the 60 min edit: canvas on its first frame, lanes filled, names and fade diamonds in place. Rule in docs/design/video.md 8f. Audit queue/audits/2026-11-22-timeline-hour-long-pass22-no-loop-in-video.json. Landed 85922f62c."
+    },
+    {
+      "t": "2026-11-22T15:11:34.698Z",
+      "note": "Still open, bars not reached: zoom in ~20 of 240 late (8% vs 5%), near Fit ~75 of 648 (the frames that let go of a held painting, ~13 ms), edits (a-long-edit-with-transitions-plays-scrubs-and-ed). Next: near Fit's fresh frames are SwiftUI rebuilding lanes + layout; with zoom in's loop cost gone, re-profile zoom in's remaining late frames at 4x-8x. Left rough, not filed: the Motion section's play button is dimmed in a video if a person turns that section on (correct: a video plays with Space)."
+    },
+    {
+      "t": "2026-11-22T15:11:34.780Z",
+      "note": "Pass 22 landed 85922f62c: a video no longer runs a picture's motion loop (it redrew the whole edit 30 times a second after opening); zoom in late frames 44-48 -> 19-22 of 240, mean 10.1 -> 9.0 ms (same build, switch). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
     }
   ],
-  "started": "2026-11-22T13:29:11.093Z",
+  "started": "2026-11-22T14:27:44.736Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",

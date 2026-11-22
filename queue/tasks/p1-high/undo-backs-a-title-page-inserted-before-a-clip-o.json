@@ -1,0 +1,29 @@
+{
+  "id": "undo-backs-a-title-page-inserted-before-a-clip-o",
+  "title": "Undo backs a title page inserted before a clip out in one step again",
+  "goal": "A person who inserts a title page in front of a recording, adds a transition, then presses Undo a few times should see the title gone and the recording back at the start. Right now four undos leave the title page on the timeline, so the insert walk fails on main.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 4040,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-22T15:05:32.298Z",
+  "updated": "2026-11-22T15:05:32.301Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-22 on main 93fbf8874 (change stashed) and on the pass-22 build: Scripts/playtest.sh Scripts/playtest/insert-a-title-before-a-clip-walk.json -> step 69 (expectClip): 1 clips are called \"Title Page\", and the walk expected 0; the timeline: Title Page on V1 0.00s to 4.00s; Tutorial Sample on V1 4.00s to 12.00s. Steps 61-67 are four undos after Cmd-T / Dip to black. sweep.sh status also lists it failing. Found while checking the hour-long timeline task (pass 22); not caused by it.",
+  "acceptance": [
+    "insert-a-title-before-a-clip-walk passes at Next defaults",
+    "Undo after inserting a title page, picking a cube, deleting it and choosing Dip to black takes the title away in the number of steps the walk expects (or the walk is corrected to the right count with the reason logged)"
+  ],
+  "log": [
+    {
+      "t": "2026-11-22T15:05:32.300Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "insert-a-title-before-a-clip-walk"
+  ]
+}
