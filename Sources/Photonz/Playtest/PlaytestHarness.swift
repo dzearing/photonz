@@ -22491,6 +22491,9 @@ final class MainThreadMeter {
     /// What the menu bar spent on a walk's mouse-downs since the meter was
     /// zeroed, left out of the press it came with (`takeWalkMouseDown`).
     private var menuBarLeftOut: CFTimeInterval = 0
+    /// What the main thread spent waiting for the window server to take a
+    /// frame since the meter was zeroed, left out of the passes it fell in.
+    private var windowServerLeftOut: CFTimeInterval = 0
 
     /// One walk click, delivered the way every walk press, double click,
     /// tile click and `windowClick` delivers it: the release queued first,
@@ -22602,11 +22605,18 @@ final class MainThreadMeter {
             case .beforeWaiting: moment = .fallingAsleep
             default: return
             }
+            // What the pass now ending spent waiting for the window server
+            // to take its frame: not the app's work (`WindowServerWait`).
+            let waited = WindowServerWait.shared.take()
+            WindowServerWait.shared.passIsOpen(moment != .fallingAsleep)
             if moment == .fallingAsleep, setAside > 0 {
                 // A pass while the harness has the window out only to
                 // photograph it: whatever it cost is the photograph's.
                 clock.drop()
                 return
+            }
+            if waited > 0, moment != .woke, clock.exclude(waited) == 0 {
+                windowServerLeftOut += waited
             }
             if moment == .enteredARun || moment == .leftARun,
                CFRunLoopCopyCurrentMode(CFRunLoopGetMain())?.rawValue as String? == WindowSlideSpan.mode {
@@ -22626,6 +22636,7 @@ final class MainThreadMeter {
         }
         self.observer = observer
         CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
+        WindowServerWait.shared.start()
         // A sheet slides in and out inside a run of AppKit's own mode, which
         // is not a common one: unwatched, the whole slide read as one pass
         // (`WindowSlideSpan`). Watched only, never made common, so nothing of
@@ -22697,7 +22708,7 @@ final class MainThreadMeter {
         longPasses = []
         tally.reset()
         builtAtLastPass = ViewBuildMeter.shared.counts
-        busy = 0; passes = 0; longest = 0; menuBarLeftOut = 0
+        busy = 0; passes = 0; longest = 0; menuBarLeftOut = 0; windowServerLeftOut = 0
         zeroedAt = CACurrentMediaTime()
         slide.reset(at: zeroedAt)
         clock.restart(at: CACurrentMediaTime())
@@ -22752,6 +22763,10 @@ final class MainThreadMeter {
             + (menuBarLeftOut > 0
                ? String(format: ", %.1fms left out that the menu bar spent on the pointer resting over it",
                         menuBarLeftOut * 1000)
+               : "")
+            + (windowServerLeftOut >= 0.001
+               ? String(format: ", %.1fms left out waiting for the window server to take a frame",
+                        windowServerLeftOut * 1000)
                : "")
     }
 }
