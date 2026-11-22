@@ -1953,6 +1953,17 @@ extension PhotonzDocument {
         return longest
     }
 
+    /// Whether the canvas's looping preview has anything to play: a picture
+    /// with something on it that moves, or a picture animated by keys. A
+    /// document with time never: its motion plays under the transport, on the
+    /// document's own clock (`DocumentTime.drawn(atTimeMS:)`), and a loop left
+    /// running on a video redraws the whole of it thirty times a second until
+    /// its last motion ends, which on the hour-long reference edit was an hour.
+    public var hasALoopToPlay: Bool {
+        guard !hasTime else { return false }
+        return automaticMotionCycleLengthMS > 0 || isKeyedPicture
+    }
+
     /// Whether the lap simply follows the longest motion, which is what it does
     /// until somebody says otherwise.
     public var motionCycleIsAutomatic: Bool { motionCycleMS == nil }

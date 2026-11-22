@@ -1,0 +1,27 @@
+{
+  "feature": "A video no longer runs a picture's motion loop behind the timeline",
+  "epic": "video-perf",
+  "summary": "Opening a video with moving titles or zooms used to start the looping motion preview meant for animated pictures, which redrew the whole edit thirty times a second with nothing in the window to stop it. A video now plays its motion only under its own transport, so zooming the timeline of the hour-long edit just after opening it drops about half as many frames.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The button on step 1 opens your own copy of the 60 minute reference edit in Photonz Dev; File > Open reaches it too (Cmd-Shift-G, ~/Library/Caches/Photonz Reference Edit/Photonz Dev). Measured with a timeline-only speed walk on the probe, one build with a throwaway switch, three runs each way, alternating.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 60 },
+    { "do": "Straight away, press Backslash to see the whole hour." },
+    { "do": "Pinch the timeline in quickly, a few times.", "shot": "2026-11-22-timeline-hour-long-pass22-mid-pinch-sc.png" },
+    { "do": "Stop, and look at the picture above the transport.", "shot": "2026-11-22-timeline-hour-long-pass22-at-rest-sc.png" },
+    { "do": "Press Space to play, then Space again to stop." }
+  ],
+  "evaluate": [
+    "Does zooming in right after opening the hour-long edit feel smoother than before?",
+    "Does the picture above the transport sit still on the playhead's frame when nothing is playing?",
+    "Do titles and zooms still move as they should while the edit plays?"
+  ],
+  "rough": [
+    "Numbers, 60 minute edit, one build, throwaway switch, three alternating runs each way (load about 5 to 10): zoom in late frames 44/45/48 to 19/20/22 of 240, mean frame 10.19/10.04/10.13 to 8.93/9.18/9.06 ms, p95 20.9/19.9/18.7 to 14.1/15.6/16.0 ms, main thread 6.4/6.1/6.2 to 4.9/5.0/4.9 ms a frame. Near Fit, zoom out and scroll unchanged (the loop had already ended by then): near Fit 84/82/71 to 76/77/75 late of 648.",
+    "Found with the every-pass profile: 460 samples of zoom in's passes sat in the motion loop's redraw of the whole document, up to 5.5 ms in one pass.",
+    "The Motion section's play button, if a person turns that section on for a video, is now dimmed there: a video plays with Space and the transport.",
+    "Bars of the task not reached: near Fit still about 12 per cent of frames late (the frames that let go of a held painting), zoom in about 20 of 240 (8 per cent against 5), edits (owned by a-long-edit-with-transitions-plays-scrubs-and-ed). The task stays open.",
+    "insert-a-title-before-a-clip-walk fails on main without this change (four undos leave the title page); filed as undo-backs-a-title-page-inserted-before-a-clip-o.",
+    "No mock covers the timeline's speed; nothing about how the timeline looks changed."
+  ]
+}

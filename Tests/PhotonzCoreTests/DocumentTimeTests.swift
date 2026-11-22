@@ -248,6 +248,31 @@ struct DocumentTimeTests {
         #expect((halfway?.style.opacity ?? 1) < 0.6)
     }
 
+    @Test func onlyAPictureHasALoopToPlay() {
+        // The canvas's looping preview is a picture's way of showing its
+        // motion. A document with time shows its motion under the transport,
+        // on its own clock, so it has no loop to play: left running on the
+        // hour-long reference edit it redrew the whole edit thirty times a
+        // second, for an hour, while somebody zoomed the timeline (2026-11-22).
+        var picture = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
+        #expect(!picture.hasALoopToPlay)
+        var bell = Self.shape("Bell")
+        bell.motions = [LayerMotion(property: .rotation, from: .number(-12), to: .number(12),
+                                    timing: MotionTiming(startMS: 0, durationMS: 900))]
+        picture.layers = [bell]
+        #expect(picture.hasALoopToPlay)
+
+        var video = picture
+        var title = Self.shape("Title")
+        title.time = LayerTime(inMS: 0, outMS: 4000)
+        title.motions = bell.motions
+        video.layers = [title]
+        video.durationMS = 4000
+        #expect(video.hasTime)
+        #expect(video.automaticMotionCycleLengthMS > 0)
+        #expect(!video.hasALoopToPlay)
+    }
+
     @Test func aDocumentWithNoTimeDrawsExactlyWhatItAlwaysDrew() {
         var doc = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
         var bell = Self.shape("Bell")

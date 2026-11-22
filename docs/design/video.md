@@ -1478,6 +1478,19 @@ The rule, for any view added to the editor window:
      scroll's step late (no gain on the step, 16 to 27 late frames of 360
      against 9 to 13). Laying the picture into a Core Graphics context of our
      own instead of `ImageRenderer.cgImage` is four times slower.
+   - **A video never runs a picture's motion loop** (`hasALoopToPlay`,
+     2026-11-22, pass 22). A picture that arrives with motion in it arrives
+     moving, on a thirty-a-second loop that redraws the canvas
+     (`EditorState+Motion`). A document with time was let in too: every
+     title or zoom with motion counted, so the hour-long reference edit
+     opened with that loop running, redrawing the whole edit thirty times a
+     second until its last motion ended, with nothing in a video's window to
+     stop it (Space and the transport play the document, not the loop). Its
+     motion already plays under the transport on the document's own clock,
+     so a document with time has no loop to play. Zooming in on the 60 minute
+     edit straight after it opens: late frames 44 to 48 of 240 fell to 19
+     to 22, the loop's mean frame from 10.1 ms to 9.0, the main thread from
+     6.2 ms a frame to 4.9 (one build, a throwaway switch, three runs each).
    - **A drawing group round the whole lane is faster still, and cannot be
      used**: on 2026-11-19 it took the near-Fit loop to 11.1 ms and a
      scroll's p95 from 12 ms to 9.5, but a drawing group cannot hold an

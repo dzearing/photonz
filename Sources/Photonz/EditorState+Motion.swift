@@ -415,7 +415,9 @@ extension EditorState {
     /// one rule, the next number typed would start a loop of a still icon.
     var canPlayMotion: Bool {
         guard Experiments.shared.motionEnabled, let document else { return false }
-        return document.automaticMotionCycleLengthMS > 0 || document.isKeyedPicture
+        // Never in a document with time: Space and the transport play it, and
+        // the loop has no control there to stop it (`hasALoopToPlay`).
+        return document.hasALoopToPlay
     }
 
     func toggleMotionPreview() {
