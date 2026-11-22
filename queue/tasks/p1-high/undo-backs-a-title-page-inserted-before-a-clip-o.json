@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 4040,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-22T15:05:32.298Z",
-  "updated": "2026-11-22T15:05:32.301Z",
+  "updated": "2026-11-22T17:14:20.479Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-22 on main 93fbf8874 (change stashed) and on the pass-22 build: Scripts/playtest.sh Scripts/playtest/insert-a-title-before-a-clip-walk.json -> step 69 (expectClip): 1 clips are called \"Title Page\", and the walk expected 0; the timeline: Title Page on V1 0.00s to 4.00s; Tutorial Sample on V1 4.00s to 12.00s. Steps 61-67 are four undos after Cmd-T / Dip to black. sweep.sh status also lists it failing. Found while checking the hour-long timeline task (pass 22); not caused by it.",
@@ -21,9 +21,27 @@
     {
       "t": "2026-11-22T15:05:32.300Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-22T16:58:12.992Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T17:14:13.643Z",
+      "note": "Reproduced on the probe: step 69 fails after 4 undos. Diagnostic walk (/tmp/diag-walk) read the state after each undo: 1 Cross dissolve (Cmd-T at step 56), 2 bare edit point (delete undone), 3 Cube, 4 Cross dissolve from the insert, 5 title gone, recording at 0:00-8:00. Cmd-T at step 28 on a join already carrying a dissolve makes no step. The app's undo is correct; the walk went stale in 500f13636 (2026-10-29) when one 'Add Transition > Dip to black' row became Cmd-T + Type (two edits). Last pass 2026-10-23, failing at step 69 since 2026-11-02. Chose to correct the walk over merging Cmd-T and the Type pick into one undo step because they are two separate edits a person makes, and Premiere undoes them separately too."
+    },
+    {
+      "t": "2026-11-22T17:14:13.711Z",
+      "note": "left rough: one Scripts/test.sh run failed ReframePerfTests 'A 12 megapixel frame punched in to 200%' at 5.9ms against 5.1ms while the stopwatch suites ran three at a time; alone it read 2.9ms three times and the next full run was green. First time it shows up in loop.log, so not filed; file it if it happens again. The other transition walks failing in the 11-20 sweep (a-transition-is-picked-at-the-cut, shorten-the-cut-for-a-dissolve, transition-tile-comes-away) fail for other reasons (fade 0.51s vs 0.5s, a renamed Spare field, tile out of view), not this undo count."
+    },
+    {
+      "t": "2026-11-22T17:14:20.477Z",
+      "note": "The app's undo was already right; the walk was stale. Since 500f13636 (2026-10-29) Dip to black goes on in two edits (Cmd-T, then Type), so five undos back out the insert, not four. insert-a-title-before-a-clip-walk now undoes five times and checks each state (dissolve, bare cut, cube, the insert's dissolve, title gone); it passes on the probe with 7 real window pictures. test.sh green. Commit b68cbac8d."
     }
   ],
   "walks": [
     "insert-a-title-before-a-clip-walk"
-  ]
+  ],
+  "started": "2026-11-22T16:58:12.991Z",
+  "completed": "2026-11-22T17:14:20.478Z"
 }
