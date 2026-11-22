@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 4050,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-22T20:30:53.951Z",
-  "updated": "2026-11-22T20:30:53.954Z",
+  "updated": "2026-11-22T21:46:49.713Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/45061203079 (commit 8cb9f46fd), Test slice 3 of 3: `gh run view 45061203079 --log-failed | grep ✘` printed: Test \"Putting copies in step costs in proportion to the copies, not their square\" recorded an issue at MainComponentsKeptTests.swift:119:9: Expectation failed: (ratio → 6.093243101327336) < (6 → 6.0). The test reads thread CPU time fastest of 5 runs; a one-shot ratio against a flat 6 is close to the noise on a shared runner. Options: compare against a quadratic reference measured beside it, take more rounds, or move it to a .serialized ...PerfTests suite per CLAUDE.md. Filed by the runner on the-frame-shown-at-a-whole-second-is-the-one-tha, which does not touch this code.",
@@ -21,6 +21,25 @@
     {
       "t": "2026-11-22T20:30:53.953Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-22T21:22:53.643Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T21:46:43.552Z",
+      "note": "Reproduced from CI logs: the old 4x test read 2.8 to 4.8 on eight green GitHub runs on 2026-11-22 and 6.1 on run 45061203079 (24 copies 6.81 ms, 96 copies 41.49 ms; the larger sheet read 22 to 38 ms on green runs). Locally it reads 3.4 to 3.7; 32 CPU burners on this Mac moved thread CPU time by nothing (6.9 to 7.0 under load with the new test), so the CI noise is the shared VM, not something this Mac can stage. Chose a wider step (24 vs 192 copies), interleaved timing (9 rounds turn and turn about, fastest of each), and up to three readings taking the lowest, over moving it to a PerfTests suite, because GitHub's 3-core runners run one swift test process anyway so a PerfTests suite gets no quiet there. Kept version reads 6.8 to 7.5 (7.3 inside the full suite); bar 16; the square version (mains walked per ask, put back on purpose) read 30.6 to 31.7 on all six readings and failed both runs. Full Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-22T21:46:43.622Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-22T21:46:49.711Z",
+      "note": "MainComponentsKeptTests syncGrowsWithTheCopies now reads 24 vs 192 copies, interleaved over 9 rounds, up to 3 readings taking the lowest, bar 16: kept version 6.8 to 7.5 here (7.3 in the full suite), square version put back on purpose 30.6 to 31.7 and fails. Commit 69c284992, full Scripts/test.sh exit 0. CI's old 4x reading spread 2.8 to 6.1; the new bar leaves about 2.2x room each side."
     }
-  ]
+  ],
+  "started": "2026-11-22T21:22:53.642Z",
+  "walks": [],
+  "completed": "2026-11-22T21:46:49.712Z"
 }
