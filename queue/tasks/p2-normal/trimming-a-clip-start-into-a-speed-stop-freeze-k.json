@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T05:39:23.539Z",
-  "updated": "2026-11-21T13:11:42.643Z",
+  "updated": "2026-11-22T06:47:04.473Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-19 with a throwaway test (deleted after): SpeedRampTests.frozenForASecond() (8 s recording, ramp to 4x at 3000, that stop frozen for 1000 ms, hold 6000-7000 of 17000), clip.trimStart(ofPiece: 0, byMS: 6500). Printed: trimmed true in 3000 length 10500 out 7513 frameAt900 3000. Expected out 8000 and the frame moving off 3000 after 500 ms. Same cause as the split fix in 4a21f06d: ClipPiece.trimmedStart keeps the full ramp, and a hold is spent on the frame a piece starts from. Use ClipPiece.speedRampCarriedOn(fromOffsetMS:) for the trimmed piece, but a trim must stay reversible: trimming back out (negative delta) from a start frame whose freeze hold was cut short has to give the hold back first before walking back into the ramp, and SpeedRamp.sourceMS going back never spends the hold on its start frame. Needs a design for how much hold is restorable (the piece does not remember the original hold).",
@@ -128,6 +128,33 @@
     {
       "t": "2026-11-21T13:11:42.642Z",
       "note": "seq 70 -> 50"
+    },
+    {
+      "t": "2026-11-22T06:25:48.311Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T06:47:04.161Z",
+      "note": "Reproduced with SpeedRampTests (frozenForASecond, trimStart 6500): hold stayed 1000, piece ended on 7513 not 8000, trim range out -5999. Matches the 2026-10-19 note."
+    },
+    {
+      "t": "2026-11-22T06:47:04.235Z",
+      "note": "Chose remembering the trimmed-off hold on the piece (ClipPiece.startHoldSpentMS, Codable only when > 0) over keeping the full ramp plus a clock offset, because playback, the speed curve lane and the panel all read piece.speedRamp + sourceInMS directly; with the reduced hold in the ramp they stay right untouched, and the memory is used only to give the hold back on a trim out. carriedOn(fromOffsetMS:) is now the one rule for split tails and trimmed starts, either direction."
+    },
+    {
+      "t": "2026-11-22T06:47:04.309Z",
+      "note": "left rough: a start trim landing on the slow approach right beside a freeze (speed near nought) drifts 10 to 50 ms of timeline, because a ramped piece's start frame is a whole millisecond and there 0.5 ms of recording is 10+ ms of timeline (e.g. trim 7500 then back: start 10 not 0, end reads 8010). Same whole-millisecond start frame as before this change, under a frame at 30 fps, so no task; trims landing inside the freeze are exact."
+    },
+    {
+      "t": "2026-11-22T06:47:04.388Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-22T06:47:04.471Z",
+      "note": "Trimming a ramped clip's start into a freeze now holds only the rest of the freeze, still ends on the recording's last frame, and pulling the edge back out by the same amount gives the identical clip (also for a split tail). Core fix in ClipPieces.swift (commit c4e766487); 8 new SpeedRampTests, Scripts/test.sh green (exit 0). No UI change, so no walk or audit."
     }
-  ]
+  ],
+  "started": "2026-11-22T06:25:48.310Z",
+  "walks": [],
+  "completed": "2026-11-22T06:47:04.472Z"
 }
