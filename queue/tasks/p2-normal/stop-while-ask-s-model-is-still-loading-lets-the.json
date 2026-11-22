@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T15:47:48.927Z",
-  "updated": "2026-11-21T13:11:42.479Z",
+  "updated": "2026-11-22T05:05:03.540Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-04 on source without typing-in-ask-lists-the-commands-you-can-run applied (its Sources diff reversed, probe rebuilt): Scripts/playtest.sh Scripts/playtest/ask-stops-a-running-request-walk.json printed: step 19 (expect): the control called \"Agent Waiting 1\" is in the panel, and this step says it should not be. Same failure with that change in, twice. Passes warm: ask-stops-a-running-request-walk 137s ok, after other model walks in one playtest-all run, and 116s ok in sweep 2026-11-03-230840, which is why sweeps never show it. Not yet looked at: where the cancelled request sits during the load; AskSession.stop cancels work, and finished() starts the next only when that task ends.",
@@ -81,9 +81,35 @@
     {
       "t": "2026-11-21T13:11:42.478Z",
       "note": "seq 50 -> 30"
+    },
+    {
+      "t": "2026-11-22T04:40:29.217Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T04:56:20.029Z",
+      "note": "Reproduced cold 2026-11-21 (no shared walk server running): Scripts/playtest.sh Scripts/playtest/ask-stops-a-running-request-walk.json -> 'step 19 (expect): the control called \"Agent Waiting 1\" is in the panel, and this step says it should not be' at 6.9s."
+    },
+    {
+      "t": "2026-11-22T04:56:20.109Z",
+      "note": "Cause: AskModelServer.ready() awaited the shared load task's .value, an unstructured Task that ignores the waiter's cancellation, so a stopped request's work task stayed alive (current != nil, isBusy) until the load ended and only then finished() started the next. Also its defer cleared 'starting' when the waiter returned, so a waiter walking away would have let the next request start a second load (stop() kills the loading server). Fix: PhotonzCore AbandonableWait.value(of:) (continuation + cancel handler, task left running, tested in AbandonableWaitTests), used in AskModelServer.ready and AskPictureServer.ready; the load task clears 'starting' itself when it ends."
+    },
+    {
+      "t": "2026-11-22T04:56:20.186Z",
+      "note": "Adversarial: the load is not cancelled by Stop, on purpose: the waiting request needs that same model, so throwing the load away would make it start over. Stop during a run (steps landing) is unchanged: that path never waited on a load."
+    },
+    {
+      "t": "2026-11-22T05:04:49.994Z",
+      "note": "walks ask-stops-a-running-request-walk -> ask-stops-a-running-request-walk"
+    },
+    {
+      "t": "2026-11-22T05:05:03.538Z",
+      "note": "A stopped request no longer waits out the model load: AbandonableWait (PhotonzCore, tested) in AskModelServer.ready and AskPictureServer.ready; the load carries on for the next request. ask-stops-a-running-request-walk failed cold at step 19 before, passes cold after (40 steps, circle working 0.6s after Stop while the model was still loading). Full Scripts/test.sh green. Audit queue/audits/2026-11-21-ask-stop-during-load.json. Commit dc00ebb4f."
     }
   ],
   "walks": [
     "ask-stops-a-running-request-walk"
-  ]
+  ],
+  "started": "2026-11-22T04:40:29.216Z",
+  "completed": "2026-11-22T05:05:03.539Z"
 }
