@@ -1,0 +1,30 @@
+{
+  "feature": "An open arrow caption repaints when the arrow's look changes",
+  "epic": "",
+  "summary": "While you type an arrow's caption, picking a colour, chip style, size or arrow style in the panel repaints the bubble you are typing in straight away, with the field still open. The bubble now also wears the chip's full finish (gradient, rim, stripe) while you type, so it is the label that lands.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Measured with the walk caption-look-follows-the-arrow-walk and a measuring walk that photographed the open bubble, the committed pill and the bare arrow for each change at 100% and 195% zoom.",
+  "switched": {},
+  "try": [
+    { "do": "Open any screenshot, press A and drag out an arrow. Type Save button into its bubble.", "shot": "2026-11-21-caption-look-before-after.png" },
+    { "do": "Without clicking away, click Blue in Appearance > Color. The bubble turns blue at once and the caret stays after your words.", "shot": "2026-11-21-caption-look-2-blue-sc.png" },
+    { "do": "Still typing, pick the Paper chip style. The bubble becomes the white plate with its blue stripe.", "shot": "2026-11-21-caption-look-3-paper-sc.png" },
+    { "do": "Click L under Size, then type ' here'. The words and the bubble grow and you keep typing in the new look.", "shot": "2026-11-21-caption-look-6-typed-more-sc.png" },
+    { "do": "Press Command-Return. The pill lands exactly as the bubble looked.", "shot": "2026-11-21-caption-look-7-committed-sc.png" },
+    { "do": "Double-click the pill, open Advanced, drag the Line swatch onto Chip Fill. The open bubble's plate turns blue at once.", "shot": "2026-11-21-caption-look-8-reedit-chip-colours-sc.png" },
+    { "do": "Press Command-Z while the field is still open. The fill goes back and the field stays open.", "shot": "2026-11-21-caption-look-9-undo-while-typing-sc.png" }
+  ],
+  "evaluate": [
+    "Does the bubble you type in now look like the label you get when you press Command-Return, in every chip style you use?",
+    "When you change the colour or size mid-word, does anything about the caret or your words feel disturbed?",
+    "Is it fine that the tool bar's Color button lands the caption first (it takes the keyboard for its Width field), or do you want the field to stay open through it?",
+    "Do you notice the words settling by a pixel at the moment you commit, at 100% zoom?"
+  ],
+  "rough": [
+    "Before and after side by side: 2026-11-21-caption-look-before-after.png. Before the fix the bubble kept its old colour and size until commit (top three rows).",
+    "Measured open bubble against committed pill, mean pixel difference over the pill's box from real captures: the bubble less its words is 1.1 to 3.3 out of 255 for Blue, Large, Marker and Paper at 100% and 195% zoom (before, the whole pill was 10.5 to 14 out of 255 off even with no change, because the chip's finish was missing while typing). The words still settle by 1 to 2 device pixels at commit, exactly as much with no change made, so that is how every caption has always placed its words and not part of this fix.",
+    "The tool bar's Color button opens a popover that takes the keyboard, and as with any focus change that lands the caption first. Its colour then shows on the committed pill at once, so nothing is stale, but the field does not stay open through it. I kept the one-draft rule rather than keep a field open behind a popover with its own text field.",
+    "There is no font or weight control for arrows anywhere: the chip style sets the face. Chip Fill and Chip Text appear under Advanced only once the arrow has a caption, so on a fresh arrow they can be changed mid-typing only on a re-edit.",
+    "Glass still stands in as one opaque colour while typing and frosts the picture once it lands, as before.",
+    "Before pictures exist for the colour and the size changes. The chip style and arrow style went stale through the same one-time copy, but I did not photograph each one before the fix."
+  ]
+}
