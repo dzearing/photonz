@@ -46,6 +46,36 @@ struct Space3DExportTests {
         return bytes
     }
 
+    /// One frame of the 30 a second movie, in whole milliseconds.
+    static let frameMS = 33
+
+    /// How far the movie's red channel is from the canvas's: the mean
+    /// difference, how many pixels are more than 48 levels off, and how many
+    /// of those are more than `edgeBand` pixels from any edge the canvas drew.
+    static func compare(_ movie: [UInt8], _ canvas: [UInt8],
+                        edgeBand: Int = 2) -> (mean: Double, far: Int, farFromEdge: Int, pixels: Int) {
+        let w = Int(Self.canvas.width), h = Int(Self.canvas.height)
+        func red(_ bytes: [UInt8], _ x: Int, _ y: Int) -> Int { Int(bytes[(y * w + x) * 4]) }
+        var total = 0, far = 0, farFromEdge = 0
+        for y in 0..<h {
+            for x in 0..<w {
+                let d = abs(red(movie, x, y) - red(canvas, x, y))
+                total += d
+                guard d > 48 else { continue }
+                far += 1
+                var nearEdge = false
+                for dy in -edgeBand...edgeBand where !nearEdge {
+                    for dx in -edgeBand...edgeBand {
+                        let nx = min(max(x + dx, 0), w - 1), ny = min(max(y + dy, 0), h - 1)
+                        if abs(red(canvas, nx, ny) - red(canvas, x, y)) > 48 { nearEdge = true; break }
+                    }
+                }
+                if !nearEdge { farFromEdge += 1 }
+            }
+        }
+        return (Double(total) / Double(w * h), far, farFromEdge, w * h)
+    }
+
     @Test("Three moments of a flip: the file's frame and the canvas's agree")
     func flipMatches() async throws {
         let (document, _) = Self.document()
@@ -64,27 +94,38 @@ struct Space3DExportTests {
         generator.requestedTimeToleranceBefore = .zero
         generator.requestedTimeToleranceAfter = .zero
         let canvasRenderer = DocumentRenderer()
+        func canvas(atMS ms: Int) throws -> [UInt8] {
+            Self.rgba(try #require(canvasRenderer.renderInteractive(document.drawn(atTimeMS: ms),
+                                                                    store: store)),
+                      size: Self.canvas)
+        }
         for ms in [400, 700, 1100] {
             let time = CMTime(value: CMTimeValue(ms), timescale: 1000)
             let (frame, actual) = try await generator.image(at: time)
             let landed = Int((actual.seconds * 1000).rounded())
-            let live = try #require(canvasRenderer.renderInteractive(document.drawn(atTimeMS: landed),
-                                                                     store: store))
             let a = Self.rgba(frame, size: Self.canvas)
-            let b = Self.rgba(live, size: Self.canvas)
-            var total = 0, far = 0
-            for index in stride(from: 0, to: a.count, by: 4) {
-                let d = abs(Int(a[index]) - Int(b[index]))
-                total += d
-                if d > 48 { far += 1 }
-            }
-            let pixels = a.count / 4
-            let mean = Double(total) / Double(pixels)
+            let b = try canvas(atMS: landed)
+            let here = Self.compare(a, b)
+            // The frames either side, so a file running a frame early or late
+            // against the canvas reads as exactly that.
+            let early = Self.compare(a, try canvas(atMS: landed - Self.frameMS))
+            let late = Self.compare(a, try canvas(atMS: landed + Self.frameMS))
             print(String(format: "[3d] movie vs canvas at %dms (frame %dms): mean red difference %.2f, "
-                         + "%d of %d pixels more than 48 levels off", ms, landed, mean, far, pixels))
-            #expect(mean < 3, "at \(ms)ms")
-            // Compression softens the card's edge a pixel or so; nothing more.
-            #expect(far < pixels / 100, "at \(ms)ms")
+                         + "%d of %d pixels more than 48 levels off, %d of them away from the card's edge; "
+                         + "a frame early %.2f, a frame late %.2f",
+                         ms, landed, here.mean, here.far, here.pixels, here.farFromEdge,
+                         early.mean, late.mean))
+            #expect(landed == ms, "the file has a frame starting at \(ms)ms")
+            #expect(here.mean < 3, "at \(ms)ms")
+            // The picture in the file is the canvas's at that moment, not the
+            // one a frame before or after it.
+            #expect(here.mean < early.mean, "at \(ms)ms")
+            #expect(here.mean < late.mean, "at \(ms)ms")
+            // Compression softens the card's edge a pixel or so, and how many
+            // edge pixels that costs is the encoder's business (CI's runner
+            // turned 776 of them, this Mac 287, for the same picture). Off the
+            // edge, every pixel is where the canvas put it.
+            #expect(here.farFromEdge < here.pixels / 1000, "at \(ms)ms")
         }
     }
 }
