@@ -2,14 +2,14 @@
   "id": "main-goes-green-an-mp4-exported-twice-stops-read",
   "title": "Main goes green: an MP4 exported twice stops reading 7 levels apart on GitHub's runner",
   "goal": "Main's checks went red on 2026-11-22 because a test that exports one recording twice found the two pictures 7 shades apart where it allows 6, on GitHub's shared machine, after three tries. Make the check tell the encoder's own wobble from a real change so main goes green, without loosening what it guards (a picture that really changes).",
-  "epic": "video-perf",
-  "priority": "p1-high",
-  "seq": 4040,
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-22T08:32:29.773Z",
-  "updated": "2026-11-22T08:32:29.776Z",
+  "updated": "2026-11-22T13:27:03.362Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Repro: gh run view 44998427631 --log-failed (commit 6d4e30f90, a queue-only commit, so app code unchanged from the green run 44995299075 before it). Output: '✘ Test \"Exporting the same recording twice gives the same file to look at\" recorded an issue at VideoExportBudgetTests.swift:354:9: Expectation failed: (worst.apart → 7) <= 6'. The test already retries 3 times and keeps the closest pair (8e6b4769d); 2026-10-27 GitHub read 7 vs 6 once before. Options: compare a small average over the frame rather than one squeezed pixel, or a tolerance of 8 with a separate gross-change check. Filed by the long-edit perf task's pass 26 (main red, not its code).",
@@ -22,6 +22,18 @@
     {
       "t": "2026-11-22T08:32:29.775Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-22T13:26:28.217Z",
+      "note": "priority p1-high -> p2-normal"
+    },
+    {
+      "t": "2026-11-22T13:26:46.072Z",
+      "note": "Triage 2026-11-22: moved p1 to p2 and re-tagged unmanned-loop (it is the check machine's health, not video speed). Ran the command in the notes: gh run view 44998427631 --log-failed shows the failure as written (worst.apart 7 <= 6, VideoExportBudgetTests.swift:354). It is intermittent: main went green on the next two runs (45014627531, 45019449805), and the last time this test read 7 was 2026-10-27. That is roughly once a month. Real, but not top of the queue while main is green."
+    },
+    {
+      "t": "2026-11-22T13:27:03.361Z",
+      "note": "seq 4040 -> 20"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Editorial Serif, Light Leak, Behind Glass, Gradient Glow, and the Minimal Underline, Pill Card and Split Wipe name cards still use stock violet and electric blue, plain system type and \"Your Title\" placeholders, and score well below the five title pages redesigned on 2026-11-21 on the same blind test. Redesign them by the same colour and type rules so nothing on the titles shelf cheapens a video.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 4100,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-21T23:22:52.142Z",
-  "updated": "2026-11-21T23:22:52.145Z",
+  "updated": "2026-11-22T13:27:03.642Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blind round 6 of task keynote-clean-soft-gradient-glass-kinetic-bold-t (2026-11-21, calm median 6.83, new five 6.83 to 7.58): Editorial Serif 6.17, Light Leak 5.67, Minimal Underline 5.25, Behind Glass 5.08, Pill Card 5.00, Gradient Glow 4.83, Split Wipe 4.50. Picture: queue/audits/2026-11-21-title-redesign-scores.png (bottom row). Frames and scorer setup: Tests/PhotonzMediaTests/TitleRedesignReelTests.swift writes others/hold-*.png beside the five (PHOTONZ_REEL=1 PHOTONZ_REDESIGN_PHASE=after PHOTONZ_REDESIGN_DIR=/tmp/redesign Scripts/test.sh --filter TitleRedesignReel). Code: Sources/PhotonzCore/TitleSet.swift (editorial, glass, lightLeak, gradientGlow, splitWipe, underline, pill). Keep TitleSetTests.movingLooks (looks shared by two at most, one light one dark) and twoSizes green. Name cards sit over footage: judge them there, legible over light and dark footage.",
@@ -23,6 +23,14 @@
     {
       "t": "2026-11-21T23:22:52.144Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-22T13:26:55.753Z",
+      "note": "Triage 2026-11-22: moved up near the head of p2. This finishes what the user asked for on 2026-11-21 (no title on the shelf that cheapens a video). The redesign covered five of the twelve that score below the calm set."
+    },
+    {
+      "t": "2026-11-22T13:27:03.641Z",
+      "note": "seq 4100 -> 60"
     }
   ]
 }

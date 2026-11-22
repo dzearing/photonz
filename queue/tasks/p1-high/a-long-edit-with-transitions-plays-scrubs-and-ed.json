@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-22T13:22:11.967Z",
+  "updated": "2026-11-22T13:27:45.135Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,13 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-22T13:22:11.966Z",
-      "note": "... 121 earlier entries elided",
-      "elided": 121
-    },
-    {
-      "t": "2026-11-19T11:48:56.144Z",
-      "note": "Next for pass 18: (a) edits 15-63 ms on the main thread (blade's inspector rebuild, 33 inspectorPanel bodies, is the biggest); (b) 1 dropped frame a minute while playing; (c) worst scrub lag 3 and the sharp frame under a fast drag 30-40 refreshes behind (decode). Main CI red at aab12cc7c (TextRevealUnclippedTests on the CI machine) folded into find-out-why-the-legibility-check-once-read-the. Left rough, not filed: nothing beyond this task's own bars."
+      "t": "2026-11-22T13:27:45.134Z",
+      "note": "... 122 earlier entries elided",
+      "elided": 122
     },
     {
       "t": "2026-11-19T11:48:56.243Z",
@@ -507,6 +503,10 @@
     {
       "t": "2026-11-22T13:22:11.965Z",
       "note": "Pass 28 landed 465cc1ade (cut while playing keeps playing; blade's window-server wait gone). Bars not reached: edits with a clip picked <=16 ms, worst scrub lag 1."
+    },
+    {
+      "t": "2026-11-22T13:27:45.133Z",
+      "note": "Triage 2026-11-22: 28 passes in. The last three each took real time off one edit (pick's own pass 27 to 23 ms, the stop gone from a blade), but every pass now says the same floor: about 15 ms of SwiftUI layout, accessibility focus walk and title bar drag regions under each landing pass, against a 16 ms bar. Acceptance item 5 already says what to do with what is not reached: file one follow-up per cost with its bar and command. If pass 29 does not move pick, unpick or pick-from-nothing under about 20 ms, close this task that way rather than run pass 30, and put the framework floor (fewer AppKit-backed controls in the panel, or sections that do not land during a pick) in a follow-up of its own. The speed walk's scrub medium frame lag also read 20 to 81 on unchanged code (pass 26 and 28), so it fails rotating checks at random; settle that number's noise in the same close."
     }
   ],
   "started": "2026-11-22T12:22:54.159Z",

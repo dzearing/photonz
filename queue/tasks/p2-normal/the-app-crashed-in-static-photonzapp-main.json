@@ -1,0 +1,43 @@
+{
+  "id": "the-app-crashed-in-static-photonzapp-main",
+  "title": "Find out what stopped the probe in SwiftUI's focus update on 2026-11-22, and whether a person could hit it",
+  "goal": "The loop's probe app stopped once at 03:12 on 2026-11-22, inside SwiftUI's own start-up loop while it was updating keyboard focus for accessibility, passing through the menu bar menu. It happened once, while a runner was trying out an unfinished change. Find out whether the shipped app can still do this, and if it can, fix it.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-22T11:52:33.974Z",
+  "updated": "2026-11-22T13:27:03.573Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-22-031236.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)\nNSApplication.photonz_nextEvent(matching:until:inMode:dequeue:) (HeldDragKeys.swift:111)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)",
+  "acceptance": [
+    "The walks long-edit pass 27 ran (painted-clips-take-a-hand-walk, speed-walk and the timeline walks) are run at least three times on the shipped probe, and the task says whether a crash report with this stack came back",
+    "If it did not come back: closed as an unfinished build, and the finding is written on the task about crashes in a runner's own probe",
+    "If it did come back: the cause is fixed, with a walk or test that fails before and passes after"
+  ],
+  "log": [
+    {
+      "t": "2026-11-22T11:52:33.976Z",
+      "note": "created (crash-watch)"
+    },
+    {
+      "t": "2026-11-22T13:26:28.351Z",
+      "note": "priority p1-high -> p2-normal"
+    },
+    {
+      "t": "2026-11-22T13:26:45.921Z",
+      "note": "Triage 2026-11-22: moved p1 to p2 and retitled as a question. The notes carry no command that shows the crash, so it cannot be re-run. What I read in the report: a SwiftUI precondition (assertionFailure < precondition < runApp's UpdateGroup.dispatchImmediately) under AccessibilityNode.updateFocus > ViewRendererHost.focusResponder > MultiViewResponder.visit > MenuBarMenu's body. HeldDragKeys.swift:111 (photonz_nextEvent) is only on the stack because it runs the event loop. The probe launched 03:08:16 and stopped 03:12:26, during long-edit pass 27, whose runner was working on the timeline lanes and reading the cost of SwiftUI's accessibility focus walk. So the probe was most likely built from pass 27's unfinished tree (binary uuid 3c46339e, not today's dist probe). Same family as a-crash-in-a-runner-s-own-half-built-probe-is-lo. One report with this signature, none since. Different from the-app-crashed-in-nsapplication-photonz-nexteve (that was a window-size runaway, fixed in c23a205be)."
+    },
+    {
+      "t": "2026-11-22T13:26:45.988Z",
+      "note": "Acceptance as a question: (1) run the walks pass 27 ran (painted-clips-take-a-hand-walk, speed-walk, the timeline walks) a few times on today's probe and say whether this report comes back; (2) if it does not, close as caused by an unfinished build and log that on a-crash-in-a-runner-s-own-half-built-probe-is-lo; if it does, fix it with a walk that fails first."
+    },
+    {
+      "t": "2026-11-22T13:27:03.572Z",
+      "note": "seq 4060 -> 50"
+    }
+  ]
+}
