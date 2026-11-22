@@ -328,53 +328,155 @@ struct VideoExportBudgetTests {
         let ranFirst = try await AVURLAsset(url: first).load(.duration).seconds
         let ranSecond = try await AVURLAsset(url: second).load(.duration).seconds
         #expect(abs(ranFirst - ranSecond) < 0.05)
-        // And they show the same picture, to the eye: a couple of levels out of
-        // 255 is what the encoder's own decisions move, and nothing a person
-        // sees. On a busy machine the encoder spends its bits differently, as
-        // with the sizes above: GitHub's VM read 7 against 6 once on unchanged
-        // code (2026-10-27). So a pair further apart than that is written
-        // again, up to three times, and the closest is the one judged; a
-        // picture that really changed is far apart every time.
-        var worst: (apart: Int, at: Double, left: [UInt8], right: [UInt8]) = (.max, 0, [], [])
+        // And they show the same picture, to the eye. Judged on the average
+        // colour of each 32 pixel square of the frame, never on one pixel: the
+        // encoder's own decisions move single pixels at the edge of a moving
+        // band by twenty or thirty levels between two writes of one file
+        // (measured 2026-11-22: up to 33 on this Mac's hardware encoder under
+        // load, 31 between a hardware and a software write), and the old check,
+        // which squeezed the whole frame into one pixel and so read about one
+        // pixel of it, caught that wobble on GitHub's runner as 7 against 6
+        // (2026-10-27 and 2026-11-22, unchanged code both times). The squares
+        // average it away: the same writes read at most 1.8 levels apart. A
+        // picture that really changed moves whole squares, so it reads far
+        // past the bar: one frame dropped reads 16 or more, a colour shifted by
+        // 20 reads 20 (`aChangedPictureReadsFarApart`). A pair past the bar is
+        // still written again, up to three times, and the closest judged.
+        var worst = PictureGap.none
         for attempt in 0..<3 {
             if attempt > 0 {
                 try await VideoExporter.exportMP4(from: source, to: second, cuts: cuts, crop: nil,
                                                   recipe: recipe)
             }
-            var pair: (apart: Int, at: Double, left: [UInt8], right: [UInt8]) = (0, 0, [], [])
+            var pair = PictureGap.zero
             for at in [0.2, 1.0, 1.8] {
-                let left = try await Self.colour(of: first, atSeconds: at)
-                let right = try await Self.colour(of: second, atSeconds: at)
-                let apart = zip(left, right).map { abs(Int($0) - Int($1)) }.max() ?? 0
-                if apart > pair.apart || pair.left.isEmpty { pair = (apart, at, left, right) }
+                let gap = try await Self.gap(between: first, and: second, atSeconds: at)
+                if gap.levels > pair.levels { pair = gap }
             }
-            if pair.apart < worst.apart { worst = pair }
-            if worst.apart <= 6 { break }
+            if pair.levels < worst.levels { worst = pair }
+            if worst.levels <= Self.samePictureLevels { break }
         }
-        #expect(worst.apart <= 6,
-                "the two exports are \(worst.apart) levels apart at \(worst.at)s: \(worst.left) and \(worst.right)")
+        #expect(worst.levels <= Self.samePictureLevels,
+                "the two exports are \(worst.description)")
     }
 
-    /// What colour the written file shows at a moment, squeezed into one pixel.
-    static func colour(of url: URL, atSeconds seconds: Double) async throws -> [UInt8] {
+    /// How far apart two pictures may read and still be the same picture to
+    /// the eye, in levels of 255, on the average of a 32 pixel square. About
+    /// three times the encoder's own wobble, and well under half of the
+    /// smallest real change measured.
+    static let samePictureLevels = 6.0
+
+    /// **The bar still catches a picture that really changed.** The same
+    /// recording written once whole and once with a single frame cut out of
+    /// it: from the cut on, every frame shows the moment one frame later, which
+    /// is what a dropped frame does to a file. And the same frame with its red
+    /// raised by 20 levels, a colour that shifted. Both read far past the bar,
+    /// and the frame against itself reads nothing.
+    @Test("A picture that really changed reads far apart: a dropped frame, a shifted colour")
+    func aChangedPictureReadsFarApart() async throws {
+        let size = CGSize(width: 640, height: 400)
+        let source = try await Self.busySource(seconds: 2, size: size)
+        let recipe = VideoExportQuality.standard.recipe(format: .mp4, sourceSize: size,
+                                                        sourceFPS: 30)
+        let whole = Self.folder.appendingPathComponent("changed-whole.mp4")
+        let dropped = Self.folder.appendingPathComponent("changed-dropped.mp4")
+        try await VideoExporter.exportMP4(from: source, to: whole,
+                                          cuts: Self.wholeOf(source, seconds: 2), crop: nil,
+                                          recipe: recipe)
+        // Frame 29 (0.967s to 1.0s) cut out, and nothing else.
+        let oneFrameOut = VideoCutList(pieces: [VideoPiece(start: 0, end: 29.0 / 30),
+                                                VideoPiece(start: 1.0, end: 2.0)],
+                                       sourceDuration: 2)
+        try await VideoExporter.exportMP4(from: source, to: dropped, cuts: oneFrameOut,
+                                          crop: nil, recipe: recipe)
+        let afterTheCut = try await Self.gap(between: whole, and: dropped, atSeconds: 1.5)
+        #expect(afterTheCut.levels > 2 * Self.samePictureLevels,
+                "one frame dropped reads only \(afterTheCut.description)")
+
+        let frame = try await Self.patches(of: whole, atSeconds: 1.0)
+        #expect(PictureGap(frame, frame, at: 1.0).levels == 0)
+        var redder = frame
+        for index in stride(from: 0, to: redder.count, by: 3) {
+            redder[index] = min(255, redder[index] + 20)
+        }
+        let shifted = PictureGap(frame, redder, at: 1.0)
+        #expect(shifted.levels > 2 * Self.samePictureLevels,
+                "a colour shifted by 20 reads only \(shifted.description)")
+    }
+
+    /// How far apart two pictures read: the largest difference, in levels of
+    /// 255, between the average red, green or blue of any one 32 pixel square
+    /// of them, and where it was.
+    struct PictureGap {
+        var levels: Double
+        var at: Double
+        var square: Int
+
+        static let none = PictureGap(levels: .infinity, at: 0, square: -1)
+        static let zero = PictureGap(levels: 0, at: 0, square: -1)
+
+        init(levels: Double, at: Double, square: Int) {
+            self.levels = levels
+            self.at = at
+            self.square = square
+        }
+
+        /// Between two lists from `patches(of:atSeconds:)` taken at `at`.
+        init(_ left: [Double], _ right: [Double], at: Double) {
+            self.init(levels: 0, at: at, square: -1)
+            for (index, (l, r)) in zip(left, right).enumerated() where abs(l - r) > levels {
+                levels = abs(l - r)
+                square = index / 3
+            }
+        }
+
+        var description: String {
+            String(format: "%.1f levels apart at %.1fs, in square %d", levels, at, square)
+        }
+    }
+
+    static func gap(between left: URL, and right: URL, atSeconds seconds: Double)
+        async throws -> PictureGap {
+        PictureGap(try await patches(of: left, atSeconds: seconds),
+                   try await patches(of: right, atSeconds: seconds), at: seconds)
+    }
+
+    /// What the written file shows at a moment, as the average red, green and
+    /// blue of each whole 32 pixel square of the frame, row by row.
+    static func patches(of url: URL, atSeconds seconds: Double) async throws -> [Double] {
         let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
         generator.appliesPreferredTrackTransform = true
         generator.requestedTimeToleranceBefore = .zero
         generator.requestedTimeToleranceAfter = .zero
         let frame = try await generator.image(
             at: CMTime(seconds: seconds, preferredTimescale: 600)).image
-        var pixel = [UInt8](repeating: 0, count: 4)
-        pixel.withUnsafeMutableBytes { bytes in
-            guard let context = CGContext(data: bytes.baseAddress, width: 1, height: 1,
-                                          bitsPerComponent: 8, bytesPerRow: 4,
+        let width = frame.width, height = frame.height, side = 32
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let drawn = pixels.withUnsafeMutableBytes { bytes -> Bool in
+            guard let context = CGContext(data: bytes.baseAddress, width: width, height: height,
+                                          bitsPerComponent: 8, bytesPerRow: width * 4,
                                           space: CGColorSpace(name: CGColorSpace.sRGB)
                                               ?? CGColorSpaceCreateDeviceRGB(),
                                           bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-            else { return }
-            context.interpolationQuality = .low
-            context.draw(frame, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+            else { return false }
+            context.draw(frame, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
         }
-        return pixel
+        try #require(drawn, "could not draw the frame at \(seconds)s of \(url.lastPathComponent)")
+        var averages: [Double] = []
+        for top in stride(from: 0, through: height - side, by: side) {
+            for left in stride(from: 0, through: width - side, by: side) {
+                var sums = [0.0, 0.0, 0.0]
+                for y in top..<(top + side) {
+                    for x in left..<(left + side) {
+                        let at = (y * width + x) * 4
+                        for channel in 0..<3 { sums[channel] += Double(pixels[at + channel]) }
+                    }
+                }
+                averages += sums.map { $0 / Double(side * side) }
+            }
+        }
+        return averages
     }
 
     // MARK: - A recording with sound on it
