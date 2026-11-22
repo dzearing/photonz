@@ -5,11 +5,11 @@
   "epic": "",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-21T16:21:02.157Z",
-  "updated": "2026-11-21T16:21:07.795Z",
+  "updated": "2026-11-22T03:51:04.575Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-21: \"when im drawing an arrow and typing some thing into the pill, an di change the appearance, it doesn't repaint with the new color or style until i'm done typing.\"\n\nLikely cause (read in code, not reproduced): the caption editor is a stand-in overlay whose look is copied ONCE when the session opens. Sources/Photonz/CanvasTextEditing.swift:87-122 (beginCaptionSession) seeds captionStyle from a.withSeededCaptionColors and stores captionLayer: layer and a CaptionPillView; refreshTextEditorDisplay (~513) says outright 'Caption sessions keep their fixed style; text sessions track the font picker's live style' (desired = session.captionStyle ?? textContent). Meanwhile the composite suppresses the real pill during the edit (EditorState.swift ~6401, caption set nil while editingCaptionLayerID), so the document's new look never shows until commit.\n\nFix direction (runner decides): on each render, re-read the arrow's annotation from the document by session.layerID, re-derive captionStyle and the pill view's fill, border and colours from it, and restyle the editor if they changed (as text sessions already do), keeping session.captionLayer current so placement planning (~434) uses the new look. Traps: restyling must not reset editor.string, the caret or the IME marked text; a size change can change the pill's planned placement, so don't let it jump unless the committed pill would too; AnnotationInspector.swift:664-676 has its own guard on editingCaptionLayerID, check panel edits actually reach the layer while editing.",
@@ -29,6 +29,51 @@
     {
       "t": "2026-11-21T16:21:07.794Z",
       "note": "seq 4030 -> 40"
+    },
+    {
+      "t": "2026-11-22T02:58:09.814Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T03:50:42.413Z",
+      "note": "owns these walks: caption-look-follows-the-arrow-walk"
+    },
+    {
+      "t": "2026-11-22T03:50:42.490Z",
+      "note": "Reproduced first in the probe at Next defaults: Red and Large picked from the panel while typing changed the line but left the bubble its old colour and 46pt height until commit (before pictures in the audit). Cause as the notes guessed: the field copied the arrow's look once when it opened."
+    },
+    {
+      "t": "2026-11-22T03:50:42.566Z",
+      "note": "Adversarial review before building: a Photoshop user expects a live text style change to show on the text being typed, so this is a plain bug, not a design question. Traps checked: restyling keeps words, caret and selection (walk types on after four changes); size change keeps the spot the session picked, same as the commit; panel presses do not take focus, so the field stays open."
+    },
+    {
+      "t": "2026-11-22T03:50:42.642Z",
+      "note": "Fix: followCaptionArrow re-reads the arrow on every refresh and restyles words and bubble. Found while measuring that the bubble itself was a flat stand-in missing every chip's finish (whole pill 10.5 to 14 out of 255 off even with no change), so the bubble is now drawn by the committed chip's own code less the words (AnnotationRasterizer.captionPlate). Bubble less words now 1.1 to 3.3 out of 255 at 100% and 195% for Blue, Large, Marker, Paper."
+    },
+    {
+      "t": "2026-11-22T03:50:42.727Z",
+      "note": "Chose to keep the tool bar's Color popover landing the caption (focus moves into it, the one-draft rule) over holding the field open behind a popover with its own text field, because the new colour then shows on the committed pill at once and nothing is stale."
+    },
+    {
+      "t": "2026-11-22T03:50:42.804Z",
+      "note": "left rough: the words settle by 1 to 2 device pixels at commit at 100% zoom, the same with no change made (control case in the measuring walk); pre-existing sub-pixel placement of the field's words against the document-grid-rounded committed words. A one pixel settle every caption has always had did not clear the follow-up bar; written here."
+    },
+    {
+      "t": "2026-11-22T03:50:42.880Z",
+      "note": "left rough: my own 'Scripts/playtest-all.sh --help | head -5' killed a probe build mid-signing and left the probe ad hoc signed, which lost its Screen Recording grant; a full 'Scripts/build-app.sh --probe' re-signed it and the grant came back. Self-inflicted, not a loop bug."
+    },
+    {
+      "t": "2026-11-22T03:50:42.960Z",
+      "note": "Tests: CaptionDraftBubbleTests (plate equals committed chip less its words for all ten chip styles), PlaytestScriptTests look claim; walk caption-look-follows-the-arrow-walk fails on the old code and passes now; 18 caption and arrow walks pass; Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-22T03:51:04.573Z",
+      "note": "An open arrow caption now repaints at once when its colour, chip style, size or arrow style changes in the panel (and the chip colours on a re-edit), field kept open; the bubble is drawn by the committed chip's own code less the words, so its finish shows while typing. Measured bubble less words 1.1-3.3/255 vs committed at 100% and 195%; words settle 1-2 device px at commit as before. Walk caption-look-follows-the-arrow-walk fails on old code, passes now; 18 caption/arrow walks and Scripts/test.sh green. Commits 9d391df2b, f78e3506d. Audit queue/audits/2026-11-21-caption-look-follows-the-arrow.json"
     }
-  ]
+  ],
+  "started": "2026-11-22T02:58:09.813Z",
+  "walks": [
+    "caption-look-follows-the-arrow-walk"
+  ],
+  "completed": "2026-11-22T03:51:04.574Z"
 }
