@@ -2902,6 +2902,10 @@ final class EditorState {
     }
     /// Renders preview sessions off the scheduler's queue.
     let previewRenderer = DocumentRenderer()
+    /// Draws the finished pictures that leave the app: an export, a copy.
+    /// Kept white where nothing is drawn, at a cost the live canvas could not
+    /// pay (`DocumentRenderer.forStills`).
+    let stillRenderer = DocumentRenderer(forStills: true)
     var dragPreviewGeneration = 0
     /// Set on commit: the preview must survive until the post-commit frame
     /// lands, or the dragged layer would flash back to its pre-drag position.
@@ -4864,7 +4868,7 @@ final class EditorState {
         // The very sizer the Export sheet weighed with, when there is one, so
         // the file that lands is byte for byte the one the sheet said it would
         // be AND is already made. Without one, a fresh sizer does the work.
-        let sizer = warm ?? ExportSizer(renderer: previewRenderer, store: store)
+        let sizer = warm ?? ExportSizer(renderer: stillRenderer, store: store)
         Task { [weak self] in
             let data = await sizer.data(of: document, frameID: frame, scale: scale,
                                         format: format, quality: quality,
@@ -4902,7 +4906,7 @@ final class EditorState {
         let base = frame.flatMap { document.layer(id: $0)?.name }
             ?? documentURL?.deletingPathExtension().lastPathComponent
             ?? "Photonz Export"
-        let sizer = warm ?? ExportSizer(renderer: previewRenderer, store: store)
+        let sizer = warm ?? ExportSizer(renderer: stillRenderer, store: store)
         Task { [weak self] in
             let data = await sizer.gifData(of: document, frameID: frame, scale: scale,
                                            background: background)

@@ -344,8 +344,9 @@ enum AgentWork {
         // A keyed picture is seen at its playhead, as the canvas shows it.
         if document.isKeyedPicture { document = document.moved(toMotionTimeMS: editor.documentTimeMS) }
         // Drawn here, the way Copy draws a picture, with a renderer of its own
-        // so the canvas's caches are left alone.
-        let renderer = DocumentRenderer()
+        // so the canvas's caches are left alone, as a finished still
+        // (`DocumentRenderer.forStills`).
+        let renderer = DocumentRenderer(forStills: true)
         let picture: CGImage?
         if let layerID {
             picture = renderer.render(document, store: editor.store, only: layerID, scale: scale)
@@ -406,7 +407,7 @@ enum AgentWork {
     /// A keyed picture at a moment of its lap.
     private static func lapPicture(of document: PhotonzDocument, store: ImageStore, atMS ms: Int,
                                    scale: CGFloat) -> CGImage? {
-        DocumentRenderer().render(document.moved(toMotionTimeMS: ms), store: store, scale: scale)
+        DocumentRenderer(forStills: true).render(document.moved(toMotionTimeMS: ms), store: store, scale: scale)
     }
 
     private static func videoFrame(_ editor: EditorState, atMS ms: Int, region: CGRect?,

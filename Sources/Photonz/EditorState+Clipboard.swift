@@ -97,7 +97,7 @@ extension EditorState {
         else { return nil }
         let animation = CompositeCopy.svgAnimation(
             for: target, motionOn: Experiments.shared.animatedSVGExportEnabled)
-        return SVGExporter.export(target, store: store, renderer: previewRenderer,
+        return SVGExporter.export(target, store: store, renderer: stillRenderer,
                                   animation: animation, background: background,
                                   playback: playback ?? document?.svgPlayback ?? .standard).text
     }
@@ -206,8 +206,8 @@ extension EditorState {
     /// an invisible rectangle on the clipboard is worse than an honest refusal.
     private func copyLayerRegion(_ id: UUID) -> Bool {
         guard let document, let selection, let layer = document.layer(id: id) else { return false }
-        guard let piece = previewRenderer.layerRegion(of: id, in: document, store: store,
-                                                      path: selection.path) else {
+        guard let piece = stillRenderer.layerRegion(of: id, in: document, store: store,
+                                                    path: selection.path) else {
             NSSound.beep() // nothing of that layer is inside the marquee
             return false
         }
@@ -229,7 +229,7 @@ extension EditorState {
         let path = selection?.path ?? CGPath(rect: canvas, transform: nil)
         let frame = path.boundingBoxOfPath.integral.intersection(canvas)
         guard !frame.isNull, frame.width >= 1, frame.height >= 1,
-              let composite = previewRenderer.rasterize(region: canvas, of: document, store: store)
+              let composite = stillRenderer.rasterize(region: canvas, of: document, store: store)
         else { return false }
         // Clipped to the marquee off the main thread, with the PNG: on a 12
         // megapixel picture the clip alone is most of a frame.
@@ -254,7 +254,7 @@ extension EditorState {
     private func bareDrawing(of target: PhotonzDocument) -> ClipboardPicture? {
         let still = target.keyedStill
         let bare = still.copied(with: copyBackground, store: store)
-        guard bare != still, let image = previewRenderer.render(bare, store: store) else { return nil }
+        guard bare != still, let image = stillRenderer.render(bare, store: store) else { return nil }
         return ClipboardPicture(image)
     }
 

@@ -388,7 +388,7 @@ struct ExportDialog: View {
             weighed = false
             return
         }
-        let sizer = sizer ?? ExportSizer(renderer: editorState.previewRenderer,
+        let sizer = sizer ?? ExportSizer(renderer: editorState.stillRenderer,
                                          store: editorState.store)
         self.sizer = sizer
         let quality = ExportQuality.fraction(qualityPercent)
@@ -422,7 +422,7 @@ struct ExportDialog: View {
     /// of the loop, a fraction of a second for an icon.
     private func refreshGIFSize() {
         guard let document = editorState.document else { return }
-        let sizer = sizer ?? ExportSizer(renderer: editorState.previewRenderer,
+        let sizer = sizer ?? ExportSizer(renderer: editorState.stillRenderer,
                                          store: editorState.store)
         self.sizer = sizer
         let scale = scale

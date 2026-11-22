@@ -1,0 +1,23 @@
+{
+  "feature": "Exported and copied pictures keep white white",
+  "epic": "agent-skills",
+  "summary": "A picture Photonz hands out (File > Export, Copy, and the picture an agent looks at) no longer has faint grey boxes on a white page. They were never leftover words: on a big enough picture, Next's way of mixing lost a fraction of a step of white in some patches.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Found and checked by replaying the eval's component sheet into the probe and drawing it at 1600 on its longest side, the size the eval looks at.",
+  "switched": {},
+  "try": [
+    { "do": "Compare the Off and On headers before and after: the lower strip of each pair is the same picture with its contrast stretched so a one-step grey shows.", "shot": "2026-11-21-still-picture-white-before-after.png" },
+    { "do": "Look at the whole sheet as the agent now sees it: no boxes beside Off and On in the Toggle, Checkbox and Radio rows.", "shot": "2026-11-21-still-picture-white-sheet.png" },
+    { "do": "In Photonz Dev, ask the agent for a table of base components with their states, then File > Export as PNG." },
+    { "do": "Open the PNG in Preview and zoom in beside a short header word such as Off: the page is plain white." }
+  ],
+  "evaluate": [
+    "Does an exported or copied sheet look clean beside its headers now?",
+    "Is an export of a large picture still quick enough that you do not notice a wait?"
+  ],
+  "rough": [
+    "The live canvas still mixes with the faster half precision, so the same one-step patches can exist on screen; at 254 against 255 nobody can see them there, and full precision costs the canvas about four times as much per frame (18ms against 5ms on a 12 megapixel, ten layer document).",
+    "Video export frames are left on the faster path too; only still pictures changed.",
+    "Current (mixing in light) is untouched: it already rounded the loss away, and its stills come out byte for byte as before.",
+    "No mock covers this: it is how pictures are drawn, not a surface."
+  ]
+}

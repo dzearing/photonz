@@ -685,7 +685,7 @@ enum AgentDrawingWork {
         let answer: Exported
         switch format {
         case .png:
-            let sizer = ExportSizer(renderer: DocumentRenderer(), store: editor.store)
+            let sizer = ExportSizer(renderer: DocumentRenderer(forStills: true), store: editor.store)
             guard let data = await sizer.data(of: document, frameID: nil, scale: CGFloat(scale),
                                               format: .png, quality: 0.9, background: backdrop) else {
                 throw Failure("Photonz could not draw the picture as a PNG.")
@@ -698,7 +698,7 @@ enum AgentDrawingWork {
         case .svg:
             // The motion goes out as Copy SVG sends it.
             let animation = CompositeCopy.svgAnimation(for: document, motionOn: Experiments.shared.animatedSVGExportEnabled)
-            guard let written = SVGExporter.data(document, store: editor.store, renderer: DocumentRenderer(),
+            guard let written = SVGExporter.data(document, store: editor.store, renderer: DocumentRenderer(forStills: true),
                                                  animation: animation, background: backdrop,
                                                  playback: playback ?? document.svgPlayback) else {
                 throw Failure("Photonz could not write the picture as SVG.")

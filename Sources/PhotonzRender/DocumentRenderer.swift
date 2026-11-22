@@ -22,6 +22,11 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
     private let source: Source
 
+    /// Whether this renderer draws finished still pictures (an export, a
+    /// copy, the picture an agent looks at) rather than the live canvas
+    /// (`stillWebContext`).
+    public let forStills: Bool
+
     /// Whether an opaque picture's shadow is cast from a stand-in for it
     /// (`opaqueCastStandIn`). Off only for a test that draws the same
     /// picture both ways.
@@ -48,7 +53,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     private var context: CIContext {
         switch source {
         case .own(let context): return context
-        default: return Self.context(for: compositing)
+        default: return Self.context(for: compositing, forStills: forStills)
         }
     }
 
@@ -229,10 +234,33 @@ public final class DocumentRenderer: @unchecked Sendable {
         .workingColorSpace: CGColorSpace(name: CGColorSpace.extendedSRGB) as Any
     ])
 
-    static func context(for space: CompositingSpace) -> CIContext {
+    /// Mixing the web's way for a finished still picture, with Core Image's
+    /// in-between pictures kept in full floats rather than its default half
+    /// floats.
+    ///
+    /// A big document splits into several passes, and each pass keeps what it
+    /// drew so far in an in-between picture. Half floats hold 1.0 exactly but
+    /// lose a fraction of a step every time a value goes through one, and in
+    /// plain sRGB numbers nothing softens that on the way out: where a white
+    /// page went through more passes than its neighbours it came out 254
+    /// instead of 255, in rectangles that moved whenever anything else on the
+    /// page moved (the eval's component sheet, 2026-11-03: every judge named
+    /// "faint ghost marks" beside the Off and On headers, with no layer there).
+    /// Full floats cost about four times as much per frame (a 12 megapixel,
+    /// ten layer document: 18ms against 5ms, measured 2026-11-21), which a
+    /// picture made once can afford and the live canvas, at a step a person
+    /// cannot see, cannot. Mixing in light rounds the same loss away on the
+    /// way back to sRGB, and is left as it was.
+    private static let stillWebContext = CIContext(options: [
+        .cacheIntermediates: true,
+        .workingColorSpace: CGColorSpace(name: CGColorSpace.extendedSRGB) as Any,
+        .workingFormat: CIFormat.RGBAf.rawValue as NSNumber
+    ])
+
+    static func context(for space: CompositingSpace, forStills: Bool = false) -> CIContext {
         switch space {
         case .linearLight: return lightContext
-        case .sRGB: return webContext
+        case .sRGB: return forStills ? stillWebContext : webContext
         }
     }
 
@@ -242,13 +270,25 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
 
     /// A renderer that follows `setting`, reading it at every frame.
-    public init(following setting: CompositingSetting) {
+    ///
+    /// `forStills` is for a finished still picture (an export, a copy, the
+    /// picture an agent looks at): one that is drawn once and kept, rather
+    /// than a frame of the live canvas (`stillWebContext`).
+    public init(following setting: CompositingSetting, forStills: Bool = false) {
         self.source = .following(setting)
+        self.forStills = forStills
+    }
+
+    /// A renderer for finished still pictures that mixes the way the app is
+    /// set to (`init(following:forStills:)`).
+    public convenience init(forStills: Bool) {
+        self.init(following: .shared, forStills: forStills)
     }
 
     /// A renderer that always mixes in `space`, whatever the app is set to.
-    public init(compositing space: CompositingSpace) {
+    public init(compositing space: CompositingSpace, forStills: Bool = false) {
         self.source = .pinned(space)
+        self.forStills = forStills
     }
 
     /// A renderer on a context of its own, for a timing test that has to read
@@ -258,6 +298,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// waiting behind them while its yardstick, on its own context, read 8ms.
     init(privateContext context: CIContext) {
         self.source = .own(context)
+        self.forStills = false
     }
 
     /// The cached CIImage wrap of a stored bitmap (keyed by object identity).
@@ -632,6 +673,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     public static func clearSharedCaches() {
         lightContext.clearCaches()
         webContext.clearCaches()
+        stillWebContext.clearCaches()
         PaintRasterCache.shared.letGo()
     }
 

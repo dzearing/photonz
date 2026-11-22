@@ -853,7 +853,7 @@ final class AskSession {
         guard ran.landed.contains(where: { AskTools.keyDoing.contains($0.tool) }), let document = editor.document,
               !document.hasTime, let lap = document.keyLap else { return nil }
         let animation = CompositeCopy.svgAnimation(for: document, motionOn: Experiments.shared.animatedSVGExportEnabled)
-        let written = SVGExporter.data(document, store: editor.store, renderer: DocumentRenderer(), animation: animation, background: .drop)
+        let written = SVGExporter.data(document, store: editor.store, renderer: DocumentRenderer(forStills: true), animation: animation, background: .drop)
         return AskChangeWords.motionNote(lapSeconds: Double(document.motionCycleLengthMS) / 1000, loops: lap.repeats,
                                          notMoving: Array(Set(written?.unmoved.map(\.layerName) ?? [])).sorted())
     }

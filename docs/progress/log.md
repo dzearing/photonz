@@ -23367,3 +23367,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Fixed: laying a title out again gave a coloured line a fill it never had (`TitleRestyler.paintAccent`); caught by `knobsTurnBack` on Command Line's grey rule.
 - Rules added to `docs/design/video-titles-polish.md` (composition and copy). `TitleRedesignReelTests` also writes the other seven of the set for scoring.
 - Filed: `seven-more-built-in-titles-look-as-refined-as-th` (the other seven score 4.50 to 6.17), `line-spacing-set-on-a-font-with-built-in-leading` (DIN Condensed comes out 72 pt looser than set), `a-typed-title-caret-follows-the-letters-as-they`.
+
+## 2026-11-21 — Faint boxes on a white page (task find-out-why-a-sheet-the-skill-built-shows-faint)
+
+- The "ghost marks" judges saw beside the component sheet's Off and On headers were not left by removed words: they were patches of the white page drawn at 254. Next mixes in extended sRGB, Core Image keeps in-between pictures in half floats, and a big picture split into several passes lost a fraction of a step of white per pass, in rectangles that moved with anything else on the page.
+- Still pictures (export, Copy, the agent's render_picture, the export tool, SVG exports) now draw through a full-float context: `DocumentRenderer(forStills:)`, `EditorState.stillRenderer`. The live canvas and video export frames keep half floats (full float was 18ms against 5ms on the 12 MP ten layer document). Mixing in light (Current) is unchanged byte for byte.
+- Test: `StillPictureStaysWhiteTests` rebuilds the eval run's sheet from its tool calls (`Fixtures/component-sheet-calls.json`). Skill eval component-table: 86.4, no judge names ghost marks.

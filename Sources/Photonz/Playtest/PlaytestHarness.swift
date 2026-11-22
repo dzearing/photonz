@@ -1048,7 +1048,7 @@ private final class Run {
         guard let plan = PictureGIF.plan(for: target) else {
             throw Failure(description: "nothing moves in this picture, so it has no GIF")
         }
-        let sizer = ExportSizer(renderer: editor.previewRenderer, store: editor.store)
+        let sizer = ExportSizer(renderer: editor.stillRenderer, store: editor.store)
         let started = Date()
         guard let data = await sizer.gifData(of: document, frameID: editor.selectedFrameID,
                                              scale: scale, background: background) else {
@@ -3099,7 +3099,7 @@ private final class Run {
             // The very path the sheet weighs with, so the bytes in this log
             // line and the size on the sheet are one number, not two that
             // happen to agree.
-            let sizer = ExportSizer(renderer: editor.previewRenderer, store: editor.store)
+            let sizer = ExportSizer(renderer: editor.stillRenderer, store: editor.store)
             let started = Date()
             guard let data = await sizer.data(of: document, frameID: editor.selectedFrameID,
                                               scale: scale, format: picture,
