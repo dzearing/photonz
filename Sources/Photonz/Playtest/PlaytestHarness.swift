@@ -6983,6 +6983,15 @@ private final class Run {
                 }
                 note(number, step.name, "captions: typing into \(editor.captionWords(of: id) ?? "")",
                      state: describe())
+            case .panelExpectOnClipUnderPlayhead:
+                let named = { (id: UUID?) in id.flatMap { editor.document?.layer(id: $0)?.name } ?? "no clip" }
+                let shown = editor.panelPlayhead.clipInHand, under = editor.clipInHandID
+                guard shown == under else {
+                    throw Failure(description: "the panel is on \(named(shown)), but the clip under the "
+                        + "playhead at \(SpeedWalk.clock(editor.documentTimeMS)) is \(named(under))")
+                }
+                note(number, step.name, "panel: on \(named(under)), the clip under the playhead at "
+                     + SpeedWalk.clock(editor.documentTimeMS), state: describe())
             case .soundExpectPlaying:
                 guard editor.isDocumentPlaying else {
                     throw Failure(description: "the document is not playing, so nothing can be "
@@ -7973,7 +7982,7 @@ private final class Run {
             // Sound, handled in full above with the rest of the timeline, where
             // each one can refuse the walk rather than quietly doing nothing.
             case .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
-                 .soundExpectPlaying, .soundHoldTheOutputUp, .soundExportMix, .soundScrubAcrossIt,
+                 .soundExpectPlaying, .panelExpectOnClipUnderPlayhead, .soundHoldTheOutputUp, .soundExportMix, .soundScrubAcrossIt,
                  .soundExpectMixOver, .soundExpectMeterReads, .soundExpectCutCarried,
                  .videoSeekStart: break
             // Captions, handled in full above for the same reason: each one

@@ -670,6 +670,29 @@ struct SpeedWalkMemoryTests {
         #expect(try JSONDecoder().decode(SpeedRun.self, from: data).walkPeakFootprintMB == 1600)
     }
 
+    @Test("A play's longest main thread pass is a number of its own, judged only once a baseline has it")
+    func playLongestPass() throws {
+        var base = SpeedRun(minutes: 6, form: "short", head: "a", date: "2026-11-22", machine: "test", frameStepMS: 33)
+        base.plays = [SpeedWalk.PlayTally(label: "whole", seconds: 60, framesDue: 1818, framesShown: 1818,
+                                          dropped: 0, worstGapMS: 60)]
+        // A baseline from before the number was kept says nothing about it.
+        #expect(!base.metrics.contains { $0.key == SpeedRun.playLongestPassKey })
+        var run = base
+        run.plays[0].longestPassMS = 40
+        #expect(SpeedCompare.regressions(baseline: base, run: run, marginPercent: 50).isEmpty)
+        base.plays[0].longestPassMS = 8
+        #expect(base.metrics.contains { $0.key == SpeedRun.playLongestPassKey && $0.value == 8 && $0.unit == .ms })
+        // The panel building its sections afresh as a clip went by read 25 ms.
+        #expect(SpeedCompare.regressions(baseline: base, run: run, marginPercent: 50)
+            .first?.hasPrefix(SpeedRun.playLongestPassKey) == true)
+        run.plays[0].longestPassMS = 9
+        #expect(SpeedCompare.regressions(baseline: base, run: run, marginPercent: 50).isEmpty)
+        let both = try #require(SpeedRun.envelope(of: [base, run]))
+        #expect(both.plays[0].longestPassMS == 9)
+        let data = try JSONEncoder().encode(run)
+        #expect(try JSONDecoder().decode(SpeedRun.self, from: data).plays[0].longestPassMS == 9)
+    }
+
     @Test("An export's peak memory is a number of its own, so an export's cost never hides a jump while playing")
     func exportPeak() throws {
         var base = SpeedRun(minutes: 6, form: "short", head: "a", date: "2026-11-16", machine: "test", frameStepMS: 33)

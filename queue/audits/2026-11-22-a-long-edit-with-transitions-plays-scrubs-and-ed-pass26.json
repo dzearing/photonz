@@ -1,0 +1,24 @@
+{
+  "feature": "A long edit plays without the panel holding it up (pass 26)",
+  "epic": "video-perf",
+  "summary": "Playing the 6 minute edit with nothing picked no longer rebuilds the right-hand panel each time play crosses into a different kind of clip. The longest hold-up of the window in a minute of play went from 12 to 14 ms down to 6 to 7 ms, and the panel shows the clip you stopped on the moment play stops.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Measured on the probe with the speed walk (three runs each way) and the-panel-catches-up-when-play-stops-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 6 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 6 },
+    { "do": "Click an empty spot in the timeline so nothing is picked, then drag the playhead to about 4:30." },
+    { "do": "Press Space and let it play into the B-roll on V2 that comes in at 4:31." },
+    { "do": "Press Space again about two seconds later.", "shot": "2026-11-22-long-edit-pass26-stopped-on-the-b-roll-sc.png" },
+    { "do": "Look at the panel's Time section: it should now be about the B-roll you stopped on." }
+  ],
+  "evaluate": [
+    "Does the panel staying on the first clip while the video plays past others ever get in your way?",
+    "When you stop, does the panel land on the clip under the playhead without a visible jump or delay?",
+    "Does a minute of play on the 6 minute edit look smooth to you, apart from the occasional single-frame stutter?"
+  ],
+  "rough": [
+    "While playing with nothing picked, the panel shows the clip that was under the playhead when play started, not the one passing by. I chose that over following because Premiere's Effect Controls never follows the playhead, and nobody tunes a clip that is sliding past; it catches up the moment play stops. No mock covers the panel during play.",
+    "0 to 3 frames a minute still go missing in play. Each one is the Mac's display refresh not reaching the window for 20 to 35 ms while the app sits idle, and a bare test window outside Photonz shows the same gaps. So nothing in the app is left to fix there; that is this task's own bar (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Edits with a clip picked still take 15 to 37 ms against the 16 ms bar (blade 24 to 26, a pick 27 to 35, unpick 29 to 37, a pick from nothing 31 to 42). That is this task's own bar (a-long-edit-with-transitions-plays-scrubs-and-ed), and this pass did not move it."
+  ]
+}

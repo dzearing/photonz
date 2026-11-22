@@ -58,6 +58,10 @@ public enum SpeedWalk {
         /// on screen: a start that takes a while, not a frame lost (nil for a
         /// transition, and in runs from before 2026-11-19).
         public var firstPictureMS: Double?
+        /// For the whole run, the longest main thread pass while it played:
+        /// the window held up by anything, a frame lost or not on this Mac
+        /// (nil for a transition, and in runs from before 2026-11-22).
+        public var longestPassMS: Double?
 
         public init(label: String, seconds: Double, framesDue: Int, framesShown: Int,
                     dropped: Int, worstGapMS: Double, firstPictureMS: Double? = nil) {
@@ -723,6 +727,8 @@ public struct SpeedRun: Codable, Equatable, Sendable {
     public static let walkPeakKey = "memory: peak playing and editing"
     /// The name an export's peak is compared under.
     public static let exportPeakKey = "export: peak memory"
+    /// A minute of play's longest main thread pass (`PlayTally.longestPassMS`).
+    public static let playLongestPassKey = "play: longest pass"
 
     public init(minutes: Int?, form: String, head: String, date: String, machine: String, frameStepMS: Int) {
         self.minutes = minutes
@@ -751,6 +757,9 @@ public struct SpeedRun: Codable, Equatable, Sendable {
             out.append(Metric(key: "\(key): worst gap", value: play.worstGapMS, unit: .ms))
             if let start = play.firstPictureMS {
                 out.append(Metric(key: "\(key): first picture", value: start, unit: .ms))
+            }
+            if let pass = play.longestPassMS {
+                out.append(Metric(key: Self.playLongestPassKey, value: pass, unit: .ms))
             }
         }
         if let sound {
@@ -816,6 +825,9 @@ extension SpeedRun {
                     out.plays[i].framesShown = min(out.plays[i].framesShown, play.framesShown)
                     if let start = play.firstPictureMS {
                         out.plays[i].firstPictureMS = max(out.plays[i].firstPictureMS ?? start, start)
+                    }
+                    if let pass = play.longestPassMS {
+                        out.plays[i].longestPassMS = max(out.plays[i].longestPassMS ?? pass, pass)
                     }
                 } else {
                     out.plays.append(play)
@@ -897,6 +909,14 @@ public enum SpeedCompare {
         }
     }
 
+    /// The floor for one number: its unit's, apart from a minute of play's
+    /// longest pass, whose healthy reading is a few milliseconds and whose
+    /// regression (the panel building its sections as a clip went by, 2026-11-22)
+    /// read 25: the 50 ms every other pass gets would never see it.
+    public static func slack(_ metric: SpeedRun.Metric) -> Double {
+        metric.key == SpeedRun.playLongestPassKey ? 6 : slack(metric.unit)
+    }
+
     /// Whether a number is judged against a baseline. A transition's own
     /// worst gap is not: the whole run's worst gap already bounds it, and
     /// while stalls last seconds which cut a stall lands on is chance (8.2 s
@@ -912,7 +932,7 @@ public enum SpeedCompare {
         let before = Dictionary(baseline.metrics.map { ($0.key, $0) }, uniquingKeysWith: { a, _ in a })
         return run.metrics.filter(isJudged).compactMap { now in
             guard let then = before[now.key] else { return nil }
-            let allowed = then.value * (1 + marginPercent / 100) + slack(now.unit)
+            let allowed = then.value * (1 + marginPercent / 100) + slack(now)
             guard now.value > allowed else { return nil }
             return "\(now.key): \(format(now.value, now.unit)) against \(format(then.value, then.unit)) "
                 + "(at most \(format(allowed, now.unit)))"

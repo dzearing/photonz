@@ -1715,6 +1715,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// that can be checked without ears, so a walk never photographs a playhead
     /// moving in silence and calls it playing.
     case soundExpectPlaying
+    /// Fail the walk unless the panel is on the clip under the playhead (with
+    /// nothing picked, the clip the panel talks about): what a play stopped
+    /// past a clip has to come back to, since the panel holds the clip it was
+    /// on while a video plays past others.
+    case panelExpectOnClipUnderPlayhead
     /// The next time the sound starts, hold the engine's first audio cycle up
     /// for six seconds: what an output device that is slow to wake (AirPlay,
     /// headphones coming out of sleep) or a stopped process does to it. A
@@ -1943,7 +1948,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsWordStretchLastLater, .captionsExpectWordDragsUndone, .captionsWordSplitAndMerge,
              .captionsNoteLines, .captionsJoinFirstLineWithNext, .captionsExpectLinesAsNoted,
              .captionsMoveSecondLineWordBack, .captionsExpectSRTMatchesLines,
-             .soundExpectPlaying, .soundHoldTheOutputUp, .soundExportMix, .soundScrubAcrossIt,
+             .soundExpectPlaying, .panelExpectOnClipUnderPlayhead, .soundHoldTheOutputUp, .soundExportMix, .soundScrubAcrossIt,
              .soundExpectMixOver, .soundExpectMeterReads, .soundExpectCutCarried,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,

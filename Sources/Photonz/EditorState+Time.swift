@@ -312,6 +312,9 @@ extension EditorState {
         documentClockWaiting = false
         documentPlaybackStartedAt = nil
         catchUpOnQuietPictures()
+        // The panel held the clip it showed while it played past others
+        // (`holdsPanelWhilePlaying`): it comes up to the one stopped on.
+        catchUpPanelPlayhead()
         documentMomentChanged()
     }
 

@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/the-panel-catches-up-when-play-stops",
+  "clock": 120,
+  "seed": "With nothing picked the panel is about the clip under the playhead. While a video plays past clips the panel holds the clip it showed when play started (building its sections afresh at every crossing held the window up to 14 ms a time on the 6 minute reference edit), and the moment play stops it comes up to the clip stopped on. The 6 minute reference edit opens at Next defaults, the playhead goes to three quarters (4:30, on a take, a second before B-roll 6 comes in at 4:31.2), and three seconds of play end inside the B-roll: the panel must be on the B-roll.",
+  "setup": { "forget": ["all"], "referenceEdit": 6 },
+  "steps": [
+    { "do": "wait", "seconds": 2 },
+    { "do": "expectTimeline", "lengthMS": 360000 },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectPicked", "layers": [] },
+    { "do": "action", "action": "panelExpectOnClipUnderPlayhead" },
+    { "do": "action", "action": "videoPlay" },
+    { "do": "wait", "seconds": 3, "onTheClock": true },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "panelExpectOnClipUnderPlayhead" },
+    { "do": "expectSections", "leading": ["Time"] },
+    { "do": "snapshot", "name": "1-stopped-on-the-b-roll" }
+  ]
+}

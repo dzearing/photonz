@@ -94,6 +94,21 @@ extension EditorState {
         // up when the hand holds still (`MovieSweep.settleMS`) or lets go
         // (`catchUpPanelPlayhead`), as the sharp picture does.
         if playheadInHand, !playheadSettled { return }
+        // ...and so does a clip playing past with nothing picked. Then the
+        // panel is about "the clip under the playhead", and the clock carrying
+        // it into a clip of another kind built the panel's sections afresh,
+        // dropdowns and all: two passes of 10 to 14 ms at each such crossing
+        // in a minute of the 6 minute reference edit, the only long passes
+        // that minute had (2026-11-22,
+        // `a-long-edit-with-transitions-plays-scrubs-and-ed`, pass 26). Nobody
+        // tunes a clip that is sliding past, and Premiere's panel does not
+        // follow the playhead at all; it catches up when play stops
+        // (`pauseDocument`). The held frame is the canvas's badge, not the
+        // panel's, and goes on following.
+        if holdsPanelWhilePlaying, answers.clipInHand != panelPlayhead.clipInHand {
+            if answers.heldFrame != panelPlayhead.heldFrame { panelPlayhead.heldFrame = answers.heldFrame }
+            return
+        }
         if answers != panelPlayhead { panelPlayhead = answers }
         if keyAnswers != panelKeyPlayhead { panelKeyPlayhead = keyAnswers }
     }
@@ -107,6 +122,13 @@ extension EditorState {
         if answers != panelPlayhead { panelPlayhead = answers }
         let keyAnswers = workOutPanelKeyPlayhead()
         if keyAnswers != panelKeyPlayhead { panelKeyPlayhead = keyAnswers }
+    }
+
+    /// True while a video plays on Next with nothing picked: the panel stays
+    /// on the clip it showed when play started (`watchPanelPlayhead`).
+    var holdsPanelWhilePlaying: Bool {
+        isDocumentPlaying && selectedLayerID == nil && selectedClipCutIndex == nil
+            && Experiments.shared.panelBuildsWhatYouSeeEnabled
     }
 
     func workOutPanelPlayhead() -> PanelPlayhead {

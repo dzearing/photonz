@@ -1055,6 +1055,36 @@ regions are AppKit asking the window's host `acceptsFirstResponder` again
 whenever a section adds AppKit views (pass 19). Neither is reachable from app
 code short of fewer controls or a host of their own (pass 12).
 
+**The panel does not follow a clip playing past (2026-11-22, pass 26).** With
+nothing picked the panel is about the clip under the playhead
+(`clipInHandID`), so the clock carrying play into a clip of another kind (a
+take into a B-roll on V2 and back) built the panel's sections afresh,
+dropdowns and all: two passes of 10 to 14 ms at each such crossing, the only
+passes of 6 ms or more in a minute of play on the 6 minute edit. While a video
+plays with nothing picked on Next the panel now holds the clip it showed when
+play started, and comes up to the clip stopped on when play stops
+(`holdsPanelWhilePlaying`, `catchUpPanelPlayhead` in `pauseDocument`), as
+Premiere's Effect Controls never follows the playhead at all. The held frame
+(the canvas's badge) still follows. The play measure now reports and judges
+the longest main thread pass of the minute (`play: longest pass`, its own 6 ms
+floor rather than the 50 every other pass gets): 12 to 14 ms before, 6.1 to
+6.7 after, three runs each. `the-panel-catches-up-when-play-stops-walk` fails
+(panel on Take 1, B-roll 6 under the playhead) without the catch-up. **A view
+that answers to the clip under the playhead holds still while it plays, and
+catches up at the stop; it never rebuilds at a crossing mid-play.**
+
+**The dropped frames left in a minute of play are the display's, not the
+app's (2026-11-22, pass 26).** 0 to 3 a minute on 2026-11-22, where passes 18
+to 21 read 0. Every one was a stretch of 20 to 35 ms in which the window's
+display link did not fire while the main thread sat idle (1 to 3 ms of passes
+in the stretch, counted with every pass logged), the play clock (a main actor
+sleep, not the display link) went on ticking on time, and a user-interactive
+thread in the probe never overslept by 5 ms; they came on a 4 second beat (and
+a 20 second one) set by the wall clock, not by Space. A bare window with a
+display link in a separate process, with Photonz not running, showed the same
+gaps (4 of 18 to 25 ms in 30 s). So a drop with an idle main thread is the
+Mac's refresh, not a cost to chase; a drop inside a long pass is.
+
 **The reference edit's recordings need ids that differ in their first eight
 bytes.** A frame's picture id is its recording's id with the frame number
 folded into the last eight (`MovieRef.frameID`). Until 2026-11-17 the

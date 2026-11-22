@@ -72,6 +72,9 @@ final class SpeedWalkProbe {
         let picturesBefore = editor.canvasFrameCount
         editor.playDocument(rate: 1)
         let start = CACurrentMediaTime()
+        // The longest pass while it plays, whatever ran in it: Space's own
+        // answer and every clip, title and transition the minute crosses.
+        MainThreadMeter.shared.reset()
         // The moment Space went down is a look too, and so is the moment the
         // stretch ends: on an hour-long edit one tick of the clock held the
         // main thread for over a minute, and a run of one look read as no
@@ -143,6 +146,7 @@ final class SpeedWalkProbe {
             .map { String(format: "%d:%.3f", $0, heardAtMinute[$0] ?? 0) }.joined(separator: " ")
         let lateSkewMS = editor.audioPlayer.worstLateSkewMS
         let reachedMS = editor.documentTimeMS
+        let longestPassMS = MainThreadMeter.shared.longestMS
         editor.pauseDocument()
         // The renderer's own account of the pictures it drew meanwhile. It
         // keeps the last few hundred, which a minute of play at the clock's
@@ -153,7 +157,8 @@ final class SpeedWalkProbe {
                                                   askedToShownMS: times.map(\.sinceAskedMS))
 
         let step = MovieRef.frameStepMS
-        let whole = SpeedWalk.tally(samples, frameStepMS: step)
+        var whole = SpeedWalk.tally(samples, frameStepMS: step)
+        whole.longestPassMS = longestPassMS
         let spans = SpeedWalk.transitionSpans(of: document)
             .filter { $0.range.lowerBound >= fromMS && $0.range.upperBound <= reachedMS }
         let cuts = spans.map { SpeedWalk.tally(samples, over: $0, frameStepMS: step) }
@@ -170,6 +175,7 @@ final class SpeedWalkProbe {
             + (droppedAt.isEmpty ? "" : " (due at " + droppedAt.prefix(8).map(SpeedWalk.clock).joined(separator: ", ")
                 + (droppedAt.count > 8 ? ", ..." : "") + ")")
             + (whole.firstPictureMS.map { String(format: ", first new picture %.0fms after Space", $0) } ?? "")
+            + String(format: ", longest main thread pass %.0fms", longestPassMS)
             + "; \(cuts.count) transitions crossed, \(cuts.filter { $0.dropped > 0 }.count) of them dropped frames"
             + (worstCut.map { String(format: ", the worst %@ (%d of %d dropped, gap %.0fms)", $0.label,
                                      $0.dropped, $0.framesDue, $0.worstGapMS) } ?? "")
