@@ -23380,3 +23380,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Fix (tests only): reference room `max(reach, em) * 2 + em`, four contexts. 1.5 GB for the suite, 5.9 s against 11.2 s locally. Mutation check: renderer reach broken to 0 or halved fails the same 72 and 40 cases as the old reference.
 - CI run 44992644745: green, slice 2's process peaked at 1795 MB of 4778, no command-buffer errors (the crashed run logged 50). The suite prints a `[gpu]` line on CI (or with `PHOTONZ_GPU_PEAK=1`) so the next one can be read against the budget.
 - Open: that is one green run, not ten. `gh run list --branch main --workflow CI` over the next day says whether slice 2 stays green.
+
+## 2026-11-22: a recording that launches the app opens
+
+- A recording double-clicked in Finder while Photonz was quit reached `AppCoordinator.openRecording` about 0.1s before the menu-bar scene set `openWindowAction`, and was shown in Finder instead. It is now held and opened when the opener arrives.
+- The empty window SwiftUI makes to hand a file over closes once its recording has gone to its own window (cold launch and running app alike).
+- New check `Scripts/launch-open-drill.sh`: cold launch with a recording and with a picture, one window each. Next: nothing open on this.

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T18:35:09.386Z",
-  "updated": "2026-11-21T13:11:42.798Z",
+  "updated": "2026-11-22T08:30:49.628Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-19 while building the agent channel (an-agent-can-reach-the-running-app-read-the-open). Commands, run twice with the same result:\n\n  Scripts/probe-app.sh --quit; open -g -a \"$PWD/dist/Photonz Probe.app\" \"/tmp/photonz-agent-try/Demo recording.mp4\"; sleep 10\n  then the agent tool list_documents (printf the tools/call line | PHOTONZ_APP=probe Scripts/photonz-mcp.sh) answers []\n\nThe same with Busy screenshot 800x500.png answers one picture document (after the agent registry also notes editors in canvasDidMoveToWindow). Opening the same recording AFTER launch (open_document, which calls AppCoordinator.openFileWindow) opens it fine, in a new 1728x990 window. Likely cause, not confirmed: AppCoordinator.openRecording has `guard openWindowAction != nil else { NSWorkspace.shared.activateFileViewerSelecting([url]); return }`, and openWindowAction is captured from the menu-bar scene in a .task (PhotonzApp.swift ~199), which may not have run when the launch-time open arrives. A picture goes through EditorView.onOpenURL -> openPicked -> openImage into the window SwiftUI made, so it never needs openWindowAction. Fix idea: hold the URL and open it once openWindowAction is set, instead of revealing in Finder.",
@@ -118,6 +118,38 @@
     {
       "t": "2026-11-21T13:11:42.797Z",
       "note": "seq 90 -> 70"
+    },
+    {
+      "t": "2026-11-22T07:29:08.585Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T08:30:49.000Z",
+      "note": "Reproduced on the probe: Scripts/probe-app.sh --quit; open -g -a 'dist/Photonz Probe.app' '/tmp/rec-launch/Demo recording.mp4'; list_documents answered []. A file trace showed openPicked and openRecording(action=false) about 0.1s (16 to 120ms) before the menu-bar .task set openWindowAction, so the recording fell through to activateFileViewerSelecting. The cause in the notes is confirmed."
+    },
+    {
+      "t": "2026-11-22T08:30:49.000Z",
+      "note": "Also found: the window SwiftUI makes to hand a file over is left empty when a recording goes to its own window, cold launch AND with the app running (window lists showed an extra 1280x840 / 900x450 window each time)."
+    },
+    {
+      "t": "2026-11-22T08:30:49.000Z",
+      "note": "Fix: AppCoordinator holds recordings asked for before openWindowAction is set (recordingsWaitingForTheOpener) and opens them in the property's didSet. EditorState.fileWentToItsOwnWindow closes an empty window that handed a recording on (now or once hostWindow arrives); EditorView.openPicked calls it. Chose closing the empty window over leaving it because nobody asked for it and a refused recording already says so in a toast."
+    },
+    {
+      "t": "2026-11-22T08:30:49.000Z",
+      "note": "Scripts/launch-open-drill.sh: launches the probe cold with a recording and a picture, passes when the documents name the file and exactly one probe window is on screen. Old code: FAILED (documents []); fixed: ok for both. Waits for the person like probe-app.sh with a file (exit 6 DEFERRED)."
+    },
+    {
+      "t": "2026-11-22T08:30:49.000Z",
+      "note": "Walks opening-a-recording-walk, opening-a-recording-as-a-document-walk, drop-a-sound-or-a-video-walk, trim-bar-clears-captions-and-notices-walk: 4 ok. Scripts/test.sh: first run had 1 issue in the stopwatch PerfTests stage (name not captured, this change touches no render code); re-run all green, exit 0. Left as noted here rather than filed: not reproduced."
+    },
+    {
+      "t": "2026-11-22T08:30:49.627Z",
+      "note": "owns these walks: opening-a-recording-walk"
     }
+  ],
+  "started": "2026-11-22T07:29:08.584Z",
+  "walks": [
+    "opening-a-recording-walk"
   ]
 }

@@ -3570,7 +3570,34 @@ final class EditorState {
             if hostWindow !== oldValue {
                 watchHostWindowFullScreen()
                 watchHostWindowClose()
+                if handedItsFileOn { closeEmptyWindowHandedOn() }
             }
+        }
+    }
+
+    /// This window was made to be handed a file (Finder, the Dock, `open`)
+    /// that went to a window of its own instead: a recording. Empty, it is
+    /// nothing anybody asked for, so it goes once it has a window to close.
+    @ObservationIgnored private var handedItsFileOn = false
+
+    /// A file this window was handed has gone to a window of its own. A window
+    /// with no document of its own closes, now or once SwiftUI has given it its
+    /// window (it has none yet when a launch-time open arrives); one holding a
+    /// document stays as it was.
+    func fileWentToItsOwnWindow() {
+        guard document == nil else { return }
+        handedItsFileOn = true
+        closeEmptyWindowHandedOn()
+    }
+
+    private func closeEmptyWindowHandedOn() {
+        guard handedItsFileOn, let hostWindow else { return }
+        Task { @MainActor [weak self, weak hostWindow] in
+            // A beat, for SwiftUI to finish the window it is building.
+            try? await Task.sleep(for: .milliseconds(150))
+            guard let self, self.document == nil, let hostWindow else { return }
+            self.handedItsFileOn = false
+            hostWindow.close()
         }
     }
 

@@ -1,0 +1,23 @@
+{
+  "feature": "A recording opened while Photonz is quit",
+  "epic": "video-editing",
+  "summary": "Double-clicking a recording in Finder, or dropping it on the Dock icon, while Photonz is quit now starts the app and opens the recording in one window. Before, the app started and the recording never showed; the file was shown in Finder instead and an empty window was left behind.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Checked on the probe with Scripts/launch-open-drill.sh, which launches the app cold with a recording and with a picture and counts the windows; it failed on the old code and passes now.",
+  "switched": {},
+  "try": [
+    { "do": "Quit Photonz Dev from its menu-bar menu." },
+    { "do": "In Finder, right-click a screen recording (an .mp4 or .mov) and choose Open With > Photonz Dev." },
+    { "do": "Check the recording opens in one editor window, with no empty window beside it." },
+    { "do": "With Photonz Dev still running, open a second recording the same way." },
+    { "do": "Quit again and open a picture the same way, to check pictures still open." }
+  ],
+  "evaluate": [
+    "Does the recording open on the first try, without Finder coming forward?",
+    "Is there exactly one window for each recording you opened, and no empty one?",
+    "Does a picture still open the way it did?"
+  ],
+  "rough": [
+    "No picture in this report: the terminal the loop runs in may not photograph other apps' windows, and a walk cannot start the app with a file, so the proof is the window count from the script check.",
+    "With the app already running, an open from Finder used to leave an empty window as well as the recording's own; that is fixed by the same change."
+  ]
+}

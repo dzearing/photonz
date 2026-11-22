@@ -29,7 +29,24 @@ final class AppCoordinator {
 
     /// SwiftUI's `openWindow(value:)`, captured from the menu-bar scene so the
     /// agent can open/focus editor windows even with none currently on screen.
-    @ObservationIgnored var openWindowAction: ((EditorWindowID) -> Void)?
+    @ObservationIgnored var openWindowAction: ((EditorWindowID) -> Void)? {
+        didSet { openRecordingsHeldForTheOpener() }
+    }
+
+    /// Recordings asked for before `openWindowAction` arrived. A recording
+    /// double-clicked in Finder while the app is quit reaches `openRecording`
+    /// a beat before the menu-bar scene's `.task` has handed the opener over
+    /// (about 0.1s on 2026-11-21), and used to fall through to "reveal it in
+    /// Finder", so the app started and the recording never showed. They wait
+    /// here and open the moment the opener is set.
+    @ObservationIgnored private var recordingsWaitingForTheOpener: [URL] = []
+
+    private func openRecordingsHeldForTheOpener() {
+        guard openWindowAction != nil, !recordingsWaitingForTheOpener.isEmpty else { return }
+        let held = recordingsWaitingForTheOpener
+        recordingsWaitingForTheOpener = []
+        for url in held { openRecording(url) }
+    }
 
     /// The global slide-down history overlay (phase 11.4). Observed by the menu
     /// for its show/hide label.
@@ -358,8 +375,9 @@ final class AppCoordinator {
 
     /// Open a recording in the in-app video editor (phase 13.3): open/focus a
     /// `.video` window for it and bring the app forward. Opening a recording for
-    /// playback is NOT TCC-gated (only capturing one is). Falls back to revealing
-    /// the file in Finder if the window action isn't wired up yet.
+    /// playback is NOT TCC-gated (only capturing one is). Asked before the
+    /// window action is wired up (a recording that launched the app), it waits
+    /// for it and opens then (`recordingsWaitingForTheOpener`).
     ///
     /// With `next-opening-a-recording` on, the FILE is looked at before any
     /// window opens (`RecordingDoor`). A recording that has gone, or that has
@@ -394,7 +412,9 @@ final class AppCoordinator {
             return
         }
         guard openWindowAction != nil else {
-            NSWorkspace.shared.activateFileViewerSelecting([url])
+            // Not wired up yet: the app is still starting. Hold it rather than
+            // showing it in Finder, and open it when the opener lands.
+            if !recordingsWaitingForTheOpener.contains(url) { recordingsWaitingForTheOpener.append(url) }
             return
         }
         // A window already holding this recording is the answer whatever the

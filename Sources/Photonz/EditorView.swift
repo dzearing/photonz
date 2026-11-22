@@ -669,6 +669,9 @@ struct EditorView: View {
     private func openPicked(_ url: URL) {
         if Experiments.shared.openingARecording, RecordingFiles.isRecording(url) {
             coordinator.openRecording(url)
+            // An empty window handed the recording (Finder, the Dock) has
+            // nothing left to show once it is on its way to its own.
+            editorState.fileWentToItsOwnWindow()
             return
         }
         // Into an empty window it fills it; over a document it goes in a
