@@ -1069,6 +1069,7 @@ extension Experiments {
     /// hint pills and the advice on the end of a notice come back.
     var noticesSayWhatHappenedEnabled: Bool { isEnabled(FeatureCatalog.noticesSayWhatHappenedFlag) }
     var panelBuildsWhatYouSeeEnabled: Bool { isEnabled(FeatureCatalog.panelBuildsWhatYouSeeFlag) }
+    var bladeKeepsPlayingEnabled: Bool { isEnabled(FeatureCatalog.bladeKeepsPlayingFlag) }
     var agentChannelEnabled: Bool { isEnabled(FeatureCatalog.agentChannelFlag) }
     var askEnabled: Bool { isEnabled(FeatureCatalog.askFlag) }
 

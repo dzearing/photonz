@@ -165,6 +165,14 @@ extension PhotonzDocument {
         return layers.reversed().filter(\.isOnTheTimeline)
     }
 
+    /// Whether any clip on the timeline passes `test`: what
+    /// `timelineClipLayers.contains(where:)` says, without copying every clip
+    /// out of the document to ask it.
+    public func hasTimelineClip(where test: (Layer) -> Bool) -> Bool {
+        guard hasTime else { return false }
+        return layers.contains { $0.isOnTheTimeline && test($0) }
+    }
+
     /// Every track on the timeline, top to bottom: the ones written down, and
     /// one for every clip that is on none of them.
     ///

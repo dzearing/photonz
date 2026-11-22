@@ -1,0 +1,24 @@
+{
+  "feature": "Cutting while a video plays keeps it playing (pass 28)",
+  "epic": "video-perf",
+  "summary": "Split at Playhead (Command B) pressed while a video plays now cuts the clip and play carries on, the way Final Cut's Blade and Premiere's Add Edit do. Before, every cut stopped play, and stopping cost the window a 20 ms wait on the system that draws it.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default (the new switch 'Cutting keeps playing' is on by default in Next). Measured on the probe with a profiled edits-only walk and the speed walk on the 6 minute reference edit. The reference edit's folder for File > Open: ~/Library/Caches/Photonz Reference Edit/Photonz Dev",
+  "switched": {},
+  "try": [
+    { "do": "Open the 6 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 6 },
+    { "do": "Click a clip on V1 to pick it, then press Space to play." },
+    { "do": "Press Command B while it plays: the clip is cut and play carries on.", "shot": "2026-11-22-long-edit-pass28-cut-while-playing-sc.png" },
+    { "do": "Press Command B again a moment later, then Space to stop.", "shot": "2026-11-22-long-edit-pass28-two-cuts-sc.png" },
+    { "do": "Press Command Z twice: the clip is whole again." }
+  ],
+  "evaluate": [
+    "Is it right that a cut made while playing leaves play running, as in Final Cut and Premiere?",
+    "After a cut while playing, is the piece before the cut the one you expect to have picked?",
+    "Does cutting while it plays feel smooth, with no hitch in the picture?"
+  ],
+  "rough": [
+    "Edits with a clip picked still miss the 16 ms bar: blade 21 to 24 ms (its longest pass is now the cut's panel section landing, not the stop), a pick 25 to 33, unpick 29 to 37, a pick from nothing 24 to 45. That is this task's own bar (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "What is left of a pick is SwiftUI and AppKit work with no app code over 2 ms under it: layout of the new rows, the accessibility focus walk and the title bar's drag regions, about 15 ms a pass whatever lands (a-long-edit-with-transitions-plays-scrubs-and-ed).",
+    "Worst scrub lag 1 is still not reached; this pass did not work on scrubbing (a-long-edit-with-transitions-plays-scrubs-and-ed)."
+  ]
+}

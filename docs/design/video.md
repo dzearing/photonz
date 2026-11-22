@@ -1072,6 +1072,29 @@ is keyed only on what the document and the view say about the clips, never on
 the pick or the pointer: anything shown for a pick or a hover is a view on top
 of the painting.**
 
+
+**An edit made while it plays never stops play (2026-11-22, pass 28).**
+Split at Playhead (Command B) paused the video before it cut. Stopping play is
+not free: it changes the window itself, and AppKit then waits on the window
+server for a fence in the next Core Animation commit, a 19 to 21 ms pass of the
+main thread doing nothing else (`_CASCreateFencePort` under
+`+[_NSCGSTransaction currentTransaction]`'s commit handler, on every blade of
+the profiled walk, never on a trim). Final Cut's Blade and Premiere's Add Edit
+both cut and keep playing, so on Next the cut now does too
+(`next-blade-keeps-playing`). The fence pass is gone from every blade, the
+blade's own pass is 22 to 25 -> 18 to 20 ms and its whole cost 122 to 145 ->
+114 to 131 ms; the longest pass (21 to 24) is now the cut's panel section
+landing. **An edit, a pick or a key that does not mean stop leaves play
+running: stopping play costs a window server round trip, and the person did
+not ask for it.**
+
+Also in pass 28: `PanelFieldRowLayout` caching its control's zero width
+measure gained nothing (SwiftUI's size cache already answers the repeat), so
+it was not kept. The Transitions group asked whether any clip is a movie by
+copying every clip out of the document on each panel pass
+(`timelineClipLayers.contains`); it asks `hasTimelineClip(where:)` now, which
+copies nothing (the panel's list of sections, 27 -> 22 ms over three picks).
+
 Also measured in pass 27: SwiftUI's accessibility work in the probe is real
 work a person pays too, not the walk's doing. It is switched on by a request
 from another process on the Mac (`NSHostingView.accessibilityEnabled` set from

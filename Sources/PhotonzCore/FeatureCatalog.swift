@@ -370,6 +370,9 @@ public enum FeatureCatalog {
     /// The dock builds a section's settings only once they are near enough to
     /// be seen (`PanelBodyReach`).
     public static let panelBuildsWhatYouSeeFlag = "next-panel-builds-what-you-see"
+    /// Cutting at the playhead while a video plays leaves it playing, as
+    /// Final Cut's Blade and Premiere's Add Edit do.
+    public static let bladeKeepsPlayingFlag = "next-blade-keeps-playing"
     /// An agent can reach the running app over its own socket and work in the
     /// open documents (`docs/design/agent-mcp.md`).
     public static let agentChannelFlag = "next-agent-channel"
@@ -1968,6 +1971,16 @@ public enum FeatureCatalog {
                     title: "The panel builds what you can see",
                     description: "On a video, panel sections far below the bottom of the panel are built when you scroll near them, so clicking from a clip to a cut answers sooner. Off builds every section at once.",
                     area: .panel,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: bladeKeepsPlayingFlag,
+                    title: "Cutting keeps playing",
+                    description: "Split at Playhead while a video plays cuts the clip and play carries on. Off stops play at the cut.",
+                    area: .motion,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

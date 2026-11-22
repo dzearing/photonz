@@ -175,7 +175,7 @@ extension EditorState {
     /// that has a recording on its timeline, which is where cuts come from.
     var showsTransitionsGroup: Bool {
         guard Experiments.shared.transitionsAtACutEnabled, documentHasTime, let document else { return false }
-        return document.timelineClipLayers.contains { $0.movie != nil }
+        return document.hasTimelineClip { $0.movie != nil }
     }
 
     /// Whether a cut itself is picked, rather than a clip with the playhead

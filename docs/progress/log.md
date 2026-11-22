@@ -23386,3 +23386,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - A recording double-clicked in Finder while Photonz was quit reached `AppCoordinator.openRecording` about 0.1s before the menu-bar scene set `openWindowAction`, and was shown in Finder instead. It is now held and opened when the opener arrives.
 - The empty window SwiftUI makes to hand a file over closes once its recording has gone to its own window (cold launch and running app alike).
 - New check `Scripts/launch-open-drill.sh`: cold launch with a recording and with a picture, one window each. Next: nothing open on this.
+
+## 2026-11-22: a cut made while playing keeps playing (video speed, pass 28)
+
+- Split at Playhead (Command B) no longer stops a playing video on Next (`next-blade-keeps-playing`, on by default), as in Final Cut and Premiere. Stopping was costing every blade a 19-21 ms main thread wait on the window server; that pass is gone, the whole blade 122-145 -> 114-131 ms.
+- The Transitions group stops copying every clip on each panel pass (`hasTimelineClip(where:)`).
+- New walk `cutting-while-playing-keeps-playing-walk`. Next: edits with a clip picked still 21-37 ms against 16 (SwiftUI layout, accessibility and drag-region floor per pass), worst scrub lag 1.

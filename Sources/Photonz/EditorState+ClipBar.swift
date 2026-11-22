@@ -135,7 +135,12 @@ extension EditorState {
     func splitClipAtPlayhead() {
         endTrimBeforeCutting()
         guard canSplitClipAtPlayhead, let id = clipInHandID else { return }
-        pauseDocument()
+        // A cut made while it plays leaves it playing, the way Final Cut's
+        // Blade and Premiere's Add Edit do (Next): stopping cost the person a
+        // pause they did not ask for, and every blade a 20 ms pass of the main
+        // thread waiting on the window server as play stopped (6 minute
+        // reference edit, 2026-11-22).
+        if !Experiments.shared.bladeKeepsPlayingEnabled { pauseDocument() }
         // From a right click on the picture or the scrubber too, in View
         // mode: the cut is on the tracks, so the window becomes the editor.
         switchToEditForAnEdit()
