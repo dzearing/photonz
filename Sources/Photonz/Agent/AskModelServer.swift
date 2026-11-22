@@ -305,10 +305,15 @@ final class AskModelServer {
     }
 
     /// The port of a server running `choice`, starting one if need be.
+    /// The load is shared, not the waiter's own: a request stopped while it
+    /// loads stops waiting at once, and the load carries on for the request
+    /// behind it (`AbandonableWait`). So the load clears `starting` itself
+    /// when it ends, never a waiter that walked away.
     private func ready(_ choice: AskBuiltInModels.Choice) async throws -> Int {
         if answering, running == choice.id, shared ? AskWalkServerProcess.alive : server.isRunning { return port }
-        if let starting { return try await starting.value }
+        if let starting { return try await AbandonableWait.value(of: starting) }
         let task = Task {
+            defer { starting = nil }
             do {
                 return try await start(choice)
             } catch Failure.wouldNotStart {
@@ -319,8 +324,7 @@ final class AskModelServer {
             }
         }
         starting = task
-        defer { starting = nil }
-        return try await task.value
+        return try await AbandonableWait.value(of: task)
     }
 
     private func start(_ choice: AskBuiltInModels.Choice) async throws -> Int {

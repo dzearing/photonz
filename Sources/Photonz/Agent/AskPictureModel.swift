@@ -289,11 +289,15 @@ final class AskPictureServer {
     /// The port of the running server, starting it if need be.
     func ready() async throws -> Int {
         if answering, server.isRunning { return port }
-        if let starting { return try await starting.value }
-        let task = Task { try await start() }
+        // Shared by whoever needs the painter next: a stopped request stops
+        // waiting at once and the load carries on (`AbandonableWait`).
+        if let starting { return try await AbandonableWait.value(of: starting) }
+        let task = Task {
+            defer { starting = nil }
+            return try await start()
+        }
         starting = task
-        defer { starting = nil }
-        return try await task.value
+        return try await AbandonableWait.value(of: task)
     }
 
     private func start() async throws -> Int {

@@ -1,0 +1,23 @@
+{
+  "feature": "Stop while Ask's model is still loading",
+  "epic": "agent-ask",
+  "summary": "Pressing Stop on a request while Ask is still getting its model ready now starts the request waiting behind it straight away. Before, the waiting one sat there until the load was over.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask's model must not be in memory yet: quit and reopen Photonz Dev, or leave Ask unused for a few minutes. Measured with ask-stops-a-running-request-walk on a cold model: before the fix it failed at the Stop (the second request still waiting 0.6 s later); after, all 40 steps passed in 129 s.",
+  "switched": {},
+  "try": [
+    { "do": "Open a blank picture and press Command-K." },
+    { "do": "Type \"add a blue rectangle\" and press Return while the Agent group says Getting the model ready.", "shot": "2026-11-21-ask-stop-during-load-1.png" },
+    { "do": "Press Command-K again, type \"add a red circle\" and press Return: it waits under the first." },
+    { "do": "Press Stop on the blue rectangle.", "shot": "2026-11-21-ask-stop-during-load-2.png" },
+    { "do": "Watch the red circle take over at once, still getting the model ready, then land.", "shot": "2026-11-21-ask-stop-during-load-3.png" }
+  ],
+  "evaluate": [
+    "Does the red circle move up to working the moment you press Stop?",
+    "Does it carry on from the load already under way, rather than starting the wait over?",
+    "Does the finished history hold only the circle, with nothing of the stopped rectangle?"
+  ],
+  "rough": [
+    "Stop does not throw the load away: the request behind needs the same model, so the load keeps going and a stop with nothing waiting leaves the model loaded until the usual few idle minutes let it go.",
+    "No mock covers this surface; it is behaviour only, no layout changed."
+  ]
+}
