@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-22T02:30:41.421Z",
+  "updated": "2026-11-22T10:53:23.358Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,41 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-22T02:30:41.420Z",
-      "note": "... 96 earlier entries elided",
-      "elided": 96
-    },
-    {
-      "t": "2026-11-17T18:21:55.281Z",
-      "note": "Next for pass 16: (a) the steady 2-3 refreshes is the composite (8.6 ms vs an 8.3 ms refresh): ~2 ms shader compile per frame and CGImage uploads/readback (render into an IOSurface the layer shows); (b) a hunt stalls ~0.1 s when the rest frames run out because the next stretch re-decodes from the key frame before it: continue the rest pass instead of restarting; (c) a fast drag stopped dead waits ~15 refreshes for the sharp frame. Gotcha: the probe build after a PhotonzCore change takes ~10 min, so run Scripts/probe-app.sh --build-only on its own and speed-walk.sh --no-build after, never both in one 10 minute call. Left rough, not filed: none beyond this task's own bars."
-    },
-    {
-      "t": "2026-11-17T18:22:12.366Z",
-      "note": "walks speed-walk, scrub-never-blacks-out-walk, keyframe-anything-walk -> speed-walk, scrub-never-blacks-out-walk"
-    },
-    {
-      "t": "2026-11-17T18:22:28.457Z",
-      "note": "Pass 15 landed 45bd07794: the reference edit's recordings no longer share frame ids (scrub numbers before were flattered), and a fast drag shows each clip its own key frame where the hand is going: medium drag 2 refreshes behind in the middle, 34 at worst (honest before: 4 and 163); a hunt from rest moves from its first frame. Bars not reached (scrub 1 refresh: 2 dragging, 3 hunting; 0 dropped: 1 a minute; edits 16 ms: 16-43). Stays open; pass 16 leads in the log."
-    },
-    {
-      "t": "2026-11-17T22:28:14.534Z",
-      "note": "2026-11-17 (timeline pass 10): speed-walk failed 2 of 3 runs on scrub numbers at the edge of their ceilings (scrub medium sight lag worst 107 vs at most 54; scrub hunt frame lag worst 37 vs at most 36), ok on the third; nothing in that pass touched scrubbing (timeline paint only)."
-    },
-    {
-      "t": "2026-11-18T01:04:41.947Z",
-      "note": "2026-11-17 (timeline pass 11): short speed-walk failed on scrub hunt frame lag worst 45 against at most 36 on a clean HEAD build (1dc3bae08, 16:53), and 42/40 with the timeline gridline change; same metric at the edge as pass 10 saw. Reproducible this evening under a ~5 load average."
-    },
-    {
-      "t": "2026-11-18T08:57:33.281Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-18T10:26:42.887Z",
-      "note": "walks speed-walk, scrub-never-blacks-out-walk -> speed-walk, scrub-never-blacks-out-walk"
-    },
-    {
-      "t": "2026-11-18T10:27:04.108Z",
-      "note": "Pass 16 measured first (10f4b00b0, short speed walk): play 1 dropped a minute, medium scrub lag 2/5, hunt sight 3/16, composite 9.0 ms median. Temporary timers in renderLocked: graph build 0.3 ms, the render call ~8 ms of which GPU kernels 2.2. sample(1) of the render thread while playing: ~52% in CI::MetalContext::bind_cgimage -> texture_for_CGImage (AGX replaceRegion), ~27% CI::ConvertNode convert_cpu (the read back into our bitmap)."
+      "t": "2026-11-22T10:53:23.357Z",
+      "note": "... 104 earlier entries elided",
+      "elided": 104
     },
     {
       "t": "2026-11-18T10:27:04.186Z",
@@ -507,11 +475,44 @@
     {
       "t": "2026-11-22T02:30:41.419Z",
       "note": "rotating check 2026-11-22T02:30:41Z, 31 walks run from 157 onward in the rotation: speed-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-11-22T08:31:40.794Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T08:35:09.365Z",
+      "note": "Pass 26, main red first: CI run 44998427631 (6d4e30f90, queue-only commit) failed 'Exporting the same recording twice gives the same file to look at' (worst.apart 7 <= 6, the encoder's wobble on GitHub's VM after 3 tries); no open task owned it, filed main-goes-green-an-mp4-exported-twice-stops-read (p1). The rotating check's speed-walk failure (scrub medium frame lag median 81 vs 40) did not reproduce: re-run on 4181b7493 green, 40 frames, inside the 20-64 that number has read on unchanged code."
+    },
+    {
+      "t": "2026-11-22T10:52:43.460Z",
+      "note": "walks speed-walk -> speed-walk, the-panel-catches-up-when-play-stops-walk"
+    },
+    {
+      "t": "2026-11-22T10:53:11.501Z",
+      "note": "Pass 26 measured: 1x play dropped 0-3 a minute today (passes 18-21: 0). Logged every pass and every play sample (temporary, removed): each drop sat in a 20-35 ms stretch where the window's display link did not fire and the main thread was idle (1-3 ms of passes), the play clock (a main actor sleep) ticked on time, and a user-interactive heartbeat thread in the probe never overslept 5 ms; the gaps came on a 4 s (and 20 s) beat set by the wall clock. Tried and ruled out: the timeline paging (it sits at Fit, nothing to page), App Nap/timer coalescing (a latency-critical activity while playing changed nothing), the walk's memory timer (not running during play). A bare display-link window in a separate process, Photonz not running, showed the same gaps (4 of 18-25 ms in 30 s). So these drops are the Mac's refresh, not app work; written in docs/design/video.md 8e."
+    },
+    {
+      "t": "2026-11-22T10:53:11.571Z",
+      "note": "Pass 26 fix (43188e737): the only long passes left in a minute of play were the panel rebuilding its sections as play crossed into a clip of another kind with nothing picked (take -> B-roll and back, two passes of 10-14 ms each, profiled with PassSampler labelled 'play'). On Next the panel now holds the clip it showed when play started and catches up in pauseDocument (holdsPanelWhilePlaying, EditorState+PanelPlayhead.swift); held-frame badge still follows. Chose holding over following because Premiere's Effect Controls never follows the playhead and nobody tunes a clip sliding past. Longest pass while playing 12-14 -> 6.1-6.7 ms (3 plays each, hold switched off by hand for the before). New judged number 'play: longest pass' (SpeedWalk.PlayTally.longestPassMS, own 6 ms floor, tests first); baseline gains only it (6.7)."
+    },
+    {
+      "t": "2026-11-22T10:53:11.645Z",
+      "note": "Pass 26 verified: Scripts/test.sh exit 0; the-panel-catches-up-when-play-stops-walk green, and red without the catch-up ('panel is on Take 1, but the clip under the playhead at 4:33.2 is B-roll 6'); speed-walk x3 green vs baseline (edits: trim 15-16, undo 9-12, trim picked 15-18, undo picked 18-21, blade 24-26, pick 27-35, unpick 29-37, pick from nothing 31-42; scrub medium frame lag median 24-32); 15 more walks green (holds, panel order, section headers, editing session, playback, scrub, reference edit). Looked at the walk's capture: playhead 4:33 over B-roll 6 on V2, panel Time section drawn. Audit queue/audits/2026-11-22-a-long-edit-with-transitions-plays-scrubs-and-ed-pass26.json."
+    },
+    {
+      "t": "2026-11-22T10:53:11.715Z",
+      "note": "Next for pass 27: bars not reached are edits with a clip picked <=16 ms (blade 24-26, pick 27-35, unpick 29-37, pick from nothing 31-42) and worst scrub lag 1. Unpick's own pass is ~32 ms, 13.5 of it SwiftUI graph teardown of the clip's sections with no app frame under it (pass-profile.sh, edits-only walk): try keeping the clip sections built and hidden across pick/unpick rather than torn down. Left rough, not filed: nothing beyond this task's own bars. Main red (export-twice encoder wobble) filed as main-goes-green-an-mp4-exported-twice-stops-read."
+    },
+    {
+      "t": "2026-11-22T10:53:23.356Z",
+      "note": "Pass 26 landed 43188e737: playing with nothing picked no longer rebuilds the panel at each clip crossing (longest main thread pass while playing 12-14 -> 6-7 ms, now judged by the speed walk); the 0-3 dropped frames a minute left are the Mac's display refresh with the app idle (a bare window shows them too). Bars not reached: edits with a clip picked <=16 ms (24-42), worst scrub lag 1. Pass 27 leads in the log."
     }
   ],
-  "started": "2026-11-21T13:12:26.141Z",
+  "started": "2026-11-22T08:31:40.793Z",
   "walks": [
-    "speed-walk"
+    "speed-walk",
+    "the-panel-catches-up-when-play-stops-walk"
   ],
   "failures": 0,
   "lastError": {
