@@ -38,7 +38,7 @@ jobs:
     name: Test slice ${{ matrix.slice }} of 3
     if: ${{ !inputs.skip_tests }}
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 55
     strategy:
       fail-fast: true
       matrix:
@@ -90,8 +90,10 @@ jobs:
       - name: Build (all targets and tests)
         run: swift build --build-tests $PHOTONZ_BUILD_FLAGS
 
+      # 30, and the job 55: room for a slice run twice on one build, as in
+      # ci.yml's Run tests.
       - name: Run tests
-        timeout-minutes: 25
+        timeout-minutes: 30
         run: Scripts/test.sh --shard ${{ matrix.slice }}/3
 
   # Builds, signs, notarizes and packages the DMG while the tests run; the

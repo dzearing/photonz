@@ -13,7 +13,8 @@
 # that dies that way says so in plain words, throws the build folder away, and
 # runs again from scratch; if it dies the same way twice, that is a real crash
 # and you are told that too. A run that does not crash pays nothing for any of
-# this.
+# this. On GitHub it runs again on the SAME build instead (see "On GitHub"
+# below): a build from scratch there does not fit in the job's time.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -482,6 +483,9 @@ run_suite() {
 watch_for_a_parked_run &
 watch_pid=$!
 
+# When this run began, so a crash report from an earlier run is never read as
+# this one's.
+run_started_ms=$(( $(date +%s) * 1000 ))
 run_suite "$@"
 
 # A drill, so the path below is something that has been RUN rather than
@@ -493,7 +497,9 @@ run_suite "$@"
 #     PHOTONZ_TEST_CRASH_DRILL=1 Scripts/test.sh --filter SomethingSmall
 #
 # It throws the build folder away and rebuilds for real, which is the whole
-# point of drilling it.
+# point of drilling it. With GITHUB_ACTIONS=true it drills GitHub's path
+# instead (the same build, run again), and PHOTONZ_TEST_CRASH_DRILL_TWICE=1
+# makes the second run die too.
 if [[ "${PHOTONZ_TEST_CRASH_DRILL:-0}" == "1" && "${PHOTONZ_TEST_REBUILT:-0}" != "1" ]]; then
   echo "PHOTONZ_TEST_CRASH_DRILL: pretending the helper exited with unexpected signal code 11" \
     | tee -a "$log"
@@ -509,7 +515,65 @@ crashed_on_memory() {
   grep -qE 'unexpected signal code (10|11)|signal code (10|11)|Segmentation fault|Bus error' "$log" "$serial_log" "$core_log" "$heavy_log" "$timing_log"
 }
 
-if (( status != 0 )) && crashed_on_memory && [[ "${PHOTONZ_TEST_REBUILT:-0}" != "1" ]]; then
+# What macOS wrote down about the helper that died, in a few lines: the
+# signal and the frames on the thread that crashed. Nothing when it wrote
+# nothing, which on a GitHub runner can happen. It waits up to 20 seconds
+# for the report, and no longer than it takes to appear: on this Mac on
+# 2026-11-22 a helper's report landed 8 seconds after its crash.
+crash_summary() {
+  node Scripts/crash-report.mjs --process swiftpm-testing-helper --since "$run_started_ms" \
+    --wait "${1:-20}" --fallback 0 2>/dev/null
+}
+
+# On GitHub. The build there is the kept one (actions/cache), already built on
+# by the step before this one, and a build from scratch is 19 minutes of a job
+# allowed 25 for its tests. On 2026-11-22 (run 45003209864) slice 3 died at
+# six minutes, threw .build away, and was still compiling when the job timed
+# out: red, saying nothing about the crash. That build had not even been
+# half-built: the step before compiled the app alone, the test bundle was the
+# very one the run before had taken through slice 3 without a crash, so the
+# crash was the code's, once, and the rebuild could only have made the same
+# bundle again. So on GitHub the slice runs once more on the same build: green
+# with a warning naming the crash when it passes, red naming it when it dies
+# again. Drill: GITHUB_ACTIONS=true PHOTONZ_TEST_CRASH_DRILL=1 Scripts/test.sh --filter SomethingSmall
+on_github() { [[ "${GITHUB_ACTIONS:-}" == "true" ]]; }
+
+if (( status != 0 )) && crashed_on_memory && [[ "${PHOTONZ_TEST_REBUILT:-0}" != "1" ]] && on_github; then
+  first_crash="$(crash_summary)"
+  cat <<'WHY'
+
+==> The test helper did not fail, it DIED, on signal 10 or 11, so any
+    failures printed above are about the crash and not about the tests.
+
+    This is GitHub: the build is the kept one, and a build from scratch does
+    not fit in the job's time, so the slice runs once more on the same build.
+
+WHY
+  [[ -n "$first_crash" ]] && printf '    What macOS wrote down:\n%s\n\n' "$first_crash"
+  first_line="$(printf '%s' "$first_crash" | head -1)"
+  PHOTONZ_TEST_REBUILT=1 run_suite "$@"
+  if [[ "${PHOTONZ_TEST_CRASH_DRILL:-0}" == "1" && "${PHOTONZ_TEST_CRASH_DRILL_TWICE:-0}" == "1" ]]; then
+    echo "PHOTONZ_TEST_CRASH_DRILL_TWICE: pretending the second run died the same way: unexpected signal code 11" \
+      | tee -a "$log"
+    status=1
+  fi
+  if (( status != 0 )) && crashed_on_memory; then
+    second_crash="$(crash_summary)"
+    [[ -n "$second_crash" ]] && printf '\n    What macOS wrote down the second time:\n%s\n' "$second_crash"
+    echo
+    echo "==> It died on the same build twice: a crash in the tests, not a slow or failing test."
+    echo "::error title=The test helper crashed twice::${first_line:-signal 10 or 11, no crash report}. Run Scripts/test.sh on a Mac: it rebuilds from scratch and tells a stale build from a real crash."
+  else
+    # A report that was slower than the wait is there by now.
+    [[ -z "$first_line" ]] && first_line="$(crash_summary 0 | head -1)"
+    if (( status == 0 )); then
+      echo
+      echo "==> Green on the second run. The first one crashed, and that crash is real:"
+      echo "    the build did not change between the two runs."
+    fi
+    echo "::warning title=A test helper crashed once, then ran to the end on the same build::${first_line:-signal 10 or 11, no crash report}"
+  fi
+elif (( status != 0 )) && crashed_on_memory && [[ "${PHOTONZ_TEST_REBUILT:-0}" != "1" ]]; then
   cat <<'WHY'
 
 ==> The test helper did not fail, it DIED, on a signal that means it read
@@ -533,6 +597,7 @@ WHY
     report macOS just wrote.
 
 WHY
+    crash_summary
   fi
 fi
 

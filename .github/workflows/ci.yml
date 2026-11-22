@@ -22,8 +22,9 @@ jobs:
     # and both at once would ask for more macOS runners than an account gets.
     if: "!startsWith(github.event.head_commit.message, 'release: v')"
     runs-on: macos-26
-    # A cold build is 19 minutes of this; a kept one is about one.
-    timeout-minutes: 45
+    # A cold build is 19 minutes of this; a kept one is about one. 55 leaves
+    # room for a cold build AND a slice run twice (Run tests below).
+    timeout-minutes: 55
     strategy:
       fail-fast: false
       matrix:
@@ -83,8 +84,15 @@ jobs:
           path: .build
           key: build-debug-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
 
+      # 30 minutes: a slice is 6 to 11.5 minutes of tests (the slowest of 21
+      # green slices from 2026-11-22 was 689 s), and one whose test helper
+      # dies on signal 10 or 11 runs once more on the same build
+      # (Scripts/test.sh, "On GitHub"), so twice the slowest slice plus the
+      # wait for the crash report has to fit. Until 2026-11-22 a crash threw
+      # .build away and rebuilt for 19 minutes, and the step timed out saying
+      # nothing about the crash (run 45003209864).
       - name: Run tests
-        timeout-minutes: 25
+        timeout-minutes: 30
         env:
           PHOTONZ_BUILD_FLAGS: --disable-index-store
           # Timings are collected here, never gated, as in release.yml. Every
@@ -95,6 +103,19 @@ jobs:
           # against 150 (2026-10-26).
           PHOTONZ_PERF_GATE: report
         run: Scripts/test.sh --shard ${{ matrix.slice }}/3
+
+      # What macOS wrote down about a test helper that died, kept beside the
+      # run whether it then passed or not. The log already says the signal and
+      # the frames; this is the whole report. A runner that crashed nothing has
+      # none, and nothing is kept.
+      - name: Keep the test helper's crash reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crash-reports-slice-${{ matrix.slice }}
+          path: ~/Library/Logs/DiagnosticReports/swiftpm-testing-helper*.ips
+          if-no-files-found: ignore
+          retention-days: 14
 
   # The queue's own checks, the release bundle, and the build kept for the
   # next run, beside the test slices.

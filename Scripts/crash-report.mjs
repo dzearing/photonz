@@ -11,6 +11,11 @@
 //
 //   node Scripts/crash-report.mjs --since <epoch-ms> [--wait 8]
 //   node Scripts/crash-report.mjs --file <report.ips>
+//   node Scripts/crash-report.mjs --process swiftpm-testing-helper --since <epoch-ms>
+//
+// --process reads a crash of a process with no bundle, by its name: the test
+// helper Scripts/test.sh runs, whose own code is the test bundle it loaded out
+// of .build (TEST_CODE below), not the helper itself.
 //
 // Prints the ONE LINE summary first and the detail indented under it, so a
 // caller can take `head -1` and print the rest as it stands. Exits 0 when it
@@ -55,14 +60,14 @@ const GENERIC_ASI = /^(abort\(\) called|Abort trap.*)$/;
 // above it. The image index is the app's own binary; compiler-generated inline
 // frames are dropped because "EditorState.history.getter" at
 // "/<compiler-generated>" names nothing a person can go and look at.
-function appFrames(body, appImageIndexes) {
+function appFrames(body, appImageIndexes, { needFile = true } = {}) {
   const thread = faultingThread(body);
   const out = [];
   for (const f of thread?.frames || []) {
     if (!appImageIndexes.has(f.imageIndex)) continue;
     const file = f.sourceFile && !f.sourceFile.startsWith('/<') ? f.sourceFile : '';
     if (!file && !out.length && !f.symbol) continue;
-    if (!file) continue;
+    if (!file && (needFile || !f.symbol)) continue;
     const symbol = String(f.symbol || '(unnamed)');
     if (out.length && out[out.length - 1].symbol === symbol) continue;
     out.push({ symbol, file: path.basename(file), line: f.sourceLine || 0 });
@@ -180,7 +185,10 @@ export function exceptionMessages(entry, runaway = null) {
   return lines;
 }
 
-export function readCrashReport(file, { exceptionLog } = {}) {
+// The test bundle swift build makes, which is where a test helper's own code is.
+export const TEST_CODE = (img) => /\/\.build\//.test(img.path || '') || /PackageTests$/.test(img.name || '');
+
+export function readCrashReport(file, { exceptionLog, codeImage = null } = {}) {
   let text;
   try {
     text = fs.readFileSync(file, 'utf8');
@@ -193,10 +201,16 @@ export function readCrashReport(file, { exceptionLog } = {}) {
   const bundleId = head.bundleID || '';
   const appImageIndexes = new Set();
   (body.usedImages || []).forEach((img, i) => {
+    if (codeImage) {
+      if (codeImage(img)) appImageIndexes.add(i);
+      return;
+    }
     if (img.CFBundleIdentifier && img.CFBundleIdentifier === bundleId) appImageIndexes.add(i);
     else if (!img.CFBundleIdentifier && img.name && head.app_name && img.name === head.app_name) appImageIndexes.add(i);
   });
-  const frames = appFrames(body, appImageIndexes);
+  // A test bundle's frames are named whether or not they carry a file: a build
+  // on a runner leaves no line numbers, and the name of the test is the news.
+  const frames = appFrames(body, appImageIndexes, { needFile: !codeImage });
   const fault = SYSTEM_FAULTS.find((f) => f.matches(body, faultingThread(body))) || null;
   const exception = body.exception?.type || 'crash';
   const signal = body.exception?.signal || body.termination?.indicator || '';
@@ -226,7 +240,8 @@ export function readCrashReport(file, { exceptionLog } = {}) {
     // frame of the app's own code and the two under it, because the top frame
     // of a Swift abort is usually a getter and the frame that names the thing
     // the user did is the third one down.
-    summary: fault ? fault.line : where ? `${what} in ${where}` : `${what}, no frame in the app's own code`,
+    summary: fault ? fault.line : where ? `${what} in ${where}`
+      : `${what}, no frame in the ${codeImage ? "tests'" : "app's"} own code`,
     // Set when the crash is macOS's own (SYSTEM_FAULTS above), never the app's.
     systemFault: fault?.id || '',
   };
@@ -236,7 +251,7 @@ export function readCrashReport(file, { exceptionLog } = {}) {
 // Deliberately NOT by file mtime: macOS rewrites these files when it
 // symbolicates them, so a report from last night can carry this minute's mtime
 // and would be read as the crash that just happened.
-export function findCrashReport({ dir = REPORTS_DIR, bundleId = PROBE_BUNDLE_ID, sinceMs = 0 } = {}) {
+export function findCrashReport({ dir = REPORTS_DIR, bundleId = PROBE_BUNDLE_ID, sinceMs = 0, processName = '' } = {}) {
   let names = [];
   try {
     names = fs.readdirSync(dir).filter((n) => n.endsWith('.ips'));
@@ -245,9 +260,10 @@ export function findCrashReport({ dir = REPORTS_DIR, bundleId = PROBE_BUNDLE_ID,
   }
   let best = null;
   for (const name of names) {
-    const r = readCrashReport(path.join(dir, name));
+    if (processName && !name.startsWith(processName)) continue;
+    const r = readCrashReport(path.join(dir, name), processName ? { codeImage: TEST_CODE } : {});
     if (!r) continue;
-    if (bundleId && r.bundleId !== bundleId) continue;
+    if (processName ? r.app !== processName : bundleId && r.bundleId !== bundleId) continue;
     if (r.whenMs && sinceMs && r.whenMs + 1000 < sinceMs) continue;
     if (!best || r.whenMs > best.whenMs) best = r;
   }
@@ -275,11 +291,11 @@ export function walkLine(r) {
 // and then skips repeats: two runs of the same crashing walk 18 seconds apart
 // produced one report between them (2026-09-18 02:49). A sweep of seven walks
 // all dying the same way would otherwise say nothing about six of them.
-export function findCrashReportOrRecent({ dir, bundleId, sinceMs, fallbackSeconds = 1800 } = {}) {
-  const own = findCrashReport({ dir, bundleId, sinceMs });
+export function findCrashReportOrRecent({ dir, bundleId, sinceMs, fallbackSeconds = 1800, processName = '' } = {}) {
+  const own = findCrashReport({ dir, bundleId, sinceMs, processName });
   if (own) return own;
   if (!fallbackSeconds || !sinceMs) return null;
-  const prev = findCrashReport({ dir, bundleId, sinceMs: sinceMs - fallbackSeconds * 1000 });
+  const prev = findCrashReport({ dir, bundleId, sinceMs: sinceMs - fallbackSeconds * 1000, processName });
   if (!prev) return null;
   return { ...prev, stale: true, agoSeconds: Math.max(0, (sinceMs - prev.whenMs) / 1000) };
 }
@@ -313,6 +329,7 @@ if (isMain) {
     return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : fallback;
   };
   const file = opt('--file', '');
+  const processName = opt('--process', '');
   // PHOTONZ_CRASH_REPORTS_DIR lets a drill hand playtest.sh a crash it made up,
   // so the rerun on a known macOS fault can be proved without waiting for one.
   const dir = opt('--dir', process.env.PHOTONZ_CRASH_REPORTS_DIR || REPORTS_DIR);
@@ -324,20 +341,21 @@ if (isMain) {
   // the hard way: two runs of the same crashing walk 18 seconds apart produced
   // exactly one report between them.
   const fallbackS = Number(opt('--fallback', 1800)) || 0;
+  const lookFor = { dir, bundleId, sinceMs, processName };
   let found = null;
   if (file) {
-    found = readCrashReport(file);
+    found = readCrashReport(file, processName ? { codeImage: TEST_CODE } : {});
   } else {
     // macOS takes a second or two to write the report, so a caller that
     // noticed the app vanish gets to wait a moment for the reason.
     const deadline = Date.now() + waitS * 1000;
     do {
-      found = findCrashReport({ dir, bundleId, sinceMs });
+      found = findCrashReport(lookFor);
       if (found || Date.now() >= deadline) break;
       // Synchronous sleep: this is a one-shot CLI with nothing else to do.
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
     } while (Date.now() < deadline);
-    if (!found) found = findCrashReportOrRecent({ dir, bundleId, sinceMs, fallbackSeconds: fallbackS });
+    if (!found) found = findCrashReportOrRecent({ ...lookFor, fallbackSeconds: fallbackS });
   }
   if (!found) {
     console.error('no crash report');

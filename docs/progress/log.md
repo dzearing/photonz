@@ -23392,3 +23392,11 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Split at Playhead (Command B) no longer stops a playing video on Next (`next-blade-keeps-playing`, on by default), as in Final Cut and Premiere. Stopping was costing every blade a 19-21 ms main thread wait on the window server; that pass is gone, the whole blade 122-145 -> 114-131 ms.
 - The Transitions group stops copying every clip on each panel pass (`hasTimelineClip(where:)`).
 - New walk `cutting-while-playing-keeps-playing-walk`. Next: edits with a clip picked still 21-37 ms against 16 (SwiftUI layout, accessibility and drag-region floor per pass), worst scrub lag 1.
+
+## 2026-11-22 — A crashed GitHub test slice reruns on the same build (task a-test-slice-on-github-that-crashes-once-still-f)
+
+- Run 45003209864's signal 11 was a real crash in a test, not a half-built folder: the Build step compiled only the app module, which no test target depends on, so the test bundle was the very one the previous run took through slice 3 without dying. Throwing `.build` away rebuilt for 19 minutes and the step timed out at 25, red and silent about the crash.
+- `Scripts/test.sh` on GitHub now runs the slice once more on the same build: green with a `::warning::` naming the crash, or red with an `::error::` naming it. Both print the crash report's frames (`Scripts/crash-report.mjs --process swiftpm-testing-helper`). Locally it still throws `.build` away.
+- CI: Run tests 30 minutes (was 25), job 55 (was 45), test helper crash reports kept as an artifact. Same timeouts in release.yml.
+- Drilled with `GITHUB_ACTIONS=true PHOTONZ_TEST_CRASH_DRILL=1` (and `_TWICE=1`), and with a real segfaulting throwaway test both ways.
+- Open: the parked-run exit 4 on a runner (run 45032918386) is a second way a slice goes red with no failing test; unchanged.

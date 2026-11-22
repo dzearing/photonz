@@ -269,6 +269,51 @@ r = readCrashReport(path.join(DIR4, 'layout.ips'), { exceptionLog: path.join(DIR
 check('no log is no message, not a failure', r && r.messages.length === 0, r && r.messages);
 fs.rmSync(DIR4, { recursive: true, force: true });
 
+// ---- test helper: a crash of the process Scripts/test.sh runs ---------------
+// On 2026-11-22 a GitHub slice died on signal 11 and nothing said where. The
+// helper has no bundle id and its own code is the test bundle out of .build,
+// with no line numbers on a runner, so it is found by name and read by image.
+console.log('a test helper that died');
+const DIR5 = fs.mkdtempSync(path.join(os.tmpdir(), 'photonz-crash-drill-helper-'));
+const helperBody = {
+  faultingThread: 1,
+  exception: { type: 'EXC_BAD_ACCESS', signal: 'SIGSEGV' },
+  termination: { indicator: 'Segmentation fault: 11' },
+  threads: [{ frames: [{ symbol: 'mach_msg2_trap', imageIndex: 2 }] }, {
+    triggered: true,
+    frames: [
+      { symbol: 'swift_retain', imageIndex: 3 },
+      { symbol: 'BrushEngine.stamp(at:)', imageIndex: 1 },
+      { symbol: 'BrushDynamicsRenderingTests.whatTheHandSeesIsWhatLands(_:)', imageIndex: 1 },
+      { symbol: 'Testing.Test.run()', imageIndex: 4 },
+    ],
+  }],
+  usedImages: [
+    { name: 'swiftpm-testing-helper', path: '/Applications/Xcode.app/Contents/Developer/usr/libexec/swift/pm/swiftpm-testing-helper' },
+    { name: 'PhotonzPackageTests', path: '/Users/runner/work/photonz/photonz/.build/arm64-apple-macosx/debug/PhotonzPackageTests.xctest/Contents/MacOS/PhotonzPackageTests' },
+    { name: 'libsystem_kernel.dylib' },
+    { name: 'libswiftCore.dylib' },
+    { name: 'Testing', path: '/Applications/Xcode.app/Contents/Developer/Library/Developer/Frameworks/Testing.framework/Testing' },
+  ],
+};
+const helperAt = Date.parse('2026-11-22T08:43:33-00:00');
+fs.writeFileSync(path.join(DIR5, 'swiftpm-testing-helper-2026-11-22-084333.ips'),
+  JSON.stringify({ app_name: 'swiftpm-testing-helper', timestamp: '2026-11-22 08:43:33.00 +0000', name: 'swiftpm-testing-helper' }) + '\n' + JSON.stringify(helperBody));
+// A probe crash in the same folder, newer, is never read as the helper's.
+fs.writeFileSync(path.join(DIR5, 'Photonz Probe-2026-11-22-084400.ips'),
+  JSON.stringify(header('2026-11-22 08:44:00.00 +0000')) + '\n' + JSON.stringify(renameBody));
+r = findCrashReport({ dir: DIR5, bundleId: '', sinceMs: helperAt - 60000, processName: 'swiftpm-testing-helper' });
+check('found by its process name, not the probe beside it', r && r.app === 'swiftpm-testing-helper', r && r.file);
+check('the frames are the test bundle\'s, named without line numbers',
+  r && r.frames.length === 2 && r.frames[1].symbol.startsWith('BrushDynamicsRenderingTests.'), r && r.frames);
+check('the line says the signal and the test it died in',
+  r && r.summary === 'EXC_BAD_ACCESS (SIGSEGV) in BrushEngine.stamp(at:) < BrushDynamicsRenderingTests.whatTheHandSeesIsWhatLands(_:)', r && r.summary);
+check('a crash before this run is not this run\'s',
+  findCrashReport({ dir: DIR5, bundleId: '', sinceMs: helperAt + 60000, processName: 'swiftpm-testing-helper' }) === null);
+check('the probe is still found by its bundle as before',
+  findCrashReport({ dir: DIR5, sinceMs: helperAt })?.app === 'Photonz Probe');
+fs.rmSync(DIR5, { recursive: true, force: true });
+
 fs.rmSync(DIR, { recursive: true, force: true });
 fs.rmSync(DIR2, { recursive: true, force: true });
 console.log(failures ? `\n${failures} FAILED` : '\nall ok');
