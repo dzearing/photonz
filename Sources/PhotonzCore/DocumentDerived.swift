@@ -89,6 +89,8 @@ struct DocumentDerived: Hashable, Sendable {
         let layerID: UUID
         let atMS: Int
         let lengthMS: Int
+        /// The captions heard off the held clip, which moved with it.
+        var carries: Set<UUID> = []
     }
 
     final class Store: Sendable {

@@ -1100,6 +1100,11 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// Set on a Captions layer a lower third moved: the box it had before,
     /// so another style puts it back (`CaptionLook.sitsLowLeft`).
     public var captionsHome: CGRect?
+    /// Set on a Captions layer: the recording its words were heard off (the
+    /// sound's id), so a freeze of that recording's clip takes them with it
+    /// (`HoldPush.swift`). Nil on every other group, and on captions written
+    /// before this was kept.
+    public var captionsHeardOff: UUID?
     /// Set on a title's group: the design it was built from and where its
     /// knobs stand (`TitleRestyle.swift`). Nil on every other group.
     public var titleRecipe: TitleRecipe?
@@ -1141,7 +1146,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
         case versionID, versionName, instanceVersion, columns, shared, pieceTextStyles
         case variantName, captions, variantAnswers, instanceAnswers, captionsHome, title
-        case keeps3D, measuresSize
+        case keeps3D, measuresSize, heardOff
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -1195,6 +1200,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // for byte what it was.
         try c.encodeIfPresent(captionLook, forKey: .captions)
         try c.encodeIfPresent(captionsHome, forKey: .captionsHome)
+        try c.encodeIfPresent(captionsHeardOff, forKey: .heardOff)
         // Only a title writes its recipe, so every other group is byte for
         // byte what it was.
         try c.encodeIfPresent(titleRecipe, forKey: .title)
@@ -1253,6 +1259,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         isShared = try c.decodeIfPresent(Bool.self, forKey: .shared) ?? false
         captionLook = try c.decodeIfPresent(CaptionLook.self, forKey: .captions)
         captionsHome = try c.decodeIfPresent(CGRect.self, forKey: .captionsHome)
+        captionsHeardOff = try c.decodeIfPresent(UUID.self, forKey: .heardOff)
         titleRecipe = try c.decodeIfPresent(TitleRecipe.self, forKey: .title)
     }
 }

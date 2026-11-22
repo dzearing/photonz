@@ -226,7 +226,7 @@ extension EditorState {
             // obviously means and what stops two copies of every line. They
             // land as one Captions group: one row in the layers list, and one
             // Captions track on the timeline with every cue side by side.
-            doc.landCaptions(cues)
+            doc.landCaptions(cues, heardOff: sound.id)
             doc.noteCaptionsListened(to: sound.id)
         }
         // Read back off the document the edit LANDED in, not the one captured

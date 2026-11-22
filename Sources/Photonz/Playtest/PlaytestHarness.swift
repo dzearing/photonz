@@ -6396,6 +6396,26 @@ private final class Run {
                 note(number, step.name,
                      "captions: the last one ends at \(String(format: "%.2fs", Double(last) / 1000)), the recording at "
                         + "\(String(format: "%.2fs", Double(end) / 1000))", state: describe())
+            case .captionsExpectInStepWithPicture:
+                guard let document = editor.document else { throw Failure(description: "no document") }
+                let cues = document.captionLayers
+                guard !cues.isEmpty else { throw Failure(description: "there are no captions") }
+                func seconds(_ ms: Int) -> String { String(format: "%.2fs", Double(ms) / 1000) }
+                let drifting = cues.filter { !document.holdDrifts(forLayer: $0.id).isEmpty }
+                guard drifting.isEmpty else {
+                    throw Failure(description: "\(drifting.count) caption(s) carry a drift mark, the first "
+                        + "\"\(drifting[0].name)\" at \(seconds(drifting[0].time?.inMS ?? 0)): they stayed "
+                        + "behind while the clip they were heard off moved along")
+                }
+                let over = document.captionWordsOverOwnStills()
+                guard over.isEmpty else {
+                    throw Failure(description: "\(over.count) caption word(s) are said over the still of "
+                        + "the clip they were heard off, the first \"\(over[0].text)\" at "
+                        + "\(seconds(over[0].startMS))")
+                }
+                let last = cues.compactMap(\.time?.inMS).max() ?? 0
+                note(number, step.name, "captions: \(cues.count) in step with the picture, no drift mark, "
+                     + "no word over a still, the last starting at \(seconds(last))", state: describe())
             case .captionsPickFirst, .captionsPickNext:
                 let cues = (editor.document?.captionLayers ?? [])
                     .sorted { ($0.time?.inMS ?? 0) < ($1.time?.inMS ?? 0) }
@@ -7963,7 +7983,8 @@ private final class Run {
                  .captionsNudgeEarlier, .captionsCorrectFirstWord, .captionsClear,
                  .captionsExpectSound, .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand,
                  .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
-                 .captionsExpectEndWithRecording, .captionsExpectInsideMarks, .captionsExpectOverClips,
+                 .captionsExpectEndWithRecording, .captionsExpectInStepWithPicture,
+                 .captionsExpectInsideMarks, .captionsExpectOverClips,
                  .captionsExpectHeardInPickedLanguage,
                  .expectAddedClick,
                  .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,

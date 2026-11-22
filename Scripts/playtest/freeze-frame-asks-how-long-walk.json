@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/freeze-frame-asks-how-long-walk",
- "seed": "At Next defaults, with no switch touched. The talk sample cut at 0:04 and 0:08 with the middle lifted, so V1 holds a clip from 0:00 to 0:04 and another from 0:08, and the sample music under both from 0:00. The clip's right-click offers Freeze Frame at 0:03.00 with an ellipsis, which opens a small popover on the clip at the playhead: a Length field on 2s, a Freeze every track box that is off, and Insert. Typing 10 and pressing Return inserts a ten second still on V1 only: the first clip now runs to 0:14 and the second moved along to 0:18, while the music runs on under the still exactly where it was. The still's end dragged back to the playhead at 0:07 makes it four seconds, the second clip follows it to 0:12, and the whole thing plays through without a blank frame. The user, 2026-10-17: 'Maybe I want to freeze it for 10 seconds... by default we'd just freeze THAT track, not every track.' Picked and deleted, the still goes, the clip is one piece again and the second clip closes back up to 0:08.",
+ "seed": "At Next defaults, with no switch touched. The talk sample cut at 0:04 and 0:08 with the middle lifted, so V1 holds a clip from 0:00 to 0:04 and another from 0:08, and the sample music under both from 0:00. The clip's right-click offers Freeze Frame at 0:03.00 with an ellipsis, which opens a small popover on the clip at the playhead: a Length field on 2s, a Freeze every track box that is off, and Insert. Typing 10 and pressing Return inserts a ten second still on V1 only: the first clip now runs to 0:14 and the second moved along to 0:18, while the music runs on under the still exactly where it was, and the talk's own captions move along with the talk, so no word is shown over the still. The still's end dragged back to the playhead at 0:07 makes it four seconds, the second clip follows it to 0:12, and the whole thing plays through without a blank frame. The user, 2026-10-17: 'Maybe I want to freeze it for 10 seconds... by default we'd just freeze THAT track, not every track.' Picked and deleted, the still goes, the clip is one piece again and the second clip closes back up to 0:08.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -245,9 +245,14 @@
    "reads": "This track"
   },
   {
+   "comment": "The talk's own captions moved along with the clip: no drift mark on them, and no word said over the still.",
+   "do": "action",
+   "action": "captionsExpectInStepWithPicture"
+  },
+  {
    "do": "describe",
    "stage": "2-ten-second-still",
-   "note": "THE FIRST TEST: a ten second still on V1 at 0:03, drawn as the timeline draws a held frame. The clip after it on V1 moved along by ten seconds, and the music on its own track runs straight on under the still"
+   "note": "THE FIRST TEST: a ten second still on V1 at 0:03, drawn as the timeline draws a held frame. The clip after it on V1 moved along by ten seconds, and the music on its own track runs straight on under the still. The Captions track moved with the talk it was heard off: the line across 0:03 waits through the still and every line after it is ten seconds later, with no drift mark"
   },
   {
    "do": "snapshot",
@@ -294,6 +299,11 @@
    "startsAt": 0.0,
    "endsAt": 14.0,
    "within": 0.5
+  },
+  {
+   "comment": "Four seconds, and the talk's captions came back with the clip.",
+   "do": "action",
+   "action": "captionsExpectInStepWithPicture"
   },
   {
    "do": "describe",
@@ -371,6 +381,11 @@
    "startsAt": 0.0,
    "endsAt": 14.0,
    "within": 0.5
+  },
+  {
+   "comment": "Thrown away, the talk's captions closed back up with it.",
+   "do": "action",
+   "action": "captionsExpectInStepWithPicture"
   },
   {
    "do": "describe",

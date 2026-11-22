@@ -122,10 +122,11 @@ extension PhotonzDocument {
               let start = holdStartMS(id, ofPiece: index) else { return false }
         guard pieces.setHoldPush(ofPiece: index, to: push) else { return false }
         updateLayer(id: id) { $0.setClipPieces(pieces) }
-        // The clip's own track moved with the hold either way, so only the
-        // other tracks take the time in or give it back.
+        // The clip's own track, and the captions heard off it, moved with the
+        // hold either way, so only the other tracks take the time in or give
+        // it back.
         rippleTime(atMS: start, byMS: push == .everything ? piece.lengthMS : -piece.lengthMS,
-                   except: ownTrackLayerIDs(ofClip: id), sparingLocked: true)
+                   except: heldWithClip(id), sparingLocked: true)
         return true
     }
 
@@ -140,10 +141,44 @@ extension PhotonzDocument {
             rippleTime(atMS: ms, byMS: delta, except: clipLayerIDs(id), sparingLocked: true)
         case .thisTrack:
             let mine = clipLayerIDs(id)
-            let track = ownTrackLayerIDs(ofClip: id).subtracting(mine)
+            let track = heldWithClip(id).subtracting(mine)
             guard !track.isEmpty else { return }
             rippleTime(atMS: ms, byMS: delta, except: mine, only: track)
         }
+    }
+
+    /// What a hold of this track alone moves: everything on the clip's own
+    /// track, and the captions heard off the clip, which are its own words
+    /// and would otherwise be shown over the wrong picture from the hold on.
+    func heldWithClip(_ id: UUID) -> Set<UUID> {
+        ownTrackLayerIDs(ofClip: id).union(captionLayerIDs(heardOffClip: id))
+    }
+
+    /// Every Captions layer heard off the recording this clip plays, and every
+    /// caption inside them, leaving out any on a locked track or locked
+    /// themselves: a locked track never moves.
+    ///
+    /// A clip whose sound was taken off it plays none, so its captions stay
+    /// with the sound, which runs on under the frozen picture. Captions
+    /// written before they kept their recording are taken to be heard off
+    /// the one recording the document has listened to, where it has listened
+    /// to exactly one.
+    func captionLayerIDs(heardOffClip id: UUID) -> Set<UUID> {
+        guard let clip = layer(id: id) else { return [] }
+        let sounds = Set([clip.sound?.id, clip.playedSound?.id].compactMap { $0 })
+        guard !sounds.isEmpty else { return [] }
+        let guess = captionsListenedTo.count == 1 ? captionsListenedTo.first : nil
+        let heard = captionsLayers.filter { captions in
+            guard let source = captions.captionsHeardOff ?? guess else { return false }
+            return sounds.contains(source)
+        }
+        guard !heard.isEmpty else { return [] }
+        let locked = layerIDsOnLockedTracks()
+        var ids = Set<UUID>()
+        for captions in heard where !captions.isLocked && !locked.contains(captions.id) {
+            for layer in captions.selfAndDescendants where !layer.isLocked { ids.insert(layer.id) }
+        }
+        return ids
     }
 
     /// The clip and everything inside it.
@@ -244,13 +279,49 @@ extension PhotonzDocument {
                 } else {
                     let out = max(time.inMS + LayerTime.shortestMS, time.outMS + delta)
                     guard out != time.outMS else { continue }
-                    updateLayer(id: layer.id) { $0.time = $0.time?.withOut(out) }
+                    updateLayer(id: layer.id) { layer in
+                        layer.time = layer.time?.withOut(out)
+                        // A caption the moment falls inside waits through the
+                        // pause, and the words it says after the moment are
+                        // said that much later, as they are in the recording.
+                        layer.captionWords = layer.captionWords?.map { word in
+                            guard word.startMS >= ms else { return word }
+                            return word.shifted(byMS: max(ms, word.startMS + delta) - word.startMS)
+                        }
+                    }
                     moved = true
                 }
             }
         }
         if moved { refreshDuration() }
         return moved
+    }
+
+    /// Every caption word said over a frozen frame of the clip it was heard
+    /// off: a word shown while the picture of the person saying it stands
+    /// still. Nothing, when every caption moved with the freezes of its clip;
+    /// what a walk checks to say the words stayed with the speaker.
+    public func captionWordsOverOwnStills() -> [TranscribedWord] {
+        var stills: [UUID: [Range<Int>]] = [:]
+        forEachLayer { clip in
+            guard let time = clip.time, let pieces = clip.clipPieces else { return }
+            for index in 0..<pieces.count where pieces.piece(at: index)?.isHeld == true {
+                guard let range = pieces.rangeMS(ofPiece: index) else { continue }
+                stills[clip.id, default: []].append((time.inMS + range.start)..<(time.inMS + range.end))
+            }
+        }
+        var over: [TranscribedWord] = []
+        for (clip, ranges) in stills {
+            let mine = captionLayerIDs(heardOffClip: clip)
+            guard !mine.isEmpty else { continue }
+            for id in mine {
+                for word in layer(id: id)?.captionWords ?? []
+                where ranges.contains(where: { $0.contains(word.startMS) }) {
+                    over.append(word)
+                }
+            }
+        }
+        return over.sorted { $0.startMS < $1.startMS }
     }
 
     // MARK: - What the timeline says about it
@@ -280,7 +351,15 @@ extension PhotonzDocument {
                                        lengthMS: piece.lengthMS))
                 }
             }
-            return holds
+            // The captions heard off a held clip moved with it, so they are
+            // in step with the picture and carry no mark.
+            var carried: [UUID: Set<UUID>] = [:]
+            return holds.map { hold in
+                let words = carried[hold.layerID] ?? captionLayerIDs(heardOffClip: hold.layerID)
+                carried[hold.layerID] = words
+                return .init(layerID: hold.layerID, atMS: hold.atMS, lengthMS: hold.lengthMS,
+                             carries: words)
+            }
         }
     }
 
@@ -290,7 +369,8 @@ extension PhotonzDocument {
         // 524 bars each walked the whole document (2026-11-14).
         let every = pictureOnlyHolds
         guard !every.isEmpty, let time = layer(id: id)?.time else { return [] }
-        let holds = every.filter { $0.layerID != id && $0.atMS > time.inMS && $0.atMS < time.outMS }
+        let holds = every.filter { $0.layerID != id && !$0.carries.contains(id)
+            && $0.atMS > time.inMS && $0.atMS < time.outMS }
             .map { (atMS: $0.atMS, lengthMS: $0.lengthMS) }
         var running = 0
         return holds.sorted { $0.atMS < $1.atMS }.map { hold in

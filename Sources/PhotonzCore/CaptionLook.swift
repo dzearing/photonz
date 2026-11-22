@@ -404,6 +404,17 @@ extension Layer {
         }
     }
 
+    /// The recording a Captions layer's words were heard off, or nil for
+    /// every other layer and for captions written before it was kept.
+    public var captionsHeardOff: UUID? {
+        get { group?.captionsHeardOff }
+        set {
+            guard case .group(var group) = content else { return }
+            group.captionsHeardOff = newValue
+            content = .group(group)
+        }
+    }
+
     /// A Captions layer's look, or nil for every other layer. Setting it on a
     /// group makes it a Captions layer.
     public var captionsLook: CaptionLook? {
@@ -482,8 +493,13 @@ extension PhotonzDocument {
     /// it is: its box, its look and its place in the stack are what somebody
     /// chose, and a second press means new words, not a new layer. Otherwise
     /// they land as a new Captions layer in the lower third.
+    ///
+    /// `heardOff` is the recording the words were heard in, kept on the
+    /// Captions layer so a freeze of that recording's clip takes them with it
+    /// (`HoldPush.swift`). Nil keeps whatever the layer already said.
     @discardableResult
-    public mutating func landCaptions(_ cues: [CaptionCue], look: CaptionLook? = nil) -> UUID? {
+    public mutating func landCaptions(_ cues: [CaptionCue], look: CaptionLook? = nil,
+                                      heardOff sound: UUID? = nil) -> UUID? {
         // Words somebody fixed by hand come back fixed where the same words
         // are heard the same way again (`CaptionWordFixes`).
         let fixed = CaptionWordFixes(self).applied(to: cues)
@@ -515,12 +531,14 @@ extension PhotonzDocument {
             updateLayer(id: existing.id) { layer in
                 layer.children = children
                 layer.captionsLook = chosen
+                if let sound { layer.captionsHeardOff = sound }
             }
             if regroups { regroupCaptions(existing.id) }
             return existing.id
         }
         var content = GroupContent(children: children)
         content.captionLook = chosen
+        content.captionsHeardOff = sound
         let layer = Layer(name: CaptionLayers.groupName, content: .group(content), frame: box)
         addLayer(layer)
         // Written in the look's grouping: a style of three words at a time

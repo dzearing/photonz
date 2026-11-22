@@ -1,0 +1,40 @@
+{
+  "feature": "Captions move with their clip when a freeze moves only its track",
+  "epic": "video-cutting",
+  "summary": "Freezing a talking clip with Freeze every track off now takes that clip's own captions along with it. The line across the freeze waits through the still and every line after it lands later by the length of the still, so the words stay under the person saying them. Music and anything else on other tracks still run on underneath.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Measured with the freeze-frame-asks-how-long walk (green, 5 real window pictures) and the a-held-frame-reads-as-a-still and the-quiet-under-a-hold-is-a-bare-slot walks (green).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a recording of someone talking and write its captions from the Captions section."
+    },
+    {
+      "do": "Put the playhead a few seconds in, click the clip on the picture and press Option Shift F."
+    },
+    {
+      "do": "Type 10 and press Return, leaving Freeze every track off.",
+      "shot": "2026-11-22-captions-follow-frozen-clip-2-ten-second-still.png"
+    },
+    {
+      "do": "Look at the Captions track: the line across the freeze now runs on through the striped still, and the lines after it sit under the clip again. Only the music says 10s out."
+    },
+    {
+      "do": "Drag the still's right end back toward the playhead: the captions come back with the clip.",
+      "shot": "2026-11-22-captions-follow-frozen-clip-3-dragged-to-four-seconds.png"
+    },
+    {
+      "do": "Click the still and press Delete: every caption is back where it was.",
+      "shot": "2026-11-22-captions-follow-frozen-clip-5-thrown-away.png"
+    }
+  ],
+  "evaluate": [
+    "When you play through the still, does the line that was on screen at the freeze staying up feel right, or would you rather it went away and came back?",
+    "Is it clear from the timeline that the captions moved with the clip, now that only the music shows a drift mark?",
+    "If you had captions for a voice on its own track, would you expect them to stay with the voice (as they do now) when you freeze the picture?"
+  ],
+  "rough": [
+    "No mock covers captions under a freeze. The drift mark is drawn only where there is drift, as the freeze mock says.",
+    "Captions written before today do not record which recording they were heard from. They follow the clip only when the document has been captioned from exactly one recording; otherwise write the captions again once.",
+    "A line that was on screen when the freeze landed stays up through the whole still, which on a long still shows the half-said line for the full length."
+  ]
+}

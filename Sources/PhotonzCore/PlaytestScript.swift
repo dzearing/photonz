@@ -1595,6 +1595,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// heard in: after a stretch is cut out, the lines for the words that went
     /// have to go with them rather than play over what comes next.
     case captionsExpectEndWithRecording
+    /// Fail unless the captions are in step with the picture after a freeze:
+    /// no caption carries a drift mark, and no word is said over a frozen
+    /// frame of the clip it was heard off (`captionWordsOverOwnStills`).
+    case captionsExpectInStepWithPicture
     /// Pick the first caption the way one click on its bar does, or the one
     /// after the caption picked, the way fixing captions goes.
     case captionsPickFirst, captionsPickNext
@@ -1922,7 +1926,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
              .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand, .captionsExpectOneTrack, .captionsExpectInsideMarks, .captionsExpectOverClips,
              .captionsExpectHeardInPickedLanguage,
-             .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
+             .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsExpectInStepWithPicture, .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
              .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
