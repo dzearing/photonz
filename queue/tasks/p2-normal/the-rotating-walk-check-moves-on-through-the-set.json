@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-26T14:17:11.190Z",
-  "updated": "2026-11-22T13:27:03.504Z",
+  "updated": "2026-11-22T19:09:20.781Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced in the 2026-10-26 digest pass. Commands and output:\n\n$ cat queue/sweep/rotation.json -> \"cursor\": 103 (unchanged since the 11:51Z check on 2026-10-25)\n$ grep '\"ev\":\"slice_pass\"' queue/history.jsonl | tail -3 -> 13:20Z walks 22 of 30 timedOut true; 15:43Z walks 21 timedOut true; 17:08Z walks 19 timedOut true, each seconds 1803-1806\n$ grep -E '^[a-z0-9-]+-walk +[0-9]+s' queue/sweep/slice-2026-10-25-081308.log and -093850.log -> the same run every time: 3d-grippers-on-a-picked-layer-walk, an-editing-session-walk, arrow-*, then ask-adds-a-title-page-walk 82-93s, ask-annotates-a-screenshot-walk 80-105s, ask-builds-base-components-walk 206-303s, ask-cancels-a-waiting-request-walk 121-146s, ask-draws-a-dog-walk 151-183s, ask-draws-a-scene-walk 159-185s, ask-draws-an-illustration-walk 331-354s ...\n$ grep 'Sized to' queue/loop.log | tail -1 -> 'Sized to 10 minutes at 19.8s a walk, the median of the last 10 rotating checks.'\n\nCause, read from code: queue/bin/sweep.sh around line 268 advances the rotation only when SLICE_TIMED_OUT is 0 ('a check cut off on the clock runs the same walks again next time rather than skipping them'), and queue/bin/sweep-schedule.mjs picks 30 walks from the median pace. From cursor 103 the next 30 walks hold about 20 Ask walks on the 27B model, so every check is stopped on the clock and the cursor never moves: a deadlock until the Ask walks get faster. ask-walks-share-one-model-instead-of-loading-a-f (one shared model) will shave the model load off each Ask walk but does not move the cursor, so this is its own fix. Do not let a fix skip walks nobody ran: advance only past finished walks.",
@@ -201,7 +201,29 @@
     {
       "t": "2026-11-22T13:27:03.503Z",
       "note": "seq 110 -> 40"
+    },
+    {
+      "t": "2026-11-22T18:35:52.040Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T18:51:58.631Z",
+      "note": "Built (578bb4f38): pickSlice fills a check by time at each walk's own recent time from queue/sweep/*.log; changed walks take at most half and the rest are carried in rotation.json owed; settleSlice moves the cursor past the rotation walks the log answered, so a stopped check keeps what it finished and is due again after 4h (cutShort). Drill replays the 157 deadlock (old rule: 3 checks stopped, cursor stays; new: 3 checks advance, none stopped, each <=600s); drill now in CI. Measured check 1 (real, sweep.sh slice from 157): '==> Rotating check: 10 of 1187 walks, from 157 in the rotation, 4 run in every check, 5 because their script changed.' / 'Sized to 10 minutes: about 7 minutes planned, 7 walk(s) at their own recent time, 3 at 21.2s' / '==> 10 walks in 5m 45s' / '==> The rotation moves on from 157 to 158.' Not stopped on the clock."
+    },
+    {
+      "t": "2026-11-22T19:09:13.301Z",
+      "note": "Measured three real rotating checks in a row through the Ask block, run by hand with queue/bin/sweep.sh slice (not by the loop, so no slice_pass events were written for them). Check 1: 'from 157', '10 walks in 5m 45s', 'The rotation moves on from 157 to 158.' Check 2: '5 of 1187 walks, from 158', 'about 7 minutes planned', '5 walks in 7m 37s' (ask-animates-an-icon-walk 330s), 'The rotation moves on from 158 to 159.' Check 3: '6 of 1187 walks, from 159', 'about 7 minutes planned, 6 walk(s) at their own recent time', '6 walks in 4m 59s', 'The rotation moves on from 159 to 161.' None was stopped on the clock, all walks passed, focus check clean each time; queue/sweep/rotation.json cursor 157 -> 158 -> 159 -> 161, owed [], cutShort false. Through the Ask block a check moves 1 or 2 walks (about 125s of every check goes to the four walks every check runs, and the Ask walks are 120 to 330s each); that is the honest pace, and sweep.sh schedule now prints the lap at 63 checks, about 11 days."
+    },
+    {
+      "t": "2026-11-22T19:09:13.371Z",
+      "note": "left rough: the four walks every check runs cost about 125s of each 600s check, so the rotation moves slowly through slow blocks; not filed, the whole set every three days answers those walks anyway. Also, settleSlice counts DEFERRED and COULD NOT RUN as answered, the same as the old rule did for a check that finished."
+    },
+    {
+      "t": "2026-11-22T19:09:20.779Z",
+      "note": "A rotating walk check stopped on the clock now moves the rotation past the walks it finished (the rest, and any changed walks it never reached, run first next time), and every check is planned walk by walk at each walk's own recent time from the run logs, so a block of Ask walks is no longer planned at the 21s median. sweep.sh schedule, CLAUDE.md and the READMEs say 72 h / 4 h and print the lap (63 checks, about 11 days). Held by queue/bin/sweep-schedule-drill.mjs (replays the 157 deadlock; now in CI). Measured: three real checks from 157 ran 5m45s, 7m37s and 4m59s, none stopped, and the cursor went 157 -> 158 -> 159 -> 161. Commit 578bb4f38."
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-11-22T18:35:52.039Z",
+  "completed": "2026-11-22T19:09:20.780Z"
 }
