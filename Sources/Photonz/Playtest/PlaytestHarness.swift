@@ -4242,10 +4242,10 @@ private final class Run {
             note(number, step.name, try checkRegion(reads: reads, present: present),
                  state: describe())
 
-        case .expectCaption(let aligned, let caret, let caretHeight, let outline):
+        case .expectCaption(let aligned, let caret, let caretHeight, let outline, let look):
             note(number, step.name,
                  try checkCaption(aligned: aligned, caret: caret,
-                                  caretHeight: caretHeight, outline: outline),
+                                  caretHeight: caretHeight, outline: outline, look: look),
                  state: describe())
 
         case .expectSectionFits(let section):
@@ -14332,7 +14332,8 @@ private final class Run {
 
     private func checkCaption(aligned: CaptionDraftAlignment?, caret: CaptionCaretSpot?,
                               caretHeight: CaptionCaretHeight?,
-                              outline: CaptionOutlineClaim?) throws -> String {
+                              outline: CaptionOutlineClaim?,
+                              look: CaptionLookClaim? = nil) throws -> String {
         let editor = try requireEditor()
         guard let canvas, let field = canvas.playtestCaptionGeometry else {
             throw Failure(description: "no arrow caption field is open, so there is nothing to claim about one")
@@ -14420,6 +14421,13 @@ private final class Run {
                 }
                 held.append("outline \(drawn.integral) round bubble \(field.bubble.integral)")
             }
+        }
+        if look == .matchesTheArrow {
+            if let wrong = canvas.playtestCaptionLookMismatch {
+                throw Failure(description: "the bubble being typed in does not wear the arrow's look as it "
+                    + "is now: \(wrong)")
+            }
+            held.append("bubble wears the arrow's look")
         }
         return held.joined(separator: ", ")
     }

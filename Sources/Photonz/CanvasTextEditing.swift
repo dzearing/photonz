@@ -94,10 +94,7 @@ extension CanvasNSView {
         let anchor = draft.captionAnchor()
         let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
         // The chip style's own face, so the words you type are the words that land.
-        let seeded = a.withSeededCaptionColors
-        var style = TextContent(string: "", fontName: seeded.captionFontName, fontSize: seeded.captionTypeSize,
-                                colorHex: seeded.captionTextHex)
-        style.weight = seeded.captionFontWeight
+        let style = Self.captionDraftStyle(for: a)
         textSession = TextEditSession(layerID: layer.id, origin: center, captionStyle: style,
                                       captionLayer: layer, captionPlacement: placement)
 
@@ -131,6 +128,35 @@ extension CanvasNSView {
         editor.setSelectedRange(NSRange(location: opening.location, length: opening.length))
         onCaptionEditBegin(layer.id)
         refreshOverlays()
+    }
+
+    /// The face, size and colour a caption's words are typed in, read off the
+    /// arrow: the chip style's own face, so the words you type are the words
+    /// that land.
+    static func captionDraftStyle(for annotation: AnnotationContent) -> TextContent {
+        let seeded = annotation.withSeededCaptionColors
+        var style = TextContent(string: "", fontName: seeded.captionFontName,
+                                fontSize: seeded.captionTypeSize, colorHex: seeded.captionTextHex)
+        style.weight = seeded.captionFontWeight
+        return style
+    }
+
+    /// An open caption keeps up with its arrow. The field used to copy the
+    /// arrow's look once, when it opened, so a colour, chip style, font or
+    /// size picked from the panel or the tool bar while typing showed on the
+    /// line at once and on the bubble only after the field closed (the user,
+    /// 2026-11-21). Every refresh now reads the arrow as the document holds it
+    /// and hands the bubble and the words its look; the spot the bubble hangs
+    /// from stays the one the session picked, exactly as the commit keeps it.
+    /// Nothing here touches the field's words, caret or selection.
+    private func followCaptionArrow() {
+        guard let session = textSession, session.captionStyle != nil,
+              let layerID = session.layerID,
+              let live = document?.canvasLayer(id: layerID),
+              let annotation = live.annotation, annotation.shape == .arrow else { return }
+        let style = Self.captionDraftStyle(for: annotation)
+        if style != session.captionStyle { textSession?.captionStyle = style }
+        if live != session.captionLayer { textSession?.captionLayer = live }
     }
 
     /// The inline editor overlay both text and caption sessions share, before
@@ -467,18 +493,15 @@ extension CanvasNSView {
                               size: CGSize(width: frame.width,
                                            height: max(frame.height,
                                                        draftHeight(in: editor, inset: inset))))
-        // The rasterizer's border straddles the pill's edge (a centered stroke)
-        // while a layer's border is drawn inside its bounds, so the bubble is
-        // grown by half a border and its inner stroke lands on the same band.
-        // Without this the drawn edge sits half a border in from where the
-        // committed one does.
-        let straddle = caption.withSeededCaptionColors.drawnCaptionBorderWidth * zoom / 2
-        captionPill?.frame = frame.insetBy(dx: -straddle, dy: -straddle)
-        // Styled with the caption BEING TYPED, not the one the layer still
-        // holds: the corner a pill wears depends on how many lines are in it.
-        var shown = caption
-        shown.caption = CaptionMetrics.committedText(editor.string)
-        captionPill?.style(for: shown, zoom: zoom)
+        // The bubble is the committed chip's own picture, words left out, drawn
+        // with room round it for its shadow: the view is the chip grown by that
+        // room, so the chip inside it lands exactly on `frame`. Its corner is
+        // the one the DRAFT's pill wears (it depends on how many lines are in
+        // it), which is why it is drawn at the draft's measured size.
+        let slack = CaptionPillView.slack(for: caption) * zoom
+        captionPill?.frame = frame.insetBy(dx: -slack, dy: -slack)
+        captionPill?.show(caption, chipSize: pill, zoom: zoom,
+                          backingScale: window?.backingScaleFactor ?? 2)
         // The bubble, in document points, for the blue outline to be drawn
         // round. Published from here because this is the one place that knows
         // it: the pill is measured from the draft and then slid to stay on the
@@ -512,9 +535,10 @@ extension CanvasNSView {
     /// Keeps the editor glued to the document while panning/zooming, and
     /// restyles it when the font picker changes the style mid-edit.
     func refreshTextEditorDisplay() {
+        followCaptionArrow()
         guard let session = textSession, let viewport else { return }
-        // Caption sessions keep their fixed style; text sessions track the
-        // font picker's live style.
+        // Caption sessions wear the arrow's look (`followCaptionArrow`); text
+        // sessions track the font picker's live style.
         let desired = session.captionStyle ?? textContent
         if let content = desired, content != textEditorContent || viewport.zoom != textEditorZoom {
             styleTextEditor(with: content)
@@ -616,15 +640,6 @@ extension CanvasNSView: NSTextViewDelegate {
     }
 }
 
-/// The bubble behind an open arrow caption. Everything it draws — the fill,
-/// the border in the arrow's ink, the capsule corner, the drop shadow — comes
-/// off `AnnotationContent`, the same values `AnnotationRasterizer` bakes into
-/// the committed caption, so typing and committing are one shape.
-///
-/// It is a view of its own rather than the text field's own background because
-/// a text view fills a plain rectangle and clips its layer to it: the capsule
-/// and its shadow need to live outside the field's bounds. Clicks pass
-/// straight through to the field on top of it.
 /// The shadows a title's words throw, drawn behind the field they are typed
 /// in. The field draws the words; this draws only what they cast, from the
 /// field's own laid-out glyphs, so the two line up letter for letter. It is a
@@ -692,73 +707,72 @@ final class TextDraftShadowView: NSView {
     }
 }
 
+/// The bubble behind an open arrow caption: the chip the caption will land
+/// in, drawn by the very code that draws the committed one
+/// (`AnnotationRasterizer.captionPlate`), everything but the words, which the
+/// field on top types. Its fill, edge, corner, shadow and a chip style's whole
+/// finish (gradient, rim, highlight, stripe, marker) are therefore the label
+/// that lands, and a look picked while typing repaints it at once
+/// (`followCaptionArrow`). Until 2026-11-21 it was a stand-in of one flat fill,
+/// an edge and a shadow, and the finish appeared only when the field closed.
+///
+/// It is a view of its own rather than the text field's own background because
+/// a text view fills a plain rectangle and clips its layer to it: the chip and
+/// its shadow need to live outside the field's bounds. Clicks pass straight
+/// through to the field on top of it.
 final class CaptionPillView: NSView {
     override var isFlipped: Bool { true }
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    /// What the plate on show was drawn from, so a refresh that changes
+    /// nothing draws nothing.
+    private struct Drawn: Equatable {
+        var look: AnnotationContent
+        var chip: CGSize
+        var scale: CGFloat
+    }
+    private var drawn: Drawn?
+    /// The picture on show and the chip size it was drawn at, in document
+    /// points, for a walk to compare against a fresh one.
+    private(set) var plate: CGImage?
+    private(set) var chipSize: CGSize?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
         wantsLayer = true
         layer?.masksToBounds = false
+        layer?.contentsGravity = .resize
     }
 
     required init?(coder: NSCoder) { nil }
 
-    /// One of the label's colours as a layer colour, see-through where the part
-    /// has been switched off.
-    private func pillColor(_ paint: Paint?) -> CGColor {
-        guard let paint, let rgba = RGBA(hex: paint.hex) else {
-            return CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0)
-        }
-        return CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+    /// How much room the plate keeps round the chip for its shadow, in
+    /// DOCUMENT points: the view's frame is the chip grown by this all round.
+    static func slack(for annotation: AnnotationContent) -> CGFloat {
+        annotation.withSeededCaptionColors.captionShadowSlack
     }
 
-    func style(for annotation: AnnotationContent, zoom: CGFloat) {
+    /// The look a plate is drawn from: the arrow's, with the words it is about
+    /// to be given when it has none of its own colours yet, and without the
+    /// words themselves, which the plate never draws.
+    static func plateLook(_ annotation: AnnotationContent) -> AnnotationContent {
+        var look = annotation.withSeededCaptionColors
+        look.caption = nil
+        return look
+    }
+
+    /// Shows the chip `annotation` lands in at `chipSize` document points,
+    /// drawn for `zoom` on a screen of `backingScale`.
+    func show(_ annotation: AnnotationContent, chipSize: CGSize, zoom: CGFloat, backingScale: CGFloat) {
         guard let layer else { return }
-        // The label's OWN three colours, not a tone worked out from the arrow.
-        // A label with no words yet borrows the ones it is about to be given,
-        // so the bubble you type in is the bubble that lands.
-        let shown = annotation.withSeededCaptionColors
-        layer.backgroundColor = pillColor(shown.captionFill)
-        layer.borderColor = pillColor(shown.captionBorder)
-        layer.borderWidth = shown.captionBorder == nil
-            ? 0 : max(1, shown.captionBorderWidth * zoom)
-        // Asked in DOCUMENT points and scaled back, because the corner rule
-        // reads the caption's padding and line count, which are document
-        // numbers: handing it a zoomed height would round a zoomed-in bubble
-        // by a different rule than the pill it stands in for.
-        let documentHeight = bounds.height / max(zoom, 0.0001)
-        layer.cornerRadius = annotation.captionCornerRadius(pillHeight: documentHeight) * zoom
-        // The rasterizer's shadow: a 4px blur two pixels down, black at 35%.
-        // A CALayer's blur radius is half a CGContext's.
-        layer.shadowColor = CGColor(gray: 0, alpha: 1)
-        layer.shadowOpacity = 0.35
-        layer.shadowRadius = 2 * zoom
-        layer.shadowOffset = CGSize(width: 0, height: 2 * zoom)
-        // A chip style: its plate, its own edge width and its main shadow.
-        // The finish (rim, swipe, accent) lands with the committed chip.
-        if let look = shown.chipLook {
-            let u = ChipLook.unit(fontSize: shown.captionFontSize) * zoom
-            if let top = look.fillTop { layer.backgroundColor = pillColor(Paint(hex: top.hexString)) }
-            if let top = look.fillTop, top.a < 1 {
-                layer.backgroundColor = CGColor(srgbRed: top.r, green: top.g, blue: top.b, alpha: top.a)
-            }
-            // Glass frosts the picture once it lands; while typing it stands
-            // in as one opaque colour so the words read over anything.
-            if let opaque = look.frostStandIn {
-                layer.backgroundColor = CGColor(srgbRed: opaque.r, green: opaque.g, blue: opaque.b, alpha: 1)
-            }
-            if shown.chipStyle != .today {
-                layer.borderWidth = shown.captionBorder == nil ? 0 : max(1, look.edgeWidth * u)
-            }
-            if let shadow = look.shadows.last {
-                layer.shadowOpacity = Float(shadow.alpha)
-                layer.shadowRadius = shadow.blur * u / 2
-                layer.shadowOffset = CGSize(width: 0, height: shadow.y * u)
-            } else {
-                layer.shadowOpacity = 0
-            }
-        }
+        let scale = max(zoom, 0.0001) * max(backingScale, 1)
+        let wanted = Drawn(look: Self.plateLook(annotation), chip: chipSize, scale: scale)
+        guard wanted != drawn else { return }
+        drawn = wanted
+        self.chipSize = chipSize
+        plate = AnnotationRasterizer.captionPlate(wanted.look, chipSize: chipSize, scale: scale)?.image
+        layer.contents = plate
+        layer.contentsScale = max(backingScale, 1)
     }
 }
 
@@ -895,6 +909,71 @@ extension CanvasNSView {
                                     centred: editor.alignment == .center,
                                     bubble: captionDraftPillRect ?? doc(editor.frame),
                                     caret: caret, lineHeight: lineHeight)
+    }
+
+    /// Where the open bubble does not wear the look its arrow holds now, in
+    /// words, or nil when it does. Each part is worked out the way the field
+    /// itself is styled, from the arrow as the document holds it, and read
+    /// back off what is on screen: the bubble's fill, edge and corner, the
+    /// words' colour and face, and the bubble's size.
+    var playtestCaptionLookMismatch: String? {
+        guard let editor = textEditor, let session = textSession,
+              session.captionStyle != nil, let layerID = session.layerID,
+              let viewport, let pill = captionPill else { return "no arrow caption field is open" }
+        guard let annotation = document?.canvasLayer(id: layerID)?.annotation else {
+            return "the arrow being captioned is not in the document"
+        }
+        let zoom = viewport.zoom
+        var wrong: [String] = []
+        // The bubble: its picture against one drawn afresh from the arrow at
+        // the bubble's own size, byte for byte.
+        let chip = pill.chipSize ?? .zero
+        let backing = window?.backingScaleFactor ?? 2
+        let fresh = AnnotationRasterizer.captionPlate(CaptionPillView.plateLook(annotation), chipSize: chip,
+                                                      scale: max(zoom, 0.0001) * max(backing, 1))?.image
+        if let drawnPlate = pill.plate, let fresh {
+            if !Self.samePixels(drawnPlate, fresh) {
+                wrong.append("the bubble's picture is not the chip the arrow holds now "
+                    + "(fill, edge or finish differ; the bubble is \(rounded(chip.width)) by \(rounded(chip.height)))")
+            }
+        } else {
+            wrong.append("the bubble has no picture drawn")
+        }
+        func hex(_ color: CGColor?) -> String {
+            guard let color, let space = CGColorSpace(name: CGColorSpace.sRGB),
+                  let c = color.converted(to: space, intent: .defaultIntent, options: nil),
+                  let p = c.components, p.count >= 4 else { return "none" }
+            return String(format: "#%02X%02X%02X@%.2f", Int((p[0] * 255).rounded()),
+                          Int((p[1] * 255).rounded()), Int((p[2] * 255).rounded()), p[3])
+        }
+        let style = Self.captionDraftStyle(for: annotation)
+        let rgba = RGBA(hex: style.colorHex) ?? RGBA(r: 1, g: 1, b: 1)
+        let words = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        if hex(editor.textColor?.cgColor) != hex(words) {
+            wrong.append("words \(hex(editor.textColor?.cgColor)) where the arrow says \(hex(words))")
+        }
+        let face = Self.draftFont(style, zoom: zoom)
+        if let font = editor.font,
+           font.fontName != face.fontName || abs(font.pointSize - face.pointSize) > 0.05 {
+            wrong.append("face \(font.fontName) \(rounded(font.pointSize / zoom)) pt where the arrow says "
+                + "\(face.fontName) \(rounded(face.pointSize / zoom)) pt")
+        }
+        if !CaptionMetrics.committedText(editor.string).isEmpty, let bubble = captionDraftPillRect {
+            let size = CaptionMetrics.pillSize(for: editor.string, in: annotation)
+            if abs(bubble.width - size.width) > 0.5 || abs(bubble.height - size.height) > 0.5 {
+                wrong.append("bubble \(rounded(bubble.width)) by \(rounded(bubble.height)) where the "
+                    + "arrow's look makes it \(rounded(size.width)) by \(rounded(size.height))")
+            }
+        }
+        return wrong.isEmpty ? nil : wrong.joined(separator: "; ")
+    }
+
+    /// Whether two pictures are the same size and the same pixels.
+    private static func samePixels(_ a: CGImage, _ b: CGImage) -> Bool {
+        guard a.width == b.width, a.height == b.height,
+              let da = a.dataProvider?.data, let db = b.dataProvider?.data,
+              a.bytesPerRow == b.bytesPerRow else { return false }
+        return (da as Data) == (db as Data)
     }
 
     /// The same, in the words a walk's log prints.

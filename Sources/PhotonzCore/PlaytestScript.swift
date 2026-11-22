@@ -2953,6 +2953,21 @@ public enum CaptionOutlineClaim: CaptionClaimWord {
     public static var claimWords: [String] { ["hugs the bubble", "none"] }
 }
 
+/// What the open caption's bubble must be wearing. The field used to copy the
+/// arrow's look once, when it opened, so a colour, chip style, font or size
+/// picked while typing only showed once the field closed (the user,
+/// 2026-11-21). The claim reads the bubble's fill, edge and words against what
+/// the arrow says they are now.
+public enum CaptionLookClaim: CaptionClaimWord {
+    /// The fill, edge colour, word colour, face and size the arrow holds now.
+    case matchesTheArrow
+    public init?(claim: String) {
+        guard claim == "matches the arrow" else { return nil }
+        self = .matchesTheArrow
+    }
+    public static var claimWords: [String] { ["matches the arrow"] }
+}
+
 public enum PlaytestStep: Sendable, Equatable {
     /// Open a file in an editor window and wait until it is ready to drive.
     /// The window is kept invisible; `size` sets its frame first.
@@ -4642,8 +4657,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// next letter landed in the middle, and the outline kept the shape it had
     /// when the field opened — and a walk had photographed both without
     /// noticing either.
+    /// `look` is the fifth: the bubble wears the arrow's look as it is now,
+    /// not as it was when the field opened.
     case expectCaption(aligned: CaptionDraftAlignment?, caret: CaptionCaretSpot?,
-                       caretHeight: CaptionCaretHeight?, outline: CaptionOutlineClaim?)
+                       caretHeight: CaptionCaretHeight?, outline: CaptionOutlineClaim?,
+                       look: CaptionLookClaim? = nil)
     /// The named dock section must be drawing whatever it holds down to and
     /// including its first OPEN entry, whole.
     ///
@@ -6966,11 +6984,12 @@ public enum PlaytestStep: Sendable, Equatable {
             let caret: CaptionCaretSpot? = try word("caret")
             let caretHeight: CaptionCaretHeight? = try word("caretHeight")
             let outline: CaptionOutlineClaim? = try word("outline")
-            guard aligned != nil || caret != nil || caretHeight != nil || outline != nil else {
-                throw f.invalid("caret", "an expectCaption has to claim something: \"aligned\", \"caret\", \"caretHeight\" or \"outline\". A step that claims nothing passes whatever the app does")
+            let look: CaptionLookClaim? = try word("look")
+            guard aligned != nil || caret != nil || caretHeight != nil || outline != nil || look != nil else {
+                throw f.invalid("caret", "an expectCaption has to claim something: \"aligned\", \"caret\", \"caretHeight\", \"outline\" or \"look\". A step that claims nothing passes whatever the app does")
             }
             self = .expectCaption(aligned: aligned, caret: caret,
-                                  caretHeight: caretHeight, outline: outline)
+                                  caretHeight: caretHeight, outline: outline, look: look)
         case "expectSectionFits":
             self = .expectSectionFits(section: try f.string("section"))
         case "expectSections":

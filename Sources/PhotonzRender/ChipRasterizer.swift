@@ -38,7 +38,7 @@ enum ChipRasterizer {
                      fontSize: CGFloat, padding: CGFloat, fontName: String,
                      typeSize: CGFloat? = nil, weight: TextWeight = .semibold,
                      cornerRadius: CGFloat, edgeWidth: CGFloat? = nil,
-                     standInFrost: Bool = false,
+                     standInFrost: Bool = false, drawsWords: Bool = true,
                      in context: CGContext) {
         var look = look
         if standInFrost, let opaque = look.frostStandIn {
@@ -174,7 +174,9 @@ enum ChipRasterizer {
             drawMarker(marker, in: box, context: context)
         }
 
-        // The words.
+        // The words. Left out of the bubble behind an open caption field,
+        // whose own text view types them (`AnnotationRasterizer.captionPlate`).
+        guard drawsWords else { return }
         let hex = look.text.hexString
         let text = PillRasterizer.content(string, fontSize: typeSize ?? fontSize, colorHex: hex,
                                           fontName: fontName, weight: weight)

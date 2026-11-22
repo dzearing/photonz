@@ -318,6 +318,39 @@ public enum AnnotationRasterizer {
         return context.makeImage().map { ($0, size) }
     }
 
+    /// The bubble behind an open caption field: the chip the caption will
+    /// land in, drawn by the code that draws the committed one, everything but
+    /// the words, at `chipSize` (the draft's measured pill). The field's own
+    /// text view types the words over it. Before this the bubble was a
+    /// stand-in of one flat fill, an edge and a shadow, so a chip's finish (its
+    /// gradient, rim, highlight, stripe) showed only once the field closed.
+    ///
+    /// Same frame as `captionPill`: the chip centred with
+    /// `captionShadowSlack` of room all round, size in DOCUMENT POINTS. Glass
+    /// stands in as one opaque colour, as it does in `captionPill`. Needs no
+    /// words, so a fresh arrow's empty field has its bubble too.
+    public static func captionPlate(_ annotation: AnnotationContent, chipSize chip: CGSize,
+                                    scale: CGFloat = 1) -> (image: CGImage, size: CGSize)? {
+        guard scale > 0, scale.isFinite, chip.width > 0, chip.height > 0 else { return nil }
+        let slack = annotation.captionShadowSlack
+        let size = CGSize(width: chip.width + 2 * slack, height: chip.height + 2 * slack)
+        let width = Int((size.width * scale).rounded())
+        let height = Int((size.height * scale).rounded())
+        guard width >= 1, height >= 1, width <= 16_384, height <= 16_384,
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            return nil
+        }
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: scale, y: -scale)
+        drawChip(CaptionMetrics.committedText(annotation.caption ?? ""), of: annotation,
+                 at: CGPoint(x: size.width / 2, y: size.height / 2),
+                 chipSize: chip, standInFrost: true, drawsWords: false, in: context)
+        return context.makeImage().map { ($0, size) }
+    }
+
     /// The caption pill at the arrow's tail: the measure chip's legibility
     /// treatment (dark tone of the arrow's ink, white text, bordered capsule)
     /// plus a soft drop shadow so the label reads over any screenshot. Baked
@@ -374,7 +407,8 @@ public enum AnnotationRasterizer {
     /// (`ChipRasterizer`), otherwise the pill every caption wore before
     /// there were styles, in its three stored colours.
     static func drawChip(_ text: String, of annotation: AnnotationContent, at center: CGPoint,
-                         chipSize: CGSize, standInFrost: Bool = false, in context: CGContext) {
+                         chipSize: CGSize, standInFrost: Bool = false, drawsWords: Bool = true,
+                         in context: CGContext) {
         let radius = annotation.captionCornerRadius(pillHeight: chipSize.height)
         if let look = annotation.chipLook {
             ChipRasterizer.draw(text, look: look, at: center, chipSize: chipSize,
@@ -386,7 +420,7 @@ public enum AnnotationRasterizer {
                                 cornerRadius: radius,
                                 edgeWidth: annotation.chipStyle == .today
                                     ? annotation.drawnCaptionBorderWidth : nil,
-                                standInFrost: standInFrost,
+                                standInFrost: standInFrost, drawsWords: drawsWords,
                                 in: context)
             return
         }
@@ -397,7 +431,7 @@ public enum AnnotationRasterizer {
                             border: pillColor(annotation.captionBorder),
                             textColorHex: annotation.captionTextHex,
                             shadow: PillRasterizer.Shadow(),
-                            cornerRadius: radius,
+                            cornerRadius: radius, drawsWords: drawsWords,
                             in: context)
     }
 }

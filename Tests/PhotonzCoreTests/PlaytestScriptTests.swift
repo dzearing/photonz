@@ -4514,7 +4514,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "expectCaption", "aligned": "centred", "caret": "centred",
                        "outline": "hugs the bubble" } ] }
         """)
-        guard case .expectCaption(let aligned, let caret, _, let outline) = script.steps[0] else {
+        guard case .expectCaption(let aligned, let caret, _, let outline, _) = script.steps[0] else {
             Issue.record("expectCaption"); return
         }
         #expect(aligned == .centred)
@@ -4529,7 +4529,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectCaption", "caret": "left" } ] }
         """)
-        guard case .expectCaption(let aligned, let caret, let height, let outline) = script.steps[0] else {
+        guard case .expectCaption(let aligned, let caret, let height, let outline, _) = script.steps[0] else {
             Issue.record("expectCaption"); return
         }
         #expect(aligned == nil)
@@ -4557,7 +4557,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectCaption", "caret": "centred", "caretHeight": "full" } ] }
         """)
-        guard case .expectCaption(let aligned, let caret, let height, let outline) = script.steps[0] else {
+        guard case .expectCaption(let aligned, let caret, let height, let outline, _) = script.steps[0] else {
             Issue.record("expectCaption"); return
         }
         #expect(aligned == nil)
@@ -4571,11 +4571,36 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectCaption", "caretHeight": "short" } ] }
         """)
-        guard case .expectCaption(_, let caret, let height, _) = script.steps[0] else {
+        guard case .expectCaption(_, let caret, let height, _, _) = script.steps[0] else {
             Issue.record("expectCaption"); return
         }
         #expect(caret == nil)
         #expect(height == .short)
+    }
+
+    /// The open field used to keep the look it had when it opened: a new
+    /// colour, chip style or size picked while typing showed only once the
+    /// field closed (the user, 2026-11-21). A walk claims the bubble wears the
+    /// arrow's look as it is NOW.
+    @Test("An expectCaption step claims the open pill wears the arrow's current look")
+    func expectCaptionClaimsTheLook() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectCaption", "look": "matches the arrow" } ] }
+        """)
+        guard case .expectCaption(let aligned, _, _, let outline, let look) = script.steps[0] else {
+            Issue.record("expectCaption"); return
+        }
+        #expect(aligned == nil)
+        #expect(outline == nil)
+        #expect(look == .matchesTheArrow)
+    }
+
+    @Test func expectCaptionRefusesALookItDoesNotKnow() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectCaption", "look": "pretty" } ] }
+            """)
+        }
     }
 
     @Test func expectCaptionRefusesACaretHeightItDoesNotKnow() {

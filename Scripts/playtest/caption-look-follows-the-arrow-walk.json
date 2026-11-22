@@ -1,0 +1,339 @@
+{
+ "out": "/tmp/photonz-playtest/caption-look-follows-the-arrow",
+ "seed": "At Next defaults, no switch changed: while an arrow's caption is being typed, every change to the arrow's look made from the panel (Color, Chip style, Size S/M/L, Arrow style, and on a re-edit the Advanced Chip Fill and Chip Text) repaints the bubble being typed in at once: its fill, edge, finish, words and size are the arrow's as it is now, the field stays open with its words kept, and Undo while typing puts the old look back on the bubble. The user, 2026-11-21: the pill kept its old colour and style until typing was done.",
+ "setup": {
+  "forget": [
+   "shapes",
+   "panel",
+   "measure"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "a"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    500,
+    640
+   ],
+   "to": [
+    700,
+    470
+   ],
+   "steps": 12
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "type",
+   "text": "Save button"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow",
+   "aligned": "left"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-typing"
+  },
+  {
+   "do": "press",
+   "control": "Color Blue",
+   "in": "Arrow Color"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow"
+  },
+  {
+   "do": "describe",
+   "stage": "2-blue",
+   "note": "Blue picked with the pointer while typing: the bubble turns blue at once and the field is still open"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-blue"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Paper",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow"
+  },
+  {
+   "do": "describe",
+   "stage": "3-paper",
+   "note": "Paper chip style picked while typing"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-paper"
+  },
+  {
+   "do": "press",
+   "control": "L",
+   "in": "Arrow Size"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow"
+  },
+  {
+   "do": "describe",
+   "stage": "4-large",
+   "note": "Large while typing: the words and the bubble grow at once"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-large"
+  },
+  {
+   "do": "press",
+   "control": "Arrow style Marker",
+   "in": "Arrow Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-marker"
+  },
+  {
+   "do": "type",
+   "text": " here"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow",
+   "aligned": "left",
+   "caretHeight": "full"
+  },
+  {
+   "do": "describe",
+   "stage": "6-typed-more",
+   "note": "typing carries on in the new look; the words typed before the changes are all still there"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-typed-more"
+  },
+  {
+   "do": "render",
+   "name": "6-typed-more"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "7-committed",
+   "note": "committed: the pill lands as it was drawn while typing"
+  },
+  {
+   "do": "snapshot",
+   "name": "7-committed"
+  },
+  {
+   "do": "render",
+   "name": "7-committed"
+  },
+  {
+   "do": "click",
+   "at": [
+    390,
+    640
+   ],
+   "count": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "press",
+   "control": "Advanced",
+   "in": "Advanced"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "dragColor",
+   "from": "Chip Fill",
+   "onto": "Chip Text",
+   "expect": "takes"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow"
+  },
+  {
+   "do": "dragColor",
+   "from": "Line",
+   "onto": "Chip Fill",
+   "expect": "takes"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow"
+  },
+  {
+   "do": "describe",
+   "stage": "8-reedit-chip-colours",
+   "note": "re-editing the caption: the plate's white dropped on Chip Text, then the line's blue on Chip Fill, repaint the open bubble's words and plate at once"
+  },
+  {
+   "do": "snapshot",
+   "name": "8-reedit-chip-colours"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectCaption",
+   "look": "matches the arrow"
+  },
+  {
+   "do": "describe",
+   "stage": "9-undo-while-typing",
+   "note": "Undo twice while the field is open takes both chip colours back, one step each, and the bubble follows each step with the field still open"
+  },
+  {
+   "do": "snapshot",
+   "name": "9-undo-while-typing"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "snapshot",
+   "name": "10-reedit-committed"
+  }
+ ]
+}

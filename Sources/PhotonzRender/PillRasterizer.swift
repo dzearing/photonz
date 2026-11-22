@@ -86,7 +86,7 @@ enum PillRasterizer {
     static func draw(_ string: String, at anchor: CGPoint, chipSize: CGSize,
                      fontSize: CGFloat, borderWidth: CGFloat, fill: CGColor,
                      border: CGColor, textColorHex: String, shadow: Shadow? = nil,
-                     cornerRadius: CGFloat? = nil,
+                     cornerRadius: CGFloat? = nil, drawsWords: Bool = true,
                      in context: CGContext) {
         let pixelsPerPoint = Self.pixelsPerPoint(of: context)
         let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
@@ -119,6 +119,8 @@ enum PillRasterizer {
         context.addPath(pill)
         context.strokePath()
 
+        // Everything but the words, for the bubble behind an open caption.
+        guard drawsWords else { return }
         let text = content(string, fontSize: fontSize, colorHex: textColorHex)
         let textSize = TextRasterizer.naturalSize(text)
         // Made with the pixels it is about to be drawn with: a document-sized
