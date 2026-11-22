@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T02:12:33.004Z",
-  "updated": "2026-11-21T13:11:43.584Z",
+  "updated": "2026-11-22T02:15:26.261Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "on-a-video-the-timeline-is-the-layer-list-and-th"
@@ -22,7 +22,8 @@
     "The panel asked-for height and the height it is given are measured and reported before and after, at a named window size and strip height",
     "DockWithTimeTests and DockFoldGuaranteeTests are updated so the arithmetic that says it fits is pinned",
     "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
-    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not",
+    "On the sample recording with its clip picked, opening the folded Library keeps the Library's first row of tiles whole and Appearance and Effects whole (opening-a-section-folds-the-near-side-walk passes)"
   ],
   "log": [
     {
@@ -300,8 +301,18 @@
     {
       "t": "2026-11-21T13:11:43.583Z",
       "note": "seq 190 -> 170"
+    },
+    {
+      "t": "2026-11-22T02:15:26.180Z",
+      "note": "2026-11-21, from walks-that-fail-in-the-full-sweep-27: opening-a-section-folds-the-near-side-walk fails at step 111 on main for this reason, reproduced 4 runs of 4 (Scripts/playtest.sh Scripts/playtest/opening-a-section-folds-the-near-side-walk.json -> 'sectionInView(\"Library\") did not happen within 2.0s'). On the sample recording with its clip picked, pressing the folded Library open gives the Library pane 512-675 (163 pt) while the open Library is 518-736 (218 pt): its first tile is cut at the foot, and Appearance above is cut too (its fourth row is a sliver). Real capture of that state: the walk's step 110 photographed in a forced copy. The probe's measurement was checked and fixed in the same commit (the Library's frame is now read inside its pane), so this is the app's layout, not the walk."
+    },
+    {
+      "t": "2026-11-22T02:15:26.260Z",
+      "note": "walks none -> opening-a-section-folds-the-near-side-walk"
     }
   ],
-  "walks": [],
+  "walks": [
+    "opening-a-section-folds-the-near-side-walk"
+  ],
   "started": "2026-09-28T09:06:51.364Z"
 }

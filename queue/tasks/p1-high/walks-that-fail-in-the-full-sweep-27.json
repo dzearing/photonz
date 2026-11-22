@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-11-11T03:48:30.958Z",
-  "updated": "2026-11-21T13:11:36.451Z",
+  "updated": "2026-11-22T02:15:58.920Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-21T09:11:08Z: 1165 of 1184 walks passed in 420 minutes.\n\nFailing walks (19): a-clip-s-sound-is-linked-under-it-walk, a-transition-is-picked-at-the-cut-walk, clicking-a-timeline-item-moves-the-playhead-walk, clip-pictures-when-zoomed-in-walk, copy-the-edit-to-the-clipboard-walk, history-filter-switch-speed-walk, insert-a-title-before-a-clip-walk, layer-row-lifts-at-scale-walk, library-last-tile-reachable-walk, opening-a-section-folds-the-near-side-walk, play-in-to-out-walk, scrub-never-blacks-out-walk, section-fold-motion-walk, shorten-the-cut-for-a-dissolve-walk, small-or-keyed-layer-presses-walk, title-bar-right-click-menu-walk, tool-and-library-dropdowns-open-on-a-click-walk, transition-tile-comes-away-walk, video-tool-bar-walk\n\nAlready named by another open task, so read that one before re-diagnosing (5):\n  clip-pictures-when-zoomed-in-walk -> the-timeline-of-an-hour-long-edit-scrolls-zooms (that task says it owns this walk)\n  insert-a-title-before-a-clip-walk -> a-clip-or-title-held-as-an-insert-shows-what-mov (guessed from its wording, so read it before believing it)\n  scrub-never-blacks-out-walk -> a-long-edit-with-transitions-plays-scrubs-and-ed (that task says it owns this walk)\n  section-fold-motion-walk -> folding-a-section-that-lets-the-panel-fit-again (that task says it owns this walk)\n  shorten-the-cut-for-a-dissolve-walk -> clicking-shorten-the-cut-trims-the-clips-and-pla (that task says it owns this walk)\n\n1 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 14: a-clip-s-sound-is-linked-under-it-walk, a-transition-is-picked-at-the-cut-walk, clicking-a-timeline-item-moves-the-playhead-walk, copy-the-edit-to-the-clipboard-walk, history-filter-switch-speed-walk, layer-row-lifts-at-scale-walk, library-last-tile-reachable-walk, opening-a-section-folds-the-near-side-walk, play-in-to-out-walk, small-or-keyed-layer-presses-walk, title-bar-right-click-menu-walk, tool-and-library-dropdowns-open-on-a-click-walk, transition-tile-comes-away-walk, video-tool-bar-walk\n\nStopped failing since the last sweep (15): a-sound-s-bend-handle-follows-the-hand-walk, component-choice-one-step-walk, component-choice-walk, component-instance-walk, component-look-walk, component-override-walk, component-preview-front-walk, component-text-halo-walk, copies-share-choice-walk, copy-own-color-walk, copy-own-number-walk, copy-svg-into-a-code-editor-walk, icon-into-a-component-onto-the-timeline-walk, label-grows-walk, library-reveal-walk\n\nFull output: queue/sweep/2026-11-20-184435.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-clip-s-own-sound-is-the-bottom-half-of-the-cli: The timeline lanes changed height for every recording with sound; walks aiming at fixed window points outside the sets run by the task may need moving; the-app-crashed-in-nsapplication-photonz-nexteve: The walk harness's open step changed for every walk (window laid out after resize, and a runaway window now fails the step): the whole set should confirm no walk trips the new check\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -194,7 +194,60 @@
     {
       "t": "2026-11-21T13:11:36.450Z",
       "note": "triage 2026-11-21: p2 -> p1 (seq 40, after main's red and the two focus tasks). 14 walks confirmed red on today's build, the first whole-set run since 4 November, and at p2 seq 500 no runner would reach it; open since 2026-11-11."
+    },
+    {
+      "t": "2026-11-21T23:44:04.451Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T02:15:42.904Z",
+      "note": "2026-11-21 pass: re-ran the 14 on a fresh probe: copy-the-edit-to-the-clipboard, layer-row-lifts-at-scale, transition-tile-comes-away passed as they stand; 11 failed."
+    },
+    {
+      "t": "2026-11-22T02:15:42.987Z",
+      "note": "play-in-to-out-walk: WALK WAS WRONG. Its waits during playback ended early because the app goes quiet while it plays (log: '2.5s asked, quiet after 0.17s'), so it read the playhead mid-play. The four waits about the clock are now onTheClock. Passes twice."
+    },
+    {
+      "t": "2026-11-22T02:15:43.065Z",
+      "note": "a-transition-is-picked-at-the-cut-walk: WALK WAS WRONG. A 60 pt drag of the fade handle reads 0.51s, a drag landing a point off; the expect is now '0.5s ±0.05'. Passes twice."
+    },
+    {
+      "t": "2026-11-22T02:15:43.139Z",
+      "note": "a-clip-s-sound-is-linked-under-it-walk: WALK WAS WRONG. The level line moved near the top of the sound strip on 2026-11-11 (80abab498), so the same 5.2 pt pull reads -5.7 dB, not -8.7; expect updated. Passes twice."
+    },
+    {
+      "t": "2026-11-22T02:15:43.216Z",
+      "note": "clicking-a-timeline-item-moves-the-playhead-walk and title-bar-right-click-menu-walk: HARNESS WAS WRONG, not the app. Reading a timeline menu without opening it handed back SwiftUI's last-built NSMenu: after split, click piece 2 at 2.36s, undo, park at 2.00s, the read said 'Split at 0:02.36' while the same menu really opened (picture taken) said 0:02.00. The harness now asks for the menu again once the press has landed (timeline right clicks only). Both pass twice; 5 other right-click walks rechecked green. The triage guess (Add Key under More) was not the cause: choose already looks one level down."
+    },
+    {
+      "t": "2026-11-22T02:15:43.297Z",
+      "note": "video-tool-bar-walk: WALK WAS WRONG. K is Add Key since the 2026-11-05 card on picture keys (option a: 'the Lens has no letter'); the walk now picks the Lens from the bar. Passes twice."
+    },
+    {
+      "t": "2026-11-22T02:15:43.374Z",
+      "note": "tool-and-library-dropdowns-open-on-a-click-walk: APP BUG, fixed. Picking Greyscale in the Lens tool's capsule over the tool bar left the capsule saying 'Lens Blur, Strength 8 pt' while the panel said Greyscale (real capture). The capsule's rows read the tool's memory from UserDefaults and only its body read the revision counter, so SwiftUI never re-ran the rows; each row now reads it (ToolSettingsCapsule.field). Also the walk clicked the Component tool's dropdown the instant N armed the tool, while the capsule was still sliding in; a 0.6s wait on the clock before it. Passes twice."
+    },
+    {
+      "t": "2026-11-22T02:15:43.450Z",
+      "note": "small-or-keyed-layer-presses-walk: WALK WAS WRONG. Depth from the arrow is divided by the canvas zoom, which fits at 0.67 now rather than 0.70, so a 20 pt pull reads -150 not -143; expect is '-146 ±8'. Passes twice."
+    },
+    {
+      "t": "2026-11-22T02:15:43.529Z",
+      "note": "library-last-tile-reachable-walk: PROBE WAS WRONG, and the walk asked the wrong question. (1) The Library's frame against the whole panel goes stale when only its pane moves, and in about one run in three the panel's list of drawn sections never learned the pane held the Library (step 9); the probe now reads the Library inside its pane and the pane says what it holds. (2) Step 31 asked for the header in view after the walk itself scrolled the shelf 600 pt down; it now checks the double clicked tile is still in view. Passes 5 of 5."
+    },
+    {
+      "t": "2026-11-22T02:15:43.609Z",
+      "note": "opening-a-section-folds-the-near-side-walk: APP LAYOUT, real (picture: Library's first tile and Appearance both cut after opening the Library with a clip picked). Folded into the-panel-keeps-its-promise-on-a-video-document, which now names this walk and has it as an acceptance item."
+    },
+    {
+      "t": "2026-11-22T02:15:43.686Z",
+      "note": "history-filter-switch-speed-walk: NOT FIXED. Fails every run on a loaded Mac (Ghoztty debug at 55% CPU, load 5.5): one pass of 21 to 40 ms starting 70 to 290 ms after a filter click, with no view rebuilt in it. History's own code has not changed since it last passed. Timed presses can now be profiled pass by pass (pass-profile.sh; the harness labels a press with longestUnderMS), but the one long pass the sampler caught read 2 s over 4 samples, a meter artifact, so the cause is not named yet. Next: rerun on a quiet Mac first; if still red, profile with Scripts/perf/pass-profile.sh on a copy of the walk ending in a 40 s wait on the clock."
+    },
+    {
+      "t": "2026-11-22T02:15:58.919Z",
+      "note": "12 of the 14 now pass, each twice or more (commit 604399eef): 8 walks were stale, 2 were a harness misread, 1 was a probe misread, 1 was an app bug (Lens capsule) now fixed. opening-a-section-folds-the-near-side is a real panel layout bug, moved to the-panel-keeps-its-promise-on-a-video-document. history-filter-switch-speed still fails its 16 ms budget on this loaded Mac, cause not yet named; left pending for it."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-11-21T23:44:04.450Z"
 }

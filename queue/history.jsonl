@@ -18509,3 +18509,18 @@
 {"t":"2026-11-21T23:43:14.299Z","ev":"task_note","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t"}
 {"t":"2026-11-21T23:43:14.377Z","ev":"task_note","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t"}
 {"t":"2026-11-21T23:43:20.053Z","ev":"task_done","id":"keynote-clean-soft-gradient-glass-kinetic-bold-t","from":"in_progress","note":"Five title pages redesigned and lifted to the bar (commit aa2b0424a, TitleSet.swift): Main Title, Frosted Glass, Condensed Poster, Command Line, Roman and Italic, each with sample copy. Final blind round (27 frames, 3 runs): calm median 6.83, the five 6.83 to 7.58 (Command Line ties it), old versions 3.83 to 5.75. Contrast 12.4 to 16.7:1, no headline at 0 ms, hold motion 0.12 to 0.39/255. Audit, reel, old-new sheet, scores grid and 5 window captures in queue/audits. 28 walks run (one unrelated known failure), Scripts/test.sh green. Follow-ups: seven-more-built-in-titles-look-as-refined-as-th, line-spacing-set-on-a-font-with-built-in-leading, a-typed-title-caret-follows-the-letters-as-they."}
+{"t":"2026-11-21T23:44:04.453Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-27","title":"Walks that fail in the full sweep","priority":"p1-high"}
+{"t":"2026-11-22T02:15:26.182Z","ev":"task_note","id":"the-panel-keeps-its-promise-on-a-video-document"}
+{"t":"2026-11-22T02:15:26.262Z","ev":"task_walks","id":"the-panel-keeps-its-promise-on-a-video-document","walks":["opening-a-section-folds-the-near-side-walk"]}
+{"t":"2026-11-22T02:15:42.907Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:42.989Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:43.067Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:43.142Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:43.218Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:43.299Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:43.376Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:43.452Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:43.531Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:43.611Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:43.688Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-27"}
+{"t":"2026-11-22T02:15:58.921Z","ev":"task_pending","id":"walks-that-fail-in-the-full-sweep-27","from":"in_progress","note":"12 of the 14 now pass, each twice or more (commit 604399eef): 8 walks were stale, 2 were a harness misread, 1 was a probe misread, 1 was an app bug (Lens capsule) now fixed. opening-a-section-folds-the-near-side is a real panel layout bug, moved to the-panel-keeps-its-promise-on-a-video-document. history-filter-switch-speed still fails its 16 ms budget on this loaded Mac, cause not yet named; left pending for it."}
