@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-10-20T13:58:02.156Z",
-  "updated": "2026-11-22T07:26:43.728Z",
+  "updated": "2026-11-22T07:28:42.732Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-10-20 digest's rule review. The cards were taken as recommended in 624a8e3a; runner-prompt.md and manager-prompt.md were updated then, the design documents were not. Docs only: no app code, so no walk check is started by it.",
@@ -131,7 +131,36 @@
     {
       "t": "2026-11-22T07:26:43.724Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T07:28:42.273Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-22T07:28:42.350Z",
+      "note": "Acceptance 1 was already met: UX-PATTERNS' Inspector row (line 28) already names one main action per section as the rule, with the card 'taken as recommended 2026-10-20'. Nothing to change there."
+    },
+    {
+      "t": "2026-11-22T07:28:42.425Z",
+      "note": "UX-PATTERNS: 'one filmed card' paragraph is now 'one filmed comparison', closing with film both, choose, log Chose...because (matches runner-prompt.md line 17). The .kfread line (~1320) no longer says raise a decision card: replace with a label inside the budget, log it, name it in rough with (UX-PATTERNS §4). Chose to also change runner-prompt.md line 412 the same way, because it said 'raise it as a decision card' while its own card rules call wording never a card; the two rule sources now agree."
+    },
+    {
+      "t": "2026-11-22T07:28:42.501Z",
+      "note": "video-vs-premiere.md: row 10 closed (user answered 2026-09-25: pictures only when zoomed in; shipped 2026-09-27, clip-pictures-when-zoomed-in-walk). Library line closed (a9944834, 2026-10-20, video-library-folded-walk). Session walk line says Command B (it presses Command B, checked in an-editing-session-walk.json). The 'Before the gaps closed' counts keep Command K as history with a line saying the blade is Command B since 2026-10-24."
+    },
+    {
+      "t": "2026-11-22T07:28:42.577Z",
+      "note": "Triage 2026-10-29 note done: D18 item 4 now names the dashed New track row at the top and the clip-shaped ghost below the tracks as the other two drop places (f2f9ac1f, 087b8cb7)."
+    },
+    {
+      "t": "2026-11-22T07:28:42.656Z",
+      "note": "For the manager pass: queue/objectives.json, video-beats-premiere success line (line 170) still lists Command K among the Premiere keys that must do their Premiere job; since 2026-10-24 Command K is Ask (the user's call) and the blade is Command B. Not edited here: objectives.json is the user's epic tree."
+    },
+    {
+      "t": "2026-11-22T07:28:42.731Z",
+      "note": "Acceptance grep: grep -n -i 'open card\\|waiting on the card\\|waiting on the user' -r docs/design docs/design/mocks/shared -> only docs/design/mocks/pages/dashboard.html:425 ('runs unbroken through an open card') and :2051 ('Only the open card's body changed'), both the dashboard's expanded task card UI, not decision cards. Nothing refers to a card no longer open."
     }
   ],
-  "started": "2026-11-22T07:26:43.723Z"
+  "started": "2026-11-22T07:26:43.723Z",
+  "walks": []
 }
