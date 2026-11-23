@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T20:06:02.744Z",
+  "updated": "2026-11-23T20:36:19.062Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T20:06:02.743Z",
-      "note": "... 46 earlier entries elided",
-      "elided": 46
-    },
-    {
-      "t": "2026-11-17T20:49:04.869Z",
-      "note": "walks open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk -> open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk, a-painted-gap-takes-a-right-click-walk"
-    },
-    {
-      "t": "2026-11-17T20:49:33.974Z",
-      "note": "Pass 9 landed 06d8034f3: busy lanes paint the gaps between clips and build only the gap under the pointer (its press and Ripple Delete menu kept). Near-Fit zoom 22.5 -> 17.4 ms; quiet-Mac zoom 13.2 -> ~9.3 ms median, scroll 10.4 -> 8.3. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open for painted cuts and the clips' paint."
+      "t": "2026-11-23T20:36:19.061Z",
+      "note": "... 48 earlier entries elided",
+      "elided": 48
     },
     {
       "t": "2026-11-17T20:50:06.560Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T20:06:02.742Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-23T20:36:14.073Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T20:36:19.060Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T20:05:57.956Z",
+  "started": "2026-11-23T20:36:14.072Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
