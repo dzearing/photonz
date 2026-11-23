@@ -18798,3 +18798,13 @@
 {"t":"2026-11-23T03:41:53.549Z","ev":"task_note","id":"the-video-tests-stop-crashing-the-test-run-when"}
 {"t":"2026-11-23T03:41:59.245Z","ev":"task_walks","id":"the-video-tests-stop-crashing-the-test-run-when","walks":[]}
 {"t":"2026-11-23T03:41:59.331Z","ev":"task_done","id":"the-video-tests-stop-crashing-the-test-run-when","from":"in_progress","note":"Cause: the video writer's adaptor swaps its frame pool a few frames into every write and the encoder frees the old one while it can still be handed out; reproduced 4 of 4 with a second thread reading the pool. Fix: Sources/PhotonzMedia/WriterFramePool.swift, a pool each writer owns, used by TestClip, the test writers and the app's five export writers that had the same race. Verified: WriterFramePoolTests, the reproduction passing 450 rounds on the own pool, five full Scripts/test.sh runs with no helper crash and no rerun (one unrelated icon speed check flaked in run 4, folded into its own task), four export walks green."}
+{"t":"2026-11-23T03:55:18.760Z","ev":"slice_pass","walks":18,"passed":18,"failed":0,"seconds":639,"of":1192,"couldNotRun":0,"timedOut":false,"rotating":true,"from":163,"to":165,"moved":2}
+{"t":"2026-11-23T03:55:18.955Z","ev":"task_started","id":"music-dips-under-the-speech-by-itself","title":"Music dips under the speech by itself","priority":"p2-normal"}
+{"t":"2026-11-23T05:04:46.215Z","ev":"task_walks","id":"music-dips-under-the-speech-by-itself","walks":["music-ducks-under-the-speech-walk","duck-under-speech-from-the-clip-menu-walk"]}
+{"t":"2026-11-23T05:05:21.914Z","ev":"task_note","id":"music-dips-under-the-speech-by-itself"}
+{"t":"2026-11-23T05:05:21.980Z","ev":"task_note","id":"music-dips-under-the-speech-by-itself"}
+{"t":"2026-11-23T05:05:22.052Z","ev":"task_note","id":"music-dips-under-the-speech-by-itself"}
+{"t":"2026-11-23T05:05:22.122Z","ev":"task_note","id":"music-dips-under-the-speech-by-itself"}
+{"t":"2026-11-23T05:05:22.191Z","ev":"task_note","id":"music-dips-under-the-speech-by-itself"}
+{"t":"2026-11-23T05:05:22.259Z","ev":"task_note","id":"music-dips-under-the-speech-by-itself"}
+{"t":"2026-11-23T05:05:37.412Z","ev":"task_done","id":"music-dips-under-the-speech-by-itself","from":"in_progress","note":"Duck Under Speech on a sound clip's right-click, its level line's right-click and the Clip menu: music dips -8 dB under every spoken stretch the captions heard, as draggable level points; dimmed with a tip with no captions. Core in SpeechDucking.swift; verified by SpeechDuckingTests, an MP4 export test reading the music level back, Scripts/test.sh green, and two walks (no flags). Audit queue/audits/2026-11-22-music-dips-under-the-speech-by-itself.json. Commit a719514ea."}
