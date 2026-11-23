@@ -57,6 +57,13 @@ import SwiftUI
 //    video section shipped at the bottom because each one was appended to the
 //    hand-kept order. Added 2026-09-24.
 //
+//    With the panel running the window's full height on a video (Next,
+//    `next-panel-full-height`, the user's answer of 2026-10-20), a clip or a
+//    title opens on Properties and then straight on to Appearance and Effects;
+//    what it leads with otherwise (Time, Text, a title's knobs, a clip's
+//    audio) follows the pair and gives way to the fold, so the pair is whole
+//    on a laptop window (`TimePanelOrder.arrange(_:for:pairFirst:)`).
+//
 // The same rule written for a reader rather than for a compiler is in
 // `docs/design/mocks/shared/UX-PATTERNS.md`, section 3, under Reveal.
 //
@@ -239,6 +246,15 @@ enum DockMetrics {
     /// (`DockHeightBudget.Group.givesWayToTheFold`).
     static let aroundThePick: Set<InspectorSectionID> = [.columns, .placement]
 
+    /// What goes below the fold rather than have the pair cut for it: the
+    /// sections around the pick, and on a video with the panel running the
+    /// full height, what the pair-first order put under the pair (a clip's
+    /// Time and audio, a title's Time, Text and Reveal: `TimePanelOrder`).
+    @MainActor static var givesWayToTheFold: Set<InspectorSectionID> {
+        guard Experiments.shared.panelRunsFullHeightEnabled else { return aroundThePick }
+        return aroundThePick.union(TimePanelOrder.underThePair.compactMap(InspectorSectionID.init(rawValue:)))
+    }
+
     /// The sections the dock PROMISES are whole on screen, whatever it costs
     /// the ones under them: Appearance and Effects, the two touched on every
     /// single layer (the user, 2026-09-07). `DockHeightBudget.foldRescue` is
@@ -330,7 +346,7 @@ struct DockBudgetScratch: Equatable {
                                           flexible: scrolls ? body : 0,
                                           floor: squeezeFloor(for: id, room: room),
                                           givesWayToTheFold: open && body > 0
-                                              && DockMetrics.aroundThePick.contains(id))
+                                              && DockMetrics.givesWayToTheFold.contains(id))
         }
         let heights = DockHeightBudget.flexibleHeights(
             groups, viewport: room, promised: promised(in: sections))

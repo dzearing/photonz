@@ -60,21 +60,21 @@
     {
       "comment": "THE FIRST TEST: Command-click on the line adds a point there, holding the line's level.",
       "do": "windowClick",
-      "at": [721, 874],
+      "at": [625.5, 874],
       "modifiers": [
         "command"
       ]
     },
     {
       "do": "windowClick",
-      "at": [1057, 874],
+      "at": [904.2, 874],
       "modifiers": [
         "command"
       ]
     },
     {
       "do": "windowClick",
-      "at": [1393, 874],
+      "at": [1183.0, 874],
       "modifiers": [
         "command"
       ]
@@ -315,13 +315,13 @@
     {
       "comment": "THE FOURTH TEST: a right-click anywhere on the clip opens its menu. The waveform under the line:",
       "do": "rightClick",
-      "at": [1000, 925],
+      "at": [856.9, 925],
       "space": "window"
     },
     {
       "comment": "...the line itself past the last point, where it was dead before:",
       "do": "rightClick",
-      "at": [1600, 874],
+      "at": [1354.8, 874],
       "space": "window",
       "shot": "4-line-menu"
     },
@@ -333,7 +333,7 @@
     {
       "comment": "...and the recording's own sound, on its line:",
       "do": "rightClick",
-      "at": [935, 836],
+      "at": [803.0, 836],
       "space": "window"
     },
     {

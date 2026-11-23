@@ -581,10 +581,22 @@
    "timeout": 2
   },
   {
+   "comment": "On a video the Library opens as the mock's short shelf, its header (45pt) and a 118pt body whose tiles scroll inside it (video.html #gLibrary, PanelShelfPane.startCap, 2026-11-11), so it is its header that is on screen, not the whole section.",
    "do": "waitFor",
-   "condition": "sectionInView",
+   "condition": "libraryPaneAtMost",
+   "value": 164,
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionHeaderInView",
    "value": "Library",
    "timeout": 2
+  },
+  {
+   "do": "expect",
+   "control": "Tutorial Sample.mp4",
+   "present": true
   },
   {
    "do": "waitFor",
@@ -601,7 +613,7 @@
   {
    "do": "describe",
    "stage": "8-recording-library-opened",
-   "note": "AFTER, a recording: the Library opens and Appearance and Effects stay whole on screen; the sections above them fold to make the room"
+   "note": "AFTER, a recording: the Library opens as the short shelf at the foot and Appearance and Effects stay whole on screen under Properties"
   },
   {
    "do": "snapshot",

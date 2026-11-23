@@ -77,6 +77,18 @@ struct EditorView: View {
     /// beyond its tools (the zoom slider is the first thing to give way).
     @State private var canvasContentWidth: CGFloat = 0
 
+    /// The video timeline, wherever the window puts it: under the picture
+    /// beside a full height panel, or across the whole window.
+    private func timelineDock(windowSize: CGSize) -> some View {
+        TimelineDock(windowHeight: windowSize.height)
+            .equatable()
+            .modifier(PlayerControlsTuck())
+            .viewEditSlideLayer(.dock)
+            .onChange(of: windowSize.width, initial: true) { _, width in
+                editorState.timelineSoundLaneHeight = SoundLaneShape.height(windowWidth: width)
+            }
+    }
+
     var body: some View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.editorBody)
@@ -91,8 +103,17 @@ struct EditorView: View {
             // window on purpose: a lag is a relationship between two bars, so
             // it needs every bar on one ruler, and a ruler squeezed into the
             // canvas column would be the same crowding the column already has.
+            // On a document with time the panel runs the window's full height
+            // and the timeline sits under the picture only (`PanelColumn`,
+            // `next-panel-full-height`), so the panel keeps the room its
+            // promise needs.
+            let timelineBesidePanel = editorState.motionStripPhase != .none
+                && PanelColumn.timelineUnderPictureOnly(
+                    documentHasTime: editorState.motionStripMeasuresADocument,
+                    switchOn: Experiments.shared.panelRunsFullHeightEnabled)
             VStack(spacing: 0) {
             HStack(spacing: 0) {
+                VStack(spacing: 0) {
                 canvas
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tutorialAnchor(.canvas)
@@ -228,6 +249,10 @@ struct EditorView: View {
                         }
                         reconcileToolbarCount()
                     }
+                if timelineBesidePanel {
+                    timelineDock(windowSize: geo.size)
+                }
+                }
                 // The docked inspector. The 1px resize handle is the panel's own
                 // LEADING EDGE (grouped here, not a separate sibling), so the two
                 // slide in together as one surface — the border used to pop in
@@ -275,14 +300,10 @@ struct EditorView: View {
             // view either way, so opening it grows the tracks out of the row
             // rather than swapping one dock for another. An icon keeps the
             // one-lap timing strip and the row it leaves behind.
-            if editorState.motionStripMeasuresADocument, editorState.motionStripPhase != .none {
-                TimelineDock(windowHeight: geo.size.height)
-                    .equatable()
-                    .modifier(PlayerControlsTuck())
-                    .viewEditSlideLayer(.dock)
-                    .onChange(of: geo.size.width, initial: true) { _, width in
-                        editorState.timelineSoundLaneHeight = SoundLaneShape.height(windowWidth: width)
-                    }
+            if timelineBesidePanel {
+                // Drawn under the picture, above.
+            } else if editorState.motionStripMeasuresADocument, editorState.motionStripPhase != .none {
+                timelineDock(windowSize: geo.size)
             } else {
                 switch editorState.motionStripPhase {
                 case .open:

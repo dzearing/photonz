@@ -93,7 +93,7 @@
       "comment": "A Command-click on the line adds a stop there at the speed the line already has, the rule every animated line follows (a plain click picks). The check above scrolled the curve into sight, its plot at window (160, 874) and 1556pt across, so seven seconds in on the 1x line is (1521, 936).",
       "do": "windowClick",
       "at": [
-        1521,
+        1289.2,
         936
       ],
       "modifiers": [
@@ -271,7 +271,7 @@
       "comment": "THE FOURTH TEST: the freeze's second zero dragged along makes the hold longer, and the clip grows with it.",
       "do": "dragGrip",
       "control": "Speed hold end 3 Tutorial Sample",
-      "by": 30,
+      "by": 24.9,
       "steps": 16
     },
     {
@@ -298,7 +298,7 @@
       "comment": "THE FIFTH TEST: the second stop dragged along: it lands under the hand, between its neighbours.",
       "do": "dragGrip",
       "control": "Speed stop 2 Tutorial Sample",
-      "by": 30,
+      "by": 24.9,
       "steps": 16,
       "within": 4
     },

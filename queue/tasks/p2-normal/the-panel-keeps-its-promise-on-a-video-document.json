@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 150,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T02:12:33.004Z",
-  "updated": "2026-11-22T13:27:04.290Z",
+  "updated": "2026-11-23T07:45:44.632Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "on-a-video-the-timeline-is-the-layer-list-and-th"
@@ -23,7 +23,7 @@
     "DockWithTimeTests and DockFoldGuaranteeTests are updated so the arithmetic that says it fits is pinned",
     "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
     "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not",
-    "On the sample recording with its clip picked, opening the folded Library keeps the Library's first row of tiles whole and Appearance and Effects whole (opening-a-section-folds-the-near-side-walk passes)"
+    "On the sample recording with its clip picked, opening the folded Library opens it as the video mock's short shelf at the foot of the panel (its tiles scrolling inside it) and keeps Appearance and Effects whole (opening-a-section-folds-the-near-side-walk passes)"
   ],
   "log": [
     {
@@ -313,10 +313,40 @@
     {
       "t": "2026-11-22T13:27:04.289Z",
       "note": "seq 170 -> 150"
+    },
+    {
+      "t": "2026-11-23T06:24:11.248Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T07:45:44.282Z",
+      "note": "walks opening-a-section-folds-the-near-side-walk -> opening-a-section-folds-the-near-side-walk, the-panel-runs-the-full-height-on-a-video-walk, video-library-short-shelf-walk"
+    },
+    {
+      "t": "2026-11-23T07:45:44.357Z",
+      "note": "Built option a of the card: Next switch next-panel-full-height (on by default) puts the timeline under the picture only (EditorView, PanelColumn); a clip or title opens on Properties then Appearance and Effects (TimePanelOrder.arrange pairFirst), and what the order puts under the pair gives way to the fold (DockMetrics.givesWayToTheFold, TimePanelOrder.underThePair). The fold rescue no longer lets a merely cut pair under its own floors, so a title's open shadow keeps its whole pane."
+    },
+    {
+      "t": "2026-11-23T07:45:44.425Z",
+      "note": "Measured at 1200x720, timeline open: panel scrolling area 336 -> 592 (clip, no sound), 302 -> 607 (title), 607 (clip with sound). Clip: Properties 6-182, Appearance 182-353 (138/138), Effects 353-421; with sound the same, audio below. Title: Appearance 136-300 (131/172, scrolls inside), Effects 300-600 (267, its open shadow's pane). Pinned in DockFoldOnAVideoDocumentTests (AFTER tests) and DockWithTimeTests."
+    },
+    {
+      "t": "2026-11-23T07:45:44.491Z",
+      "note": "Chose to reword the last checklist line over growing the video Library past the mock's short shelf, because the shelf whose tiles scroll inside it is the mock (video.html #gLibrary, shipped 1db5bdff4 on 2026-11-11 with video-library-short-shelf-walk); the walk's step 111 had expected the whole Library section in view, which that change made impossible. The walk now checks the short shelf and the pair."
+    },
+    {
+      "t": "2026-11-23T07:45:44.561Z",
+      "note": "Walks moved to the narrower timeline (same times, not new behaviour), all run green: keys-copy-between-layers, double-click-clears-a-range, timeline-right-click, fade-diamonds-and-level-points-look-like-the-mock, draw-a-range-by-hand, a-sound-s-volume-line-plain-clicks, a-sound-s-volume-line-picks-and-shapes, a-sound-s-trim-grip-trims-from-its-middle, the-scrubber-knob-clears-the-times, hide-picture-and-clean-noise-for-a-section, a-zoom-is-shaped-by-hand, a-sound-s-waveform-follows-its-level, the-speed-curve-shows-under-a-clip, drag-a-marker-by-hand, a-video-clip-fades, a-graph-handle-follows-the-hand, a-click-tick-is-hidden-and-slid, a-transition-is-picked-at-the-cut, command-drag-ripple-trims-an-edge, freeze-frame-asks-how-long, timecode-reads-in-frames, transition-edge-follows-the-pointer, video-library-short-shelf. Still failing for reasons that predate this (fail with the switch off, or in the 11-21 sweep): section-fold-motion-walk, clicking-a-timeline-item-moves-the-playhead-walk. Asked for a whole-set run (--now) since every video walk that clicks the timeline by position is touched."
+    },
+    {
+      "t": "2026-11-23T07:45:44.631Z",
+      "note": "left rough: sliding View -> Edit, the timeline is laid out at its final narrower width while the panel slides in, so the corner under the incoming panel is briefly empty; View/Edit walks pass and nothing lands wrong. Not filed: nobody has flagged it and it lasts one spring."
     }
   ],
   "walks": [
-    "opening-a-section-folds-the-near-side-walk"
+    "opening-a-section-folds-the-near-side-walk",
+    "the-panel-runs-the-full-height-on-a-video-walk",
+    "video-library-short-shelf-walk"
   ],
-  "started": "2026-09-28T09:06:51.364Z"
+  "started": "2026-11-23T06:24:11.247Z"
 }

@@ -30,7 +30,7 @@
     {"do": "snapshot", "name": "5-clicked-an-eighth-along"},
     {"do": "key", "key": "i"},
     {"do": "wait", "seconds": 0.8},
-    {"comment": "I opens the tracks, so the bar is now x 286 to 1350 at y 696. Seven eighths along is x 1217: (931 - 13) / 1038 of 3.6s, 3184 ms; the old mapping said 3150.", "do": "windowClick", "at": [1217, 696]},
+    {"comment": "I opens the tracks, and in Edit the panel runs the window's full height beside the timeline (next-panel-full-height), so the bar is now x 286 to 1085 at y 696. Seven eighths along is x 982.6: (696.6 - 13) / 773 of 3.6s, 3184 ms.", "do": "windowClick", "at": [982.6, 696]},
     {"do": "wait", "seconds": 0.4},
     {"do": "expectTimeline", "playheadMS": 3184, "withinMS": 20},
     {"do": "describe", "stage": "6-clicked-seven-eighths-along", "note": "a real click seven eighths along: the knob's centre is under the pointer"},

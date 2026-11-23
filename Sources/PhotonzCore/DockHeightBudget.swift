@@ -340,8 +340,12 @@ public enum DockHeightBudget {
         }
         guard hanging || (cut && giving != nil) else { return nil }
 
+        // Only a pair hanging off the bottom is let under its own floors: a
+        // pair that is inside the dock and merely cut keeps them, so the one
+        // open effect the floor pays for is never sliced to give the other
+        // section a row back (a title's open shadow, 2026-11-22).
         let lists = above.filter { $0.flexible > 0 }.map { list in
-            guard promised.contains(list.key) else { return list }
+            guard hanging, promised.contains(list.key) else { return list }
             return Group(key: list.key, fixed: list.fixed, flexible: list.flexible,
                          floor: min(list.floor, foldFloor))
         }

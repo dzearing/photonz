@@ -1,0 +1,45 @@
+{
+  "feature": "The panel runs the full height on a video",
+  "epic": "video-editing",
+  "summary": "On a video the right hand panel now runs from the top of the window to the bottom, with the timeline under the picture only, and Appearance and Effects sit straight under Properties. In a 1200 by 720 window both are whole on screen with a clip, a clip with sound, or a title picked, where before they were below the bottom edge.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default (the new switch, The panel runs the full height, is on by default in Next). Measured with the-panel-runs-the-full-height-on-a-video-walk at a 1200 by 720 window with the timeline open: the panel's scrolling area went from 336 to 592 points with a clip picked, and from 302 to 607 with a title picked.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording in Photonz Dev and make the window about laptop size (1200 by 720).",
+      "shot": "2026-11-22-panel-full-height-1-clip.png"
+    },
+    {
+      "do": "Click the picture to pick the clip and look down the panel: Properties, then Appearance and Effects, then Time.",
+      "shot": "2026-11-22-panel-full-height-3-clip-with-sound.png"
+    },
+    {
+      "do": "With the text tool (T), type a title over the video, press Command Return, and pick it.",
+      "shot": "2026-11-22-panel-full-height-2-title.png"
+    },
+    {
+      "do": "Scroll the panel down to reach the title's Time, Text and Reveal."
+    },
+    {
+      "do": "Pick the clip again and click the folded Library header at the foot of the panel.",
+      "shot": "2026-11-22-panel-full-height-4-library-opened.png"
+    },
+    {
+      "do": "Press Option Command L (View > Panel) to put the panel away and see the timeline take the whole width back."
+    }
+  ],
+  "evaluate": [
+    "Does a timeline that stops at the panel's edge still feel like a proper editing timeline to you?",
+    "With a title picked, is it right that Time and Text sit below Appearance and Effects, a scroll away?",
+    "Is the narrower timeline (about a fifth narrower on a laptop window) a fair price for never scrolling to Appearance?",
+    "Does the panel's border running the full height read as one clean column?"
+  ],
+  "rough": [
+    "The video mock (pages/video.html, the editor frame) runs the timeline under the panel as well; here it stops at the panel's edge. Settled by your answer on the card the-panel-keeps-its-promise-on-a-video-document-on-a-video-in-a-laptop-sized-win (option a, taken as recommended on 2026-10-20).",
+    "The mock's video panel is a clip line and an Animating list with nothing under it; the app's Time, Text and audio sections now come under Appearance and Effects rather than above them, as option a on the card the-panel-keeps-its-promise-on-a-video-document-on-a-video-in-a-laptop-sized-win says.",
+    "With a title picked at 1200 by 720 the pair is whole but shares the panel: Appearance scrolls inside itself (131 of 172 points) so the open drop shadow in Effects keeps its whole pane. That is the fold promise as worded on 2026-09-20.",
+    "The Library on a video matches the mock (video.html #gLibrary): it opens as a short shelf at the foot of the panel with its tile scrolling inside it.",
+    "Sliding from View into Edit, the timeline is laid out at its final, narrower width while the panel slides in from the right, so for a moment the corner under the incoming panel is empty. Both View and Edit walks pass and the slide lands in place.",
+    "About twenty timeline walks clicked timeline spots by window position or dragged grips by a fixed number of points; each was moved to the same time on the narrower timeline and run green. Other video walks written that way may still need the same move; a whole-set run was asked for."
+  ]
+}

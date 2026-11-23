@@ -218,4 +218,21 @@ import Testing
         #expect(clip > viewport)
         #expect(clip - viewport > 280)
     }
+
+    /// The answer, 2026-10-20 (`next-panel-full-height`): on a document with
+    /// time the timeline sits under the picture only, so it takes nothing off
+    /// the panel. The laptop window that was 280 points over keeps its whole
+    /// viewport whatever the strip does, and the clip's sections that are not
+    /// the pair go below the fold rather than above it.
+    @Test func withTheTimelineBesideThePanelTheStripCostsThePanelNothing() {
+        let strip = Self.stripHeight(layers: 3, lanes: 6)
+        let viewport = PanelColumn.height(window: laptopViewport, timeline: strip,
+                                          timelineUnderPanel: false)
+        #expect(viewport == laptopViewport)
+        let pairFirst: [DockHeightBudget.Group] =
+            [form("keys", height: 176),
+             form("color", height: 223),
+             list("effects", chrome: 33, body: 35, floor: 35)]
+        #expect(drawnHeight(pairFirst, viewport: viewport) <= viewport)
+    }
 }

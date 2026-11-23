@@ -17,7 +17,7 @@
     { "do": "describe", "stage": "1-folded", "note": "the clip picked on the laptop window: Properties and Time whole, the Library folded to its header at the foot" },
     { "do": "snapshot", "name": "1-folded" },
 
-    { "comment": "A real click on the header's face, left of its scope chip and well clear of its plus.", "do": "windowClick", "at": [990, 414] },
+    { "comment": "A real click on the header's face, left of its scope chip and well clear of its plus. The panel runs the window's full height on a video (next-panel-full-height), so the folded header sits at the foot of the window.", "do": "windowClick", "at": [990, 670] },
     { "do": "wait", "seconds": 1.0 },
     { "do": "waitFor", "condition": "sectionOpen", "value": "Library", "timeout": 3 },
     { "comment": "Its header (45pt) and the mock's 118pt body, a point either way.", "do": "waitFor", "condition": "libraryPaneAtMost", "value": 164, "timeout": 3 },

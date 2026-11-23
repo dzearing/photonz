@@ -373,6 +373,10 @@ public enum FeatureCatalog {
     /// Cutting at the playhead while a video plays leaves it playing, as
     /// Final Cut's Blade and Premiere's Add Edit do.
     public static let bladeKeepsPlayingFlag = "next-blade-keeps-playing"
+    /// On a document with time the right hand panel runs the full height of
+    /// the window and the timeline sits under the picture only
+    /// (`PanelColumn`).
+    public static let panelRunsFullHeightFlag = "next-panel-full-height"
     /// An agent can reach the running app over its own socket and work in the
     /// open documents (`docs/design/agent-mcp.md`).
     public static let agentChannelFlag = "next-agent-channel"
@@ -1970,6 +1974,16 @@ public enum FeatureCatalog {
                     name: panelBuildsWhatYouSeeFlag,
                     title: "The panel builds what you can see",
                     description: "On a video, panel sections far below the bottom of the panel are built when you scroll near them, so clicking from a clip to a cut answers sooner. Off builds every section at once.",
+                    area: .panel,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: panelRunsFullHeightFlag,
+                    title: "The panel runs the full height",
+                    description: "On a video the panel runs from the top of the window to the bottom and the timeline sits under the picture, so Appearance and Effects fit on a laptop. Off runs the timeline under the panel too.",
                     area: .panel,
                     isEnabled: false,
                     parameters: []),

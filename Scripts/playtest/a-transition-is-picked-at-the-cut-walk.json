@@ -254,7 +254,7 @@
     {
       "do": "dragGrip",
       "control": "Tutorial Sample picture fade in",
-      "by": 60,
+      "by": 49.8,
       "steps": 8
     },
     {

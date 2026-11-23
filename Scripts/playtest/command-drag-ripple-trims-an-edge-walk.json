@@ -39,7 +39,7 @@
     { "do": "describe", "stage": "1-two-clips-meet", "note": "The recording cut to its first six seconds with W and b-roll butted onto it at six; the playhead parked at four and the recording picked, so its edge grips are up" },
     { "do": "snapshot", "name": "1-before" },
 
-    { "do": "dragGrip", "control": "Tutorial Sample clip end", "by": -220, "steps": 24, "cancel": true },
+    { "do": "dragGrip", "control": "Tutorial Sample clip end", "by": -182.5, "steps": 24, "cancel": true },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 6.0, "count": 1 },
     { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 6.0, "endsAt": 14.0, "count": 1 },
@@ -49,7 +49,7 @@
     { "do": "describe", "stage": "2-ripple-look", "note": "Command held with the pointer on the recording's end grip: the grip is Premiere's ripple yellow before anything is pressed" },
     { "do": "snapshot", "name": "2-ripple-look" },
 
-    { "do": "dragGrip", "control": "Tutorial Sample clip end", "by": -220, "steps": 24, "modifiers": ["command"], "hold": "3-rippling-mid-drag" },
+    { "do": "dragGrip", "control": "Tutorial Sample clip end", "by": -182.5, "steps": 24, "modifiers": ["command"], "hold": "3-rippling-mid-drag" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 4.0, "count": 1, "within": 0.02 },
     { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 4.0, "endsAt": 12.0, "count": 1, "within": 0.02 },
@@ -63,7 +63,7 @@
     { "do": "describe", "stage": "4-undone", "note": "One Command Z puts the recording's end and b-roll back at six: the ripple was one step" },
 
     { "do": "move", "at": [40, 40] },
-    { "do": "dragGrip", "control": "Tutorial Sample clip end", "by": -220, "steps": 24 },
+    { "do": "dragGrip", "control": "Tutorial Sample clip end", "by": -182.5, "steps": 24 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 4.0, "count": 1, "within": 0.02 },
     { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 6.0, "endsAt": 14.0, "count": 1 },

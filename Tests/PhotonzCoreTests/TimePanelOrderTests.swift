@@ -243,3 +243,65 @@ struct ClipSpeedValueTests {
         #expect(ClipSpeed.menuTitle(25) == "0.25x (silent)")
     }
 }
+
+/// With the panel running the window's full height on a video
+/// (`next-panel-full-height`), Appearance and Effects come straight under
+/// Properties for a clip and for a title, and what the layer is for (Time,
+/// Text, a title's knobs, a clip's audio) follows them: the user's answer on
+/// the-panel-keeps-its-promise-on-a-video-document (2026-10-20), so the pair
+/// is whole on a laptop window whatever is picked.
+@Suite("Appearance and Effects first on a video")
+struct TimePanelOrderPairFirstTests {
+    let saved = TimePanelOrderTests.saved
+
+    @Test func aClipLeadsWithPropertiesThenThePair() {
+        let order = TimePanelOrder.arrange(saved, for: .playing, pairFirst: true)
+        #expect(Array(order.prefix(4)) == ["layers", "keys", "color", "effects"])
+        // Its time and its audio follow, in the order they led and trailed in.
+        let after = Array(order.drop(while: { $0 != "effects" }).dropFirst().prefix(5))
+        #expect(after == ["speed", "sound", "fades", "gain", "soundEffects"])
+    }
+
+    @Test func aTitleLeadsWithPropertiesThenThePair() {
+        let order = TimePanelOrder.arrange(saved, for: .onScreen, pairFirst: true)
+        #expect(Array(order.prefix(4)) == ["layers", "keys", "color", "effects"])
+        let after = Array(order.drop(while: { $0 != "effects" }).dropFirst().prefix(2))
+        #expect(after == ["speed", "text"])
+    }
+
+    @Test func aTitlesOwnKnobsComeUnderThePairInTheirOrder() {
+        let withTitle = saved + ["chart", "title", "titlePart", "reveal"]
+        let order = TimePanelOrder.arrange(withTitle, for: .onScreen, pairFirst: true)
+        let after = Array(order.drop(while: { $0 != "effects" }).dropFirst().prefix(6))
+        #expect(after == ["chart", "title", "titlePart", "speed", "text", "reveal"])
+    }
+
+    /// Nothing is added or lost by the move.
+    @Test func everySectionIsStillThereOnce() {
+        for role in [TimePanelOrder.Role.playing, .onScreen] {
+            let order = TimePanelOrder.arrange(saved, for: role, pairFirst: true)
+            #expect(order.sorted() == saved.sorted())
+        }
+    }
+
+    /// A sound has no picture to put first, and captions keep their own
+    /// options on top, so neither moves.
+    @Test func aSoundAndCaptionsKeepTheirOrder() {
+        for role in [TimePanelOrder.Role.heard, .captioned] {
+            #expect(TimePanelOrder.arrange(saved, for: role, pairFirst: true)
+                    == TimePanelOrder.arrange(saved, for: role))
+        }
+    }
+
+    /// With the switch off the order is the one that shipped before it.
+    @Test func offIsTheOrderBefore() {
+        #expect(TimePanelOrder.arrange(saved, for: .playing, pairFirst: false)
+                == TimePanelOrder.arrange(saved, for: .playing))
+    }
+
+    /// A clip's sound is still headed as its audio wherever it sits.
+    @Test func theClipsAudioKeepsItsName() {
+        #expect(TimePanelOrder.title("fades", shown: "Fades", for: .playing) == "Audio Fades")
+        #expect(TimePanelOrder.title("speed", shown: "Time", for: .playing) == "Time")
+    }
+}

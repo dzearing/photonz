@@ -23,22 +23,22 @@
     { "do": "expect", "menu": "Length", "reads": "0.4s" },
     { "do": "snapshot", "name": "1-a-dissolve" },
 
-    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": 24, "steps": 20, "within": 2, "hold": "2-end-mid-drag" },
+    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": 19.9, "steps": 20, "within": 2, "hold": "2-end-mid-drag" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "field": "Transition length", "present": false },
     { "do": "describe", "stage": "2-end", "note": "THE FIRST TEST: the band's right end, pulled right in twenty small real mouse moves, was drawn under the pointer at every one of them, and the bubble beside the pointer said the length the whole way. Across the cut the left end moves out by the same amount, so the band grew by twice the travel" },
 
-    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll start", "by": -24, "steps": 20, "within": 2 },
+    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll start", "by": -19.9, "steps": 20, "within": 2 },
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "3-start", "note": "THE SECOND TEST: its left end, pulled left, did the same" },
     { "do": "snapshot", "name": "3-both-ends-pulled" },
 
-    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": 220, "steps": 30, "within": 2, "hold": "4-at-the-stop" },
+    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": 182.5, "steps": 30, "within": 2, "hold": "4-at-the-stop" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "menu": "Length", "reads": "4.9s" },
     { "do": "describe", "stage": "4-stop", "note": "THE THIRD TEST: pulled far past what the spare can pay for. Since 2026-10-29 a transition no longer stops where the spare runs out: the end kept following the pointer the whole way, and what the footage cannot pay for is held edge frames, which Paid with names. Letting go landed exactly the length the bubble showed, with no jump" },
 
-    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": -80, "steps": 20, "cancel": true },
+    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": -66.4, "steps": 20, "cancel": true },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "menu": "Length", "reads": "4.9s" },
     { "do": "describe", "stage": "5-escape", "note": "THE FOURTH TEST: Escape half way through a drag put the band back as it was, and the rest of the gesture did nothing" },
@@ -51,7 +51,7 @@
     { "do": "press", "control": "After it" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expect", "field": "The overlap sits", "reads": "After it" },
-    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": -30, "steps": 20, "within": 2, "hold": "7-after-the-cut-mid-drag" },
+    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": -24.9, "steps": 20, "within": 2, "hold": "7-after-the-cut-mid-drag" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "7-after", "note": "THE FIFTH TEST: a transition placed after its cut starts on the cut, so only its far end is a grip, and that end follows the pointer too" },
 
@@ -70,9 +70,9 @@
     { "do": "action", "action": "clipTransitionDissolve" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "snapshot", "name": "8-a-join" },
-    { "do": "dragGrip", "control": "Tutorial Sample transition at join 1 end", "by": 24, "steps": 20, "within": 2, "hold": "9-join-mid-drag" },
+    { "do": "dragGrip", "control": "Tutorial Sample transition at join 1 end", "by": 19.9, "steps": 20, "within": 2, "hold": "9-join-mid-drag" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "dragGrip", "control": "Tutorial Sample transition at join 1 start", "by": -24, "steps": 20, "within": 2 },
+    { "do": "dragGrip", "control": "Tutorial Sample transition at join 1 start", "by": -19.9, "steps": 20, "within": 2 },
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "9-join", "note": "THE SIXTH TEST, and the one the user hit: a transition on a join inside one clip (cut with the blade, the middle thrown away). Both of its ends followed the pointer at every move, where before this they stayed put until the button came up" },
     { "do": "snapshot", "name": "10-join-pulled" }

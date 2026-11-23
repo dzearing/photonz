@@ -23420,3 +23420,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 
 - Video time can read in frames: View > Timecode (off by default, remembered) reads the transport, the ruler and its gridlines, the timeline bar's window, a transition's drag bubble and its panel rows in `HH:MM:SS:FF` at the timeline's 30 fps grid; dragged transitions land on whole frames; the freeze length field takes `12`, `12f` or `00:00:00:12`. Core in `PhotonzCore/VideoTimecode.swift`, setting in `Photonz/VideoTimeDisplaySetting.swift`, walk `timecode-reads-in-frames-walk`.
 - Next: the title bar length, trim In/Out line and key tooltips still read seconds with Timecode on.
+
+## 2026-11-22: the panel runs the full height on a video (Next)
+
+- On a document with time the timeline now sits under the picture only and the panel runs the window's height (`next-panel-full-height`, on in Next; `PanelColumn`, `EditorView`). A clip or a title opens on Properties, then Appearance and Effects; Time, Text, a title's knobs and a clip's audio follow and give way to the fold (`TimePanelOrder.arrange(pairFirst:)`, `underThePair`, `DockMetrics.givesWayToTheFold`). The fold rescue keeps a merely cut pair's floors.
+- 1200x720, timeline open: panel 336 -> 592 (clip), 302 -> 607 (title); both of the pair whole. New walk `the-panel-runs-the-full-height-on-a-video-walk`; about twenty timeline walks moved to the narrower timeline.
+- Next: the whole-set run asked for will show any other walk that clicks the timeline by window position.

@@ -1,0 +1,184 @@
+{
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "timelineOpen": true
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "fixtures/Full screen Retina recording 3456x2234.mp4",
+      "width": 1200,
+      "height": 720
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        600,
+        500
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionInView",
+      "value": "Appearance",
+      "timeout": 2
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionInView",
+      "value": "Effects",
+      "timeout": 2
+    },
+    {
+      "do": "describe",
+      "stage": "1-clip-picked",
+      "note": "THE TEST, a clip: 1200 by 720, timeline open, the clip picked. The panel runs from the top of the window to the bottom and Appearance and Effects are both whole in it"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-clip-picked"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        1100,
+        900
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionInView",
+      "value": "Appearance",
+      "timeout": 2
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionInView",
+      "value": "Effects",
+      "timeout": 2
+    },
+    {
+      "do": "describe",
+      "stage": "2-title-picked",
+      "note": "THE TEST, a title: the same window with a title just typed and picked, which adds its own track and its Text section. Appearance and Effects are still both whole"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-title-picked"
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Noisy voice recording 1280x800.mp4",
+      "width": 1200,
+      "height": 720
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        640,
+        400
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionInView",
+      "value": "Appearance",
+      "timeout": 2
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionInView",
+      "value": "Effects",
+      "timeout": 2
+    },
+    {
+      "do": "describe",
+      "stage": "3-clip-with-sound-picked",
+      "note": "THE TEST, a clip with sound: its Audio sections sit under the pair, and Appearance and Effects are still both whole"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-clip-with-sound-picked"
+    }
+  ]
+}

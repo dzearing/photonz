@@ -184,11 +184,11 @@
       "comment": "The first key's leaving handle, drawn at (510, 929) once the segment is picked. A real pointer's drag up and to the right.",
       "do": "windowDrag",
       "from": [
-        509.8,
+        450.2,
         929
       ],
       "to": [
-        560,
+        491.9,
         901.7
       ],
       "steps": 8

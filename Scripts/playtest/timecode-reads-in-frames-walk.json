@@ -27,7 +27,7 @@
     { "do": "expect", "menu": "Length", "reads": "00:00:00:12" },
     { "do": "snapshot", "name": "2-timecode-on" },
 
-    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": 24, "steps": 20, "within": 2, "hold": "3-end-mid-drag", "says": "00:00:00:24" },
+    { "do": "dragGrip", "control": "Transition Tutorial Sample to b-roll end", "by": 19.9, "steps": 20, "within": 2, "hold": "3-end-mid-drag", "says": "00:00:00:24" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "menu": "Length", "reads": "00:00:00:24" },
     { "do": "describe", "stage": "3-dragged", "note": "THE TEST: the band's end pulled by real mouse moves with Timecode on. The bubble by the pointer said a whole number of frames before letting go, and the panel's Length row says the same frames after" },

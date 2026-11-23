@@ -325,6 +325,12 @@ import Testing
 /// ANY order: the answer is a change to what the window shows, which is a
 /// question for the user (`queue/decisions/`, task
 /// the-panel-keeps-its-promise-on-a-video-document).
+///
+/// The user's answer (option a, 2026-10-20): the panel runs the full height
+/// and the timeline sits under the picture only (`PanelColumn`,
+/// `next-panel-full-height`), with Appearance and Effects straight under
+/// Properties and what the order put under them giving way to the fold. The
+/// AFTER tests below pin that it fits.
 @Suite struct DockFoldOnAVideoDocumentTests {
     let topPadding: CGFloat = 6
     let promised: Set<String> = ["color", "effects"]
@@ -396,6 +402,84 @@ import Testing
         #expect(above == 547)
         #expect(bottom(of: "effects", in: clipToday, viewport: clipWithTimeline)
                 > clipWithTimeline)
+    }
+
+    // MARK: AFTER: the panel runs the full height (`next-panel-full-height`)
+
+    /// The panel's scrolling area at 1200 by 720 with the timeline open,
+    /// measured 2026-11-22 once the timeline sits under the picture only
+    /// (`the-panel-runs-the-full-height-on-a-video-walk`): a clip with no
+    /// sound, a clip with sound and a title picked. Against 336 and 302 before.
+    let clipFullHeight: CGFloat = 592
+    let soundClipFullHeight: CGFloat = 607
+    let titleFullHeight: CGFloat = 607
+
+    @Test func theTimelineBesideThePanelGivesItTheWindowsHeight() {
+        #expect(clipFullHeight - clipWithTimeline == 256)
+        #expect(titleFullHeight - titleWithTimeline == 305)
+        #expect(PanelColumn.height(window: 720, timeline: 337, timelineUnderPanel: false) == 720)
+    }
+
+    func givingWay(_ key: String, _ height: CGFloat) -> DockHeightBudget.Group {
+        .init(key: key, fixed: height, flexible: 0, floor: 0, givesWayToTheFold: true)
+    }
+
+    /// A clip with sound, pair first (`TimePanelOrder.arrange(pairFirst:)`):
+    /// Properties 176, the pair, then Time 165, Audio 95, Audio Fades 108,
+    /// Audio Gain 199 and Audio Effects 199, all forms, read off the probe.
+    func soundClip(underGivesWay: Bool) -> [DockHeightBudget.Group] {
+        let under: [(String, CGFloat)] = [("speed", 165), ("sound", 95), ("fades", 108),
+                                          ("gain", 199), ("soundEffects", 199)]
+        return [form("properties", 176),
+                .init(key: "color", fixed: 33, flexible: 138, floor: 112),
+                effectsOverClip]
+            + under.map { underGivesWay ? givingWay($0.0, $0.1) : form($0.0, $0.1) }
+    }
+
+    func drawn(_ key: String, in groups: [DockHeightBudget.Group], viewport: CGFloat) -> CGFloat? {
+        DockHeightBudget.flexibleHeights(groups, viewport: viewport - 2 * topPadding,
+                                         promised: promised)[key]
+    }
+
+    /// BEFORE the audio gave way: the forms under the pair were paid in full
+    /// first, so Appearance was cut to its floor with the room right there.
+    @Test func paidInFullTheAudioUnderThePairCutsAppearance() {
+        let appearance = drawn("color", in: soundClip(underGivesWay: false), viewport: soundClipFullHeight)
+        #expect(appearance == 112)
+    }
+
+    /// AFTER: the clip's time and audio go below the fold instead, and the
+    /// pair is whole: Appearance's 138, Effects's 35, both ending by 421.
+    @Test func theAudioUnderThePairGivesWayAndThePairIsWhole() {
+        let groups = soundClip(underGivesWay: true)
+        #expect(drawn("color", in: groups, viewport: soundClipFullHeight) == 138)
+        #expect(drawn("effects", in: groups, viewport: soundClipFullHeight) == 35)
+        #expect(bottom(of: "effects", in: groups, viewport: soundClipFullHeight) <= soundClipFullHeight)
+    }
+
+    /// A title, pair first: Properties 130, then the pair, which between them
+    /// want more than the panel has (Effects with a drop shadow open is 528),
+    /// so the two share it and scroll inside themselves, which is the promise
+    /// as the user worded it; Time, Text and Reveal go below the fold.
+    @Test func aTitlesPairSharesTheFullHeightPanel() {
+        let groups = [form("properties", 130), appearanceOverTitle, effectsOverTitle,
+                      givingWay("speed", 105), givingWay("text", 237), givingWay("reveal", 75)]
+        #expect(bottom(of: "effects", in: groups, viewport: titleFullHeight) <= titleFullHeight)
+        let effects = drawn("effects", in: groups, viewport: titleFullHeight) ?? 0
+        #expect(effects >= effectsOverTitle.floor)
+        // ...and Appearance gets every row the open shadow leaves.
+        let appearance = drawn("color", in: groups, viewport: titleFullHeight) ?? 0
+        #expect(appearance > appearanceOverTitle.floor)
+    }
+
+    /// The sections a pair-first order puts under the pair are the ones that
+    /// give way to the fold there.
+    @Test func whatThePairFirstOrderPutsUnderThePairGivesWay() {
+        for key in ["speed", "sound", "fades", "gain", "soundEffects", "text", "reveal", "title"] {
+            #expect(TimePanelOrder.underThePair.contains(key))
+        }
+        #expect(!TimePanelOrder.underThePair.contains("keys"))
+        #expect(!TimePanelOrder.underThePair.contains("color"))
     }
 
     /// Why no ordering fixes it: even with the pair straight under Properties

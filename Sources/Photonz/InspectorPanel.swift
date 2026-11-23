@@ -1757,7 +1757,8 @@ struct InspectorPanel: View {
             return [.keys] + order.filter { $0 != .keys }
         }
         guard let role = timeRole else { return order }
-        return TimePanelOrder.arrange(order.map(\.rawValue), for: role)
+        return TimePanelOrder.arrange(order.map(\.rawValue), for: role,
+                                      pairFirst: Experiments.shared.panelRunsFullHeightEnabled)
             .compactMap(InspectorSectionID.init(rawValue:))
     }
 

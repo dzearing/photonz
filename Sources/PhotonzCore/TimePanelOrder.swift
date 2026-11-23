@@ -104,10 +104,47 @@ public enum TimePanelOrder {
         return .onScreen
     }
 
+    /// The two sections nobody should have to scroll to.
+    public static let pair = ["color", "effects"]
+
+    /// The sections a pair-first order puts UNDER the pair: everything a clip
+    /// or a title led or trailed with but its Properties. Under the pair
+    /// these give way to the fold (`DockHeightBudget.Group.givesWayToTheFold`)
+    /// rather than have Appearance cut for them, since the order put them
+    /// there so the pair would be whole.
+    public static var underThePair: Set<String> {
+        Set([Role.playing, .onScreen].flatMap { leads($0) + trails($0) }).subtracting(["keys"])
+    }
+
+    /// The roles whose layer has a picture for the pair to lead with.
+    static func putsThePairFirst(_ role: Role) -> Bool {
+        role == .playing || role == .onScreen
+    }
+
     /// The saved order with the role's lead moved up under Layers. Only
     /// sections the order already holds are moved; nothing is added or lost.
     /// The role's trailing sections, when the order has a picture section to
     /// put them under, go straight under the last one.
+    ///
+    /// `pairFirst` is the panel running the window's full height on a video
+    /// (`next-panel-full-height`): a clip or a title then opens on Properties
+    /// and straight under it Appearance and Effects, with the rest of its lead
+    /// and its trailing sections under them in the same order, so the pair is
+    /// whole on a laptop window (the user's answer, 2026-10-20).
+    public static func arrange(_ order: [String], for role: Role?, pairFirst: Bool) -> [String] {
+        guard let role else { return order }
+        let pairShown = pair.filter(order.contains)
+        guard pairFirst, putsThePairFirst(role), !pairShown.isEmpty else {
+            return arrange(order, for: role)
+        }
+        let top = ["keys"].filter(order.contains) + pairShown
+        let under = (leads(role) + trails(role)).filter { order.contains($0) && !top.contains($0) }
+        var rest = order.filter { !top.contains($0) && !under.contains($0) }
+        let at = rest.firstIndex(of: anchor).map { $0 + 1 } ?? 0
+        rest.insert(contentsOf: top + under, at: at)
+        return rest
+    }
+
     public static func arrange(_ order: [String], for role: Role?) -> [String] {
         guard let role else { return order }
         var arranged = order
