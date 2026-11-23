@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T18:30:07.976Z",
+  "updated": "2026-11-23T18:45:21.101Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T18:30:07.975Z",
-      "note": "... 40 earlier entries elided",
-      "elided": 40
-    },
-    {
-      "t": "2026-11-17T18:34:36.996Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-17T20:49:04.489Z",
-      "note": "Pass 9 (2026-11-17). Rotating check at 03:14 had speed-walk failing on scrub medium frame lag (73 vs at most 56): scrub, not the timeline, from before the long-edit task's pass 15 landed (45bd07794, speed-walk ok x3 there). This pass: speed-walk ok twice; one run during a 15 load average failed on scrub hunt sight lag worst 32 vs at most 32, ok on rerun. Not mine; nothing filed."
+      "t": "2026-11-23T18:45:21.100Z",
+      "note": "... 42 earlier entries elided",
+      "elided": 42
     },
     {
       "t": "2026-11-17T20:49:04.567Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T18:30:07.974Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-23T18:45:16.382Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T18:45:21.099Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T18:30:02.305Z",
+  "started": "2026-11-23T18:45:16.381Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
