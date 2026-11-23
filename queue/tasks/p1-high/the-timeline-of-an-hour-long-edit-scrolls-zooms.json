@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T22:37:25.070Z",
+  "updated": "2026-11-23T23:07:40.765Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T22:37:25.069Z",
-      "note": "... 56 earlier entries elided",
-      "elided": 56
-    },
-    {
-      "t": "2026-11-18T01:04:53.633Z",
-      "note": "Pass 11 (2026-11-17). Baseline at 1dc3bae08, 60 min edit: near Fit 16.9-17.0 ms mean (p95 23-24), zoom in 13.8-14.1, out 12.1-12.6, scroll 10.8-11.1. Profile near Fit: SwiftUI graph update ~55% of busy main thread (our own bodies ~a third of it), RB rasterising canvases ~20% (about 40% of that per-layer overhead: IOSurface register, command buffer submit), clip paint closure ~8%, accessibility ~8% (probe)."
-    },
-    {
-      "t": "2026-11-18T01:04:53.711Z",
-      "note": "Pass 11 switch-off decomposition near Fit, one build (mean frame): every lane empty 8.4 (p95 8.9: the window outside the lanes is already at 120 Hz); both painted canvases gone 10.9; both drawing nothing 12.5; clips' canvas drawing nothing 14.0; cuts' canvas drawing nothing 15.8; base 17.0. Inside the clip paint, fills only: -1.5 ms; flat colour for the gradient fill: 0; no per-clip clip-to-shape: ~0.2. Lane structure: built clip and cut views 0.7, gridlines 0.4, click ticks 0.3, painted hands 0.2, gap views 0, playtest strip report 0."
+      "t": "2026-11-23T23:07:40.764Z",
+      "note": "... 58 earlier entries elided",
+      "elided": 58
     },
     {
       "t": "2026-11-18T01:04:53.787Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T22:37:25.068Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-23T23:07:36.159Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T23:07:40.763Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T22:37:19.317Z",
+  "started": "2026-11-23T23:07:36.158Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
