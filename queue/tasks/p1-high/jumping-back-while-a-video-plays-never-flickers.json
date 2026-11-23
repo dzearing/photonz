@@ -1,0 +1,34 @@
+{
+  "id": "jumping-back-while-a-video-plays-never-flickers",
+  "title": "Jumping back while a video plays never flickers between two frames",
+  "goal": "When a video is playing and you click or scrub to an earlier spot on the timeline, the picture flickers for about half a second, as if it is swapping between two frames. It happens on a plain MP4 with one clip and no transitions. Whatever spot you jump to should show that frame, then play on from it, with no frame from anywhere else flashing in between.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-23T15:35:22.939Z",
+  "updated": "2026-11-23T15:35:23.062Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-23: \"When I play back and scrub to a previous location, I'm seeing flickering!!! as if we're swaping between 2 frames or something for a brief moment\", then: \"i thought this was specific to transitions, but i just opened an mp4, played, clicked on a previous location in the timeline, and it started flickering for about half a sec\". Not reproduced by me; most likely Photonz Dev (built 2026-11-23 06:54).\n\nA shipped task came close: a-cross-fade-plays-smoothly-in-the-editor-the-wa (done 2026-11-21) fixed borrowed frames standing in, restarts onto the same key frame, and play starting before frames are ready, and verified scrubs from REST; its log says the after-a-scrub walk passes on old code too, so nothing guards this. This report is a jump WHILE playing. Suspects, not confirmed: after the jump the play pass still shows frames queued for the old position for a few ticks while the new pass decodes from its key frame (about half a second of GOP would match the user's half second), or the resting scrub read and the play pass both draw and alternate. Code: Sources/PhotonzCore/MoviePlayPass.swift, Sources/PhotonzCore/MovieFrameQueue.swift; recent hunt and budget commits cf12e8b00, b9cf61d13; the in-progress task picking-letting-go-of-and-cutting-a-clip-while-a and the hour-long timeline task are also landing nearby, bisect across them.",
+  "acceptance": [
+    "Reproduced first in the probe at Next defaults, matching the user's case: open a plain MP4 (a real screen recording and a camera-style long-GOP H.264 or HEVC file), press play, then click an earlier point on the timeline while it plays. Also: a long and a short jump back, a jump forward, and dragging the playhead back while playing. Capture every frame the player actually puts on screen and name in the audit which frames are wrong and where each came from (the pre-jump position, a key frame, a stale queued frame, a borrowed stand-in, the resting read).",
+    "Find the cause before fixing and write it in the audit with its evidence; say whether it is a regression from the cross fade task's fixes (5b1effa70, f599c5fdc) or a case that task never covered.",
+    "Measured bar: for the second after the jump, every displayed frame matches the frame at its own time (mean pixel difference to an offscreen render of that time under a stated small number), and frames shown never move backwards and forwards in time (no A-B-A alternation). Today's build fails this on the reproduction.",
+    "Passes at 0.5x, 1x and 2x, on one clip, across a cut and inside a transition.",
+    "A walk that fails on today's code: the cross fade task's after-a-scrub walk passed on old code too because its fixture decodes too fast, so this one uses a long-GOP or slow-decoding fixture, or throttles decoding, so it actually catches the flicker.",
+    "A reel under queue/audits/ (captured frames before and after, frame by frame for the half second) named in the audit. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-23T15:35:22.941Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-23T15:35:23.061Z",
+      "note": "seq 4070 -> 20"
+    }
+  ]
+}
