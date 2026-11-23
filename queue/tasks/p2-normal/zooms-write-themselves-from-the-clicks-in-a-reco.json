@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:57.237Z",
-  "updated": "2026-11-22T13:27:04.156Z",
+  "updated": "2026-11-23T05:31:00.141Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, competitor lens (focus brief names Screen Studio and ScreenFlow: raw recording to polished share, zooms that follow the pointer). Building blocks already shipped: recorded clicks (a-recording-remembers-where-the-cursor-went-and, audit 2026-09-30-recorded-clicks.json), click effects (2026-09-30-click-effects.json), zoom regions with Follow Cursor (a-zoom-region-that-frames-a-spot-and-can-follow, audit 2026-09-30-zoom-regions.json). No mock draws automatic zooms (video-zoom-wt.html is the manual punch-in), so this is a new visible command and goes through a card first. Placement: Menu bar (Clip) and the clip's right-click, per the placement contract; no new panel button.",
@@ -202,6 +202,52 @@
     {
       "t": "2026-11-22T13:27:04.155Z",
       "note": "seq 150 -> 130"
+    },
+    {
+      "t": "2026-11-23T05:06:05.468Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T05:08:13.052Z",
+      "note": "Found the command already shipped as Suggest Zooms (Clip menu + recording right-click, one undo step, greyed with no clicks, walk zooms-suggested-from-clicks-walk). Remaining: card settled the name Add Zooms from Clicks; and a burst of clicks spread across the screen got a zoom at the 1.3x floor that crops some clicks out (box wider than the frame). Writing tests first for spread clicks, gap edges, clip edges."
+    },
+    {
+      "t": "2026-11-23T05:30:36.769Z",
+      "note": "owns these walks: zooms-suggested-from-clicks-walk, add-zooms-from-clicks-clip-menu-walk"
+    },
+    {
+      "t": "2026-11-23T05:30:46.959Z",
+      "note": "Adversarial pass: a Screen Studio user expects zooms per click burst, editable afterwards, one undo; all already true of the shipped Suggest Zooms. Gaps: card's name, and spread bursts were cropped (fixed zoom clamped to 130% could not hold clicks in opposite corners)."
+    },
+    {
+      "t": "2026-11-23T05:30:47.027Z",
+      "note": "Chose a pointer-following zoom at 160% over splitting a spread burst into two back-to-back zooms because two abutting zooms dip to the whole picture between them (a bounce); without a pointer path the still frame loosens to whatever holds every click, and makes none under 110%."
+    },
+    {
+      "t": "2026-11-23T05:30:47.095Z",
+      "note": "Chose to keep the command id suggest_zooms (agents' run_command) and rename only what people see."
+    },
+    {
+      "t": "2026-11-23T05:30:47.164Z",
+      "note": "left rough: the Zoom added notice stays up for its seconds after Cmd-Z undid it (seen in add-zooms-from-clicks-clip-menu-walk picture 3). Shared notice behaviour, not this feature; no open task covers it, and it is a nit, so logged here only."
+    },
+    {
+      "t": "2026-11-23T05:30:47.234Z",
+      "note": "left rough: a walk that scripts clicks into a recording after it opened must change the document once before the menu bar reads the row enabled (the pointer record is not watched). Real recordings load their record as they open, so people never see it; walk-only."
+    },
+    {
+      "t": "2026-11-23T05:30:47.321Z",
+      "note": "Pictures looked at: 1 (zoom box round the card), 2 (1.5s partway in), 3 (2.4s fully in), clip-menu walk 3 (after one undo, Zoom lane gone). Right-click menu picture cut off at the window edge, left out of the audit."
+    },
+    {
+      "t": "2026-11-23T05:31:00.139Z",
+      "note": "Add Zooms from Clicks (was Suggest Zooms) in Clip menu and recording right-click; spread bursts now follow the pointer so every click is framed. ClipZoomTests (tests first), full Scripts/test.sh green, walks zooms-suggested-from-clicks-walk and add-zooms-from-clicks-clip-menu-walk pass at Next defaults with real captures; audit 2026-11-22-add-zooms-from-clicks.json. Commit 65f1b97d7."
     }
-  ]
+  ],
+  "started": "2026-11-23T05:06:05.467Z",
+  "walks": [
+    "zooms-suggested-from-clicks-walk",
+    "add-zooms-from-clicks-clip-menu-walk"
+  ],
+  "completed": "2026-11-23T05:31:00.140Z"
 }
