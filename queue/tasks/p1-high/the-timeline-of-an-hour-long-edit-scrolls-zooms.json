@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T20:36:19.062Z",
+  "updated": "2026-11-23T21:06:36.297Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T20:36:19.061Z",
-      "note": "... 48 earlier entries elided",
-      "elided": 48
-    },
-    {
-      "t": "2026-11-17T20:50:06.560Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-17T22:28:14.685Z",
-      "note": "Pass 10 (2026-11-17). Added to the speed walk's timeline measure: a near-Fit loop (Fit to 8x and back six times, said in the line only) and the mean frame per film, since medians sit on whole refreshes (16.7) and hide sub-refresh gains. Baseline (HEAD adc29f0bc): near Fit mean 17.1-17.2 ms (median 16.5-16.7, p95 24), zoom in 13.9-14.9, out 12.1-13.1, scroll 11.0-11.7. Profile near Fit: CA commit ~56% of the main thread, RB rasterising the lanes ~18%, clip paint closure ~12% (waveforms 4.4%, a third of that per-point main-actor checks in a map closure), lateBody 7%, accessibility graph ~7% (probe), painted cuts ~2% (TimelineEditPoint.id string building ~40% of it)."
+      "t": "2026-11-23T21:06:36.296Z",
+      "note": "... 50 earlier entries elided",
+      "elided": 50
     },
     {
       "t": "2026-11-17T22:28:14.765Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T20:36:19.060Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-23T21:06:29.877Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T21:06:36.295Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T20:36:14.072Z",
+  "started": "2026-11-23T21:06:29.876Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
