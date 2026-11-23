@@ -1,0 +1,27 @@
+{
+  "id": "the-video-tests-stop-crashing-the-test-run-when",
+  "title": "The video tests stop crashing the test run when they make a test clip on a busy Mac",
+  "goal": "A full test run on 2026-11-22 had its test helper die with a memory crash while one video test was making its small test clip. The test runner put it down to a half-built build folder and ran everything again, which hides a real crash and costs about four minutes. Find out why making a test clip can crash and stop it.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 7.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-23T02:57:06.292Z",
+  "updated": "2026-11-23T02:57:06.295Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen in the third of five full Scripts/test.sh runs during task find-out-why-the-encoder-cannot-match-copy-test (exit 0 only because the wrapper rebuilt and reran). Wrapper said: swiftpm-testing-helper ... exited with unexpected signal code 11, then \"Throwing .build away and running again\". Nothing had rebuilt between run 2 and run 3, so it was not a half-built .build. Crash report ~/Library/Logs/DiagnosticReports/swiftpm-testing-helper-2026-11-22-184244.ips, faulting thread on the cooperative pool: EXC_BAD_ACCESS KERN_INVALID_ADDRESS at 0x0, __CF_IS_OBJC < CFDictionaryGetValue < CVPixelBufferPool::createPixelBuffer < CVPixelBufferPoolCreatePixelBuffer < TestClip.makePixelBuffer(pool:size:index:bits:) < TestClip.write(to:seconds:size:likeAScreenRecording:profile:bits:) < SmoothedCopyWriterTests.depth(). TestClip.write reads adaptor.pixelBufferPool fresh each frame and makePixelBuffer passes nil attributes; one theory, not checked, is that the pool is torn down when the writer fails or the hardware session is taken away under load. First such report on this Mac (the other helper crashes today are ZZTemporaryCrashProbeTests, a deliberate probe).",
+  "acceptance": [
+    "The cause of the crash is written in this task log, with the run or report that shows it",
+    "Making test clips no longer crashes in five full Scripts/test.sh runs in a row on this Mac"
+  ],
+  "log": [
+    {
+      "t": "2026-11-23T02:57:06.294Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}
