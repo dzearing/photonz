@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T21:06:36.297Z",
+  "updated": "2026-11-23T21:36:52.520Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T21:06:36.296Z",
-      "note": "... 50 earlier entries elided",
-      "elided": 50
-    },
-    {
-      "t": "2026-11-17T22:28:14.765Z",
-      "note": "Pass 10 switch-off experiments near Fit, one build (mean frame saved): all clip paint 1.7 ms; cut marks painting 1.3 (bands 0.9, seams 0.25, the band's drawLayer 0.4, its shadow alone 0, glyph 0.2); waveforms 0.4; level line 0.3 (its shadow 0); clipping per clip, names, fade diamonds, painted hands each under 0.3; Canvas rendersAsynchronously 0.3."
-    },
-    {
-      "t": "2026-11-17T22:28:14.841Z",
-      "note": "Pass 10 change: alternates made once per document in TimelineTrackRowModel.alternates (one lane sorted every frame); TimelineCutKey (two clip UUIDs) keys TimelinePaintedFacts.cut, the painted set and the picked/pointer checks (isEditPointPicked compares clips), so no cut id string per cut per frame; waveform points moved in a nonisolated loop (TimelinePaintedClips.moved); a band's shadow cast by its opaque base, no drawLayer. Chose shadow-on-base over the layer because the base is opaque and covers wash and edge: pictures differ by at most 15/255 along V1's edges (invisible side by side). After, same build with old paths switched (2 runs each): near Fit 17.1 -> 16.1-16.2 mean, zoom in 14.8-14.9 -> 13.9-14.1, out 13.0-13.1 -> 12.2-12.4, scroll 11.3 -> 10.4-10.6. Quiet run: near Fit 15.5 (median 14.9), zoom in 12.5, scroll 9.9 (p95 13.7, 41/360 late). Edits unchanged: trim 63 / move 36 / blade 75 / undo 67 / transition 98 / title 42."
+      "t": "2026-11-23T21:36:52.519Z",
+      "note": "... 52 earlier entries elided",
+      "elided": 52
     },
     {
       "t": "2026-11-17T22:28:14.918Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T21:06:36.295Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-23T21:36:47.249Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T21:36:52.518Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T21:06:29.876Z",
+  "started": "2026-11-23T21:36:47.248Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
