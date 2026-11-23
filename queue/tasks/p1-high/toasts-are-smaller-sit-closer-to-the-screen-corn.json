@@ -1,0 +1,34 @@
+{
+  "id": "toasts-are-smaller-sit-closer-to-the-screen-corn",
+  "title": "Toasts are smaller, sit closer to the screen corner and are gone in half the time",
+  "goal": "The little notices Photonz puts in the bottom-right corner of the screen (after a capture, a saved recording, an export and the like) feel too big, sit too far in from the corner and stay too long. Make them about a quarter smaller, tuck them closer into the corner, and have them gone in half the time they take today, while still being readable and still staying put while the pointer is over them.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-23T15:53:00.275Z",
+  "updated": "2026-11-23T15:53:00.523Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-23: \"can you make the toasts for photonz a bit smaller, a little closer to the corner of the screen, and maybe fade out in half the time? they're rather annoying and stay there too long\". This applies to Current and Next (the toast is shared code and the timing flag is in both releases).\n\nWhere: Sources/Photonz/ToastController.swift: margin = 16 (line ~45), placed at vf.maxX - margin - width, vf.minY + margin (~106, ~159, ~196); NoteToastView .frame(width: 244) .padding(12) .padding(8) for the shadow (~437-440); ToastView thumbnailSize 128x80 (~636), .padding(8), glass corner radius 12, .padding(8) shadow room; a button toast holds captureToastHoldSeconds * 4 (~149). Timing defaults: Sources/PhotonzCore/FeatureCatalog.swift:30-31 captureToastHoldSeconds = 7, captureToastFadeSeconds = 3, also the Experiments parameters (~439-444) and Experiments.swift:136-141. The doc comment at ToastController.swift:12 ('full opacity for 2s, fades over the next 5s') is already stale; fix it to the new truth.\n\nTrap: the 8 point clear area around each toast exists so the shadow and hover controls are not clipped, so to get closer to the corner reduce the margin rather than that area, or the shadow gets cut off. Thumbnail rendering (CaptureThumbnailView, fixedHeight) may size its poster from the old 80 point height: check recordings' poster frames still fill the smaller picture sharply.",
+  "acceptance": [
+    "Every corner toast kind is smaller: the capture toast's picture goes from 128 by 80 points to about 96 by 60, with its padding and corner radius scaled to match, and the note toast (244 points wide plus 12 padding today) and progress toast shrink in proportion. Text stays at least the system caption size and still reads; measured sizes before and after in the audit.",
+    "Closer to the corner: the visible edge of the toast sits about 10 points from the screen's right edge and from the bottom of the usable screen (above the Dock), down from about 24 today (a 16 point margin plus the 8 point clear area kept for the shadow). The shadow is still not clipped. Measured on screen in the audit, on a Mac with the Dock at the bottom and one with it hidden or on the side.",
+    "Half the time: a plain toast is fully gone 5 seconds after it appears instead of 10 (hold 3.5 s, fade 1.5 s, down from hold 7 s, fade 3 s); a toast that offers a button keeps its longer hold relative to the new default (it is 4 times the hold today). The Experiments window's capture toast timing sliders default to the new numbers. Hovering still keeps a toast up, and moving off it starts the fade again.",
+    "Stacked toasts still stack cleanly with the smaller size and margin, and the capture that clears the corner before a screenshot still clears it.",
+    "Tests and walks that pin the old sizes or timings are updated, not left asserting the old numbers; the focus drill for any walk that shows a toast still reads clean.",
+    "Audit under queue/audits/ with before and after pictures of the corner (capture toast, note toast, two stacked) and the measured gaps and times. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-23T15:53:00.277Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-23T15:53:00.522Z",
+      "note": "seq 4070 -> 30"
+    }
+  ]
+}
