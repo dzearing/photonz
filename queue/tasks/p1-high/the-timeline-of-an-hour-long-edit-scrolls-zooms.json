@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T19:35:46.636Z",
+  "updated": "2026-11-23T20:06:02.744Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T19:35:46.635Z",
-      "note": "... 44 earlier entries elided",
-      "elided": 44
-    },
-    {
-      "t": "2026-11-17T20:49:04.715Z",
-      "note": "Pass 9 results: first after-build (12:00) zoom in 9.2-9.4 (p95 24-25), out 8.8-9.0 (17-18), scroll 8.3 (12, 14-18 late), near Fit 1x 24-25 / 2x 15-18 / 4x 16-17; final build (12:45, Mac busier, far zoom 9-12 where it read 8) zoom 12.0-12.5, scroll 11.5-11.8. Pictures vs a HEAD build made the same hour: Fit identical but for single pixels on gap edges; zoomed, pictures landing and the dash phase along wide gaps' top edges (Chose to keep it over another build cycle because no person would see dashes a few points along). Chose to let a painted gap run off the window's edge as a painted clip does over the view's cut-at-the-edge slot because clamping would break sliding the canvas on a scroll. 16 walks green (task walks, gap walks, an-editing-session, reference-edit-opens); Scripts/test.sh green. Rule added to docs/design/video.md 8f. Audit queue/audits/2026-11-17-timeline-hour-long-painted-gaps.json."
-    },
-    {
-      "t": "2026-11-17T20:49:04.791Z",
-      "note": "Still open, bars not reached: zoom near Fit 17 ms vs 8.3, scroll p95 12 vs 8.3, edits 31-96 vs 16 (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). Next: painted cuts (~3 ms near Fit, not their shadows: the seam capsules, the cut canvas and paintedCuts each frame), then the clips' paint (~2 ms: waveforms the largest), then SwiftUI upkeep. Left rough, not filed: probe-only costs in measures (window watcher 0.27 ms every 20 ms, accessibility graph ~6%). Gotcha: git stash refused twice mid-pass (untracked path, then 'could not write index' while something else held the index); copy files aside instead. A probe build after a PhotonzCore change takes 8-11 min, past the 600 s foreground limit."
+      "t": "2026-11-23T20:06:02.743Z",
+      "note": "... 46 earlier entries elided",
+      "elided": 46
     },
     {
       "t": "2026-11-17T20:49:04.869Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T19:35:46.634Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-23T20:05:57.957Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T20:06:02.742Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T19:35:39.094Z",
+  "started": "2026-11-23T20:05:57.956Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
