@@ -18808,3 +18808,13 @@
 {"t":"2026-11-23T05:05:22.191Z","ev":"task_note","id":"music-dips-under-the-speech-by-itself"}
 {"t":"2026-11-23T05:05:22.259Z","ev":"task_note","id":"music-dips-under-the-speech-by-itself"}
 {"t":"2026-11-23T05:05:37.412Z","ev":"task_done","id":"music-dips-under-the-speech-by-itself","from":"in_progress","note":"Duck Under Speech on a sound clip's right-click, its level line's right-click and the Clip menu: music dips -8 dB under every spoken stretch the captions heard, as draggable level points; dimmed with a tip with no captions. Core in SpeechDucking.swift; verified by SpeechDuckingTests, an MP4 export test reading the music level back, Scripts/test.sh green, and two walks (no flags). Audit queue/audits/2026-11-22-music-dips-under-the-speech-by-itself.json. Commit a719514ea."}
+{"t":"2026-11-23T05:06:05.473Z","ev":"task_started","id":"zooms-write-themselves-from-the-clicks-in-a-reco","title":"Zooms write themselves from the clicks in a recording","priority":"p2-normal"}
+{"t":"2026-11-23T05:08:13.054Z","ev":"task_note","id":"zooms-write-themselves-from-the-clicks-in-a-reco"}
+{"t":"2026-11-23T05:30:36.773Z","ev":"task_walks","id":"zooms-write-themselves-from-the-clicks-in-a-reco","walks":["zooms-suggested-from-clicks-walk","add-zooms-from-clicks-clip-menu-walk"]}
+{"t":"2026-11-23T05:30:46.961Z","ev":"task_note","id":"zooms-write-themselves-from-the-clicks-in-a-reco"}
+{"t":"2026-11-23T05:30:47.029Z","ev":"task_note","id":"zooms-write-themselves-from-the-clicks-in-a-reco"}
+{"t":"2026-11-23T05:30:47.097Z","ev":"task_note","id":"zooms-write-themselves-from-the-clicks-in-a-reco"}
+{"t":"2026-11-23T05:30:47.166Z","ev":"task_note","id":"zooms-write-themselves-from-the-clicks-in-a-reco"}
+{"t":"2026-11-23T05:30:47.236Z","ev":"task_note","id":"zooms-write-themselves-from-the-clicks-in-a-reco"}
+{"t":"2026-11-23T05:30:47.323Z","ev":"task_note","id":"zooms-write-themselves-from-the-clicks-in-a-reco"}
+{"t":"2026-11-23T05:31:00.142Z","ev":"task_done","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":"in_progress","note":"Add Zooms from Clicks (was Suggest Zooms) in Clip menu and recording right-click; spread bursts now follow the pointer so every click is framed. ClipZoomTests (tests first), full Scripts/test.sh green, walks zooms-suggested-from-clicks-walk and add-zooms-from-clicks-clip-menu-walk pass at Next defaults with real captures; audit 2026-11-22-add-zooms-from-clicks.json. Commit 65f1b97d7."}
