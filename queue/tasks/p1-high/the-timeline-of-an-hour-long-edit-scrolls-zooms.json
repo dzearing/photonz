@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T21:36:52.520Z",
+  "updated": "2026-11-23T22:07:08.202Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T21:36:52.519Z",
-      "note": "... 52 earlier entries elided",
-      "elided": 52
-    },
-    {
-      "t": "2026-11-17T22:28:14.918Z",
-      "note": "Pass 10 verified: 15 walks green (task walks incl. a-cut-slid-under-a-still-pointer, a-painted-gap-takes-a-right-click, transitions-where-clips-meet, transition-band-reads-as-the-mock, transitions-at-a-cut, transition-placement-and-hold, an-editing-session, reference-edit-opens); a-transition-is-picked-at-the-cut-walk fails at step 46 (Fade In 0.51s), pre-existing, owned by walks-that-fail-in-the-full-sweep-27. speed-walk scrub flake folded into a-long-edit-with-transitions-plays-scrubs-and-ed. Scripts/test.sh green (one earlier run hit SmoothedCopyWriter readerStalled under load, passed alone; folded into find-out-why-the-legibility-check-once-read-the). Rule added in docs/design/video.md 8f. Audit queue/audits/2026-11-17-timeline-hour-long-pass10-per-frame-answers.json. Left rough, not filed: hasClickMarks still copies a layer per clip in sight per frame (~0.1 ms); TimelinePaintedHands rebuilds a hit shape of every painted rect each frame (switching it off measured nothing)."
-    },
-    {
-      "t": "2026-11-17T22:28:15.014Z",
-      "note": "Still open, bars not reached: near Fit ~15.5-16 ms mean vs 8.3; scroll ~10 vs 8.3; edits 36-98 vs 16 (inspector). No single painting element is worth more than ~1 ms now; reaching 8.3 near Fit likely needs the lanes drawn outside SwiftUI's per-frame graph (a layer-backed lane redrawn without rebuilding the view tree each zoom frame) rather than more trimming."
+      "t": "2026-11-23T22:07:08.201Z",
+      "note": "... 54 earlier entries elided",
+      "elided": 54
     },
     {
       "t": "2026-11-17T22:28:35.124Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T21:36:52.518Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-23T22:07:03.847Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T22:07:08.200Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T21:36:47.248Z",
+  "started": "2026-11-23T22:07:03.846Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
