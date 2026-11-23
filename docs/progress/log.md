@@ -23433,3 +23433,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - The short speed walk times a move (14), a transition (14) and a title reworded (11) while it plays; baseline rewritten.
 - Measured: with the panel out of the window every pick is 6-19 ms, so the panel is the whole excess, spread over every section. Picks (25-56), unpick (33) and edits with a clip picked (17-32) are still over 16 ms.
 - Next: a panel that holds what it shows during a pick while playing needs its sections to read a panel-only subject instead of the live pick (task log has the detail).
+
+## 2026-11-23 — picks while a long edit plays, pass 2
+
+- Next (`next-panel-waits-for-play-to-stop`, on by default): while a video plays, the sections and late rows a pick brings into the right hand panel wait for play to stop or the pointer to come into the panel (`PanelPlayHold`, `InspectorPanel.catchUp`, `PanelRowsArrival`). Speed walk worst of 3: pick from nothing 61 -> 22.8 ms, pick 26 -> 17.5, unpick 33 -> 12.8, blade picked 22 -> 16.6, trim picked 18 -> 12.1, undo picked 18 -> 13.0. Baseline rewritten. Walk: `a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk`.
+- Ruled out: freezing the panel in its own NSHostingView (bodies still flush unless it leaves the window, and it cannot be pictured meanwhile).
+- Next: pick, pick from nothing and blade picked are still over 16 ms; a pick with the whole panel already built is not timed yet. Leads in the task log.
