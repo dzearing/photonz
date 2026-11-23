@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-10T17:44:55.683Z",
-  "updated": "2026-11-22T13:27:06.372Z",
+  "updated": "2026-11-23T03:27:49.064Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-10 by the runner on an-unmanned-session-never-opens-the-installed-ph. Full Scripts/test.sh, exit 1:\n  [perf] budget: moving icon previews, whole strip of 5 — 21.2ms on the calibration machine clock against a budget of 20.5ms (baseline 5.0ms x 2.5 tolerance + 8ms). Read 24.2ms here beside a filter graph yardstick reading 9.1ms against its own 8.0ms\n  ✘ Test \"A whole strip of moving previews fits inside one frame of the loop\" at IconPreviewRenderTests.swift:372\nThen Scripts/test.sh --filter IconPreviewRenderTests alone: 10.5ms against 20.5ms, passed. The suite \"Previewing a moving icon, frame after frame\" is not a ...PerfTests suite, so MachineSpeed.checkInterleaved is read while the other three test processes compete (CLAUDE.md: a new speed budget goes in a PerfTests suite). An orphaned xctest from 2026-11-09 (pid 28380, 0% CPU, PhotonzMediaTests SpeechTranscriptionTests) was also still up.",
@@ -65,6 +65,10 @@
     {
       "t": "2026-11-22T13:27:06.371Z",
       "note": "seq 460 -> 440"
+    },
+    {
+      "t": "2026-11-23T03:27:49.063Z",
+      "note": "Seen again 2026-11-22 in full run 4 of 5 during the-video-tests-stop-crashing-the-test-run-when: whole strip of 5 at 21.9ms on the calibration clock against 20.5ms (read 18.7ms beside a yardstick at 7.1ms vs its own 8.0ms), inside the PhotonzCoreTests slice; runs 1, 2, 3 and 5 passed it."
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p2-normal",
   "seq": 7.5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-23T02:57:06.292Z",
-  "updated": "2026-11-23T02:57:06.295Z",
+  "updated": "2026-11-23T03:41:59.330Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in the third of five full Scripts/test.sh runs during task find-out-why-the-encoder-cannot-match-copy-test (exit 0 only because the wrapper rebuilt and reran). Wrapper said: swiftpm-testing-helper ... exited with unexpected signal code 11, then \"Throwing .build away and running again\". Nothing had rebuilt between run 2 and run 3, so it was not a half-built .build. Crash report ~/Library/Logs/DiagnosticReports/swiftpm-testing-helper-2026-11-22-184244.ips, faulting thread on the cooperative pool: EXC_BAD_ACCESS KERN_INVALID_ADDRESS at 0x0, __CF_IS_OBJC < CFDictionaryGetValue < CVPixelBufferPool::createPixelBuffer < CVPixelBufferPoolCreatePixelBuffer < TestClip.makePixelBuffer(pool:size:index:bits:) < TestClip.write(to:seconds:size:likeAScreenRecording:profile:bits:) < SmoothedCopyWriterTests.depth(). TestClip.write reads adaptor.pixelBufferPool fresh each frame and makePixelBuffer passes nil attributes; one theory, not checked, is that the pool is torn down when the writer fails or the hardware session is taken away under load. First such report on this Mac (the other helper crashes today are ZZTemporaryCrashProbeTests, a deliberate probe).",
@@ -21,7 +21,33 @@
     {
       "t": "2026-11-23T02:57:06.294Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-23T02:57:46.331Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T03:08:52.617Z",
+      "note": "Cause: AVAssetWriterInputPixelBufferAdaptor swaps its pixelBufferPool for a new one after the 4th frame of every write (measured: pool pointer 0x...98600 x4 then 0x...98800 x26 at 160x120, same at 320x200), and VideoToolbox frees the old pool on the encoder thread (vtBuildPixelBufferPoolsCommon < CFRelease < CVBufferPool::finalize, thread 119 of swiftpm-testing-helper-2026-11-22-184244.ips) while the adaptor can still hand it out. A frame asked of it then reads the pool's attributes dictionary at offset 0x28 as NULL (disassembly: CFDictionaryGetValue([pool+0x28], kCVBufferPropagatedAttachmentsKey) at createPixelBuffer+964, the exact crash offset). Reproduced: 8 writes at once with a second thread reading adaptor.pixelBufferPool through their first 10 frames, 'swift test --skip-build --filter ZZPoolHammerTests', died 'exited with unexpected signal code 11' 4 runs of 4, report swiftpm-testing-helper-2026-11-22-190354.ips (same EXC_BAD_ACCESS at 0x0 in CVPixelBufferPool::createPixelBuffer). Same pattern was in the app's own export writers (VideoExporter, DocumentMovieWriter, SmoothedCopyWriter, ReferenceFootage, TutorialSampleRecording), so a real export could die the same way."
+    },
+    {
+      "t": "2026-11-23T03:08:52.687Z",
+      "note": "Fix: Sources/PhotonzMedia/WriterFramePool.swift, a pool the writer makes once from the adaptor's own attributes (plus IOSurface) and holds for the write; every writer in Sources and the tests uses it, nothing reads adaptor.pixelBufferPool any more. Same hammer with the writer's own pool: 3 runs x 150 rounds, all passed. Tests: WriterFramePoolTests (3)."
+    },
+    {
+      "t": "2026-11-23T03:41:53.547Z",
+      "note": "Five full Scripts/test.sh runs in a row after the fix: no helper crash, no signal line, no 'Throwing .build away' rerun in any (logs /tmp/zz-run1..5.log; no new swiftpm-testing-helper report besides the deliberate reproductions at 19:03-19:07). Runs 1, 2, 3, 5 green; run 4 failed one unrelated speed check (IconPreviewRenderTests whole strip of moving previews, 21.9ms vs 20.5ms), folded into the-moving-icon-preview-speed-check-passes-on-a. Walks a-cross-fade-plays-as-exported, export-a-video-at-1080p, export-keeps-to-the-in-and-out, tutorial-export-the-video: 4 passed on a fresh probe build. Perf: export writers only, not the composite path; the own pool carries the adaptor's attributes on an IOSurface, so the encoder takes frames as before."
+    },
+    {
+      "t": "2026-11-23T03:41:59.243Z",
+      "note": "walks none -> none"
+    },
+    {
+      "t": "2026-11-23T03:41:59.328Z",
+      "note": "Cause: the video writer's adaptor swaps its frame pool a few frames into every write and the encoder frees the old one while it can still be handed out; reproduced 4 of 4 with a second thread reading the pool. Fix: Sources/PhotonzMedia/WriterFramePool.swift, a pool each writer owns, used by TestClip, the test writers and the app's five export writers that had the same race. Verified: WriterFramePoolTests, the reproduction passing 450 rounds on the own pool, five full Scripts/test.sh runs with no helper crash and no rerun (one unrelated icon speed check flaked in run 4, folded into its own task), four export walks green."
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-11-23T02:57:46.330Z",
+  "completed": "2026-11-23T03:41:59.329Z"
 }
