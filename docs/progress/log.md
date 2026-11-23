@@ -23408,3 +23408,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Fixtures that mean a bed running past the picture say so: core `addSound(..., stoppingWithThePicture: false)`, walk action `soundAddSampleWhole` (13 walks switched); `captionsAddVoiceover` lays its voiceover whole. `playback-speed-walk` rewinds and plays again before 1.5x.
 - `timeline-right-click-menus-walk` also expects the colour grade task's new "Add Color Grade" row.
 - Open: no fade at the song's end (iMovie fades); a flaky copy-writer test filed as find-out-why-the-encoder-cannot-match-copy-test.
+
+## 2026-11-22 — Duck Under Speech
+
+- Music under a captioned recording dips -8 dB under every spoken stretch with one command: the music's right-click, its level line's right-click, and Clip > Duck Under Speech. Written as level points (`Sources/PhotonzCore/SpeechDucking.swift`), so playback and export carry it and the points drag like any other.
+- Dimmed with a tip where there are no captions; left out on the voice itself. Reset Gain moved under More on a sound clip's right-click to keep it at 11 rows.
+- Tests: `SpeechDuckingTests`, `SpeechDuckExportTests` (real MP4). Walks: `music-ducks-under-the-speech-walk`, `duck-under-speech-from-the-clip-menu-walk`.
+- Open: the dips do not follow the voice when it moves (the mock's live Ducking section was not chosen on 2026-10-20).

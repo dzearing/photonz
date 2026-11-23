@@ -137,6 +137,7 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case detachAudio = "detach_audio"
     case reattachAudio = "reattach_audio"
     case flattenLevel = "flatten_level"
+    case duckUnderSpeech = "duck_under_speech"
     case normalizePeaks = "normalize_peaks"
     case normalizeLoudness = "normalize_loudness"
     case normalizeCleansNoise = "normalize_cleans_noise"
@@ -723,6 +724,9 @@ public enum AppCommandTable {
             make(.reattachAudio, "Re-attach Audio", clip, .timeline, needs: "a detached sound in hand",
                  picks: [.playhead, .layers]),
             make(.flattenLevel, "Flatten Level", clip, .timeline, needs: "a sound with level points in hand",
+                 picks: [.playhead, .layers]),
+            make(.duckUnderSpeech, "Duck Under Speech", clip, .timeline,
+                 needs: "a sound in hand that is not the voice, in a document with captions",
                  picks: [.playhead, .layers]),
             make(.normalizePeaks, "Peaks to -1 dB", normalize, .timeline, needs: soundPicked,
                  picks: [.playhead, .layers]),

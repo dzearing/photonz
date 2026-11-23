@@ -134,6 +134,7 @@ extension AppCommandID {
         case .detachAudio: "waveform.path.badge.minus"
         case .reattachAudio: "waveform.path.badge.plus"
         case .flattenLevel: "chart.line.flattrend.xyaxis"
+        case .duckUnderSpeech: "speaker.wave.2.bubble"
         case .normalizePeaks: "waveform"
         case .normalizeLoudness: "speaker.wave.3"
         // Both Clean Noise rows wear the same words, so the same icon.

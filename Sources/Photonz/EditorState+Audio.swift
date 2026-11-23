@@ -302,6 +302,41 @@ extension EditorState {
         if soundLinePick?.layerID == id { clearSoundLinePick() }
     }
 
+    // MARK: - Duck Under Speech
+
+    /// Whether Duck Under Speech can act on this sound: not the voice itself,
+    /// and only where captions say when somebody talks (`SpeechDucking.swift`).
+    func canDuckUnderSpeech(_ id: UUID) -> Bool {
+        document?.duckUnderSpeechAvailability(layerID: id) == .ready && !isClipLocked(id)
+    }
+
+    /// The tip a dimmed Duck Under Speech row wears, saying why.
+    func duckUnderSpeechTip(_ id: UUID) -> String? {
+        document?.duckUnderSpeechAvailability(layerID: id).tip
+    }
+
+    /// Duck Under Speech: the music dips under every stretch the captions
+    /// heard somebody talking, as level points on its bar that drag like any
+    /// other, in one step to undo.
+    func duckUnderSpeech(layerID id: UUID) {
+        guard canDuckUnderSpeech(id), let level = document?.levelDuckedUnderSpeech(layerID: id),
+              level != (document?.layer(id: id)?.soundLevel ?? AudioLevel()) else { return }
+        if selectedLayerID != id { selectLayer(id) }
+        writeSoundLevel(level, onLayer: id)
+    }
+
+    /// Duck Under Speech in the menus, for the sound a right click landed on.
+    /// Left out on the voice the captions came from, which it would only
+    /// turn down; dimmed with its tip where there are no captions yet.
+    func duckUnderSpeechMenuRow(layerID id: UUID) -> MenuRow? {
+        guard let availability = document?.duckUnderSpeechAvailability(layerID: id),
+              availability != .notASound, availability != .isTheVoice else { return nil }
+        return .command("Duck Under Speech", enabled: canDuckUnderSpeech(id),
+                        tip: availability.tip) {
+            self.duckUnderSpeech(layerID: id)
+        }
+    }
+
     // MARK: - Gain and Normalize
 
     /// The layers a right-click on one sound acts on: everything picked that

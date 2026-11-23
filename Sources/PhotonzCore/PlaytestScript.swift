@@ -1712,6 +1712,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Duck the picked layer: four points either side of a dip, which is all a
     /// duck is. It is a walk's stand-in for dragging four dots on the bar.
     case soundDuck
+    /// Fail unless the picked sound plays lower in the middle of every stretch
+    /// the captions heard somebody talking than in the pauses between them:
+    /// what Duck Under Speech has to have done (`SpeechDucking.swift`).
+    case soundExpectDuckedUnderSpeech
     /// Pull the picked layer's fader down to half, so a walk can photograph a
     /// level that is not the one it was recorded at.
     case soundLevelHalf
@@ -1931,6 +1935,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture, .expectZoomShowsItsBox,
              .zoomAddAtPlayhead, .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
              .soundDetach, .soundAddSample, .soundAddSampleWhole, .soundDuck, .soundLevelHalf,
+             .soundExpectDuckedUnderSpeech,
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,

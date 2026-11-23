@@ -1,0 +1,30 @@
+{
+  "feature": "Music dips under the speech by itself (Duck Under Speech)",
+  "epic": "video-audio",
+  "summary": "Right-click music under a captioned recording and choose Duck Under Speech: the music drops 8 dB under every stretch of talk and comes back up where nobody is talking, as level points on its bar you can drag afterwards. Playback and the exported MP4 both carry it.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Pictures are real window captures from music-ducks-under-the-speech-walk (probe, screen unlocked); duck-under-speech-from-the-clip-menu-walk picks the Clip menu row with the probe in front.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording of somebody talking with File > Open, then right-click its clip and choose Add Captions." },
+    { "do": "Cut the talk at two points a few seconds apart with Command B, pick the middle piece and press ; to lift it, leaving a silent gap." },
+    { "do": "Move the playhead to 0:00 and choose Sequence > Add Media at Playhead, picking any music file.", "shot": "2026-11-22-duck-under-speech-1-flat-sc.png" },
+    { "do": "Right-click the music on the Audio track and choose Duck Under Speech.", "shot": "2026-11-22-duck-under-speech-2-ducked-sc.png" },
+    { "do": "Press Space and listen across the gap: the music swells in it and settles back under the voice after it." },
+    { "do": "Drag one of the new points on the music's line, then press Command Z twice to get the flat line back." },
+    { "do": "Pick the music again and choose Clip > Duck Under Speech from the menu bar." },
+    { "do": "Open a recording with no captions, add music, and right-click it: Duck Under Speech is dimmed, and hovering it says captions are needed." }
+  ],
+  "evaluate": [
+    "Is -8 dB under the voice the right amount for your recordings, or does the music still fight the speech?",
+    "On a talk with no real pauses the music simply sits 8 dB lower the whole way. Is that what you expect from a duck?",
+    "Is it right that running it again replaces any points you had dragged along the line (fades are kept), the way Premiere's Generate Keyframes does?",
+    "Does the right-click on the music feel like the place you'd look for this, or did you reach for the panel first?"
+  ],
+  "rough": [
+    "The mock's Duck button in the timeline bar, its Ducking section in the panel (On/Off, Amount, Ramp) and its 'relationship, not a baked edit' behaviour are not built: the answer to decision music-dips-under-the-speech-by-itself-when-you-put-music-under-someone (option a, 2026-10-20) was one command that writes points. Move the voice afterwards and the dips stay where they were; run the command again.",
+    "The mock's menu row reads 'Duck music under voiceover'; the row says 'Duck Under Speech', the words decision music-dips-under-the-speech-by-itself-when-you-put-music-under-someone settled.",
+    "Speech recognition gives word timings that run end to end, so the only pauses it sees are real gaps of a second or more (a cut, a lifted piece, music before anyone talks). Short breaths between sentences stay ducked, which is on purpose: pauses under 1.1 s stay down so the music does not pump.",
+    "A sound clip's right-click was already at its 11-row limit, so Reset Gain moved under More on music and voice-overs (it is still on the top level of a video's own sound and in the Clip menu).",
+    "Amount and ramp are fixed at the mock's -8 dB and 300 ms; there is nowhere to change them yet other than dragging the points, because decision music-dips-under-the-speech-by-itself-when-you-put-music-under-someone chose a command over the mock's Ducking section."
+  ]
+}

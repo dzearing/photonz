@@ -256,6 +256,7 @@ extension EditorState {
         case .detachAudio: detachSound()
         case .reattachAudio: reattachSound()
         case .flattenLevel: clearSoundLevelPoints()
+        case .duckUnderSpeech: if let id = soundLayerInHand?.id { duckUnderSpeech(layerID: id) }
         case .normalizePeaks:
             let ids = soundIDsInHand
             Task { await normalizeSound(layers: ids) }
@@ -554,6 +555,7 @@ extension EditorState {
         case .detachAudio: return canDetachSound
         case .reattachAudio: return canReattachSound
         case .flattenLevel: return !soundLevelInHand.points.isEmpty
+        case .duckUnderSpeech: return soundLayerInHand.map { canDuckUnderSpeech($0.id) } ?? false
         case .normalizePeaks, .normalizeLoudness, .normalizeCleansNoise, .cleanNoise: return !soundIDsInHand.isEmpty
         case .resetGain:
             return soundIDsInHand.contains { (document?.layer(id: $0)?.soundLevel?.clipGainDB ?? 0) != 0 }

@@ -96,6 +96,18 @@ struct TimelineMenuTableTests {
         #expect(TimelineMenuTable.groups(for: thing)[1].first == .detachAudio)
     }
 
+    /// Music offers Duck Under Speech on its top level; a video's own sound,
+    /// the voice, never does, and Reset Gain is still reachable on both.
+    @Test func musicOffersDuckUnderSpeech() {
+        let music = TimelineMenuTable.groups(for: .soundClip).flatMap { $0 }
+        #expect(music.contains(.duckUnderSpeech))
+        #expect(TimelineMenuTable.moreGroups(for: .soundClip).flatMap { $0 }.contains(.resetGain))
+        let linked = TimelineMenuTable.groups(for: .linkedSound).flatMap { $0 }
+            + TimelineMenuTable.moreGroups(for: .linkedSound).flatMap { $0 }
+        #expect(!linked.contains(.duckUnderSpeech))
+        #expect(linked.contains(.resetGain))
+    }
+
     /// A title and a picture are placed in time: when they start and end at
     /// the playhead, and how they come in and go out.
     @Test(arguments: [TimelineMenuThing.title, .picture])

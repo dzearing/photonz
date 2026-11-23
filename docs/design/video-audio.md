@@ -550,7 +550,7 @@ points is a smear and a level line has nowhere to be dragged.
 | Mute and Solo | **Cut** | A level at nought IS mute. Solo is a mixer's product |
 | EQ and Compressor in Effects | **Built** (2026-10-02): EQ reads "low cut 80", Compressor "3:1", each with its settings under it and the switch on its row | The mock's dot switch is the picture list's eye, and its drag grip is left out because the order is fixed |
 | Fade in field, fade out field, curve picker, diamonds on the lane | **One thing: points on the level line** | §3 |
-| "Duck music under voiceover" as a menu command | **Cut** | It needs the app to know which layer is a voice. The points do it by hand |
+| "Duck music under voiceover" as a menu command | **Built** (2026-11-22) as **Duck Under Speech**, on the music's right-click, its level line's right-click and in the Clip menu, at the mock's -8 dB and 300 ms ramp | Cut on 2026-09-21 because the app could not tell which layer is a voice. The captions can: they wrote themselves off it, word by word (`SpeechDucking.swift`). It writes level points, so the dips drag like any other, and it replaces the points along the line (keeping the fades), as Premiere's Generate Keyframes does. A pause shorter than 1.1 s stays ducked so the music does not pump. Dimmed, with a tip, where there are no captions; left out on the voice itself. The mock's Ducking section with an On/Off toggle ("a relationship, not a baked edit") is not built: the dips are written once and follow nothing when the voice moves |
 | No Layers group in the dock | **Not followed** | `video.md` §5 settled this: not everything in a video document has time |
 
 ---

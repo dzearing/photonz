@@ -346,6 +346,7 @@ struct EveryMenuCommandHasANameTests {
         case .normalize: .command(.normalizeLoudness)
         case .cleanNoise: .command(.cleanNoise)
         case .resetGain: .command(.resetGain)
+        case .duckUnderSpeech: .command(.duckUnderSpeech)
         case .animateIn: .command(.animateIn)
         case .animateOut: .command(.animateOut)
         case .cut: .command(.cut)

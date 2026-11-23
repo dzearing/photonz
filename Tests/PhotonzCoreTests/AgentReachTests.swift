@@ -532,6 +532,7 @@ struct AgentReachTests {
         "EditorState+KeyGraph.swift › segmentMenuRows": "A stretch on a key graph",
         "EditorState+KeyLanes.swift › graphRows": "A key lane ▸ Show Graph",
         "EditorState+KeyLanes.swift › keyLaneMenuRows": "A key lane",
+        "EditorState+Audio.swift › duckUnderSpeechMenuRow": "A sound clip ▸ Duck Under Speech",
         "EditorState+KeyLanes.swift › keyMenuRows": "A key",
         "EditorState+KeyLanes.swift › pasteKeysRow": "A key lane ▸ Paste Keys",
         "EditorState+MeasureChip.swift › measureChipStyleMenuRows": "A measurement's label chip",

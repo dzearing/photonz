@@ -225,6 +225,7 @@ extension EditorState {
         // The panel's Channel counts the points and has no button for it (one
         // main action per section, UX-PATTERNS Inspector row).
         rows.append(.separator)
+        if let duck = duckUnderSpeechMenuRow(layerID: layerID) { rows.append(duck) }
         rows.append(.command("Flatten Level", enabled: !level.points.isEmpty) {
             self.clearSoundLevelPoints(layerID: layerID)
         })

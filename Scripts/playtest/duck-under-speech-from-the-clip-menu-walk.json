@@ -1,0 +1,19 @@
+{
+  "out": "/tmp/photonz-playtest/duck-under-speech-from-the-clip-menu-walk",
+  "seed": "At Next defaults, with no switch touched, the probe in front so its Clip menu is live. The talk sample with its captions written and the sample music added at 0:00 and picked: Clip > Duck Under Speech, picked from the menu bar, dips the music under every stretch of speech the way its right-click does.",
+  "setup": { "timelineOpen": true, "forget": ["all"], "front": true },
+  "steps": [
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "action", "action": "captionsWriteQuietly" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "clickRuler", "seconds": 0.0 },
+    { "do": "action", "action": "soundAddSample" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "menus", "stage": "clip-menu", "menu": "Clip", "choose": "Clip > Duck Under Speech" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "soundExpectDuckedUnderSpeech" },
+    { "do": "snapshot", "name": "1-ducked-from-the-menu-bar" }
+  ]
+}

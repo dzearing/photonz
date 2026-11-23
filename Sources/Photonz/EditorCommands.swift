@@ -1233,6 +1233,15 @@ struct EditorCommands: Commands {
             .disabled(!(editor?.canRun(.flattenLevel) ?? false))
     }
 
+    /// Duck Under Speech: the picked music dips under every stretch the
+    /// captions heard. Dimmed with a tip saying why where it cannot.
+    @ViewBuilder private var duckUnderSpeechRow: some View {
+        let sound = editor?.soundLayerInHand?.id
+        Button("Duck Under Speech") { editor?.run(.duckUnderSpeech) }
+            .disabled(!(editor?.canRun(.duckUnderSpeech) ?? false))
+            .help(sound.flatMap { editor?.duckUnderSpeechTip($0) } ?? "")
+    }
+
     /// Insert Title Page ▸ and Insert Name Card ▸, each listing its presets,
     /// the person's own first (`EditorState+TitlePresets`). Dimmed where the
     /// document has no time to put one in.
@@ -1805,6 +1814,7 @@ struct EditorCommands: Commands {
             if Experiments.shared.soundOnTheTimelineEnabled {
                 detachAudioRow
                 flattenLevelRow
+                duckUnderSpeechRow
                 soundCleanupRows
                 Divider()
             }

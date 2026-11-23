@@ -85,6 +85,9 @@ struct MenuRow: Identifiable {
     /// nobody has to hunt for why a row is dead.
     var isEnabled: Bool = true
     var isDestructive: Bool = false
+    /// What a greyed row's tip says about why, where the menu alone cannot:
+    /// Duck Under Speech saying it needs captions.
+    var tip: String?
     var kind: Kind = .command
     /// A small picture beside the title: a curve's shape in a curve list.
     var image: NSImage?
@@ -93,10 +96,10 @@ struct MenuRow: Identifiable {
     static var separator: MenuRow { MenuRow(kind: .separator) }
 
     static func command(_ title: String, _ shortcut: MenuShortcut? = nil,
-                        enabled: Bool = true, destructive: Bool = false,
+                        enabled: Bool = true, destructive: Bool = false, tip: String? = nil,
                         run: @escaping @MainActor () -> Void) -> MenuRow {
         MenuRow(title: title, shortcut: shortcut, isEnabled: enabled,
-                isDestructive: destructive, kind: .command, run: run)
+                isDestructive: destructive, tip: tip, kind: .command, run: run)
     }
 
     static func toggle(_ title: String, isOn: Bool, shortcut: MenuShortcut? = nil,
@@ -154,6 +157,7 @@ struct MenuRowsView: View {
     private func command(_ row: MenuRow) -> some View {
         let button = Button(role: row.isDestructive ? .destructive : nil) { row.run() } label: { label(row) }
             .disabled(!row.isEnabled)
+            .help(row.tip ?? "")
         if let shortcut = row.shortcut {
             button.keyboardShortcut(shortcut.keyEquivalent, modifiers: shortcut.modifiers)
         } else {
@@ -179,6 +183,7 @@ private final class MenuRowItem: NSMenuItem {
         if case .toggle(let isOn) = row.kind { state = isOn ? .on : .off }
         image = row.image
         isEnabled = row.isEnabled
+        toolTip = row.tip
         target = self
         action = #selector(fire)
     }

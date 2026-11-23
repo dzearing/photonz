@@ -6071,6 +6071,49 @@ private final class Run {
                     throw Failure(description: "the duck did not land: the level has "
                         + "\(editor.soundLevelInHand.points.count) points on it, not 4")
                 }
+            case .soundExpectDuckedUnderSpeech:
+                guard let layer = editor.soundLayerInHand, let time = layer.time,
+                      let document = editor.document else {
+                    throw Failure(description: "nothing picked makes a sound, so nothing can be ducked")
+                }
+                let stretches = document.speechStretches
+                guard !stretches.isEmpty else {
+                    throw Failure(description: "the captions say nobody talks, so there is no speech to duck under")
+                }
+                let level = layer.soundLevel ?? AudioLevel()
+                let full = level.gain
+                var under: [String] = []
+                let words = document.captionLayers.flatMap { document.captionWordsAsShown(of: $0.id) ?? [] }
+                    .sorted { $0.startMS < $1.startMS }
+                let pauses = zip(words, words.dropFirst()).map { $1.startMS - $0.endMS }.filter { $0 >= 300 }
+                    .sorted(by: >).prefix(6).map { String(format: "%.2fs", Double($0) / 1000) }
+                let said = "longest pauses between words: \(pauses.joined(separator: " ")); speech: " + stretches.map { String(format: "%.1f-%.1fs", Double($0.lowerBound) / 1000,
+                                                              Double($0.upperBound) / 1000) }.joined(separator: ", ")
+                      + String(format: "; the sound runs %.1f-%.1fs", Double(time.inMS) / 1000, Double(time.outMS) / 1000)
+                for span in stretches where span.upperBound > time.inMS && span.lowerBound < time.outMS {
+                    let from = max(span.lowerBound, time.inMS), to = min(span.upperBound, time.outMS)
+                    let middle = (from + to) / 2 - time.inMS
+                    let heard = level.gain(atLayerMS: middle)
+                    guard heard < full * 0.75 else {
+                        throw Failure(description: "the music is not down under the speech at "
+                            + "\(Double(middle + time.inMS) / 1000)s: it plays at \(heard) of \(full)")
+                    }
+                    under.append(String(format: "%.1fs", Double(middle + time.inMS) / 1000))
+                }
+                for (a, b) in zip(stretches, stretches.dropFirst())
+                where a.upperBound >= time.inMS && b.lowerBound <= time.outMS {
+                    let middle = (a.upperBound + b.lowerBound) / 2 - time.inMS
+                    let heard = level.gain(atLayerMS: middle)
+                    guard heard > full * 0.95 else {
+                        throw Failure(description: "the music does not come back up in the pause at "
+                            + "\(Double(middle + time.inMS) / 1000)s: it plays at \(heard) of \(full)")
+                    }
+                }
+                guard !under.isEmpty else {
+                    throw Failure(description: "no stretch of speech falls inside the picked sound")
+                }
+                note(number, step.name, said + "; down under \(under.count) of them, at "
+                     + under.joined(separator: ", "))
             case .soundLevelHalf:
                 guard editor.soundLayerInHand != nil else {
                     throw Failure(description: "nothing picked makes a sound, so there is no level "
@@ -7987,7 +8030,7 @@ private final class Run {
             // Sound, handled in full above with the rest of the timeline, where
             // each one can refuse the walk rather than quietly doing nothing.
             case .soundDetach, .soundAddSample, .soundAddSampleWhole, .soundDuck, .soundLevelHalf,
-                 .soundExpectPlaying, .panelExpectOnClipUnderPlayhead, .soundHoldTheOutputUp, .soundExportMix, .soundScrubAcrossIt,
+                 .soundExpectDuckedUnderSpeech, .soundExpectPlaying, .panelExpectOnClipUnderPlayhead, .soundHoldTheOutputUp, .soundExportMix, .soundScrubAcrossIt,
                  .soundExpectMixOver, .soundExpectMeterReads, .soundExpectCutCarried,
                  .videoSeekStart: break
             // Captions, handled in full above for the same reason: each one

@@ -283,6 +283,10 @@ extension EditorState {
             var sound = soundGainRows(layerID: layerID)
             if let captions = addCaptionsMenuRow() { sound += (sound.isEmpty ? [] : [.separator]) + [captions] }
             return sound.isEmpty ? [] : [.submenu(ClipMenuPlan.soundSubmenuTitle, sound)]
+        case .duckUnderSpeech:
+            guard Experiments.shared.soundOnTheTimelineEnabled, !clip.onTheSound,
+                  let row = duckUnderSpeechMenuRow(layerID: layerID) else { return [] }
+            return [row]
         case .normalize:
             return Array(soundGainRows(layerID: layerID).prefix(1))
         case .cleanNoise:

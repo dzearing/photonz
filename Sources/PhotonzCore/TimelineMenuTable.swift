@@ -45,7 +45,7 @@ public enum TimelineMenuRow: String, CaseIterable, Sendable {
     // At the playhead
     case split, freezeFrame, speed, startAtPlayhead, endAtPlayhead
     // What a clip does
-    case transition, detachAudio, audio, normalize, cleanNoise, resetGain, animateIn, animateOut
+    case transition, detachAudio, audio, duckUnderSpeech, normalize, cleanNoise, resetGain, animateIn, animateOut
     // The clipboard and the deletes
     case cut, copy, delete, rippleDelete
     // One level down
@@ -80,9 +80,18 @@ public enum TimelineMenuTable {
              [.transition, .detachAudio, .audio],
              [.cut, .copy, .delete, .rippleDelete],
              [.more]]
-        case .linkedSound, .soundClip:
+        case .linkedSound:
             [[.split, .speed],
              [.detachAudio, .normalize, .cleanNoise, .resetGain],
+             [.cut, .copy, .delete, .rippleDelete],
+             [.more]]
+        // Music, a voice-over, a detached sound: Duck Under Speech leads what
+        // it does, the one-step dip under the captions' speech, and Reset
+        // Gain, which only acts once gain was changed, goes one level down to
+        // keep the menu at eleven rows.
+        case .soundClip:
+            [[.split, .speed],
+             [.detachAudio, .duckUnderSpeech, .normalize, .cleanNoise],
              [.cut, .copy, .delete, .rippleDelete],
              [.more]]
         // Fade In and Out leads what it does: the user, 2026-10-19, had to
@@ -132,9 +141,13 @@ public enum TimelineMenuTable {
              [.punchIn, .addZoom, .suggestZooms, .addClick],
              [.animate, .addKey, .pasteKeys],
              [.breakApart, .selectForward, .duplicate, .rename, .revealInFinder]]
-        case .linkedSound, .soundClip:
+        case .linkedSound:
             [[.rippleTrimStart, .rippleTrimEnd],
              [.addCaptions],
+             [.breakApart, .selectForward, .duplicate, .rename, .revealInFinder]]
+        case .soundClip:
+            [[.rippleTrimStart, .rippleTrimEnd],
+             [.resetGain, .addCaptions],
              [.breakApart, .selectForward, .duplicate, .rename, .revealInFinder]]
         case .title, .picture:
             [[.fadeIn, .fadeOut, .transition, .animate, .addKey, .pasteKeys],
