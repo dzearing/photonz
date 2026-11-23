@@ -372,7 +372,7 @@ The try paths: scenario 2 (a box in a cloud, as SVG) and scenario 3 (measurement
 | `move_clip` | Slide a clip to a time, or onto another track; refused where it would land over a clip | `moveClip(_:toInMS:)`, `moveClip(_:toTrack:)` (dragging the bar) |
 | `set_transition` | A kind (or `none`) and a length on the cut at `seconds`, from read_document's `cuts`; a kind the cut cannot pay for is refused with the kinds it can take | `setTransition(_:at:)` (the transition picker), `withLength` (Length) |
 | `add_title`, `list_titles` | A title page or name card in one of the Insert menu's styles, with its words; with `clip`, a page in front of that clip, the clip and what follows moving along, the default transition on the join | `insertTitleBeforeClip`, `insertTitle` (Sequence > Insert Title Page), then `commitTextEdit` + `relayOutTitle` per line, as typing does |
-| `recommended_zooms`, `apply_zooms` | The zooms the app recommends from each recording's kept clicks, on the video's clock; then put them on, one step for every clip | `addSuggestedZooms` on a copy; `suggestZooms(onClip:)` (Suggest Zooms) |
+| `recommended_zooms`, `apply_zooms` | The zooms the app recommends from each recording's kept clicks, on the video's clock; then put them on, one step for every clip | `addSuggestedZooms` on a copy; `suggestZooms(onClip:)` (Add Zooms from Clicks) |
 | `set_playhead` | Move the playhead | `moveDocumentPlayhead` |
 | `export` | `format: mp4` with `size` (full, 1080p, 720p, 480p) and `quality` (high, standard, small), written straight to a path; answers once the file is there | `EditorState.writeVideo`, the write the Export sheet ends in |
 

@@ -634,7 +634,7 @@ public enum AppCommandTable {
             make(.showClickEffects, "Show Click Effects", clip, .timeline, needs: "a recording with clicks",
                  picks: [.playhead, .layers], toggle: true),
             make(.addZoom, "Add Zoom", clip, .timeline, needs: "a recording under the playhead", picks: .playhead),
-            make(.suggestZooms, "Suggest Zooms", clip, .timeline, needs: "a recording in hand",
+            make(.suggestZooms, "Add Zooms from Clicks", clip, .timeline, needs: "a recording in hand",
                  picks: [.playhead, .layers]),
             make(.renameClip, "Rename\u{2026}", clip, .timeline, needs: clipInHand, picks: [.playhead, .layers],
                  options: [nameArgument]),

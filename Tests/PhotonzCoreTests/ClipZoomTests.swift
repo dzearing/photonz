@@ -366,6 +366,99 @@ struct ClipZoomTests {
                                      sourceRange: 0...12_000, keepingClearOf: []).isEmpty)
     }
 
+    /// A pointer that glides straight between two points of a recording.
+    static func glide(from a: (ms: Int, x: Double, y: Double), to b: (ms: Int, x: Double, y: Double)) -> PointerTrack {
+        var samples: [PointerSample] = []
+        var ms = a.ms - 1500
+        while ms <= b.ms + 2500 {
+            let t = min(max(Double(ms - a.ms) / Double(b.ms - a.ms), 0), 1)
+            samples.append(PointerSample(ms: ms, x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t))
+            ms += 33
+        }
+        return PointerTrack(pixelSize: CGSize(width: 2000, height: 1000), samples: samples, clicks: [])
+    }
+
+    @Test func clicksSpreadAcrossThePictureFollowThePointerSoEveryClickIsSeen() {
+        // A menu at the top left, then a button at the bottom right, under a
+        // second apart: no fixed frame tighter than the whole picture holds both.
+        let clicks = [Self.click(3000, 150, 100), Self.click(3800, 1850, 900)]
+        let track = Self.glide(from: (3000, 150, 100), to: (3800, 1850, 900))
+        let suggested = ClipZoom.suggestions(clicks: clicks, pixelSize: CGSize(width: 2000, height: 1000),
+                                             sourceRange: 0...12_000, keepingClearOf: [], cursorTrack: track)
+        #expect(suggested.count == 1)
+        guard let zoom = suggested.first else { return }
+        #expect(zoom.followsCursor)
+        #expect(zoom.cursor != nil)
+        #expect(zoom.scale >= ClipZoom.suggestedScales.lowerBound)
+        // Each click is inside the frame at the moment it lands.
+        for click in clicks {
+            let unit = CGPoint(x: click.point.x / 2000, y: click.point.y / 1000)
+            #expect(zoom.target(atMS: click.downMS).contains(unit))
+        }
+    }
+
+    @Test func clicksThatFitTogetherStayAStillZoomEvenWithAPointerPath() {
+        let clicks = [Self.click(3000, 1500, 200), Self.click(3800, 1600, 260)]
+        let track = Self.glide(from: (3000, 1500, 200), to: (3800, 1600, 260))
+        let suggested = ClipZoom.suggestions(clicks: clicks, pixelSize: CGSize(width: 2000, height: 1000),
+                                             sourceRange: 0...12_000, keepingClearOf: [], cursorTrack: track)
+        #expect(suggested.count == 1)
+        #expect(suggested.first?.followsCursor == false)
+    }
+
+    @Test func withoutAPointerPathSpreadClicksAreFramedAtWhatHoldsThemAll() {
+        // Too far apart for the usual tightest frame, near enough for a looser one.
+        let clicks = [Self.click(3000, 300, 200), Self.click(3800, 1650, 700)]
+        let suggested = ClipZoom.suggestions(clicks: clicks, pixelSize: CGSize(width: 2000, height: 1000),
+                                             sourceRange: 0...12_000, keepingClearOf: [])
+        #expect(suggested.count == 1)
+        guard let zoom = suggested.first else { return }
+        #expect(!zoom.followsCursor)
+        for click in clicks {
+            let unit = CGPoint(x: click.point.x / 2000, y: click.point.y / 1000)
+            #expect(zoom.region.contains(unit))
+        }
+    }
+
+    @Test func withoutAPointerPathClicksInOppositeCornersGetNoZoom() {
+        // The only frame holding both is the whole picture: nothing to zoom on.
+        let clicks = [Self.click(3000, 40, 30), Self.click(3800, 1960, 970)]
+        #expect(ClipZoom.suggestions(clicks: clicks, pixelSize: CGSize(width: 2000, height: 1000),
+                                     sourceRange: 0...12_000, keepingClearOf: []).isEmpty)
+    }
+
+    @Test func burstsJustPastTheGapAreTwoZoomsThatNeverOverlap() {
+        let second = 3000 + ClipZoom.clusterGapMS + 1
+        let clicks = [Self.click(3000, 1500, 200), Self.click(second, 400, 700)]
+        let suggested = ClipZoom.suggestions(clicks: clicks, pixelSize: CGSize(width: 2000, height: 1000),
+                                             sourceRange: 0...20_000, keepingClearOf: [])
+        #expect(suggested.count == 2)
+        if suggested.count == 2 {
+            #expect(suggested[0].endMS <= suggested[1].startMS)
+            #expect(suggested[0].endMS - suggested[0].easeOutMS >= 3000)
+            #expect(suggested[1].startMS + suggested[1].easeInMS <= second)
+        }
+    }
+
+    @Test func clicksJustInsideTheGapShareOneZoom() {
+        let second = 3000 + ClipZoom.clusterGapMS
+        let clicks = [Self.click(3000, 1500, 200), Self.click(second, 1550, 260)]
+        #expect(ClipZoom.suggestions(clicks: clicks, pixelSize: CGSize(width: 2000, height: 1000),
+                                     sourceRange: 0...20_000, keepingClearOf: []).count == 1)
+    }
+
+    @Test func clicksOutsideWhatTheClipPlaysAreLeftOut() {
+        // The clip plays 2s to 10s of its recording; the clicks at 1s and 11s are trimmed away.
+        let clicks = [Self.click(1000, 300, 300), Self.click(2300, 1500, 200), Self.click(11_000, 300, 800)]
+        let suggested = ClipZoom.suggestions(clicks: clicks, pixelSize: CGSize(width: 2000, height: 1000),
+                                             sourceRange: 2000...10_000, keepingClearOf: [])
+        #expect(suggested.count == 1)
+        guard let zoom = suggested.first else { return }
+        #expect(zoom.startMS == 2000)
+        #expect(zoom.endMS <= 10_000)
+        #expect(zoom.region.contains(CGPoint(x: 0.75, y: 0.2)))
+    }
+
     @Test func aSuggestionIsKeptInsideTheClip() {
         let clicks = [Self.click(200, 1000, 500), Self.click(11_900, 1000, 500)]
         let suggested = ClipZoom.suggestions(clicks: clicks, pixelSize: CGSize(width: 2000, height: 1000),

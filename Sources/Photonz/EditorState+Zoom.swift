@@ -12,7 +12,7 @@ import PhotonzCore
 // the box on it to move, resize or draw again. Moving the playhead takes the
 // box down, so a scrub shows exactly what the zoom does at every frame, the
 // same as playing and exporting. Follow Cursor makes the box
-// ride the pointer the recorder took down; Suggest Zooms puts one round every
+// ride the pointer the recorder took down; Add Zooms from Clicks puts one round every
 // run of clicks. Every change is one undo step.
 
 /// Which zoom on which clip.
@@ -134,18 +134,20 @@ extension EditorState {
         return CGPoint(x: p.x / track.pixelSize.width, y: p.y / track.pixelSize.height)
     }
 
-    /// Whether Suggest Zooms has anything to go on: clicks on the clip, and
+    /// Whether Add Zooms from Clicks has anything to go on: clicks on the clip, and
     /// room for a zoom round at least one run of them.
     func canSuggestZooms(onClip id: UUID) -> Bool {
         guard canWorkWithZooms, !isClipLocked(id), var trial = document else { return false }
-        return !trial.addSuggestedZooms(toClip: id, clicks: clicks(ofClip: id)).isEmpty
+        return !trial.addSuggestedZooms(toClip: id, clicks: clicks(ofClip: id),
+                                        cursorTrack: recordedPointerTrack(ofClip: id)).isEmpty
     }
 
     func suggestZooms(onClip id: UUID) {
         guard canSuggestZooms(onClip: id) else { return }
         let clicks = clicks(ofClip: id)
+        let track = recordedPointerTrack(ofClip: id)
         var made: [ClipZoom] = []
-        perform { made = $0.addSuggestedZooms(toClip: id, clicks: clicks) }
+        perform { made = $0.addSuggestedZooms(toClip: id, clicks: clicks, cursorTrack: track) }
         guard let first = made.first else { return }
         pickZoom(ClipZoomRef(layerID: id, zoomID: first.id))
         raiseCanvasNotice(.zoomsAdded(count: made.count), action: .undo)
@@ -372,14 +374,14 @@ extension EditorState {
 
     // MARK: Menus
 
-    /// Add Zoom and Suggest Zooms, for a recording's right-click menu.
+    /// Add Zoom and Add Zooms from Clicks, for a recording's right-click menu.
     func addZoomMenuRows(layerID: UUID, atMS ms: Int) -> [MenuRow] {
         guard canWorkWithZooms, document?.layer(id: layerID)?.takesAZoom == true else { return [] }
         return [
             .command("Add Zoom", enabled: canAddZoom(toClip: layerID, atMS: ms)) {
                 self.addZoom(toClip: layerID, atMS: ms)
             },
-            .command("Suggest Zooms", enabled: canSuggestZooms(onClip: layerID)) {
+            .command("Add Zooms from Clicks", enabled: canSuggestZooms(onClip: layerID)) {
                 self.suggestZooms(onClip: layerID)
             },
         ]

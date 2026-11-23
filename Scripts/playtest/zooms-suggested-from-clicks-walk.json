@@ -1,16 +1,86 @@
 {
   "out": "/tmp/photonz-playtest/zooms-suggested-from-clicks-walk",
-  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
   "steps": [
-    { "do": "action", "action": "openSampleRecording" },
-    { "do": "wait", "seconds": 2.0 },
-    { "do": "action", "action": "videoPause" },
-    { "do": "tool", "tool": "select" },
-    { "do": "action", "action": "zoomScriptPointerPath" },
-    { "do": "rightClick", "at": [900, 866], "space": "window", "shot": "0-clip-menu-suggest-zooms", "choose": "Suggest Zooms" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "expectZoomSuggested" },
-    { "do": "describe", "stage": "1-suggested", "note": "A recording with two clicks close together at 2 and 2.6 seconds, right-click, Suggest Zooms: one zoom lands round them, arriving before the first and leaving after the second, picked with its box up" },
-    { "do": "snapshot", "name": "1-a-zoom-round-the-clicks" }
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "zoomScriptPointerPath"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        900,
+        866
+      ],
+      "space": "window",
+      "shot": "0-clip-menu-add-zooms-from-clicks",
+      "choose": "Add Zooms from Clicks"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "expectZoomSuggested"
+    },
+    {
+      "do": "describe",
+      "stage": "1-suggested",
+      "note": "A recording with two clicks close together at 2 and 2.6 seconds, right-click, Add Zooms from Clicks: one zoom lands round them, arriving before the first and leaving after the second, picked with its box up"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-zoom-round-the-clicks"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "2-easing-in-at-1-5s"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.4
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "3-zoomed-in-at-2-4s"
+    }
   ]
 }

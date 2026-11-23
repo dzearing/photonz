@@ -1329,7 +1329,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless the one zoom on the recording has been reshaped from how
     /// Add Zoom made it: a longer way out, an earlier end and a wider box.
     case expectZoomShapedByHand
-    /// Fail unless Suggest Zooms put exactly one zoom on the recording, in
+    /// Fail unless Add Zooms from Clicks put exactly one zoom on the recording, in
     /// place by its first scripted click, still there at its last, and framing
     /// both.
     case expectZoomSuggested

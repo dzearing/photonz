@@ -9,7 +9,7 @@ import Foundation
 // Video (from clips, the way Premiere's New Sequence from Clip sizes the
 // frame to the first), Add Media at Playhead, the blade, the trim handles, a
 // clip dragged along, the transition picker, Insert Title Page with its words
-// typed in, Suggest Zooms and Export. The app half is
+// typed in, Add Zooms from Clicks and Export. The app half is
 // `Sources/Photonz/Agent/AgentVideoWork.swift`.
 
 /// A recording to put on the timeline: a file, or an item of History by its
@@ -183,7 +183,7 @@ extension AgentTools {
             ])),
         AgentTool(
             name: "apply_zooms",
-            description: "Put the recommended zooms on a clip, or on every recording, as Suggest Zooms does. One undo step for all of them.",
+            description: "Put the recommended zooms on a clip, or on every recording, as Add Zooms from Clicks does. One undo step for all of them.",
             inputSchema: videoSchema([
                 "document": videoDocument,
                 "clip": ["type": "string", "description": "One clip's id. Every recording that has recommendations when left out."],

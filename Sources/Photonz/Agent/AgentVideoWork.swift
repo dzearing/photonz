@@ -8,7 +8,7 @@ import PhotonzRender
 /// Each one runs the edit a person makes: File > New Video, Add Media at
 /// Playhead over the picked track, the blade, the trim handles, a bar dragged
 /// along, the transition picker, Insert Title Page and the words typed into
-/// it, Suggest Zooms, and the write the Export sheet ends in. Each lands
+/// it, Add Zooms from Clicks, and the write the Export sheet ends in. Each lands
 /// inside `asOneUndoStep`, so one Command Z takes back one thing the agent did.
 @MainActor
 enum AgentVideoWork {
@@ -506,7 +506,8 @@ enum AgentVideoWork {
         let listed = try recordings(editor, clip: clip).map { layer -> ClipZooms in
             let clicks = editor.clicks(ofClip: layer.id)
             var trial = document
-            let zooms = trial.addSuggestedZooms(toClip: layer.id, clicks: clicks)
+            let zooms = trial.addSuggestedZooms(toClip: layer.id, clicks: clicks,
+                                                cursorTrack: editor.recordedPointerTrack(ofClip: layer.id))
             let placed = trial.layer(id: layer.id) ?? layer
             let note: String? = clicks.isEmpty ? "No clicks were kept while this was recorded, so nothing is recommended."
                 : zooms.isEmpty ? "Every click already has a zoom, or none has room for one." : nil

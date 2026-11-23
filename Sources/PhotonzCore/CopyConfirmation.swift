@@ -188,7 +188,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// picture that did nothing.
         case clickAdded(atMS: Int)
         /// Zoom regions were put on a recording (`ClipZoom.swift`): one by
-        /// Add Zoom, or as many as Suggest Zooms found runs of clicks for.
+        /// Add Zoom, or as many as Add Zooms from Clicks found runs of clicks for.
         case zoomsAdded(count: Int)
         /// A tool's letter picked up a tool that is folded under More on this
         /// bar (a document with time, `ToolBarFold`). The tool is in hand and

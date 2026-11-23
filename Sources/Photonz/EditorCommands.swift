@@ -1469,7 +1469,7 @@ struct EditorCommands: Commands {
                 editor?.run(.addZoom)
             }
             .disabled(!(editor?.canRun(.addZoom) ?? false))
-            Button("Suggest Zooms") { editor?.run(.suggestZooms) }
+            Button("Add Zooms from Clicks") { editor?.run(.suggestZooms) }
                 .disabled(!(editor?.canRun(.suggestZooms) ?? false))
             // The picked zooms' own verbs, as their bars' right-click has
             // them: every zoom picked at once.

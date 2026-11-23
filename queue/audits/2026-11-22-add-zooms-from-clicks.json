@@ -1,0 +1,29 @@
+{
+  "feature": "Add Zooms from Clicks",
+  "epic": "video-transitions-motion",
+  "summary": "A recording that kept its clicks gets a zoom round each burst of them with one command, in the Clip menu and on the clip's right-click. Clicks too far apart for one still frame now get a zoom that follows the pointer, so no click is cropped out.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Needs a screen recording made in Photonz with some clicks in it (File > New Recording, click around, stop). Checked by the walks zooms-suggested-from-clicks-walk and add-zooms-from-clicks-clip-menu-walk on the probe, which script two clicks into the sample recording.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording you made in Photonz that has clicks in it, and pick its clip on the timeline." },
+    { "do": "Right-click the clip and choose Add Zooms from Clicks (it is in the Clip menu too).", "shot": "2026-11-22-add-zooms-from-clicks-1-a-zoom-round-the-clicks-sc.png" },
+    { "do": "Put the playhead just before the first click: the picture is partway into the zoom.", "shot": "2026-11-22-add-zooms-from-clicks-2-easing-in-at-1-5s-sc.png" },
+    { "do": "Put the playhead on the clicks: the picture is fully zoomed on where you clicked.", "shot": "2026-11-22-add-zooms-from-clicks-3-zoomed-in-at-2-4s-sc.png" },
+    { "do": "Drag a zoom bar on the Zoom lane, or drag its ends, to move or trim it like any zoom." },
+    { "do": "Press Command-Z once: every zoom the command made goes.", "shot": "2026-11-22-add-zooms-from-clicks-3-one-undo-takes-it-off-sc.png" },
+    { "do": "Open a recording with no clicks and look at Clip > Add Zooms from Clicks: it is greyed." }
+  ],
+  "evaluate": [
+    "Does a zoom arrive early enough before your first click that you see the click land?",
+    "Clicks within two and a half seconds share one zoom. Does that split your recording into the moments you would have picked?",
+    "When your clicks jump across the screen, does the zoom that follows the pointer feel smooth, or would you rather have two separate zooms?",
+    "Is Add Zooms from Clicks the name you would look for?"
+  ],
+  "rough": [
+    "The command was already in the app as Suggest Zooms; this renames it to the name settled on the card on 2026-10-20 and fixes the framing. Agents still call it by its old id, suggest_zooms.",
+    "No mock covers automatic zooms (video-zoom-wt.html is the manual punch-in), so there is no mock frame to compare against.",
+    "The walk's picture of the right-click menu is cut off by the window edge and does not show the row, so it is left out; the walks choose the row by name in both menus and check the zoom it made.",
+    "Clicks that need a following zoom use 160% and the pointer path kept beside the recording. Clicks added by hand with no path, spread too wide for any frame tighter than about 110%, get no zoom.",
+    "The Zoom added notice stays up for its few seconds after Command-Z has taken the zoom away."
+  ]
+}

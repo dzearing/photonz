@@ -9,7 +9,7 @@ import PhotonzRender
 ///   and two clicks, as if the recorder had taken them down: the sample
 ///   recording was made before pointers were kept, and a walk never moves the
 ///   person's own pointer. Written where the recorder's own record would be
-///   read from, so Follow Cursor and Suggest Zooms read it the same way.
+///   read from, so Follow Cursor and Add Zooms from Clicks read it the same way.
 /// - `expectZoomFollowsCursor` checks the one zoom on the clip follows: at three
 ///   moments of its hold the frame holds the pointer clear of its edges, at the
 ///   zoom's own size, and has moved between them.
@@ -252,14 +252,14 @@ enum PlaytestZoom {
     static func expectSuggested(_ editor: EditorState) throws -> String {
         let clip = try recording(in: editor)
         guard let zooms = clip.zooms, zooms.count == 1, let zoom = zooms.first else {
-            throw Failure(description: "Suggest Zooms left \(clip.zooms?.count ?? 0) zooms, not 1")
+            throw Failure(description: "Add Zooms from Clicks left \(clip.zooms?.count ?? 0) zooms, not 1")
         }
         let first = scriptedClickMS.first ?? 0
         let last = scriptedClickMS.last ?? 0
         var wrong: [String] = []
         if zoom.startMS + zoom.eases.inMS > first { wrong.append("it has not arrived by the first click") }
         if zoom.endMS - zoom.eases.outMS < last { wrong.append("it has left before the last click") }
-        for ms in scriptedClickMS where !zoom.region.contains(scriptedPoint(atMS: ms)) {
+        for ms in scriptedClickMS where !zoom.target(atMS: ms).contains(scriptedPoint(atMS: ms)) {
             wrong.append("the click at \(ms) ms is outside its box")
         }
         if editor.selectedZoom?.zoomID != zoom.id { wrong.append("it is not picked") }

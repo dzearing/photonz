@@ -274,18 +274,32 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
     public static let suggestedScales = 1.3...2.0
     /// How much room round the clicks a suggestion leaves, a share of the picture.
     public static let suggestedPadding: CGFloat = 0.08
+    /// How far in a suggestion goes when its clicks are too far apart for one
+    /// still frame and it follows the pointer from one to the next instead.
+    public static let suggestedFollowScale = 1.6
+    /// The least a still suggestion may zoom when there is no pointer path to
+    /// follow: under this the frame is all but the whole picture, so there is
+    /// no spot to zoom on and none is made.
+    public static let leastStillScale = 1.1
 
     /// Zooms around the clicks of a recording: one for each run of clicks
     /// close together in time, framing all of them, arriving just before the
     /// first and leaving after the last. None lands on a zoom already in
     /// `existing`, and every one stays inside `sourceRange`.
     ///
+    /// Every click of a run is inside its zoom when it lands. Clicks too far
+    /// apart for a still frame at `suggestedScales` get a zoom that follows
+    /// the pointer (`cursorTrack`) from one to the next; without a path they
+    /// get the still frame that holds them all, and none when that frame is
+    /// all but the whole picture.
+    ///
     /// Framed on the picture seen (`stage`): the box fits round the clicks as
     /// they are on screen, at the picture seen's shape.
     public static func suggestions(clicks: [PointerClick], pixelSize: CGSize,
                                    sourceRange: ClosedRange<Int>,
                                    keepingClearOf existing: [ClipZoom],
-                                   on stage: ZoomStage = .whole) -> [ClipZoom] {
+                                   on stage: ZoomStage = .whole,
+                                   cursorTrack: PointerTrack? = nil) -> [ClipZoom] {
         guard pixelSize.width > 0, pixelSize.height > 0 else { return [] }
         let sorted = clicks.filter { sourceRange.contains($0.downMS) }.sorted { $0.downMS < $1.downMS }
         var runs: [[PointerClick]] = []
@@ -310,13 +324,24 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
                              width: (xs.max() ?? 0.5) - (xs.min() ?? 0.5) + 2 * suggestedPadding,
                              height: (ys.max() ?? 0.5) - (ys.min() ?? 0.5) + 2 * suggestedPadding)
             let fit = fitting(box)?.scale ?? suggestedScales.upperBound
-            let scale = min(max(fit, suggestedScales.lowerBound), suggestedScales.upperBound)
             let start = max(sourceRange.lowerBound, first.downMS - suggestedLeadMS)
             let end = min(sourceRange.upperBound, last.downMS + suggestedTailMS)
             guard end - start >= shortestMS else { continue }
+            let follows = fit < suggestedScales.lowerBound && cursorTrack.map { !$0.samples.isEmpty } == true
+            let scale: Double
+            if follows {
+                scale = suggestedFollowScale
+            } else if fit < suggestedScales.lowerBound {
+                guard fit >= leastStillScale else { continue }
+                scale = fit
+            } else {
+                scale = min(fit, suggestedScales.upperBound)
+            }
             let middle = region(scale: scale, center: CGPoint(x: box.midX, y: box.midY))
-            let zoom = ClipZoom(startMS: start, endMS: end, scale: scale,
-                                center: stage.fromStage(CGPoint(x: middle.midX, y: middle.midY)))
+            var zoom = ClipZoom(startMS: start, endMS: end, scale: scale,
+                                center: stage.fromStage(CGPoint(x: middle.midX, y: middle.midY)),
+                                followsCursor: follows)
+            if follows { zoom.bakeCursor(from: cursorTrack) }
             guard !taken.contains(where: { $0.startMS < zoom.endMS && zoom.startMS < $0.endMS }) else { continue }
             taken.append(zoom)
             made.append(zoom)
@@ -584,12 +609,14 @@ extension PhotonzDocument {
     /// Add the zooms `ClipZoom.suggestions` proposes for a clip's clicks.
     /// Answers the ones added.
     @discardableResult
-    public mutating func addSuggestedZooms(toClip id: UUID, clicks: [PointerClick]) -> [ClipZoom] {
+    public mutating func addSuggestedZooms(toClip id: UUID, clicks: [PointerClick],
+                                           cursorTrack: PointerTrack? = nil) -> [ClipZoom] {
         guard let layer = layer(id: id), layer.takesAZoom, let movie = layer.movie,
               let range = layer.zoomSourceRange else { return [] }
         let made = ClipZoom.suggestions(clicks: clicks, pixelSize: movie.pixelSize,
                                         sourceRange: range, keepingClearOf: layer.zooms ?? [],
-                                        on: zoomStage(ofClip: id, atTimeMS: layer.time?.inMS) ?? .whole)
+                                        on: zoomStage(ofClip: id, atTimeMS: layer.time?.inMS) ?? .whole,
+                                        cursorTrack: cursorTrack)
         guard !made.isEmpty else { return [] }
         updateLayer(id: id) { $0.zooms = (($0.zooms ?? []) + made).sorted { $0.startMS < $1.startMS } }
         return made

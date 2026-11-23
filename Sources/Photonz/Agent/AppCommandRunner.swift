@@ -684,7 +684,7 @@ extension EditorState {
         }
     }
 
-    /// What Suggest Zooms acts on: the clip in hand, else the recording under
+    /// What Add Zooms from Clicks acts on: the clip in hand, else the recording under
     /// the playhead.
     var clipToSuggestZooms: UUID? { clipInHandID ?? clipToAddZoom(atMS: documentTimeMS) }
 

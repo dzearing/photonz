@@ -1,0 +1,104 @@
+{
+  "out": "/tmp/photonz-playtest/add-zooms-from-clicks-clip-menu-walk",
+  "seed": "At Next defaults, with no switch touched, the probe in front so its Clip menu is live. The sample recording, which kept no clicks: Clip > Add Zooms from Clicks is greyed. Given two scripted clicks, the same row puts one zoom round them, in one undo step. The clicks are scripted into the recording's pointer record after it opened, which the menu bar does not watch, so a zoom is added and undone once after to have the bar read again, as a recording that kept its clicks reads from the moment it opens.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 4.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "menus",
+      "stage": "0-clip-menu-no-clicks",
+      "menu": "Clip"
+    },
+    {
+      "do": "action",
+      "action": "zoomScriptPointerPath"
+    },
+    {
+      "do": "action",
+      "action": "zoomAddAtPlayhead"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "action",
+      "action": "expectNoZooms"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "menus",
+      "stage": "1-clip-menu-with-clicks",
+      "menu": "Clip",
+      "choose": "Clip > Add Zooms from Clicks"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "expectZoomSuggested"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-a-zoom-from-the-clip-menu"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "expectNoZooms"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-one-undo-takes-it-off"
+    }
+  ]
+}
