@@ -1,0 +1,27 @@
+{
+  "id": "a-colour-grade-look-can-be-saved-to-the-library",
+  "title": "A colour grade look can be saved to the Library and dropped onto the timeline as a grade",
+  "goal": "The compositing mock shows a grade.look preset tile in the Library. Today a colour grade can be added over the video, but a grade you have tuned cannot be kept and reused: saving it as a look and dropping that tile on the timeline (or on a grade) should bring the same grade back.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 4120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-23T01:16:34.885Z",
+  "updated": "2026-11-23T01:16:34.888Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-compositing.html line 287 (libtile grade.look preset). The grade track is ColorGradeLayer.swift (a full-frame lens, adjustment colorGrade, graded by its own ColorGradeEffect in style.effects); EditorState+ColorGradeTrack.swift adds one. Split out of a-colour-grade-can-be-its-own-track-over-the-cli, whose notes named the preset but whose checklist did not.",
+  "acceptance": [
+    "A picked Color Grade (on a clip or on its own track) can be saved as a look that appears as a tile in the Library",
+    "Dropping that tile on the timeline adds a Color Grade track carrying those five values; dropping it on a clip or a grade gives that clip or grade those values",
+    "A walk at Next defaults saves a look, drops it, and measures the frame graded the same as the original"
+  ],
+  "log": [
+    {
+      "t": "2026-11-23T01:16:34.887Z",
+      "note": "created (manual)"
+    }
+  ]
+}

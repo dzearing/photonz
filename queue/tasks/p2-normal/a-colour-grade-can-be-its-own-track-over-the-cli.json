@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T12:36:36.602Z",
-  "updated": "2026-11-22T13:27:03.919Z",
+  "updated": "2026-11-23T01:17:40.846Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-compositing.html lines 262 (layer list Colour grade screen), 287 (grade.look preset), 306 (add menu Colour grade), 346 (V4 colour grade track), 377-443 (blend swatches, matte masking). The per-clip Color Grade effect landed in task a-clip-can-be-colour-graded-from-add-effect: ColorGradeEffect (PhotonzCore/ColorGrade.swift) and ColorGradeFilter (PhotonzRender) can be reused as the adjustment the layer applies to the composite below it. The grade.look Library preset is part of this too.",
@@ -135,6 +135,36 @@
     {
       "t": "2026-11-22T13:27:03.918Z",
       "note": "seq 120 -> 100"
+    },
+    {
+      "t": "2026-11-23T00:18:03.419Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T00:29:15.957Z",
+      "note": "Adversarial pass before building: (1) a Premiere editor expects an Adjustment Layer they drop on a track above clips, graded with Lumetri, its opacity/blend mode in Effect Controls, and a track matte from a layer below; Photonz already has Blending and Masked by (borrowed from the layer directly under) on every layer, so the grade only needs to be a layer that reads what is under it. (2) A lens already does exactly that, and the Effects list's Color Grade already applies to a lens's pixels, so the grade is a full-frame lens (adjustment colorGrade, no Does row) wearing the Color Grade effect; nothing new in the renderer but Add. (3) Mock assumes a separate Matte layer type with Off/Shape/Luma/Text: the app's Masked by covers Shape and Luma (Its shape / Its brightness), and a text layer's shape IS its letterforms, so no prerequisite to file. (4) Mock's default blend is Screen because its grade is a magenta wash; ours is a real grade, so Normal (the graded picture) is the honest default. (5) First-time user: where do they find it? Sequence > Add Color Grade (with the playhead), and an empty track's right-click, same place Add Text/Add Rectangle live. Library grade.look preset left for later (noted)."
+    },
+    {
+      "t": "2026-11-23T01:16:55.490Z",
+      "note": "owns these walks: a-colour-grade-track-grades-under-its-matte-walk, a-colour-grade-from-the-sequence-menu-walk"
+    },
+    {
+      "t": "2026-11-23T01:17:40.699Z",
+      "note": "Chose a full-frame lens graded by its own Color Grade effect over a new Layer content kind because a lens already reads what is under it and Blending, Masked by, Effects, keys and the timeline all work on it unchanged. Chose Normal as the arriving Blending over the mock's Screen because ours is a real grade, not a magenta wash. Chose 'Color Grade' spelling to match the per-clip effect. Chose from-the-playhead-to-the-end (whole video when under 1s is left) over Premiere's 5s still length because the mock's grade spans the whole scene."
+    },
+    {
+      "t": "2026-11-23T01:17:40.768Z",
+      "note": "Looked at audit pictures 1-graded (whole frame warm, card turns cream, Grade track pink to purple with sliders icon), 2-masked (ellipse no longer drawn, only its area warmed), 3-screen, and the two menu pictures (Add Color Grade in the track right-click; Sequence menu has it below Insert Name Card, past the fold). Left rough, not filed: Add Color Grade sits low in a long Sequence menu (the track right-click is quicker); outside the matte matches to within 2 of 255 (Core Image rounding; grade off changes no pixel there). Filed a-colour-grade-look-can-be-saved-to-the-library for the mock's grade.look preset."
+    },
+    {
+      "t": "2026-11-23T01:17:40.844Z",
+      "note": "Sequence > Add Color Grade and an empty track's right-click put a Color Grade on its own Grade track over every clip below it (a full-frame lens graded by its own Color Grade effect); Blending gains Add; Masked by Its shape limits it to a shape below, and a keyed shape moves the reveal. Verified: ColorGradeLayerTests + ColorGradeLayerRenderTests, full suite green, walks a-colour-grade-track-grades-under-its-matte-walk (whole frame +30.9 warmer, outside the matte unchanged, inside +9.0) and a-colour-grade-from-the-sequence-menu-walk at Next defaults; commit 9e8f10b82; audit queue/audits/2026-11-22-colour-grade-track.json."
     }
-  ]
+  ],
+  "started": "2026-11-23T00:18:03.418Z",
+  "walks": [
+    "a-colour-grade-track-grades-under-its-matte-walk",
+    "a-colour-grade-from-the-sequence-menu-walk"
+  ],
+  "completed": "2026-11-23T01:17:40.845Z"
 }
