@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T12:30:45.465Z",
-  "updated": "2026-11-22T13:27:04.224Z",
+  "updated": "2026-11-23T06:23:44.923Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen twice now, so it is filed. First: docs/design/video-vs-premiere.md, 'Seen, not filed: No frames in the time readout. The transport says 0:04 and the ruler counts seconds; Premiere shows 00:00:04:12.' Second: queue/audits/2026-09-29-transition-edge-follows-the-pointer.json rough list: 'The bubble shows tenths of a second (0.8s), and hundredths only once the ruler is zoomed in far enough. It does not show frames.' Serves the video-beats-premiere success criterion that the ruler, playhead, clips and captions agree to the frame at every zoom. Update the gap report's line when this closes.",
@@ -246,11 +246,41 @@
     {
       "t": "2026-11-22T13:27:04.223Z",
       "note": "seq 160 -> 140"
+    },
+    {
+      "t": "2026-11-23T05:31:51.762Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T06:23:06.179Z",
+      "note": "walks time-reads-today-walk, transition-edge-follows-the-pointer-walk -> timecode-reads-in-frames-walk, time-reads-today-walk, transition-edge-follows-the-pointer-walk"
+    },
+    {
+      "t": "2026-11-23T06:23:06.249Z",
+      "note": "Reproduced earlier (2026-10-02 log): transport 0:04, closest ruler 3.9s/4s/4.1s, bubble and Length 0.8s. Rechecked today at defaults: 1-seconds-by-default shows Length 0.4s and seconds everywhere."
+    },
+    {
+      "t": "2026-11-23T06:23:06.319Z",
+      "note": "Built: PhotonzCore VideoTimecode/VideoTimeDisplay (30fps grid, HH:MM:SS:FF, parse 12 / 00:00:00:12 / 4:12), ruler ticks(display:) on whole frames, ClipTransitionEdgeDrag.landing(wholeFrames:), FreezeLength.parse(display:), TimelineZoom.reading(display:). App: VideoTimeDisplaySetting (UserDefaults video.timeDisplay, forgotten with motion), View > Timecode toggle running AppCommand .timecode, transport, ruler + gridlines, zoom readout, bubble, Length/Hold/Paid with/Spare rows, edit point header, timeline spare labels, freeze popover. dragGrip step gained says: for the bubble's last words."
+    },
+    {
+      "t": "2026-11-23T06:23:06.389Z",
+      "note": "Chose View over the timeline bar's menu because a display format changes how the window reads, not the document (Premiere keeps it in the sequence's panel menu; View is the placement contract's row for view preferences). Chose frame counts (30f, 12f + 12f) for the compound rows over full timecode because four timecodes overflow a panel row. Chose the timeline's 30fps grid over each recording's own rate because that is the frame the canvas draws and the export writes."
+    },
+    {
+      "t": "2026-11-23T06:23:06.463Z",
+      "note": "Adversarial review after build: tried it in the probe walk; bubble and Length agree (00:00:00:24), transport and ruler agree at fit and closest zoom, off puts seconds back. left rough: title bar length, trim In/Out line, key/level point tooltips and caption word times still read seconds with Timecode on; low, no task (a person reading video time mostly reads the transport, ruler and panel, all done). Looked at pictures 1-7: all show what the steps claim."
+    },
+    {
+      "t": "2026-11-23T06:23:44.921Z",
+      "note": "View > Timecode (off by default, remembered) reads the transport, ruler, timeline window, transition bubble and Length/Hold/Paid with/Spare rows in frames at 30fps; dragged transitions land on whole frames; freeze length takes 12, 12f or 00:00:00:12. Commit 753351d51. Verified: VideoTimecodeTests + full Scripts/test.sh green; timecode-reads-in-frames-walk (no flags) turns it on from View, drags a transition, bubble and Length both read 00:00:00:24; time-reads-today and transition-edge walks still pass in seconds. Audit queue/audits/2026-11-22-timecode-reads-in-frames.json."
     }
   ],
-  "started": "2026-10-02T07:23:54.886Z",
+  "started": "2026-11-23T05:31:51.761Z",
   "walks": [
+    "timecode-reads-in-frames-walk",
     "time-reads-today-walk",
     "transition-edge-follows-the-pointer-walk"
-  ]
+  ],
+  "completed": "2026-11-23T06:23:44.922Z"
 }
