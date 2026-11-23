@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T18:45:21.101Z",
+  "updated": "2026-11-23T19:35:46.636Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T18:45:21.100Z",
-      "note": "... 42 earlier entries elided",
-      "elided": 42
-    },
-    {
-      "t": "2026-11-17T20:49:04.567Z",
-      "note": "Pass 9 baseline at 45bd07794, 60 min edit: zoom in 13.2 ms (p95 32.4), out 11.4 (25.7), scroll 10.4 (15.3, 120 of 360 late), near Fit 1x 32 / 2x 29 / 4x 26; edits trim 75 / move 52 / blade 76 / undo 72 / transition 96 / title 42. Near-Fit loop (1x to 8x and back, 6 times) with throwaway file switches on one build: base 22.5, no gaps 17.5, no painted clips 16.3, no painted cuts 18.7, no Zoom bars 20.7, no gridlines 22.1; inside the paint (clip, shadows, waveforms, names, level line) all off only 19.5; Canvas rendersAsynchronously 20.6; band shadows off no change. SwiftUI trace: ~118 canvases rebuilt a frame, ~110 of them gap stripes (one Canvas per gap)."
-    },
-    {
-      "t": "2026-11-17T20:49:04.641Z",
-      "note": "Pass 9 change: a painting lane paints its gaps under its clips (TimelinePaintedClips.paintGaps: one clip and one fill for every stripe, each stripe cut to its own gap; each dashed edge stroked alone because one dashed path carried its dashes from gap to gap) and builds a gap view only under the pointer, without a look, for its press and right-click menu (TimelinePaint.gapViews/paintedGaps/gap(atMS:), tested; readPointer finds it). rightClick takes lane+seconds (PlaytestScript, tested). hasClickMarks copies one layer not two; soundCleaningProgress returns at once when nothing is being cleaned. New walk a-painted-gap-takes-a-right-click-walk: Ripple Delete first with the hover; without the hover step the same right click gets the lane menu (proven both ways). Near-Fit loop 22.5 -> 17.4."
+      "t": "2026-11-23T19:35:46.635Z",
+      "note": "... 44 earlier entries elided",
+      "elided": 44
     },
     {
       "t": "2026-11-17T20:49:04.715Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T18:45:21.099Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-23T19:35:39.095Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T19:35:46.634Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T18:45:16.381Z",
+  "started": "2026-11-23T19:35:39.094Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-11-23T14:33:29.634Z",
-  "updated": "2026-11-23T15:11:23.475Z",
+  "updated": "2026-11-23T19:33:33.640Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-23T14:33:29Z: 1178 of 1197 walks passed in 403 minutes.\n\nFailing walks (19): a-clip-s-sound-is-linked-under-it-walk, a-video-edit-saves-as-a-project-walk, ask-row-thumbs-walk, caption-pick-answers-at-once-walk, clicking-a-timeline-item-moves-the-playhead-walk, dock-headers-walk, panel-shows-what-is-picked-video-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, section-fold-motion-walk, shorten-the-cut-for-a-dissolve-walk, the-timeline-is-the-layer-list-walk, timeline-right-click-menus-walk, title-presets-library-shelf-walk, title-size-box-walk, transition-band-reads-as-the-mock-walk, transition-picker-at-a-cut-walk, transition-tile-comes-away-walk, video-panel-order-walk\n\nAlready named by another open task, so read that one before re-diagnosing (3):\n  section-fold-motion-walk -> folding-a-section-that-lets-the-panel-fit-again (that task says it owns this walk)\n  shorten-the-cut-for-a-dissolve-walk -> clicking-shorten-the-cut-trims-the-clips-and-pla (that task says it owns this walk)\n  title-presets-library-shelf-walk -> the-title-presets-walk-pulls-film-super-off-the (that task says it owns this walk)\n\nThis task owns the other 16: a-clip-s-sound-is-linked-under-it-walk, a-video-edit-saves-as-a-project-walk, ask-row-thumbs-walk, caption-pick-answers-at-once-walk, clicking-a-timeline-item-moves-the-playhead-walk, dock-headers-walk, panel-shows-what-is-picked-video-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, the-timeline-is-the-layer-list-walk, timeline-right-click-menus-walk, title-size-box-walk, transition-band-reads-as-the-mock-walk, transition-picker-at-a-cut-walk, transition-tile-comes-away-walk, video-panel-order-walk\n\nFull output: queue/sweep/2026-11-22-235031.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: walks-that-fail-in-the-full-sweep-27: Timeline right-click menus are now read after the press lands (about 70 walks use rightClick), and the Library's in-view measure changed for every walk that asks about it; the-panel-keeps-its-promise-on-a-video-document: the-panel-keeps-its-promise-on-a-video-document moved the video timeline under the picture only (narrower by the panel's width); every video walk that clicks the timeline by window position or drags a grip by points can land on a different time. 23 were moved and run green; the rest need the whole set.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-23T15:11:23.474Z",
       "note": "seq 4130 -> 30"
+    },
+    {
+      "t": "2026-11-23T19:33:33.639Z",
+      "note": "rotating check 2026-11-23T19:33:33Z, 19 walks run from 168 onward in the rotation: an-editing-session-walk, closed-windows-give-their-memory-back-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
     }
   ],
   "standing": "walk-sweep"
