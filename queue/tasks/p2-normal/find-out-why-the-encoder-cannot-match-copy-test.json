@@ -1,0 +1,27 @@
+{
+  "id": "find-out-why-the-encoder-cannot-match-copy-test",
+  "title": "Find out why the 'encoder cannot match' copy test fails in a busy full test run",
+  "goal": "A full test run on 2026-11-22 failed once in the cut-export copy tests: a recording the encoder should refuse to copy was copied instead. It passed alone and on the next full run. Find out whether a busy Mac changes the encoder's answer, and make the test steady either way.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-23T02:20:56.952Z",
+  "updated": "2026-11-23T02:20:56.955Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen in Scripts/test.sh (whole suite) during task music-longer-than-the-edit-stops-where-the-pictu, which touched only sound landing. Output: '✘ Test \"A recording the encoder cannot match is left to the ordinary path\" recorded an issue at PieceCopyWriterTests.swift:145:15: Expectation failed: an error was expected but none was thrown and \"Outcome(copiedFrames: 48, renderedFrames: 0)\" was returned' and at :152 the edit.mp4 was left behind. `Scripts/test.sh --filter aRecordingItCannotMatchIsNotCopied` passed (0.27 s), and the next full run passed (1453 tests in 231 suites). Related history: done tasks find-out-why-the-cut-export-test-fails-again-in and the-full-test-suite-stays-green-on-a-busy-mac-wh, and commit ff1766f41 (re-made frames wait for the hardware encoder).",
+  "acceptance": [
+    "The cause is written in this task's log, with the run that shows it",
+    "The test passes in five full Scripts/test.sh runs in a row on this Mac",
+    "If the copy really can succeed on a busy Mac, the test says what it is checking in a way that holds then"
+  ],
+  "log": [
+    {
+      "t": "2026-11-23T02:20:56.954Z",
+      "note": "created (manual)"
+    }
+  ]
+}

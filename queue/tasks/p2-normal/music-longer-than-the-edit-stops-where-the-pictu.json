@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T13:30:28.837Z",
-  "updated": "2026-11-22T13:27:03.987Z",
+  "updated": "2026-11-23T02:21:37.236Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-08 by the manager: /tmp/mgr-walks2/music-bed.json (the-ninety-second-cut-walk steps, then importPicks a 180 s m4a made with ffmpeg sine, Sequence > Add Media at Playhead at 0:00). Result: step 62 expectTimeline: the timeline runs 179975ms, not 90000ms. Pictures: queue/manager/shots/2026-10-08-0640-music-past-the-cut.png (title bar Long Talk Retina 2880 x 1800 2:59, Song on Audio 2 to 3:00, V1 ends at 1:30) and queue/manager/shots/2026-10-08-0640-export-says-2-59.png (sheet line 2880 x 1800 px 30 fps 2:59). Code: EditorState+Audio.swift addSound(from:atMS:) lands the whole sound; the document length is the latest end of any layer. Premiere does the same (sequence runs to the end of the longest track); iMovie and Clips trim background music to the movie. Related but separate: music-dips-under-the-speech-by-itself (ducking, its own card).",
@@ -197,6 +197,39 @@
     {
       "t": "2026-11-22T13:27:03.986Z",
       "note": "seq 130 -> 110"
+    },
+    {
+      "t": "2026-11-23T01:18:08.538Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T02:06:02.472Z",
+      "note": "owns these walks: music-bed-under-a-cut-walk"
+    },
+    {
+      "t": "2026-11-23T02:06:11.980Z",
+      "note": "Adversarial pass before building: a Premiere editor expects the sequence to run to the longest track, an iMovie/Clips user expects the music trimmed to the movie; the card settled on the iMovie answer. Risk found: ~14 walks and 13 core tests used the 14 s sample song on the 8 s sample recording as a fixture for other features (box picks, level lines, holds), so they relied on music running past the picture."
+    },
+    {
+      "t": "2026-11-23T02:06:12.050Z",
+      "note": "Chose: one rule in core (PhotonzDocument.soundLengthUnderThePicture) used by addSound and by the timeline drop/place-at-playhead landing, over trimming inside clipLanding, because clipLanding also serves Paste and a pasted clip should keep its length. Picture = any timed layer that is not sound-only, plus the written length where the video holds past its last clip. A sound put down at or after the picture's end, or in a video with no picture, lands whole as before. The rest of the song stays in the clip (sourceLengthMS), so dragging its end out brings it back."
+    },
+    {
+      "t": "2026-11-23T02:06:12.123Z",
+      "note": "Chose to keep the old fixtures meaning what they meant over rewriting their geometry: core addSound gained stoppingWithThePicture: false (13 fixture calls use it) and walks gained the action soundAddSampleWhole (12 walks switched). captionsAddVoiceover lays its voiceover whole, since every sentence is what captioning walks count on. playback-speed-walk presses Home before 4x because its 12 s tone now stops at 0:08."
+    },
+    {
+      "t": "2026-11-23T02:21:37.157Z",
+      "note": "Looked at the audit pictures: 1 (song on Audio 0:00 to 1:30, title bar and transport 1:30), 2 (Export sheet line 2880 x 1800 px · 30 fps · 1:30), 3 (dropped song stops at 1:30). Left rough, not filed: no fade at the song's end (first evaluate question in the audit, for the user to call); voiceovers trimmed by the same rule (in the audit's rough list)."
+    },
+    {
+      "t": "2026-11-23T02:21:37.234Z",
+      "note": "A sound longer than the edit now stops with the last picture (core soundLengthUnderThePicture, used by Add Media at Playhead, Add Sound and a drop on the timeline); the rest stays in the clip to drag back out. Verified by music-bed-under-a-cut-walk at Next defaults: 3:00 song under the 1:30 cut by the menu and by a timeline drop both end at 90 s, the timeline and Export sheet say 1:30, one Undo takes it back, the MP4 runs 90.0 s with sound. Shorter sounds and sounds with no picture are unchanged (SoundStopsWithThePictureTests). 15 affected walks pass; Scripts/test.sh green. Commit b0e19ff47. Audit queue/audits/2026-11-22-music-longer-than-the-edit-stops-where-the-pictu.json."
     }
-  ]
+  ],
+  "started": "2026-11-23T01:18:08.537Z",
+  "walks": [
+    "music-bed-under-a-cut-walk"
+  ],
+  "completed": "2026-11-23T02:21:37.235Z"
 }
