@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T18:22:51.623Z",
+  "updated": "2026-11-23T18:24:57.703Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T18:22:51.622Z",
-      "note": "... 36 earlier entries elided",
-      "elided": 36
-    },
-    {
-      "t": "2026-11-16T21:42:23.642Z",
-      "note": "Pass 8 landed 90ffa8b69: (1) after a change of scale a painting lane's canvas is the window and 1/32 either side (TimelinePaint.paintedMS, EditorState.timelinePaintsTheWindow, tested), back to the drawn stretch at the first move along; paintedBars, builds and cut views follow it. (2) a strip fades in only when it appears on a clip already painted; clips sliding in on a scroll or zoom out are noted in a box the view does not observe (TimelinePaintedClips.Painted), so they no longer start a fade that repainted the whole canvas every frame for 0.22 s. After: zoom in 13.4 (11.4 with the Mac quiet), out 13.1 (p95 25), by zoom 1x 27 / 8x 17-19 / 128x+ 9-12; scroll 11.7-12.3 (p95 16.2-16.7, late 137-159 of 360, was 238-328). Same window photographed after a scroll and after a zoom: only pictures still loading and 1 px on three band outlines differ. 17 walks green (task walks, reference edit, Zoom lane, speed-walk, an-editing-session-walk); Scripts/test.sh green. Audit queue/audits/2026-11-16-timeline-hour-long-zoom-paints-the-window.json."
-    },
-    {
-      "t": "2026-11-16T21:42:23.726Z",
-      "note": "Still open, bars not reached: zoom ~13 ms median (near Fit 25-28), scroll ~12 vs 8.3; edits 38-99 vs 16 (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). Next: near Fit the canvas is already the window, so what is left is paint per clip (waveform columns, names) and SwiftUI graph upkeep; on a scroll the stretch move still repaints 2.5 windows every ~1.5 frames of the walk's fling. Left rough, not filed: during a zoom out, clips entering at the edges now arrive with their pictures at once rather than fading (they used to fade off screen in the stretch margin)."
+      "t": "2026-11-23T18:24:57.702Z",
+      "note": "... 38 earlier entries elided",
+      "elided": 38
     },
     {
       "t": "2026-11-16T21:42:23.799Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T18:22:51.621Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-23T18:24:55.812Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T18:24:57.701Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T18:22:46.578Z",
+  "started": "2026-11-23T18:24:55.811Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
