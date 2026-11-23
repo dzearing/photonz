@@ -4,12 +4,12 @@
   "goal": "The compositing mock shows a grade.look preset tile in the Library. Today a colour grade can be added over the video, but a grade you have tuned cannot be kept and reused: saving it as a look and dropping that tile on the timeline (or on a grade) should bring the same grade back.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 4120,
+  "seq": 430,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-23T01:16:34.885Z",
-  "updated": "2026-11-23T01:16:34.888Z",
+  "updated": "2026-11-23T15:11:26.220Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-compositing.html line 287 (libtile grade.look preset). The grade track is ColorGradeLayer.swift (a full-frame lens, adjustment colorGrade, graded by its own ColorGradeEffect in style.effects); EditorState+ColorGradeTrack.swift adds one. Split out of a-colour-grade-can-be-its-own-track-over-the-cli, whose notes named the preset but whose checklist did not.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-11-23T01:16:34.887Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-23T15:11:26.219Z",
+      "note": "seq 4120 -> 430"
     }
   ]
 }

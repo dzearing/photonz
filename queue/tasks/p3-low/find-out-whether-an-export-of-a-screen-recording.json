@@ -3,13 +3,13 @@
   "title": "Find out whether an export of a screen recording changes picture earlier than the canvas does",
   "goal": "When a video is written out, the app reads each recording frame nearest a moment, while the editor shows the frame on screen at that moment. On a 30 frames a second file the two now agree, but on a screen recording that holds one picture for a while, the written file may show the next picture up to half that pause early. Not yet seen happen.",
   "epic": "video-cutting",
-  "priority": "p2-normal",
-  "seq": 4100,
+  "priority": "p3-low",
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-22T21:16:55.134Z",
-  "updated": "2026-11-22T21:16:55.137Z",
+  "updated": "2026-11-23T15:11:26.452Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Unreproduced; found while fixing the-frame-shown-at-a-whole-second-is-the-one-tha (2026-11-22). Readers: MovieFrameStream.frameAndSurface steps on while the next sample is at least as near the moment (nearest); MovieSweepGrid.arrived fills a grid frame with the latest sample starting no more than MovieSweepGrid.lateSampleMS (1ms) after it (on screen); MovieDecoder seeks with MovieRef.seekSlopMS (16ms) either way, which on the probe showed the on-screen frame. On CFR 30fps all three give frame N at N/30 s (Tests/PhotonzMediaTests/WholeSecondFrameTests.swift). For a VFR clip with samples at 0 and 1000ms, nearest at grid 600ms would be the 1000ms sample, on-screen the 0ms one. TestClip.write only writes evenly spaced frames, so a test needs a writer with chosen presentation times. MovieFrameStreamTests assert nearest-frame on purpose, so changing it is a decision about frame-rate conversion for 24/25/60fps sources too.",
@@ -21,6 +21,18 @@
     {
       "t": "2026-11-22T21:16:55.136Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-23T15:11:23.084Z",
+      "note": "priority p2-normal -> p3-low"
+    },
+    {
+      "t": "2026-11-23T15:11:23.155Z",
+      "note": "triage 2026-11-23: p2 -> p3. Its own notes say it has not been seen happen; it is a question to answer, not a reproduced defect."
+    },
+    {
+      "t": "2026-11-23T15:11:26.451Z",
+      "note": "seq 4100 -> 70"
     }
   ]
 }

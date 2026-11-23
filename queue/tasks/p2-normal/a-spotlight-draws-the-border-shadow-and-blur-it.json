@@ -4,12 +4,12 @@
   "goal": "A person who adds a Border, Shadow or Blur to a spotlight in the Effects section sees nothing happen. A border should ring the lit area (a common way to point at a button), and the other effects should either do something sensible or not be offered on a spotlight.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 520,
+  "seq": 390,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-20T08:57:41.428Z",
-  "updated": "2026-11-22T13:27:06.922Z",
+  "updated": "2026-11-23T15:11:25.952Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found finishing a-spotlight-dims-and-blurs-everything-except-the (2026-11-20). The spotlight takes its own path in DocumentRenderer.compositeLayers (spotlightVeil, SpotlightFilter) and `continue`s before the box-sized styling path, so borderEffects, castShadows and blurred never run for it. Reproduced with a throwaway render test: a spotlight with style.borderWidth = 6, borderColorHex #FF0000 (layer.ringedBorders.count == 1) renders [255,255,255,255] at the area edge (61,100), identical to the same spotlight without a border. Only Opacity, Blending and Corner Radius apply today.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-11-22T13:27:06.921Z",
       "note": "seq 540 -> 520"
+    },
+    {
+      "t": "2026-11-23T15:11:25.951Z",
+      "note": "seq 520 -> 390"
     }
   ]
 }

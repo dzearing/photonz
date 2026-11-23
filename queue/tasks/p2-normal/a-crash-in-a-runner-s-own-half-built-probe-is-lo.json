@@ -4,12 +4,12 @@
   "goal": "When a runner tests unfinished work and the test copy of the app crashes, the crash watcher files it as a new app crash, so the dashboard shows crash tasks for bugs that never reached the app and a later runner spends a whole turn proving that. The watcher should tell a crash in a half-built test copy apart from one in landed code.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 500,
+  "seq": 370,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-18T07:07:39.307Z",
-  "updated": "2026-11-22T19:30:50.491Z",
+  "updated": "2026-11-23T15:11:25.814Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Happened twice in a week, both closed as runner diagnostics after a full runner turn each: the-app-crashed-in-run-pickuptile (2026-11-11 20:22, throwaway NSStringFromClass loop in pickUpTile) and the-app-crashed-in-documentaudioengine-play (2026-11-13 11:40, two voices wired straight into one AVAudioUnitTimePitch, fixed before 0c0b3edf8 landed). Evidence: queue/loop.log around line 150405 shows '[crash-watch] crash probe 2026-11-13 11:40:48 ... filed the-app-crashed-in-documentaudioengine-play' right after the playback-speed runner exited, and the same runner's transcript a few hundred lines earlier says 'The probe crashed in the new sound path at a non-1x speed ... the time-pitch unit has one input'. The pickuptile task's log proposed this fix ('if it happens again, stamp the probe build with the git tree state'). Sketch: Scripts/probe-app.sh writes {binaryUUID, head, dirty, task} beside the bundle (or into Info.plist); queue/bin/crash-watch.mjs reads the report's slice_uuid, and on a dirty build calls queue.mjs log <task> instead of addjson. A third, the-app-crashed-in-nsapplication-photonz-nexteve, is open and being asked the same question.",
@@ -48,6 +48,10 @@
     {
       "t": "2026-11-22T19:30:50.490Z",
       "note": "A third kind, 2026-11-22 03:12 (the-app-crashed-in-static-photonzapp-main): a probe built from the COMMITTED tree that crashed because the runner had lldb attached (pass 27's /tmp/pz27-nodes-run.sh: breakpoints in SwiftUI's focus walk, EvaluateExpression in a callback, lldb killed by perl alarm 250 mid-expression). A dirty-tree stamp would have filed it anyway. Tell-tales in the report: the executable's own Photonz_main/$main frames appear in the MIDDLE of the stack, above system frames (lldb's injected-call return address), and the crash time matches a runner command with 'lldb -p'. Took a full runner turn to rule out (3 rounds of pass 27's walks, no recurrence)."
+    },
+    {
+      "t": "2026-11-23T15:11:25.813Z",
+      "note": "seq 500 -> 370"
     }
   ]
 }

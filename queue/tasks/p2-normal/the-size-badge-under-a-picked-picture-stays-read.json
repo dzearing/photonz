@@ -1,0 +1,35 @@
+{
+  "id": "the-size-badge-under-a-picked-picture-stays-read",
+  "title": "The size badge under a picked picture stays readable instead of sliding under the tool bar",
+  "goal": "When a picture or video fills the canvas, the little size badge drawn under the picked layer (for example 3456 x 2234) lands behind the floating tool bar and is cut in half, so the one number it exists to show cannot be read. It should always sit where it can be read, above the tool bar or flipped inside the picture's edge.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 440,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-23T15:09:47.348Z",
+  "updated": "2026-11-23T15:11:26.289Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-11-23 in queue/audits/2026-11-22-panel-full-height-1-clip.png (real app capture from the-panel-keeps-its-promise-on-a-video-document): the 3456 x 2234 badge sits at about y 855 to 890 in a 1440 point tall capture and the tool bar starts at about 880, so the badge's lower half is hidden. In the same picture the chip above the top handle is cut off by the title bar. Related done task: a-picture-or-video-fits-above-the-tool-bar-not-u (the picture fits above the bar, but its readouts do not).",
+  "acceptance": [
+    "With the sample screen recording open in Next at default settings, at the window size of the 2026-11-22 panel audit, picking the clip shows the whole size badge with no part of it under the tool bar or the window's edge, in a snapshot",
+    "The same holds for a picture document fitted to the window, in light and dark appearance",
+    "The badge never covers the handles or the picked layer itself (the never-cover-what-is-being-manipulated rule), and a walk photographs both cases"
+  ],
+  "log": [
+    {
+      "t": "2026-11-23T15:09:47.350Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-23T15:11:22.880Z",
+      "note": "Seen again 2026-11-23 on the sample recording: queue/audits/2026-11-23-picked-transition-shows-no-settings-sc.png, the 1280 x 800 badge half under the tool bar."
+    },
+    {
+      "t": "2026-11-23T15:11:26.288Z",
+      "note": "seq 4140 -> 440"
+    }
+  ]
+}

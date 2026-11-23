@@ -4,12 +4,12 @@
   "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 4130,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-11-23T14:33:29.634Z",
-  "updated": "2026-11-23T14:33:29.639Z",
+  "updated": "2026-11-23T15:11:23.475Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-23T14:33:29Z: 1178 of 1197 walks passed in 403 minutes.\n\nFailing walks (19): a-clip-s-sound-is-linked-under-it-walk, a-video-edit-saves-as-a-project-walk, ask-row-thumbs-walk, caption-pick-answers-at-once-walk, clicking-a-timeline-item-moves-the-playhead-walk, dock-headers-walk, panel-shows-what-is-picked-video-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, section-fold-motion-walk, shorten-the-cut-for-a-dissolve-walk, the-timeline-is-the-layer-list-walk, timeline-right-click-menus-walk, title-presets-library-shelf-walk, title-size-box-walk, transition-band-reads-as-the-mock-walk, transition-picker-at-a-cut-walk, transition-tile-comes-away-walk, video-panel-order-walk\n\nAlready named by another open task, so read that one before re-diagnosing (3):\n  section-fold-motion-walk -> folding-a-section-that-lets-the-panel-fit-again (that task says it owns this walk)\n  shorten-the-cut-for-a-dissolve-walk -> clicking-shorten-the-cut-trims-the-clips-and-pla (that task says it owns this walk)\n  title-presets-library-shelf-walk -> the-title-presets-walk-pulls-film-super-off-the (that task says it owns this walk)\n\nThis task owns the other 16: a-clip-s-sound-is-linked-under-it-walk, a-video-edit-saves-as-a-project-walk, ask-row-thumbs-walk, caption-pick-answers-at-once-walk, clicking-a-timeline-item-moves-the-playhead-walk, dock-headers-walk, panel-shows-what-is-picked-video-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, the-timeline-is-the-layer-list-walk, timeline-right-click-menus-walk, title-size-box-walk, transition-band-reads-as-the-mock-walk, transition-picker-at-a-cut-walk, transition-tile-comes-away-walk, video-panel-order-walk\n\nFull output: queue/sweep/2026-11-22-235031.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: walks-that-fail-in-the-full-sweep-27: Timeline right-click menus are now read after the press lands (about 70 walks use rightClick), and the Library's in-view measure changed for every walk that asks about it; the-panel-keeps-its-promise-on-a-video-document: the-panel-keeps-its-promise-on-a-video-document moved the video timeline under the picture only (narrower by the panel's width); every video walk that clicks the timeline by window position or drags a grip by points can land on a different time. 23 were moved and run green; the rest need the whole set.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -22,6 +22,18 @@
     {
       "t": "2026-11-23T14:33:29.636Z",
       "note": "created (sweep)"
+    },
+    {
+      "t": "2026-11-23T15:09:36.713Z",
+      "note": "triage 2026-11-23: read the 19 failures. Most look like walks behind two intended changes, not app bugs: (1) five walks expect the panel to read Properties, Time, Color, Effects, Channel and it now reads Properties, Color, Effects, Time, Channel (dock-headers, panel-shows-what-is-picked-video, properties-pane, the-timeline-is-the-layer-list, video-panel-order), which is the order the-panel-keeps-its-promise-on-a-video-document chose; (2) timeline-right-click-menus expects the sound clip menu without the new Duck Under Speech row; (3) clicking-a-timeline-item-moves-the-playhead and premiere-keys-on-the-timeline land a few ms off, which is the narrower timeline or the new exact thirtieths grid. CHECK FIRST as possibly real: four walks that pick a cut can no longer find the transition fields in the panel (a-video-edit-saves-as-a-project: no menu Type; transition-band-reads-as-the-mock: no menu Type; transition-picker-at-a-cut: no field Out; shorten-the-cut-for-a-dissolve, owned elsewhere: no field Spare before strip). If a picked cut no longer shows its section after the panel change, that is an app regression a person hits. Also: caption-pick-answers-at-once froze 84.5 ms against 80, a-clip-s-sound-is-linked-under-it reads Fade in 0.8s not 0.7s (frame grid rounding?), title-size-box reads 80 px not 30 px, ask-row-thumbs timed out waiting for Ask. transition-tile-comes-away-walk moved to the-title-presets-walk-pulls-film-super-off-the (same short-shelf cause)."
+    },
+    {
+      "t": "2026-11-23T15:11:10.637Z",
+      "note": "triage 2026-11-23: checked the transition cluster. It is real: a picked transition shows no settings in the panel. Filed as a-picked-transition-shows-its-own-settings-in-th, which now owns transition-band-reads-as-the-mock-walk, transition-picker-at-a-cut-walk and a-video-edit-saves-as-a-project-walk. This task keeps the other 12."
+    },
+    {
+      "t": "2026-11-23T15:11:23.474Z",
+      "note": "seq 4130 -> 30"
     }
   ],
   "standing": "walk-sweep"
