@@ -27,7 +27,7 @@ struct HoldPushTests {
                           lengthMS: Int = 8000) -> (doc: PhotonzDocument, clip: UUID, voice: UUID) {
         var doc = PhotonzDocument.recording(movie(), name: "Take 1")
         let clip = doc.layers[0].id
-        let voice = doc.addSound(SoundRef(durationMS: lengthMS), name: "voice over", atMS: start)
+        let voice = doc.addSound(SoundRef(durationMS: lengthMS), name: "voice over", atMS: start, stoppingWithThePicture: false)
         return (doc, clip, voice)
     }
 
@@ -244,7 +244,7 @@ struct HoldPushTests {
     @Test("The silence a hold pushes into one layer is not read as a hold of its own")
     func silenceIsNotAHoldOfItsOwn() throws {
         var (doc, clip, voice) = Self.withVoice()
-        let music = doc.addSound(SoundRef(durationMS: 14_000), name: "music", atMS: 0)
+        let music = doc.addSound(SoundRef(durationMS: 14_000), name: "music", atMS: 0, stoppingWithThePicture: false)
         let didA = doc.holdFrame(clip, atMS: 4000, forMS: 5000, push: .everything)
         #expect(didA)
         // Every layer waited, so nothing is out of step with anything. The

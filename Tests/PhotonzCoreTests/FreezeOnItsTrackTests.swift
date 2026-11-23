@@ -18,7 +18,7 @@ struct FreezeOnItsTrackTests {
     /// its own track, starting at 0 and running 10s.
     static func twoOnV1WithVoice() throws -> (doc: PhotonzDocument, first: UUID, second: UUID, voice: UUID) {
         var (doc, first, second, _) = try ClipsAcrossTracksTests.twoOnV1()
-        let voice = doc.addSound(SoundRef(durationMS: 10_000), name: "voice over", atMS: 0)
+        let voice = doc.addSound(SoundRef(durationMS: 10_000), name: "voice over", atMS: 0, stoppingWithThePicture: false)
         return (doc, first, second, voice)
     }
 

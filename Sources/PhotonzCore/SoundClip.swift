@@ -257,16 +257,53 @@ extension PhotonzDocument {
         return nil
     }
 
-    /// Put a piece of sound on the timeline at a moment, and stretch the
-    /// document to hold it where it runs past the end.
+    /// The last moment anything is seen: the latest end of a layer that draws
+    /// something, or the document's own written length where it holds past
+    /// that. Nil where nothing in it is a picture, only sound.
+    public var pictureEndMS: Int? {
+        let drawn = allLayers.compactMap { layer -> Int? in
+            guard let time = layer.time, !layer.isSoundOnly, layer.merged?.isSoundOnly != true,
+                  !layer.isGroup else { return nil }
+            return time.outMS
+        }
+        guard let last = drawn.max() else { return nil }
+        return max(last, durationMS ?? 0)
+    }
+
+    /// How long a sound `lengthMS` long, put down at `ms`, plays: to the last
+    /// picture where it would run past it, whole otherwise.
+    ///
+    /// A song longer than the edit stops where the picture stops (settled
+    /// 2026-10-20), the way iMovie and Clips trim background music to the
+    /// movie, so a ninety second cut stays ninety seconds with a song under
+    /// it. It is whole where there is no picture at all, and where it is put
+    /// down at or after the last picture, which is somebody placing it there
+    /// on purpose.
+    public func soundLengthUnderThePicture(atMS ms: Int, lengthMS: Int) -> Int {
+        let start = max(0, ms)
+        guard let end = pictureEndMS, start < end else { return lengthMS }
+        return max(LayerTime.shortestMS, min(lengthMS, end - start))
+    }
+
+    /// Put a piece of sound on the timeline at a moment. It stops with the
+    /// last picture where it would run past it (`soundLengthUnderThePicture`),
+    /// keeping the rest of itself to be dragged back out; with no picture to
+    /// stop at, the document stretches to hold it.
+    ///
+    /// `stoppingWithThePicture: false` lays it down whole however far past
+    /// the picture it runs: a song whose end was dragged back out, which is
+    /// a state a person can always reach by hand.
     ///
     /// The one way sound arrives from outside a recording. It lands as a layer
     /// like anything else, which is what makes it immediately cuttable,
     /// movable, nameable and undoable with nothing new built for it.
     @discardableResult
-    public mutating func addSound(_ sound: SoundRef, name: String, atMS ms: Int) -> UUID {
+    public mutating func addSound(_ sound: SoundRef, name: String, atMS ms: Int,
+                                  stoppingWithThePicture: Bool = true) -> UUID {
         let start = max(0, ms)
-        let time = LayerTime(inMS: start, outMS: start + max(LayerTime.shortestMS, sound.durationMS),
+        let whole = max(LayerTime.shortestMS, sound.durationMS)
+        let length = stoppingWithThePicture ? soundLengthUnderThePicture(atMS: start, lengthMS: whole) : whole
+        let time = LayerTime(inMS: start, outMS: start + length,
                              sourceInMS: 0, sourceLengthMS: sound.durationMS)
         let layer = Layer.sound(sound, name: name, time: time)
         let id = layer.id

@@ -36,6 +36,9 @@
     { "do": "expectSoundPitch", "hz": 440 },
     { "do": "snapshot", "name": "2-playing-at-half-speed" },
 
+    { "do": "key", "key": "home" },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 0.3 },
     { "do": "panelMenu", "menu": "Playback Speed", "at": ["centre"], "choose": "1.5x" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "3-one-and-a-half", "note": "picked 1.5x while it plays: it changes speed where it is, and the tone still reads 440 Hz" },

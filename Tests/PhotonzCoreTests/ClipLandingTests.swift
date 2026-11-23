@@ -26,7 +26,7 @@ struct ClipLandingTests {
                           frame: CGRect(x: 0, y: 0, width: 40, height: 20))
         title.time = LayerTime(inMS: 5000, outMS: 7000)
         doc.addLayer(title)
-        let music = doc.addSound(SoundRef(durationMS: 14000), name: "music", atMS: 0)
+        let music = doc.addSound(SoundRef(durationMS: 14000), name: "music", atMS: 0, stoppingWithThePicture: false)
         return (doc, take, title.id, music)
     }
 

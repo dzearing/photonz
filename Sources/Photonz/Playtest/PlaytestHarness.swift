@@ -6042,14 +6042,15 @@ private final class Run {
                         + "recording has a sound track and has not been detached already")
                 }
                 editor.detachSound()
-            case .soundAddSample:
+            case .soundAddSample, .soundAddSampleWhole:
                 guard let url = TutorialSampleSound.fresh() else {
                     throw Failure(description: "couldn't write the sample music")
                 }
                 let before = editor.document?.allLayers.count ?? 0
                 var landed: UUID?
                 let at = editor.documentTimeMS
-                Task { landed = await editor.addSound(from: url, atMS: at) }
+                let stops = action == .soundAddSample
+                Task { landed = await editor.addSound(from: url, atMS: at, stoppingWithThePicture: stops) }
                 try await poll("the sample music to land on the timeline", within: 20) {
                     landed != nil && (editor.document?.allLayers.count ?? 0) > before
                 }
@@ -6083,7 +6084,10 @@ private final class Run {
                 let before = editor.document?.allLayers.count ?? 0
                 var landed: UUID?
                 let at = editor.documentTimeMS
-                Task { landed = await editor.addSound(from: url, atMS: at) }
+                // Whole, past the end of the picture where it is longer: it is
+                // there to be listened to, and every sentence of it is what a
+                // captioning walk counts on, not where the song rule stops it.
+                Task { landed = await editor.addSound(from: url, atMS: at, stoppingWithThePicture: false) }
                 try await poll("the spoken sample to land on the timeline", within: 20) {
                     landed != nil && (editor.document?.allLayers.count ?? 0) > before
                 }
@@ -7982,7 +7986,7 @@ private final class Run {
                  .historyWritesCutShortByQuit: break
             // Sound, handled in full above with the rest of the timeline, where
             // each one can refuse the walk rather than quietly doing nothing.
-            case .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
+            case .soundDetach, .soundAddSample, .soundAddSampleWhole, .soundDuck, .soundLevelHalf,
                  .soundExpectPlaying, .panelExpectOnClipUnderPlayhead, .soundHoldTheOutputUp, .soundExportMix, .soundScrubAcrossIt,
                  .soundExpectMixOver, .soundExpectMeterReads, .soundExpectCutCarried,
                  .videoSeekStart: break

@@ -9,9 +9,11 @@ import Foundation
 // their Mac.
 //
 // It is DELIBERATELY LONGER than the recording, because that is the case worth
-// showing: a bed of music runs under the whole thing and past the end of it, so
-// the timeline has to grow to hold it and the level has to be pulled down to
-// let a voice through.
+// showing: a bed of music laid under the whole thing stops where the picture
+// stops (`PhotonzDocument.soundLengthUnderThePicture`), and the level has to be
+// pulled down to let a voice through. A walk that wants it running past the
+// end, the way a person gets it by dragging its end back out, says
+// `soundAddSampleWhole`.
 @MainActor
 enum TutorialSampleSound {
     static let seconds = 14.0

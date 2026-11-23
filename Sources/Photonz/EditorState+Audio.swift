@@ -161,7 +161,7 @@ extension EditorState {
     /// The same thing without the panel: what a drop on the timeline does, and
     /// what a scripted walk does.
     @discardableResult
-    func addSound(from url: URL, atMS ms: Int) async -> UUID? {
+    func addSound(from url: URL, atMS ms: Int, stoppingWithThePicture: Bool = true) async -> UUID? {
         guard let sound = await SoundLibrary.shared.sound(at: url) else {
             raiseCanvasNotice(.mixWritten(file: nil))
             return nil
@@ -170,7 +170,8 @@ extension EditorState {
         var landed: UUID?
         pauseDocument()
         perform {
-            landed = $0.addSound(sound, name: name, atMS: max(0, ms))
+            landed = $0.addSound(sound, name: name, atMS: max(0, ms),
+                                 stoppingWithThePicture: stoppingWithThePicture)
             $0.rememberMedia(.sound(sound), named: url.lastPathComponent)
         }
         if let landed { selectLayer(landed) }

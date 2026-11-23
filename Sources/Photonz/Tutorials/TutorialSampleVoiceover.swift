@@ -27,8 +27,8 @@ enum TutorialSampleVoiceover {
     static let fileName = "Sample Voiceover.m4a"
 
     /// What it says. Five sentences with pauses between them, so the caption
-    /// breaks land where a person would put them, and long enough that the
-    /// recording it is laid over has to grow to hold it.
+    /// breaks land where a person would put them, and longer than the sample
+    /// recording; the walks lay it down whole, past the picture's end.
     static let script = """
     Photonz opens a screen recording as an ordinary document with time in it. \
     The transport bar and the timeline appear under the canvas. \

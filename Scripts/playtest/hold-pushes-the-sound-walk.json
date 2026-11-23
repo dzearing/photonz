@@ -17,7 +17,7 @@
     { "do": "action", "action": "soundDetach" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "action", "action": "videoSeekStart" },
-    { "do": "action", "action": "soundAddSample" },
+    { "do": "action", "action": "soundAddSampleWhole" },
     { "do": "wait", "seconds": 1.5 },
     { "do": "selectRow", "row": "Tutorial Sample" },
     { "do": "wait", "seconds": 0.5 },

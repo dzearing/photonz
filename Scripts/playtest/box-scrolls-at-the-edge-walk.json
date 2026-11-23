@@ -12,7 +12,7 @@
     { "do": "wait", "seconds": 2.0 },
     { "do": "action", "action": "videoPause" },
     { "do": "tool", "tool": "select" },
-    { "do": "action", "action": "soundAddSample" },
+    { "do": "action", "action": "soundAddSampleWhole" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "clickRuler", "seconds": 12.0 },
     { "do": "tool", "tool": "text" },

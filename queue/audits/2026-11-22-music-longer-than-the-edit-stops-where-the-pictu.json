@@ -1,0 +1,28 @@
+{
+  "feature": "Music longer than the edit stops where the picture stops",
+  "epic": "video-audio",
+  "summary": "Put a song longer than your cut under it and it now stops with the last picture, so a ninety second cut stays ninety seconds in the title bar, the timeline, the Export sheet and the MP4. The rest of the song is still in the clip: drag its right edge out to get it back.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Any song longer than your cut works (a three minute track from Music, say). Checked by the walk music-bed-under-a-cut-walk: the five minute talk cut to 1:30, a 3:00 song added at 0:00 from the menu and again by dropping it on the timeline, and the cut written out as an MP4 that runs 90.0 s with sound.",
+  "switched": {},
+  "try": [
+    { "do": "Open any recording longer than a minute and cut it short (I, O and the apostrophe key, or W to trim the end).", "shot": "2026-11-22-music-stops-with-the-picture-1.png" },
+    { "do": "Press Home, then choose Sequence > Add Media at Playhead and pick a song longer than the cut." },
+    { "do": "Read the title bar, the end of the transport and the end of the song's bar on the timeline: all three stop where the picture stops." },
+    { "do": "Choose File > Export and read the line under Captions: it says the cut's length, not the song's.", "shot": "2026-11-22-music-stops-with-the-picture-2.png" },
+    { "do": "Press Escape, then Command Z once: the song goes and nothing else changes." },
+    { "do": "Drag the same song from the Finder onto the timeline at 0:00: it lands on a sound track and stops at the last picture too.", "shot": "2026-11-22-music-stops-with-the-picture-3.png" },
+    { "do": "Drag the song's right edge past the end of the picture: the rest of the song is still there." }
+  ],
+  "evaluate": [
+    "Is a song that stops dead at the last frame good enough, or would you rather it faded out over the last second or two by itself?",
+    "When you mean the song to run past the end, is dragging its edge out the gesture you would reach for?",
+    "Should a song put down AFTER the last picture still land whole (it does today), or stop at nothing?"
+  ],
+  "rough": [
+    "No mock covers how long a song runs under a cut; the rule is the one settled on 2026-10-20 when the waiting cards were taken as recommended.",
+    "The song stops dead on the last frame with no fade. iMovie fades background music out at the end; that is not built here and is the first evaluate question.",
+    "The rule counts anything drawn (clips, titles, text) as picture and ignores other sounds, so a voiceover already running past the end does not stretch the next song.",
+    "A voiceover or sound effect longer than the cut is trimmed the same way as music; nothing tells a song from a voiceover.",
+    "The walk that proves the menu path needs the probe in front (the Sequence menu only exists then), so it waits for the Mac to be free and only runs in the whole walk set, not the rotating checks."
+  ]
+}

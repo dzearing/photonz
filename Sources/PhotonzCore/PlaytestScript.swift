@@ -1531,6 +1531,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// panel-free path Add Sound takes, so a walk never has to answer an open
     /// panel.
     case soundAddSample
+    /// The same sample music laid down whole, running past the last picture
+    /// where it is longer: the bed a person gets by dragging the song's end
+    /// back out once it has stopped with the picture. For walks about
+    /// something else that start from music running past the end.
+    case soundAddSampleWhole
     /// Put the spoken sample on the timeline where the playhead is: the Mac's
     /// own voice reading five sentences about this app. What a captioning walk
     /// needs, because the sample recording's own sound is tones and blips and
@@ -1925,7 +1930,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .curveDrawOnZoom, .expectZoomFollowsCurve, .expectDissolveFollowsCurve,
              .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture, .expectZoomShowsItsBox,
              .zoomAddAtPlayhead, .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
-             .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
+             .soundDetach, .soundAddSample, .soundAddSampleWhole, .soundDuck, .soundLevelHalf,
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,

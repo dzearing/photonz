@@ -14,7 +14,7 @@
     { "do": "key", "key": "b", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.3 },
     { "do": "clickRuler", "seconds": 0.0 },
-    { "do": "action", "action": "soundAddSample" },
+    { "do": "action", "action": "soundAddSampleWhole" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "clickRuler", "seconds": 10.0 },
     { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "pieces": 3 },

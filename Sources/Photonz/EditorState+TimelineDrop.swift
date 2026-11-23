@@ -48,6 +48,13 @@ struct TimelineFileInAir {
     var lengthMS: Int? { movie?.durationMS ?? sound?.durationMS }
     var trackKind: DocumentTrack.Kind { kind == .sound ? .audio : .video }
     var name: String { url.deletingPathExtension().lastPathComponent }
+
+    /// How long it lands, put down at `ms`: a recording whole, a sound to the
+    /// last picture where it would run past it, so the ghost is drawn the
+    /// length the song will be (`PhotonzDocument.soundLengthUnderThePicture`).
+    func landingLengthMS(_ length: Int, atMS ms: Int, in document: PhotonzDocument) -> Int {
+        kind == .sound ? document.soundLengthUnderThePicture(atMS: ms, lengthMS: length) : length
+    }
 }
 
 // A sound or a recording let go on the TIMELINE lands at the moment and on the
@@ -150,8 +157,9 @@ extension EditorState {
         let start = ClipLanding.snapped(startMS: raw, lengthMS: length,
                                         to: document.timelineEdgesMS + [documentTimeMS],
                                         withinMS: isTimelineSnapping ? max(0, reach) : 0)
-        return document.clipLanding(kind: inAir.trackKind, lengthMS: length, atMS: start,
-                                    over: trackDrop(atY: point.y),
+        return document.clipLanding(kind: inAir.trackKind,
+                                    lengthMS: inAir.landingLengthMS(length, atMS: start, in: document),
+                                    atMS: start, over: trackDrop(atY: point.y),
                                     edit: insert ? .insert : .overwrite)
     }
 
@@ -211,8 +219,9 @@ extension EditorState {
         guard Experiments.shared.droppingMedia, let kind = MediaFiles.kind(of: url) else { return nil }
         return await landTimelineFile(TimelineFileInAir(url: url, kind: kind)) { [weak self] inAir in
             guard let document = self?.document, let length = inAir.lengthMS else { return nil }
-            return document.clipLanding(kind: inAir.trackKind, lengthMS: length, atMS: at,
-                                        over: picked.map { .onto($0) }, edit: .overwrite)
+            return document.clipLanding(kind: inAir.trackKind,
+                                        lengthMS: inAir.landingLengthMS(length, atMS: at, in: document),
+                                        atMS: at, over: picked.map { .onto($0) }, edit: .overwrite)
         }
     }
 
@@ -252,8 +261,11 @@ extension EditorState {
             layer.time = LayerTime(inMS: 0, outMS: length, sourceInMS: 0, sourceLengthMS: movie.durationMS)
             media = .recording(movie)
         } else if let sound = inAir.sound {
+            // As long as the landing says: a song that would run past the
+            // last picture stops with it, the rest kept to drag back out.
             layer = Layer.sound(sound, name: inAir.name,
-                                time: LayerTime(inMS: 0, outMS: length, sourceLengthMS: sound.durationMS))
+                                time: LayerTime(inMS: 0, outMS: min(length, landing.lengthMS),
+                                                sourceLengthMS: sound.durationMS))
             media = .sound(sound)
         } else {
             return nil

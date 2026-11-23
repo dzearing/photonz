@@ -203,7 +203,7 @@ struct SoundClipTests {
 
     @Test("A sound brought in from a file is a layer on the timeline, drawing nothing")
     func soundBroughtInIsALayer() throws {
-        var doc = Self.recording()
+        var doc = Self.recording(durationMS: 20_000)
         let music = SoundRef(durationMS: 14_000)
         let id = doc.addSound(music, name: "music", atMS: 1000)
         let layer = try #require(doc.layer(id: id))
@@ -215,11 +215,11 @@ struct SoundClipTests {
         #expect(layer.sound == music)
     }
 
-    @Test("Sound longer than the document stretches the document to hold it")
-    func soundCanOutlastThePicture() throws {
+    @Test("Sound longer than the picture stops with it, and the document keeps its length")
+    func soundStopsWithThePicture() throws {
         var doc = Self.recording(durationMS: 8000)
         _ = doc.addSound(SoundRef(durationMS: 20_000), name: "music", atMS: 0)
-        #expect(doc.documentDurationMS == 20_000)
+        #expect(doc.documentDurationMS == 8000)
     }
 
     @Test("A sound layer round trips through the file it is written to")

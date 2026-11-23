@@ -51,7 +51,7 @@ struct TimelineGapTests {
         #expect(doc.gap(onTrack: track, atMS: 2000) == nil)
         #expect(doc.gap(onTrack: track, atMS: 9000) == nil)
         // A document longer than its last clip: the space after it is not a gap.
-        _ = doc.addSound(SoundRef(durationMS: 20_000), name: "music", atMS: 0)
+        _ = doc.addSound(SoundRef(durationMS: 20_000), name: "music", atMS: 0, stoppingWithThePicture: false)
         #expect(doc.gap(onTrack: track, atMS: 15_000) == nil)
     }
 
@@ -122,7 +122,7 @@ struct TimelineGapTests {
     @Test("Music running across the gap, and a title inside it, stay where they are")
     func acrossAndInsideStay() throws {
         var (doc, _, tail, track, _) = try Self.lifted()
-        let bed = doc.addSound(SoundRef(durationMS: 20_000), name: "bed", atMS: 0)
+        let bed = doc.addSound(SoundRef(durationMS: 20_000), name: "bed", atMS: 0, stoppingWithThePicture: false)
         let inside = MarkedStretchTests.title("Inside", 5000, 6000)
         doc.addLayer(inside)
         let gap = try #require(doc.gap(onTrack: track, atMS: 5000))

@@ -23400,3 +23400,11 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - CI: Run tests 30 minutes (was 25), job 55 (was 45), test helper crash reports kept as an artifact. Same timeouts in release.yml.
 - Drilled with `GITHUB_ACTIONS=true PHOTONZ_TEST_CRASH_DRILL=1` (and `_TWICE=1`), and with a real segfaulting throwaway test both ways.
 - Open: the parked-run exit 4 on a runner (run 45032918386) is a second way a slice goes red with no failing test; unchanged.
+
+## 2026-11-22 — Music longer than the edit stops where the picture stops (task music-longer-than-the-edit-stops-where-the-pictu)
+
+- A sound that would run past the last picture now stops with it: `PhotonzDocument.soundLengthUnderThePicture` / `pictureEndMS` (core, tested in `SoundStopsWithThePictureTests`), used by `addSound` and by a file dropped on or placed at the playhead on the timeline. The rest of the song stays in the clip to drag back out. Whole as before with no picture at all, or when put down at or after the picture's end.
+- A three minute song under the ninety second talk: title bar, transport, ruler and Export sheet say 1:30, and the MP4 runs 90.0 s with sound. New walk `music-bed-under-a-cut-walk` (needs the probe in front for the Sequence menu); fixture `Scripts/playtest/fixtures/A song 3 minutes.m4a`.
+- Fixtures that mean a bed running past the picture say so: core `addSound(..., stoppingWithThePicture: false)`, walk action `soundAddSampleWhole` (13 walks switched); `captionsAddVoiceover` lays its voiceover whole. `playback-speed-walk` rewinds and plays again before 1.5x.
+- `timeline-right-click-menus-walk` also expects the colour grade task's new "Add Color Grade" row.
+- Open: no fade at the song's end (iMovie fades); a flaky copy-writer test filed as find-out-why-the-encoder-cannot-match-copy-test.

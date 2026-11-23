@@ -31,7 +31,7 @@
     },
     {
       "do": "action",
-      "action": "soundAddSample"
+      "action": "soundAddSampleWhole"
     },
     {
       "do": "wait",
