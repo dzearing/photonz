@@ -1,0 +1,32 @@
+{
+  "id": "scrubbing-a-long-edit-never-trails-the-pointer-b",
+  "title": "Scrubbing a long edit never trails the pointer by more than one display frame",
+  "goal": "Dragging the playhead over the 6 minute reference edit keeps up most of the time (the picture is one refresh behind the hand at the middle), but at its worst it is still 3 to 5 refreshes behind. Make even the worst moment of a drag show the moment under the pointer within one display frame, at a medium end to end drag and while hunting back and forth.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-23T14:48:45.395Z",
+  "updated": "2026-11-23T14:48:45.398Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (closed 2026-11-23). lag = refreshes since the hand was at the moment the picture carries (a stand-in frame counts as caught up); frame lag = the exact frame under the hand; sight lag = the frames the picture is really drawn from (SpeedWalk.ScrubTally). The medium drag's frame lag and sight lag worst are shown but not judged since 2026-11-23 (SpeedCompare.isJudged: 17 to 81 at the median on unchanged code); its lag worst is judged. Passes 20 to 22 made the hunt follow the hand (MovieSweep.window(follows:), restingPass, MovieFrameQueue.placesStillShown): hunt frame worst 43 -> 3. Lead from pass 22: the hunt's ~20 ms looks with an idle main thread (display link or render server; Metal System Trace needs developer mode). Lag worst 3-10 on medium in 45 runs: which moment is late is chance, so look at the per-look dump (temporary) before changing anything.",
+  "acceptance": [
+    "Scripts/perf/speed-walk.sh on the 6 minute edit reads scrub lag worst of 1 for the medium drag and the hunt, worst of three runs (2026-11-23: medium 5, hunt 3; medians already 1)",
+    "The hunt's frame lag and sight lag worst read 1 or 2 (2026-11-23: 3 and 3)",
+    "scrub-never-blacks-out-walk and hear-the-scrub-walk stay green",
+    "The speed walk baseline is rewritten with --baseline once it is reached"
+  ],
+  "log": [
+    {
+      "t": "2026-11-23T14:48:45.397Z",
+      "note": "created (user)"
+    }
+  ],
+  "walks": [
+    "speed-walk",
+    "scrub-never-blacks-out-walk"
+  ]
+}

@@ -382,6 +382,45 @@ struct SpeedWalkTests {
         #expect(SpeedCompare.table(base, run).contains("play cube at 0:59.8: worst gap"))
     }
 
+    @Test("An end to end drag's exact-frame lags are shown but not judged; its lag and a hunt's are")
+    func endToEndFrameLagsNotJudged() {
+        func scrub(_ speed: String, frameMedian: Int, frameWorst: Int, sightMedian: Int, sightWorst: Int,
+                   lagMedian: Int = 1, lagWorst: Int = 3) -> SpeedWalk.ScrubTally {
+            var tally = SpeedWalk.ScrubTally(speed: speed, frames: 240, lagMedianFrames: lagMedian,
+                                             lagWorstFrames: lagWorst, worstFrameMS: 20)
+            tally.frameLagMedianFrames = frameMedian
+            tally.frameLagWorstFrames = frameWorst
+            tally.sightLagMedianFrames = sightMedian
+            tally.sightLagWorstFrames = sightWorst
+            return tally
+        }
+        var base = Self.run(dropped: 0, gap: 40, peak: 1000)
+        base.scrubs = [scrub("medium", frameMedian: 40, frameWorst: 152, sightMedian: 1, sightWorst: 91),
+                       scrub("fling", frameMedian: 60, frameWorst: 200, sightMedian: 1, sightWorst: 120),
+                       scrub("hunt", frameMedian: 1, frameWorst: 8, sightMedian: 1, sightWorst: 6)]
+        // What 45 runs of unchanged code read on 2026-11-18 to 11-22: medium's
+        // frame under the hand 17 to 81 refreshes at the median, its sight
+        // worst 33 to 159. Not a regression.
+        var noisy = base
+        noisy.scrubs[0] = scrub("medium", frameMedian: 81, frameWorst: 320, sightMedian: 1, sightWorst: 159)
+        noisy.scrubs[1] = scrub("fling", frameMedian: 150, frameWorst: 500, sightMedian: 1, sightWorst: 300)
+        #expect(SpeedCompare.regressions(baseline: base, run: noisy, marginPercent: 50).isEmpty)
+        // Still written down, side by side.
+        #expect(SpeedCompare.table(base, noisy).contains("scrub medium: frame lag median"))
+        // The picture falling behind the hand at medium is still judged...
+        var behind = base
+        behind.scrubs[0] = scrub("medium", frameMedian: 40, frameWorst: 152, sightMedian: 9, sightWorst: 91,
+                                 lagMedian: 9, lagWorst: 30)
+        let named = SpeedCompare.regressions(baseline: base, run: behind, marginPercent: 50)
+        #expect(named.contains { $0.hasPrefix("scrub medium: lag median") })
+        #expect(named.contains { $0.hasPrefix("scrub medium: lag worst") })
+        #expect(named.contains { $0.hasPrefix("scrub medium: sight lag median") })
+        // ...and so is every number of a hunt, where the frame under the hand is the point.
+        var slowHunt = base
+        slowHunt.scrubs[2] = scrub("hunt", frameMedian: 9, frameWorst: 40, sightMedian: 9, sightWorst: 40)
+        #expect(SpeedCompare.regressions(baseline: base, run: slowHunt, marginPercent: 50).count == 4)
+    }
+
     @Test("A baseline from several runs is the worst of them, number by number")
     func envelopeIsTheWorst() throws {
         var a = Self.run(dropped: 100, gap: 900, peak: 1000)

@@ -1,0 +1,28 @@
+{
+  "feature": "A long edit plays, scrubs and edits without a stutter (pass 29, closing)",
+  "epic": "video-perf",
+  "summary": "Where 29 passes left the 6 minute reference edit: a minute of play shows every frame but the odd one or two a minute (the Mac's own refresh, the app idle), a drag keeps the picture a refresh behind the hand, and an edit with nothing picked fits in one frame. Picking, letting go of and cutting a picked clip still take about two frames and go on as their own task, and the speed walk no longer fails at random on a medium drag's exact-frame number.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Measured on the probe with the short speed walk on 2026-11-23 (one run, all 46 judged numbers inside the baseline's margin). The reference edit for File > Open lives in ~/Library/Caches/Photonz Reference Edit/Photonz Dev.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 6 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 6, "shot": "2026-11-23-a-long-edit-with-transitions-plays-scrubs-and-ed-pass29.png" },
+    { "do": "Press Space and watch a minute play through the dissolves, the push and the cube." },
+    { "do": "Drag the playhead knob end to end, then back and forth over ten seconds as if hunting for a moment." },
+    { "do": "While it plays, trim the end of a clip and press Command Z." },
+    { "do": "While it plays, click a clip in V1, then press Command B to cut it, then click empty timeline to let it go." }
+  ],
+  "evaluate": [
+    "Does a minute of play look smooth to you through every transition?",
+    "When you drag the playhead, does the picture stay under your hand?",
+    "With nothing picked, do a trim and an undo while playing feel instant?",
+    "Do you notice a hitch when you click a clip, or let it go, while the edit plays?"
+  ],
+  "rough": [
+    "Numbers on the 6 minute edit, 2026-11-23 (bar in brackets): play 2 of 1818 frames dropped in a minute, worst gap 59 ms, longest main thread pass while playing 7 ms (0 dropped; pass 26 found the odd drop is the display refresh with the app idle, and 0 to 3 a minute is what this build reads); first picture 58 ms after Space.",
+    "Edits while playing, longest main thread pass (16 ms): with nothing picked trim 9, undo 11; with a clip picked trim 15, undo 15, blade 19; pick another clip 29, pick from nothing 33, let go 30. Picks and the picked blade go on in picking-letting-go-of-and-cutting-a-clip-while-a with this bar and the speed walk as its check.",
+    "Scrubbing (within one display frame): lag median 1 at both speeds, worst 5 on a medium drag and 3 hunting. Goes on in scrubbing-a-long-edit-never-trails-the-pointer-b.",
+    "The speed walk no longer judges a medium drag's exact-frame lags (frame lag median and worst, sight lag worst): 45 runs of unchanged code read 17 to 81 at the median, so rotating checks failed at random. It still writes them down and still judges what a person sees at that speed (lag, sight lag median) and every hunt number.",
+    "Moving a clip, adding a transition and changing a title are on the objective's list but not in the speed walk yet; their timing is an item on picking-letting-go-of-and-cutting-a-clip-while-a.",
+    "No change to what is drawn this pass: only how the speed walk judges its numbers changed."
+  ]
+}

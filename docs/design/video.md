@@ -822,7 +822,13 @@ write every number into one `speed.json`:
   more than a margin (50% by default, 100% in the short walk) plus a floor in
   its own unit (`SpeedCompare.slack`). A transition's own worst gap is shown
   but not judged: the whole run's worst gap already bounds it, and which cut a
-  multi-second stall lands on is chance.
+  multi-second stall lands on is chance. Nor are a drag end to end's
+  exact-frame lags (medium and fling: frame lag median and worst, sight lag
+  worst): a hand crossing the edit in seconds passes a second of film a
+  refresh, so which read lands first is chance, and 45 short walks of
+  unchanged code read medium's frame lag median 17 to 81 (2026-11-23). Its lag
+  and sight lag median, what a person sees, stay judged, as does every number
+  of the hunt.
 
 Every measure is capped in time, so an app that cannot keep up still ends the
 walk with a number rather than a timeout. The short form,

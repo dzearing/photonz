@@ -921,8 +921,24 @@ public enum SpeedCompare {
     /// worst gap is not: the whole run's worst gap already bounds it, and
     /// while stalls last seconds which cut a stall lands on is chance (8.2 s
     /// and 12.8 s at the same cut in two runs of one build, 2026-11-12).
+    ///
+    /// Nor are the exact-frame lags of a drag end to end (medium, fling):
+    /// a hand crossing the whole edit in a few seconds passes over a second
+    /// of film or more each refresh, so whether the very frame under it has
+    /// been read by then is down to which read lands first. 45 short walks of
+    /// unchanged code on 2026-11-18 to 11-22 read medium's frame under the
+    /// hand 17 to 81 refreshes at the median and its sight worst 33 to 159,
+    /// so the walk failed rotating checks at random. What a person sees at
+    /// that speed is still judged (lag and sight lag median: 1 or 2 in every
+    /// one of those runs), and so is every number of a hunt, the drag where
+    /// the frame under the hand is the point.
     public static func isJudged(_ metric: SpeedRun.Metric) -> Bool {
-        !(metric.key.hasPrefix("play ") && metric.key.hasSuffix(": worst gap"))
+        if metric.key.hasPrefix("play ") && metric.key.hasSuffix(": worst gap") { return false }
+        for speed in ["medium", "fling"] where metric.key.hasPrefix("scrub \(speed): ") {
+            let name = metric.key.dropFirst("scrub \(speed): ".count)
+            if name.hasPrefix("frame lag ") || name == "sight lag worst" { return false }
+        }
+        return true
     }
 
     /// The numbers in `run` that read worse than `baseline` by more than the

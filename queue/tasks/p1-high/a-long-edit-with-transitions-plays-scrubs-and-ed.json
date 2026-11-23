@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-22T13:27:45.135Z",
+  "updated": "2026-11-23T14:33:29.897Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,13 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-22T13:27:45.134Z",
-      "note": "... 122 earlier entries elided",
-      "elided": 122
-    },
-    {
-      "t": "2026-11-19T11:48:56.243Z",
-      "note": "Pass 17 landed fc28facc9: a video's picture stays on a GPU surface and goes up as it is, so composite 5.6 -> 4.2 ms and a dragged playhead's picture trails the hand by 1 refresh in the middle (was 2). Bars not reached (0 dropped: 1 a minute; edits 16 ms: 15-63; worst scrub lag 3). Pass 18 leads in the log."
+      "t": "2026-11-23T14:33:29.888Z",
+      "note": "... 123 earlier entries elided",
+      "elided": 123
     },
     {
       "t": "2026-11-19T11:49:37.460Z",
@@ -507,9 +503,13 @@
     {
       "t": "2026-11-22T13:27:45.133Z",
       "note": "Triage 2026-11-22: 28 passes in. The last three each took real time off one edit (pick's own pass 27 to 23 ms, the stop gone from a blade), but every pass now says the same floor: about 15 ms of SwiftUI layout, accessibility focus walk and title bar drag regions under each landing pass, against a 16 ms bar. Acceptance item 5 already says what to do with what is not reached: file one follow-up per cost with its bar and command. If pass 29 does not move pick, unpick or pick-from-nothing under about 20 ms, close this task that way rather than run pass 30, and put the framework floor (fewer AppKit-backed controls in the panel, or sections that do not land during a pick) in a follow-up of its own. The speed walk's scrub medium frame lag also read 20 to 81 on unchanged code (pass 26 and 28), so it fails rotating checks at random; settle that number's noise in the same close."
+    },
+    {
+      "t": "2026-11-23T14:33:29.887Z",
+      "note": "claimed by go loop"
     }
   ],
-  "started": "2026-11-22T12:22:54.159Z",
+  "started": "2026-11-23T14:33:29.886Z",
   "walks": [
     "speed-walk",
     "the-panel-catches-up-when-play-stops-walk",
