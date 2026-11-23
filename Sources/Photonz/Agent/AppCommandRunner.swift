@@ -215,6 +215,7 @@ extension EditorState {
             else { addMediaFromFile() }
         case .insertTitle:
             if let preset = titlePreset(call) { insertTitle(preset, onTrack: call.track.flatMap(UUID.init(uuidString:))) }
+        case .addColorGrade: addColorGrade(onTrack: call.track.flatMap(UUID.init(uuidString:)))
         case .saveTitlePreset:
             if let name = call.word("name") { saveTitlePresetInHand(named: name) } else { beginSavingTitlePreset() }
         case .exportSound:
@@ -510,6 +511,7 @@ extension EditorState {
         case .insertTitle:
             guard canInsertTitle else { return false }
             return call.options.isEmpty || titlePreset(call) != nil
+        case .addColorGrade: return canAddColorGrade
         case .saveTitlePreset: return titlePresetLayerInHand != nil && call.word("name").map { !$0.isEmpty } != false
         case .exportSound: return documentHasAudio
         case .freezeFrame:

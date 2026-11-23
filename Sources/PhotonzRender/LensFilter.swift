@@ -65,6 +65,10 @@ enum LensFilter {
         // inside its box a spotlight changes nothing.
         case .spotlight:
             return image
+        // A grade layer's grade is its Color Grade effect, applied with every
+        // other effect after this hands the picture back.
+        case .colorGrade:
+            return image
         }
     }
 }

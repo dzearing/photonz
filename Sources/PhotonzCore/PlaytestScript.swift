@@ -3596,7 +3596,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// How a colour grade is measured (`a-clip-can-be-colour-graded-from-add-effect`):
     /// Temperature at its warm end warms the frame by a clear margin, and
     /// every value back at its middle gives the untouched frame exactly.
-    case measureColor(name: String, against: String?, warmerBy: Double?, same: Bool)
+    /// `region`: only that part of the frame (`FrameColorRegion`), nil for all of it.
+    /// `within`: how many levels of 255 a pixel may move and still be the
+    /// same, for `same` (`FrameColor.largestDifference`); nought is exact.
+    case measureColor(name: String, against: String?, warmerBy: Double?, same: Bool,
+                      region: FrameColorRegion?, within: Int)
     /// Open a menu that lives INSIDE the window — the Add menu on a
     /// component's Properties list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
@@ -5873,7 +5877,9 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .measureColor(name: try f.string("name"),
                                  against: try f.optionalString("against"),
                                  warmerBy: try f.optionalNumber("warmerBy"),
-                                 same: try f.optionalFlag("same") ?? false)
+                                 same: try f.optionalFlag("same") ?? false,
+                                 region: try Self.colorRegion(f),
+                                 within: Int(try f.optionalNumber("within") ?? 0))
         case "writeFrame":
             self = .writeFrame(name: try f.string("name"),
                                atMS: try f.optionalNumber("atMS").map { Int($0) },
@@ -7203,6 +7209,17 @@ public enum PlaytestStep: Sendable, Equatable {
         default:
             throw PlaytestScriptError.unknownStep(index: index, name: name)
         }
+    }
+
+    /// A measureColor's `region` or `inside`, nil for the whole frame.
+    private static func colorRegion(_ f: Fields) throws -> FrameColorRegion? {
+        if let inside = try f.optionalString("inside") { return .inside(inside) }
+        let box = try f.optionalNumbers("region")
+        guard !box.isEmpty else { return nil }
+        guard box.count == 4, box[2] > 0, box[3] > 0 else {
+            throw f.invalid("region", "must be [x, y, width, height] in fractions of the canvas")
+        }
+        return .fraction(CGRect(x: box[0], y: box[1], width: box[2], height: box[3]))
     }
 
     /// A drag's `pause` and `pauseAt`, nil when it does not stop part way.

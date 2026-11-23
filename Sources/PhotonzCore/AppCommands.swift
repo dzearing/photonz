@@ -106,6 +106,7 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case deleteZoom = "delete_zoom"
     case addMediaAtPlayhead = "add_media_at_playhead"
     case insertTitle = "insert_title"
+    case addColorGrade = "add_color_grade"
     case saveTitlePreset = "save_title_preset"
     case exportSound = "export_sound"
     // Clip: time
@@ -655,6 +656,9 @@ public enum AppCommandTable {
                  options: [.init("kind", .choice(TitleKind.allCases.map(\.rawValue)), "Which kind of title.",
                                  required: true),
                            .init("preset", .text, "The style's name, as the Insert menu lists it.", required: true)]),
+            // A colour grade on a track of its own, from the playhead to the end
+            // (`ColorGradeLayer.swift`): Premiere's adjustment layer.
+            make(.addColorGrade, "Add Color Grade", "Sequence", .timeline, needs: aVideo, picks: [.playhead, .track]),
             make(.saveTitlePreset, "Save as Preset\u{2026}", clip, .timeline, needs: "a title page or name card in hand",
                  picks: [.playhead, .layers], options: [nameArgument]),
             make(.exportSound, "Export Sound\u{2026}", "Sequence", .timeline, needs: "a video with sound",

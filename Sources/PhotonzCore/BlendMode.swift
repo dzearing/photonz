@@ -18,8 +18,13 @@ import Foundation
 ///
 /// The order is the order of the menu, and it is not alphabetical: Normal
 /// leads because it is what every layer already is, then the two that change
-/// everything they cover (Multiply, Screen), then the two that change only part
-/// of it (Darken, Lighten).
+/// everything they cover (Multiply, Screen, Add), then the two that change
+/// only part of it (Darken, Lighten).
+///
+/// Add is the sixth, and it earned its place from the compositing mock's own
+/// swatches (`video-compositing.html`: Normal, Screen, Multiply, Add), where a
+/// colour grade on a track of its own picks between those four. It is Screen's
+/// stronger sibling, and its sentence says so.
 ///
 /// The renderer's half is `DocumentRenderer.composite(_:over:mode:extent:)`.
 public enum BlendMode: String, Hashable, Codable, Sendable, CaseIterable {
@@ -29,6 +34,10 @@ public enum BlendMode: String, Hashable, Codable, Sendable, CaseIterable {
     case multiply
     /// Always lighter or the same: light thrown at what is already there.
     case screen
+    /// Its light added to what is under it: brighter than Screen, and white
+    /// where the two together are more than a screen can show. Premiere and
+    /// After Effects call it Add; Photoshop calls it Linear Dodge (Add).
+    case add
     /// Takes the darker of the two, pixel by pixel.
     case darken
     /// Takes the lighter of the two, pixel by pixel.
@@ -47,6 +56,7 @@ public enum BlendMode: String, Hashable, Codable, Sendable, CaseIterable {
         case .normal: "Normal"
         case .multiply: "Multiply"
         case .screen: "Screen"
+        case .add: "Add"
         case .darken: "Darken"
         case .lighten: "Lighten"
         }
@@ -63,6 +73,8 @@ public enum BlendMode: String, Hashable, Codable, Sendable, CaseIterable {
             "Darkens what is under it, the way a highlighter pen does. Detail underneath still shows."
         case .screen:
             "Lightens what is under it, the way shining a light on it would."
+        case .add:
+            "Adds its light to what is under it, brighter still than lightening it."
         case .darken:
             "Keeps whichever is darker, this layer or what is under it."
         case .lighten:

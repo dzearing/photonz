@@ -11,6 +11,9 @@ import Foundation
 /// drawn on top.
 public enum TimelineTrackKind: String, Hashable, Sendable, CaseIterable {
     case video, audio, text, component, graphic, overlay
+    /// A colour grade over what is under it (`ColorGradeLayer.swift`): the
+    /// compositing mock's V4, with its sliders icon and its own bar.
+    case grade
 }
 
 extension Layer {
@@ -20,6 +23,7 @@ extension Layer {
     /// picture is what it is, and its sound is drawn inside its clip.
     public var timelineTrackKind: TimelineTrackKind {
         if instanceOf != nil { return .component }
+        if isColorGrade { return .grade }
         if movie != nil { return .video }
         if let merged { return merged.isSoundOnly ? .audio : .video }
         switch content {

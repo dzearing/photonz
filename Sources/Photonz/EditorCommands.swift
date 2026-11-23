@@ -1245,6 +1245,14 @@ struct EditorCommands: Commands {
         }
     }
 
+    /// Add Color Grade: a grade on a track of its own over every clip, from
+    /// the playhead to the end (`EditorState+ColorGradeTrack`). Premiere's
+    /// adjustment layer, on no key, as Premiere has it.
+    @ViewBuilder private var addColorGradeRow: some View {
+        Button("Add Color Grade") { editor?.run(.addColorGrade) }
+            .disabled(!(editor?.canAddColorGrade ?? false))
+    }
+
     /// Save as Preset…: the picked title page or name card, kept as your own.
     @ViewBuilder private var saveTitlePresetRow: some View {
         // Replay Title: the picked title's in, played again.
@@ -1851,6 +1859,11 @@ struct EditorCommands: Commands {
             }
             if Experiments.shared.titlePresetsEnabled {
                 insertTitleRows
+            }
+            if Experiments.shared.colorGradeEnabled {
+                addColorGradeRow
+            }
+            if Experiments.shared.titlePresetsEnabled || Experiments.shared.colorGradeEnabled {
                 Divider()
             }
             if Experiments.shared.captionsFromTheSoundEnabled {

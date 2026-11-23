@@ -13,6 +13,8 @@ public enum LayerMark: String, CaseIterable, Hashable, Sendable {
     case text, picture, video, sound
     case group, frame, component
     case zoomCallout, lens, measure, collage
+    /// A colour grade over what is under it (`ColorGradeLayer.swift`).
+    case colorGrade
 }
 
 extension Layer {
@@ -39,7 +41,7 @@ extension Layer {
         case .sound: return .sound
         case .group(let group): return group.isFrame ? .frame : .group
         case .zoomCallout: return .zoomCallout
-        case .lens: return .lens
+        case .lens(let lens): return lens.adjustment == .colorGrade ? .colorGrade : .lens
         case .measure: return .measure
         case .collage: return .collage
         }

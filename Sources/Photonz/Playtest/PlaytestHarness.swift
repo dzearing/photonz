@@ -3149,9 +3149,10 @@ private final class Run {
                  try await measureFade(name: name, atMS: atMS, within: within, smooth: smooth),
                  state: describe())
 
-        case .measureColor(let name, let against, let warmerBy, let same):
+        case .measureColor(let name, let against, let warmerBy, let same, let region, let within):
             note(number, step.name,
-                 try await measureColor(name: name, against: against, warmerBy: warmerBy, same: same),
+                 try await measureColor(name: name, against: against, warmerBy: warmerBy, same: same,
+                                        region: region, within: within),
                  state: describe())
 
         case .writeFrame(let name, let atMS, let width, let height):
@@ -19379,20 +19380,49 @@ private final class Run {
     /// The canvas's mean colour now, remembered by name and checked against
     /// an earlier reading (`measureColor`).
     private func measureColor(name: String, against: String?, warmerBy: Double?,
-                              same: Bool) async throws -> String {
+                              same: Bool, region: FrameColorRegion?,
+                              within: Int = 0) async throws -> String {
         let editor = try requireEditor()
         editor.pauseDocument()
         // Let the picture settle to the sharp frame a hand holding still gets,
         // and hold out for one that has stopped changing.
         await sleep(0.8)
-        guard let picture = editor.renderedImage, let reading = FrameColor.mean(of: picture) else {
+        guard var picture = editor.renderedImage else {
+            throw Failure(description: "the canvas has no picture to measure")
+        }
+        // Only part of the frame, when the step names one: a box of
+        // fractions, or the middle of a named layer's box.
+        var part = ""
+        if let region {
+            let fraction: CGRect
+            switch region {
+            case .fraction(let box):
+                fraction = box
+                part = " (the part of the frame at \(box.minX), \(box.minY), \(box.width) by \(box.height))"
+            case .inside(let layerName):
+                guard let document = editor.document,
+                      let layer = document.allLayers.first(where: { $0.name == layerName }) else {
+                    throw Failure(description: "there is no layer called \(layerName) to measure inside")
+                }
+                fraction = FrameColorRegion.middle(of: document.canvasFrame(of: layer.id) ?? layer.frame,
+                                                   canvas: document.canvasSize)
+                part = " (the middle of \(layerName)'s box)"
+            }
+            let box = FrameColorRegion.pixelBox(fraction, in: CGSize(width: picture.width, height: picture.height))
+            guard box.width >= 1, box.height >= 1, let cut = picture.cropping(to: box) else {
+                throw Failure(description: "the part of the frame to measure falls off the picture")
+            }
+            picture = cut
+        }
+        guard let reading = FrameColor.mean(of: picture) else {
             throw Failure(description: "the canvas has no picture to measure")
         }
         colorReadings[name] = (reading, picture)
-        var facts = ["\(name): \(reading.text)"]
+        var facts = ["\(name)\(part): \(reading.text)"]
         var wrong: [String] = []
         var record: [String: Any] = ["red": reading.red, "green": reading.green, "blue": reading.blue,
                                      "warmth": reading.warmth]
+        if !part.isEmpty { record["part"] = part.trimmingCharacters(in: .whitespaces) }
         if let against {
             guard let (before, earlier) = colorReadings[against] else {
                 throw Failure(description: "there is no earlier reading called \(against) to compare with")
@@ -19408,10 +19438,20 @@ private final class Run {
             }
             if same {
                 let identical = FrameColor.identical(picture, earlier)
+                let most = FrameColor.largestDifference(picture, earlier)
                 record["identical"] = identical
-                facts.append(identical ? "identical to \(against) pixel for pixel"
-                                       : "NOT identical to \(against)")
-                if !identical { wrong.append("the picture is not the same as \(against) pixel for pixel") }
+                record["largestDifference"] = most ?? -1
+                if identical {
+                    facts.append("identical to \(against) pixel for pixel")
+                } else if let most, most <= within {
+                    facts.append("the same as \(against) to within \(most) of 255 on any pixel "
+                        + "(allowed \(within))")
+                } else {
+                    facts.append("NOT identical to \(against): "
+                        + (most.map { "a pixel differs by \($0) of 255" } ?? "a different size"))
+                    wrong.append("the picture is not the same as \(against) pixel for pixel"
+                        + (within > 0 ? " to within \(within) of 255" : ""))
+                }
             }
         }
         write(json: record, to: "\(name).json")

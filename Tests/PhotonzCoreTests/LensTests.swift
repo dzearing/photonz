@@ -26,7 +26,10 @@ struct LensTests {
     @Test func onlyInvertHasNoSetting() {
         // Spotlight has four numbers of its own rather than one
         // (`SpotlightTests`).
-        for adjustment in LensAdjustment.allCases where adjustment != .invert && adjustment != .spotlight {
+        // A colour grade's five numbers are its Color Grade effect's
+        // (`ColorGradeLayerTests`).
+        for adjustment in LensAdjustment.allCases
+        where adjustment != .invert && adjustment != .spotlight && adjustment != .colorGrade {
             #expect(adjustment.settingTitle != nil)
             #expect(adjustment.range.lowerBound < adjustment.range.upperBound)
         }

@@ -176,7 +176,7 @@ extension VideoKit {
     /// `.ov`, `.gfx`, `.txt`, `.aud`). Colour says which track a clip came from and
     /// nothing else; retiming, keys and trimming are drawn on top.
     enum ClipKind: CaseIterable {
-        case video, videoAlternate, component, overlay, graphic, text, audio, caption
+        case video, videoAlternate, component, overlay, graphic, text, audio, caption, grade
 
         var fill: AnyShapeStyle {
             switch self {
@@ -186,6 +186,8 @@ extension VideoKit {
             case .overlay: AnyShapeStyle(Self.diagonal(0x1B7A8C, 0x12C2E9))
             // `.clip.gfx` in the title mock: a picture or logo laid in time.
             case .graphic: AnyShapeStyle(Self.diagonal(0xFEBC2E, 0xFF9D5C))
+            // `.clip.grade` in the compositing mock: a colour grade's track.
+            case .grade: AnyShapeStyle(Self.diagonal(0xFF5D8F, 0x7C4DFF))
             case .text: AnyShapeStyle(rgb(0x2A2F45))
             // `.clip.cue`: the mock's lavender at a fifth, over the lane.
             case .caption: AnyShapeStyle(rgb(0xB98CFF).opacity(0.2))

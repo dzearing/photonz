@@ -61,7 +61,7 @@ public enum TimelineMenuRow: String, CaseIterable, Sendable {
     case applyDefaultTransition, transitionLength, transitionCurve, removeTransition
     case copyTransition, pasteTransition, rollEdit, joinThroughEdit, expandCut
     // Space on a track
-    case closeGap, addTitlePage, addNameCard, addText, addRectangle, putLayerHere, pasteHere
+    case closeGap, addTitlePage, addNameCard, addText, addRectangle, addColorGrade, putLayerHere, pasteHere
     case zoomToFit, compactTracks, trackRows
 }
 
@@ -112,7 +112,7 @@ public enum TimelineMenuTable {
              [.zoomToFit, .compactTracks],
              [.track]]
         case .emptySpace:
-            [[.addTitlePage, .addNameCard, .addText, .addRectangle, .putLayerHere],
+            [[.addTitlePage, .addNameCard, .addText, .addRectangle, .addColorGrade, .putLayerHere],
              [.captionsTrack, .pasteHere],
              [.zoomToFit, .compactTracks],
              [.track]]

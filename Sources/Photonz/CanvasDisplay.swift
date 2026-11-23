@@ -1604,6 +1604,7 @@ extension PhotonzCore.BlendMode {
         case .screen: "screenBlendMode"
         case .darken: "darkenBlendMode"
         case .lighten: "lightenBlendMode"
+        case .add: "additionCompositing"
         }
     }
 }

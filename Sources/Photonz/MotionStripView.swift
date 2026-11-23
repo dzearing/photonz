@@ -735,6 +735,7 @@ extension LayerMark {
         case .frame: Tool.frame.barSymbol
         case .zoomCallout: Tool.zoomCallout.barSymbol
         case .lens: Tool.lens.barSymbol
+        case .colorGrade: TimelineTrackRow.symbol(.grade)
         case .measure: Tool.measure.barSymbol
         case .collage: "square.grid.2x2"
         case .paint: Tool.brush.barSymbol

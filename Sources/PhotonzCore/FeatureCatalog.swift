@@ -1529,7 +1529,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: blendModeFlag,
                     title: "A layer can say how it mixes with what is under it",
-                    description: "Adds a Blending row under Opacity: Normal, Multiply, Screen, Darken or Lighten, previewed on the canvas as you move down the list. Off means no Blending row.",
+                    description: "Adds a Blending row under Opacity: Normal, Multiply, Screen, Add, Darken or Lighten, previewed on the canvas as you move down the list. Off means no Blending row.",
                     area: .layers,
                     isEnabled: false,
                     parameters: []),

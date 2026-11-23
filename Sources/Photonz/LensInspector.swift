@@ -105,7 +105,7 @@ struct LensInspector: View {
             return "How big one block is. Bigger blocks give less away."
         case .greyscale:
             return "How much of the colour is drained out. All the way is black and white."
-        case .invert, .spotlight:
+        case .invert, .spotlight, .colorGrade:
             return ""
         case .brightness:
             return "Lifts the picture underneath towards white, or pushes it towards black."

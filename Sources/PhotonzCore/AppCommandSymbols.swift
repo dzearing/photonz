@@ -103,6 +103,7 @@ extension AppCommandID {
         case .deleteZoom: "viewfinder.circle"
         case .addMediaAtPlayhead: "photo.badge.plus"
         case .insertTitle: "textformat"
+        case .addColorGrade: "slider.horizontal.3"
         case .saveTitlePreset: "rectangle.stack.badge.plus"
         case .exportSound: "square.and.arrow.up.on.square"
         // Clip: time

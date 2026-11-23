@@ -1,0 +1,49 @@
+{
+  "feature": "A colour grade on its own track",
+  "epic": "video-editing",
+  "summary": "A Color Grade can now sit on a track of its own above the clips, grading every picture under it from the playhead to the end. Its Blending picks how it mixes with what is under it (Add is new), and Masked by Its shape limits it to a shape on the track below, which can be keyed to move the reveal.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any video works; the pictures come from the Tutorial Sample recording (Help > Tutorials, or File > New Video and add a recording). Measured with a-colour-grade-track-grades-under-its-matte-walk and a-colour-grade-from-the-sequence-menu-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a video, put the playhead at 0:01, and choose Sequence > Add Color Grade (or right-click an empty picture track and choose Add Color Grade).",
+      "shot": "2026-11-22-colour-grade-track-0-track-menu.png"
+    },
+    {
+      "do": "Look at the timeline: a Grade track at the top with a pink to purple Color Grade bar, picked, and the whole frame warmed.",
+      "shot": "2026-11-22-colour-grade-track-1-graded.png"
+    },
+    {
+      "do": "Drag Temperature in the panel's Color Grade rows and watch every clip under the grade change together."
+    },
+    {
+      "do": "Pick the Ellipse tool and draw an ellipse, then Sequence > Add Color Grade again so the grade lands directly over the ellipse."
+    },
+    {
+      "do": "With the grade picked, set Masked by to Its shape: the ellipse stops drawing and only the picture inside it is graded.",
+      "shot": "2026-11-22-colour-grade-track-2-masked.png"
+    },
+    {
+      "do": "Set Blending to Screen, then Add, then Multiply, and compare how the graded area mixes with the picture under it.",
+      "shot": "2026-11-22-colour-grade-track-3-screen.png"
+    },
+    {
+      "do": "Pick the ellipse's bar, press Add Key in the panel at 0:01, move the playhead to 0:03 and drag the ellipse across the frame, then play: the graded spot travels with it."
+    }
+  ],
+  "evaluate": [
+    "Is Sequence > Add Color Grade where you would look for Premiere's adjustment layer, or do you want it somewhere nearer the top of that long menu?",
+    "Does a grade arriving as the warm look (Temperature 20) feel like the press did something, or would you rather it arrive neutral?",
+    "Is Normal the right default Blending for a grade, given the mock's swatch reference started on Screen?",
+    "Inside the ellipse on the dark tutorial background the graded spot is subtle at Temperature 20: is that a reason for a stronger starting grade, or fine because you will tune it anyway?"
+  ],
+  "rough": [
+    "The mock's grade Properties show Blend as four stacked buttons (Normal, Screen, Multiply, Add) starting on Screen, for its magenta wash; the app uses its one Blending dropdown, now six modes with Add added, and a real grade arrives Normal, the graded picture itself (settled by layers-combine-over-the-tracks-below-them, which built Blending against this mock).",
+    "The mock offers a Matte of Off, Shape, Luma or Text; the app's Masked by offers Nothing, Its shape and Its brightness, because a text layer's shape already is its letterforms (settled by layers-combine-over-the-tracks-below-them).",
+    "The mock spells it Colour grade; the app keeps Color Grade, the name the per-clip effect already ships with (settled by a-clip-can-be-colour-graded-from-add-effect).",
+    "The mock's grade.look Library preset is not built yet (a-colour-grade-look-can-be-saved-to-the-library).",
+    "Add Color Grade sits low in the Sequence menu, under Insert Name Card, which is past the fold of that long menu on a laptop screen; the track right-click is the quicker way in.",
+    "Outside the matte the frame matches the untouched recording in its mean and to within 2 of 255 per pixel, not bit for bit: Core Image rounds a pixel laid through one more composite. Switching the grade off changes nothing there, pixel for pixel, so nothing of the grade leaks.",
+    "The keyed matte reveal is proven by a render test (aKeyedMatteMovesTheReveal), not by a walk."
+  ]
+}

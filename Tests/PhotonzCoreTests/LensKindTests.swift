@@ -31,7 +31,9 @@ struct LensKindTests {
     /// one that is not, because what it draws lives somewhere else on the
     /// picture and is a zoom callout.
     @Test func onlyMagnifyIsNotAnAdjustment() {
-        for adjustment in LensAdjustment.allCases {
+        // A colour grade is a lens with no kind of the tool's: it has no Does
+        // row (`ColorGradeLayerTests`).
+        for adjustment in LensAdjustment.allCases where adjustment != .colorGrade {
             let kind = LensKind(adjustment)
             #expect(kind.adjustment == adjustment)
             #expect(!kind.magnifies)

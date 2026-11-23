@@ -387,6 +387,7 @@ struct EveryMenuCommandHasANameTests {
         case .closeGap: .command(.delete)
         case .addTitlePage, .addNameCard: .command(.insertTitle)
         case .addText, .addRectangle: .leftOut("draws with a tool; add_text and add_shape draw them")
+        case .addColorGrade: .command(.addColorGrade)
         case .putLayerHere: .command(.putOnTimeline)
         case .zoomToFit: .command(.zoomTimelineToFit)
         case .compactTracks: .command(.compactTracks)

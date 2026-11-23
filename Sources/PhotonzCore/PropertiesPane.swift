@@ -71,6 +71,8 @@ public struct ClipLine: Hashable, Sendable {
         if layer.isCaptionsLayer { return "Captions" }
         if layer.isCaption { return "Caption" }
         if layer.isComponentInstance { return "Instance" }
+        // The compositing mock's chip on its colour grade layer.
+        if layer.isColorGrade { return "Adjustment" }
         switch TimePanelOrder.role(of: layer) {
         case .heard: return "Audio"
         case .onScreen:

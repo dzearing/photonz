@@ -1282,6 +1282,8 @@ struct TimelineTrackRow: View {
         case .audio: "music.note"
         case .text: "textformat"
         case .component: "square.on.square.dashed"
+        // The mock's `ic-sliders` on its V4 colour grade track.
+        case .grade: "slider.horizontal.3"
         }
     }
 
@@ -1293,6 +1295,7 @@ struct TimelineTrackRow: View {
         case .audio: .audio
         case .text: .text
         case .component: .component
+        case .grade: .grade
         }
     }
 }
@@ -1462,6 +1465,9 @@ struct TimelineTrackMenu: View {
         if isEmpty, track.kind == .video, !track.isLocked {
             Button("Add Rectangle") { editorState.addRectangle(onTrack: track.id) }
             Button("Add Text") { editorState.addText(onTrack: track.id) }
+            if editorState.canAddColorGrade {
+                Button("Add Color Grade") { editorState.addColorGrade(onTrack: track.id) }
+            }
             // A title page or a name card from its presets, on this track
             // from the playhead (`EditorState+TitlePresets`).
             MenuRowsView(rows: editorState.titleInsertMenuRows(verb: "Add", onTrack: track.id))

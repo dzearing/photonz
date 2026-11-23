@@ -26,6 +26,13 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
     /// friends), which is why it has no single `settingTitle`. Last, because
     /// an order somebody has learned does not get reshuffled.
     case spotlight
+    /// Grades what is underneath by the Color Grade in the layer's own Effects
+    /// list: a colour grade on a track of its own, over every clip below it
+    /// (`ColorGradeLayer.swift`). The lens itself changes nothing, which is
+    /// why it has no number and is not one of the Lens tool's kinds: its five
+    /// values are the Color Grade effect's, keyed and tuned where that effect
+    /// always is.
+    case colorGrade
 
     /// The word on the adjustment, in the tool's capsule and in the panel.
     public var title: String {
@@ -36,6 +43,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
         case .invert: "Invert"
         case .brightness: "Brightness"
         case .spotlight: "Spotlight"
+        case .colorGrade: "Color Grade"
         }
     }
 
@@ -51,7 +59,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
         case .blur: "Strength"
         case .pixelate: "Block size"
         case .greyscale: "Amount"
-        case .invert, .spotlight: nil
+        case .invert, .spotlight, .colorGrade: nil
         case .brightness: "Amount"
         }
     }
@@ -67,7 +75,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
         case .blur: 1...60
         case .pixelate: 2...80
         case .greyscale: 0...1
-        case .invert, .spotlight: 0...0
+        case .invert, .spotlight, .colorGrade: 0...0
         case .brightness: -1...1
         }
     }
@@ -80,7 +88,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
         case .blur: 8
         case .pixelate: 12
         case .greyscale: 1
-        case .invert, .spotlight: 0
+        case .invert, .spotlight, .colorGrade: 0
         case .brightness: 0.35
         }
     }
@@ -92,7 +100,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
     public var isLength: Bool {
         switch self {
         case .blur, .pixelate: true
-        case .greyscale, .invert, .brightness, .spotlight: false
+        case .greyscale, .invert, .brightness, .spotlight, .colorGrade: false
         }
     }
 
@@ -107,7 +115,7 @@ public enum LensAdjustment: String, CaseIterable, Hashable, Codable, Sendable {
             return "\(Int(amount.rounded())) pt"
         case .greyscale:
             return "\(Int((amount * 100).rounded()))%"
-        case .invert, .spotlight:
+        case .invert, .spotlight, .colorGrade:
             return ""
         case .brightness:
             let percent = Int((amount * 100).rounded())
@@ -284,7 +292,7 @@ public struct LensContent: Hashable, Codable, Sendable {
         case .blur: blurRadius
         case .pixelate: blockSize
         case .greyscale: greyscaleAmount
-        case .invert, .spotlight: 0
+        case .invert, .spotlight, .colorGrade: 0
         case .brightness: brightness
         }
     }
@@ -301,7 +309,7 @@ public struct LensContent: Hashable, Codable, Sendable {
         case .blur: blurRadius = clamped
         case .pixelate: blockSize = clamped
         case .greyscale: greyscaleAmount = clamped
-        case .invert, .spotlight: break
+        case .invert, .spotlight, .colorGrade: break
         case .brightness: brightness = clamped
         }
     }
@@ -321,7 +329,7 @@ public struct LensContent: Hashable, Codable, Sendable {
         // A spotlight's picture is everything OUTSIDE its box, so how far past
         // the box it reads is the whole canvas (`backdropSource`). This number
         // is for the inside-the-box kinds.
-        case .greyscale, .invert, .brightness, .spotlight: 0
+        case .greyscale, .invert, .brightness, .spotlight, .colorGrade: 0
         }
     }
 
@@ -335,6 +343,9 @@ public struct LensContent: Hashable, Codable, Sendable {
         case .invert: false
         case .brightness: brightness == 0
         case .spotlight: spotlightDim <= 0 && spotlightBlur <= 0
+        // The grade is the layer's Color Grade effect, applied where every
+        // effect is; the lens hands the picture under it through untouched.
+        case .colorGrade: true
         }
     }
 
@@ -525,7 +536,8 @@ extension Layer {
     /// Magnify, because that is what it is.
     public var lensKind: LensKind? {
         switch content {
-        case .lens(let lens): LensKind(lens.adjustment)
+        // A grade layer is not one of the tool's kinds: it has no Does row.
+        case .lens(let lens): lens.adjustment == .colorGrade ? nil : LensKind(lens.adjustment)
         case .zoomCallout: .magnify
         default: nil
         }

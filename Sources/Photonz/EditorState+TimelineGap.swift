@@ -95,6 +95,11 @@ extension EditorState {
                 return emptyPictureTrack ? [.command("Add Text") { self.addText(onTrack: track.id) }] : []
             case .addRectangle:
                 return emptyPictureTrack ? [.command("Add Rectangle") { self.addRectangle(onTrack: track.id) }] : []
+            case .addColorGrade:
+                // A grade over everything under this track, from the playhead
+                // to the end (`EditorState+ColorGradeTrack`).
+                guard emptyPictureTrack, self.canAddColorGrade else { return [] }
+                return [.command("Add Color Grade") { self.addColorGrade(onTrack: track.id) }]
             case .putLayerHere:
                 // A layer that is on the canvas and on no track.
                 let loose = self.layersOffTheTimeline

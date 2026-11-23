@@ -14,8 +14,10 @@ struct BlendModeChoiceTests {
     // MARK: - The list
 
     @Test func theListIsShortAndLedByNormal() {
-        #expect(BlendMode.allCases == [.normal, .multiply, .screen, .darken, .lighten],
-                "five modes, normal first: the list a person reads top to bottom")
+        // Add joined after Screen for the compositing mock's grade swatches
+        // (`video-compositing.html`: Normal, Screen, Multiply, Add).
+        #expect(BlendMode.allCases == [.normal, .multiply, .screen, .add, .darken, .lighten],
+                "six modes, normal first: the list a person reads top to bottom")
     }
 
     @Test func everyModeHasAPlainNameAndAPlainSentence() {

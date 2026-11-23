@@ -51,6 +51,24 @@ public struct FrameColor: Hashable, Sendable, Codable {
         return left == right
     }
 
+    /// The most any one channel of any one pixel differs between two pictures
+    /// of the same size, in levels of 255; nil when their sizes differ.
+    ///
+    /// What "the same" means for a part of the frame something was composited
+    /// over without changing it: Core Image rounds a pixel laid through a blend
+    /// by a level now and then, which no eye and no mean can see, so a walk
+    /// may allow that much (`measureColor`'s `within`).
+    public static func largestDifference(_ a: CGImage, _ b: CGImage) -> Int? {
+        guard a.width == b.width, a.height == b.height,
+              let left = pixels(of: a, width: a.width, height: a.height),
+              let right = pixels(of: b, width: b.width, height: b.height) else { return nil }
+        var most = 0
+        for index in left.indices where index % 4 != 3 {
+            most = max(most, abs(Int(left[index]) - Int(right[index])))
+        }
+        return most
+    }
+
     /// The picture drawn over black into sRGB bytes at a size.
     static func pixels(of image: CGImage, width: Int, height: Int) -> [UInt8]? {
         guard let space = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
@@ -68,5 +86,35 @@ public struct FrameColor: Hashable, Sendable, Codable {
             return true
         }
         return drawn ? data : nil
+    }
+}
+
+/// The part of the frame a `measureColor` step reads, when it reads part of
+/// it: a colour grade masked to a shape has to warm inside the shape and leave
+/// the rest alone, and the mean over the whole frame cannot tell those apart.
+public enum FrameColorRegion: Hashable, Sendable {
+    /// A box in fractions of the canvas, top-left origin: `[x, y, width,
+    /// height]` in the walk.
+    case fraction(CGRect)
+    /// The middle half, each way, of the box of the layer with this name.
+    case inside(String)
+
+    /// A box of fractions as whole pixels of a picture `size` big, held to
+    /// the picture.
+    public static func pixelBox(_ fraction: CGRect, in size: CGSize) -> CGRect {
+        let whole = CGRect(origin: .zero, size: size)
+        let box = CGRect(x: (fraction.minX * size.width).rounded(),
+                         y: (fraction.minY * size.height).rounded(),
+                         width: (fraction.width * size.width).rounded(),
+                         height: (fraction.height * size.height).rounded())
+        return box.intersection(whole)
+    }
+
+    /// The central half of `frame` each way, in fractions of `canvas`.
+    public static func middle(of frame: CGRect, canvas: CGSize) -> CGRect {
+        guard canvas.width > 0, canvas.height > 0 else { return .zero }
+        let core = frame.insetBy(dx: frame.width / 4, dy: frame.height / 4)
+        return CGRect(x: core.minX / canvas.width, y: core.minY / canvas.height,
+                      width: core.width / canvas.width, height: core.height / canvas.height)
     }
 }

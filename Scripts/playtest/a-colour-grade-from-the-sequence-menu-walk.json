@@ -1,0 +1,89 @@
+{
+  "out": "/tmp/photonz-playtest/a-colour-grade-from-the-sequence-menu-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "timelineOpen": true,
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording",
+      "comment": "Sequence > Add Color Grade from the menu bar, the way a person reaches it, and an empty track's right-click offers it too. Front, because a menu bar row is only there for the app in front."
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "menuShot",
+      "menu": "Sequence",
+      "name": "1-sequence-menu"
+    },
+    {
+      "do": "menus",
+      "stage": "2-add",
+      "menu": "Sequence",
+      "choose": "Sequence > Add Color Grade"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Color Grade",
+      "track": "Grade",
+      "startsAt": 0.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-added",
+      "note": "THE TEST: Sequence > Add Color Grade at 0:00 puts a Color Grade over the whole recording on a new Grade track at the top, picked, with its Color Grade rows in the panel."
+    },
+    {
+      "do": "panel",
+      "stage": "2-added"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-added"
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "shot": "3-empty-track-menu"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
+  ]
+}

@@ -3631,6 +3631,11 @@ public final class DocumentRenderer: @unchecked Sendable {
             return image.applyingFilter("CILightenBlendMode",
                                         parameters: [kCIInputBackgroundImageKey: backdrop])
                 .cropped(to: extent)
+
+        case .add:
+            return image.applyingFilter("CIAdditionCompositing",
+                                        parameters: [kCIInputBackgroundImageKey: backdrop])
+                .cropped(to: extent)
         }
     }
 

@@ -1,0 +1,317 @@
+{
+  "out": "/tmp/photonz-playtest/a-colour-grade-track-grades-under-its-matte-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "timelineOpen": true
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording",
+      "comment": "A colour grade on a track of its own (the compositing mock's V4): Sequence > Add Color Grade puts a Color Grade on a new Grade track over the recording, grading everything under it; drawn over an ellipse and Masked by Its shape, the grade shows only inside the ellipse and the frame outside it is the untouched recording pixel for pixel. Next defaults, no flags."
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "measureColor",
+      "name": "untouched"
+    },
+    {
+      "do": "measureColor",
+      "name": "untouched-corner",
+      "region": [
+        0.02,
+        0.04,
+        0.14,
+        0.14
+      ]
+    },
+    {
+      "do": "render",
+      "name": "0-canvas-untouched"
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        460,
+        260
+      ],
+      "to": [
+        860,
+        520
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "measureColor",
+      "name": "ellipse-corner",
+      "region": [
+        0.02,
+        0.04,
+        0.14,
+        0.14
+      ],
+      "against": "untouched-corner",
+      "same": true
+    },
+    {
+      "do": "agentTool",
+      "tool": "run_command",
+      "arguments": "{\"command\": \"add_color_grade\"}",
+      "comment": "The command Sequence > Add Color Grade runs (a-colour-grade-from-the-sequence-menu-walk picks the row itself, with the probe in front)."
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Color Grade",
+      "track": "Grade",
+      "startsAt": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-grade-track",
+      "note": "THE FIRST TEST: Sequence > Add Color Grade puts a Color Grade on a new Grade track at the top of the timeline, from the playhead (one second) to the end, with the mock's sliders icon and its pink to purple bar. It arrives picked, as the Warm grade, and everything under it is warmed: the recording and the red ellipse alike."
+    },
+    {
+      "do": "expect",
+      "field": "Temperature",
+      "reads": "20"
+    },
+    {
+      "do": "measureColor",
+      "name": "graded",
+      "against": "untouched",
+      "warmerBy": 20
+    },
+    {
+      "do": "measureColor",
+      "name": "graded-corner",
+      "region": [
+        0.02,
+        0.04,
+        0.14,
+        0.14
+      ],
+      "against": "untouched-corner",
+      "warmerBy": 8
+    },
+    {
+      "do": "panel",
+      "stage": "1-grade-track"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-grade-track"
+    },
+    {
+      "do": "render",
+      "name": "1-canvas-graded"
+    },
+    {
+      "do": "reveal",
+      "control": "Masked by"
+    },
+    {
+      "do": "press",
+      "control": "Masked by"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Its shape",
+      "in": "Masked by"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "control": "Masked by",
+      "reads": "Masked by, Its shape"
+    },
+    {
+      "do": "describe",
+      "stage": "2-masked",
+      "note": "THE SECOND TEST: Masked by Its shape borrows the ellipse under the grade. The ellipse stops drawing (it is the grade's shape now, not part of the picture), the grade shows only inside it, and outside it the frame is the untouched recording pixel for pixel."
+    },
+    {
+      "do": "measureColor",
+      "name": "masked-corner",
+      "region": [
+        0.02,
+        0.04,
+        0.14,
+        0.14
+      ],
+      "against": "untouched-corner",
+      "same": true,
+      "within": 2,
+      "comment": "Outside the matte the frame is the recording as it was: the same mean, and no pixel more than 2 of 255 off it, which is Core Image rounding a frame laid through one more composite (the grade switched off, below, reads the same to the pixel)."
+    },
+    {
+      "do": "measureColor",
+      "name": "masked-middle",
+      "inside": "Ellipse"
+    },
+    {
+      "do": "panel",
+      "stage": "2-masked"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-masked"
+    },
+    {
+      "do": "render",
+      "name": "2-canvas-masked"
+    },
+    {
+      "do": "reveal",
+      "control": "Switch",
+      "in": "Color Grade"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Color Grade"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "measureColor",
+      "name": "grade-off-middle",
+      "inside": "Ellipse"
+    },
+    {
+      "do": "measureColor",
+      "name": "grade-off-corner",
+      "region": [
+        0.02,
+        0.04,
+        0.14,
+        0.14
+      ],
+      "against": "masked-corner",
+      "same": true,
+      "comment": "Outside the matte the grade adds nothing at all: switching it off changes no pixel there."
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Color Grade"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-inside",
+      "note": "THE THIRD TEST: inside the ellipse the frame is graded. Switched off, the same part of the frame is the plain recording; switched back on it is warmer by a clear margin."
+    },
+    {
+      "do": "measureColor",
+      "name": "masked-middle-again",
+      "inside": "Ellipse",
+      "against": "grade-off-middle",
+      "warmerBy": 6
+    },
+    {
+      "do": "press",
+      "control": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Screen",
+      "in": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-screen",
+      "note": "THE FOURTH TEST: Blending Screen mixes the graded picture over the one under it, so inside the ellipse is lighter as well as warmer, and the frame outside it is still untouched."
+    },
+    {
+      "do": "measureColor",
+      "name": "screen-corner",
+      "region": [
+        0.02,
+        0.04,
+        0.14,
+        0.14
+      ],
+      "against": "untouched-corner",
+      "same": true,
+      "within": 2,
+      "comment": "Outside the matte the frame is the recording as it was: the same mean, and no pixel more than 2 of 255 off it, which is Core Image rounding a frame laid through one more composite (the grade switched off, below, reads the same to the pixel)."
+    },
+    {
+      "do": "panel",
+      "stage": "4-screen"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-screen"
+    },
+    {
+      "do": "render",
+      "name": "4-canvas-screen"
+    }
+  ]
+}
