@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T03:17:18.133Z",
-  "updated": "2026-11-23T14:33:29.897Z",
+  "updated": "2026-11-23T14:53:43.587Z",
   "deps": [
     "a-long-reference-edit-opens-in-the-probe-in-one",
     "a-speed-walk-measures-the-long-reference-edit-th"
@@ -108,29 +108,9 @@
       "note": "claimed by go loop"
     },
     {
-      "t": "2026-11-23T14:33:29.888Z",
-      "note": "... 123 earlier entries elided",
-      "elided": 123
-    },
-    {
-      "t": "2026-11-19T11:49:37.460Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-19T12:29:03.664Z",
-      "note": "Pass 18 took the playback bar (0 dropped), which had not moved since pass 7. Recorded every look of three one-minute plays from 0:15 (temporary dump, removed): the picture is the playhead's own moment at each clock tick, ticks 25-38 ms apart and not on a 33 ms grid; no moment was ever jumped over. The old tally (due = wall/33) read 1, 0, 1: run 1 had the last picture in flight (shown 74972, playhead 75006), run 3 had the clock's first tick 46 ms after Space (advance 59967 of 60000 wall). Its own unit test had allowed 'dropped <= 1' for a perfect picture."
-    },
-    {
-      "t": "2026-11-19T12:29:03.740Z",
-      "note": "Pass 18 fix (19e4cdd15, SpeedWalk.tally/missedMoments/droppedMoments, SpeedWalkTests: realistic off-grid clock, a skipped moment, three skipped, a slow clock): dropped = moments a jump spans past one step (first jump after Space gets one step of slack) + moments passed after the last picture less the one in flight + ticks a clock that fell behind the wall never made (one tick slack). PlayTally.firstPictureMS (judged in the baseline); the walk prints where any dropped frame was due. Result: 3 plays 0/1817 dropped, first picture 50-67 ms; speed walk 0 dropped, trim 11, blade 35, undo 23, pick 30, pick from nothing 51 ms; scrub lag median 1 / worst 3. short-6.json play dropped 1 -> 0, firstPictureMS 67. docs/design/video.md speed walk play line + a paragraph after the 2026-11-14 numbers."
-    },
-    {
-      "t": "2026-11-19T12:29:03.815Z",
-      "note": "Pass 18 verified: test.sh exit 0; walks ok: speed-walk (against the new baseline), scrub-never-blacks-out, playing-a-recording-never-blinks, playback-speed, command-r-opens-the-speed. history-filter-switch-speed-walk (matched by name only) failed twice on a 18-22 ms press pass while test.sh had the load average at 21, ok on a quiet rerun; not filed, untouched by this change. Looked at the speed walk capture: edit, picked clip and panel drawn right. Audit queue/audits/2026-11-19-a-long-edit-with-transitions-plays-scrubs-and-ed-pass18.json."
-    },
-    {
-      "t": "2026-11-19T12:29:03.902Z",
-      "note": "Next for pass 19: (a) edits while playing 11-51 ms vs 16: the blade with nothing picked fills the panel from nothing (pick from nothing 51), and passes that build no body still cost 10-30 ms (window-wide layout, accessibility focus, drag margins; digest 2026-11-16 said this floor deserves a pass of its own): profile one bodiless pass with trace-bursts.py --passes; (b) worst scrub lag 3 vs 1. Bar met this pass: 1x playback drops no frames. Left rough, not filed: nothing beyond this task's own bars."
+      "t": "2026-11-23T14:53:43.585Z",
+      "note": "... 128 earlier entries elided",
+      "elided": 128
     },
     {
       "t": "2026-11-19T12:29:16.197Z",
@@ -507,6 +487,26 @@
     {
       "t": "2026-11-23T14:33:29.887Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T14:53:38.259Z",
+      "note": "Pass 29 measured (short speed walk, 5d20a974d + this change, green vs baseline): play 2 of 1818 dropped, worst gap 59 ms, longest play pass 7 ms; scrub lag median 1, worst medium 5 / hunt 3; edits nothing-picked trim 9, undo 11; picked trim 15, undo 15, blade 19; pick 29, pick from nothing 33, unpick 30 ms."
+    },
+    {
+      "t": "2026-11-23T14:53:38.327Z",
+      "note": "Pass 29 decision per the 2026-11-22 triage: picks did not come under ~20 ms (29-33), so closed rather than run pass 30. Remaining bars filed as follow-ups under video-perf (p1, source user, behind this task): picking-letting-go-of-and-cutting-a-clip-while-a (edits with a clip picked <=16 ms, plus move/add transition/change title timed by the speed walk) and scrubbing-a-long-edit-never-trails-the-pointer-b (scrub lag worst 1)."
+    },
+    {
+      "t": "2026-11-23T14:53:38.412Z",
+      "note": "Pass 29 settled the speed walk's scrub noise (f040511c3): 45 short runs (2026-11-18 to 11-22, nine builds) read medium frame lag median 17-81, worst 48-186, sight worst 33-159 while lag and sight median stayed 1-2. Chose to show those medium/fling numbers but not judge them (SpeedCompare.isJudged, test first in SpeedWalkTests) over widening the margin, because a hand crossing the edit in seconds lands on whichever read finished first; medium lag, sight lag median and every hunt number stay judged. Written in docs/design/video.md 8e and the walk's seed."
+    },
+    {
+      "t": "2026-11-23T14:53:38.483Z",
+      "note": "Pass 29 verified: Scripts/test.sh exit 0; speed-walk green on the rebuilt probe (46 numbers within margin). Acceptance: 1 done by dep; 2-3 by dep and passes 1-28; 4 met for play and for edits with nothing picked, the rest carried per item 5 by the two follow-ups; 6 composite untouched this pass; 7 in docs/design/video.md 8f; 8 nothing else left rough. Audit queue/audits/2026-11-23-a-long-edit-with-transitions-plays-scrubs-and-ed-pass29.json."
+    },
+    {
+      "t": "2026-11-23T14:53:43.584Z",
+      "note": "29 passes: 1x play on the 6 min edit went from 4 to 1816+ of 1818 frames a minute (longest play pass 7 ms), scrub lag median 160 -> 1 refresh, edits with nothing picked 1.4-5.7 s -> 9-11 ms. Pass 29 (f040511c3) made the speed walk stop failing at random on a medium drag's exact-frame lags (shown, not judged; test first). Bars not reached carried per acceptance item 5 to picking-letting-go-of-and-cutting-a-clip-while-a (picks 29-33 ms vs 16) and scrubbing-a-long-edit-never-trails-the-pointer-b (scrub lag worst 3-5 vs 1). Verified: Scripts/test.sh exit 0, speed-walk green. Audit 2026-11-23-...-pass29.json."
     }
   ],
   "started": "2026-11-23T14:33:29.886Z",
@@ -520,5 +520,6 @@
     "at": "2026-11-18T11:31:54.164Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-  }
+  },
+  "completed": "2026-11-23T14:53:43.586Z"
 }
