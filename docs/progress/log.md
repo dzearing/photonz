@@ -23426,3 +23426,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - On a document with time the timeline now sits under the picture only and the panel runs the window's height (`next-panel-full-height`, on in Next; `PanelColumn`, `EditorView`). A clip or a title opens on Properties, then Appearance and Effects; Time, Text, a title's knobs and a clip's audio follow and give way to the fold (`TimePanelOrder.arrange(pairFirst:)`, `underThePair`, `DockMetrics.givesWayToTheFold`). The fold rescue keeps a merely cut pair's floors.
 - 1200x720, timeline open: panel 336 -> 592 (clip), 302 -> 607 (title); both of the pair whole. New walk `the-panel-runs-the-full-height-on-a-video-walk`; about twenty timeline walks moved to the narrower timeline.
 - Next: the whole-set run asked for will show any other walk that clicks the timeline by window position.
+
+## 2026-11-23 — picks while a long edit plays, pass 1
+
+- Adding a transition while a video plays keeps playing on Next (`next-transition-keeps-playing`): 39-57 ms -> 14 ms on the 6 minute edit. Walk `a-transition-put-on-while-playing-keeps-playing-walk`.
+- The short speed walk times a move (14), a transition (14) and a title reworded (11) while it plays; baseline rewritten.
+- Measured: with the panel out of the window every pick is 6-19 ms, so the panel is the whole excess, spread over every section. Picks (25-56), unpick (33) and edits with a clip picked (17-32) are still over 16 ms.
+- Next: a panel that holds what it shows during a pick while playing needs its sections to read a panel-only subject instead of the live pick (task log has the detail).
