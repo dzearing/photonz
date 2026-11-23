@@ -18907,3 +18907,14 @@
 {"t":"2026-11-23T15:11:26.453Z","ev":"task_resequenced","id":"find-out-whether-an-export-of-a-screen-recording","from":4100,"to":70}
 {"t":"2026-11-23T15:11:38.479Z","ev":"triage","summary":"0 merged, 1 folded (transition-tile-comes-away-walk into the short-shelf walk task, retitled), 0 dropped, 2 moved p2 to p3 (two unreproduced questions), 2 filed (a picked transition shows no settings, reproduced; the size badge under the tool bar), 0 reset; both new p1 focus tasks reproduced with the speed walk; renumbered p1, p2, p3 in steps of 10"}
 {"t":"2026-11-23T15:12:38.119Z","ev":"digest","file":"2026-11-23.md"}
+{"t":"2026-11-23T15:13:02.352Z","ev":"task_started","id":"picking-letting-go-of-and-cutting-a-clip-while-a","title":"Picking, letting go of and cutting a clip while a long edit plays each finish within one frame","priority":"p1-high"}
+{"t":"2026-11-23T15:35:22.943Z","ev":"task_created","id":"jumping-back-while-a-video-plays-never-flickers","priority":"p1-high","title":"Jumping back while a video plays never flickers between two frames"}
+{"t":"2026-11-23T15:35:23.063Z","ev":"task_resequenced","id":"jumping-back-while-a-video-plays-never-flickers","from":4070,"to":20}
+{"t":"2026-11-23T15:53:00.279Z","ev":"task_created","id":"toasts-are-smaller-sit-closer-to-the-screen-corn","priority":"p1-high","title":"Toasts are smaller, sit closer to the screen corner and are gone in half the time"}
+{"t":"2026-11-23T15:53:00.524Z","ev":"task_resequenced","id":"toasts-are-smaller-sit-closer-to-the-screen-corn","from":4070,"to":30}
+{"t":"2026-11-23T16:31:37.430Z","ev":"task_walks","id":"picking-letting-go-of-and-cutting-a-clip-while-a","walks":["speed-walk","the-panel-catches-up-when-play-stops-walk","cutting-while-playing-keeps-playing-walk","a-transition-put-on-while-playing-keeps-playing-walk"]}
+{"t":"2026-11-23T16:31:37.510Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-23T16:31:37.588Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-23T16:31:37.668Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-23T16:31:37.746Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-23T16:31:37.827Z","ev":"task_pending","id":"picking-letting-go-of-and-cutting-a-clip-while-a","from":"in_progress","note":"Pass 1: transition while playing 39-57 -> 14 ms (keeps playing, 221074d5f); speed walk now times move 14, transition 14, title 11 (acceptance 2 met, baseline rewritten). Not reached: picks 25-56, unpick 33, blade picked 23-32, trim/undo picked 17-18 vs 16. Measured the panel is the whole excess; pass 2 lead in the log."}

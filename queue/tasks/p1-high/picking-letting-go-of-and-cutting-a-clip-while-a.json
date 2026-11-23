@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:47:56.154Z",
-  "updated": "2026-11-23T15:13:02.351Z",
+  "updated": "2026-11-23T16:31:37.826Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (28 passes, closed 2026-11-23 per its triage). Measure with Scripts/perf/speed-walk.sh (short form, ~2 min) and Scripts/perf/pass-profile.sh (PassSampler, edits-only walks; Instruments refuses without developer mode). Where the time is (pass 25 to 28): a landing pass has a floor of about 15-17 ms whatever lands: dock stack layout ~4.4, SwiftUI graph ~3.8, accessibility focus ~3.0 (AccessibilityNode.updateFocus -> ViewRendererHost.focusResponder walking every responder; SwiftUI accessibility is switched on in the probe by another process, so a person with any accessibility client sees it too), title bar drag regions ~1.3 (-[NSWindow _resetDragMargins] asks the hosting view acceptsFirstResponder, which walks every focusable control). A pick from nothing is ~30 passes over 0.7 s, one section or row set each. Leads not tried: fewer AppKit-backed controls in the panel (TextField and Picker as NSView, ~170 in the window) so the focus walk shrinks; land only the sections in sight during play and the rest after play stops; keep the clip sections built and hidden across unpick (13.5 ms of unpick is SwiftUI graph teardown). Tried and reverted: a Layout cache for PanelFieldRowLayout (worse), caching control minimums (no gain). Related panel-cost tasks: folding-a-section-that-lets-the-panel-fit-again, leaving-preview-slides-back-without-a-hitch.",
@@ -39,10 +39,37 @@
     {
       "t": "2026-11-23T15:20:00.000Z",
       "note": "Pass 1 start: reproducing with the short speed walk, then profiling the landing passes."
+    },
+    {
+      "t": "2026-11-23T16:31:37.428Z",
+      "note": "walks speed-walk -> speed-walk, the-panel-catches-up-when-play-stops-walk, cutting-while-playing-keeps-playing-walk, a-transition-put-on-while-playing-keeps-playing-walk"
+    },
+    {
+      "t": "2026-11-23T16:31:37.508Z",
+      "note": "Pass 1 reproduced (short speed walk, 1fc313cba): pick from nothing 33-46, pick 26-28, unpick 31-34, blade picked 22-31, trim picked 16-17, undo picked 13-19 ms."
+    },
+    {
+      "t": "2026-11-23T16:31:37.586Z",
+      "note": "Pass 1 measured where it goes. Panel taken out of the window (experiment, reverted): pick 10-11, pick from nothing 11-19, unpick 6-8, blade 10, move 8, title 10 ms, so the panel is the whole excess. No one section carries it: without Color+Effects pick 19-23 / unpick 20-22; without time, keys and sound sections pick 22-26 / unpick 29-30. Profile of a clip-to-clip pick's own pass (28 ms): SwiftUI graph 11, bodies 6, layout 4, observation 2, AppKit 1.7, a11y 1.5, almost no app frames; every section re-runs because every one reads the live pick. View census with a clip picked: 467 AppKit views (75 focus rings, 62 for tutorial anchors, 36 for hint anchors). Tried and reverted: a dropdown not handing its face/title item to its host when unchanged (no measurable gain, noise 27-30 either way)."
+    },
+    {
+      "t": "2026-11-23T16:31:37.666Z",
+      "note": "Pass 1 fix: adding a transition while playing paused, picked the cut and jumped back to it (39-57 ms). Chose keep playing, no jump, no pick over the old stop-and-go-to because Final Cut's Add Transition keeps playing and the blade already follows that rule (docs/design/video.md 8e); next-transition-keeps-playing, Next only, on by default, TransitionKeepsPlayingFlagTests first. Now 13-14 ms. Walk a-transition-put-on-while-playing-keeps-playing-walk green at defaults, red with the switch off (checked). Speed walk now times move, transition, title: worst of 3 runs 14, 14, 11 ms (acceptance 2 met); baseline rewritten. Also green: a-transition-is-picked-at-the-cut, an-editing-session, every-section-header-opens, insert-a-title-before-a-clip, playing-a-recording-never-blinks, transition-tile-comes-away, transitions-group. Scripts/test.sh exit 0. Landed 221074d5f."
+    },
+    {
+      "t": "2026-11-23T16:31:37.744Z",
+      "note": "Not reached (acceptance 1): pick 25-28, pick from nothing 41-56, unpick 33-34, blade picked 23-32, trim picked 17, undo picked 17-18 ms (worst of 3, baseline run). Lead for pass 2: since the panel is the whole excess and is spread over every section, the one lever that clears 16 ms is the panel not re-running at the moment of a pick while it plays (hold what it shows and catch up when play stops or the pointer comes into the panel, as it already holds with nothing picked). The obstacle is that the panel's sections read the live pick directly (354 reads of selectedLayerID in 92 files), so a held panel needs a panel-only subject the sections read instead; a partial freeze would show one clip's values while edits land on another. Second lever: the window floor of ~13 ms per landing pass (layout, a11y focus walk over ~470 views, title bar drag regions), e.g. the 98 anchor views."
+    },
+    {
+      "t": "2026-11-23T16:31:37.825Z",
+      "note": "Pass 1: transition while playing 39-57 -> 14 ms (keeps playing, 221074d5f); speed walk now times move 14, transition 14, title 11 (acceptance 2 met, baseline rewritten). Not reached: picks 25-56, unpick 33, blade picked 23-32, trim/undo picked 17-18 vs 16. Measured the panel is the whole excess; pass 2 lead in the log."
     }
   ],
   "walks": [
-    "speed-walk"
+    "speed-walk",
+    "the-panel-catches-up-when-play-stops-walk",
+    "cutting-while-playing-keeps-playing-walk",
+    "a-transition-put-on-while-playing-keeps-playing-walk"
   ],
   "started": "2026-11-23T15:13:02.347Z"
 }
