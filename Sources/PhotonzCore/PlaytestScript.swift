@@ -3285,8 +3285,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// go, the way a hand changes its mind. `rise` lifts the pointer that
     /// many points as it goes, for a grip that also moves up and down (a speed
     /// stop on its curve); the trace still reads along.
+    ///
+    /// `says` claims what the drag's readout beside the pointer (a
+    /// transition's length bubble) said at the last move, before letting go.
     case dragGrip(control: String, by: CGFloat, steps: Int, within: CGFloat?, hold: String?,
-                  modifiers: [PlaytestModifier], cancel: Bool, rise: CGFloat = 0)
+                  modifiers: [PlaytestModifier], cancel: Bool, rise: CGFloat = 0, says: String? = nil)
     case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool, leave: Bool,
                   says: String?)
     /// A file carried from the Finder onto the TIMELINE, over the lane of the
@@ -5632,7 +5635,8 @@ public enum PlaytestStep: Sendable, Equatable {
                              hold: try f.optionalString("hold"),
                              modifiers: try f.modifiers(),
                              cancel: try f.optionalFlag("cancel") ?? false,
-                             rise: CGFloat(try f.optionalNumber("rise") ?? 0))
+                             rise: CGFloat(try f.optionalNumber("rise") ?? 0),
+                             says: try f.optionalString("says"))
         case "dragFile":
             self = .dragFile(file: try f.string("file"), at: try f.point("at"),
                              hold: try f.optionalString("hold"),

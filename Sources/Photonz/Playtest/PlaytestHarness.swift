@@ -2197,7 +2197,8 @@ private final class Run {
             }
             try await windowClick(at: target.point, saying: "the middle of \"\(control)\"",
                                   count: count, modifiers: modifiers, number: number)
-        case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers, let cancel, let rise):
+        case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers, let cancel, let rise,
+                       let says):
             // A grip on the timeline pulled by real mouse moves, and where it
             // was DRAWN read back after every one (`GripTrace`). The fault it
             // exists for lives between pictures: a bar end that lands half way
@@ -2267,6 +2268,9 @@ private final class Run {
                 await screenCapture(window, name: hold)
                 held = ", held \(hold).png"
             }
+            // What the bubble by the pointer says with the button still down,
+            // the last thing a person reads before letting go.
+            let lastSaid = editor?.clipTransitionReadout
             post(.leftMouseUp, at: CGPoint(x: start.x + by, y: start.y + rise), pressure: 0)
             await sleep(0.3)
             await giveTheFrontBack(front)
@@ -2274,7 +2278,12 @@ private final class Run {
             try SafeJSON.data(from: readings, options: [.prettyPrinted])?
                 .write(to: out.appendingPathComponent("grip-trace-\(number).json"))
             note(number, "dragGrip", "\(control) pulled \(short(CGPoint(x: by, y: -rise))) in \(steps) moves: "
-                 + trace.summary + held + cancelled + front.note)
+                 + trace.summary + held + cancelled + front.note
+                 + (lastSaid.map { ", the bubble said \($0) before letting go" } ?? ""))
+            if let says, lastSaid != says {
+                throw Failure(description: "\(control): the bubble by the pointer said "
+                    + "\(lastSaid.map { "\"\($0)\"" } ?? "nothing") before letting go, not \"\(says)\"")
+            }
             if let within, !trace.follows(within: within) {
                 throw Failure(description: "\(control) did not follow the pointer within \(within)pt: "
                     + trace.summary + " (every step is in grip-trace-\(number).json)")

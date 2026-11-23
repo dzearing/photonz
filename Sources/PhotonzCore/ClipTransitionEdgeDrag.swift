@@ -57,10 +57,13 @@ public struct ClipTransitionEdgeDrag: Hashable, Sendable {
 
     /// How long the transition is with the hand `travelledMS` from where it
     /// took hold (positive is to the right), and what stopped it, if anything.
-    public func landing(travelledMS: Int) -> (lengthMS: Int, stop: Stop?) {
+    ///
+    /// `wholeFrames` (View > Timecode on) lands the length on the nearest
+    /// whole frame, so the bubble's frames are the length that is kept.
+    public func landing(travelledMS: Int, wholeFrames: Bool = false) -> (lengthMS: Int, stop: Stop?) {
         let outward = grabbedLeadingEdge ? -travelledMS : travelledMS
         let growth = alignment == .across ? outward * 2 : outward
-        let wanted = startedAtMS + growth
+        let wanted = wholeFrames ? VideoTimecode.wholeFrames(startedAtMS + growth) : startedAtMS + growth
         let longest = max(ClipTransition.shortestMS, longestMS)
         if wanted > longest { return (longest, .longest) }
         if wanted < ClipTransition.shortestMS { return (ClipTransition.shortestMS, .shortest) }
@@ -73,8 +76,11 @@ extension ClipTransitionCopy {
     /// What the bubble by the pointer says while a band's end is dragged: the
     /// length, in tenths of a second, or hundredths once the ruler is counting
     /// in hundredths itself, with the word for a stop when one is holding it.
-    public static func dragReadout(_ ms: Int, stop: ClipTransitionEdgeDrag.Stop?, fine: Bool) -> String {
-        let length = fine ? String(format: "%.2fs", Double(ms) / 1000) : seconds(ms)
+    /// In timecode, whole frames whatever the zoom, once View > Timecode is on.
+    public static func dragReadout(_ ms: Int, stop: ClipTransitionEdgeDrag.Stop?, fine: Bool,
+                                   display: VideoTimeDisplay = .seconds) -> String {
+        let length = display.isTimecode ? VideoTimecode.length(ms)
+            : fine ? String(format: "%.2fs", Double(ms) / 1000) : seconds(ms)
         switch stop {
         case .longest: return "\(length) max"
         case .shortest: return "\(length) min"

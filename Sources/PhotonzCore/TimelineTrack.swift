@@ -78,6 +78,43 @@ extension MotionStripRuler {
         return values
     }
 
+    /// The numbers along the ruler the way View > Timecode asks: in seconds
+    /// as `secondTicks` reads them, or in timecode, each line on a whole
+    /// frame and labelled with that frame (`00:00:04:12`), so the ruler and
+    /// the transport name the same frame at every zoom.
+    public func ticks(display: VideoTimeDisplay) -> [Tick] {
+        guard display.isTimecode else { return secondTicks }
+        return frameTickMS(across: startMS...(startMS + spanMS)).map {
+            Tick(ms: $0, label: VideoTimecode.moment(Int($0)))
+        }
+    }
+
+    /// Where the gridlines fall across `stretch` at the step the ruler's own
+    /// numbers take for `display` (`secondTickMS(across:)`).
+    public func tickMS(across stretch: ClosedRange<Double>, display: VideoTimeDisplay) -> [Double] {
+        display.isTimecode ? frameTickMS(across: stretch) : secondTickMS(across: stretch)
+    }
+
+    /// Whole frames, on a step an editor counts in: 1, 2, 3, 5, 10 and 15
+    /// frames, then whole seconds as `secondStep` climbs them. Fewer across
+    /// the width than seconds, because `00:00:04:12` is a longer word than
+    /// `4.4s`.
+    private func frameTickMS(across stretch: ClosedRange<Double>) -> [Double] {
+        let fps = Double(VideoTimecode.framesPerSecond)
+        let target = spanMS / 5 * fps / 1000
+        let ladder: [Double] = [1, 2, 3, 5, 10, 15] + [1, 2, 3, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600].map { $0 * fps }
+        let step = ladder.first { $0 >= target } ?? 3600 * fps
+        var frame = (Double(MovieRef.gridFrame(atMS: Int(stretch.lowerBound.rounded(.down)))) / step).rounded(.down) * step
+        var values: [Double] = []
+        while true {
+            let ms = Double(MovieRef.gridMS(ofFrame: Int(frame)))
+            if ms > stretch.upperBound + 0.001 { break }
+            if ms >= stretch.lowerBound - 0.001 { values.append(ms) }
+            frame += step
+        }
+        return values
+    }
+
     /// A step a video editor would say out loud: tenths and halves below a
     /// second, then 1, 2, 3, 5, 10, 15, 30 seconds, then whole minutes. The
     /// threes and fifteens are what make a fifteen second ruler read in threes,

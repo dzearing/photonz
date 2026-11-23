@@ -540,7 +540,9 @@ extension EditorState {
     /// `ClipTransitionEdgeDrag`.
     func updateClipTransitionDrag(byMS delta: Int) {
         guard var session = clipTransitionDrag, session.travelledMS != delta else { return }
-        let landing = session.hand.landing(travelledMS: delta)
+        // In timecode the band lands on whole frames, so the frames the
+        // bubble says are the length that is kept.
+        let landing = session.hand.landing(travelledMS: delta, wholeFrames: timeDisplay.isTimecode)
         session.travelledMS = delta
         session.stop = landing.stop
         let lengthChanged = landing.lengthMS != session.landingMS
@@ -599,7 +601,7 @@ extension EditorState {
     var clipTransitionReadout: String? {
         guard let session = clipTransitionDrag else { return nil }
         return ClipTransitionCopy.dragReadout(session.landingMS, stop: session.stop,
-                                              fine: motionStripRuler.readsHundredths)
+                                              fine: motionStripRuler.readsHundredths, display: timeDisplay)
     }
 
     /// Escape is watched through `HeldDragKeys`, because AppKit drops every

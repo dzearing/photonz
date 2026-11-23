@@ -29,6 +29,7 @@ extension EditorState {
         switch id {
         case .snapInTimeline: isTimelineSnapping
         case .preview: isPreviewing
+        case .timecode: timeDisplay.isTimecode
         case .muteTrack: trackInHand?.isMuted ?? false
         case .hideTrack: trackInHand?.isHidden ?? false
         case .soloTrack: trackInHand?.isSolo ?? false
@@ -118,6 +119,7 @@ extension EditorState {
         case .addCaptionsForRange: addCaptionsInRange()
         case .splitEverythingAtPlayhead: splitEverything(atMS: documentTimeMS)
         case .snapInTimeline: toggleTimelineSnapping()
+        case .timecode: VideoTimeDisplaySetting.shared.setTimecode(!timeDisplay.isTimecode)
         // On the next turn of the main loop. An agent's call and a walk's step
         // arrive from async work, and called from there the state changed and
         // the canvas and title bar followed but the editor's own view did not:
@@ -464,6 +466,7 @@ extension EditorState {
         case .addCaptionsForRange: return canAddCaptionsInRange
         case .splitEverythingAtPlayhead: return canSplitEverythingAtPlayhead
         case .preview: return showsPreviewButton
+        case .timecode: return documentHasTime
         case .snapInTimeline, .addVideoTrack, .addAudioTrack, .addCaptionsTrack: return timed
         case .addTrackAbove, .addTrackBelow, .soloTrack, .lockTrack, .deleteTrack: return track != nil
         case .muteTrack: return track?.kind == .audio

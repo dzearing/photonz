@@ -1165,7 +1165,8 @@ struct EditorCommands: Commands {
             let transition = editor?.cutInHand?.cut.drawnTransition
             Menu("Length") {
                 ForEach(editor?.clipTransitionLengthOffers ?? [], id: \.self) { ms in
-                    Toggle(ClipTransitionCopy.lengthChoice(ms, of: transition?.kind ?? .dissolve),
+                    Toggle(ClipTransitionCopy.lengthChoice(ms, of: transition?.kind ?? .dissolve,
+                                                           display: VideoTimeDisplaySetting.shared.display),
                            isOn: Binding(get: { transition?.lengthMS == ms },
                                          set: { _ in editor?.run(.setTransitionLength, ["milliseconds": .number(Double(ms))]) }))
                 }
@@ -2674,6 +2675,13 @@ struct EditorCommands: Commands {
                 get: { editor?.isMotionStripOpen ?? false },
                 set: { _ in editor?.pressTimelineToggle() }))
             .keyboardShortcut("t", modifiers: [.command, .option])
+            // Premiere's Display Format: every time on a video read in
+            // hours, minutes, seconds and frames rather than seconds. A view
+            // preference for the whole app, remembered, off by default. No
+            // key, as Premiere binds none.
+            Toggle(MenuToggleNames.timecode, isOn: Binding(
+                get: { VideoTimeDisplaySetting.shared.isTimecode },
+                set: { _ in editor?.run(.timecode) }))
         } else if Experiments.shared.motionStripEnabled {
             Toggle(MenuToggleNames.timingStrip, isOn: Binding(
                 get: { editor?.isMotionStripShown ?? false },

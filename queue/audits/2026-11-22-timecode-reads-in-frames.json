@@ -1,0 +1,29 @@
+{
+  "feature": "View > Timecode: video time in frames",
+  "epic": "video-beats-premiere",
+  "summary": "Turn on View > Timecode and every time on a video reads the way Premiere does: the transport, the ruler, the transition you drag and its panel rows say 00:00:04:12 and whole frames, all agreeing to the frame. Off, everything reads seconds as before.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any recording; the pictures come from timecode-reads-in-frames-walk on the tutorial sample with a second clip dropped after it.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording and put a Cross dissolve on a cut. The panel's Length reads 0.4s.", "shot": "2026-11-22-timecode-1-seconds-by-default-sc.png" },
+    { "do": "Choose View > Timecode. The transport, the ruler and the Length row now read 00:00:..:.. timecode.", "shot": "2026-11-22-timecode-2-timecode-on-sc.png" },
+    { "do": "Drag one end of the dissolve's band on the timeline. The bubble by the pointer counts whole frames and the Length row says the same frames when you let go.", "shot": "2026-11-22-timecode-3-end-mid-drag-sc.png" },
+    { "do": "Step the playhead with the arrow keys and read the transport against the ruler.", "shot": "2026-11-22-timecode-5-transport-and-ruler-at-fit-sc.png" },
+    { "do": "Zoom the timeline all the way in. The ruler labels individual frames.", "shot": "2026-11-22-timecode-6-ruler-at-closest-zoom-sc.png" },
+    { "do": "With a clip in hand, choose Clip > Freeze Frame… and type 12 as its length. With Timecode on that is twelve frames, the same as 00:00:00:12 or 12f." },
+    { "do": "Choose View > Timecode again. Everything reads seconds, and the setting is remembered next launch.", "shot": "2026-11-22-timecode-7-seconds-again-sc.png" }
+  ],
+  "evaluate": [
+    "Is View the menu you would look in for this, given Premiere keeps it in the timeline's own menu as Display Format?",
+    "Do the Spare and Paid with rows reading 30f, 56f and 12f + 12f sit well beside a Length of 00:00:00:24, or should they be full timecode too?",
+    "Is the full 00:00:04:12 on every ruler label readable, or would you rather the ruler drop the leading hours?",
+    "Does a transition landing on whole frames while you drag feel right, or does it feel steppy at a far-out zoom?"
+  ],
+  "rough": [
+    "The title bar's length (0:13) still reads seconds with Timecode on; it is the window title, not a video readout. Left in the task log.",
+    "Frames are the timeline's own 30 a second (what playback and export use), not each recording's frame rate, so a 60fps recording reads in 30fps timecode.",
+    "Spare after, Spare before, Paid with and the spare labels on the timeline read in frames (30f) rather than full timecode, because four timecodes do not fit on one panel row (UX-PATTERNS §4).",
+    "Other readouts still in seconds with Timecode on: key and level points in tooltips, the trim bar's In/Out/kept line, caption word times. Left in the task log.",
+    "No mock covers this switch: the mocks draw seconds everywhere, which stays the default (the card answered 2026-10-20)."
+  ]
+}

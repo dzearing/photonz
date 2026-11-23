@@ -1054,7 +1054,7 @@ private struct TimelineRulerRow<Scrub: Gesture>: View {
     var body: some View {
         let ruler = editorState.motionStripRuler
         let x = { (ms: Int) in laneWidth * ruler.fraction(ofMS: Double(ms)) }
-        VideoKit.TimeRuler(ticks: ruler.secondTicks.map {
+        VideoKit.TimeRuler(ticks: ruler.ticks(display: editorState.timeDisplay).map {
             VideoKit.RulerTick(fraction: ruler.fraction(ofMS: $0.ms), label: $0.label)
         }, height: height)
         .frame(width: laneWidth)

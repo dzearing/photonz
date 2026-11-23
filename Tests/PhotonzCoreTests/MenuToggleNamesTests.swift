@@ -51,8 +51,8 @@ import Testing
     /// a name in this file shows up as a missing entry rather than silently
     /// growing its own flip.
     @Test func everyOnOffItemInTheAppIsAccountedFor() {
-        #expect(MenuToggleNames.all.count == 13)
-        #expect(Set(MenuToggleNames.all).count == 13)
+        #expect(MenuToggleNames.all.count == 14)
+        #expect(Set(MenuToggleNames.all).count == 14)
     }
 
     // MARK: The capture menus agree with it

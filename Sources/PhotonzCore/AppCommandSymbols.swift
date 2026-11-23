@@ -42,6 +42,7 @@ extension AppCommandID {
         case .splitEverythingAtPlayhead: "scissors.badge.ellipsis"
         case .snapInTimeline: "arrow.right.and.line.vertical.and.arrow.left"
         case .preview: "eye"
+        case .timecode: "clock"
         // Sequence > Track
         case .addVideoTrack: "video.badge.plus"
         case .addAudioTrack: "waveform.badge.plus"

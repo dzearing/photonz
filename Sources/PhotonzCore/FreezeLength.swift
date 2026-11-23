@@ -25,14 +25,21 @@ public enum FreezeLength {
     static let framesPerSecond = (1000.0 / Double(MovieRef.frameStepMS)).rounded()
 
     /// The length `text` means, in milliseconds, or nil where it is not one.
-    public static func parse(_ text: String) -> Int? {
+    ///
+    /// Timecode (`00:00:00:12`) is read whatever the display. With View >
+    /// Timecode on, a bare number is frames and a shorter colon form reads
+    /// from the right the way Premiere's field does (`VideoTimecode`), so
+    /// `12`, `12f` and `00:00:00:12` are all twelve frames.
+    public static func parse(_ text: String, display: VideoTimeDisplay = .seconds) -> Int? {
         let typed = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !typed.isEmpty else { return nil }
         let ms: Double?
-        if typed.contains(":") {
+        if let framed = VideoTimecode.parseLength(typed, bareNumberIsFrames: display.isTimecode) {
+            ms = Double(framed)
+        } else if typed.contains(":") {
             ms = minutesAndSeconds(typed)
         } else if let n = number(typed, endingIn: ["frames", "frame", "fr", "f"]) {
-            ms = n * 1000 / framesPerSecond
+            ms = n == n.rounded() ? Double(VideoTimecode.lengthMS(ofFrames: Int(n))) : n * 1000 / framesPerSecond
         } else if let n = number(typed, endingIn: ["ms"]) {
             ms = n
         } else if let n = number(typed, endingIn: ["seconds", "second", "secs", "sec", "s", ""]) {
@@ -47,7 +54,10 @@ public enum FreezeLength {
     }
 
     /// What the field shows for a length: the same words the timeline uses.
-    public static func text(_ ms: Int) -> String { ClipPieces.holdTitle(ms) }
+    /// In timecode once View > Timecode is on.
+    public static func text(_ ms: Int, display: VideoTimeDisplay = .seconds) -> String {
+        display.isTimecode ? VideoTimecode.length(ms) : ClipPieces.holdTitle(ms)
+    }
 
     /// `1:30` or `0:02.5`: minutes, then seconds.
     private static func minutesAndSeconds(_ typed: String) -> Double? {

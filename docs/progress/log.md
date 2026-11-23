@@ -23415,3 +23415,8 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Dimmed with a tip where there are no captions; left out on the voice itself. Reset Gain moved under More on a sound clip's right-click to keep it at 11 rows.
 - Tests: `SpeechDuckingTests`, `SpeechDuckExportTests` (real MP4). Walks: `music-ducks-under-the-speech-walk`, `duck-under-speech-from-the-clip-menu-walk`.
 - Open: the dips do not follow the voice when it moves (the mock's live Ducking section was not chosen on 2026-10-20).
+
+## 2026-11-22 — View > Timecode
+
+- Video time can read in frames: View > Timecode (off by default, remembered) reads the transport, the ruler and its gridlines, the timeline bar's window, a transition's drag bubble and its panel rows in `HH:MM:SS:FF` at the timeline's 30 fps grid; dragged transitions land on whole frames; the freeze length field takes `12`, `12f` or `00:00:00:12`. Core in `PhotonzCore/VideoTimecode.swift`, setting in `Photonz/VideoTimeDisplaySetting.swift`, walk `timecode-reads-in-frames-walk`.
+- Next: the title bar length, trim In/Out line and key tooltips still read seconds with Timecode on.

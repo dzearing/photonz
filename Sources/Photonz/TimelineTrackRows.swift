@@ -1038,7 +1038,8 @@ struct TimelineTrackRow: View {
         let carrying = keptPainting.carrying(row)
         let key = LanePaintingKept.Key(row: row, paints: paints, kept: kept, stretch: stretch, spanMS: ruler.spanMS,
                                        leftEdge: leftEdge, zoom: zoom, laneWidth: laneWidth, laneHeight: laneHeight,
-                                       scheme: colorScheme, switches: switches, groundsSounds: groundsSounds)
+                                       scheme: colorScheme, switches: switches, groundsSounds: groundsSounds,
+                                       display: editorState.timeDisplay)
         var laid = keptPainting.laid(key, document: document) {
             var waits = false
             let painting = paintedBars(document, paints: paints, kept: kept, ruler: ruler, leftEdge: leftEdge,
@@ -1047,7 +1048,7 @@ struct TimelineTrackRow: View {
                                        waits: &waits)
             guard !painting.bars.isEmpty else { return (.init(painting: painting, gaps: [], gridlines: []), waits) }
             let gaps = TimelinePaint.paintedGaps(editorState.timelineGaps(onTrack: track), stretch: stretch)
-            return (.init(painting: painting, gaps: gaps.map(\.range), gridlines: ruler.secondTickMS(across: stretch)),
+            return (.init(painting: painting, gaps: gaps.map(\.range), gridlines: ruler.tickMS(across: stretch, display: key.display)),
                     waits)
         }
         // Painted, and built on top as well.
@@ -1705,6 +1706,7 @@ struct TimelineTrackSelect: View {
 /// `.lane .gl`: a hairline under every second on the ruler, so a clip's edge
 /// can be read against the numbers above it.
 struct TimelineGridlines: View {
+    @Environment(EditorState.self) private var editorState
     let ruler: MotionStripRuler
     let laneWidth: CGFloat
     let height: CGFloat
@@ -1714,7 +1716,7 @@ struct TimelineGridlines: View {
         // playhead on a zoomed timeline moves every second to a new one, and a
         // view per second was thrown away and built again in every row
         // (`first-long-jump-when-zoomed-in-walk`).
-        Hairlines(xs: ruler.secondTicks.map { laneWidth * ruler.fraction(ofMS: $0.ms) })
+        Hairlines(xs: ruler.ticks(display: editorState.timeDisplay).map { laneWidth * ruler.fraction(ofMS: $0.ms) })
             .fill(VideoKit.Palette.edgeLo)
             .frame(width: laneWidth, height: height, alignment: .topLeading)
             .allowsHitTesting(false)
@@ -2312,6 +2314,9 @@ extension TimelineTrackRow: Equatable {
         let scheme: ColorScheme
         let switches: TimelinePaintedFacts.Switches
         let groundsSounds: Bool
+        /// Seconds or timecode: the gridlines fall on the ruler's numbers,
+        /// which are whole frames in timecode.
+        var display: VideoTimeDisplay = .seconds
     }
 
     /// What the painted cuts are worked out from beyond the painting's key.

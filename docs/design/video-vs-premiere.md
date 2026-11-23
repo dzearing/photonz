@@ -69,9 +69,13 @@ with real window captures.
 
 ### Seen, not filed
 
-- **No frames in the time readout.** The transport says 0:04 and the ruler counts
-  seconds; Premiere shows 00:00:04:12. The playhead readout does give 4.31 s.
-  Low; left in the task log.
+- **No frames in the time readout.** The transport said 0:04 and the ruler counted
+  seconds; Premiere shows 00:00:04:12. **Closed** 2026-11-22
+  (`time-on-a-video-reads-in-frames-where-an-editor`): View > Timecode, off by
+  default and remembered, reads the transport, the ruler, the timeline bar's
+  window, a transition's bubble and its panel rows in frames at the timeline's
+  30 a second, and a dragged transition lands on whole frames;
+  `timecode-reads-in-frames-walk`.
 - **The picture shrinks as tracks are added** (35 % to 32 % after a video track
   and a music bed). Premiere keeps the monitor still and scrolls the tracks.
   Low; left in the task log.

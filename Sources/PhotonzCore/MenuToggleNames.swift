@@ -38,6 +38,11 @@ public enum MenuToggleNames {
     /// carries: one switch covers every icon frame in every window. Named for
     /// the thing icon designers already call it.
     public static let iconKeylines = "Show Icon Keylines"
+    /// Every time on a video read in hours, minutes, seconds and frames
+    /// (`00:00:04:12`) rather than seconds (`VideoTimeDisplay`). Premiere's
+    /// Display Format, in the one word an editor calls it. On the View menu
+    /// because it changes how the window reads and nothing about the document.
+    public static let timecode = "Timecode"
     /// What pulls a point inside an icon frame, each on its own: whole units,
     /// the keylines, and the shapes already drawn. The submenu is named the
     /// way the timeline's own snapping is, and its rows wear the three words
@@ -88,7 +93,7 @@ public enum MenuToggleNames {
     /// standard and a new one added without a name here shows up as a gap.
     public static let all: [String] = [
         grid, snapToGrid, panel, library, iconKeylines, showColumns, history,
-        layerVisible, layerLocked, snapInTimeline,
+        layerVisible, layerLocked, snapInTimeline, timecode,
         iconSnapGrid, iconSnapKeylines, iconSnapGeometry,
     ]
 }

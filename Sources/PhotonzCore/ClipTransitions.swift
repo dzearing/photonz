@@ -866,6 +866,12 @@ public enum ClipTransitionCopy {
         String(format: "%.1fs", Double(ms) / 1000)
     }
 
+    /// A length the way the Length row and the bubble say it: seconds, or
+    /// whole frames in timecode once View > Timecode is on (`00:00:00:12`).
+    public static func length(_ ms: Int, display: VideoTimeDisplay) -> String {
+        display.length(ms)
+    }
+
     /// What a cut has to spend, the few words along the top of the picker.
     /// A side with nothing stopping it says "any".
     public static func spareShort(_ cut: ClipCut) -> String {
@@ -876,7 +882,11 @@ public enum ClipTransitionCopy {
     /// sides across the cut, and only the side it borrows from otherwise, in
     /// the words of the Spare after and Spare before fields.
     /// Where the spare ran out, the frames held for the rest say so after it.
-    public static func paidWith(_ cut: ClipCut) -> String {
+    ///
+    /// In timecode each amount is a count of frames (`12f + 12f of spare`):
+    /// four timecodes would not fit on one panel row.
+    public static func paidWith(_ cut: ClipCut, display: VideoTimeDisplay = .seconds) -> String {
+        let seconds: (Int) -> String = { short($0, display: display) }
         let spent = switch cut.drawnTransition?.drawnAlignment ?? .across {
         case .across: "\(seconds(cut.spentFromOutgoingMS)) + \(seconds(cut.spentFromIncomingMS)) of spare"
         case .before: "\(seconds(cut.spentFromIncomingMS)) of spare before"
@@ -886,6 +896,12 @@ public enum ClipTransitionCopy {
         guard held > 0 else { return spent }
         guard cut.spentFromOutgoingMS + cut.spentFromIncomingMS > 0 else { return "\(seconds(held)) of held frames" }
         return "\(spent), \(seconds(held)) held"
+    }
+
+    /// A short amount beside others on one row: seconds, or whole frames
+    /// (`12f`) in timecode.
+    public static func short(_ ms: Int, display: VideoTimeDisplay) -> String {
+        display.isTimecode ? "\(VideoTimecode.frames(inLengthMS: ms))f" : seconds(ms)
     }
 
     /// What is behind the Paid with row's question mark when it holds frames.
@@ -906,9 +922,16 @@ public enum ClipTransitionCopy {
     /// One length as the Length menu offers it. A dip's says how it splits,
     /// out of the outgoing clip and back into the incoming one, since its
     /// length is two fades and not one overlap.
-    public static func lengthChoice(_ ms: Int, of kind: ClipTransitionKind) -> String {
-        guard !kind.needsOverlap else { return seconds(ms) }
+    public static func lengthChoice(_ ms: Int, of kind: ClipTransitionKind,
+                                    display: VideoTimeDisplay = .seconds) -> String {
+        guard !kind.needsOverlap else { return length(ms, display: display) }
         let split = ClipTransition(kind: kind, lengthMS: ms)
+        guard !display.isTimecode else {
+            // Frames split into whole frames, the out half taking the odd one.
+            let whole = VideoTimecode.frames(inLengthMS: ms)
+            let out = VideoTimecode.frames(inLengthMS: split.beforeMS)
+            return "\(length(ms, display: display)), \(out)f out and \(whole - out)f in"
+        }
         return "\(seconds(ms)), \(half(split.beforeMS)) out and \(half(split.afterMS)) in"
     }
 

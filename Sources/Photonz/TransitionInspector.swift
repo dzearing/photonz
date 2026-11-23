@@ -34,13 +34,13 @@ struct EditPointInspector: View {
     static let sectionHelp = ClipTransitionCopy.spareHelp
 
     private func spare(_ ms: Int?) -> String {
-        ms.map(ClipTransitionCopy.seconds) ?? "any"
+        ms.map { ClipTransitionCopy.short($0, display: editorState.timeDisplay) } ?? "any"
     }
 
     /// What the section's header says on its right: where the cut is on the
     /// document's clock, the number the ruler and the transport show.
     static func headerNote(_ editorState: EditorState) -> String? {
-        editorState.cutInHand.map { "at \(CaptionProgress.clock($0.atMS))" }
+        editorState.cutInHand.map { "at \(editorState.timeDisplay.moment($0.atMS))" }
     }
 }
 
@@ -116,8 +116,8 @@ struct TransitionInspector: View {
                             motionBlur(transition.motionBlur)
                             if transition.kind.needsOverlap, inHand.cut.drawnTransition != nil {
                                 VideoKit.FieldRow(label: "Paid with") {
-                                    VideoKit.ValueFace(value: ClipTransitionCopy.paidWith(inHand.cut))
-                                        .panelReadout(ClipTransitionCopy.paidWith(inHand.cut))
+                                    VideoKit.ValueFace(value: ClipTransitionCopy.paidWith(inHand.cut, display: editorState.timeDisplay))
+                                        .panelReadout(ClipTransitionCopy.paidWith(inHand.cut, display: editorState.timeDisplay))
                                 }
                                 .panelHelp(inHand.cut.holdsFrames ? ClipTransitionCopy.holdsEdgeFramesHelp
                                            : "The spare footage it plays either side of the cut")
@@ -261,9 +261,9 @@ struct TransitionInspector: View {
         let now = inHand.cut.drawnTransition?.lengthMS ?? 0
         let kind = inHand.cut.drawnTransition?.kind ?? .dissolve
         return VideoKit.DropdownRow(
-            label: "Length", value: ClipTransitionCopy.seconds(now),
+            label: "Length", value: ClipTransitionCopy.length(now, display: editorState.timeDisplay),
             choices: .picking(editorState.clipTransitionLengthOffers, current: now,
-                              title: { ClipTransitionCopy.lengthChoice($0, of: kind) }) {
+                              title: { ClipTransitionCopy.lengthChoice($0, of: kind, display: editorState.timeDisplay) }) {
                 editorState.setClipTransitionLength($0)
             })
         .playtestField("Length")
@@ -293,9 +293,11 @@ struct TransitionInspector: View {
         var stops = Set(ClipTransition.holdStopsMS)
         stops.insert(transition.holdMS)
         return VideoKit.DropdownRow(
-            label: label, value: ClipTransitionCopy.seconds(transition.holdMS),
+            label: label, value: ClipTransitionCopy.length(transition.holdMS, display: editorState.timeDisplay),
             choices: .picking(stops.sorted(), current: transition.holdMS,
-                              title: ClipTransitionCopy.seconds) { editorState.setClipTransitionHold($0) })
+                              title: { ClipTransitionCopy.length($0, display: editorState.timeDisplay) }) {
+                editorState.setClipTransitionHold($0)
+            })
         .playtestField(label)
     }
 

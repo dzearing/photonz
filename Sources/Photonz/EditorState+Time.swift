@@ -634,8 +634,13 @@ extension EditorState {
         return String(format: "%d:%02d", minutes, seconds)
     }
 
-    /// Where the playhead is, said the way the transport says it.
-    var documentTimecode: String { Self.timecode(ms: documentTimeMS) }
+    /// Seconds, or timecode once View > Timecode is on: one switch for every
+    /// window (`VideoTimeDisplaySetting`).
+    var timeDisplay: VideoTimeDisplay { VideoTimeDisplaySetting.shared.display }
+
+    /// Where the playhead is, said the way the transport says it: `0:04`, or
+    /// the frame it is on in timecode, `00:00:04:12`.
+    var documentTimecode: String { timeDisplay.moment(documentTimeMS) }
     /// How long the whole thing is.
-    var documentLengthTimecode: String { Self.timecode(ms: documentLengthMS) }
+    var documentLengthTimecode: String { timeDisplay.duration(documentLengthMS) }
 }

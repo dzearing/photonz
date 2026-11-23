@@ -122,7 +122,10 @@ extension PlaytestMemory {
              EditorState.timelineViewMemoryKey,
              // And how tall the timeline's top edge was dragged, and how
              // wide the column of track names.
-             EditorState.timelineHeightKey, TrackColumnWidth.defaultsKey]
+             EditorState.timelineHeightKey, TrackColumnWidth.defaultsKey,
+             // And whether time reads in seconds or timecode (View >
+             // Timecode), which lasts across launches like the rest.
+             VideoTimeDisplaySetting.defaultsKey]
         case .shelf:
             // Not a setting at all: the shared shelf is a file, emptied in
             // `perform` beside the settings it names.
@@ -205,6 +208,7 @@ struct PlaytestSetupRunner {
                 DefaultTransitionStore.shared.reload()
                 SavedCurveStore.shared.reload()
                 TrackColumnWidth.shared.reload()
+                VideoTimeDisplaySetting.shared.reload()
             }
             if setup.forget.contains(.tutorials) { TutorialController.shared.forgetAllProgress() }
             if setup.forget.contains(.titlePresets) { TitlePresetStore.shared.reload() }
@@ -547,7 +551,10 @@ struct PlaytestSetupRunner {
                 UserDefaults.standard.removeObject(forKey: key)
             }
         }
-        if !ledger.restore.isEmpty { UserDefaults.standard.synchronize() }
+        if !ledger.restore.isEmpty {
+            UserDefaults.standard.synchronize()
+            VideoTimeDisplaySetting.shared.reload()
+        }
         let quiet = ledger.undeclared(given: declared)
         guard !quiet.isEmpty else { return ledger.report }
         // Not a failure: the machine is already back. It is the line whoever

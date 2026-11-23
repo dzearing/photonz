@@ -214,8 +214,13 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
 
     /// What is on screen, in the words the transport uses: `1:00 to 1:30`, or
     /// `all 5:00` when the whole thing is.
-    public func reading(documentMS: Double) -> String {
+    /// In timecode, the frames at either edge, once View > Timecode is on.
+    public func reading(documentMS: Double, display: VideoTimeDisplay = .seconds) -> String {
         let span = visibleMS(documentMS: documentMS)
+        if display.isTimecode {
+            guard !showsAll(documentMS: documentMS) else { return "all " + display.duration(Int(documentMS)) }
+            return display.moment(Int(startMS)) + " to " + display.moment(Int(startMS + span))
+        }
         guard !showsAll(documentMS: documentMS) else {
             return "all " + MotionStripRuler.timecode(documentMS)
         }

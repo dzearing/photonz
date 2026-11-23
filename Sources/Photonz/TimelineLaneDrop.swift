@@ -805,7 +805,7 @@ struct TimelineSpareStrips: View {
         let x1 = min(laneWidth, laneWidth * ruler.fraction(ofMS: Double(start + lengthMS)))
         let width = max(2, x1 - x0)
         let ink = alongTop ? VideoKit.rgb(0x9A7DFF) : VideoKit.rgb(0xFFB98A)
-        let label = "\(ClipTransitionCopy.seconds(lengthMS)) spare"
+        let label = "\(ClipTransitionCopy.short(lengthMS, display: editorState.timeDisplay)) spare"
         let clear = clearOfMS > 0
             ? laneWidth * ruler.fraction(spanningMS: Double(clearOfMS)) + 6
             : 0

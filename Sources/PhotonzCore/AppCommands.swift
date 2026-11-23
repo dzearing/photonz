@@ -45,6 +45,7 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case splitEverythingAtPlayhead = "split_everything_at_playhead"
     case snapInTimeline = "snap_in_timeline"
     case preview = "preview"
+    case timecode = "timecode"
     // Sequence > Track
     case addVideoTrack = "add_video_track"
     case addAudioTrack = "add_audio_track"
@@ -949,10 +950,14 @@ public enum AppCommandTable {
         ]
     }()
 
+    /// What View > Timecode needs to be offered: a document with time.
+    static let aVideoForTimecode = "a video"
+
     static let view: [AppCommand] = {
         let menu = "View"
         return [
             make(.preview, MenuToggleNames.preview, menu, .view, needs: "a picture with component copies", toggle: true),
+            make(.timecode, MenuToggleNames.timecode, menu, .view, needs: aVideoForTimecode, toggle: true),
             make(.zoomIn, "Zoom In", menu, .view, needs: "a document"),
             make(.zoomOut, "Zoom Out", menu, .view, needs: "a document"),
             make(.zoomToFit, "Zoom to Fit", menu, .view, needs: "a document"),

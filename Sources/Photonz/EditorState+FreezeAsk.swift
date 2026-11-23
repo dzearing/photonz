@@ -17,9 +17,12 @@ struct FreezeAsk: Equatable {
     let heldPiece: Int?
     var text: String
     var everyTrack: Bool
+    /// How time reads when the popover opened: with View > Timecode on, a
+    /// bare number typed is frames (`FreezeLength.parse`).
+    var display: VideoTimeDisplay = .seconds
 
     /// The length typed, or nil while it is not one.
-    var lengthMS: Int? { FreezeLength.parse(text) }
+    var lengthMS: Int? { FreezeLength.parse(text, display: display) }
 }
 
 extension EditorState {
@@ -37,8 +40,8 @@ extension EditorState {
         pauseDocument()
         closeTransitionPicker()
         showFreezeAsk(FreezeAsk(layerID: id, atMS: documentTimeMS, heldPiece: nil,
-                                text: FreezeLength.text(FreezeLength.defaultMS),
-                                everyTrack: holdPushChoice == .everything))
+                                text: FreezeLength.text(FreezeLength.defaultMS, display: timeDisplay),
+                                everyTrack: holdPushChoice == .everything, display: timeDisplay))
     }
 
     /// Open the popover on a freeze that is already there, to change it.
@@ -51,8 +54,8 @@ extension EditorState {
         closeTransitionPicker()
         selectClipPiece(layerID: layerID, index: index)
         showFreezeAsk(FreezeAsk(layerID: layerID, atMS: time.inMS + (range.start + range.end) / 2,
-                                heldPiece: index, text: FreezeLength.text(piece.lengthMS),
-                                everyTrack: piece.holdPush == .everything))
+                                heldPiece: index, text: FreezeLength.text(piece.lengthMS, display: timeDisplay),
+                                everyTrack: piece.holdPush == .everything, display: timeDisplay))
     }
 
     /// Put the popover up. It hangs from the clip's bar, so the tracks have

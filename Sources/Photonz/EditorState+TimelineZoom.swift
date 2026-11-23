@@ -264,7 +264,7 @@ extension EditorState {
 
     /// What the local bar says is on screen: `1:00 to 1:30`, or `all 5:00`.
     var timelineWindowReading: String {
-        timelineWindow.reading(documentMS: timelineLengthForZoomMS)
+        timelineWindow.reading(documentMS: timelineLengthForZoomMS, display: timeDisplay)
     }
 
     // MARK: Moving in and out

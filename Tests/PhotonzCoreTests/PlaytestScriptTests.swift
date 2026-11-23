@@ -976,15 +976,19 @@ struct PlaytestScriptTests {
     func dragGripStep() throws {
         let script = try decode("""
         { "steps": [ { "do": "dragGrip", "control": "Rectangle clip end", "by": -120, "steps": 40,
-                       "within": 2, "hold": "mid-drag", "modifiers": ["command"], "cancel": true },
+                       "within": 2, "hold": "mid-drag", "modifiers": ["command"], "cancel": true,
+                       "says": "00:00:00:24" },
                      { "do": "dragGrip", "control": "Rectangle clip start", "by": 30, "rise": 24 } ] }
         """)
         guard case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers,
-                             let cancel, let rise) = script.steps[0],
+                             let cancel, let rise, let says) = script.steps[0],
               case .dragGrip(_, let by2, let steps2, let within2, let hold2, let modifiers2,
-                             let cancel2, let rise2) = script.steps[1] else {
+                             let cancel2, let rise2, let says2) = script.steps[1] else {
             Issue.record("dragGrip"); return
         }
+        // What the bubble by the pointer said at the last move, before letting go.
+        #expect(says == "00:00:00:24")
+        #expect(says2 == nil)
         #expect(control == "Rectangle clip end")
         #expect(by == -120)
         #expect(steps == 40)
