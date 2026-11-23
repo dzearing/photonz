@@ -2313,7 +2313,32 @@ final class EditorState {
     var menuDocumentRevision = 0
     @ObservationIgnored var menuDocumentCatchUpAsked = false
     /// Whether the document is playing.
-    var isDocumentPlaying = false
+    var isDocumentPlaying = false {
+        didSet {
+            // The panel's pieces that waited for play to stop land now
+            // (`PanelPlayHold`).
+            if oldValue, !isDocumentPlaying { panelPiecesMayLand?() }
+        }
+    }
+    /// The pointer is over the right hand panel, as its hover last said.
+    @ObservationIgnored private(set) var pointerInPanel = false
+    /// What the panel does when the pieces a pick brought in may land after
+    /// waiting for play to stop: its next catch-up (`InspectorPanel.catchUp`).
+    @ObservationIgnored var panelPiecesMayLand: (() -> Void)?
+    /// Whether a section or a set of rows the panel owes waits for play to
+    /// stop (`PanelPlayHold`). Read where pieces are let in, never in a body.
+    var panelPiecesWait: Bool {
+        Experiments.shared.panelWaitsForPlayToStopEnabled
+            && PanelPlayHold.waits(hasTime: documentHasTime, playing: isDocumentPlaying,
+                                   pointerInPanel: pointerInPanel)
+    }
+    /// The pointer came into the panel or left it. Coming in while a video
+    /// plays brings in what waited: somebody at the panel has come to use it.
+    func notePointerInPanel(_ inside: Bool) {
+        guard inside != pointerInPanel else { return }
+        pointerInPanel = inside
+        if inside, isDocumentPlaying { panelPiecesMayLand?() }
+    }
     /// True while this window holds a recording opened the moment it was
     /// stopped, whose file macOS is still closing: it shows the frame the
     /// recording ended on, and Play waits for the file

@@ -37,6 +37,8 @@ struct PanelRowsArrival<Content: View>: View {
     /// they only arrive a pass at a time.
     var waitsForReach = true
     @ViewBuilder let content: () -> Content
+    /// Read only inside the task that lets the rows in, never by the body.
+    @Environment(EditorState.self) private var editorState: EditorState?
     @State private var isHere = false
     /// Within reach of the view, as last measured. True until measured, so a
     /// dock that cannot say builds them as it always has.
@@ -63,7 +65,10 @@ struct PanelRowsArrival<Content: View>: View {
                         // Rows are the pieces full of controls, so the pass
                         // after them is left for SwiftUI's focus and
                         // accessibility work on those controls.
-                        while !Task.isCancelled, !PanelLanding.mayLand(restAfter: 1) {
+                        // ...and while a video plays, not until it stops or
+                        // the pointer comes into the panel (`PanelPlayHold`).
+                        while !Task.isCancelled,
+                              editorState?.panelPiecesWait == true || !PanelLanding.mayLand(restAfter: 1) {
                             await NextRunLoopPass.start()
                         }
                         guard !Task.isCancelled else { return }

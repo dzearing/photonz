@@ -376,6 +376,9 @@ public enum FeatureCatalog {
     /// Putting a transition on a cut while a video plays leaves it playing,
     /// as Final Cut's Add Transition does.
     public static let transitionKeepsPlayingFlag = "next-transition-keeps-playing"
+    /// While a video plays, the sections and rows a pick brings into the
+    /// right hand panel wait for play to stop (`PanelPlayHold`).
+    public static let panelWaitsForPlayToStopFlag = "next-panel-waits-for-play-to-stop"
     /// On a document with time the right hand panel runs the full height of
     /// the window and the timeline sits under the picture only
     /// (`PanelColumn`).
@@ -2008,6 +2011,16 @@ public enum FeatureCatalog {
                     title: "Adding a transition keeps playing",
                     description: "Putting a transition on a cut while a video plays leaves it playing where it was. Off stops play, picks the cut and goes to it.",
                     area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: panelWaitsForPlayToStopFlag,
+                    title: "Panel fills in when play stops",
+                    description: "While a video plays, the sections a pick brings into the panel wait until play stops or the pointer comes into the panel. Off builds them while it plays.",
+                    area: .panel,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

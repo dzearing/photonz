@@ -1,0 +1,123 @@
+{
+  "out": "/tmp/photonz-playtest/a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk",
+  "seed": "At Next defaults, no switch touched: while a video plays, the sections a pick brings into the right hand panel wait for play to stop (next-panel-waits-for-play-to-stop), because each one that landed while it played held the window a frame or two. The sample recording opens with nothing picked, Space plays it, and a real click on its clip picks it while it plays: the clip is picked and play carries on, and the panel still shows only Time: Properties and the sound's Fades have not come in. Space stops it and every section of the picked clip comes in, from Properties down to Audio Effects.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5,
+      "onTheClock": true
+    },
+    {
+      "comment": "A real click on the clip while it plays picks it.",
+      "do": "windowClick",
+      "lane": "V1",
+      "seconds": 4
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0,
+      "onTheClock": true
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Tutorial Sample"
+      ]
+    },
+    {
+      "do": "expectTimeline",
+      "rate": 1.0
+    },
+    {
+      "do": "expectSections",
+      "leading": [
+        "Time"
+      ],
+      "absent": [
+        "Properties",
+        "Color",
+        "Fades"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "1-picked-while-playing"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expectTimeline",
+      "rate": 0
+    },
+    {
+      "do": "expectSections",
+      "leading": [
+        "Properties",
+        "Color",
+        "Effects",
+        "Time",
+        "Channel",
+        "Fades",
+        "Gain",
+        "Audio Effects"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-stopped",
+      "note": "Play stopped with the clip picked: every section of the clip is in the panel"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-stopped-panel-filled"
+    }
+  ]
+}

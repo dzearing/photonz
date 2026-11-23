@@ -1,0 +1,24 @@
+{
+  "feature": "The panel fills in when play stops",
+  "epic": "video-perf",
+  "summary": "Picking a clip while a video plays no longer builds the rest of the right hand panel in the middle of play: the sections already there follow the pick at once, the others come in the moment play stops or you move the pointer into the panel. Picking from nothing on the 6 minute edit went from passes of up to 61 ms to 22, letting go from 33 to 13.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Timings come from the speed walk on the 6 minute reference edit, worst of three runs.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording, press Escape so nothing is picked, and press Space to play it.", "shot": "2026-11-23-panel-waits-for-play-1.png" },
+    { "do": "While it plays, click the clip on V1. It is picked and play carries on; the panel shows Time and nothing more yet." },
+    { "do": "Press Space to stop. Properties, Appearance, Effects and the Audio sections come in.", "shot": "2026-11-23-panel-waits-for-play-2.png" },
+    { "do": "Press Escape, press Space, click the clip again while it plays, then move the pointer over the panel. The sections come in while it is still playing." },
+    { "do": "Open the 6 minute reference edit in Photonz Dev with the button below, play it, and click clips and let go of them while it plays. Watch whether the picture stutters.", "referenceEdit": 6 }
+  ],
+  "evaluate": [
+    "While a video plays, is it fine that the panel shows only what it already had until you stop or reach for it?",
+    "When you stop, do the sections arrive quickly enough that you never wait for them?",
+    "Does moving the pointer into the panel while it plays bring the sections in when you want them?"
+  ],
+  "rough": [
+    "Not reached yet: picking a clip from nothing still holds the window 22 ms at worst, and clicking from one clip to another 17.5 ms, against the one frame (16 ms) the task asks for (task picking-letting-go-of-and-cutting-a-clip-while-a stays open).",
+    "A clip picked and its panel built before you press play still rebuilds every section in one pass when you click another clip while it plays; the speed walk does not time that case yet (task picking-letting-go-of-and-cutting-a-clip-while-a).",
+    "No mock covers how the panel behaves during playback."
+  ]
+}

@@ -1145,6 +1145,23 @@ floor rather than the 50 every other pass gets): 12 to 14 ms before, 6.1 to
 that answers to the clip under the playhead holds still while it plays, and
 catches up at the stop; it never rebuilds at a crossing mid-play.**
 
+**What a pick brings into the panel waits for play to stop (2026-11-23).**
+A pick from nothing while the 6 minute edit played landed eight sections and
+six sets of rows one per pass over 0.7 s, in passes of 16 to 61 ms, and
+letting go landed Captions the same way. On Next
+(`next-panel-waits-for-play-to-stop`, `PanelPlayHold`) neither a section the
+dock lets in nor a section's late rows land while a video plays: the sections
+already built follow the pick at once, the rest come in, a pass each as
+before, the moment play stops (`isDocumentPlaying` didSet calls the panel's
+catch-up) or the pointer comes into the panel, since somebody at the panel
+has come to use it. Speed walk, worst of the edits before and after: pick
+from nothing 61 to 22 ms, unpick 33 to 10, blade picked 22 to 17, trim
+picked 18 to 11. Not reached by this: a pick while playing with the whole
+panel already built (picked, then played) still re-runs every built section
+in one pass; holding those needs the panel's sections to read a held pick,
+which they do not yet. `a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk`
+fails with the switch off.
+
 **The dropped frames left in a minute of play are the display's, not the
 app's (2026-11-22, pass 26).** 0 to 3 a minute on 2026-11-22, where passes 18
 to 21 read 0. Every one was a stretch of 20 to 35 ms in which the window's

@@ -431,6 +431,7 @@ struct InspectorPanel: View {
         let _ = foldBudgetPass
         let _ = folds.syncs
         let _ = (folds.onFoldFromAnotherWindow = { checkFoldBudget() })
+        let _ = (editorState.panelPiecesMayLand = { catchUp() })
         // Before `drawnSections` moves on: a section new to the dock is placed
         // by where the one above it ended LAST pass.
         let _ = bodies.draw(split.pick, after: reveal, holding: holdsBodiesOutOfSight)
@@ -1158,6 +1159,10 @@ struct InspectorPanel: View {
     private func catchUp() {
         guard editorState.editArrival.panelMayFill,
               !arrivals.isCatchingUp, arrivals.isWaiting(for: orderedAvailableSections) else { return }
+        // While a video plays, what a pick brought in waits for play to stop
+        // or the pointer to come in, and `panelPiecesMayLand` asks again then
+        // (`PanelPlayHold`).
+        if editorState.panelPiecesWait { return }
         arrivals.isCatchingUp = true
         // Built behind a recording playing in View, a section would cost the
         // player a frame, and built while Edit slides in (a pick handed back)
@@ -1167,6 +1172,7 @@ struct InspectorPanel: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
             arrivals.isCatchingUp = false
             if wait > 0 { catchUp(); return }
+            if editorState.panelPiecesWait { return }
             let latest = orderedAvailableSections
             guard arrivals.isWaiting(for: latest) else { return }
             // A section never lands in the pass another piece of the dock

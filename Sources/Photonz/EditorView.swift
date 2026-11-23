@@ -276,6 +276,9 @@ struct EditorView: View {
                             // Nothing handed in, so nothing to draw it again for
                             // when this closure runs (`InspectorPanel: Equatable`).
                             .equatable()
+                            // Coming to the panel while a video plays brings
+                            // in what waited for play to stop (`PanelPlayHold`).
+                            .playtestHover("panel") { editorState.notePointerInPanel($0) }
                             .modifier(PanelLengthUnit())
                             .frame(width: panelWidth)
                             .tutorialAnchor(.panel)
