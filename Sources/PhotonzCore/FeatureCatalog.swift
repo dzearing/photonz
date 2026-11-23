@@ -373,6 +373,9 @@ public enum FeatureCatalog {
     /// Cutting at the playhead while a video plays leaves it playing, as
     /// Final Cut's Blade and Premiere's Add Edit do.
     public static let bladeKeepsPlayingFlag = "next-blade-keeps-playing"
+    /// Putting a transition on a cut while a video plays leaves it playing,
+    /// as Final Cut's Add Transition does.
+    public static let transitionKeepsPlayingFlag = "next-transition-keeps-playing"
     /// On a document with time the right hand panel runs the full height of
     /// the window and the timeline sits under the picture only
     /// (`PanelColumn`).
@@ -1994,6 +1997,16 @@ public enum FeatureCatalog {
                     name: bladeKeepsPlayingFlag,
                     title: "Cutting keeps playing",
                     description: "Split at Playhead while a video plays cuts the clip and play carries on. Off stops play at the cut.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: transitionKeepsPlayingFlag,
+                    title: "Adding a transition keeps playing",
+                    description: "Putting a transition on a cut while a video plays leaves it playing where it was. Off stops play, picks the cut and goes to it.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

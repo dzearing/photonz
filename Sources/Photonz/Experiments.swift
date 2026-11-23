@@ -1070,6 +1070,7 @@ extension Experiments {
     var noticesSayWhatHappenedEnabled: Bool { isEnabled(FeatureCatalog.noticesSayWhatHappenedFlag) }
     var panelBuildsWhatYouSeeEnabled: Bool { isEnabled(FeatureCatalog.panelBuildsWhatYouSeeFlag) }
     var bladeKeepsPlayingEnabled: Bool { isEnabled(FeatureCatalog.bladeKeepsPlayingFlag) }
+    var transitionKeepsPlayingEnabled: Bool { isEnabled(FeatureCatalog.transitionKeepsPlayingFlag) }
     var panelRunsFullHeightEnabled: Bool { isEnabled(FeatureCatalog.panelRunsFullHeightFlag) }
     var agentChannelEnabled: Bool { isEnabled(FeatureCatalog.agentChannelFlag) }
     var askEnabled: Bool { isEnabled(FeatureCatalog.askFlag) }

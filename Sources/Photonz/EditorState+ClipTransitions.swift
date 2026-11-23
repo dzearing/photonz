@@ -156,6 +156,22 @@ extension EditorState {
                        picksLater: Bool = false) {
         guard Experiments.shared.transitionsAtACutEnabled,
               let cut = document?.documentCut(at: place)?.cut else { return }
+        // While it plays the transition goes on and play carries on from
+        // where it is, as Final Cut's Add Transition does: no stop, no jump
+        // back to the cut and no pick of it, each of which the person did not
+        // ask for and which together held the window 39 to 57 ms on the 6
+        // minute reference edit (`next-transition-keeps-playing`). They see
+        // it when play reaches the cut; a cut already in hand stays in hand.
+        if isDocumentPlaying, Experiments.shared.transitionKeepsPlayingEnabled {
+            if let kind {
+                guard let transition = cut.fitted(kind) else { return }
+                perform { $0.setTransition(transition, at: place) }
+            } else {
+                perform { $0.setTransition(nil, at: place) }
+            }
+            documentMomentChanged()
+            return
+        }
         pauseDocument()
         guard let kind else {
             perform { $0.setTransition(nil, at: place) }

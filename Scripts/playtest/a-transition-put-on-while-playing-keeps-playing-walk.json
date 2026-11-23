@@ -1,0 +1,177 @@
+{
+  "out": "/tmp/photonz-playtest/a-transition-put-on-while-playing-keeps-playing-walk",
+  "seed": "At Next defaults, no switch touched: Apply Default Transition (Command T) pressed while a video plays puts the transition on the cut at the playhead and play carries on, the way Final Cut's Add Transition does and the blade already does (an edit that does not mean stop leaves play running). Two recordings meet on V1 at 0:07; play starts at 0:06, Command T half a second in puts the transition on the cut with the playhead still moving, Space stops it, and Command Z takes the transition off.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "clipDragEndIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 6.95
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "clipDragStartIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5,
+      "onTheClock": true
+    },
+    {
+      "do": "expectTimeline",
+      "rate": 1.0
+    },
+    {
+      "comment": "Command T while it plays, half a second before the cut: the default transition goes on and play carries on.",
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4,
+      "onTheClock": true
+    },
+    {
+      "do": "expectTimeline",
+      "rate": 1.0
+    },
+    {
+      "do": "expect",
+      "control": "Transition Tutorial Sample to b-roll",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-transition-while-playing",
+      "note": "Command T half a second before the cut while it plays: the transition is drawn on the cut and the playhead is still moving, past the cut"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-transition-while-playing"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectTimeline",
+      "rate": 0
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Transition Tutorial Sample to b-roll",
+      "present": false
+    }
+  ]
+}

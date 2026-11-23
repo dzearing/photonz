@@ -1094,6 +1094,24 @@ landing. **An edit, a pick or a key that does not mean stop leaves play
 running: stopping play costs a window server round trip, and the person did
 not ask for it.**
 
+**A transition put on while it plays keeps playing (2026-11-23).** The same
+rule reached Add Transition (Command T, the panel's Type, the picker's tiles):
+it paused, picked the cut and moved the playhead back to it, so adding a
+dissolve while the 6 minute reference edit played held the window 39 to 57 ms.
+On Next (`next-transition-keeps-playing`) the transition goes on and play
+carries on from where it is, as Final Cut's does: no stop, no jump, no pick
+(a cut already in hand stays in hand). 15 ms now. Walk:
+`a-transition-put-on-while-playing-keeps-playing-walk`. The short speed walk
+now also times a move, a transition and a title reworded while it plays.
+
+**Where a pick's time goes (2026-11-23).** With the panel taken out of the
+window, a pick while the reference edit plays is 10 to 19 ms, an unpick 6 to
+8, a blade 10: the panel is the whole of the rest (pick 26 to 30, unpick 31 to
+37). No one section carries it: without Color and Effects a pick is 19 to 23,
+without the clip's time, keys and sound sections 22 to 26. Every section
+re-runs because every one reads the live pick. Keeping each dropdown from
+handing its face to its host when nothing moved gained nothing measurable.
+
 Also in pass 28: `PanelFieldRowLayout` caching its control's zero width
 measure gained nothing (SwiftUI's size cache already answers the repeat), so
 it was not kept. The Transitions group asked whether any clip is a movie by
