@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 4060,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-22T22:15:03.565Z",
-  "updated": "2026-11-22T23:20:07.104Z",
+  "updated": "2026-11-23T00:17:46.051Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI run https://github.com/dzearing/photonz/actions/runs/45074019141 (commit da5d5fad6), Test slice 2 of 3:\n✘ Test \"Three moments of a flip: the file's frame and the canvas's agree\" recorded an issue at Space3DExportTests.swift:87:13: Expectation failed: (far → 776) < (pixels / 100 → 768)\nRecent nearby commits: 924fa8d8e The frame shown at a whole second is the one that starts there; 959ef8eeb A new video keeps the length it was given. Filed by the runner of a-chart-or-title-keeps-what-you-set-by-hand-when, which does not touch export.",
@@ -26,6 +26,25 @@
     {
       "t": "2026-11-22T23:20:07.103Z",
       "note": "Failed again the same way on run 45076579800 (commit 8a40d9fdf, slice 1 of 3 this time): far 776 against 768. Exactly the same count twice suggests a steady drift rather than noise."
+    },
+    {
+      "t": "2026-11-22T23:32:40.075Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-22T23:38:03.697Z",
+      "note": "Cause: compression at the card's edge, not drift. Evidence: (1) CI's own log says every sampled frame landed exactly on its moment (400/700/1100ms) and the export picture equals the canvas pixel for pixel before encoding (pre-encode diff 0 here; CI's render-level 3D test reads 0 too). (2) Here, against canvas renders a frame early/late and 3/10ms off, the landed moment matches best every time (400ms: 287 far vs 3433/4566 a frame off). (3) Every far pixel here is within 1px of the card's edge (0 off-edge, hardware and software encoders alike); the 1px edge band is 1474-2076 pixels, so the old bar of pixels/100 = 768 was half the edge band, and CI's encoder fills more of it (776) than this Mac's (287). It was already at 741/768 on CI at 700ms before the frame-grid commit; that commit only moved which angles are sampled (397->400ms). Fix: the test now checks the frame starts at its moment, mean < 3, the landed moment beats the frame either side, and fewer than 0.1% of pixels are off more than 2px from the edge. Mutation (movie one frame late) fails all three moments on three checks."
+    },
+    {
+      "t": "2026-11-23T00:17:45.971Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-23T00:17:46.049Z",
+      "note": "Cause: compression at the card's edge, not drift. CI run 45085009984 (commit 68b49e4fb) is green on all three slices and prints the proof: at 400/700/1100ms the frame lands on its moment, 776/658/717 pixels are off but 0 of them away from the card's edge, and the frame early/late reads 10.06/13.87, 11.79/10.00, 2.25/2.27 mean against 0.99/1.01/1.19 for the landed one. The old bar (1% of the frame, 768) was half the one-pixel edge band. Space3DExportTests now checks: frame starts at its moment, mean < 3, beats the frame either side, < 0.1% off more than 2px from the edge. A movie made one frame late fails all three moments. Test-only change; Scripts/test.sh green here (exit 0)."
     }
-  ]
+  ],
+  "started": "2026-11-22T23:32:40.074Z",
+  "walks": [],
+  "completed": "2026-11-23T00:17:46.050Z"
 }
