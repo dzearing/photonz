@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-22T16:27:40.139Z",
+  "updated": "2026-11-23T18:22:51.623Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-22T16:27:40.138Z",
-      "note": "... 34 earlier entries elided",
-      "elided": 34
-    },
-    {
-      "t": "2026-11-16T21:42:23.497Z",
-      "note": "Pass 8 (2026-11-16). Baseline at e873d3762, 60 min edit, markers down (two runs): zoom in 16.1-18.1 ms/frame (p95 34), out 14.8-16.3 (p95 33), by zoom 1x 33 / 8x 28 / 256x+ 11-14; scroll 14.3-16.4 (p95 23-29). Profile: zoom near Fit ~21% Canvas display lists + ~12% RenderBox rasterising in the CA commit, both proportional to the canvas (2.5 windows); scroll ~12% canvas + 8% raster."
-    },
-    {
-      "t": "2026-11-16T21:42:23.569Z",
-      "note": "Pass 8 tried first and backed out: each lane painted in fixed half-window pieces of time (power-of-two ms, pixel-exact seams, only pieces in view), each its own Equatable canvas. Scroll 25 ms, zoom 24: each canvas is its own texture and a zoom resized every one each frame (make_texture + SurfacePool ~12%, CA commit 37%). Written into docs/design/video.md 8f."
+      "t": "2026-11-23T18:22:51.622Z",
+      "note": "... 36 earlier entries elided",
+      "elided": 36
     },
     {
       "t": "2026-11-16T21:42:23.642Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-22T16:27:40.137Z",
       "note": "Pass 23 landed be620f3e0: a pinch from rest no longer rebuilds every lane and lays every picture on its first frame; zoom in worst frame 42-44 -> 26-28 ms (same build, switches), first pass 28 -> ~20 ms. Bars of 8.3 ms zoom/scroll (95%, none over 16) and 16 ms edits not reached; stays open (next: the frame change still invalidates every lane)."
+    },
+    {
+      "t": "2026-11-23T18:22:46.579Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T18:22:51.621Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-22T15:19:24.330Z",
+  "started": "2026-11-23T18:22:46.578Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
