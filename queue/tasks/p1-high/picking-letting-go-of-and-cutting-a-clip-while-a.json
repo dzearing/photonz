@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:47:56.154Z",
-  "updated": "2026-11-23T16:31:37.826Z",
+  "updated": "2026-11-23T17:38:20.066Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (28 passes, closed 2026-11-23 per its triage). Measure with Scripts/perf/speed-walk.sh (short form, ~2 min) and Scripts/perf/pass-profile.sh (PassSampler, edits-only walks; Instruments refuses without developer mode). Where the time is (pass 25 to 28): a landing pass has a floor of about 15-17 ms whatever lands: dock stack layout ~4.4, SwiftUI graph ~3.8, accessibility focus ~3.0 (AccessibilityNode.updateFocus -> ViewRendererHost.focusResponder walking every responder; SwiftUI accessibility is switched on in the probe by another process, so a person with any accessibility client sees it too), title bar drag regions ~1.3 (-[NSWindow _resetDragMargins] asks the hosting view acceptsFirstResponder, which walks every focusable control). A pick from nothing is ~30 passes over 0.7 s, one section or row set each. Leads not tried: fewer AppKit-backed controls in the panel (TextField and Picker as NSView, ~170 in the window) so the focus walk shrinks; land only the sections in sight during play and the rest after play stops; keep the clip sections built and hidden across unpick (13.5 ms of unpick is SwiftUI graph teardown). Tried and reverted: a Layout cache for PanelFieldRowLayout (worse), caching control minimums (no gain). Related panel-cost tasks: folding-a-section-that-lets-the-panel-fit-again, leaving-preview-slides-back-without-a-hitch.",
@@ -63,13 +63,38 @@
     {
       "t": "2026-11-23T16:31:37.825Z",
       "note": "Pass 1: transition while playing 39-57 -> 14 ms (keeps playing, 221074d5f); speed walk now times move 14, transition 14, title 11 (acceptance 2 met, baseline rewritten). Not reached: picks 25-56, unpick 33, blade picked 23-32, trim/undo picked 17-18 vs 16. Measured the panel is the whole excess; pass 2 lead in the log."
+    },
+    {
+      "t": "2026-11-23T16:32:22.375Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-23T17:38:19.746Z",
+      "note": "walks speed-walk, the-panel-catches-up-when-play-stops-walk, cutting-while-playing-keeps-playing-walk, a-transition-put-on-while-playing-keeps-playing-walk -> speed-walk, the-panel-catches-up-when-play-stops-walk, cutting-while-playing-keeps-playing-walk, a-transition-put-on-while-playing-keeps-playing-walk, a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk"
+    },
+    {
+      "t": "2026-11-23T17:38:19.824Z",
+      "note": "Pass 2 fix (11c86b116): while a Next video plays, sections and late rows a pick brings into the panel wait for play to stop or the pointer to enter the panel (next-panel-waits-for-play-to-stop, on by default, PanelPlayHold + tests first). Worst of 3 before -> after: pick from nothing 61 -> 22.8, pick 26 -> 17.5, unpick 33 -> 12.8, blade picked 22 -> 16.6, trim picked 18 -> 12.1, undo picked 18 -> 13.0 ms. Baseline rewritten. New walk a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk green at defaults, red with switch off; also green: the three named walks plus a-recording-is-a-document, a-transition-is-picked-at-the-cut, an-editing-session, border-width-keys, every-caption-control, every-section-header-opens, insert-a-title-before-a-clip, motion-loop-preview, picture-keys (x2), playback-speed (x4), playing-a-recording-never-blinks, shadow-distance-keys, tilt-keys. Scripts/test.sh exit 0. Audit queue/audits/2026-11-23-panel-waits-for-play-to-stop.json; looked at both pictures: playing shows Time + Library only, stopped shows Properties down to Audio Gain."
+    },
+    {
+      "t": "2026-11-23T17:38:19.904Z",
+      "note": "Pass 2 tried and ruled out (all as throwaway experiments in /tmp, nothing landed): freezing the panel by moving it into its own NSHostingView. Skipping the host's layout() does not stop bodies (SwiftUI flushes them from a run-loop observer); hiding it does not either; only taking it out of the window stops updates, and a picture of it to show meanwhile is not possible (cacheDisplay drops SwiftUI text and controls, 7 ms). So a full freeze would blank the panel during play."
+    },
+    {
+      "t": "2026-11-23T17:38:19.985Z",
+      "note": "Not reached (acceptance 1): pick from nothing 22.8 (first passes: clip bars + panel's own pass with Time re-running for the pick), pick 17.5, blade picked 16.6 ms worst of 3. Lead for pass 3: (a) the case the speed walk does not time, a pick while playing with the whole panel already built (picked then played), still re-runs every section in one ~26 ms pass: add it to the speed walk; (b) holding the pick for the panel needs the panel's reads of selectedLayerID to be told apart from everyone else's; the existing static-flag pattern (readingALatePass) only covers the body that sets it, so it needs either every section view wrapped or the sections given the subject explicitly; (c) the first pass of a pick from nothing is clip bars (3) + inspectorPanel (3) + Time (2): Time re-running for a new clip while playing could hold too (PanelPlayhead.clipInHand already holds with nothing picked)."
+    },
+    {
+      "t": "2026-11-23T17:38:20.065Z",
+      "note": "Pass 2: panel pieces wait for play to stop (11c86b116): unpick, trim and undo picked now within a frame (12.8, 12.1, 13.0); pick 17.5, pick from nothing 22.8, blade picked 16.6 still over 16. Leads for pass 3 in the log."
     }
   ],
   "walks": [
     "speed-walk",
     "the-panel-catches-up-when-play-stops-walk",
     "cutting-while-playing-keeps-playing-walk",
-    "a-transition-put-on-while-playing-keeps-playing-walk"
+    "a-transition-put-on-while-playing-keeps-playing-walk",
+    "a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk"
   ],
-  "started": "2026-11-23T15:13:02.347Z"
+  "started": "2026-11-23T16:32:22.374Z"
 }
