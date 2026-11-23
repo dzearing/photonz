@@ -133,6 +133,15 @@ struct PieceCopyWriterTests {
     /// Where the encoder cannot be made to store frames the recording's way,
     /// nothing is left behind and the caller draws the edit instead, rather
     /// than a file only QuickTime can play.
+    ///
+    /// The cut is taken from the recording's own key frames, one frame after
+    /// one of them, so the frame it opens on has to be made again and the
+    /// encoder is asked. A fixed cut is not enough: a busy hardware encoder
+    /// puts extra key frames wherever it likes (keys at frames 11, 15, 21 or
+    /// 1 as well as near every 30th, measured 2026-11-22 under sixteen other
+    /// encodes), and on 2026-11-22 one full run's clip had key frames at both
+    /// ends of a fixed 450..<2017ms cut, so all 48 frames were copied, none was
+    /// made, and nothing was refused because nothing was asked.
     @Test("A recording the encoder cannot match is left to the ordinary path")
     func aRecordingItCannotMatchIsNotCopied() async throws {
         let dir = TestClip.makeScratchDirectory()
@@ -141,9 +150,19 @@ struct PieceCopyWriterTests {
         try await TestClip.write(to: source, seconds: 5, size: CGSize(width: 320, height: 240),
                                  likeAScreenRecording: true,
                                  profile: AVVideoProfileLevelH264MainAutoLevel)
+        // A key frame with at least three more frames before the next one, and
+        // a cut 50ms after it: the frame on screen there is the one after the
+        // key frame, whose group starts before the cut and so cannot be copied.
+        let keys = try await Self.keyFrameMS(of: source)
+        let nextKeys = Array(keys.dropFirst()) + [5_000]
+        let roomy: [Int] = zip(keys, nextKeys).compactMap { key, next in
+            key < 3_000 && Double(next - key) > 3_000 / Self.fps ? key : nil
+        }
+        let key = try #require(roomy.first, "no key frame in \(keys) leaves room to cut inside its group")
+        let cut = key + 50
         let out = dir.appendingPathComponent("edit.mp4")
         await #expect {
-            try await PieceCopyWriter.write(source: source, ranges: [450..<2_017], mix: [],
+            try await PieceCopyWriter.write(source: source, ranges: [cut..<(cut + 1_567)], mix: [],
                                             soundURLs: [:], to: out)
         } throws: { error in
             if case PieceCopyWriter.CopyError.notCopyable = error { return true }
