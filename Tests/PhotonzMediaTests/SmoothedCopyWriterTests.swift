@@ -208,9 +208,10 @@ struct SmoothedCopyWriterTests {
         writer.add(input)
         try #require(writer.startWriting())
         writer.startSession(atSourceTime: .zero)
+        let framePool = try #require(WriterFramePool.make(for: adaptor))
         for frame in 0..<30 {
             while !input.isReadyForMoreMediaData { try await Task.sleep(for: .milliseconds(2)) }
-            let pool = try #require(adaptor.pixelBufferPool)
+            let pool = framePool
             var made: CVPixelBuffer?
             CVPixelBufferPoolCreatePixelBuffer(nil, pool, &made)
             let buffer = try #require(made)

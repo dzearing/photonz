@@ -145,10 +145,11 @@ struct MovieColourTests {
         writer.startWriting()
         writer.startSession(atSourceTime: .zero)
         let fps = 10
+        let framePool = WriterFramePool.make(for: adaptor)
         for index in 0..<(colours.count * fps) {
             while !input.isReadyForMoreMediaData { try await Task.sleep(for: .milliseconds(5)) }
             let colour = colours[index / fps]
-            guard let pool = adaptor.pixelBufferPool else { break }
+            guard let pool = framePool else { break }
             var made: CVPixelBuffer?
             CVPixelBufferPoolCreatePixelBuffer(nil, pool, &made)
             guard let buffer = made else { break }

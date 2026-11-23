@@ -91,14 +91,17 @@ enum TestClip {
             return (writer, (input, adaptor))
         }
         writer.startSession(atSourceTime: .zero)
+        // A pool of our own, never the adaptor's read frame by frame: the
+        // adaptor swaps that one a few frames in and the encoder frees the old
+        // pool while it can still be handed out (`WriterFramePool`).
+        guard let pool = WriterFramePool.make(for: adaptor) else { throw CocoaError(.fileWriteUnknown) }
 
         let frames = max(1, Int((seconds * Double(fps)).rounded()))
         for index in 0..<frames {
             while !input.isReadyForMoreMediaData {
                 try await Task.sleep(for: .milliseconds(5))
             }
-            guard let pool = adaptor.pixelBufferPool,
-                  let buffer = makePixelBuffer(pool: pool, size: size, index: index, bits: bits) else {
+            guard let buffer = makePixelBuffer(pool: pool, size: size, index: index, bits: bits) else {
                 continue
             }
             adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(index),

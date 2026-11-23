@@ -325,6 +325,8 @@ public enum SmoothedCopyWriter {
         }
         let total = max(0.001, recording.duration.seconds)
         var written = 0
+        // Our own pool, never the adaptor's (`WriterFramePool`).
+        let framePool = WriterFramePool.make(for: adaptor)
         while true {
             let next: HandedSample
             do {
@@ -349,7 +351,7 @@ public enum SmoothedCopyWriter {
                 }
                 try? await Task.sleep(for: .milliseconds(2))
             }
-            guard let pool = adaptor.pixelBufferPool else { giveUp(); throw WriteError.failed("no room for a frame") }
+            guard let pool = framePool else { giveUp(); throw WriteError.failed("no room for a frame") }
             var made: CVPixelBuffer?
             guard CVPixelBufferPoolCreatePixelBuffer(nil, pool, &made) == kCVReturnSuccess,
                   let ours = made else { giveUp(); throw WriteError.failed("no room for a frame") }

@@ -104,12 +104,13 @@ struct AnimatedExportWeighTests {
         writer.add(input)
         writer.startWriting()
         writer.startSession(atSourceTime: .zero)
+        let framePool = try #require(WriterFramePool.make(for: adaptor))
         for index in 0..<(seconds * fps) {
             while !input.isReadyForMoreMediaData {
                 try await Task.sleep(for: .milliseconds(5))
             }
             var buffer: CVPixelBuffer?
-            let pool = try #require(adaptor.pixelBufferPool)
+            let pool = framePool
             #expect(CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer) == kCVReturnSuccess)
             let frame = try #require(buffer)
             CVPixelBufferLockBaseAddress(frame, [])

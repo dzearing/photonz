@@ -564,6 +564,8 @@ public enum VideoExporter {
         // answering, this read waits for ever (`GuardedReads`).
         let reads = GuardedReads(label: "photonz.export.pictures", limit: readStallLimit)
         let handed = HandedPictures(reader: reader, output: videoOut, writer: writer)
+        // Our own pool, never the adaptor's (`WriterFramePool`).
+        let framePool = WriterFramePool.make(for: adaptor)
         while true {
             let next: HandedSample
             do {
@@ -589,7 +591,7 @@ public enum VideoExporter {
             }
             try await waitFor(input, writer: writer)
             guard let rendered = CMSampleBufferGetImageBuffer(sample),
-                  let pool = adaptor.pixelBufferPool,
+                  let pool = framePool,
                   let ours = copy(rendered, into: pool) else { break }
             let at = CMSampleBufferGetPresentationTimeStamp(sample)
             guard adaptor.append(ours, withPresentationTime: at) else { break }

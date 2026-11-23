@@ -2,6 +2,7 @@ import AVFoundation
 import AppKit
 import CoreGraphics
 import PhotonzCore
+import PhotonzMedia
 
 // The recording a video guide brings with it.
 //
@@ -128,13 +129,14 @@ enum TutorialSampleRecording {
         writer.startSession(atSourceTime: .zero)
 
         let total = Int(seconds * Double(framesPerSecond))
+        // Our own pool, never the adaptor's (`WriterFramePool`).
+        guard let framePool = WriterFramePool.make(for: adaptor) else { return false }
         for frame in 0..<total {
             // Driven by hand rather than by `requestMediaDataWhenReady`: this
             // is 160 small frames written once, and a callback would mean the
             // window opening on a file that is not finished yet.
             while !input.isReadyForMoreMediaData { Thread.sleep(forTimeInterval: 0.005) }
-            guard let pool = adaptor.pixelBufferPool,
-                  let buffer = makeBuffer(pool: pool,
+            guard let buffer = makeBuffer(pool: framePool,
                                           at: Double(frame) / Double(framesPerSecond),
                                           background: background)
             else { continue }

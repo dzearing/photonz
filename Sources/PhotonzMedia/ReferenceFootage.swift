@@ -152,6 +152,8 @@ public enum ReferenceFootage {
             return (writer, (input, adaptor))
         }
         let (input, adaptor) = made
+        // Our own pool, never the adaptor's (`WriterFramePool`).
+        let framePool = WriterFramePool.make(for: adaptor)
         writer.startSession(atSourceTime: .zero)
         let scene = SceneDrawing(footage: footage, size: spec.size)
         let frames = spec.recordingMS * spec.framesPerSecond / 1000
@@ -161,7 +163,7 @@ public enum ReferenceFootage {
                 if writer.status == .failed { throw Failure.wouldNotWrite(writer.error?.localizedDescription ?? "failed") }
                 try await Task.sleep(for: .milliseconds(2))
             }
-            guard let pool = adaptor.pixelBufferPool else { throw Failure.wouldNotWrite("no picture buffers") }
+            guard let pool = framePool else { throw Failure.wouldNotWrite("no picture buffers") }
             var made: CVPixelBuffer?
             CVPixelBufferPoolCreatePixelBuffer(nil, pool, &made)
             guard let buffer = made else { throw Failure.wouldNotWrite("no picture buffer") }

@@ -412,6 +412,8 @@ public enum DocumentMovieWriter {
         var wroteAny = false
         var last: CGImage?
         var lastBuffer: CVPixelBuffer?
+        // Our own pool, never the adaptor's (`WriterFramePool`).
+        let framePool = WriterFramePool.make(for: adaptor)
         for index in 0..<plan.frameCount {
             try Task.checkCancellation()
             // The document's moment, which is the file's own counted on from
@@ -424,13 +426,13 @@ public enum DocumentMovieWriter {
                 guard let picture else { continue }
                 last = picture
                 try await waitUntilHungry(input, writer: writer)
-                guard let pool = adaptor.pixelBufferPool,
+                guard let pool = framePool,
                       let drawn = pixelBuffer(from: picture, pool: pool, width: width, height: height)
                 else { continue }
                 buffer = drawn
             case .drawnInto(let draw):
                 // Drawn before waiting on the encoder, so the two overlap.
-                guard let pool = adaptor.pixelBufferPool else { continue }
+                guard let pool = framePool else { continue }
                 var fresh: CVPixelBuffer?
                 CVPixelBufferPoolCreatePixelBuffer(nil, pool, &fresh)
                 if let fresh, await draw(ms, fresh) {
