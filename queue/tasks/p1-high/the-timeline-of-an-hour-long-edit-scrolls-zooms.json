@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-23T23:50:44.723Z",
+  "updated": "2026-11-24T00:21:00.320Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-23T23:50:44.722Z",
-      "note": "... 60 earlier entries elided",
-      "elided": 60
-    },
-    {
-      "t": "2026-11-18T01:04:53.952Z",
-      "note": "Pass 11 verified: Scripts/test.sh green; 13 walks ok on the final probe build (the task's 10 incl. a-painted-gap-takes-a-right-click, a-cut-slid-under-a-still-pointer, transitions-where-clips-meet, plus an-editing-session, reference-edit-opens). speed-walk fails on scrub hunt frame lag worst (42, 40 against at most 36) with this change AND on a HEAD build (45 against 36, 16:53): pre-existing scrub, folded into a-long-edit-with-transitions-plays-scrubs-and-ed. Audit queue/audits/2026-11-17-timeline-hour-long-pass11-gridlines.json."
-    },
-    {
-      "t": "2026-11-18T01:04:54.029Z",
-      "note": "Still open, bars not reached: near Fit ~15 ms mean vs 8.3, scroll p95 ~13, edits (inspector). For the next pass: no single part of the lanes is worth more than ~1.5 ms; reaching 8.3 near Fit needs the lanes to draw far less per zoom frame, e.g. repaint a lane's canvas every other zoom frame and stretch the last painting across in between (a GPU transform, about half the paint and raster; costs a frame of slightly stretched corners and names, so it needs a filmed look before it is chosen), or lanes outside SwiftUI's graph entirely. Left rough, not filed: nothing new."
+      "t": "2026-11-24T00:21:00.319Z",
+      "note": "... 62 earlier entries elided",
+      "elided": 62
     },
     {
       "t": "2026-11-18T01:05:16.642Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-23T23:50:44.721Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T00:20:55.840Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T00:21:00.318Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-23T23:50:39.501Z",
+  "started": "2026-11-24T00:20:55.839Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
