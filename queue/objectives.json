@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-24T14:36:45.513Z",
+  "updated": "2026-11-24T14:14:41.000Z",
   "focus": "video-perf",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -135,16 +135,18 @@
       "children": [
         {
           "id": "video-perf",
-          "title": "Video editing and playback that stay fast at any length",
+          "title": "Video editing and playback that stay fast at any length and render with full fidelity",
           "stage": "now",
-          "note": "The user, 2026-11-12: \"With a moderately complex 6 minute video with transitions, perf tanked. I think we need to focus on perf so that editing and playing back video is top notch and scalable.\" Made the FOCUS that day (icons, icon-svg, stay now).",
+          "note": "The user, 2026-11-12: \"With a moderately complex 6 minute video with transitions, perf tanked. I think we need to focus on perf so that editing and playing back video is top notch and scalable.\" Made the FOCUS that day (icons, icon-svg, stay now). The user, 2026-11-24: \"this needs to be a really high priority. Fixing the perf in video. Also the quality... We need not just perf but high fidelity rendering that doesn't have jittery artifacts\". Quality is now part of this epic, equal to speed.",
           "success": [
             "A reference edit is kept in the repo and measured on every perf change: 6 minutes and longer (also 20 and 60 minute versions), 3 or more tracks, 30 or more cuts with transitions (dissolves and 3D ones), titles, zooms and a moving background, from screen recordings at Retina size.",
             "Playback at 1x plays every frame at the document rate (60 fps where the source is) with no dropped frames, through every transition, and sound never stutters, measured over the whole reference edit.",
             "Scrubbing and dragging the playhead show the frame under the pointer within one display frame, on any length of edit.",
             "Editing stays instant at any length: trim, move, blade, undo, add a transition, change a title each finish within one frame (16 ms) on the main thread, and the timeline scrolls and zooms at 120 Hz with hundreds of clips.",
             "Memory stays bounded: playing and scrubbing the 60 minute edit for 10 minutes never grows past a measured ceiling.",
-            "Export of the 6 minute reference edit takes at most its own length on this Mac, and every number above sits in an audit with before and after."
+            "Export of the 6 minute reference edit takes at most its own length on this Mac, and every number above sits in an audit with before and after.",
+            "Wide edits stay fast too: 50 to 100 tracks with 100 or more clips scroll in both directions at 120 Hz, play without dropped or wrong frames, and edit within one frame.",
+            "High fidelity: nothing that moves over time (text, shapes, images, zooms) jitters or snaps pixel by pixel; a letter never moves on its own apart from its word (under 0.1 px measured), playback frames match the export's frames, and no frame flashes, blanks or shows a stale picture, in playback or export."
           ],
           "spec": {
             "mocks": [

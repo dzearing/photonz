@@ -4,12 +4,12 @@
   "goal": "On a long edit the timeline is where a person spends their time, and it is the part most likely to slow down as clips pile up: every clip bar, thumbnail strip and waveform drawn again when anything moves. Make the timeline of the 60 minute reference edit, several hundred clips, scroll, zoom and follow a playing playhead at the display's 120 Hz, and keep an edit on it inside one frame.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 20,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T14:13:01.017Z",
+  "updated": "2026-11-24T14:13:03.670Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,13 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T14:13:01.016Z",
-      "note": "... 91 earlier entries elided",
-      "elided": 91
-    },
-    {
-      "t": "2026-11-20T18:02:16.052Z",
-      "note": "Pass 15 change: TimelineDrawnStretch(stepShare:) and stepShare(lanePixels:marginPixels:widestPixels:) (tested): the drawn stretch moves a whole window at a time where four windows of the lane plus the picture margin fit in TimelinePaintedPicture.widestPixels, else half (EditorState.timelineDrawnStepShare, reads timelineLaneWidth and the window's backing scale). Chose a whole window over 1.5 because 5.5 windows passes 16,000 px on the speed walk's 1463 pt lane and would fall back to a sliding Canvas. A/B on one build (throwaway switch): scroll mean 10.46/10.62 -> 9.46/9.49 ms, late 104-114 -> 55-56 of 360, worst unchanged; final build 8.98/9.88 (late 31/73, machine under load). Walks on the final build: 12 of 13 green (task's walks + an-editing-session, reference-edit-opens, timeline-zooms-out-past-the-end); clip-pictures-when-zoomed-in-walk fails ~1 run in 3 on one pan pass of 50.5-74 ms against 50, equally with the old half step (2 of 6 each way), so not this change; left on this task, which owns the walk. Scripts/test.sh exit 0. Looked at 2-scrolled-sc and the scrolled-more capture: pictures, names, cuts, waveforms, zoom row in place. Audit queue/audits/2026-11-20-timeline-hour-long-pass15-whole-window-step.json. Landed f01d1eeaa."
+      "t": "2026-11-24T14:13:03.669Z",
+      "note": "... 92 earlier entries elided",
+      "elided": 92
     },
     {
       "t": "2026-11-20T18:02:16.133Z",
@@ -506,6 +502,10 @@
     {
       "t": "2026-11-24T14:13:01.015Z",
       "note": "User 2026-11-24 reports scroll lag with 50 tracks and 100 clips: filed as an-edit-with-50-tracks-and-100-clips-scrolls-pla (wide edit, vertical scroll). Share the speed walk and painted-lane work with it."
+    },
+    {
+      "t": "2026-11-24T14:13:03.668Z",
+      "note": "seq 20 -> 40"
     }
   ],
   "started": "2026-11-24T07:34:01.198Z",

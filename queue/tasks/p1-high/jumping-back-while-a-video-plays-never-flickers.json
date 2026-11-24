@@ -4,12 +4,12 @@
   "goal": "When a video is playing and you click or scrub to an earlier spot on the timeline, the picture flickers for about half a second, as if it is swapping between two frames. It happens on a plain MP4 with one clip and no transitions. Whatever spot you jump to should show that frame, then play on from it, with no frame from anywhere else flashing in between.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 20,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-23T15:35:22.939Z",
-  "updated": "2026-11-23T15:35:23.062Z",
+  "updated": "2026-11-24T14:13:03.452Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-23: \"When I play back and scrub to a previous location, I'm seeing flickering!!! as if we're swaping between 2 frames or something for a brief moment\", then: \"i thought this was specific to transitions, but i just opened an mp4, played, clicked on a previous location in the timeline, and it started flickering for about half a sec\". Not reproduced by me; most likely Photonz Dev (built 2026-11-23 06:54).\n\nA shipped task came close: a-cross-fade-plays-smoothly-in-the-editor-the-wa (done 2026-11-21) fixed borrowed frames standing in, restarts onto the same key frame, and play starting before frames are ready, and verified scrubs from REST; its log says the after-a-scrub walk passes on old code too, so nothing guards this. This report is a jump WHILE playing. Suspects, not confirmed: after the jump the play pass still shows frames queued for the old position for a few ticks while the new pass decodes from its key frame (about half a second of GOP would match the user's half second), or the resting scrub read and the play pass both draw and alternate. Code: Sources/PhotonzCore/MoviePlayPass.swift, Sources/PhotonzCore/MovieFrameQueue.swift; recent hunt and budget commits cf12e8b00, b9cf61d13; the in-progress task picking-letting-go-of-and-cutting-a-clip-while-a and the hour-long timeline task are also landing nearby, bisect across them.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-11-23T15:35:23.061Z",
       "note": "seq 4070 -> 20"
+    },
+    {
+      "t": "2026-11-24T14:13:03.451Z",
+      "note": "seq 20 -> 10"
     }
   ]
 }

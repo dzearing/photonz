@@ -1,0 +1,35 @@
+{
+  "id": "text-that-zooms-or-scales-in-a-video-moves-as-on",
+  "title": "Text that zooms or scales in a video moves as one smooth piece, with no letter jittering on its own",
+  "goal": "In a video, when text zooms in or scales during a transition, each letter jumps by a pixel or two independently of the others, which is very distracting. Text, and anything else that scales, moves or rotates over time, should move as one smooth, solid piece from frame to frame, the way it does in Final Cut or After Effects, in playback and in the export.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:14:27.652Z",
+  "updated": "2026-11-24T14:14:27.776Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-24: \"this needs to be a really high priority. Fixing the perf in video. Also the quality. For example I had a video claude made where the text zoomed in, but the individaul characters jitted by a pixel or 2 independently, making it very distracting during the transition. We need not just perf but high fidelity rendering that doesn't have jittery artifacts\". The video was made through the Photonz MCP tools (so possibly a title's scale entrance, a zoom from apply_zooms, or a transition between clips with titles); I did not see it.\n\nCode: Sources/PhotonzRender/TextRasterizer.swift rasterize(_:size:scale:) builds a fresh 8-bit sRGB CGContext of round(size*scale) pixels and context.scaleBy(scale) (lines ~81-106); it never sets setAllowsFontSubpixelQuantization(false) / setShouldSubpixelQuantizeFonts(false) or setShouldSubpixelPositionFonts(true), so glyph origins likely snap to the pixel grid differently at each scale. Fix directions to weigh (runner decides, measured): turn off subpixel quantization and allow fractional glyph positioning; or rasterize text once at a size at or above its largest on-screen size and scale the bitmap with a good filter during the animation, re-rasterizing only at rest; or draw glyph outlines as paths. Watch the existing promise that 'a label does not change its line breaks at any scale' (TextRasterizer doc comment ~32-36): keep it.\n\nThe user made video quality part of the same top priority as video speed: this task sits with the video-perf tasks at the head of the queue.",
+  "acceptance": [
+    "Reproduced first at Next defaults, in playback and in export: a title whose text scales in (several sizes and fonts, including the built-in titles that scale or zoom), a zoom on a recording with text in it, and a camera zoom across a title. Export frame by frame and measure per letter: track each glyph's centre across frames and report how far each letter's motion departs from the smooth motion of the whole word (the jitter, in pixels). Today's build fails the bar below on the reproduction.",
+    "Find the cause before fixing and write it in the audit with evidence. Suspect, not confirmed: text is drawn afresh at each frame's scale (TextRasterizer.rasterize with a new `scale` per frame), and Core Text in a bitmap context rounds each glyph's position and advance to whole pixels (font subpixel quantization and positioning, hinting), so each letter snaps on its own as the size changes; the pixel size of the picture is also rounded per frame (TextRasterizer.swift:92-93). Other possibilities to rule in or out: layer positions rounded to whole pixels in the compositor, a text cache switching between two sizes, magnified renders at a stepped zoom.",
+    "Measured bar: across a 1 second scale from 50% to 100% at 1080p and at 4K, every letter's deviation from the word's smooth motion is under 0.1 pixel on every frame, and the word's own scale and position change monotonically frame to frame (no step backwards). The same bar holds for a slow 2% drift, where rounding shows most.",
+    "The same check runs on other moving things that can snap: shapes, images and outlines scaling, moving or rotating slowly; any that jitter are fixed here if they share the cause, or filed as follow-ups with their numbers.",
+    "Text stays sharp: a still title at rest is no softer than today (edge sharpness measured before and after), and the fix does not slow playback (frame time on a title-heavy edit before and after, perf note in the commit).",
+    "A unit test in PhotonzRender that fails on today's code: render a word at a sequence of slowly changing scales and assert the per glyph deviation stays under the bar. Plus a walk on a real title.",
+    "A reel under queue/audits/ (the zoom before and after, at full size and magnified 4x on a few letters, side by side) named in the audit for the user to look at. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:14:27.654Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-24T14:14:27.775Z",
+      "note": "seq 4070 -> 12"
+    }
+  ]
+}
