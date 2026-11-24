@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import PhotonzCore
+import QuartzCore
 
 // The transport, for a document that has time (`docs/design/video.md` §5).
 //
@@ -487,6 +488,9 @@ extension EditorState {
     /// the last frame it has and replaces it the instant the right one lands.
     func documentMomentChanged() {
         guard let document = shownDocument else { return }
+        // Draws whatever has landed too (`movieFrameLanded`).
+        landingWaits = false
+        landingDrawnAt = CACurrentMediaTime()
         // A timeline opened out carries its window along with the playhead, a
         // screenful at a time (`EditorState+TimelineZoom`). Free where the
         // playhead is already on screen, which is nearly every call.
@@ -495,7 +499,10 @@ extension EditorState {
         // which is what turns a pair of points into a duck you can hear
         // (`EditorState+Audio.swift`).
         followAudio()
-        var wanted = document.movieFrames(atTimeMS: documentTimeMS)
+        // Playing forwards, only what is seen is read (`MovieFramesSeen`).
+        let playsForward = isDocumentPlaying && playheadTravel != .backward
+        var wanted = playsForward ? document.movieFramesSeen(atTimeMS: documentTimeMS)
+            : document.movieFrames(atTimeMS: documentTimeMS)
         if !wanted.isEmpty {
             // ...and the stretch just ahead IN THE DIRECTION IT IS GOING, so
             // playing is decoding ahead of the playhead rather than behind it,
@@ -531,7 +538,8 @@ extension EditorState {
                 for step in 1...count {
                     let ahead = documentTimeMS + way * step * stride
                     guard ahead >= 0, ahead <= lastDocumentTimeMS else { break }
-                    wanted += document.movieFrames(atTimeMS: ahead)
+                    wanted += playsForward ? document.movieFramesSeen(atTimeMS: ahead)
+                        : document.movieFrames(atTimeMS: ahead)
                 }
             }
             // A hand hunting is also read a quarter second of its own pace
@@ -648,8 +656,36 @@ extension EditorState {
             askForMomentByRefresh(atOnce: false)
             return
         }
-        submit(document)
+        guard isDocumentPlaying else {
+            submit(document)
+            return
+        }
+        // Playing, the frames that land are drawn together, a refresh apart.
+        // With ten recordings on screen three hundred land a second, and each
+        // drawing the whole canvas on its own held the main thread so that
+        // the next ones landed late, and were drawn on their own in turn
+        // (2026-11-24). The first one to land is still drawn at once.
+        let now = CACurrentMediaTime()
+        let due = landingDrawnAt + Self.landingsApart
+        if now >= due {
+            landingDrawnAt = now
+            submit(document)
+        } else if !landingWaits {
+            landingWaits = true
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(due - now))
+                guard let self, landingWaits else { return }
+                landingWaits = false
+                guard isDocumentPlaying, let document = shownDocument else { return }
+                landingDrawnAt = CACurrentMediaTime()
+                submit(document)
+            }
+        }
     }
+
+    /// How far apart landing frames draw the canvas while it plays: a refresh
+    /// of a 120 Hz display.
+    static let landingsApart = 1.0 / 120
 
     // MARK: Reading the clock
 

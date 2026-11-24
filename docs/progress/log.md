@@ -23461,3 +23461,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Exporting over the open recording keeps what it was cut from (`keepRecordingPlayed`). History checks its recordings as it comes up.
 - Walks: `a-recording-replaced-on-disk-shows-its-new-frames-walk`, `a-recording-replaced-while-open-reloads-walk`, `exporting-over-the-open-recording-keeps-the-edit-walk`.
 - Open: music changed under an open window is not re-read; kept copies from exporting over are never cleared.
+
+## 2026-11-24 — Fifty tracks, a hundred clips (pass 1)
+
+- New wide reference edit (50 and 100 tracks, `ReferenceWideEdit.swift`), speed walk `--wide`, a vertical scroll measure, `addTrack`/`addClip` edits, and a `pictures` measure that holds every played frame against the export.
+- Flashes reproduced and fixed: ten clips up drew 833 clip frames wrong in nine seconds (284 from ahead), now 0; whole edit drops 0 of 3636. Zoom p95 66 -> 16 ms, along 17 -> 5, edits 20-53 -> 10-33, opening pass 627 -> 230 ms.
+- Not done: vertical scroll p95 14 ms (was 7, worse), zoom p95 16-19, undo of an added clip 33, blade 19, add track 17; the 100 track edit unmeasured, reel and export picture compare not made. Task left pending.

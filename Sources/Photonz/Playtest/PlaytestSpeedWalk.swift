@@ -10,6 +10,7 @@
 #if PHOTONZ_PLAYTEST
 import AppKit
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 import QuartzCore
 
@@ -44,6 +45,8 @@ final class SpeedWalkProbe {
         case .edits: return try await edits(editor, step.edits, fromMS: step.fromMS)
         case .idleBuilds: return try await idleBuilds(editor, seconds: step.seconds ?? 3, fromMS: step.fromMS)
         case .timeline: return try await timeline(editor)
+        case .pictures: return try await pictures(editor, fromMS: step.fromMS ?? 0, seconds: step.seconds ?? 6,
+                                                  keep: step.keep)
         case .memory: return try await memory(editor, step)
         case .export: return try await export(editor, step)
         case .compare: return try compare(step)
@@ -490,6 +493,25 @@ final class SpeedWalkProbe {
             guard editor.canSplitClipAtPlayhead else { throw Failure(description: "\(clip.name) cannot be cut there") }
             editor.splitClipAtPlayhead()
             return "\(clip.name) cut at \(SpeedWalk.clock(editor.documentTimeMS))"
+        case "addTrack":
+            editor.addTrack(.video)
+            return "a picture track added"
+        case "addClip":
+            guard let like = main.first(where: { ($0.time?.inMS ?? 0) > playhead + 2000 }), let movie = like.movie,
+                  let time = like.time else {
+                throw Failure(description: "no clip ahead of the playhead to add one like")
+            }
+            editor.perform { document in
+                var layer = like
+                layer = Layer(name: "Added", content: like.content, frame: like.frame)
+                layer.movie = movie
+                layer.time = LayerTime(inMS: time.inMS, outMS: time.outMS, sourceInMS: time.sourceInMS,
+                                       sourceLengthMS: movie.durationMS)
+                _ = document.land(layer, at: ClipLanding(target: .newTrack(at: 0), startMS: time.inMS,
+                                                         lengthMS: time.lengthMS, edit: .overwrite,
+                                                         trackName: "Added", allowed: true))
+            }
+            return "a recording on a track of its own at \(SpeedWalk.clock(time.inMS))"
         case "unpick":
             editor.selectLayer(nil)
             return "nothing picked"
@@ -598,9 +620,15 @@ final class SpeedWalkProbe {
             _ = MainThreadMeter.shared.takeBusy()
             var at: [Double] = []
             var octaves: [Int: [Double]] = [:]
+            var busy: [Double] = []
             defer {
-                busyPerFrame.append(String(format: "%@ %.2fms", label,
-                                           MainThreadMeter.shared.takeBusy() * 1000 / Double(max(1, at.count - 1))))
+                let sorted = busy.sorted()
+                if !sorted.isEmpty {
+                    busyPerFrame.append(String(format: "%@ mean %.2fms p95 %.2fms worst %.1fms (%d of %d over 8.3ms)", label,
+                                               sorted.reduce(0, +) / Double(sorted.count),
+                                               sorted[min(sorted.count - 1, Int(Double(sorted.count) * 0.95))],
+                                               sorted.last ?? 0, sorted.count { $0 > 8.34 }, sorted.count))
+                }
                 let built = ViewBuildMeter.shared.count(.clipBar)
                 barsPerFrame.append(String(format: "%@ %.0f", label, Double(built) / Double(max(1, at.count - 1))))
                 lanesPerFrame.append(String(format: "%@ %.2f", label, Double(ViewBuildMeter.shared.count(.trackLane))
@@ -637,6 +665,7 @@ final class SpeedWalkProbe {
                     : label + " " + (isHeld ? "held" : "fresh"))
                 await frames.next()
                 PassSampler.label = ""
+                busy.append(MainThreadMeter.shared.takeBusy() * 1000)
                 let now = (CACurrentMediaTime() - start) * 1000
                 octaves[octave, default: []].append(now - (at.last ?? 0))
                 if isHeld { held.append(now - (at.last ?? 0)) } else { fresh.append(now - (at.last ?? 0)) }
@@ -697,16 +726,212 @@ final class SpeedWalkProbe {
         }
         let viewsZoomed = Self.viewCensus(editor)
         editor.fitTimeline()
-        run.timeline = [zoomIn, zoomOut, scroll]
+        // Down through the tracks and back up, the wheel turned twelve points
+        // a refresh, when there are more of them than fit.
+        var upAndDown: [SpeedWalk.FrameTimes] = []
+        if let scroller = Self.tracksScroller(editor) {
+            await settle(editor, frames: frames)
+            let before = editor.timelineTracksScrollGeometry.offsetY
+            for (label, by) in [("tracks down", -12.0), ("tracks up", 12.0)] {
+                upAndDown.append(await film(label, moves: 360) { Self.turn(scroller, by: by) })
+                barsPerFrame.append("\(label) grid \(ViewBuildMeter.shared.count(.timelineGrid)) rows \(ViewBuildMeter.shared.count(.trackRow)) built")
+                if label == "tracks down" {
+                    barsPerFrame.append(String(format: "%@ went from %.0f to %.0fpt of %.0f", label, before,
+                                               editor.timelineTracksScrollGeometry.offsetY,
+                                               editor.timelineTracksScrollGeometry.contentHeight))
+                }
+            }
+        }
+        run.timeline = [zoomIn, zoomOut, scroll] + upAndDown
         return "views at fit: \(viewsAtFit); views zoomed in: \(viewsZoomed); clip bars built a frame: "
             + barsPerFrame.joined(separator: ", ") + "; lanes built a frame: " + lanesPerFrame.joined(separator: ", ")
             + "; paintings laid a frame: " + picturesPerFrame.joined(separator: ", ")
             + "; by zoom: " + byZoom.joined(separator: "; ") + "; mean frame: " + means.joined(separator: ", ")
             + "; main thread busy a frame: " + busyPerFrame.joined(separator: ", ") + heldSplit + movedSplit + "; "
-            + [zoomIn, zoomOut, nearFit, scroll].map {
+            + ([zoomIn, zoomOut, nearFit, scroll] + upAndDown).map {
             String(format: "%@: %d frames, median %.1fms, p95 %.1fms, worst %.0fms, %d late against %.1fms",
                    $0.label, $0.frames, $0.medianMS, $0.p95MS, $0.worstMS, $0.late, $0.refreshMS)
         }.joined(separator: "; ")
+    }
+
+    /// The scroll view the tracks are in, when they do not all fit.
+    static func tracksScroller(_ editor: EditorState) -> NSScrollView? {
+        let geometry = editor.timelineTracksScrollGeometry
+        guard geometry.contentHeight > geometry.viewportHeight + 1, let root = editor.hostWindow?.contentView else { return nil }
+        var found: [NSScrollView] = []
+        func walk(_ view: NSView) {
+            if let scroll = view as? NSScrollView, let document = scroll.documentView,
+               abs(document.frame.height - geometry.contentHeight) < 2,
+               abs(scroll.frame.height - geometry.viewportHeight) < 2 { found.append(scroll) }
+            view.subviews.forEach(walk)
+        }
+        walk(root)
+        return found.first
+    }
+
+    /// One turn of a trackpad's wheel over it; false once it can go no further.
+    static func turn(_ scroller: NSScrollView, by points: Double) -> Bool {
+        let clip = scroller.contentView
+        let room = max(0, (scroller.documentView?.frame.height ?? 0) - clip.bounds.height)
+        let at = clip.bounds.origin.y
+        if points < 0 ? at >= room - 0.5 : at <= 0.5 { return false }
+        guard let wheel = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
+                                  wheel1: Int32(points), wheel2: 0, wheel3: 0) else { return false }
+        wheel.setIntegerValueField(.scrollWheelEventIsContinuous, value: 1)
+        guard let event = NSEvent(cgEvent: wheel) else { return false }
+        scroller.scrollWheel(with: event)
+        return true
+    }
+
+    // MARK: - Every picture played
+
+    /// Plays a stretch from rest and holds every picture the canvas is handed
+    /// against one of its moment drawn offscreen the way an export draws it:
+    /// what each wrong picture got wrong, clip by clip (a frame missing, one
+    /// held from before, one from somewhere else), is the line.
+    private func pictures(_ editor: EditorState, fromMS: Int, seconds: Double, keep: String?) async throws -> String {
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "there is no video in this window to play")
+        }
+        struct Look { let moment: Int; let picture: CGImage; let drawn: PhotonzDocument; let present: Set<UUID>; let at: Double }
+        let frames = try frames(editor)
+        defer { frames.invalidate() }
+        editor.pauseDocument()
+        editor.scrubDocument(toMS: fromMS)
+        await settle(editor, frames: frames)
+        let width = 480
+        // Shrunk off the main thread: on it, shrinking was a quarter of what
+        // the main thread did while this watched (2026-11-24). A picture holds
+        // its surface until it is let go, so the renderer cannot draw over it.
+        final class Shrunk: @unchecked Sendable {
+            // Unchecked: every touch of `pictures` is on `queue`.
+            let queue = DispatchQueue(label: "photonz.walk.shrink", qos: .utility)
+            var pictures: [Int: CGImage] = [:]
+        }
+        struct Handed: @unchecked Sendable { let image: CGImage }
+        let shrunk = Shrunk()
+        var told: [(moment: Int, drawn: PhotonzDocument, present: Set<UUID>, at: Double)] = []
+        editor.playtestPictureTap = { image, moment, drawn, present in
+            let index = told.count, handed = Handed(image: image)
+            told.append((moment, drawn, present, CACurrentMediaTime()))
+            shrunk.queue.async { shrunk.pictures[index] = Self.small(handed.image, width: width) }
+        }
+        defer { editor.playtestPictureTap = nil; editor.playtestTapPresent = [:] }
+        editor.playDocument(rate: 1)
+        let start = CACurrentMediaTime()
+        var heldPasses: [String] = []
+        var nextLook = 1.0
+        while editor.isDocumentPlaying, editor.documentTimeMS < fromMS + Int(seconds * 1000),
+              CACurrentMediaTime() - start < seconds + 4 {
+            await frames.next()
+            // Where every read pass has got to, once a second.
+            if CACurrentMediaTime() - start >= nextLook {
+                nextLook += 1
+                let passes = editor.movieFrames.playtestPasses.values.flatMap { $0 }
+                heldPasses.append("\(SpeedWalk.clock(editor.documentTimeMS)): \(passes.count) passes: " + passes.joined(separator: ", "))
+            }
+        }
+        editor.pauseDocument()
+        editor.playtestPictureTap = nil
+        let all = await withCheckedContinuation { done in
+            shrunk.queue.async { done.resume(returning: shrunk.pictures) }
+        }
+        let looks = told.enumerated().compactMap { index, one in
+            all[index].map { Look(moment: one.moment, picture: $0, drawn: one.drawn, present: one.present, at: one.at) }
+        }
+        guard let first = looks.first else { throw Failure(description: "the canvas was handed no picture") }
+        let height = first.picture.height
+        let export = DocumentFrames(document: document, store: editor.store,
+                                    movieURLs: MovieLibrary.shared.urls(in: document),
+                                    size: CGSize(width: width, height: height), streaming: true)
+        defer { export.putTheStoreBack() }
+        var made: [Int: CGImage] = [:]
+        for moment in Set(looks.map(\.moment)).sorted() {
+            if let one = await export.frame(atMS: moment) { made[moment] = Self.small(one, width: width) }
+        }
+        var wrong: [(Look, Double, String)] = []
+        var causes: [String: Int] = [:]
+        // Which clips were wrong, over what stretch, and by how much at worst.
+        var byClip: [String: (count: Int, from: Int, to: Int, worst: Int)] = [:]
+        var differences: [Double] = []
+        var longestGap = 0.0
+        for (index, look) in looks.enumerated() {
+            if index > 0 { longestGap = max(longestGap, (look.at - looks[index - 1].at) * 1000) }
+            let one: [UInt8] = Self.bytes(of: look.picture)
+            let two: [UInt8] = made[look.moment].map { Self.bytes(of: $0) } ?? []
+            var sum = 0
+            if one.count == two.count {
+                var at = 0
+                while at + 3 < one.count {
+                    for channel in 0..<3 { sum += abs(Int(one[at + channel]) - Int(two[at + channel])) }
+                    at += 4
+                }
+            }
+            let difference = one.count == two.count && !one.isEmpty ? Double(sum) / Double(one.count / 4 * 3) : 255
+            differences.append(difference)
+            let clips = document.movieFramesSeen(atTimeMS: look.moment).map { request -> (String, Int, Int?) in
+                let who = document.layer(id: request.layerID)?.name ?? "?"
+                let wanted = request.movie.frameIndex(atSourceMS: request.sourceMS)
+                guard let layer = look.drawn.allLayers.first(where: { $0.id == request.layerID }), layer.isVisible,
+                      case .image(let ref) = layer.content, look.present.contains(ref.id) else { return (who, wanted, nil) }
+                return (who, wanted, request.movie.frameIndex(ofFrameID: ref.id))
+            }
+            let off = clips.filter { $0.1 != $0.2 }
+            for clip in off {
+                let cause = clip.2.map { $0 < clip.1 ? "a frame held (\($0 == clip.1 - 1 ? "one" : "more") behind)" : "a frame from ahead" } ?? "nothing drawn"
+                causes[cause, default: 0] += 1
+                let was = byClip[clip.0] ?? (0, look.moment, look.moment, 0)
+                byClip[clip.0] = (was.count + 1, was.from, look.moment, max(was.worst, clip.2.map { abs($0 - clip.1) } ?? 999))
+            }
+            // Within the difference an H.264 read and an 8 bit round trip make.
+            if difference > 1.5 {
+                wrong.append((look, difference, off.map { "\($0.0) \($0.2.map(String.init) ?? "none") for \($0.1)" }.joined(separator: ", ")))
+            }
+        }
+        if let keep {
+            let rows = wrong.prefix(12).map { look, _, _ in (look.picture, made[look.moment]) }
+            if !rows.isEmpty, let space = CGColorSpace(name: CGColorSpace.sRGB),
+               let sheet = CGContext(data: nil, width: 2 * width + 8, height: rows.count * (height + 8), bitsPerComponent: 8,
+                                     bytesPerRow: 0, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+                for (index, row) in rows.enumerated() {
+                    let y = sheet.height - (index + 1) * (height + 8)
+                    sheet.draw(row.0, in: CGRect(x: 0, y: y, width: width, height: height))
+                    if let export = row.1 { sheet.draw(export, in: CGRect(x: width + 8, y: y, width: width, height: height)) }
+                }
+                if let image = sheet.makeImage() {
+                    try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?
+                        .write(to: out.appendingPathComponent(keep))
+                }
+            }
+        }
+        let due = Int(Double((looks.last?.moment ?? fromMS) - first.moment) / Double(MovieRef.frameStepMS)) + 1
+        return String(format: "played %@ to %@, every picture kept: %d pictures for %d frames due, %d differ from the export by more than 1.5 of 255 (worst %.1f), longest wait between two %.0fms; clips drawn wrong: ",
+                      SpeedWalk.clock(fromMS), SpeedWalk.clock(looks.last?.moment ?? fromMS), looks.count, due, wrong.count,
+                      differences.max() ?? 0, longestGap)
+            + (causes.isEmpty ? "none" : causes.sorted { $0.value > $1.value }.map { "\($0.value) \($0.key)" }.joined(separator: ", "))
+            + "; by clip: " + byClip.sorted { $0.value.count > $1.value.count }.prefix(14).map {
+                "\($0.key) \($0.value.count) (\(SpeedWalk.clock($0.value.from)) to \(SpeedWalk.clock($0.value.to)), up to \($0.value.worst) off)"
+            }.joined(separator: ", ")
+            + "; passes: " + heldPasses.joined(separator: " | ")
+            + (wrong.isEmpty ? "" : "; " + wrong.prefix(10).map { String(format: "%@ diff %.1f [%@]", SpeedWalk.clock($0.0.moment), $0.1, $0.2) }.joined(separator: "; "))
+    }
+
+    /// A picture on black, `width` across.
+    private nonisolated static func small(_ image: CGImage, width: Int) -> CGImage? {
+        let height = max(1, Int((Double(image.height) * Double(width) / Double(max(1, image.width))).rounded()))
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: width * 4, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return nil }
+        context.setFillColor(CGColor(gray: 0, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.interpolationQuality = .medium
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return context.makeImage()
+    }
+
+    private static func bytes(of image: CGImage) -> [UInt8] {
+        (image.dataProvider?.data as Data?).map { [UInt8]($0) } ?? []
     }
 
     /// How many AppKit views the window holds, by class, most first: a

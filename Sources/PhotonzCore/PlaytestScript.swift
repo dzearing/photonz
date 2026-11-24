@@ -295,6 +295,9 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// Mac has none, and opened as a person opens a project. The edit every
     /// video speed walk measures against. Nil opens nothing.
     public var referenceEdit: Int?
+    /// The walk starts with the wide reference edit open instead
+    /// (`ReferenceEdit.buildWide`), this many tracks tall.
+    public var wideEdit: Int?
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
@@ -304,8 +307,9 @@ public struct PlaytestSetup: Sendable, Equatable {
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
                 askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false, askMac: Int? = nil,
                 askSearch: Int? = nil, askReplies: [String] = [], askSeconds: Int? = nil,
-                referenceEdit: Int? = nil) {
+                referenceEdit: Int? = nil, wideEdit: Int? = nil) {
         self.referenceEdit = referenceEdit
+        self.wideEdit = wideEdit
         self.askReplies = askReplies
         self.askMac = askMac
         self.askSeconds = askSeconds
@@ -333,7 +337,7 @@ public struct PlaytestSetup: Sendable, Equatable {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
             && flags.isEmpty && timelineOpen == nil && !timelineRoom && !screenWideWindow && !front && !behindLook && !shown && history == nil && !timedWithoutMarkers
             && !askModelMissing && askModelsOnly == nil && !offline && !agentHome && askMac == nil && askSearch == nil && askReplies.isEmpty
-            && askSeconds == nil && referenceEdit == nil
+            && askSeconds == nil && referenceEdit == nil && wideEdit == nil
     }
 
     /// The kind of each capture in a generated history, newest first: every
@@ -344,7 +348,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     /// The known keys, named in the error when a walk uses another one.
     static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "askSeconds", "behindLook", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "referenceEdit", "scratch", "screenWideWindow", "shown",
-                            "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
+                            "timedWithoutMarkers", "timelineOpen", "timelineRoom", "wideEdit"]
 
     /// The word a walk writes in `forget` to start from a machine that has
     /// never run Photonz.
@@ -433,6 +437,17 @@ public struct PlaytestSetup: Sendable, Equatable {
             }
             reference = number.intValue
         }
+        var wide: Int?
+        if let raw = fields["wideEdit"], !(raw is NSNull) {
+            guard let number = raw as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+                  Double(number.intValue) == number.doubleValue, ReferenceEdit.wideTracks.contains(number.intValue),
+                  reference == nil else {
+                throw PlaytestScriptError.invalidSetup(
+                    field: "wideEdit", reason: "is how many tracks tall the wide reference edit is, and goes without "
+                        + "referenceEdit: one of " + ReferenceEdit.wideTracks.map(String.init).joined(separator: ", "))
+            }
+            wide = number.intValue
+        }
         var replies: [String] = []
         if let raw = fields["askReplies"], !(raw is NSNull) {
             guard let list = raw as? [Any], list.allSatisfy({ $0 is [String: Any] }),
@@ -464,7 +479,7 @@ public struct PlaytestSetup: Sendable, Equatable {
                   askSearch: search,
                   askReplies: replies,
                   askSeconds: seconds,
-                  referenceEdit: reference)
+                  referenceEdit: reference, wideEdit: wide)
     }
 
     private static func count(_ raw: Any?, field: String) throws -> Int? {

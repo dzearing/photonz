@@ -1,0 +1,31 @@
+{
+  "feature": "Fifty tracks and a hundred clips, first pass",
+  "epic": "video-perf",
+  "summary": "With ten recordings on screen at once, every one now shows its own frame: no flashes. Zooming, scrolling along and editing a 50 track timeline cost a half to a third of what they did. Scrolling up and down through the tracks is not finished.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe with Scripts/perf/speed-walk.sh --wide 50; the numbers are Scripts/perf/baselines/wide-50-before.json and wide-50.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open Reference Edit 50 tracks.photonz with File > Open.", "shot": "2026-11-24-wide-edit-1-sc.png" },
+    { "do": "Put the playhead at 0:58 and press Space: ten recordings come on at 1:00.", "shot": "2026-11-24-wide-edit-ten-up.png" },
+    { "do": "Watch for a window that jumps to another picture and back.", "shot": "2026-11-24-wide-edit-before-sheet.png" },
+    { "do": "Pinch the timeline in and out." },
+    { "do": "Scroll the timeline sideways while zoomed in." },
+    { "do": "Scroll down through all the tracks and back up." },
+    { "do": "While it plays, trim a clip, move one, press Command B, then undo each." }
+  ],
+  "evaluate": [
+    "Does anything still flash while the ten recordings play together?",
+    "Does zooming and scrolling sideways feel smooth now?",
+    "Does scrolling down through the tracks feel as smooth as before, better or worse?"
+  ],
+  "rough": [
+    "Flashes, the same stretch (0:58 to 1:07) before and after: clip frames drawn wrong 833 (549 held behind, 284 from ahead of their time) to 0. Whole edit played: 1 of 3636 frames dropped to 0.",
+    "Why it flashed: each frame that landed redrew the whole canvas on its own (about 300 a second), so the main thread fell behind; only eight read passes could hold a place and a waiting one kept it; one read size per recording restarted all of its passes when a clip of another size came on; and the frame budget had four spare frames for all the passes together, so eleven threw away frames they had just read and started over from a key frame.",
+    "The decoder is at its limit with ten full Retina 60 fps recordings (they need 600 frames a second, this Mac decodes about 630), so with more than three on screen it reads only the frames others are made from. A frame can then be the one 17 ms before. Pictures differ from the export by at most 2.4 of 255, which is that and the preview reading small clips at a smaller size.",
+    "Main thread a frame, before and after (bar: 95 percent under 8.3 ms, none over 16): zoom in p95 66 to 15.7, worst 111 to 20.8; zoom out p95 61 to 18.6, worst 138 to 57.6; along p95 17 to 5.3, worst 48 to 12.0 (bar met).",
+    "Scrolling up and down got worse and is not finished: p95 7.3 to 14.3, worst 16.8 to 17.4, 29 of 190 frames late against 1. Only rows near the screen are built now, and building them as they come in is the cost. Mean is unchanged, 3.6 ms.",
+    "Longest pass per edit (bar 16 ms): add track 34 to 17, undo 27 to 11, add clip 35 to 15, its undo 53 to 33, move 25 to 14, trim 23 to 11, undo 28 to 10, pick from nothing 20 to 11, blade 31 to 19. Over the bar still: add track, undo of an added clip, blade.",
+    "Opening: longest main thread pass 627 to 230 ms, 1.4 to 0.8 s. Memory over a minute of playing and scrubbing: 2032 to 1792 MB at the end, peak 2421 to 2149.",
+    "No mock covers a 50 track timeline. The 100 track edit is written but not measured, the screen capture of scrolling and playing is not filmed, and the export was not compared picture by picture: a test shows every layer handed to the renderer is equal before and after at every moment tried, on this edit and the 6 minute one."
+  ]
+}

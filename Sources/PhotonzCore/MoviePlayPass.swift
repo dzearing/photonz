@@ -57,6 +57,28 @@ public enum MoviePlayPass {
     /// The most passes one recording reads at once: the stretch playing, the
     /// shot coming in over it during a dissolve, and the next cut.
     public static let passesPerRecording = 3
+    /// ...or, with more clips of it on screen or coming at once than that
+    /// leaves room for, this many opened ahead beside the ones playing. Ten clips cut
+    /// from four recordings are three or four passes a recording before
+    /// anything is coming, and a clip starting then had no pass opened for
+    /// it: its first frames stood in from another clip (2026-11-24).
+    public static let comingBesideMany = 4
+
+    /// How many passes a recording with `playing` places on screen may hold.
+    public static func passLimit(playing: Int) -> Int {
+        max(passesPerRecording, playing + comingBesideMany)
+    }
+
+    /// Whether a pass read `width` pixels wide does for a place that needs
+    /// `needed`: as wide, and not so much wider that it is worth reading
+    /// again smaller. Nil needs nothing in particular. Two clips of one
+    /// recording at different sizes each have their own; until 2026-11-24 the
+    /// recording had one, and a small clip starting over a full-screen one
+    /// stopped every pass it had.
+    public static func serves(width: Int, needed: Int?) -> Bool {
+        guard let needed, width > 0 else { return true }
+        return width >= needed - 1 && Double(width) <= Double(needed) * 1.5
+    }
     /// How many grid frames after the one under the playhead a clock starting
     /// with sound waits to have in hand (`PhotonzDocument.readyToStartPlaying`).
     /// The frame under the playhead is often there already (a scrub read it),
@@ -250,6 +272,28 @@ public enum MoviePlayPass {
         MoviePlayBackward.keeps(frame: frame, speed: speed)
     }
 
+    // MARK: More than the decoder can read
+
+    /// How many full Retina screens (`fullScreen` pixels) playing at once
+    /// this Mac reads every frame of, with room to start passes up beside
+    /// them. Past it, the passes opened read only the frames others are
+    /// decoded from while it lasts. An M4 Max decodes about 630 frames a
+    /// second of 3456x2234 H.264 however many read at once, and ten 60 fps
+    /// recordings on screen ask for 600 before one is started up
+    /// (2026-11-24): everything fell behind. Skipping, the same decoder
+    /// covers about 1200, and a frame skipped shows the one 17 ms of the
+    /// recording before it, which a grid of 30 a second mostly never draws.
+    public static let screensReadWhole = 3.0
+    static let fullScreen = 3456.0 * 2234.0
+
+    /// How many full Retina screens' worth of recording `places` read.
+    public static func load(_ places: [MovieFrameRequest]) -> Double {
+        places.reduce(0) { $0 + $1.movie.pixelSize.width * $1.movie.pixelSize.height } / fullScreen
+    }
+
+    /// Whether passes skip the frames nothing is decoded from at this load.
+    public static func skipsUnreferenced(load: Double) -> Bool { load > screensReadWhole }
+
     // MARK: More than one pass in a recording
 
     /// A pass reading a recording: what it covers, the first frame it has not
@@ -259,12 +303,15 @@ public enum MoviePlayPass {
         public var reached: Int
         public var playhead: Int
         public var reach: Int
+        /// How wide it reads its frames; 0 when nobody asks.
+        public var width = 0
 
-        public init(running: ClosedRange<Int>, reached: Int, playhead: Int, reach: Int) {
+        public init(running: ClosedRange<Int>, reached: Int, playhead: Int, reach: Int, width: Int = 0) {
             self.running = running
             self.reached = reached
             self.playhead = playhead
             self.reach = reach
+            self.width = width
         }
     }
 
@@ -294,14 +341,19 @@ public enum MoviePlayPass {
     ///
     /// `keyFrames` are the recording's, when known: a pass fallen behind with
     /// no key frame between it and the playhead is kept (`serves`).
+    ///
+    /// `needed` says how wide the place on a frame has to be read, nil for one
+    /// any width does for (`serves(width:needed:)`).
     public static func plan(now: [Int], coming: [Int], passes: [Running],
                             inHand: (Int) -> Bool, speed: Double = 1,
-                            keyFrames: MovieKeyFrames? = nil) -> Plan {
+                            keyFrames: MovieKeyFrames? = nil,
+                            needed: (Int) -> Int? = { _ in nil }) -> Plan {
         var plan = Plan()
         let stride = MoviePlayBackward.stride(speed: speed)
         for frame in unique(now) {
             let serving = passes.indices.filter {
                 plan.aim[$0] == nil
+                    && serves(width: passes[$0].width, needed: needed(frame))
                     && serves(running: passes[$0].running, reached: passes[$0].reached,
                               playhead: frame, inHand: inHand, speed: speed, keyFrames: keyFrames)
             }
@@ -320,13 +372,14 @@ public enum MoviePlayPass {
         }
         for frame in unique(coming) {
             let kept = plan.aim.contains { index, aim in
-                reaches(frame, running: passes[index].running, reached: passes[index].reached,
+                serves(width: passes[index].width, needed: needed(frame)) && reaches(frame, running: passes[index].running, reached: passes[index].reached,
                         aim: aim, inHand: inHand, stride: stride)
             }
             let opening = plan.open.contains { $0.playhead <= frame && frame <= $0.playhead + $0.reach }
             if kept || opening { continue }
             if let waiting = passes.indices.first(where: {
                 plan.aim[$0] == nil
+                    && serves(width: passes[$0].width, needed: needed(frame))
                     && reaches(frame, running: passes[$0].running, reached: passes[$0].reached,
                                aim: Aim(playhead: passes[$0].playhead, reach: passes[$0].reach),
                                inHand: inHand, stride: stride)
@@ -334,7 +387,7 @@ public enum MoviePlayPass {
                 plan.aim[waiting] = Aim(playhead: passes[waiting].playhead, reach: passes[waiting].reach)
                 continue
             }
-            guard plan.aim.count + plan.open.count < passesPerRecording else { break }
+            guard plan.aim.count + plan.open.count < passLimit(playing: unique(now).count) else { break }
             plan.open.append(Aim(playhead: frame, reach: prime(speed: speed)))
         }
         return plan
@@ -361,10 +414,20 @@ public enum MoviePlayPass {
     /// `base`, and room for every frame each pass reads ahead plus a few
     /// behind, so a frame read for a shot coming in is never let go to make
     /// room for the shot going out.
+    ///
+    /// The frames just shown are kept for each pass, not a few for them all:
+    /// four between eleven passes were let go for frames just read ahead,
+    /// whose pass then started over from its key frame, so every clip on
+    /// screen started over every half second (2026-11-24). `behindKept`
+    /// frames behind count nearer than the furthest one ahead
+    /// (`MovieFrameQueue.behindWeight`), so that is how many each has.
     public static func frameBudget(base: Int, reaches: [Int]) -> Int {
         guard reaches.count > 1 else { return base }
-        return max(base, reaches.reduce(0) { $0 + $1 + 1 } + fallenBehindFrames)
+        return max(base, reaches.reduce(0) { $0 + $1 + 1 + behindKept } + fallenBehindFrames)
     }
+
+    /// How many frames just shown each pass has room for in the budget.
+    static let behindKept = 2
 }
 
 /// What a playing playhead needs read in each recording: the frames under it
@@ -456,7 +519,7 @@ public struct MoviePlayLookahead: Sendable {
 
     private mutating func frames(in document: PhotonzDocument, atMS ms: Int) -> [MovieFrameRequest] {
         looks += 1
-        return document.movieFrames(atTimeMS: ms)
+        return document.movieFramesSeen(atTimeMS: ms)
     }
 
     /// The first frame of the stretch `request` (seen at `index`, at

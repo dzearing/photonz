@@ -228,7 +228,21 @@ extension PhotonzDocument {
         guard hasTime else { return moved(toMotionTimeMS: ms) }
         let moment = min(max(0, ms), lastDrawableTimeMS)
         var shown = self
-        shown.layers = layers.map { $0.shownTree(atTimeMS: moment, framesInHand: framesInHand) }
+        // What is off screen then is switched off and otherwise left alone,
+        // in the one copy of the list this makes: with a hundred clips ten of
+        // which are on, working every one of them out, its title's parts and
+        // all, and copying the list again at each step below, was two thirds
+        // of what drawing a moment cost the main thread (2026-11-24). Except
+        // a clip a transition borrows, whose look is drawn, and any under a
+        // mask, which may be cut to one that is off.
+        let working = layersWorkedOut(atTimeMS: moment)
+        for index in shown.layers.indices {
+            if working[index] {
+                shown.layers[index] = shown.layers[index].shownTree(atTimeMS: moment, framesInHand: framesInHand)
+            } else {
+                shown.layers[index].isVisible = false
+            }
+        }
         // A track switched off, or outsoloed, takes its clips off screen the
         // way their own stretch ending does (`DocumentTracks.swift`).
         let offTrack = layersOffScreenByTrack()
@@ -246,8 +260,8 @@ extension PhotonzDocument {
         if hasChartSets {
             shown.layers = shown.layers.map { chartsShown($0, atDocumentTimeMS: moment) }
         }
-        shown.layers = shown.layers.map {
-            $0.movedTree(atDocumentTimeMS: moment, documentCycleMS: cycle)
+        for index in shown.layers.indices where working[index] {
+            shown.layers[index] = shown.layers[index].movedTree(atDocumentTimeMS: moment, documentCycleMS: cycle)
         }
         // ...and the camera is where its keys have it, on the same clock
         // (`SceneCamera.shown`).
@@ -262,13 +276,17 @@ extension PhotonzDocument {
         // the fade is (`PictureFade.swift`). After the motions, so the fade
         // takes down whatever opacity its keys left it at.
         if hasPictureFades {
-            shown.layers = shown.layers.map { $0.withPictureFadeShown(atDocumentTimeMS: moment) }
+            for index in shown.layers.indices where working[index]
+                && (shown.layers[index].pictureFade != nil || shown.layers[index].isGroup) {
+                shown.layers[index] = shown.layers[index].withPictureFadeShown(atDocumentTimeMS: moment)
+            }
         }
         // ...and a clip inside a zoom shows the part of its picture the zoom
         // is on (`ClipZoom.swift`): its box stays put, the picture in it moves.
         if hasZooms {
-            shown.layers = shown.layers.map {
-                $0.withZoomShown(atDocumentTimeMS: moment, origin: .zero, canvas: canvasSize)
+            for index in shown.layers.indices where working[index] {
+                shown.layers[index] = shown.layers[index].withZoomShown(atDocumentTimeMS: moment, origin: .zero,
+                                                                        canvas: canvasSize)
             }
         }
         // ...and a clip that shows its clicks draws the effect of each one
@@ -282,8 +300,11 @@ extension PhotonzDocument {
         // (`ClipTransitions.swift`). Last, so a layer told to fade over the
         // shot is faded and THEN dissolved, rather than the dissolve being
         // overwritten by the fade.
-        shown.layers = shown.layers.flatMap {
-            $0.withTransitionDrawn(atTimeMS: moment, framesInHand: framesInHand, projection: projection)
+        // Only a clip mid-transition, or something holding one, can change.
+        if shown.layers.indices.contains(where: { shown.layers[$0].mayDrawATransition(atTimeMS: moment) }) {
+            shown.layers = shown.layers.flatMap {
+                $0.withTransitionDrawn(atTimeMS: moment, framesInHand: framesInHand, projection: projection)
+            }
         }
         // ...and so does a cut between two clips (`EditPointTransitions.swift`).
         if hasEditPointTransitions {
@@ -307,6 +328,19 @@ extension PhotonzDocument {
 
 extension PhotonzDocument {
 
+    /// Which of the layers a moment has to work out (`drawn(atTimeMS:)`), in
+    /// the order they stand: the ones on screen then, any something on screen
+    /// is drawn out of, and any whose keys or parts move, since where they
+    /// stand is read off the drawn document past their end too.
+    private func layersWorkedOut(atTimeMS ms: Int) -> [Bool] {
+        if layers.contains(where: { $0.style.matte != nil }) { return layers.map { _ in true } }
+        let borrowed = hasEditPointTransitions ? Set(editPointMoments(atMS: ms).map(\.borrowed)) : []
+        return layers.map {
+            $0.time == nil || $0.isGroup || !($0.motions ?? []).isEmpty
+                || $0.isOnScreen(atTimeMS: ms) || borrowed.contains($0.id)
+        }
+    }
+
     /// The document with everything that is not on screen at `ms` hidden and
     /// nothing else changed: what the canvas clicks against, so a caption or
     /// a title still to come never takes a click meant for what is showing.
@@ -326,6 +360,12 @@ extension PhotonzDocument {
 }
 
 extension Layer {
+
+    /// Whether `withTransitionDrawn` can change this layer at a moment.
+    fileprivate func mayDrawATransition(atTimeMS ms: Int) -> Bool {
+        guard isVisible else { return false }
+        return isGroup || (movie != nil && clipMoment(atTimeMS: ms)?.isMidTransition == true)
+    }
 
     /// This layer and everything inside it, with whatever is not on screen at
     /// this moment hidden. A layer already hidden by hand stays hidden: the

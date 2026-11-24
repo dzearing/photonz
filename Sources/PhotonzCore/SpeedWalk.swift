@@ -1015,16 +1015,18 @@ public enum SpeedCompare {
 /// `form` ("short" or "long") on any of them names the run in its file.
 public struct PlaytestSpeedMeasure: Equatable, Sendable {
     public enum Measure: String, CaseIterable, Sendable {
-        case play, scrub, edits, idleBuilds, timeline, memory, export, compare
+        case play, scrub, edits, idleBuilds, timeline, pictures, memory, export, compare
     }
     public static let speeds = ["slow", "medium", "fling", "hunt"]
     public static let edits = ["trim", "move", "blade", "undo", "transition", "title"]
     /// Edits a walk may name that change what the ones after it act on, so
     /// they are never made unless named: `pick` picks the recording under
     /// the playhead and keeps it picked, as a person editing a clip has it;
+    /// `addTrack` adds a picture track and `addClip` a recording on one of its
+    /// own ahead of the playhead, both of which leave the edit taller;
     /// `unpick` picks nothing, so the next `pick` is a click on a clip with
     /// nothing picked, the one that builds the panel's sections from nothing.
-    public static let namedOnlyEdits = ["pick", "unpick"]
+    public static let namedOnlyEdits = ["pick", "unpick", "addTrack", "addClip"]
     /// Timed exactly like an edit and changing nothing: what the main thread
     /// does in the same second and a half of playing with no edit made, so
     /// an edit's number can be told from the floor it stands on. Measured on
@@ -1040,7 +1042,7 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     /// pick from a clip the panel already describes.
     public static func tallyName(_ edit: String, picked: Bool, fromNothing: Bool = false) -> String {
         if edit == "pick", fromNothing { return "pick, from nothing" }
-        return picked && !namedOnlyEdits.contains(edit) ? "\(edit), picked" : edit
+        return picked && edit != "pick" && edit != "unpick" ? "\(edit), picked" : edit
     }
 
     /// Where a hand drags the playhead from and to at each speed. The three
@@ -1078,7 +1080,8 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     public var baseline: String?
     public var marginPercent: Double
     /// An export's file kept under this name in the walk's own folder, where
-    /// it is otherwise thrown away: what two exports are compared by.
+    /// it is otherwise thrown away: what two exports are compared by. A
+    /// `pictures` step keeps a sheet of its wrong pictures under it.
     public var keep: String?
     /// An export drawn the way every export was before 2026-11-16: each frame
     /// made into a picture, read back off the GPU and drawn again into the
@@ -1133,8 +1136,9 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
         }
         if let ceilingMB, ceilingMB <= 0 { return ("ceilingMB", "must be more than nothing") }
         if let growthPercent, growthPercent < 0 { return ("growthPercent", "cannot be less than nothing") }
-        if measure != .export, keep != nil || throughPictures {
-            return (keep != nil ? "keep" : "throughPictures", "is for an export")
+        if measure != .export, throughPictures { return ("throughPictures", "is for an export") }
+        if measure != .export, measure != .pictures, keep != nil {
+            return ("keep", "is for an export or the pictures played")
         }
         return nil
     }

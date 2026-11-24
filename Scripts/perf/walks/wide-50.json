@@ -1,0 +1,17 @@
+{
+  "out": "/tmp/photonz-playtest/speed-wide-50",
+  "clock": 1200,
+  "seed": "The wide reference edit (50 tracks, 100 recordings, up to ten playing at once), at Next defaults: the timeline scrolled down and up through every track, zoomed and scrolled along, played end to end at 1x, every picture of its busiest stretch held against the export's, and a track added, a clip added, a move, a trim, a blade and an undo made while it plays. Run by Scripts/perf/speed-walk.sh --wide.",
+  "setup": { "forget": ["all"], "wideEdit": 50 },
+  "steps": [
+    { "do": "wait", "seconds": 3 },
+    { "do": "snapshot", "name": "1-open" },
+    { "do": "speed", "measure": "timeline", "form": "long" },
+    { "do": "speed", "measure": "idleBuilds", "seconds": 3 },
+    { "do": "speed", "measure": "edits", "edits": ["nothing", "addTrack", "undo", "addClip", "undo", "move", "trim", "undo", "pick", "blade", "undo"] },
+    { "do": "speed", "measure": "pictures", "fromMS": 58000, "seconds": 9, "keep": "busiest.png" },
+    { "do": "speed", "measure": "play", "fromMS": 0, "seconds": 125 },
+    { "do": "speed", "measure": "memory", "seconds": 60 },
+    { "do": "snapshot", "name": "2-after" }
+  ]
+}

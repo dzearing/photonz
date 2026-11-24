@@ -286,7 +286,9 @@ extension EditorState {
         let inEdit = rows.reduce(0) { $0 + $1.clips.count }
         return rows.map { row in
             var row = row
-            row.clipsInEdit = inEdit
+            // Counted no further than what makes an edit long, or one clip
+            // more or less makes every row a new one to build.
+            row.clipsInEdit = min(inEdit, TimelinePaint.longEdit)
             return row
         }
     }

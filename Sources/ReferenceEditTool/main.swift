@@ -4,6 +4,10 @@
 // fresh every time so an edit saved into it last run never carries over.
 //
 //   swift run ReferenceEditTool 6|20|60 [--folder <dir>] [--seed <n>] [--sheet <png>]
+//   swift run ReferenceEditTool wide-50|wide-100 [--folder <dir>]
+//
+// The wide edits are tall rather than long: that many tracks, twice as many
+// clips, up to ten recordings at one moment (`ReferenceEdit.buildWide`).
 //
 // `--sheet` also draws a contact sheet of twelve moments of the edit
 // (`ReferenceEdit.sheetMoments`) through the app's own renderer, each frame
@@ -180,6 +184,7 @@ if arguments.first == "frames", arguments.count == 4, let minutes = Int(argument
 var folder = ReferenceFootage.defaultFolder
 var seed = ReferenceEdit.defaultSeed
 var minutes: Int?
+var wide: Int?
 var sheet: URL?
 while !arguments.isEmpty {
     let word = arguments.removeFirst()
@@ -194,7 +199,24 @@ while !arguments.isEmpty {
         guard !arguments.isEmpty, let n = UInt64(arguments.removeFirst()) else { break }
         seed = n
     default:
-        minutes = Int(word)
+        if word.hasPrefix("wide-") { wide = Int(word.dropFirst(5)) } else { minutes = Int(word) }
+    }
+}
+if let wide {
+    guard ReferenceEdit.wideTracks.contains(wide) else {
+        FileHandle.standardError.write(Data("a wide edit is one of \(ReferenceEdit.wideTracks) tracks\n".utf8))
+        exit(2)
+    }
+    do {
+        let project = try await ReferenceFootage.wideProject(tracks: wide, in: folder) { print("    \($0)") }
+        try PackageIO.write(project.document, store: ImageStore(), media: project.media, to: project.url)
+        let census = ReferenceEdit.census(of: project.document)
+        print("==> \(wide) tracks (\(project.document.timelineTracks.count) rows with their sound), \(census.clips) clips, \(census.recordingClips) of them recordings, \(census.titles) titles, \(census.transitions.values.reduce(0, +)) transitions")
+        print(project.url.path)
+        exit(0)
+    } catch {
+        FileHandle.standardError.write(Data("!! \(error)\n".utf8))
+        exit(1)
     }
 }
 guard let minutes, ReferenceEdit.lengths.contains(minutes) else {

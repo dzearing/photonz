@@ -4,6 +4,10 @@
 #
 #   Scripts/perf/reference-edit.sh 6|20|60 [--no-open] [--no-build]
 #   Scripts/perf/reference-edit.sh 6|20|60 --dev [--fresh]
+#   Scripts/perf/reference-edit.sh wide-50|wide-100 [the same switches]
+#
+# wide-50 and wide-100 are the wide edit: that many tracks, twice as many clips,
+# up to ten recordings playing at once (ReferenceWideEdit.swift).
 #
 # Writes "Reference Edit <N> min.photonz" under the reference edit's folder
 # (~/Library/Caches/Photonz Reference Edit, or $PHOTONZ_REFERENCE_EDIT_DIR),
@@ -43,14 +47,17 @@ for arg in "$@"; do
     --no-build) BUILD=0 ;;
     --dev) DEV=1 ;;
     --fresh) FRESH=1 ;;
-    6|20|60) MINUTES="$arg" ;;
-    *) echo "usage: $0 6|20|60 [--no-open] [--no-build] | 6|20|60 --dev [--fresh]" >&2; exit 2 ;;
+    6|20|60|wide-50|wide-100) MINUTES="$arg" ;;
+    *) echo "usage: $0 6|20|60|wide-50|wide-100 [--no-open] [--no-build] | 6|20|60|wide-50|wide-100 --dev [--fresh]" >&2; exit 2 ;;
   esac
 done
-[[ -n "$MINUTES" ]] || { echo "usage: $0 6|20|60 [--no-open] [--no-build] | 6|20|60 --dev [--fresh]" >&2; exit 2; }
+[[ -n "$MINUTES" ]] || { echo "usage: $0 6|20|60|wide-50|wide-100 [--no-open] [--no-build] | 6|20|60|wide-50|wide-100 --dev [--fresh]" >&2; exit 2; }
 
 FOLDER="${PHOTONZ_REFERENCE_EDIT_DIR:-$HOME/Library/Caches/Photonz Reference Edit}"
-NAME="Reference Edit ${MINUTES} min.photonz"
+case "$MINUTES" in
+  wide-*) NAME="Reference Edit ${MINUTES#wide-} tracks.photonz"; WHAT="${MINUTES#wide-} track wide" ;;
+  *) NAME="Reference Edit ${MINUTES} min.photonz"; WHAT="${MINUTES} minute" ;;
+esac
 
 # Writes the walks' copy with ReferenceEditTool and prints its path.
 write_edit() {
@@ -60,7 +67,7 @@ write_edit() {
   local tool
   tool="$(swift build --show-bin-path)/ReferenceEditTool"
   [[ -x "$tool" ]] || { echo "!! $tool was not built" >&2; exit 1; }
-  echo "==> Writing the ${MINUTES} minute reference edit" >&2
+  echo "==> Writing the ${WHAT} reference edit" >&2
   local out
   out="$("$tool" "$MINUTES" | tee /dev/stderr)"
   printf '%s\n' "$out" | tail -1
@@ -95,7 +102,7 @@ if (( DEV )); then
     rm -rf "$COPY"
     cp -R "$SOURCE" "$COPY"
     printf '%s\n' "$source_sum" > "$STAMP"
-    echo "==> Made your copy of the ${MINUTES} minute reference edit"
+    echo "==> Made your copy of the ${WHAT} reference edit"
   elif [[ "$(sum "$COPY/document.json")" != "$(cat "$STAMP" 2>/dev/null)" ]]; then
     echo "==> Kept your copy: it has been saved into since it was made (--fresh starts it over)"
   fi

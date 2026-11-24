@@ -180,6 +180,24 @@ What keeps it now:
    read was still going, so every recording opened blurred at 0:00. Writing a
    file always reads at the recording's own size.
 
+**Many clips on screen at once (2026-11-24,
+`an-edit-with-50-tracks-and-100-clips-scrolls-pla`).** Ten recordings playing
+together drew clips from the wrong moment (833 clip frames in nine seconds, 284
+of them from AHEAD, which reads as a flash). What keeps it right:
+frames that land while playing redraw the canvas together, a refresh apart
+(`movieFrameLanded`), never one redraw each; a pass waiting ahead of the
+playhead gives up its place among the eight reading at once; each clip's place
+is read at its own size (`MoviePlayPass.serves(width:needed:)`); a recording
+may open four passes ahead beside the ones playing (`passLimit`); the budget
+keeps two frames behind for EACH pass (`behindKept`); with more than three full
+Retina screens on at once passes opened skip the frames nothing is decoded from
+(`screensReadWhole`, about 630 decodes a second is all an M4 Max has); and only
+clips somebody can see are read (`movieFramesSeen`). A still playhead and an
+export read every frame. `drawn(atTimeMS:)` works out what is on screen and
+copies the layer list once. The wide edit (`ReferenceWideEdit.swift`,
+`Scripts/perf/speed-walk.sh --wide 50`) measures all of it, every picture
+played held against the export by the `pictures` measure.
+
 Scrubbing (a hand on the playhead) adds five more, since 2026-09-26
 (`scrubbing-is-smooth-never-goes-black-and-the-pic`, walk
 `scrub-never-blacks-out-walk`, which scrubs at every display frame and
@@ -1304,6 +1322,12 @@ The rule, for any view added to the editor window:
    header key diamond, Add Key and the held-frame badge watch their answers
    in `PanelPlayhead` (rule 2), where they had rebuilt on every tick of a
    video played with a clip picked.
+   A tall edit (more than 24 rows) builds only the rows within reach of the
+   part on screen (`TimelineRowInSight`), three at a time; a new kind of row
+   with anything open under its lane must stay out of it (`isOneLane`). Building
+   them as they come in is what a scroll down costs now (p95 14 ms against 7
+   with all fifty built, 2026-11-24), tried and no better: a step a frame, a
+   step in the scroll's own pass, and taking rows down after the scroll.
 8. **A busy lane paints its plain clips and cuts; a clip somebody is working
    on is its full view again.** A lane builds only what is in sight plus half
    a window each side (`TimelineSight`). When 24 or more clips are in sight,

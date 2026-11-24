@@ -545,7 +545,7 @@ private final class Run {
                  + "so its number is what a person's click costs (setup timedWithoutMarkers)")
         }
         // The reference edit, written fresh and open before step one.
-        if let minutes = script.setup.referenceEdit {
+        if script.setup.referenceEdit != nil || script.setup.wideEdit != nil {
             // Timed without markers, the edit opens with them down, and a
             // guarded wait as the first step keeps them down while it reads
             // the opening: hung, the walk's own markers were 837 of the 947
@@ -555,7 +555,7 @@ private final class Run {
             // has none of them.
             if timesWithoutMarkers { await takeTheMarkersDownForATimedStep() }
             do {
-                note(0, "setup", try await openReferenceEdit(minutes: minutes))
+                note(0, "setup", try await openReferenceEdit(script.setup))
             } catch {
                 finish(status: "failed", steps: 0, error: "setup: the reference edit: \(error)")
                 return
@@ -18020,17 +18020,33 @@ private final class Run {
     /// Writes the reference edit `minutes` long (`ReferenceEdit`), its
     /// recordings first if this Mac has never had them, and opens it the way
     /// a person opens a project. What it says goes in the walk's log.
-    private func openReferenceEdit(minutes: Int) async throws -> String {
+    private func openReferenceEdit(_ setup: PlaytestSetup) async throws -> String {
         let started = Date()
-        let project = try await ReferenceFootage.project(minutes: minutes, in: ReferenceFootage.defaultFolder)
+        let folder = ReferenceFootage.defaultFolder
+        let project: ReferenceFootage.Project
+        let named: String
+        if let tracks = setup.wideEdit {
+            project = try await ReferenceFootage.wideProject(tracks: tracks, in: folder)
+            named = "\(tracks) track wide edit"
+        } else {
+            let minutes = setup.referenceEdit ?? 6
+            project = try await ReferenceFootage.project(minutes: minutes, in: folder)
+            named = "\(minutes) minute reference edit"
+        }
         try PackageIO.write(project.document, store: ImageStore(), media: project.media, to: project.url)
+        let wrote = Date().timeIntervalSince(started)
+        let opening = CACurrentMediaTime()
+        MainThreadMeter.shared.reset()
         try await open(project.url, size: nil, number: 0)
+        let opened = CACurrentMediaTime() - opening
         let census = ReferenceEdit.census(of: project.document)
         let transitions = census.transitions.sorted { $0.key.rawValue < $1.key.rawValue }
             .map { "\($0.value) \($0.key.title.lowercased())" }.joined(separator: ", ")
-        return "opened the \(minutes) minute reference edit: \(census.pictureTracks) picture tracks, "
+        return "opened the \(named): \(census.pictureTracks) picture tracks, "
             + "\(census.clips) clips, \(census.cuts) cuts (\(transitions)), \(census.titles) titles, "
-            + "\(census.zooms) zooms; written in \(Int(Date().timeIntervalSince(started)))s "
+            + "\(census.zooms) zooms; written in \(Int(wrote))s, "
+            + String(format: "open in %.1fs, longest main thread pass while it opened %.0fms ", opened,
+                     MainThreadMeter.shared.longestMS)
             + "(\(project.url.path))"
     }
 

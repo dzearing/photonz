@@ -11,6 +11,9 @@
 #                                                           of playing and scrubbing the 60 minute
 #                                                           edit, failed over its ceiling or if it
 #                                                           keeps growing (about 13 minutes)
+#   Scripts/perf/speed-walk.sh --wide [50] [100] [--no-build]
+#                                                           the wide edit: 50 or 100 tracks, twice the
+#                                                           clips, up to ten recordings at once
 #   Scripts/perf/speed-walk.sh --baseline [N] [--no-build]  N short runs (3 by default), their
 #                                                           worst written as the short walk's baseline
 #
@@ -45,16 +48,19 @@ LONG=0
 MEMORY=0
 BUILD=1
 BASELINE=0
+WIDE=0
 LENGTHS=()
 for arg in "$@"; do
   case "$arg" in
     --long) LONG=1 ;;
     --memory) MEMORY=1 ;;
+    --wide) WIDE=1 ;;
     --baseline) BASELINE=3 ;;
     --no-build) BUILD=0 ;;
     6|20|60) LENGTHS+=("$arg") ;;
-    [1-9]) (( BASELINE )) && BASELINE="$arg" || { echo "usage: $0 [--long [6] [20] [60]] [--memory] [--baseline [N]] [--no-build]" >&2; exit 2; } ;;
-    *) echo "usage: $0 [--long [6] [20] [60]] [--memory] [--baseline [N]] [--no-build]" >&2; exit 2 ;;
+    50|100) LENGTHS+=("$arg") ;;
+    [1-9]) (( BASELINE )) && BASELINE="$arg" || { echo "usage: $0 [--long [6] [20] [60]] [--memory] [--wide [50] [100]] [--baseline [N]] [--no-build]" >&2; exit 2; } ;;
+    *) echo "usage: $0 [--long [6] [20] [60]] [--memory] [--wide [50] [100]] [--baseline [N]] [--no-build]" >&2; exit 2 ;;
   esac
 done
 (( LONG )) && (( ${#LENGTHS[@]} == 0 )) && LENGTHS=(6 20 60)
@@ -139,6 +145,15 @@ if (( MEMORY )); then
   Scripts/probe-app.sh --quit >/dev/null 2>&1 || true
   if (( status == 0 )); then echo "==> Memory check passed"; else echo "!! Memory check FAILED (walk exit $status)"; fi
   exit "$status"
+fi
+
+if (( WIDE )); then
+  (( ${#LENGTHS[@]} )) || LENGTHS=(50)
+  for tracks in "${LENGTHS[@]}"; do
+    part="$(walk "Scripts/perf/walks/wide-$tracks.json")" && merge "$RESULTS/$STAMP-$HEAD-wide-$tracks.json" "$part"
+  done
+  Scripts/probe-app.sh --quit >/dev/null 2>&1 || true
+  exit 0
 fi
 
 if (( ! LONG )); then

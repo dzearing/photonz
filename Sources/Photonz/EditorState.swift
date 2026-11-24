@@ -2248,6 +2248,10 @@ final class EditorState {
     /// their view is: what the tracks' scroller draws, and what a row zoom
     /// measures the pointer against.
     var timelineTracksScrollGeometry = TimelineTracksScrollGeometry()
+    /// When a frame landing while it plays last drew the canvas, and whether
+    /// one waits to (`movieFrameLanded`).
+    @ObservationIgnored var landingDrawnAt: CFTimeInterval = 0
+    @ObservationIgnored var landingWaits = false
     /// Where the ruler and the whole dock are in the window. Written as they
     /// lay out; read by a walk that proves a zoom moved neither.
     @ObservationIgnored var timelineRulerFrame: CGRect = .zero

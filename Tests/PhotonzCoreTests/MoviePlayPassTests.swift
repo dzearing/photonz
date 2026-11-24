@@ -531,10 +531,34 @@ struct MoviePlayPassPlanTests {
         #expect(plan.open == [.init(playhead: 30, reach: MoviePlayPass.aheadFrames)])
     }
 
+    @Test("Two clips of one recording at different sizes each keep their own pass")
+    func eachItsOwnSize() {
+        let passes = [Pass(running: 0...last, reached: 80, playhead: 75, reach: 8, width: 1728),
+                      Pass(running: 136...last, reached: 141, playhead: 136, reach: 8, width: 864)]
+        let needed: (Int) -> Int? = { $0 == 76 ? 1728 : 864 }
+        let plan = MoviePlayPass.plan(now: [137, 76], coming: [], passes: passes, inHand: { _ in true }, needed: needed)
+        #expect(Set(plan.aim.keys) == [0, 1])
+        #expect(plan.open.isEmpty)
+        // Needed bigger than it reads, or far smaller, it is opened again.
+        let bigger = MoviePlayPass.plan(now: [137], coming: [], passes: [passes[1]], inHand: { _ in true },
+                                        needed: { _ in 1728 })
+        #expect(bigger.aim.isEmpty)
+        #expect(bigger.open.count == 1)
+        #expect(!MoviePlayPass.serves(width: 1728, needed: 432))
+        #expect(MoviePlayPass.serves(width: 1728, needed: nil))
+    }
+
+    @Test("A recording with many clips on screen still opens the one coming")
+    func comingBesideMany() {
+        let plan = MoviePlayPass.plan(now: [10, 50, 90, 130], coming: [160, 180, 200, 220, 240], passes: [],
+                                      inHand: { _ in false })
+        #expect(plan.open.map(\.playhead) == [10, 50, 90, 130, 160, 180, 200, 220])
+    }
+
     @Test("No more passes are opened ahead than a recording may have")
     func bounded() {
         let plan = MoviePlayPass.plan(now: [30], coming: [90, 150, 200, 230], passes: [], inHand: { _ in false })
-        #expect(plan.open.count == MoviePlayPass.passesPerRecording)
+        #expect(plan.open.count == MoviePlayPass.passLimit(playing: 1))
         #expect(plan.open.first?.playhead == 30)
     }
 

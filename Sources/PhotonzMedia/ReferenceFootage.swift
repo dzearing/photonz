@@ -665,6 +665,16 @@ extension ReferenceFootage {
         return Project(document: document, media: media, url: url)
     }
 
+    /// The wide edit (`ReferenceEdit.buildWide`), cut from the same recordings.
+    public static func wideProject(tracks: Int, in folder: URL, spec: Spec = .full,
+                                   progress: (@Sendable (String) -> Void)? = nil) async throws -> Project {
+        let files = try await ensure(in: folder, spec: spec, progress: progress)
+        let document = ReferenceEdit.buildWide(tracks: tracks)
+        let url = folder.appendingPathComponent(ReferenceEdit.wideProjectName(tracks: tracks))
+        let media = ProjectMedia.table(for: document, project: url) { files[$0] }
+        return Project(document: document, media: media, url: url)
+    }
+
     /// Where the reference edit is kept on this Mac unless asked otherwise:
     /// a cache, since everything in it can be made again.
     public static var defaultFolder: URL {

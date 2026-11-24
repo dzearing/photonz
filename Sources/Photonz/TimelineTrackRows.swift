@@ -708,7 +708,13 @@ struct TimelineTrackRow: View {
             editorState.trackDropRows[track.id] = TrackDropRow(trackID: track.id, minY: frame.minY,
                                                                maxY: frame.maxY)
         }
-        .onDisappear { if !isLifted { editorState.trackDropRows[track.id] = nil } }
+        // A row gone out of sight is still where a drag can land
+        // (`TimelineRowInSight`); only a track that is gone is not.
+        .onDisappear {
+            if !isLifted, editorState.document?.timelineTracks.contains(where: { $0.id == track.id }) != true {
+                editorState.trackDropRows[track.id] = nil
+            }
+        }
     }
 
     /// Everything in a lane that is placed in time, laid out against `ruler`:

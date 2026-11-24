@@ -445,6 +445,10 @@ struct TimelineDock: View, Equatable {
                             // row stands where the Captions track will land:
                             // under the picture, over the sound.
                             let listening = editorState.isWritingCaptions
+                            // A tall edit builds only the rows near the part
+                            // of it on screen (`TimelineRowInSight`).
+                            let gates = drawn.count > TimelineRowsInSight.tallEdit
+                            let firstRows = gates ? Set(drawn.prefix(TimelineRowsInSight.builtAtFirst).map(\.id)) : []
                             let listeningBefore = listening
                                 ? editorState.captionsListeningRowID(in: drawn) : nil
                             // A file in the air has a new track to go on at
@@ -462,12 +466,17 @@ struct TimelineDock: View, Equatable {
                                         TimelineGroupRow(group: group, isCollapsed: isCollapsed,
                                                          tracks: tracks, laneWidth: laneWidth)
                                     case .track(let track, let inGroup):
-                                        TimelineTrackRow(row: track, inGroup: inGroup,
-                                                         index: order.firstIndex(of: track.id) ?? 0,
-                                                         trackCount: order.count,
-                                                         laneWidth: laneWidth, isBlade: isBlade,
-                                                         rows: rows, pick: picks.share(of: track))
-                                        .equatable()
+                                        TimelineRowInSight(row: track, height: Self.height(of: track, rows: rows),
+                                                           laneHeight: rows.height(track.restingLaneHeight),
+                                                           gates: gates && Self.isOneLane(track, editorState),
+                                                           startsNear: firstRows.contains(row.id)) {
+                                            TimelineTrackRow(row: track, inGroup: inGroup,
+                                                             index: order.firstIndex(of: track.id) ?? 0,
+                                                             trackCount: order.count,
+                                                             laneWidth: laneWidth, isBlade: isBlade,
+                                                             rows: rows, pick: picks.share(of: track))
+                                                .equatable()
+                                        }
                                     }
                                 }
                                 // Where each row stands, measured before it is
@@ -849,6 +858,15 @@ struct TimelineDock: View, Equatable {
         // lane, so the timeline grows to show them.
         let expanded = track.expandsCut ? ExpandedCutRows.height + 3 : 0
         return lane + words + expanded
+    }
+
+    /// Whether a track's row is its lane and nothing under it, so how tall it
+    /// stands is known without building it.
+    static func isOneLane(_ track: TimelineTrackRowModel, _ editor: EditorState) -> Bool {
+        track.inner.isEmpty && track.zoomedClips.isEmpty && track.rampedClips.isEmpty && !track.expandsCut
+            && !track.isCaptions && track.clips.allSatisfy(\.lanes.isEmpty)
+            && !(editor.isKeyTrackOpen(track.id) && editor.trackHasKeyLanes(track.clips.map(\.layerID)))
+            && editor.renamingTrackID != track.id && editor.trackRowDrag.grabbedID != track.id
     }
 
     /// The track lifted by its header, drawn over the others: the real row,
