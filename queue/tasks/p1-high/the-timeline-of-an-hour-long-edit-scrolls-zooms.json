@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T05:02:49.259Z",
+  "updated": "2026-11-24T05:33:04.329Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T05:02:49.258Z",
-      "note": "... 80 earlier entries elided",
-      "elided": 80
-    },
-    {
-      "t": "2026-11-19T16:43:57.057Z",
-      "note": "Pass 13 after, same build A/B by a throwaway defaults switch, two runs each: near Fit 12.03/12.11 -> 11.67/11.70 (late 226/245 -> 208/214), zoom out 10.02/9.97 -> 9.82/9.56, zoom in and scroll unchanged within noise (10.8, 8.8). Lane bodies 1.31 -> 0.99 s in the same profile. Fit photographed before and after a full timeline speed measure: identical pixel for pixel. 15 walks green on the final build (task's 10 + a-click-tick-is-hidden-and-slid, an-editing-session, reference-edit-opens, a-sound-s-waveform-follows-its-level, a-sound-lane-is-as-tall-as-the-mock). Scripts/test.sh exit 0. Audit queue/audits/2026-11-19-timeline-hour-long-pass13-kept-painting.json. Landed 1fda7669d."
-    },
-    {
-      "t": "2026-11-19T16:43:57.130Z",
-      "note": "Still open, bars not reached: near Fit ~11.7 ms mean (p95 ~17) vs 8.3, scroll worst 23-26 vs 16, edits 30-86 ms vs 16 (inspector, a-long-edit-with-transitions-plays-scrubs-and-ed). Largest app item left: the canvases' paint closure when a painting is laid afresh (~0.8 s of 25 s; waveforms ~a quarter) on every let-go of a held zoom and every stretch move of a scroll. Next lever: draw waveforms from a path kept per clip and scale, or a lane drawn into a layer whose transform moves without SwiftUI (needs the paint code against CGContext). Left rough, not filed: motionStripCycleMS + rulerDocument + shownDocument are read by every view reading the ruler (~0.2 s of 25 s); Experiments.isEnabled string compares on every flag read."
+      "t": "2026-11-24T05:33:04.328Z",
+      "note": "... 82 earlier entries elided",
+      "elided": 82
     },
     {
       "t": "2026-11-19T16:44:11.629Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-24T05:02:49.257Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T05:32:59.949Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T05:33:04.327Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-24T05:02:45.215Z",
+  "started": "2026-11-24T05:32:59.948Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
