@@ -1,0 +1,34 @@
+{
+  "id": "motion-that-feels-like-apple-springs-speed-ramps",
+  "title": "Motion that feels like Apple: springs, speed ramps, motion blur and 3D moves an agent can use",
+  "goal": "A sizzle reel's energy comes from motion: a window that springs into place, a clip that ramps from slow motion to fast, a camera that pushes in with motion blur, a screen that tilts in 3D before the reveal. Make these feel as good as Apple's own films and make every one of them reachable by an agent.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 78,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:19:30.488Z",
+  "updated": "2026-11-24T14:19:30.606Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-24: \"I also want to have the agent make high quality 'sizzle reels'... What prevents us from having enough control to make high videlity sizzle reals that really slap. I'm talking apple smoothness coupled with high energy music that builds as we demonstrate features of aplications. And the features are smooth - we capture the most credible moments of an app, making the user really pumped to use them. With creshendos that build up and reveal something massive. We need video features that can do that. Help refine the flows and ensure that agents have the tools to do this\".\n\nWhat agents can reach today (checked 2026-11-24, plugin/skills/photonz/SKILL.md and the MCP tool list): new_video, add_clip, move_clip, trim, cut, add_title, list_titles, set_transition, apply_zooms, recommended_zooms (from recorded clicks), set_keys / change_keys with named curves, video_frame, contact_sheet, export, list_history. NOT reachable by an agent: music or any sound placement and levels, beats of any kind (nothing in Sources analyses tempo or beats), speed changes (the app has setSpeed and speed stops as commands, no agent tool), recording the screen or driving the app being shown, and any way to judge motion rather than stills. Exists in the app but not checked for agent reach: motion smear (MotionSmearFilter), depth transitions, keyframe curves, title entrances.\n\nVideo quality is part of the video-perf focus: none of this may add jitter or dropped frames; land after or alongside the fidelity tasks.",
+  "acceptance": [
+    "First an audit of what exists and what an agent can reach: keyframe curves, motion smear, depth transitions, zooms, speed and speed stops, title entrances. Gaps are fixed here or filed.",
+    "Spring curves with physical settings (response and damping, as SwiftUI springs) and overshoot, beside the named eases, for every keyed value; a key can be told to land on a beat.",
+    "Speed ramps: a clip can ease from one speed to another over a stretch (slow motion into a burst), smooth in playback and export, agent reachable.",
+    "Motion blur on any moving layer and on camera moves, by shutter angle, matching the speed of the move, in playback and export, without slowing playback past the video-perf bars (measured).",
+    "A layer or a whole recording can move in 3D: tilt, perspective, depth and a soft shadow on the ground, keyed like any other value, for the classic floating app window and the dramatic reveal.",
+    "Measured bar for each: no frame-to-frame step in motion (the review task's hitch measure is clean), and a reel of each effect next to a reference from the board, named in the audit for the user. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:19:30.490Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-24T14:19:30.605Z",
+      "note": "seq 4070 -> 78"
+    }
+  ]
+}

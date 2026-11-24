@@ -1,0 +1,33 @@
+{
+  "id": "an-agent-can-record-the-most-credible-moments-of",
+  "title": "An agent can record the most credible moments of an app: scripted, clean, smooth takes",
+  "goal": "A reel is only as convincing as its footage. An agent should be able to record an app doing its best tricks: drive the app through a feature while Photonz records its window, with a clean desktop, a smooth natural cursor, full frame rate and Retina size, take several takes and keep the best one.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 74,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:19:30.088Z",
+  "updated": "2026-11-24T14:19:30.207Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-24: \"I also want to have the agent make high quality 'sizzle reels'... What prevents us from having enough control to make high videlity sizzle reals that really slap. I'm talking apple smoothness coupled with high energy music that builds as we demonstrate features of aplications. And the features are smooth - we capture the most credible moments of an app, making the user really pumped to use them. With creshendos that build up and reveal something massive. We need video features that can do that. Help refine the flows and ensure that agents have the tools to do this\".\n\nWhat agents can reach today (checked 2026-11-24, plugin/skills/photonz/SKILL.md and the MCP tool list): new_video, add_clip, move_clip, trim, cut, add_title, list_titles, set_transition, apply_zooms, recommended_zooms (from recorded clicks), set_keys / change_keys with named curves, video_frame, contact_sheet, export, list_history. NOT reachable by an agent: music or any sound placement and levels, beats of any kind (nothing in Sources analyses tempo or beats), speed changes (the app has setSpeed and speed stops as commands, no agent tool), recording the screen or driving the app being shown, and any way to judge motion rather than stills. Exists in the app but not checked for agent reach: motion smear (MotionSmearFilter), depth transitions, keyframe curves, title entrances.\n\nThe probe-only playtest harness drives Photonz itself and must stay compiled out of release; whatever the agent uses to drive other apps must be a real, shipped, permission-respecting route. Bound OS permission prompts to once per launch (no prompt loops).",
+  "acceptance": [
+    "An agent tool records a chosen window or area at full Retina size and 60 fps (the existing 10-bit recorder), starting and stopping on command, with notifications and desktop clutter hidden for the take and the recording landing in History with its clicks.",
+    "The agent can drive the app being shown during a take: for a web app through the browser it already drives, for a Mac app through the accessibility or scripting route the runner judges best, with the cursor moved along smooth, human paced curves (not teleporting) and clicks and typing at a believable pace. Say in the audit what works for Mac apps and what does not.",
+    "Takes are judged, not guessed: a take with a hitch, a spinner, a wrong click or a stutter is detected from the recording (frame time and frame difference measures, the click list) and redone; the best take of several is kept, and why is in the log.",
+    "Cursor polish at edit time: a recorded cursor can be smoothed, enlarged, hidden when still, and its clicks shown (the existing click effects), reachable by an agent.",
+    "Proven on two real apps (Photonz and one other), takes in the audit with their measures. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:19:30.090Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-24T14:19:30.206Z",
+      "note": "seq 4070 -> 74"
+    }
+  ]
+}

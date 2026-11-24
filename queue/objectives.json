@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-24T14:14:41.000Z",
+  "updated": "2026-11-24T14:19:29.000Z",
   "focus": "video-perf",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -161,6 +161,19 @@
             ],
             "workflow": "Open the reference edit (6 minutes, 3 tracks, 30 cuts with dissolves and a 3D transition, titles, zooms), press Space and watch it play to the end with no dropped frame, scrub the playhead end to end, trim a clip and blade one in the middle while it plays, undo, add a transition, then export it; count dropped frames, the longest main thread pass and the export time."
           }
+        },
+        {
+          "id": "video-sizzle",
+          "title": "Sizzle reels: an agent makes a high energy launch video that builds to a reveal",
+          "stage": "now",
+          "note": "The user, 2026-11-24: agents should make sizzle reels with Apple smoothness, high energy music that builds, the most credible moments of an app and crescendos that reveal something massive. Sequenced after the video-perf and fidelity tasks, which it depends on.",
+          "success": [
+            "An agent, with only the Photonz tools and skill, makes a 30 to 60 second reel of any app that scores close to the reference board's real launch films on a blind rubric.",
+            "Music drives the cut: beats, bars, sections and energy are found and edits snap to them.",
+            "Footage is credible: the agent records clean, smooth takes of the app and keeps the best.",
+            "Motion and type feel like Apple's: springs, speed ramps, motion blur, 3D moves, kinetic type, all jitter free.",
+            "The agent can watch its own reel and fix what is rough before it exports."
+          ]
         },
         {
           "id": "video-beats-premiere",

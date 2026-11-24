@@ -1,0 +1,32 @@
+{
+  "id": "music-drives-the-cut-photonz-finds-the-beats-bar",
+  "title": "Music drives the cut: Photonz finds the beats, bars and build of a track and edits snap to them",
+  "goal": "A sizzle reel lives on its music. Photonz should hear a music track and find its tempo, beats, bar starts, sections and where the energy builds and drops, show them on the timeline, and let cuts, keys, titles and zooms snap to them, for people and for agents.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 72,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:19:29.893Z",
+  "updated": "2026-11-24T14:19:30.013Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-24: \"I also want to have the agent make high quality 'sizzle reels'... What prevents us from having enough control to make high videlity sizzle reals that really slap. I'm talking apple smoothness coupled with high energy music that builds as we demonstrate features of aplications. And the features are smooth - we capture the most credible moments of an app, making the user really pumped to use them. With creshendos that build up and reveal something massive. We need video features that can do that. Help refine the flows and ensure that agents have the tools to do this\".\n\nWhat agents can reach today (checked 2026-11-24, plugin/skills/photonz/SKILL.md and the MCP tool list): new_video, add_clip, move_clip, trim, cut, add_title, list_titles, set_transition, apply_zooms, recommended_zooms (from recorded clicks), set_keys / change_keys with named curves, video_frame, contact_sheet, export, list_history. NOT reachable by an agent: music or any sound placement and levels, beats of any kind (nothing in Sources analyses tempo or beats), speed changes (the app has setSpeed and speed stops as commands, no agent tool), recording the screen or driving the app being shown, and any way to judge motion rather than stills. Exists in the app but not checked for agent reach: motion smear (MotionSmearFilter), depth transitions, keyframe curves, title entrances.\n\nOpen question for the user, not for a card: where the music comes from (their own file, a bundled royalty-free library, or a local music model). This task works on a track the person or agent supplies; do not block on the source.",
+  "acceptance": [
+    "Analysis runs on the Mac with nothing to install (Accelerate / vDSP onset and tempo detection, or a small bundled model if it is clearly better, measured), on any audio clip on an audio track: tempo, beat times, downbeats (bar starts), sections (intro, build, drop, outro by energy change) and an energy curve. Accuracy measured against hand-marked beats on at least 10 tracks of different genres and tempos (within 20 ms on 90 percent of beats); numbers in the audit. Unit tests in PhotonzCore for the pure parts first.",
+    "The timeline shows beat ticks, bar marks and section bands on the music track at Next defaults, and the playhead, blade, trim, clip moves, key moves and title placement snap to beats and bars (with the usual modifier to not snap). A command cuts the clips under the playhead range on every beat or every bar.",
+    "Agents get it: a tool or a read_document field gives the beats, bars, sections and energy, and add_clip, move_clip, trim, cut, set_keys and add_title can take a time as a beat or bar reference (for example 'bar 9 beat 1') as well as seconds. Sound placement is agent reachable: put a music file on an audio track, set its level and fades, duck it under a voice.",
+    "Try path and an audit with a short reel cut to a track by the snapping alone. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:19:29.895Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-24T14:19:30.012Z",
+      "note": "seq 4070 -> 72"
+    }
+  ]
+}

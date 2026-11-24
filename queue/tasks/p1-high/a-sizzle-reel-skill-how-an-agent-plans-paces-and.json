@@ -1,0 +1,32 @@
+{
+  "id": "a-sizzle-reel-skill-how-an-agent-plans-paces-and",
+  "title": "A sizzle reel skill: how an agent plans, paces and builds a reel that builds to a reveal",
+  "goal": "With the tools in place, agents still need the craft: how to pick an app's most impressive moments, structure a reel (hook, build, crescendo, reveal, end card), pace cuts to the music's energy, and keep it smooth and readable. Write that craft into the Photonz skill so any agent can make a reel that gets people excited, for any app.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 82,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:19:30.876Z",
+  "updated": "2026-11-24T14:19:31.010Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-24: \"I also want to have the agent make high quality 'sizzle reels'... What prevents us from having enough control to make high videlity sizzle reals that really slap. I'm talking apple smoothness coupled with high energy music that builds as we demonstrate features of aplications. And the features are smooth - we capture the most credible moments of an app, making the user really pumped to use them. With creshendos that build up and reveal something massive. We need video features that can do that. Help refine the flows and ensure that agents have the tools to do this\".\n\nWhat agents can reach today (checked 2026-11-24, plugin/skills/photonz/SKILL.md and the MCP tool list): new_video, add_clip, move_clip, trim, cut, add_title, list_titles, set_transition, apply_zooms, recommended_zooms (from recorded clicks), set_keys / change_keys with named curves, video_frame, contact_sheet, export, list_history. NOT reachable by an agent: music or any sound placement and levels, beats of any kind (nothing in Sources analyses tempo or beats), speed changes (the app has setSpeed and speed stops as commands, no agent tool), recording the screen or driving the app being shown, and any way to judge motion rather than stills. Exists in the app but not checked for agent reach: motion smear (MotionSmearFilter), depth transitions, keyframe curves, title entrances.\n\nLands last: it depends on the beats, capture, review, motion and type tasks; until they land it writes the parts that do not depend on them and logs the rest. Reels are agent output, so the no-hardcoded-content principle applies: techniques, tools and request-time material, never a stored reel, a template keyed to one app, or a pass tuned to one eval case. Judge on a held-out set of different apps and briefs.",
+  "acceptance": [
+    "A sizzle reel recipe in plugin/skills/photonz/SKILL.md (and the in-app agent skill it ships as) built from the reference board's rules: a shot list from the app's features ranked by how impressive they look, a structure mapped onto the track's sections, cut density that follows the energy curve, where the reveal goes and how the build sets it up, type rules, and the review loop with the watch tool before export.",
+    "General techniques only: nothing keyed to one app, one song or one feature.",
+    "Held-out eval: at least 6 different briefs (different apps, lengths of 15, 30 and 60 seconds, different music) run by a fresh agent with only the skill; each reel scored blind against board references with the review tool's measures and a vision and listening rubric; the scores and every reel in the audit for the user.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:19:30.878Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-24T14:19:31.009Z",
+      "note": "seq 4070 -> 82"
+    }
+  ]
+}

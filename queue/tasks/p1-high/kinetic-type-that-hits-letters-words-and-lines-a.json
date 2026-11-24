@@ -1,0 +1,33 @@
+{
+  "id": "kinetic-type-that-hits-letters-words-and-lines-a",
+  "title": "Kinetic type that hits: letters, words and lines animate with real typographic control",
+  "goal": "The big moments in a reel are type: a word that slams in on the downbeat, a line that tracks out as it fades, letters that cascade, a headline revealed through a mask. Give titles real typographic control and motion per letter, word and line, beautiful at rest and solid in motion, for people and agents.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:19:30.682Z",
+  "updated": "2026-11-24T14:19:30.802Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-24: \"I also want to have the agent make high quality 'sizzle reels'... What prevents us from having enough control to make high videlity sizzle reals that really slap. I'm talking apple smoothness coupled with high energy music that builds as we demonstrate features of aplications. And the features are smooth - we capture the most credible moments of an app, making the user really pumped to use them. With creshendos that build up and reveal something massive. We need video features that can do that. Help refine the flows and ensure that agents have the tools to do this\".\n\nWhat agents can reach today (checked 2026-11-24, plugin/skills/photonz/SKILL.md and the MCP tool list): new_video, add_clip, move_clip, trim, cut, add_title, list_titles, set_transition, apply_zooms, recommended_zooms (from recorded clicks), set_keys / change_keys with named curves, video_frame, contact_sheet, export, list_history. NOT reachable by an agent: music or any sound placement and levels, beats of any kind (nothing in Sources analyses tempo or beats), speed changes (the app has setSpeed and speed stops as commands, no agent tool), recording the screen or driving the app being shown, and any way to judge motion rather than stills. Exists in the app but not checked for agent reach: motion smear (MotionSmearFilter), depth transitions, keyframe curves, title entrances.\n\nOverlaps: keynote-clean-soft-gradient-glass-kinetic-bold-t (done) redesigned title looks from a reference board; reuse its colour and type rules. Reels are agent output, so the no-hardcoded-content principle applies: techniques, tools and request-time material, never a stored reel, a template keyed to one app, or a pass tuned to one eval case. Judge on a held-out set of different apps and briefs.",
+  "acceptance": [
+    "Typography: a choice of display faces beyond the system font (shipped with macOS, or bundled with a licence that allows it), variable font axes (weight, width) that can be keyed, tracking and line height that can be keyed, mixed weights and sizes within one title, and gradient or image fill and outline text.",
+    "Motion per unit: any title can animate by letter, word or line with a stagger and order (start, end, centre, random with a seed), on position, scale, rotation, opacity, blur, tracking and weight, with the curve and spring choices from the motion task; and a mask reveal (a line wipes the word on, the word rises out of its own baseline).",
+    "Hits on the music: a title's entrance can be told to land on a beat or bar (with the beats task).",
+    "All of it agent reachable through add_title, change_part and set_keys, written up in the skill with examples that are techniques, not stored designs.",
+    "Fidelity: every letter passes the jitter bar from text-that-zooms-or-scales-in-a-video-moves-as-on while it moves. A reel of a dozen kinetic treatments beside board references in the audit for the user. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:19:30.684Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-24T14:19:30.801Z",
+      "note": "seq 4070 -> 80"
+    }
+  ]
+}
