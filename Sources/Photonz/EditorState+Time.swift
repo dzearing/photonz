@@ -73,19 +73,37 @@ extension EditorState {
         if isMotionPlaying, isKeyedPicture { pauseMotionPreview() }
         let landing = min(max(0, ms), lastDocumentTimeMS)
         guard landing != documentTimeMS else { return }
-        playheadTravel = landing < documentTimeMS ? .backward : .forward
+        // While the clock plays it plays on from where it landed, so it goes
+        // the clock's way: a click back on the timeline left it going
+        // backwards while it played forwards, and the picture swapped between
+        // the new place and the old one (`MovieFramesInHand.Travel.afterMove`).
+        playheadTravel = .afterMove(from: documentTimeMS, to: landing,
+                                    clockRate: isDocumentPlaying ? documentPlaybackRate : nil,
+                                    handHolds: playheadInHand)
         playheadStrideMS = max(MovieRef.frameStepMS, abs(landing - documentTimeMS))
         documentTimeMS = landing
         // A scrub while it plays takes over: the clock restarts from where the
         // hand put the playhead rather than snapping back to where it had got
         // to on its own.
         if isDocumentPlaying {
-            restartDocumentClock()
-            // The sound is scheduled against one engine start, so a scrub
-            // mid-play has to schedule it again from where the hand put the
-            // playhead. Nothing is faded: a scrub is somebody looking for a
-            // moment, and what they want to hear is that moment.
-            if playsSoundAtRate { startAudio() }
+            if !playheadInHand, playsSoundAtRate {
+                // A jump while it plays (a click on the timeline, a key to the
+                // next cut) waits for its first frames as Space from rest
+                // does, and the sound starts again with the clock from there
+                // (`preRollWithSound`). Played on at once, a jump back on a
+                // full-screen recording held the frame it landed on for three
+                // frames while the reading caught up from the key frame
+                // (2026-11-24).
+                stopAudio()
+                restartDocumentClock(fromRest: true)
+            } else {
+                restartDocumentClock()
+                // The sound is scheduled against one engine start, so a scrub
+                // mid-play has to schedule it again from where the hand put the
+                // playhead. Nothing is faded: a scrub is somebody looking for a
+                // moment, and what they want to hear is that moment.
+                if playsSoundAtRate { startAudio() }
+            }
         }
         // ...and where the playhead is being DRAGGED, the sliver of sound
         // under it, so somebody hunting for a word can hear it go by
@@ -142,6 +160,15 @@ extension EditorState {
     /// ...and let go. Whatever the last refresh had not yet drawn is drawn now.
     func endPlayheadDrag() {
         playheadInHand = false
+        // ...and a clock still playing goes its own way again.
+        playheadTravel = .whenHandLetsGo(clockRate: isDocumentPlaying ? documentPlaybackRate : nil,
+                                         handWent: playheadTravel)
+        // ...and plays on from where it was let go once its first frames are
+        // in, the way a jump while playing does.
+        if isDocumentPlaying, playsSoundAtRate {
+            stopAudio()
+            restartDocumentClock(fromRest: true)
+        }
         catchUpOnQuietPictures()
         scrubFrames?.stop()
         playheadSettleTask?.cancel()

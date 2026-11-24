@@ -4225,6 +4225,9 @@ private final class Run {
                                                           rate: rate, scrub: scrub, tolerance: tolerance),
                  state: describe())
 
+        case .expectJumpWhilePlaying(let jump):
+            note(number, step.name, try await checkJumpWhilePlaying(jump), state: describe())
+
         case .filmThumb(let film):
             note(number, step.name, try await filmThumb(film, number: number), state: describe())
         case .filmHover(let film):
@@ -12836,6 +12839,199 @@ private final class Run {
             : "; \(late.count) picture(s) drawn from a frame up to \(behind) off, within what a person cannot see")
     }
 
+
+    /// One picture the canvas was handed after the playhead was moved while
+    /// it played (`expectJumpWhilePlaying`).
+    private struct JumpLook {
+        let moment: Int
+        let shown: CGImage
+        let drawn: PhotonzDocument
+        let present: Set<UUID>
+        /// The play passes of each recording as the picture landed.
+        let passes: [String]
+        let travel: String
+        /// When it was handed over, in milliseconds on the wall clock.
+        let at: Int
+    }
+
+    /// Plays, moves the playhead while it plays, and reads every picture the
+    /// canvas is handed after (`expectJumpWhilePlaying`, `JumpPlayReading`).
+    private func checkJumpWhilePlaying(_ jump: PlaytestJumpWhilePlaying) async throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "there is no recording in this document to play")
+        }
+        let name = jump.name
+        let fromMS = Int((jump.fromSeconds * 1000).rounded())
+        let toMS = min(Int((jump.toSeconds * 1000).rounded()), editor.lastDocumentTimeMS)
+        let watchMS = Int((jump.watchSeconds * jump.rate * 1000).rounded())
+        guard toMS + watchMS < editor.lastDocumentTimeMS else {
+            throw Failure(description: String(format: "the document is %.2fs long, too short to watch %.2fs "
+                + "of playing after a jump to %.2fs", Double(editor.documentLengthMS) / 1000,
+                jump.watchSeconds, jump.toSeconds))
+        }
+        let width = 320
+        editor.pauseDocument()
+        editor.scrubDocument(toMS: fromMS)
+        await sleep(1.2)
+        editor.playDocument(rate: jump.rate)
+        // Play until it has played what it was asked to, on the wall clock.
+        let began = Date()
+        let playedMS = Int((jump.playForSeconds * jump.rate * 1000).rounded())
+        while editor.isDocumentPlaying, editor.documentTimeMS < fromMS + playedMS,
+              Date().timeIntervalSince(began) < jump.playForSeconds + 3 {
+            await sleep(0.005)
+        }
+        guard editor.isDocumentPlaying else {
+            throw Failure(description: "the document stopped playing before the jump, at "
+                + String(format: "%.2fs", Double(editor.documentTimeMS) / 1000))
+        }
+        let jumpedFrom = editor.documentTimeMS
+        var looks: [JumpLook] = []
+        var listening = false
+        editor.playtestPictureTap = { image, moment, drawn, present in
+            guard listening else { return }
+            // The first picture of the new place opens the watch: anything
+            // handed before was asked for before the jump.
+            if looks.isEmpty, !(toMS...(toMS + 250)).contains(moment) { return }
+            guard moment <= toMS + watchMS + 100, let small = Self.onBlack(image, width: width)?.image else { return }
+            var seen = Set<UUID>()
+            let passes = document.movieFrames(atTimeMS: moment).compactMap { request -> String? in
+                guard seen.insert(request.movie.id).inserted else { return nil }
+                return (editor.movieFrames.playtestPasses[request.movie.id] ?? []).joined(separator: "; ")
+            }
+            looks.append(JumpLook(moment: moment, shown: small, drawn: drawn, present: present, passes: passes,
+                                  travel: editor.playheadTravel == .backward ? "backward" : "forward",
+                                  at: Int((Date().timeIntervalSinceReferenceDate * 1000).rounded())))
+        }
+        defer { editor.playtestPictureTap = nil; editor.playtestTapPresent = [:] }
+        if jump.drag {
+            // A hand on the ruler's playhead, while it plays: a quarter second
+            // of moves from where it is to where it lets go.
+            editor.beginPlayheadDrag()
+            for step in 1...15 {
+                editor.dragPlayhead(toMS: jumpedFrom + (toMS - jumpedFrom) * step / 15)
+                await sleep(1.0 / 60)
+            }
+            listening = true
+            editor.endPlayheadDrag()
+        } else {
+            listening = true
+            editor.playheadToTimelineClick(atMS: toMS)
+        }
+        let jumped = Date()
+        while editor.isDocumentPlaying, editor.documentTimeMS < toMS + watchMS + 100,
+              Date().timeIntervalSince(jumped) < jump.watchSeconds + 3 {
+            await sleep(0.005)
+        }
+        let travelAtEnd = editor.playheadTravel == .backward ? "backward" : "forward"
+        editor.pauseDocument()
+        editor.playtestPictureTap = nil
+        guard looks.count >= 2 else {
+            throw Failure(description: "the canvas was handed \(looks.count) picture(s) after the jump")
+        }
+        // The export's picture of every moment shown, drawn the way the file
+        // is written.
+        let height = looks[0].shown.height
+        let frames = DocumentFrames(document: document, store: editor.store,
+                                    movieURLs: MovieLibrary.shared.urls(in: document),
+                                    size: CGSize(width: width, height: height), streaming: true)
+        defer { frames.putTheStoreBack() }
+        var exported: [Int: CGImage] = [:]
+        for moment in Set(looks.map(\.moment)).sorted() {
+            if let made = await frames.frame(atMS: moment), let small = Self.onBlack(made, width: width)?.image {
+                exported[moment] = small
+            }
+        }
+        func difference(_ a: CGImage, _ b: CGImage?) -> Double {
+            guard let b else { return 255 }
+            let one = Self.bytes(of: a), two = Self.bytes(of: b)
+            guard one.count == two.count, !one.isEmpty else { return 255 }
+            var sum = 0
+            var at = 0
+            while at + 3 < one.count {
+                sum += abs(Int(one[at]) - Int(two[at])) + abs(Int(one[at + 1]) - Int(two[at + 1]))
+                    + abs(Int(one[at + 2]) - Int(two[at + 2]))
+                at += 4
+            }
+            return Double(sum) / Double(one.count / 4 * 3)
+        }
+        // For every clip each moment shows, the frame drawn for it.
+        let read = looks.map { look -> JumpPlayReading.Look in
+            let clips = document.movieFrames(atTimeMS: look.moment).map { request -> JumpPlayReading.Frame in
+                let who = document.layer(id: request.layerID)?.name ?? "the second picture"
+                let wanted = request.movie.frameIndex(atSourceMS: request.sourceMS)
+                guard let drawn = look.drawn.allLayers.first(where: { $0.id == request.layerID }),
+                      drawn.isVisible, case .image(let ref) = drawn.content, look.present.contains(ref.id)
+                else { return .init(clip: who, wanted: wanted, shown: nil) }
+                return .init(clip: who, wanted: wanted, shown: request.movie.frameIndex(ofFrameID: ref.id))
+            }
+            return .init(momentMS: look.moment, frames: clips,
+                         difference: difference(look.shown, exported[look.moment]),
+                         shownAtMS: look.at - (looks.first?.at ?? look.at))
+        }
+        let onTime = max(0, PlaybackKeepsUp.framesOnTime(rate: jump.rate))
+        let reading = JumpPlayReading(looks: read, tolerance: jump.tolerance, onTime: onTime,
+                                      longestHoldMS: jump.longestHoldMS)
+        // Every picture beside the export's, and a pair per picture for a reel.
+        let pairWidth = width * 2 + 4
+        let columns = 4
+        let rows = (looks.count + columns - 1) / columns
+        if let space = CGColorSpace(name: CGColorSpace.sRGB),
+           let sheet = CGContext(data: nil, width: columns * (pairWidth + 8), height: rows * (height + 8),
+                                 bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+            sheet.setFillColor(CGColor(gray: 0.15, alpha: 1))
+            sheet.fill(CGRect(x: 0, y: 0, width: sheet.width, height: sheet.height))
+            for (index, look) in looks.enumerated() {
+                let x = (index % columns) * (pairWidth + 8)
+                let y = sheet.height - (index / columns + 1) * (height + 8)
+                sheet.draw(look.shown, in: CGRect(x: x, y: y, width: width, height: height))
+                if let export = exported[look.moment] {
+                    sheet.draw(export, in: CGRect(x: x + width + 4, y: y, width: width, height: height))
+                }
+                if read[index].difference > jump.tolerance {
+                    sheet.setStrokeColor(CGColor(red: 1, green: 0.2, blue: 0.2, alpha: 1))
+                    sheet.setLineWidth(3)
+                    sheet.stroke(CGRect(x: x + 1, y: y + 1, width: pairWidth - 2, height: height - 2))
+                }
+            }
+            if let made = sheet.makeImage() { try writePNG(made, name: "\(name)-sheet") }
+            for (index, look) in looks.enumerated() {
+                guard let pair = CGContext(data: nil, width: pairWidth, height: height, bitsPerComponent: 8,
+                                           bytesPerRow: 0, space: space,
+                                           bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { continue }
+                pair.setFillColor(CGColor(gray: 0.15, alpha: 1))
+                pair.fill(CGRect(x: 0, y: 0, width: pairWidth, height: height))
+                pair.draw(look.shown, in: CGRect(x: 0, y: 0, width: width, height: height))
+                if let export = exported[look.moment] {
+                    pair.draw(export, in: CGRect(x: width + 4, y: 0, width: width, height: height))
+                }
+                if let made = pair.makeImage() { try writePNG(made, name: String(format: "%@-pair-%03d", name, index + 1)) }
+            }
+        }
+        let table = read.enumerated().map { index, look in
+            String(format: "%d %.3fs +%dms diff %.1f ", index + 1, Double(look.momentMS) / 1000, look.shownAtMS,
+                   look.difference)
+                + look.frames.map { "\($0.clip) \($0.shown.map(String.init) ?? "none") for \($0.wanted)" }
+                    .joined(separator: ", ")
+                + " travel " + looks[index].travel + " [" + looks[index].passes.joined(separator: " | ") + "]"
+        }
+        write(json: ["from": jumpedFrom, "to": toMS, "looks": table, "problems": reading.problems,
+                     "travelAtEnd": travelAtEnd], to: "\(name)-looks.json")
+        let worst = read.map(\.difference).max() ?? 0
+        let how = jump.drag ? "dragged" : "clicked"
+        let summary = String(format: "playing%@, the playhead was %@ from %.2fs to %.2fs; the canvas was handed "
+                             + "%d pictures in the %.1fs after (%@-sheet.png), worst difference %.1f",
+                             jump.rate == 1 ? "" : " at \(PlaybackSpeed.label(jump.rate))", how,
+                             Double(jumpedFrom) / 1000, Double(toMS) / 1000, looks.count, jump.watchSeconds,
+                             name, worst)
+            + (reading.heldMS.map { "; the new place came on \($0)ms after the jump" } ?? "")
+        guard reading.problems.isEmpty else {
+            throw Failure(description: summary + "; " + reading.problems.joined(separator: " | "))
+        }
+        return summary + "; every picture after it showed its own moment, never going back in time"
+    }
 
     /// One look at a playing document for `expectPlaybackShows`: the moment,
     /// what the layer was doing in the document the picture was drawn from,

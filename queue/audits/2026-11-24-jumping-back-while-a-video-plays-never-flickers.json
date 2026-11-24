@@ -1,0 +1,27 @@
+{
+  "feature": "Jumping back while a video plays never flickers",
+  "epic": "video-perf",
+  "summary": "Clicking an earlier point on the timeline while a video plays now shows that moment and plays on from it. Before, the picture swapped every other frame between the new place and a frame from before the jump, for as long as it kept playing.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Measured in the probe with the walk jumping-back-while-playing-walk: every picture the canvas was handed in the second after each jump, beside the export's picture of the same moment. Reel: 2026-11-24-jumping-back-reel.mp4 (and .gif), before on top and after below, canvas left and export right, a third of real speed.",
+  "switched": {},
+  "try": [
+    { "do": "Open any MP4 in Photonz Dev and open the timeline.", "shot": "2026-11-24-jumping-back-1-sc.png" },
+    { "do": "Press Space and let it play for a couple of seconds." },
+    { "do": "While it plays, click a point a few seconds earlier on the timeline.", "shot": "2026-11-24-jumping-back-before-sheet.png" },
+    { "do": "Watch the next second: the picture should start at the moment you clicked and play on smoothly.", "shot": "2026-11-24-jumping-back-after-sheet.png" },
+    { "do": "Do it again with a short jump back, a jump forward, and by dragging the playhead back while it plays." },
+    { "do": "Put a cross dissolve on a cut, play past it, then click back into the dissolve while it plays.", "shot": "2026-11-24-jumping-back-dissolve-sc.png" }
+  ],
+  "evaluate": [
+    "Does the picture ever swap back and forth after you click back while playing?",
+    "The sound now stops for a moment and starts again with the picture at the new place (usually under a tenth of a second, at most 0.8s). Does that pause feel right, or would you rather the sound carried on at once?",
+    "On a long screen recording, does a click while playing land as quickly as you expect?"
+  ],
+  "rough": [
+    "Cause: a jump back while playing left the playhead marked as going backwards while the clock played forwards. Nothing read ahead, each frame was read on its own, and until it landed the canvas stood in a frame from the place it had left. On the long-GOP fixture: 135 for 61, then 61, then 135 for 62, 135 for 63, then 63, through the whole second. Not a regression from the cross fade fixes (5b1effa70, f599c5fdc). The direction rule dates from 2026-09-26 and playing backwards by it from 2026-10-08; the cross fade task only tested from rest.",
+    "Second change: a jump while playing at a speed with sound now waits for its first frames the way Space from rest does, and the sound restarts with the picture. Without it, a jump back on the full-screen Retina recording held its first frame for three frames while reading caught up from the key frame.",
+    "Measured after, 9 cases: long and short jump back, jump forward, drag back while playing, 0.5x, 2x, across a cut, into a dissolve, and a full-screen Retina recording. The new place came on 0 to 48ms after the jump, and every picture after it matched its own frame (difference to the export at most 1.2 of 255 on the long-GOP recording, 2.3 on the Retina one). No picture went back in time.",
+    "During that short wait the canvas still shows a stand-in, sometimes a frame from elsewhere in the recording rather than the one on screen before the click: one picture, about 25ms, in the long-jump case (the first boxed pair in the after sheet). Too short to see, so it is left in the task log rather than filed.",
+    "Not reproduced on your own recordings; the evidence is the repo's long-GOP and Retina fixtures, which do reproduce it on the old code."
+  ]
+}

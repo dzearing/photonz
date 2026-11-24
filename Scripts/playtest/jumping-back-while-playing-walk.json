@@ -1,0 +1,198 @@
+{
+  "out": "/tmp/photonz-playtest/jumping-back-while-playing-walk",
+  "seed": "Clicking an earlier point on the timeline while a plain MP4 plays shows that moment and plays on from it, with no frame from anywhere else flashing in between. Every picture the canvas is handed in the second after the jump is held up against the export's picture of its moment, on a long-GOP recording (one key frame in eight seconds, so the new place decodes slowly) and on a full-screen Retina recording: a long jump back, a short one, one forward, a drag back on the ruler while it plays, and at half and double speed. The user saw the picture swap between two frames for about half a second on 2026-11-23.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "fixtures/Quiet system audio recording 1280x800.mp4",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "describe",
+      "stage": "1-long-gop",
+      "note": "An eight second 1280x800 recording with a single key frame, so a jump decodes from its first frame"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-long-gop"
+    },
+    {
+      "do": "expectJumpWhilePlaying",
+      "name": "long-gop-long-back",
+      "from": 5,
+      "playFor": 1,
+      "to": 2,
+      "tolerance": 4
+    },
+    {
+      "do": "expectJumpWhilePlaying",
+      "name": "long-gop-short-back",
+      "from": 5,
+      "playFor": 1,
+      "to": 5.4,
+      "tolerance": 4
+    },
+    {
+      "do": "expectJumpWhilePlaying",
+      "name": "long-gop-forward",
+      "from": 1,
+      "playFor": 1,
+      "to": 5,
+      "tolerance": 4
+    },
+    {
+      "do": "expectJumpWhilePlaying",
+      "name": "long-gop-drag-back",
+      "from": 5,
+      "playFor": 1,
+      "to": 2.5,
+      "how": "drag",
+      "tolerance": 4
+    },
+    {
+      "do": "expectJumpWhilePlaying",
+      "name": "long-gop-half",
+      "from": 5,
+      "playFor": 1,
+      "to": 3,
+      "rate": 0.5,
+      "tolerance": 4
+    },
+    {
+      "do": "expectJumpWhilePlaying",
+      "name": "long-gop-double",
+      "from": 4,
+      "playFor": 1,
+      "to": 2,
+      "rate": 2,
+      "tolerance": 4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "action",
+      "action": "clipDeletePiece"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "describe",
+      "stage": "3-a-cut",
+      "note": "The same recording cut at a quarter and at the middle and the middle thrown away: a jump cut at 2s that plays on from 4s of the recording"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-cut"
+    },
+    {
+      "do": "expectJumpWhilePlaying",
+      "name": "cut-back-across-it",
+      "from": 4.5,
+      "playFor": 1,
+      "to": 1.5,
+      "tolerance": 4
+    },
+    {
+      "do": "action",
+      "action": "clipPickFirstCut"
+    },
+    {
+      "do": "action",
+      "action": "clipTransitionDissolve"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "describe",
+      "stage": "4-a-dissolve",
+      "note": "A cross dissolve on that jump cut, both sides from the one recording"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-a-dissolve"
+    },
+    {
+      "do": "expectJumpWhilePlaying",
+      "name": "dissolve-back-into-it",
+      "from": 4.5,
+      "playFor": 1,
+      "to": 1.8,
+      "tolerance": 4
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Full screen Retina recording 3456x2234.mp4",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "describe",
+      "stage": "2-retina",
+      "note": "A 3456x2234 screen recording with key frames two seconds apart"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-retina"
+    },
+    {
+      "do": "expectJumpWhilePlaying",
+      "name": "retina-back",
+      "from": 2.1,
+      "playFor": 0.8,
+      "to": 1.0
+    }
+  ]
+}

@@ -4207,6 +4207,33 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("An expectJumpWhilePlaying step reads where it plays, where it jumps, how and how fast")
+    func expectJumpWhilePlayingParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectJumpWhilePlaying", "name": "x", "to": 1 },
+                     { "do": "expectJumpWhilePlaying", "name": "y", "from": 5, "playFor": 0.5, "to": 6.5,
+                       "rate": 2, "how": "drag", "watch": 1.5, "tolerance": 6, "longestHold": 0.3 } ] }
+        """)
+        guard case .expectJumpWhilePlaying(let first) = script.steps[0],
+              case .expectJumpWhilePlaying(let second) = script.steps[1] else {
+            Issue.record("expectJumpWhilePlaying"); return
+        }
+        #expect(first == PlaytestJumpWhilePlaying(name: "x", fromSeconds: 2, playForSeconds: 1, toSeconds: 1,
+                                                  rate: 1, drag: false, watchSeconds: 1, tolerance: 8,
+                                                  longestHoldMS: 500))
+        #expect(second == PlaytestJumpWhilePlaying(name: "y", fromSeconds: 5, playForSeconds: 0.5, toSeconds: 6.5,
+                                                   rate: 2, drag: true, watchSeconds: 1.5, tolerance: 6,
+                                                   longestHoldMS: 300))
+        #expect(PlaytestStep.names.contains("expectJumpWhilePlaying"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectJumpWhilePlaying"))
+        for bad in [#""to": -1"#, #""to": 1, "rate": -1"#, #""to": 1, "how": "fling""#,
+                    #""to": 1, "watch": 0"#, #""to": 1, "tolerance": 0"#, #""to": 1, "playFor": 0"#] {
+            #expect(throws: (any Error).self) {
+                try decode(#"{ "steps": [ { "do": "expectJumpWhilePlaying", "name": "x", "# + bad + " } ] }")
+            }
+        }
+    }
+
     @Test("An expectPlaybackNeverBlank step defaults to three seconds and twenty moments")
     func expectPlaybackNeverBlankDefaults() throws {
         let script = try decode("""

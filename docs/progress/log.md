@@ -23439,3 +23439,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Next (`next-panel-waits-for-play-to-stop`, on by default): while a video plays, the sections and late rows a pick brings into the right hand panel wait for play to stop or the pointer to come into the panel (`PanelPlayHold`, `InspectorPanel.catchUp`, `PanelRowsArrival`). Speed walk worst of 3: pick from nothing 61 -> 22.8 ms, pick 26 -> 17.5, unpick 33 -> 12.8, blade picked 22 -> 16.6, trim picked 18 -> 12.1, undo picked 18 -> 13.0. Baseline rewritten. Walk: `a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk`.
 - Ruled out: freezing the panel in its own NSHostingView (bodies still flush unless it leaves the window, and it cannot be pictured meanwhile).
 - Next: pick, pick from nothing and blade picked are still over 16 ms; a pick with the whole panel already built is not timed yet. Leads in the task log.
+
+## 2026-11-24 — Jumping back while a video plays never flickers
+
+- Reproduced the user's flicker in the probe: a click back on the timeline while playing left the playhead marked as going backwards while the clock played forwards, so nothing read ahead and every frame not read yet was stood in for by a frame from the place it had left (new, old, new...). Not a regression from the cross fade fixes; a case nobody had tested.
+- Fix: while the clock plays, a jump keeps the clock's direction (`MovieFramesInHand.Travel.afterMove`, `whenHandLetsGo`); a jump while playing at a sound speed waits for its first frames like Space from rest (at most 0.8s, sound restarts with the picture).
+- New walk step `expectJumpWhilePlaying` (`JumpPlayReading`) keeps every picture after a jump and reads it against the export; `jumping-back-while-playing-walk` covers 9 cases. Audit: `queue/audits/2026-11-24-jumping-back-while-a-video-plays-never-flickers.json`, reel `2026-11-24-jumping-back-reel.mp4`.
+- Next: nothing open on this; the wait's stand-in can be a frame from elsewhere for one picture (~25ms), noted in the task log.
