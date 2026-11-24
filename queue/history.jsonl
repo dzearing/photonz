@@ -19079,3 +19079,4 @@
 {"t":"2026-11-24T18:32:02.099Z","ev":"task_note","id":"text-that-zooms-or-scales-in-a-video-moves-as-on"}
 {"t":"2026-11-24T18:32:02.181Z","ev":"task_note","id":"text-that-zooms-or-scales-in-a-video-moves-as-on"}
 {"t":"2026-11-24T18:32:02.259Z","ev":"task_note","id":"text-that-zooms-or-scales-in-a-video-moves-as-on"}
+{"t":"2026-11-24T18:32:02.701Z","ev":"task_done","id":"text-that-zooms-or-scales-in-a-video-moves-as-on","from":"in_progress","note":"Words that grow in a video move as one piece: letters slip 0.007 px at most in playback and export (0.50 and 0.63 before); shapes, pictures, zooms on recordings and camera pushes steady too. Verified by full test suite, words-that-grow-move-as-one-walk at Next defaults and 11 neighbouring walks. Audit 2026-11-24-text-that-grows-in-a-video-moves-as-one-piece with reel."}
