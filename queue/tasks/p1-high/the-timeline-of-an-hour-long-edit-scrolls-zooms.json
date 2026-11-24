@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T04:02:18.728Z",
+  "updated": "2026-11-24T04:32:34.362Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T04:02:18.727Z",
-      "note": "... 76 earlier entries elided",
-      "elided": 76
-    },
-    {
-      "t": "2026-11-19T15:36:46.628Z",
-      "note": "Pass 12 landed d04e1564c: a zoom stretches the last painting instead of painting every frame. Near Fit 13.5-14.3 -> 12.2-12.4 ms, zoom in 11.8-12.6 -> 11.0, scroll 9.0-9.7 -> 8.9; look unchanged at rest. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
-    },
-    {
-      "t": "2026-11-19T16:10:49.339Z",
-      "note": "claimed by go loop"
+      "t": "2026-11-24T04:32:34.361Z",
+      "note": "... 78 earlier entries elided",
+      "elided": 78
     },
     {
       "t": "2026-11-19T16:43:56.917Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-24T04:02:18.726Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T04:32:30.263Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T04:32:34.360Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-24T04:02:13.182Z",
+  "started": "2026-11-24T04:32:30.262Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
