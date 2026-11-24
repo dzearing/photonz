@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:47:56.154Z",
-  "updated": "2026-11-24T10:05:24.744Z",
+  "updated": "2026-11-24T10:35:40.601Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (28 passes, closed 2026-11-23 per its triage). Measure with Scripts/perf/speed-walk.sh (short form, ~2 min) and Scripts/perf/pass-profile.sh (PassSampler, edits-only walks; Instruments refuses without developer mode). Where the time is (pass 25 to 28): a landing pass has a floor of about 15-17 ms whatever lands: dock stack layout ~4.4, SwiftUI graph ~3.8, accessibility focus ~3.0 (AccessibilityNode.updateFocus -> ViewRendererHost.focusResponder walking every responder; SwiftUI accessibility is switched on in the probe by another process, so a person with any accessibility client sees it too), title bar drag regions ~1.3 (-[NSWindow _resetDragMargins] asks the hosting view acceptsFirstResponder, which walks every focusable control). A pick from nothing is ~30 passes over 0.7 s, one section or row set each. Leads not tried: fewer AppKit-backed controls in the panel (TextField and Picker as NSView, ~170 in the window) so the focus walk shrinks; land only the sections in sight during play and the rest after play stops; keep the clip sections built and hidden across unpick (13.5 ms of unpick is SwiftUI graph teardown). Tried and reverted: a Layout cache for PanelFieldRowLayout (worse), caching control minimums (no gain). Related panel-cost tasks: folding-a-section-that-lets-the-panel-fit-again, leaving-preview-slides-back-without-a-hitch.",
@@ -143,6 +143,14 @@
     {
       "t": "2026-11-24T10:05:24.743Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T10:35:35.680Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T10:35:40.600Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
   "walks": [
@@ -152,7 +160,7 @@
     "a-transition-put-on-while-playing-keeps-playing-walk",
     "a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk"
   ],
-  "started": "2026-11-24T10:05:20.334Z",
+  "started": "2026-11-24T10:35:35.679Z",
   "failures": 1,
   "lastError": {
     "at": "2026-11-23T18:22:12.384Z",
