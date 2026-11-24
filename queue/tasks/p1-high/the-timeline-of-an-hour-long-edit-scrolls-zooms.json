@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T02:51:16.491Z",
+  "updated": "2026-11-24T03:21:31.395Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T02:51:16.490Z",
-      "note": "... 72 earlier entries elided",
-      "elided": 72
-    },
-    {
-      "t": "2026-11-19T15:36:46.366Z",
-      "note": "Pass 12 change: while a zoom moves a step at a time, painting lanes keep the painting laid a frame or two ago and stretch it (TimelinePaint.stretch/heldStretch 8.5%, tested; EditorState.timelineHeldPainting + timelinePaintRuler/timelinePaintStretch/timelinePaintScaleOnly/timelinePaintLeftEdgeRangeMS; lane applies scaleEffect(x:) before its offset). Let go past 8.5%, when the window leaves what was painted, on any non-zoom move, and 30 ms after the last step. Zoom lane keeps its zooms' spans per document unless a zoom/clip/box drag is in hand (ZoomLane.Spans). Chose 8.5% over 4.5% because near Fit gave 12.5-12.75 vs 12.8 ms and held vs fresh pictures at the same zoom differ only in strip tile placement and, at the pictures' threshold, the name pill arriving up to two frames late."
-    },
-    {
-      "t": "2026-11-19T15:36:46.433Z",
-      "note": "Pass 12 tried and backed out (A/B on one build with defaults switches): drawingGroup on each painted canvas = no change; each canvas in a nested NSHostingView (hitTest nil) = raster during zoom 1.78 -> 1.17 s but commit handlers 3.1 -> 4.5 s, scroll 9.2 -> 10.1 ms. A stretched or slid Canvas is re-rasterised regardless; written into docs/design/video.md 8f."
+      "t": "2026-11-24T03:21:31.394Z",
+      "note": "... 74 earlier entries elided",
+      "elided": 74
     },
     {
       "t": "2026-11-19T15:36:46.497Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-24T02:51:16.489Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T03:21:27.196Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T03:21:31.393Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-24T02:51:11.639Z",
+  "started": "2026-11-24T03:21:27.195Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
