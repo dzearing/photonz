@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T02:21:00.702Z",
+  "updated": "2026-11-24T02:51:16.491Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T02:21:00.701Z",
-      "note": "... 70 earlier entries elided",
-      "elided": 70
-    },
-    {
-      "t": "2026-11-19T13:59:47.356Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-19T15:36:46.298Z",
-      "note": "Pass 12 (2026-11-19). Baseline at 7e5df3922, 60 min edit: near Fit 13.9-14.3 ms mean (later runs 13.5-13.6), zoom in 12.5, out 10.6-11.5, scroll 9.0-9.7 (p95 12-13, 10-29 late of 360). Profile of the zoom stretch: main thread busy 80%; SwiftUI graph ~61% (bodies 21%, canvas display lists 16%), CA commit 55% incl. RBLayer rasterising 16.6%; app lane code ~25% total, no piece over ~1 ms (TimelineTrackRow.lateBody 11.5%, painted clips paint 11.9%, ZoomLane.bars 2.5-3.8%, hasClickMarks 1.4%)."
+      "t": "2026-11-24T02:51:16.490Z",
+      "note": "... 72 earlier entries elided",
+      "elided": 72
     },
     {
       "t": "2026-11-19T15:36:46.366Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-24T02:21:00.700Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T02:51:11.640Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T02:51:16.489Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-24T02:20:56.432Z",
+  "started": "2026-11-24T02:51:11.639Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
