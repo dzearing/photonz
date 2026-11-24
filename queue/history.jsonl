@@ -19096,3 +19096,16 @@
 {"t":"2026-11-24T19:43:29.631Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
 {"t":"2026-11-24T19:43:29.708Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
 {"t":"2026-11-24T19:43:30.162Z","ev":"task_done","id":"a-video-that-changed-on-disk-shows-its-new-frame","from":"in_progress","note":"A recording replaced on disk shows only its new file: reopened (0 old pictures of 182 looks, was old length, size, sound, clicks and timeline pictures) or with its window open (reloads 0.9s after the file settles, playhead kept, no blank, 0 old of 182; was 26 of 91 scrubbing back). Three walks at Next defaults, new unit tests that failed on the old code, full suite green. Audit 2026-11-24-a-video-that-changed-on-disk."}
+{"t":"2026-11-24T19:44:06.820Z","ev":"task_started","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","title":"An edit with 50 tracks and 100 clips scrolls, plays and edits without lag or flashes","priority":"p1-high"}
+{"t":"2026-11-24T20:12:01.998Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-24T20:13:55.874Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-24T20:29:39.257Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-24T21:03:37.917Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-24T21:38:10.012Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-24T21:53:35.310Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-24T23:14:43.992Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-24T23:14:44.072Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-24T23:14:44.151Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-24T23:14:44.230Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-24T23:14:44.305Z","ev":"task_note","id":"jumping-back-while-a-video-plays-never-flickers"}
+{"t":"2026-11-24T23:14:44.381Z","ev":"task_pending","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"Pass 1 landed: no flashes and no drops with ten clips up, zoom and edits 2 to 3 times faster. Vertical scroll (worse than before), zoom and three edits are still over their bars; see the log."}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T15:35:22.939Z",
-  "updated": "2026-11-24T15:46:15.647Z",
+  "updated": "2026-11-24T23:14:44.304Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-23: \"When I play back and scrub to a previous location, I'm seeing flickering!!! as if we're swaping between 2 frames or something for a brief moment\", then: \"i thought this was specific to transitions, but i just opened an mp4, played, clicked on a previous location in the timeline, and it started flickering for about half a sec\". Not reproduced by me; most likely Photonz Dev (built 2026-11-23 06:54).\n\nA shipped task came close: a-cross-fade-plays-smoothly-in-the-editor-the-wa (done 2026-11-21) fixed borrowed frames standing in, restarts onto the same key frame, and play starting before frames are ready, and verified scrubs from REST; its log says the after-a-scrub walk passes on old code too, so nothing guards this. This report is a jump WHILE playing. Suspects, not confirmed: after the jump the play pass still shows frames queued for the old position for a few ticks while the new pass decodes from its key frame (about half a second of GOP would match the user's half second), or the resting scrub read and the play pass both draw and alternate. Code: Sources/PhotonzCore/MoviePlayPass.swift, Sources/PhotonzCore/MovieFrameQueue.swift; recent hunt and budget commits cf12e8b00, b9cf61d13; the in-progress task picking-letting-go-of-and-cutting-a-clip-while-a and the hour-long timeline task are also landing nearby, bisect across them.",
@@ -61,6 +61,10 @@
     {
       "t": "2026-11-24T15:46:15.645Z",
       "note": "Fixed the flicker after jumping while a video plays (commit 6b8a6695a). Cause: a jump back while playing left the playhead marked as going backwards, so frames were stood in from the place it had left (A-B-A). It now keeps the clock's direction, and a jump at a sound speed waits for its first frames like Space from rest (max 0.8s). New walk step expectJumpWhilePlaying plus jumping-back-while-playing-walk: 9 cases (long and short back, forward, drag back, 0.5x, 2x, a cut, a dissolve, Retina) fail on the old code and pass now. New place on screen 0-48ms after the jump, every later picture its own frame (export diff at most 2.3/255), no reversal. 13 neighbouring playback walks pass, full test.sh green. Audit and reel in queue/audits/2026-11-24-jumping-back-*."
+    },
+    {
+      "t": "2026-11-24T23:14:44.303Z",
+      "note": "2026-11-24, from the 50 track task: the flashes with many clips up were a different cause (redraw per landed frame, starved passes, frame budget), fixed there in d5f6d5b54. jumping-back-while-playing-walk green on it."
     }
   ],
   "started": "2026-11-24T14:26:18.002Z",

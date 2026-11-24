@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:13:00.798Z",
-  "updated": "2026-11-24T14:17:50.161Z",
+  "updated": "2026-11-24T23:14:44.380Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"the perf of photonz is still pretty rough with video editing. when i add like 50 tracks with 100 clips, scroll starts to lag, i get weird behaviors like flashes during playback, very sluggish behavior\".\n\nContext: the loop could not sign in from about 2026-11-23 19:00 to 2026-11-24 14:10, so the open video-perf tasks made no progress in that window; the user re-logged in on 2026-11-24.\n\nOverlaps, and why this is separate: the-timeline-of-an-hour-long-edit-scrolls-zooms (p1, pending) is about a LONG edit (60 minutes, hundreds of clips) on the 3+ track reference edit, horizontal scroll and zoom; this one is WIDE (50 to 100 tracks): vertical scroll, many track headers, many clips overlapping at one moment for the compositor and decoders. Reuse that task's speed walk, ViewBuildMeter and busy-lane painting rather than building a second harness; if its painted-lane fix also fixes vertical scroll here, record it and move on. picking-letting-go-of-and-cutting-a-clip-while-a (p1, seq 10) covers edit latency while playing; jumping-back-while-a-video-plays-never-flickers covers flicker after a jump. I did not reproduce the user's lag or flashes myself.",
@@ -34,6 +34,51 @@
     {
       "t": "2026-11-24T14:17:50.160Z",
       "note": "seq 15 -> 30"
+    },
+    {
+      "t": "2026-11-24T19:44:06.815Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T20:12:01.996Z",
+      "note": "Before numbers (50 track wide edit, Next defaults, Scripts/perf/walks/wide-50.json): opens in 1.4s, longest pass 627ms. Main thread a frame: zoom in mean 27.5 p95 66 worst 111ms; zoom out 27.7/61/138; near fit 23.6/47/121; along 8.6/17/48; tracks down 3.7/7.3/16.8; tracks up 3.4/3.8/7.2. Edits while playing, longest pass: addTrack 34, undo 27, addClip 35, undo 53, move 25, trim 23, undo 28, pick from nothing 20, blade picked 31, undo picked 27; each rebuilds all 50 trackRows. Play 120s: 1 of 3636 dropped, longest pass 14. Flash reproduced 0:58-1:07: 259 of 356 pictures differ from the export (worst 10.6 of 255), 549 clip frames held behind, 284 from AHEAD, longest wait 230ms. Memory 60s: 2003 to 2032MB, peak 2421."
+    },
+    {
+      "t": "2026-11-24T20:13:55.872Z",
+      "note": "Flash causes found: (1) SweepGate lets 8 passes read at once and a play pass WAITING at its reach keeps its place, so with 10 clips up passes 9+ never read; (2) MovieFrameFetcher.play takes one size per recording from its first request, so a clip of another size starting cancels every pass of that recording; (3) passesPerRecording 3 counts the ones playing, so a clip starting while three play of its recording has no pass ready; a clip with nothing behind in hand then shows another clip's frame from AHEAD."
+    },
+    {
+      "t": "2026-11-24T20:29:39.255Z",
+      "note": "Decoder ceiling (bare AVAssetReader loop on the reference recordings, M4 Max): 672 fps with 1 reader, 632 with 8, 624 with 10. Ten 3456x2234 60fps clips need 600/s before key frame start-ups, so reading every frame cannot hold the bar at ten; skipping frames nothing is decoded from under load, and not reading clips hidden under an opaque full-canvas one. Fixes 1-3 alone made it worse (828 from ahead) because every pass then competes for that ceiling."
+    },
+    {
+      "t": "2026-11-24T21:03:37.915Z",
+      "note": "Sampled the probe in the busy stretch: main thread 393 of 418 samples busy. 211 of them are movieFrameLanded: every frame a pass files at or behind its playhead redraws the whole canvas (displayDocument, drawn(atTimeMS:), submit) on its own, about 300 a second with ten clips. Landings queue behind each other, so frames file late, so more are 'due', so more redraws: the feedback loop behind the held and from-ahead frames."
+    },
+    {
+      "t": "2026-11-24T21:38:10.010Z",
+      "note": "Flashes fixed, same walk before and after: 0:58-1:07 wrong clip frames 833 (549 held, 284 from ahead) -> 3 (one frame late, none ahead); 0:20-0:29 60 -> 0. The last cause was the frame budget: four spare frames for all passes together, so eleven passes let go frames just read and started over from a key frame every half second. Test suite green."
+    },
+    {
+      "t": "2026-11-24T21:53:35.308Z",
+      "note": "Rows near the part on screen only (TimelineRowInSight), main thread before -> after: addTrack 34->17, undo 27->12, addClip 35->16, undo of it 53->33, move 25->12, trim 23->10, undo 28->10, pick 20->10, blade 31->20; zoom in mean 27.5->9.5 p95 66->26; near fit 23.6->6.0 p95 47->11; along p95 17->5.2 worst 48->13; opening longest pass 611->206. Vertical p95 went UP 7.3->11.6 as rows build coming in: splitting a row's build over two frames next."
+    },
+    {
+      "t": "2026-11-24T23:14:43.990Z",
+      "note": "Pass 1 landed (d5f6d5b54). MET: played frames (833 wrong clip frames -> 0 in the ten-up stretch, 1 -> 0 dropped of 3636, worst difference to the export 2.4 of 255), scroll along (p95 5.3, worst 12.0), move 14, trim 11, undo 10-11, add clip 15, pick 11. NOT MET: vertical scroll p95 14.3 worst 17.4 (bar 8.3/16) and WORSE than before (7.3/16.8, 29 of 190 frames late against 1): building rows as they come in (TimelineRowInSight) is the cost; tried a step of a row a frame, a step inside the scroll's own pass, taking rows down after, batches of 4 and 3. Zoom in p95 15.7 worst 20.8, zoom out 18.6/57.6, near fit 12.4/27.7; add track 17, undo of an added clip 33 (7 clip bars built), blade picked 19."
+    },
+    {
+      "t": "2026-11-24T23:14:44.070Z",
+      "note": "Left for the next pass: (1) vertical scroll, first. Lead: keep far rows built but not woken (lane reads of motionStripRuler and timelineLaneFrameStanding are what a zoom wakes), or make one row cheaper (profile with the sampler; its buffer fills before the vertical scroll, so run a walk with only that measure). (2) zoom and the three edits over 16 ms. (3) the 100 track run (Scripts/perf/speed-walk.sh --wide 100; edit written, never measured). (4) before/after screen capture of scrolling and playing: not made. (5) export compared picture by picture: not made; ReferenceWideEditTests 'changes nothing that is drawn' shows every visible layer handed to the renderer equal before and after. (6) starting play from rest at 0:58 still waits about 725 ms."
+    },
+    {
+      "t": "2026-11-24T23:14:44.149Z",
+      "note": "Chose to land the row gate with the vertical scroll regression over holding it back because edits, zoom, opening and sideways scroll are 2 to 3 times faster; the gate is one line to switch off (TimelineRowsInSight.tallEdit). Scripts/test.sh green (all five runs). SmoothedCopyWriterTests failed once in an earlier full run (its temp file was missing) and passed twice alone and in the next full run; not touched by this work. 10 walks green, listed: jumping-back, opening-title-dissolve, scrub-never-blacks-out, an-editing-session, marquee-and-track-range, box-picks, timeline-sub-layer-rows, a-gap-between-clips-closes, a-clip-picked-while-playing, words-that-grow."
+    },
+    {
+      "t": "2026-11-24T23:14:44.379Z",
+      "note": "Pass 1 landed: no flashes and no drops with ten clips up, zoom and edits 2 to 3 times faster. Vertical scroll (worse than before), zoom and three edits are still over their bars; see the log."
     }
-  ]
+  ],
+  "started": "2026-11-24T19:44:06.814Z"
 }
