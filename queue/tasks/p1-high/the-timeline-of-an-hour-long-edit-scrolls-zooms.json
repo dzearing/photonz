@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T00:51:16.735Z",
+  "updated": "2026-11-24T01:50:45.416Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,25 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T00:51:16.734Z",
-      "note": "... 64 earlier entries elided",
-      "elided": 64
-    },
-    {
-      "t": "2026-11-18T11:34:00.647Z",
-      "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-    },
-    {
-      "t": "2026-11-18T11:39:04.274Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-18T11:39:09.630Z",
-      "note": "runner failed (exit 1, attempt 2): You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
-    },
-    {
-      "t": "2026-11-18T11:54:13.375Z",
-      "note": "claimed by go loop"
+      "t": "2026-11-24T01:50:45.415Z",
+      "note": "... 68 earlier entries elided",
+      "elided": 68
     },
     {
       "t": "2026-11-18T11:54:19.026Z",
@@ -506,9 +490,25 @@
     {
       "t": "2026-11-24T00:51:16.733Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T01:21:27.662Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T01:21:32.217Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T01:50:40.907Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T01:50:45.414Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-24T00:51:11.597Z",
+  "started": "2026-11-24T01:50:40.906Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
