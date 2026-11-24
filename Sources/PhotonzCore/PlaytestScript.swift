@@ -1077,6 +1077,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// for it to land. What an export changes about the window (a recording
     /// that cannot be saved counts as kept once exported) is then checkable.
     case exportVideoAsTheSheetDoes
+    /// Export over the very recording the window plays, which is the name the
+    /// save box offers. The window must go on playing the recording as it was
+    /// with the edit on it, and the file opened again must be the export.
+    case exportVideoOverItself
     /// Start an MP4 export at 1080p through the path the Export sheet's button
     /// runs, into the walk's scratch folder, and DO NOT wait for it: the steps
     /// after it run while the card is up, so a walk can photograph the card
@@ -1271,6 +1275,24 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Shut the window holding the sample recording and ask for it again: how a
     /// walk checks that coming back puts the playhead where it was left.
     case reopenSampleRecording
+    /// A recording replaced on disk under its own name
+    /// (`PlaytestChangingRecording`). The first opens six seconds of red, 1280
+    /// by 800 with no sound. The next two put nine seconds of blue, 1440 by
+    /// 810 with sound and a click, at the same path: written over in place,
+    /// or a new file swapped in the way an export or a re-record does. Where
+    /// the walk has a made-up history the file is in it.
+    case openChangingRecording, rewriteChangingRecording, replaceChangingRecording
+    /// Swaps the file back to the red one, so one walk can go round twice.
+    case putFirstRecordingBack
+    /// Scrub the recording backwards then forwards as a hand does, before
+    /// anything has played, and look at every refresh. Every picture on the
+    /// canvas, every decoded frame in hand, the clip's small pictures on the
+    /// timeline, the History thumbnail, and its length, size, sound and clicks
+    /// must be the blue file's, or with the second, the red one's.
+    case expectRecordingChanged, expectRecordingAsFirst
+    /// What a window left open shows a moment after its file changed: the
+    /// same, with the playhead where it was. Waits for it up to five seconds.
+    case expectOpenRecordingReloaded
     /// Make a real five second recording of a corner of the screen through the
     /// app's own recorder, into a history folder of the walk's own, with three
     /// clicks scripted into it at known moments and points, then open it as a

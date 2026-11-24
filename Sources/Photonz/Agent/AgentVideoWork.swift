@@ -1,5 +1,6 @@
 import AppKit
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 
 /// What the video tools do in the running app (`docs/design/agent-mcp.md`,

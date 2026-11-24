@@ -1,6 +1,7 @@
 #if PHOTONZ_PLAYTEST
 import AppKit
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 
 /// The walk steps for zoom regions (`ClipZoom.swift`, `EditorState+Zoom`).
@@ -57,7 +58,7 @@ enum PlaytestZoom {
             return PointerClick(downMS: ms, upMS: ms + 80,
                                 point: CGPoint(x: p.x * size.width, y: p.y * size.height), button: .left)
         }
-        MovieLibrary.shared.setPointerTrackForPlaytest(
+        MovieLibrary.shared.setPointerTrack(
             PointerTrack(pixelSize: size, samples: samples, clicks: clicks), for: movie)
         return "the recording now carries a pointer path of \(samples.count) samples crossing "
             + "the picture between 1 and 6 seconds, and \(clicks.count) clicks"

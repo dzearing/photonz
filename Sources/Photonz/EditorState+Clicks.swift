@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import PhotonzCore
+import PhotonzMedia
 
 // The clicks in a recording: the ones the recorder took down while it ran
 // (beside the file, `PointerTrack.swift`) and the ones a person adds by hand.

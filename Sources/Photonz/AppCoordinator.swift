@@ -839,6 +839,9 @@ final class AppCoordinator {
 
     func showHistory() {
         guard !historyOverlay.isShown else { return }
+        // A recording written over where it is does not tell its folder, so
+        // its tile is checked as History comes up.
+        capture.store.noticeChangedRecordings()
         // The history overlay is a non-activating floating panel that orders
         // itself front and becomes key on its own — DON'T activate the app, or
         // every editor window would be dragged forward with it. "Show history"

@@ -48,6 +48,8 @@ extension EditorState {
         let fetcher = MovieFrameFetcher(store: store)
         fetcher.onFrameLanded = { [weak self] in self?.movieFrameLanded() }
         movieFramesStorage = fetcher
+        // A window that shows recordings is told when one changes on disk.
+        MovieFileWatch.shared.add(self)
         return fetcher
     }
 

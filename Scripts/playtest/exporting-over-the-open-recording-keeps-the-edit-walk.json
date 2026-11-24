@@ -1,0 +1,18 @@
+{
+  "out": "/tmp/photonz-playtest/exporting-over-the-open-recording-keeps-the-edit-walk",
+  "seed": "A recording is cut in half and exported over its own name, which is the name the save box offers. The window now notices a file changing under it, and this change is its own: it goes on playing the recording it cut, with its edit, and is not moved onto the export with the cut made a second time. The file opened again is the export.",
+  "setup": { "timelineOpen": true, "history": 4, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openChangingRecording" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "b", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "exportVideoOverItself" },
+    { "do": "action", "action": "expectRecordingAsFirst" },
+    { "do": "snapshot", "name": "1-still-the-edit" }
+  ]
+}

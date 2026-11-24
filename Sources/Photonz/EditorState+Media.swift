@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import PhotonzCore
+import PhotonzMedia
 
 /// The Library's Media shelf: the pictures THIS document holds, and putting
 /// one of them down again.

@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 
 // A few knobs restyle a title (`TitleRestyle.swift`,

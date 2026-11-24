@@ -204,11 +204,11 @@ extension CaptureStore {
                 continue
             }
             let pictures = ImageStore()
-            guard let document = try? PackageIO.read(from: project, into: pictures) else {
+            guard let read = try? PackageIO.read(from: project, into: pictures) else {
                 forgetPendingWrite(video)
                 continue
             }
-            _ = EditorState.fileProjectMedia(of: document, project: project)
+            let document = EditorState.fileProjectMedia(of: read, project: project).document
             NSLog("Finishing the edited video \(video.lastPathComponent) a quit cut short")
             writeEditedVideo(entries.first { $0.url.standardizedFileURL == video.standardizedFileURL }?.url ?? video,
                              document: document, pictures: pictures)

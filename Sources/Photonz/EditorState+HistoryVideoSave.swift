@@ -1,5 +1,6 @@
 import Foundation
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 
 // Command S on a recording that lives in history (`HistoryVideoSave`).
@@ -88,24 +89,25 @@ extension EditorState {
         guard HistoryVideoSave.projectIsCurrent(projectModified: modified(project),
                                                 videoModified: modified(video)),
               let opened = try? PackageIO.read(from: project, into: store) else { return false }
-        let missing = Self.fileProjectMedia(of: opened, project: project)
-        installDocument(opened, url: nil)
-        missingMediaNames = missing
+        let filed = Self.fileProjectMedia(of: opened, project: project)
+        installDocument(filed.document, url: nil)
+        missingMediaNames = filed.missing
         // Still the recording's window: Save writes the tile again, the
         // title is the recording's name, and Revert to Original goes back to
         // the recording as it was made.
         recordingURL = video
         openedFileURL = video
         let original = VideoOriginals.url(for: video).standardizedFileURL
-        if let movie = opened.allLayers.lazy.compactMap(\.movie)
+        if let movie = filed.document.allLayers.lazy.compactMap(\.movie)
             .first(where: { MovieLibrary.shared.url(for: $0) == original }) {
             recordingAsOpened = PhotonzDocument.recording(movie, name: video.deletingPathExtension().lastPathComponent)
         }
         markSaved()
         documentTimeMS = 0
         documentMomentChanged()
+        readChangedMedia()
         restoreTimelineView()
-        openInItsMode(opened, forAGuide: false)
+        openInItsMode(filed.document, forAGuide: false)
         tellAboutMissingMedia()
         #if PHOTONZ_PLAYTEST
         PlaytestHarness.register(self)

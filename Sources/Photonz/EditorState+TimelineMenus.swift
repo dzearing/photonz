@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import PhotonzCore
+import PhotonzMedia
 
 // What a right click offers on the timeline: on a clip, on a cut, on the ruler
 // and the transport's scrub bar.

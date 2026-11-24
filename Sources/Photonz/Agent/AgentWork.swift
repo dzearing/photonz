@@ -1,6 +1,7 @@
 import AppKit
 import CoreText
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 
 /// What each agent tool does in the running app (`docs/design/agent-mcp.md`).

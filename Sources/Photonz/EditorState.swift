@@ -4754,13 +4754,14 @@ final class EditorState {
     func openPackage(at url: URL) {
         do {
             let document = try PackageIO.read(from: url, into: store)
-            let missing = Self.fileProjectMedia(of: document, project: url)
-            installDocument(document, url: url)
-            missingMediaNames = missing
-            if document.hasTime {
+            let filed = Self.fileProjectMedia(of: document, project: url)
+            installDocument(filed.document, url: url)
+            missingMediaNames = filed.missing
+            if filed.document.hasTime {
                 // The first frame, fetched before anybody presses anything,
                 // exactly as a recording opened on its own does.
                 documentMomentChanged()
+                readChangedMedia()
             }
             tellAboutMissingMedia()
         } catch {
@@ -4772,23 +4773,32 @@ final class EditorState {
     /// the project holds it by, BEFORE the install, so the first frame asked
     /// for already knows where to come from. One that is nowhere to be found
     /// leaves its clips blank and is named, rather than the whole project
-    /// refusing to open. Returns the names of those.
-    static func fileProjectMedia(of document: PhotonzDocument, project url: URL) -> [String] {
+    /// refusing to open.
+    ///
+    /// A recording whose file was replaced since the project was saved is put
+    /// under a new id in the document handed back, so nothing made from the
+    /// old one (a frame, a cleaned sound kept on disk) can be shown for it;
+    /// `readChangedMedia` then reads what the new file says about itself.
+    static func fileProjectMedia(of document: PhotonzDocument,
+                                 project url: URL) -> (document: PhotonzDocument, missing: [String]) {
         let found = ProjectMedia.resolve((try? PackageIO.readMedia(from: url)) ?? [],
                                          project: url) {
             FileManager.default.fileExists(atPath: $0.path)
         }
+        var document = document
         for media in ProjectMedia.references(in: document) {
             switch media {
             case .recording(let movie):
-                if let file = found.located[movie.id] { MovieLibrary.shared.adopt(movie, at: file) }
+                guard let file = found.located[movie.id] else { continue }
+                let held = MovieLibrary.shared.adopt(movie, at: file, savedAs: found.stamps[movie.id])
+                if held.id != movie.id { document.replaceRecording(movie.id, with: held) }
             case .sound(let sound):
                 if let file = found.located[sound.id] { SoundLibrary.shared.link(sound, to: file) }
             case .picture:
                 break
             }
         }
-        return found.missing.map(\.name)
+        return (document, found.missing.map(\.name))
     }
 
     #if PHOTONZ_PLAYTEST
@@ -5807,6 +5817,15 @@ final class EditorState {
 
     func zoomIn() { zoomTowardCenter(zoom * 1.25) }
     func zoomOut() { zoomTowardCenter(zoom / 1.25) }
+
+    /// The canvas is another size than the viewport was laid out for (the
+    /// recording it is was replaced on disk): fitted afresh, as an opened
+    /// document is.
+    func fitCanvasToWindow() {
+        guard let document else { return }
+        viewport = fittedViewport(documentSize: document.canvasSize, in: canvasViewSize)
+        appPlaced(canvasViewSize == .zero ? nil : viewport, fitted: true)
+    }
 
     func zoomToFit() {
         guard let viewport else { return }

@@ -1,5 +1,6 @@
 import AppKit
 import PhotonzCore
+import PhotonzMedia
 import SwiftUI
 import UniformTypeIdentifiers
 

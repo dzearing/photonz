@@ -4795,6 +4795,31 @@ private final class Run {
                  "exported as MP4; the window is \(editor.hasUnsavedChanges ? "STILL edited" : "no longer edited")",
                  state: describe())
 
+        case .action(.exportVideoOverItself):
+            let editor = try requireEditor()
+            guard let url = editor.recordingURL, let held = editor.document?.allLayers.compactMap(\.movie).first else {
+                throw Failure(description: "the window in front is not holding a recording")
+            }
+            let editMS = editor.documentLengthMS
+            editor.startVideoExport(format: .mp4, quality: .high, to: url)
+            try await poll("the export to land", within: 120) { editor.videoExport == nil }
+            // Long enough for a change on disk to have been taken on.
+            await sleep(2.5)
+            let now = editor.document?.allLayers.compactMap(\.movie).first
+            guard now == held, editor.documentLengthMS == editMS, let plays = MovieLibrary.shared.url(for: held) else {
+                throw Failure(description: "the window was moved onto its own export: it holds "
+                              + "\(now?.durationMS ?? -1) ms of recording in \(editor.documentLengthMS) ms of edit")
+            }
+            let playsMS = Int((await VideoExporter.duration(of: plays) * 1000).rounded())
+            let fileMS = Int((await VideoExporter.duration(of: url) * 1000).rounded())
+            guard abs(playsMS - held.durationMS) < 50, abs(fileMS - editMS) < 100,
+                  let opened = await MovieLibrary.shared.movie(at: url), abs(opened.durationMS - editMS) < 100 else {
+                throw Failure(description: "the window plays a file of \(playsMS) ms for a recording of "
+                              + "\(held.durationMS) ms, and the export is \(fileMS) ms for an edit of \(editMS) ms")
+            }
+            note(number, step.name, "exported \(editMS) ms over the recording; the window still plays all "
+                 + "\(playsMS) ms of what it was cut from, and the file opens as the export", state: describe())
+
         case .action(.exportVideoKept):
             let editor = try requireEditor()
             var said: [String] = []
@@ -5655,6 +5680,59 @@ private final class Run {
             guard let landed else { throw Failure(description: "no editor opened the five minute talk") }
             try await adopt(landed, window: nil, step: step.name,
                             subject: "a five minute recording with somebody talking in it", number: number)
+
+        case .action(.openChangingRecording):
+            let url = try await PlaytestChangingRecording.makeFirst(in: changingRecordingFolder())
+            coordinator.capture.store.reload()
+            coordinator.openRecording(url)
+            try await adoptRecordingDocument(at: url, within: 20, step: step.name,
+                                             subject: "the recording whose file is about to change",
+                                             number: number)
+
+        case .action(let action) where [.rewriteChangingRecording, .replaceChangingRecording,
+                                        .putFirstRecordingBack].contains(action):
+            let way: PlaytestChangingRecording.Way = action == .rewriteChangingRecording ? .inPlace : .replaced
+            let back = action == .putFirstRecordingBack
+            let url = try await PlaytestChangingRecording.change(to: back ? .first : .changed, way: way,
+                                                                 in: changingRecordingFolder())
+            note(number, step.name, "\(url.lastPathComponent) is now the \(back ? "red" : "blue") file, "
+                 + (way == .inPlace ? "written over in place" : "a new file in its place"), state: describe())
+
+        case .action(let action) where action == .expectRecordingChanged || action == .expectRecordingAsFirst:
+            let version: PlaytestChangingRecording.Version = action == .expectRecordingAsFirst ? .first : .changed
+            note(number, step.name, try await checkChangingRecording(is: version), state: describe())
+
+        case .action(.expectOpenRecordingReloaded):
+            let editor = try requireEditor()
+            let before = editor.documentTimeMS
+            let wanted = PlaytestChangingRecording.Version.changed
+            let asked = Date()
+            try await poll("the open window to take on the changed file", within: 5) {
+                editor.document?.allLayers.contains { $0.movie?.durationMS == wanted.seconds * 1000 } == true
+            }
+            let waited = Date().timeIntervalSince(asked)
+            guard editor.documentTimeMS == before else {
+                throw Failure(description: "the playhead moved from \(before) to \(editor.documentTimeMS) ms")
+            }
+            // The picture on screen stays until the new file's frame is read:
+            // a moment, and never a blank one.
+            let swapped = Date()
+            var blank = 0, looks = 0
+            while Date().timeIntervalSince(swapped) < 0.5 {
+                looks += 1
+                let shows = editor.renderedImage.flatMap { PlaytestChangingRecording.version(of: $0) }
+                if shows == wanted { break }
+                if shows == nil { blank += 1 }
+                await sleep(0.008)
+            }
+            let late = Date().timeIntervalSince(swapped)
+            guard late < 0.5, blank == 0 else {
+                throw Failure(description: String(format: "%.2fs after the window took on the new file its picture "
+                              + "was still not the new file's; %d of %d looks were blank", late, blank, looks))
+            }
+            note(number, step.name, String(format: "reloaded %.2fs after it was looked for, its picture %.0f ms later "
+                                           + "with no blank between, playhead still at %d ms. ", waited, late * 1000, before)
+                 + (try await checkChangingRecording(is: wanted)), state: describe())
 
         case .action(.openScrollingPage):
             guard let url = await PlaytestScrollingPage.fresh() else {
@@ -8811,7 +8889,7 @@ private final class Run {
                 if let id = editor.selectedLayerID {
                     editor.setContentPlacement(id: id, horizontal: .stretch)
                 }
-            case .closeDocument, .askToClose, .answerCloseFirst, .exportVideoAsTheSheetDoes,
+            case .closeDocument, .askToClose, .answerCloseFirst, .exportVideoAsTheSheetDoes, .exportVideoOverItself,
                  .exportVideoKept, .startExportAt1080p, .awaitExport, .copyVideo, .copyAsGIF, .awaitCopy,
                  .saveProjectAs, .answerCloseExport, .expectReopenedAsSaved, .expectMissingMedia,
                  .expectWordsFollowTheCurve:
@@ -8841,6 +8919,9 @@ private final class Run {
                  .openScrollingPage, .openRecordingFromDisk,
                  .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture,
+                 .openChangingRecording, .rewriteChangingRecording, .replaceChangingRecording,
+                 .putFirstRecordingBack, .expectRecordingChanged, .expectRecordingAsFirst,
+                 .expectOpenRecordingReloaded,
                  .hotkeyCaptureFullScreen, .hotkeyCaptureRegion, .hotkeyRecord,
                  .hotkeyEditLastCapture, .showCaptureToast, .copyNewestCapture, .captureLands, .captureLandsAndStays, .captureTwoDisplays, .captureLandsCopyFails, .clickCopyAgain, .shortcutsHeldByMacOS, .beginHeldSave, .finishHeldSave,
                  .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace,
@@ -18383,6 +18464,22 @@ private final class Run {
             throw Failure(description: "asking for \(url.lastPathComponent) opened no editor")
         }
         try await adopt(landed, window: nil, step: step, subject: subject, number: number)
+    }
+
+    /// Where the recording that changes on disk is: the walk's made-up history
+    /// when it has one, and the walk's own folder otherwise, never the person's.
+    private func changingRecordingFolder() -> URL {
+        PlaytestGeneratedHistory.folder ?? Self.walkRecordingsFolder()
+    }
+
+    private func checkChangingRecording(is version: PlaytestChangingRecording.Version) async throws -> String {
+        let reading = await PlaytestChangingRecording.read(try requireEditor(), store: coordinator.capture.store,
+                                                           against: version)
+        guard reading.wrong.isEmpty else {
+            throw Failure(description: "not the \(version.colour) file everywhere: "
+                          + reading.wrong.joined(separator: "; ") + ". Right: " + reading.right.joined(separator: "; "))
+        }
+        return "the \(version.colour) file everywhere: " + reading.right.joined(separator: "; ")
     }
 
     /// Waits for the editor a picture in history opened in (⇧⌘6 on a

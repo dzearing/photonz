@@ -143,6 +143,7 @@ extension EditorState {
                           weighed: URL? = nil, captions: CaptionExport = .burnedIn,
                           range: VideoExportRange = .marked) {
         guard videoExport == nil else { return }
+        keepRecordingPlayed(from: url)
         // Already written, to answer what it would weigh: move it into place
         // and there is nothing to watch.
         // The sheet writes it with the captions it shows, burned in or not, so

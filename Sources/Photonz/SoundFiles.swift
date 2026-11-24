@@ -28,7 +28,8 @@ final class SoundLibrary {
     static let shared = SoundLibrary()
 
     @ObservationIgnored private var urls: [UUID: URL] = [:]
-    @ObservationIgnored private var refsByURL: [URL: SoundRef] = [:]
+    @ObservationIgnored private var identities = MediaIdentities<SoundRef>()
+    @ObservationIgnored private var stamps: [UUID: MediaFileStamp] = [:]
     private var waveforms: [UUID: Waveform] = [:]
     /// Ignored on purpose: a bar asks for its file to be read from inside its
     /// own body, and a body that changed something it was watching would ask
@@ -58,10 +59,11 @@ final class SoundLibrary {
     static let openableTypes: [UTType] = [.audio, .mp3, .wav, .aiff, .mpeg4Audio, .movie, .mpeg4Movie]
 
     /// Read a file's length and hand back the reference a document can hold.
-    /// The same file asked for twice is the same reference.
+    /// The same file asked for twice is the same reference, and one replaced
+    /// on disk since is another (`MediaFileStamp`).
     func sound(at url: URL) async -> SoundRef? {
         let standardized = url.standardizedFileURL
-        if let known = refsByURL[standardized] { return known }
+        if let known = identities.known(at: standardized, stamp: MediaFileStamp.of(standardized)) { return known }
         guard await SoundFile.hasSound(at: standardized),
               let durationMS = await SoundFile.durationMS(at: standardized), durationMS > 0
         else { return nil }
@@ -75,8 +77,13 @@ final class SoundLibrary {
     /// picture share an id because they are one file.
     func link(_ ref: SoundRef, to url: URL) {
         let standardized = url.standardizedFileURL
+        // The same id on a file that has changed: its shape is the old file's.
+        if let was = stamps[ref.id], was != MediaFileStamp.of(standardized), urls[ref.id] == standardized {
+            waveforms[ref.id] = nil
+        }
+        stamps[ref.id] = MediaFileStamp.of(standardized)
         urls[ref.id] = standardized
-        refsByURL[standardized] = ref
+        identities.file(ref, at: standardized, stamp: MediaFileStamp.of(standardized))
     }
 
     /// Every sound filed against `old` is filed against `new` instead: a
@@ -84,8 +91,11 @@ final class SoundLibrary {
     /// folder before a save into history writes over its file
     /// (`MovieLibrary.relocate`).
     func relocate(from old: URL, to new: URL) {
-        for (id, url) in urls where url == old { urls[id] = new }
-        if let ref = refsByURL.removeValue(forKey: old) { refsByURL[new] = ref }
+        for (id, url) in urls where url == old {
+            urls[id] = new
+            stamps[id] = MediaFileStamp.of(new)
+        }
+        identities.relocate(from: old, to: new, stamp: MediaFileStamp.of(new))
     }
 
     /// Where this sound lives. A recording's own sound is looked up among the

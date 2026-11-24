@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/a-recording-replaced-on-disk-shows-its-new-frames-walk",
+  "seed": "A recording is opened, scrubbed and played, its window closed, and its file swapped on disk for a different one under the same name: once by writing over it in place, once by a new file taking its place the way an export or a re-record does. Opened again, scrubbing back and forth before anything has played must show the new file only, in the canvas, in every frame decoded, in the timeline's pictures and in History, and its length, size, sound and clicks must be the new file's. Until 2026-11-24 a file was known by its path alone, so the old length, size and frames came back.",
+  "setup": { "timelineOpen": true, "history": 4, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openChangingRecording" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "expectRecordingAsFirst" },
+    { "do": "action", "action": "videoPlay" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "1-the-first-file" },
+    { "do": "action", "action": "rewriteChangingRecording" },
+    { "do": "action", "action": "reopenSampleRecording" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "snapshot", "name": "2-written-over-in-place-and-opened-again" },
+    { "do": "action", "action": "expectRecordingChanged" },
+    { "do": "snapshot", "name": "3-after-scrubbing" },
+    { "do": "action", "action": "putFirstRecordingBack" },
+    { "do": "action", "action": "reopenSampleRecording" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "expectRecordingAsFirst" },
+    { "do": "action", "action": "replaceChangingRecording" },
+    { "do": "action", "action": "reopenSampleRecording" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "expectRecordingChanged" },
+    { "do": "snapshot", "name": "4-replaced-and-opened-again" }
+  ]
+}

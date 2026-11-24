@@ -1,5 +1,6 @@
 import AppKit
 import PhotonzCore
+import PhotonzMedia
 
 // A recording opened the moment it was stopped (`ClosingRecording`).
 //

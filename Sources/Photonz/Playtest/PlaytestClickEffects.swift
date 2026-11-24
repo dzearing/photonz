@@ -1,6 +1,7 @@
 #if PHOTONZ_PLAYTEST
 import AppKit
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 
 /// The walk steps for an effect at each click (`ClickEffect.swift`,

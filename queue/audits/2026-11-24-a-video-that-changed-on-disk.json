@@ -1,0 +1,28 @@
+{
+  "feature": "A video that changed on disk",
+  "epic": "video-perf",
+  "summary": "A recording replaced on disk shows only its new file, whether you open it again or its window was open all along. Before, scrubbing backwards in an open window showed 26 old pictures of 91 until you played, and opening it again kept the old length, size, sound and timeline pictures.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Measured in the probe by a-recording-replaced-on-disk-shows-its-new-frames-walk, a-recording-replaced-while-open-reloads-walk and exporting-over-the-open-recording-keeps-the-edit-walk. Unchanged files keep what is decoded: asking for one again costs 11 microseconds, reading one costs 2 ms.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, then scrub and play it. (The pictures here are before the fix: the file was already the new one and the window still showed the old.)", "shot": "2026-11-24-changed-on-disk-before-open-window.png" },
+    { "do": "With its window open, replace the file in Finder or from another app with a different video of the same name.", "shot": "2026-11-24-changed-on-disk-after-open-window.png" },
+    { "do": "Drag the playhead backwards without playing first." },
+    { "do": "Cut the recording with Command B, then replace the file again.", "shot": "2026-11-24-changed-on-disk-after-edit-kept.png" },
+    { "do": "Close the window, replace the file, open it again and drag the playhead backwards. (Before: new pictures at the old size and length.)", "shot": "2026-11-24-changed-on-disk-before-reopened.png" },
+    { "do": "Look at its length and size in the title bar and zoom the timeline in to its pictures.", "shot": "2026-11-24-changed-on-disk-after-reopened.png" },
+    { "do": "Cut a recording, delete a piece and export over the recording's own name.", "shot": "2026-11-24-changed-on-disk-after-export-over.png" }
+  ],
+  "evaluate": [
+    "Does an open window pick up the new file quickly enough (about a second after the file stops changing)?",
+    "Is it right that it happens silently, with the playhead left where it was?",
+    "Is it right that an edited recording keeps its cuts and length and fits the new picture into the old frame?"
+  ],
+  "rough": [
+    "What an open window did before: it noticed nothing, kept the old length, size, sound and timeline pictures, and mixed old and new frames. Now it reloads about 0.9 s after the file settles, with no blank frame and no undo step.",
+    "If the new file is shorter than a piece of an edit, that piece holds the last frame rather than being trimmed.",
+    "Exporting over the open recording keeps the recording it was cut from in the hidden .photonz-originals folder beside it, so the window's edit stays true. Nothing clears those copies yet.",
+    "Music and sound files are read again when opened again or when their project is, but not while a window is already playing them.",
+    "A saved project whose footage changed is read again on opening; that is covered by unit tests, not by a walk."
+  ]
+}

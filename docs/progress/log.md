@@ -23453,3 +23453,11 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Fix: a growing text keeps the size it was set at (`TextContent.drawnScale`, set by `Layer.drawnLarger(passing:)`), drawn as fattened outlines at the exact part of a pixel (`SteadyType.swift`, `PixelPlacing`); in anything drawn over time (`PhotonzDocument.isDrawnOverTime`) layers are placed by their own numbers, and a crop or zoom window is cut exactly. Words square on to a moved camera are drawn at the size seen.
 - New walk step `expectWordsSteady` (`LetterSteadiness`), walk `words-that-grow-move-as-one-walk` (0.007 px played, 0.007 export; 0.50 and 0.63 on the old app). Tests `TextMovesAsOneTests`, `ThingsMoveAsOneTests`. Audit `2026-11-24-text-that-grows-in-a-video-moves-as-one-piece`.
 - Next: labels on arrows and measurements still slip about half a pixel when scaled (filed).
+
+## 2026-11-24: A video that changed on disk shows its new frames
+
+- Reproduced: with its window open, a replaced recording showed 26 old pictures of 91 scrubbing backwards and none forwards (the frames the window held); reopened, it kept the old length, size, sound, clicks and timeline pictures. A file was known by its path alone.
+- Fix: a file is its path plus `MediaFileStamp`; a changed one is a new `MovieRef`. Open windows are re-pointed (`MovieFileWatch`, `replaceRecording`), undo steps included; projects save the stamp. `MovieLibrary` and `MovieDecoder` moved to `PhotonzMedia` so this is unit tested.
+- Exporting over the open recording keeps what it was cut from (`keepRecordingPlayed`). History checks its recordings as it comes up.
+- Walks: `a-recording-replaced-on-disk-shows-its-new-frames-walk`, `a-recording-replaced-while-open-reloads-walk`, `exporting-over-the-open-recording-keeps-the-edit-walk`.
+- Open: music changed under an open window is not re-read; kept copies from exporting over are never cleared.

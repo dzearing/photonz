@@ -165,7 +165,7 @@ final class CaptureStore {
         // editor commits the trim into it), so the poster and duration
         // regenerate on next display.
         for entry in sorted where entry.kind == .video {
-            let stamp = mediaStamp(for: entry.url)
+            let stamp = Self.mediaStamp(for: entry.url)
             if mediaStamps[entry.url] != stamp {
                 mediaStamps[entry.url] = stamp
                 thumbnails[entry.url] = nil
@@ -233,9 +233,22 @@ final class CaptureStore {
         }
     }
 
+    /// A recording written over in place, rather than swapped for a new file,
+    /// is not a change to the folder this watches. Every recording's file is
+    /// looked at, off the main thread, and the folder read again only where
+    /// one is not what its tile was made from.
+    func noticeChangedRecordings() {
+        let known = mediaStamps.compactMapValues { $0 }
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let changed = known.contains { url, stamp in Self.mediaStamp(for: url) != stamp }
+            guard changed else { return }
+            await self?.reload()
+        }
+    }
+
     /// Fingerprint of a recording's media file (mtime + size); `nil` when it
     /// can't be read.
-    private func mediaStamp(for url: URL) -> String? {
+    private nonisolated static func mediaStamp(for url: URL) -> String? {
         guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path) else {
             return nil
         }
@@ -450,6 +463,11 @@ final class CaptureStore {
     func heldRecordingURL(matching url: URL) -> URL? {
         if let closing = closingRecordingURL(matching: url) { return closing }
         guard let landed = justLanded else { return nil }
+        // Written over since: the frame held is not its last any more.
+        guard mediaStamps[landed.url] == nil || mediaStamps[landed.url] == Self.mediaStamp(for: landed.url) else {
+            justLanded = nil
+            return nil
+        }
         let wanted = url.standardizedFileURL.resolvingSymlinksInPath().path
         guard landed.url == url || landed.url.standardizedFileURL.resolvingSymlinksInPath().path == wanted,
               // Watched since, and left part way: it opens back where it was
@@ -488,7 +506,7 @@ final class CaptureStore {
     /// file it has never seen appeared under it.
     private func keepLastFrameThumbnail(from reserved: URL, landingAt destination: URL) {
         guard closing[reserved] != nil else { return }
-        mediaStamps[destination] = mediaStamp(for: destination)
+        mediaStamps[destination] = Self.mediaStamp(for: destination)
         if destination != reserved, let thumbnail = thumbnails[reserved] {
             thumbnails[destination] = thumbnail
         }
@@ -608,7 +626,7 @@ final class CaptureStore {
 
     private func stamp(for url: URL) -> String? {
         if let known = mediaStamps[url] { return known }
-        let stamp = mediaStamp(for: url)
+        let stamp = Self.mediaStamp(for: url)
         mediaStamps[url] = stamp
         return stamp
     }

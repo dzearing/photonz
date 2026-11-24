@@ -384,6 +384,17 @@ matter more than they sound: see §6.
 
 ---
 
+### A file that changes on disk
+
+A recording is known by its path AND by what the file was when it was read
+(`MediaFileStamp`: size, date, which file on the disk). One written over or
+replaced since is another recording with a new id (`MovieLibrary.movie(at:)`),
+so nothing kept under the old id (frames, timeline pictures, waveform) can be
+shown for it, and a late read of the old file lands where nobody looks. A window
+holding it is re-pointed (`MovieFileWatch`, `PhotonzDocument.replaceRecording`),
+undo steps included, with no step recorded; a project saves the stamp and is
+re-pointed on opening. Never key anything about a recording by its URL.
+
 ## 5. Layers does not leave
 
 Every one of the fourteen video clickthroughs draws a dock of Properties ·

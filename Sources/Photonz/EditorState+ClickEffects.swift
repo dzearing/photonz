@@ -1,5 +1,6 @@
 import Foundation
 import PhotonzCore
+import PhotonzMedia
 
 // An effect at each click of a recording (`ClickEffect.swift`): the Clicks row
 // on the clip's Properties turns it on and picks its look, and each click is a

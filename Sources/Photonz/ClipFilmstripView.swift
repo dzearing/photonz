@@ -1,5 +1,6 @@
 import AppKit
 import PhotonzCore
+import PhotonzMedia
 import SwiftUI
 
 // **Pictures along a clip on the timeline** (`ClipFilmstrip.swift`).

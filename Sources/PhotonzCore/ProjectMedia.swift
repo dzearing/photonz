@@ -30,8 +30,14 @@ public struct ProjectMediaFile: Hashable, Codable, Sendable {
     /// Where it was measured from the folder the project sits in, so a folder
     /// moved whole still finds its footage. Nil where the two share no root.
     public let relativePath: String?
+    /// What the file was when the project was saved, so one replaced since is
+    /// read again when the project opens. Nil in a project saved before this
+    /// was kept.
+    public let stamp: MediaFileStamp?
 
-    public init(id: UUID, kind: Kind, name: String, path: String, relativePath: String?) {
+    public init(id: UUID, kind: Kind, name: String, path: String, relativePath: String?,
+                stamp: MediaFileStamp? = nil) {
+        self.stamp = stamp
         self.id = id
         self.kind = kind
         self.name = name
@@ -75,6 +81,7 @@ public enum ProjectMedia {
     /// in this run of the app; a file it cannot answer for is left out, and
     /// opens as missing, rather than stopping the save.
     public static func table(for document: PhotonzDocument, project: URL,
+                             stamp: (URL) -> MediaFileStamp? = MediaFileStamp.of,
                              locate: (UUID) -> URL?) -> [ProjectMediaFile] {
         let folder = project.deletingLastPathComponent().standardizedFileURL
         return references(in: document).compactMap { media in
@@ -88,7 +95,8 @@ public enum ProjectMedia {
             }
             return ProjectMediaFile(id: id, kind: kind, name: url.lastPathComponent,
                                     path: url.path,
-                                    relativePath: relativePath(of: url, from: folder))
+                                    relativePath: relativePath(of: url, from: folder),
+                                    stamp: stamp(url))
         }
     }
 
@@ -99,6 +107,8 @@ public enum ProjectMedia {
         public var located: [UUID: URL] = [:]
         /// Every file that is in neither place, in the table's order.
         public var missing: [ProjectMediaFile] = []
+        /// What each of them was when the project was saved, where it says.
+        public var stamps: [UUID: MediaFileStamp] = [:]
     }
 
     /// Where each file is now: first where it was saved, then the same place
@@ -108,6 +118,7 @@ public enum ProjectMedia {
         let folder = project.deletingLastPathComponent().standardizedFileURL
         var result = Resolution()
         for entry in table {
+            if let stamp = entry.stamp { result.stamps[entry.id] = stamp }
             let saved = URL(fileURLWithPath: entry.path)
             if exists(saved) {
                 result.located[entry.id] = saved
