@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-23T15:35:22.939Z",
-  "updated": "2026-11-24T14:13:03.452Z",
+  "updated": "2026-11-24T15:46:15.647Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-23: \"When I play back and scrub to a previous location, I'm seeing flickering!!! as if we're swaping between 2 frames or something for a brief moment\", then: \"i thought this was specific to transitions, but i just opened an mp4, played, clicked on a previous location in the timeline, and it started flickering for about half a sec\". Not reproduced by me; most likely Photonz Dev (built 2026-11-23 06:54).\n\nA shipped task came close: a-cross-fade-plays-smoothly-in-the-editor-the-wa (done 2026-11-21) fixed borrowed frames standing in, restarts onto the same key frame, and play starting before frames are ready, and verified scrubs from REST; its log says the after-a-scrub walk passes on old code too, so nothing guards this. This report is a jump WHILE playing. Suspects, not confirmed: after the jump the play pass still shows frames queued for the old position for a few ticks while the new pass decodes from its key frame (about half a second of GOP would match the user's half second), or the resting scrub read and the play pass both draw and alternate. Code: Sources/PhotonzCore/MoviePlayPass.swift, Sources/PhotonzCore/MovieFrameQueue.swift; recent hunt and budget commits cf12e8b00, b9cf61d13; the in-progress task picking-letting-go-of-and-cutting-a-clip-while-a and the hour-long timeline task are also landing nearby, bisect across them.",
@@ -33,6 +33,39 @@
     {
       "t": "2026-11-24T14:13:03.451Z",
       "note": "seq 20 -> 10"
+    },
+    {
+      "t": "2026-11-24T14:26:18.003Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T15:34:28.531Z",
+      "note": "Reproduced in the probe at Next defaults (new step expectJumpWhilePlaying, walk jumping-back-while-playing-walk): long-GOP 8s 1280x800 H.264 (one key frame), played from 5s, clicked back 6.03s to 2.00s. Every other picture showed frame 135 (read before the jump) for the new place's frame, then the right frame once it landed: 60 for 60, 135 for 61, 61, 135 for 62, 135 for 63, 63 ... for the whole second watched. No play pass ran."
+    },
+    {
+      "t": "2026-11-24T15:34:28.611Z",
+      "note": "Cause: scrubDocument set playheadTravel from the move alone, so a jump back while playing forwards left travel = backward while the clock played forwards. With travel backward the fetcher opens no forward play pass (playsAhead needs !backward) and reads each frame on its own, and MovieFramesInHand stands in from the frames AHEAD of the wanted one (the 'side it came from' going backwards), i.e. the place it left: A-B-A. Not a regression from 5b1effa70/f599c5fdc: travel-from-the-move dates from 33932f22d (2026-09-26) and play-backward-by-travel from c4c0eb94d / f72bc93ad (2026-10-08); the cross fade task only tested from rest."
+    },
+    {
+      "t": "2026-11-24T15:34:28.695Z",
+      "note": "owns these walks: jumping-back-while-playing-walk"
+    },
+    {
+      "t": "2026-11-24T15:46:00.001Z",
+      "note": "Fixed: travel follows the clock while it plays (MovieFramesInHand.Travel.afterMove / whenHandLetsGo, PhotonzCore/JumpWhilePlaying.swift, used in scrubDocument and endPlayheadDrag). Chose to make a jump while playing at sound speeds wait for its first frames (preRollWithSound, max 0.8s, sound restarts with the clock) over playing on at once, because a jump back on the Retina fixture held its first frame for 3 frames while the pass caught up from the key frame, and Premiere waits the same way. Walk passes all 9 cases (long/short back, forward, drag back, 0.5x, 2x, across a cut, into a dissolve, Retina): new place on screen 0-48ms after the jump, every picture after it its own frame, diff to export <=1.2 (long-GOP) / 2.3 (Retina), no reversal. 13 neighbouring playback walks pass; full test.sh green (15148+ tests). Unit test recordedBeforeTheFix replays the recorded before-sequence and fails it; the walk failed on old code (/tmp/jump-before)."
+    },
+    {
+      "t": "2026-11-24T15:46:00.079Z",
+      "note": "left rough: during the <=48ms wait the stand-in can be a frame from elsewhere in the recording (frame 30 for 60, one picture, ~25ms) rather than the picture on screen before the click; invisible at that length, so not filed. Drag-back-while-playing steps down through the frames the hand passed as they land (105, 94, 86, 79, then 76, 77, 78) within one tick, converging and never back and forth; the reading allows that."
+    },
+    {
+      "t": "2026-11-24T15:46:15.645Z",
+      "note": "Fixed the flicker after jumping while a video plays (commit 6b8a6695a). Cause: a jump back while playing left the playhead marked as going backwards, so frames were stood in from the place it had left (A-B-A). It now keeps the clock's direction, and a jump at a sound speed waits for its first frames like Space from rest (max 0.8s). New walk step expectJumpWhilePlaying plus jumping-back-while-playing-walk: 9 cases (long and short back, forward, drag back, 0.5x, 2x, a cut, a dissolve, Retina) fail on the old code and pass now. New place on screen 0-48ms after the jump, every later picture its own frame (export diff at most 2.3/255), no reversal. 13 neighbouring playback walks pass, full test.sh green. Audit and reel in queue/audits/2026-11-24-jumping-back-*."
     }
-  ]
+  ],
+  "started": "2026-11-24T14:26:18.002Z",
+  "walks": [
+    "jumping-back-while-playing-walk"
+  ],
+  "completed": "2026-11-24T15:46:15.646Z"
 }
