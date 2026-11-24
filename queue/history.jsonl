@@ -19012,3 +19012,36 @@
 {"t":"2026-11-24T12:06:26.860Z","ev":"runner_failed","id":"picking-letting-go-of-and-cutting-a-clip-while-a","kind":"task","exit":1,"consecutive":38,"outcome":"signin","environment":true,"signIn":true,"reason":"signin","error":"Failed to authenticate: OAuth session expired and could not be refreshed"}
 {"t":"2026-11-24T12:36:38.020Z","ev":"task_started","id":"picking-letting-go-of-and-cutting-a-clip-while-a","title":"Picking, letting go of and cutting a clip while a long edit plays each finish within one frame","priority":"p1-high"}
 {"t":"2026-11-24T12:36:42.878Z","ev":"runner_failed","id":"picking-letting-go-of-and-cutting-a-clip-while-a","kind":"task","exit":1,"consecutive":39,"outcome":"signin","environment":true,"signIn":true,"reason":"signin","error":"Failed to authenticate: OAuth session expired and could not be refreshed"}
+{"t":"2026-11-24T13:06:55.385Z","ev":"runner_failed","id":null,"kind":"digest","exit":1,"consecutive":40,"outcome":"signin","environment":true,"signIn":true,"reason":"signin","error":"Failed to authenticate: OAuth session expired and could not be refreshed"}
+{"t":"2026-11-24T13:06:55.490Z","ev":"digest_deferred","reason":"signin"}
+{"t":"2026-11-24T13:37:05.126Z","ev":"runner_failed","id":null,"kind":"digest","exit":1,"consecutive":41,"outcome":"signin","environment":true,"signIn":true,"reason":"signin","error":"Failed to authenticate: OAuth session expired and could not be refreshed"}
+{"t":"2026-11-24T13:37:05.231Z","ev":"digest_deferred","reason":"signin"}
+{"t":"2026-11-24T14:07:14.514Z","ev":"runner_failed","id":null,"kind":"digest","exit":1,"consecutive":42,"outcome":"signin","environment":true,"signIn":true,"reason":"signin","error":"Failed to authenticate: OAuth session expired and could not be refreshed"}
+{"t":"2026-11-24T14:07:14.608Z","ev":"digest_deferred","reason":"signin"}
+{"t":"2026-11-24T14:08:15.101Z","ev":"stall_notified","reason":"signin","hours":19,"on":"return"}
+{"t":"2026-11-24T14:11:41.462Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-24T14:13:00.802Z","ev":"task_created","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","priority":"p1-high","title":"An edit with 50 tracks and 100 clips scrolls, plays and edits without lag or flashes"}
+{"t":"2026-11-24T14:13:00.932Z","ev":"task_resequenced","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":4070,"to":15}
+{"t":"2026-11-24T14:13:01.018Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-24T14:13:03.453Z","ev":"task_resequenced","id":"jumping-back-while-a-video-plays-never-flickers","from":20,"to":10}
+{"t":"2026-11-24T14:13:03.527Z","ev":"task_resequenced","id":"toasts-are-smaller-sit-closer-to-the-screen-corn","from":30,"to":20}
+{"t":"2026-11-24T14:13:03.598Z","ev":"task_resequenced","id":"picking-letting-go-of-and-cutting-a-clip-while-a","from":10,"to":30}
+{"t":"2026-11-24T14:13:03.671Z","ev":"task_resequenced","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":20,"to":40}
+{"t":"2026-11-24T14:13:03.744Z","ev":"task_resequenced","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":30,"to":50}
+{"t":"2026-11-24T14:14:27.656Z","ev":"task_created","id":"text-that-zooms-or-scales-in-a-video-moves-as-on","priority":"p1-high","title":"Text that zooms or scales in a video moves as one smooth piece, with no letter jittering on its own"}
+{"t":"2026-11-24T14:14:27.777Z","ev":"task_resequenced","id":"text-that-zooms-or-scales-in-a-video-moves-as-on","from":4070,"to":12}
+{"t":"2026-11-24T14:14:27.855Z","ev":"task_resequenced","id":"toasts-are-smaller-sit-closer-to-the-screen-corn","from":20,"to":60}
+{"t":"2026-11-24T14:16:43.248Z","ev":"task_walks","id":"picking-letting-go-of-and-cutting-a-clip-while-a","walks":["speed-walk","the-panel-catches-up-when-play-stops-walk","cutting-while-playing-keeps-playing-walk","a-transition-put-on-while-playing-keeps-playing-walk","a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk","closed-windows-give-their-memory-back-walk"]}
+{"t":"2026-11-24T14:16:43.323Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-24T14:16:43.426Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
+{"t":"2026-11-24T14:17:50.086Z","ev":"task_resequenced","id":"text-that-zooms-or-scales-in-a-video-moves-as-on","from":12,"to":20}
+{"t":"2026-11-24T14:17:50.162Z","ev":"task_resequenced","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":15,"to":30}
+{"t":"2026-11-24T14:17:50.237Z","ev":"task_resequenced","id":"picking-letting-go-of-and-cutting-a-clip-while-a","from":30,"to":40}
+{"t":"2026-11-24T14:17:50.313Z","ev":"task_resequenced","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":40,"to":50}
+{"t":"2026-11-24T14:17:50.386Z","ev":"task_resequenced","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":50,"to":60}
+{"t":"2026-11-24T14:17:50.460Z","ev":"task_resequenced","id":"toasts-are-smaller-sit-closer-to-the-screen-corn","from":60,"to":70}
+{"t":"2026-11-24T14:18:22.445Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-24T14:19:06.399Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-24T14:19:06.473Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
+{"t":"2026-11-24T14:19:06.502Z","ev":"triage","summary":"0 merged, 0 dropped, 0 priority moves, 0 reset; p1 renumbered to steps of 10 keeping the intake order; toast task tagged measure-redline; memory leak regression (closed windows keep 13 editors, reproduced) folded onto picking-letting-go-of-and-cutting-a-clip-while-a as its first acceptance item; panel-during-play design finding folded onto the same task; stash 10adc84c9 annotated. Open: p1 7, p2 44, p3 7"}
+{"t":"2026-11-24T14:19:06.531Z","ev":"digest","file":"2026-11-24.md"}

@@ -4,12 +4,12 @@
   "goal": "On a long edit the timeline is where a person spends their time, and it is the part most likely to slow down as clips pile up: every clip bar, thumbnail strip and waveform drawn again when anything moves. Make the timeline of the 60 minute reference edit, several hundred clips, scroll, zoom and follow a playing playhead at the display's 120 Hz, and keep an edit on it inside one frame.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 40,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T14:13:03.670Z",
+  "updated": "2026-11-24T14:17:50.312Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,13 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T14:13:03.669Z",
-      "note": "... 92 earlier entries elided",
-      "elided": 92
-    },
-    {
-      "t": "2026-11-20T18:02:16.133Z",
-      "note": "Still open, bars not reached: near Fit ~12-13 ms mean on today's busier machine (pass 14 read 11.0), scroll worst ~22 vs 16, edits (inspector). What is left is generic SwiftUI upkeep per frame (AG update ~36%, layout ~11%, CA commit ~16%, accessibility ~11% in the probe) across every view reading the ruler; picture laying is ~1 ms. Next lever is structural: lanes whose painting and slide do not go through the SwiftUI graph at all (one CALayer per lane with the picture as contents, moved by the ruler outside SwiftUI), with full clip views and overlays still SwiftUI. Left rough, not filed: none new."
+      "t": "2026-11-24T14:17:50.311Z",
+      "note": "... 93 earlier entries elided",
+      "elided": 93
     },
     {
       "t": "2026-11-20T18:02:31.969Z",
@@ -506,6 +502,10 @@
     {
       "t": "2026-11-24T14:13:03.668Z",
       "note": "seq 20 -> 40"
+    },
+    {
+      "t": "2026-11-24T14:17:50.310Z",
+      "note": "seq 40 -> 50"
     }
   ],
   "started": "2026-11-24T07:34:01.198Z",

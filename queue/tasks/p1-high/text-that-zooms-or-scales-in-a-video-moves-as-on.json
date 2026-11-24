@@ -4,12 +4,12 @@
   "goal": "In a video, when text zooms in or scales during a transition, each letter jumps by a pixel or two independently of the others, which is very distracting. Text, and anything else that scales, moves or rotates over time, should move as one smooth, solid piece from frame to frame, the way it does in Final Cut or After Effects, in playback and in the export.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 12,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:14:27.652Z",
-  "updated": "2026-11-24T14:14:27.776Z",
+  "updated": "2026-11-24T14:17:50.085Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"this needs to be a really high priority. Fixing the perf in video. Also the quality. For example I had a video claude made where the text zoomed in, but the individaul characters jitted by a pixel or 2 independently, making it very distracting during the transition. We need not just perf but high fidelity rendering that doesn't have jittery artifacts\". The video was made through the Photonz MCP tools (so possibly a title's scale entrance, a zoom from apply_zooms, or a transition between clips with titles); I did not see it.\n\nCode: Sources/PhotonzRender/TextRasterizer.swift rasterize(_:size:scale:) builds a fresh 8-bit sRGB CGContext of round(size*scale) pixels and context.scaleBy(scale) (lines ~81-106); it never sets setAllowsFontSubpixelQuantization(false) / setShouldSubpixelQuantizeFonts(false) or setShouldSubpixelPositionFonts(true), so glyph origins likely snap to the pixel grid differently at each scale. Fix directions to weigh (runner decides, measured): turn off subpixel quantization and allow fractional glyph positioning; or rasterize text once at a size at or above its largest on-screen size and scale the bitmap with a good filter during the animation, re-rasterizing only at rest; or draw glyph outlines as paths. Watch the existing promise that 'a label does not change its line breaks at any scale' (TextRasterizer doc comment ~32-36): keep it.\n\nThe user made video quality part of the same top priority as video speed: this task sits with the video-perf tasks at the head of the queue.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-11-24T14:14:27.775Z",
       "note": "seq 4070 -> 12"
+    },
+    {
+      "t": "2026-11-24T14:17:50.084Z",
+      "note": "seq 12 -> 20"
     }
   ]
 }
