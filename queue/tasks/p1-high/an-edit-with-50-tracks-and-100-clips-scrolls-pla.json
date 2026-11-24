@@ -1,0 +1,35 @@
+{
+  "id": "an-edit-with-50-tracks-and-100-clips-scrolls-pla",
+  "title": "An edit with 50 tracks and 100 clips scrolls, plays and edits without lag or flashes",
+  "goal": "With about 50 tracks and 100 clips in a video, the timeline lags when you scroll, playback flashes, and the whole editor feels sluggish. A person should be able to build an edit that wide and still scroll, play and edit it as smoothly as a small one.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:13:00.798Z",
+  "updated": "2026-11-24T14:13:00.931Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-24: \"the perf of photonz is still pretty rough with video editing. when i add like 50 tracks with 100 clips, scroll starts to lag, i get weird behaviors like flashes during playback, very sluggish behavior\".\n\nContext: the loop could not sign in from about 2026-11-23 19:00 to 2026-11-24 14:10, so the open video-perf tasks made no progress in that window; the user re-logged in on 2026-11-24.\n\nOverlaps, and why this is separate: the-timeline-of-an-hour-long-edit-scrolls-zooms (p1, pending) is about a LONG edit (60 minutes, hundreds of clips) on the 3+ track reference edit, horizontal scroll and zoom; this one is WIDE (50 to 100 tracks): vertical scroll, many track headers, many clips overlapping at one moment for the compositor and decoders. Reuse that task's speed walk, ViewBuildMeter and busy-lane painting rather than building a second harness; if its painted-lane fix also fixes vertical scroll here, record it and move on. picking-letting-go-of-and-cutting-a-clip-while-a (p1, seq 10) covers edit latency while playing; jumping-back-while-a-video-plays-never-flickers covers flicker after a jump. I did not reproduce the user's lag or flashes myself.",
+  "acceptance": [
+    "A reference edit generator for this shape, kept beside the existing ones in Scripts/perf/: 50 tracks, 100 clips from real screen recordings spread across them (some tracks with one clip, some stacked so up to 10 clips overlap at one moment), a few transitions, titles and sound. Deterministic. Also a 100 track version.",
+    "Measured first with the speed walk at Next defaults, before any fix, numbers in the audit: frame times scrolling the timeline up and down through all 50 tracks and left and right, zooming, playing at 1x end to end (dropped frames, worst frame, main thread busy per frame), and the longest main thread pass for add track, add clip, move, trim, blade and undo. Also how long the document takes to open and memory over a minute of playing.",
+    "Reproduce and explain the flashes: capture every displayed frame through a stretch where many clips overlap and name each wrong frame and its cause (a layer missing for a tick, a stale frame, a blank). If one of the open playback tasks already owns that cause (jumping-back-while-a-video-plays-never-flickers), say so in both logs and fix it there or here, not twice.",
+    "Bars on the 50 track edit: vertical and horizontal scroll and zoom keep 95 percent of frames under 8.3 ms on the main thread and none over 16 ms; 1x playback drops no frames and every displayed frame matches an offscreen render of its time (stated small tolerance); each edit above finishes within 16 ms on the main thread. Each fix with a before and after number. Where 10 videos overlap at once and the decoder genuinely cannot keep up, say so with numbers and make playback degrade gracefully (hold a frame, never flash) rather than claiming the bar.",
+    "Likely costs to confirm, not assume: track headers and clip bars built for every track rather than only the ones on screen, per track SwiftUI state read on every playback tick, decoding clips that are hidden under an opaque one above them, per frame compositing of every track.",
+    "What is not reached here is filed as follow-up tasks under video-perf (p1, source user), one cost each with its bar and the command that measures it. No change in what is drawn: export of the reference edit compares equal before and after within a stated tolerance. Perf note in every commit that touches the composite path.",
+    "Audit under queue/audits/ with the numbers, and a short screen capture of scrolling and playing the 50 track edit before and after for the user to look at. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:13:00.800Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-24T14:13:00.930Z",
+      "note": "seq 4070 -> 15"
+    }
+  ]
+}

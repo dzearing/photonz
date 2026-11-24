@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T07:34:05.913Z",
+  "updated": "2026-11-24T14:13:01.017Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,13 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T07:34:05.912Z",
-      "note": "... 90 earlier entries elided",
-      "elided": 90
-    },
-    {
-      "t": "2026-11-20T17:31:57.061Z",
-      "note": "Pass 15 tried and backed out (A/B on one build by throwaway defaults switches): (1) the pass-14 next step, fewer fresh paints per zoom: zoom sliver 1/10 (zoom out held 2 of 3 like zoom in) and hold 12.5%/sliver 0.14: held frames 432/492 of 648 but each held frame cost as much more, near Fit 12.8-12.9 / 12.2-12.7 vs 12.8-12.9, no gain. (2) the pass-9 next step, the stretch laid in pieces of time half a window wide (TimelinePaint.tiles, each an Equatable Piece kept while what it covers is unchanged): after fixing the key (a piece's x across the canvas moved with the stretch) pictures laid went 3.6 -> 7.2 a frame and scroll 9.7 -> 12.4 ms (slid frames 7.7 -> 9.0): the extra image views cost more than the painting saved. Picture laying is not where a move's time goes."
+      "t": "2026-11-24T14:13:01.016Z",
+      "note": "... 91 earlier entries elided",
+      "elided": 91
     },
     {
       "t": "2026-11-20T18:02:16.052Z",
@@ -506,6 +502,10 @@
     {
       "t": "2026-11-24T07:34:05.911Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T14:13:01.015Z",
+      "note": "User 2026-11-24 reports scroll lag with 50 tracks and 100 clips: filed as an-edit-with-50-tracks-and-100-clips-scrolls-pla (wide edit, vertical scroll). Share the speed walk and painted-lane work with it."
     }
   ],
   "started": "2026-11-24T07:34:01.198Z",

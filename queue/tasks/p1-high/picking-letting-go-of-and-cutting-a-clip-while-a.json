@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:47:56.154Z",
-  "updated": "2026-11-24T12:36:42.874Z",
+  "updated": "2026-11-24T14:11:41.461Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (28 passes, closed 2026-11-23 per its triage). Measure with Scripts/perf/speed-walk.sh (short form, ~2 min) and Scripts/perf/pass-profile.sh (PassSampler, edits-only walks; Instruments refuses without developer mode). Where the time is (pass 25 to 28): a landing pass has a floor of about 15-17 ms whatever lands: dock stack layout ~4.4, SwiftUI graph ~3.8, accessibility focus ~3.0 (AccessibilityNode.updateFocus -> ViewRendererHost.focusResponder walking every responder; SwiftUI accessibility is switched on in the probe by another process, so a person with any accessibility client sees it too), title bar drag regions ~1.3 (-[NSWindow _resetDragMargins] asks the hosting view acceptsFirstResponder, which walks every focusable control). A pick from nothing is ~30 passes over 0.7 s, one section or row set each. Leads not tried: fewer AppKit-backed controls in the panel (TextField and Picker as NSView, ~170 in the window) so the focus walk shrinks; land only the sections in sight during play and the rest after play stops; keep the clip sections built and hidden across unpick (13.5 ms of unpick is SwiftUI graph teardown). Tried and reverted: a Layout cache for PanelFieldRowLayout (worse), caching control minimums (no gain). Related panel-cost tasks: folding-a-section-that-lets-the-panel-fit-again, leaving-preview-slides-back-without-a-hitch.",
@@ -183,6 +183,10 @@
     {
       "t": "2026-11-24T12:36:42.873Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T14:11:41.460Z",
+      "note": "Triage 2026-11-24: the stash 10adc84c9 from pass 3 (handed at 08:04 to a runner that never signed in) is still there. Its speed walk part is worth keeping: a pick from nothing first parks the playhead inside the next recording and plays on, so the park is not charged to the pick (PlaytestSpeedWalk.swift, parkForThePick). Its panel part is an experiment switched by a /tmp/p3/hold file and must not land as it is. Restore with git stash apply 10adc84c9672e820205770c7fb394aefeb90156e, keep the walk change, drop the /tmp/p3/hold lines."
     }
   ],
   "walks": [
