@@ -18967,3 +18967,5 @@
 {"t":"2026-11-24T01:48:40.188Z","ev":"stall_notified","reason":"signin","hours":7,"on":"return"}
 {"t":"2026-11-24T01:50:40.910Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
 {"t":"2026-11-24T01:50:45.420Z","ev":"runner_failed","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","kind":"task","exit":1,"consecutive":18,"outcome":"signin","environment":true,"signIn":true,"reason":"signin","error":"Failed to authenticate: OAuth session expired and could not be refreshed"}
+{"t":"2026-11-24T02:20:56.436Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-24T02:21:00.706Z","ev":"runner_failed","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","kind":"task","exit":1,"consecutive":19,"outcome":"signin","environment":true,"signIn":true,"reason":"signin","error":"Failed to authenticate: OAuth session expired and could not be refreshed"}
