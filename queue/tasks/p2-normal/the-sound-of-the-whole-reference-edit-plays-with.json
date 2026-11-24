@@ -1,0 +1,34 @@
+{
+  "id": "the-sound-of-the-whole-reference-edit-plays-with",
+  "title": "The sound of the whole reference edit plays without a single dropout",
+  "goal": "Sound that clicks, drops out or stutters for a moment is the first thing a person notices in a video, before a dropped frame. The speed walk checks once a second that the sound due is playing and how far it is from the picture, but a dropout of a few milliseconds between those looks is never seen. Measure every moment of the sound coming out while the reference edit plays and is edited, and fix any dropout found.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:24:29.911Z",
+  "updated": "2026-11-24T14:24:40.928Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Focus success line 2 says sound never stutters, measured over the whole reference edit. Today Scripts/perf/baselines/short-6.json sound: {looks:60, piecesLeftOut:0, silentLooks:0, sync:{median 4 ms behind, -11 to +20}}: one look a second, so it proves the sound is on, not that it is unbroken. Not reproduced as a bug (nobody has reported a stutter), so p2 and measure-first. Engine: DocumentAudioEngine (there was a crash in its play, the-app-crashed-in-documentaudioengine-play-2, done). Edits during play rebuild the sound schedule: blade (next-blade-keeps-playing) and transitions (next-transition-keeps-playing) are the likely places for a gap.",
+  "acceptance": [
+    "A measure in the speed walk that listens to every buffer of sound the app sends out while it plays (a tap on the engine's output, counting buffers that arrive late, gaps of silence where sound is due, and sudden jumps in the wave), not one look a second",
+    "Run first on the 6 minute reference edit at Next defaults, at 1x end to end, and while trimming, blading, undoing and adding a transition during play; the counts go in the audit before any fix",
+    "Bar: zero late buffers and zero dropouts over the whole 6 minutes, through every cut and transition and every edit made while playing, worst of three runs; also on the 20 minute edit past the 6:25 mark (Scripts/perf/walks/long-20-sound.json)",
+    "If nothing is found, the measure still lands as a guard in the speed walk's baseline, and the task closes with the numbers",
+    "Try it: open the 6 minute reference edit in Photonz Dev from the audit's button, play it with headphones through the dissolves and blade a clip while it plays",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:24:29.913Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-24T14:24:40.927Z",
+      "note": "seq 5 -> 5"
+    }
+  ]
+}

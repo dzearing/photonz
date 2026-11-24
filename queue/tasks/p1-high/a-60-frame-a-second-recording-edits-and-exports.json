@@ -1,0 +1,35 @@
+{
+  "id": "a-60-frame-a-second-recording-edits-and-exports",
+  "title": "A 60 frame a second recording edits and exports at 60 frames a second",
+  "goal": "Photonz records the screen at 60 frames a second, but every video it opens is cut, timed and exported on a fixed 30 frame grid, so half of every recording's frames are thrown away and fast scrolling and pointer motion come out choppier than the recording itself. A video should keep the rate of what is in it: an edit made from 60 frame recordings is a 60 frame edit, steps one sixtieth of a second at a time, and exports at 60, while an edit of 30 frame footage stays at 30 exactly as today.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:23:57.105Z",
+  "updated": "2026-11-24T14:24:40.706Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Focus success line 2 says 1x plays every frame at the document rate, 60 fps where the source is. Today the rate is a constant: Sources/PhotonzCore/MovieClip.swift MovieRef.framesPerSecond = 30, frameStepMS = 33 (exactly 30 since 2026-11-22, ce69dc74b); Sources/PhotonzCore/DocumentVideoExport.swift movieFPS = 30 with a comment saying 30 is finer than any screen recording the app makes, which is not true: Sources/Photonz/Capture/ScreenRecorder.swift:332 records at fps = 60, and Sources/PhotonzCore/ReferenceEdit.swift framesPerSecond = 60. Users of the constant: TimelineTrack, DocumentVideoExport, VideoTimecode, KeyLanesView, ReferenceFootage, FreezeLength, ClipNudge, ClipFilmstrip, DocumentTime, AgentContactSheet, ClosingRecording. Reproduction 2026-11-24 manager pass: a walk at /tmp/mgr-fps/walk.json with setup referenceEdit 6 and a speed export step {seconds:5, keep:\"five-seconds.mp4\"} ran via Scripts/playtest.sh; ffprobe of the source: r_frame_rate=60/1 nb_frames=3600 duration=60; ffprobe of the export: width=3456 height=2234 r_frame_rate=30/1 nb_frames=150 duration=5.0. Export took 3.2 s for 5 s. Speed walk baseline short-6.json says frameStepMS 33 and plays.whole.framesDue 1817 a minute, which is 30 a second. Keep the codable change backward compatible (decodeIfPresent, default 30). The doc to update: docs/design/video.md (every place it says thirty times a second). Second half, playback at 60, is its own task that waits on this one.",
+  "acceptance": [
+    "Reproduced first and pasted into the audit: 5 seconds of the 6 minute reference edit (its four recordings are 60/1 by ffprobe, 3600 frames a minute) export today as 150 frames at r_frame_rate 30/1; after the fix the same 5 seconds export as 300 frames at 60/1, and no two neighbouring frames of a stretch where the recording moves are the same picture",
+    "Test first in PhotonzCore: a video document carries its own frame rate (taken from its recordings, the highest of them up to 60; a document with no recordings, or one saved before this change, reads as 30), and the frame grid (MovieRef.gridFrame / gridMS / frameStepMS and FreezeLength, VideoTimecode, ClipNudge, ClipFilmstrip, DocumentTime.shortestMS) asks the document for its rate instead of a constant. Tests cover a 30 frame edit staying frame for frame what it is today, a 60 frame edit, a mixed one, and an old file opening unchanged",
+    "Export writes at the document's rate (DocumentVideoExport.movieFPS becomes the document's rate); GIF and animated HEIC keep their own lower rates. The 6 minute reference edit still exports in no more than its own length (2026-11-16: 117.6 s at 30), number before and after in the audit",
+    "Frame stepping (arrow keys, the clip nudge) and View > Timecode count in the document's frames, so a 60 frame edit steps a sixtieth at a time and its timecode reads 0 to 59",
+    "Ships on by default in Next behind a new flag in FeatureCatalog (suggested next-video-keeps-its-recorded-frame-rate); Current keeps 30. Try it: open the 6 minute reference edit in Photonz Dev from the audit's button, export 5 seconds and read the file's rate in Finder's Get Info, then press the right arrow and watch the timecode step one frame",
+    "Speed walk short form and the video walks stay green at Next defaults (Scripts/perf/speed-walk.sh, Scripts/playtest-all.sh --no-build export, an-editing-session-walk); playback itself may still step at 30 until the follow-up task makes it play at 60, and the audit says which it does",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:23:57.107Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-24T14:24:40.705Z",
+      "note": "seq 4070 -> 90"
+    }
+  ]
+}

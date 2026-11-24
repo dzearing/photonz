@@ -1,0 +1,19 @@
+{
+  "id": "picking-letting-go-of-and-cutting-a-clip-while-a-2026-11-23T18-22-13-019Z",
+  "task": "picking-letting-go-of-and-cutting-a-clip-while-a",
+  "kind": "task",
+  "label": "Picking, letting go of and cutting a clip while a long edit plays each finish within one frame",
+  "title": "Picking, letting go of and cutting a clip while a long edit plays each finish within one frame",
+  "outcome": "failed",
+  "at": "2026-11-23T18:22:13.019Z",
+  "files": [
+    "Sources/Photonz/InspectorPanel.swift",
+    "Sources/Photonz/Playtest/PlaytestSpeedWalk.swift"
+  ],
+  "count": 2,
+  "state": "stashed",
+  "stash": "10adc84c9672e820205770c7fb394aefeb90156e",
+  "restore": "git stash apply 10adc84c9672e820205770c7fb394aefeb90156e",
+  "why": "",
+  "handed": "2026-11-24T08:04:16.909Z"
+}

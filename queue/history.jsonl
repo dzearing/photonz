@@ -19045,3 +19045,26 @@
 {"t":"2026-11-24T14:19:06.473Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
 {"t":"2026-11-24T14:19:06.502Z","ev":"triage","summary":"0 merged, 0 dropped, 0 priority moves, 0 reset; p1 renumbered to steps of 10 keeping the intake order; toast task tagged measure-redline; memory leak regression (closed windows keep 13 editors, reproduced) folded onto picking-letting-go-of-and-cutting-a-clip-while-a as its first acceptance item; panel-during-play design finding folded onto the same task; stash 10adc84c9 annotated. Open: p1 7, p2 44, p3 7"}
 {"t":"2026-11-24T14:19:06.531Z","ev":"digest","file":"2026-11-24.md"}
+{"t":"2026-11-24T14:19:29.692Z","ev":"task_created","id":"an-agent-makes-a-sizzle-reel-of-a-real-app-end-t","priority":"p1-high","title":"An agent makes a sizzle reel of a real app end to end, and every gap it hits becomes a task"}
+{"t":"2026-11-24T14:19:29.820Z","ev":"task_resequenced","id":"an-agent-makes-a-sizzle-reel-of-a-real-app-end-t","from":4070,"to":70}
+{"t":"2026-11-24T14:19:29.897Z","ev":"task_created","id":"music-drives-the-cut-photonz-finds-the-beats-bar","priority":"p1-high","title":"Music drives the cut: Photonz finds the beats, bars and build of a track and edits snap to them"}
+{"t":"2026-11-24T14:19:30.014Z","ev":"task_resequenced","id":"music-drives-the-cut-photonz-finds-the-beats-bar","from":4070,"to":72}
+{"t":"2026-11-24T14:19:30.092Z","ev":"task_created","id":"an-agent-can-record-the-most-credible-moments-of","priority":"p1-high","title":"An agent can record the most credible moments of an app: scripted, clean, smooth takes"}
+{"t":"2026-11-24T14:19:30.208Z","ev":"task_resequenced","id":"an-agent-can-record-the-most-credible-moments-of","from":4070,"to":74}
+{"t":"2026-11-24T14:19:30.290Z","ev":"task_created","id":"an-agent-can-watch-its-own-video-and-tell-whethe","priority":"p1-high","title":"An agent can watch its own video and tell whether it is smooth, on the beat and readable"}
+{"t":"2026-11-24T14:19:30.413Z","ev":"task_resequenced","id":"an-agent-can-watch-its-own-video-and-tell-whethe","from":4070,"to":76}
+{"t":"2026-11-24T14:19:30.492Z","ev":"task_created","id":"motion-that-feels-like-apple-springs-speed-ramps","priority":"p1-high","title":"Motion that feels like Apple: springs, speed ramps, motion blur and 3D moves an agent can use"}
+{"t":"2026-11-24T14:19:30.607Z","ev":"task_resequenced","id":"motion-that-feels-like-apple-springs-speed-ramps","from":4070,"to":78}
+{"t":"2026-11-24T14:19:30.686Z","ev":"task_created","id":"kinetic-type-that-hits-letters-words-and-lines-a","priority":"p1-high","title":"Kinetic type that hits: letters, words and lines animate with real typographic control"}
+{"t":"2026-11-24T14:19:30.803Z","ev":"task_resequenced","id":"kinetic-type-that-hits-letters-words-and-lines-a","from":4070,"to":80}
+{"t":"2026-11-24T14:19:30.880Z","ev":"task_created","id":"a-sizzle-reel-skill-how-an-agent-plans-paces-and","priority":"p1-high","title":"A sizzle reel skill: how an agent plans, paces and builds a reel that builds to a reveal"}
+{"t":"2026-11-24T14:19:31.011Z","ev":"task_resequenced","id":"a-sizzle-reel-skill-how-an-agent-plans-paces-and","from":4070,"to":82}
+{"t":"2026-11-24T14:23:57.109Z","ev":"task_created","id":"a-60-frame-a-second-recording-edits-and-exports","priority":"p1-high","title":"A 60 frame a second recording edits and exports at 60 frames a second"}
+{"t":"2026-11-24T14:24:09.059Z","ev":"task_created","id":"a-60-frame-a-second-edit-plays-every-one-of-its","priority":"p1-high","title":"A 60 frame a second edit plays every one of its 60 frames"}
+{"t":"2026-11-24T14:24:29.784Z","ev":"task_created","id":"every-frame-the-whole-reference-edit-plays-is-th","priority":"p1-high","title":"Every frame the whole reference edit plays is the frame its export shows"}
+{"t":"2026-11-24T14:24:29.915Z","ev":"task_created","id":"the-sound-of-the-whole-reference-edit-plays-with","priority":"p2-normal","title":"The sound of the whole reference edit plays without a single dropout"}
+{"t":"2026-11-24T14:24:40.707Z","ev":"task_resequenced","id":"a-60-frame-a-second-recording-edits-and-exports","from":4070,"to":90}
+{"t":"2026-11-24T14:24:40.781Z","ev":"task_resequenced","id":"a-60-frame-a-second-edit-plays-every-one-of-its","from":4080,"to":92}
+{"t":"2026-11-24T14:24:40.855Z","ev":"task_resequenced","id":"every-frame-the-whole-reference-edit-plays-is-th","from":4090,"to":94}
+{"t":"2026-11-24T14:24:40.929Z","ev":"task_resequenced","id":"the-sound-of-the-whole-reference-edit-plays-with","from":5,"to":5}
+{"t":"2026-11-24T14:25:54.984Z","ev":"manager","filed":4,"readyBefore":64,"readyAfter":66,"report":"queue/manager/2026-11-24-0628.md"}

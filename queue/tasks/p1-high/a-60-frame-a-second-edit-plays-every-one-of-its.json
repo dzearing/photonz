@@ -1,0 +1,36 @@
+{
+  "id": "a-60-frame-a-second-edit-plays-every-one-of-its",
+  "title": "A 60 frame a second edit plays every one of its 60 frames",
+  "goal": "Once an edit made from 60 frame recordings is a 60 frame edit, playing it should show all 60 frames a second, through every cut and transition, without the sound, scrubbing or editing getting any slower. Today playback steps at 30 a second, so a recording that was smooth when it was made looks half as smooth in the editor.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 92,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:24:09.055Z",
+  "updated": "2026-11-24T14:24:40.780Z",
+  "deps": [
+    "a-60-frame-a-second-recording-edits-and-exports"
+  ],
+  "blockedBy": [],
+  "notes": "Second half of a-60-frame-a-second-recording-edits-and-exports (waits on it). Focus success line 2. Speed walk: Sources/Photonz/Playtest/PlaytestSpeedWalk.swift lines 31, 135, 159 pass MovieRef.frameStepMS to SpeedWalk.tally. docs/design/video.md around line 1220 explains the playhead moving thirty times a second and what watches it; at 60 every playhead watcher costs twice, so the rule in 8f (which views may watch the playhead each tick) matters double: check bodiesPerFrame in the speed walk. Perf note in every commit that touches the composite path.",
+  "acceptance": [
+    "Measured first at Next defaults with Scripts/perf/speed-walk.sh on the 6 minute reference edit: frames due and shown a minute (2026-11-23: 1817 due, 30 a second), and the longest main thread pass while playing (7 ms)",
+    "The play clock, the one-pass decode sweep (MoviePlayPass), its read-ahead and the exact-read lanes all step at the document's rate; the speed walk's framesDue counts at the document's rate, not MovieRef.frameStepMS",
+    "Bar on the 6 minute edit at 1x, worst of three runs: at least 3594 of 3600 frames a minute shown, no gap over 34 ms, longest main thread pass while playing at most 8 ms, through every dissolve, the push and the cube (the speed walk's per-transition plays)",
+    "Nothing else gets worse beyond the baseline's margin: scrub lag, edit passes, memory (Scripts/perf/speed-walk.sh --memory ceiling 2500 MB) and the sound's sync numbers; a 30 frame edit plays exactly as it does today",
+    "Try it in Photonz Dev at Next defaults: open the 6 minute reference edit from the audit's button, press Space and watch the typing and scrolling recordings; the audit carries a short screen film of the same stretch before and after, slowed to half speed, for the user to look at",
+    "Audit written under queue/audits/ with every number before and after. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:24:09.057Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-24T14:24:40.779Z",
+      "note": "seq 4080 -> 92"
+    }
+  ]
+}

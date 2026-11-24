@@ -1,0 +1,37 @@
+{
+  "id": "every-frame-the-whole-reference-edit-plays-is-th",
+  "title": "Every frame the whole reference edit plays is the frame its export shows",
+  "goal": "A person should never see a blank, a stale picture or a frame from somewhere else flash by while an edit plays, and what they watch should be what they export. Today that is checked only on short fixtures and in a few spots; nothing watches a whole long edit play through its dissolves, its 3D transition, its titles and its zooms and compares each shown frame against the export.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 94,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-24T14:24:29.780Z",
+  "updated": "2026-11-24T14:24:40.854Z",
+  "deps": [
+    "jumping-back-while-a-video-plays-never-flickers"
+  ],
+  "blockedBy": [],
+  "notes": "Focus success line 8: playback frames match the export's frames, and no frame flashes, blanks or shows a stale picture, in playback or export. Today the displayed-vs-render comparison is asked for only inside jumping-back-while-a-video-plays-never-flickers (the second after a jump) and an-edit-with-50-tracks-and-100-clips-scrolls-pla (the 50 track edit); this one covers the whole reference edit at 1x. Waits on the jump-back task so it reuses its capture instead of building a second one. Reference edit: Sources/PhotonzCore/ReferenceEdit.swift, Scripts/perf/reference-edit.sh; speed walk long form Scripts/perf/speed-walk.sh --long; existing play blank checks: playing-a-recording-never-blinks-walk, scrub-never-blacks-out-walk.",
+  "acceptance": [
+    "A check, kept in the repo and run by the speed walk's long form, that plays the 6 minute reference edit at 1x at Next defaults, keeps every frame the canvas actually shows (with its time), and compares each with the export's frame at that time; it reuses the displayed-frame capture the jump-back flicker task builds",
+    "It names every wrong frame and its kind: blank, a frame of another time (stale or ahead), a layer missing for a tick, or a picture that differs from the export by more than a stated small tolerance (mean pixel difference, measured on today's build so the tolerance is honest)",
+    "Run first and the findings written in the audit: how many wrong frames in the 6 minutes, where, and of which kind, through every cut, dissolve, the push, the cube, each title's entrance and exit, and each zoom",
+    "Bar: zero blank or wrong-time frames in the 6 minutes, and every frame within the tolerance; what this task cannot fix in one sitting is filed under video-perf (p1), one cause each, with its count and the command that shows it",
+    "A walk short enough for the rotating check guards one stretch with a dissolve, a title and a zoom, and is proved red by breaking the thing it checks",
+    "Try it: open the 6 minute reference edit in Photonz Dev from the audit's button and play through the cube at 3:30; the audit names the frames before and after as a contact sheet for the user to look at",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-24T14:24:29.782Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-24T14:24:40.853Z",
+      "note": "seq 4090 -> 94"
+    }
+  ]
+}
