@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T04:32:34.362Z",
+  "updated": "2026-11-24T05:02:49.259Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T04:32:34.361Z",
-      "note": "... 78 earlier entries elided",
-      "elided": 78
-    },
-    {
-      "t": "2026-11-19T16:43:56.917Z",
-      "note": "Pass 13 (2026-11-19). Baseline at 17dd91f1b (60 min edit, /tmp/tl60.json): near Fit 12.42-12.50 ms mean (p95 17.8-18.5, 279-282 late of 648), zoom in 10.41-10.87, out 10.31-10.33, scroll 9.07-9.37 (p95 11.9, worst 41); edits longest pass trim 43 / move 30 / blade 63 / undo 41 / transition 86 / title 36. Profile (25 s, timeline measure): lane bodies 1.31 s, painted clips' paint closure 0.90 s, paintedBars ~0.54 s, Bar equality ~0.27 s, hasClickMarks 0.16-0.18 s (copied the document and a Layer per clip in sight per frame)."
-    },
-    {
-      "t": "2026-11-19T16:43:56.986Z",
-      "note": "Pass 13 change: LanePaintingKept (TimelineTrackRows.swift) keeps a painting lane's bars, painted cuts, gaps and gridlines under a key of everything they are read from (row, paints, kept incl. pointer/renaming/freeze/transition drag, drawn stretch, paint span, left edge range, paint zoom, lane size, scheme, switches, panel-ground flag; document by sharesWorkedOutAnswers; cuts also by drag/grip/session/pointer/picked) and hands back the same arrays, so TimelinePaintedClips' == answers on buffer identity. Never kept while a waveform is missing or a sound is being cleaned (re-read each frame, so still told when it lands). hasClickMarks reads a click source kept per document (TimelinePaintedFacts.clickSource; the recording's pointer track still looked up live). Rule added to docs/design/video.md 8f."
+      "t": "2026-11-24T05:02:49.258Z",
+      "note": "... 80 earlier entries elided",
+      "elided": 80
     },
     {
       "t": "2026-11-19T16:43:57.057Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-24T04:32:34.360Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T05:02:45.216Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T05:02:49.257Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-24T04:32:30.262Z",
+  "started": "2026-11-24T05:02:45.215Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
