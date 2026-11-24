@@ -35,6 +35,10 @@ public enum TextRasterizer {
     /// scales the drawing, never the type: the point size, the line breaks and
     /// the box the words sit in are identical at every scale, so a label does
     /// not shift or re-wrap when a sharper copy of it arrives.
+    ///
+    /// The overload below also takes a `placing`, for words in something that
+    /// plays: the letters are then filled outlines at exactly the part of a
+    /// pixel they land on (`SteadyType.swift`).
     public static func rasterize(_ text: TextContent, size: CGSize,
                                  borderWidth: CGFloat = 0,
                                  borderColorHex: String = "#000000",
@@ -80,17 +84,19 @@ public enum TextRasterizer {
     /// top of the fat one, which is the order the list itself paints in.
     public static func rasterize(_ text: TextContent, size: CGSize,
                                  outlines: [TextOutline],
-                                 scale: CGFloat = 1) -> CGImage? {
+                                 scale: CGFloat = 1, placing: PixelPlacing? = nil) -> CGImage? {
         guard scale > 0, scale.isFinite else { return nil }
         // Words set along a curve are drawn a letter at a time, each on the
         // curve and turned to it (`TextOnPath.swift`).
-        if text.onPath != nil { return rasterizeOnPath(text, size: size, outlines: outlines, scale: scale) }
+        if text.onPath != nil {
+            return rasterizeOnPath(text, size: size, outlines: outlines, scale: scale, placing: placing)
+        }
         // Words that stay on one line give way here, before anything is laid
         // out, so everything below — the box, the alignment, the halo — is
         // working on the string that actually fits.
         let text = truncating(text, toFit: size.width)
-        let width = Int((size.width * scale).rounded())
-        let height = Int((size.height * scale).rounded())
+        let width = placing?.width ?? Int((size.width * scale).rounded())
+        let height = placing?.height ?? Int((size.height * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
 
         guard let context = CGContext(data: nil, width: width, height: height,
@@ -101,14 +107,21 @@ public enum TextRasterizer {
         }
         // Everything below lays out in document points; the context turns them
         // into however many pixels `scale` asked for.
+        if let placing { context.translateBy(x: placing.origin.x, y: placing.origin.y) }
         context.scaleBy(x: scale, y: scale)
 
-        let box = layoutBox(size, pixelHeight: height, scale: scale)
+        let box = placing != nil ? CGRect(origin: .zero, size: size)
+            : layoutBox(size, pixelHeight: height, scale: scale)
         let path = CGPath(rect: laidOutBox(text, in: box), transform: nil)
         func draw(_ attributed: NSAttributedString) {
             let framesetter = CTFramesetterCreateWithAttributedString(attributed)
             let frame = CTFramesetterCreateFrame(framesetter, CFRange(location: 0, length: 0), path, nil)
-            CTFrameDraw(frame, context)
+            if let placing {
+                SteadyType.draw(frame, base: path.boundingBox.origin, scale: scale,
+                                snaps: placing.snapsLetters, in: context)
+            } else {
+                CTFrameDraw(frame, context)
+            }
         }
 
         // A caption at a moment whose word does more than change colour
@@ -120,7 +133,8 @@ public enum TextRasterizer {
             let raised = CGRect(x: box.minX, y: box.minY + room, width: box.width,
                                 height: box.height - room)
             let path = CGPath(rect: laidOutBox(text, in: raised), transform: nil)
-            drawMoment(text, paint: paint, outlines: outlines, path: path, box: box, in: context)
+            drawMoment(text, paint: paint, outlines: outlines, path: path, box: box,
+                       steadyScale: placing != nil ? scale : nil, snaps: placing?.snapsLetters ?? false, in: context)
             return context.makeImage()
         }
 
@@ -272,7 +286,7 @@ public enum TextRasterizer {
     /// word grows about where it already sits and the words around it never
     /// move.
     private static func drawMoment(_ text: TextContent, paint: CaptionWordPaint, outlines: [TextOutline],
-                                   path: CGPath, box: CGRect, in context: CGContext) {
+                                   path: CGPath, box: CGRect, steadyScale: CGFloat?, snaps: Bool, in context: CGContext) {
         let length = (text.string as NSString).length
         let start = min(max(0, paint.word.location), length)
         let end = min(max(start, paint.word.location + paint.word.length), length)
@@ -304,7 +318,15 @@ public enum TextRasterizer {
         func draw(_ attributed: NSAttributedString) {
             let frame = CTFramesetterCreateFrame(CTFramesetterCreateWithAttributedString(spaced(attributed)),
                                                  CFRange(location: 0, length: 0), path, nil)
-            CTFrameDraw(frame, context)
+            if let steadyScale {
+                // The word being said is drawn grown, under its own glow.
+                SteadyType.draw(frame, base: path.boundingBox.origin,
+                                scale: steadyScale * max(0.1, abs(context.ctm.a) / steadyScale),
+                                // A word mid-pop is at another size every frame.
+                                snaps: snaps && !paint.drawnAlone, grouped: paint.drawnAlone, in: context)
+            } else {
+                CTFrameDraw(frame, context)
+            }
         }
         let ink = RGBA(hex: text.colorHex) ?? RGBA(r: 1, g: 1, b: 1)
         /// The words, shaded: `wordAlpha` for the word being said, the rest as
@@ -1111,11 +1133,11 @@ extension TextRasterizer {
     /// first, as they do on words in a box. A ramp through the letters is
     /// drawn in its flat colour here.
     static func rasterizeOnPath(_ text: TextContent, size: CGSize, outlines: [TextOutline],
-                                scale: CGFloat) -> CGImage? {
+                                scale: CGFloat, placing: PixelPlacing? = nil) -> CGImage? {
         guard let onPath = text.onPath else { return nil }
         let pad = TextOnPath.reach(fontSize: text.fontSize)
-        let width = Int(((size.width + 2 * pad) * scale).rounded())
-        let height = Int(((size.height + 2 * pad) * scale).rounded())
+        let width = placing?.width ?? Int(((size.width + 2 * pad) * scale).rounded())
+        let height = placing?.height ?? Int(((size.height + 2 * pad) * scale).rounded())
         guard width >= 1, height >= 1,
               let context = CGContext(data: nil, width: width, height: height,
                                       bitsPerComponent: 8, bytesPerRow: width * 4,
@@ -1124,7 +1146,11 @@ extension TextRasterizer {
         guard text.fontSize > 0, !text.string.isEmpty else { return context.makeImage() }
         // Top-left coordinates in document points, measured from the box's
         // corner, the space the curve is stored in.
-        context.translateBy(x: 0, y: CGFloat(height))
+        if let placing {
+            context.translateBy(x: placing.origin.x, y: placing.origin.y + (size.height + 2 * pad) * scale)
+        } else {
+            context.translateBy(x: 0, y: CGFloat(height))
+        }
         context.scaleBy(x: scale, y: -scale)
         context.translateBy(x: pad, y: pad)
         context.textMatrix = .identity
@@ -1143,8 +1169,13 @@ extension TextRasterizer {
                 // the curve rather than hanging under it upside down.
                 context.scaleBy(x: 1, y: -1)
                 context.translateBy(x: -item.glyph.x, y: 0)
-                context.textPosition = .zero
-                CTRunDraw(item.run, context, CFRange(location: item.index, length: 1))
+                if placing != nil {
+                    SteadyType.draw(item.run, from: item.index, count: 1, at: .zero, scale: scale,
+                                    snaps: false, in: context)
+                } else {
+                    context.textPosition = .zero
+                    CTRunDraw(item.run, context, CFRange(location: item.index, length: 1))
+                }
                 context.restoreGState()
             }
         }

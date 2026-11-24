@@ -170,6 +170,13 @@ public final class DocumentRenderer: @unchecked Sendable {
     static let keptOnASurfaceFrom = 512 * 512
     private var rasterCache: [RasterKey: CIImage] = [:]
     private var rasterOrder: [RasterKey] = []
+    /// Words drawn for one frame of a move, until a second frame asks for
+    /// the same ones (`raster(for:size:variant:passing:rasterize:)`).
+    private var passingCache: [RasterKey: (image: CIImage, bytes: Int)] = [:]
+    private var passingOrder: [RasterKey] = []
+    private var passingBytes = 0
+    /// A frame's worth of big titles at 4K, and no more.
+    private static let passingByteCap = 48 << 20
     /// Texts' pieces for their reveals (`TextRevealRasterizer.swift`).
     private var piecesCache: [RasterKey: TextRevealPieces] = [:]
     private var piecesOrder: [RasterKey] = []
@@ -211,7 +218,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     var contentCacheCount: Int {
         cacheLock.lock()
         defer { cacheLock.unlock() }
-        return rasterCache.count + wrapCache.count
+        return rasterCache.count + passingCache.count + wrapCache.count
     }
 
     /// A single process-wide CIContext shared by every renderer instance.
@@ -416,7 +423,7 @@ public final class DocumentRenderer: @unchecked Sendable {
 
     private func revealPieces(for text: TextContent, size: CGSize, box: CGSize,
                               outlines: [TextRasterizer.TextOutline], bake: CGFloat, variant: String,
-                              unit: TextRevealUnit) -> TextRevealPieces? {
+                              unit: TextRevealUnit, placing: PixelPlacing?) -> TextRevealPieces? {
         let key = piecesKey(for: text, size: size, variant: variant, unit: unit)
         cacheLock.lock()
         if let hit = piecesCache[key] {
@@ -426,7 +433,8 @@ public final class DocumentRenderer: @unchecked Sendable {
         }
         contentCacheMisses += 1
         cacheLock.unlock()
-        guard let pieces = TextRasterizer.revealPieces(text, size: box, outlines: outlines, scale: bake, unit: unit)
+        guard let pieces = TextRasterizer.revealPieces(text, size: box, outlines: outlines, scale: bake, unit: unit,
+                                                        placing: placing)
         else { return nil }
         cacheLock.lock()
         if piecesCache[key] == nil {
@@ -469,7 +477,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         return reach
     }
 
-    private func raster(for content: LayerContent, size: CGSize, variant: String = "",
+    /// `passing` is a raster that may be wanted for this one frame and never
+    /// again (words mid-move): it is kept apart, a few megabytes of them,
+    /// until a second frame asks for it, so a title growing for a second does
+    /// not push every picture that holds still out of the cache.
+    private func raster(for content: LayerContent, size: CGSize, variant: String = "", passing: Bool = false,
                         rasterize: () -> CGImage?) -> CIImage? {
         let key = RasterKey(content: content,
                             pixelWidth: Int(size.width.rounded()),
@@ -480,6 +492,13 @@ public final class DocumentRenderer: @unchecked Sendable {
             contentCacheHits += 1
             cacheLock.unlock()
             return hit
+        }
+        if passing, let hit = passingCache[key] {
+            contentCacheHits += 1
+            forgetPassing(key)
+            keepRaster(hit.image, for: key)
+            cacheLock.unlock()
+            return hit.image
         }
         contentCacheMisses += 1
         cacheLock.unlock()
@@ -493,15 +512,42 @@ public final class DocumentRenderer: @unchecked Sendable {
         let image = (big ? FrameOnASurface.keep(cg) : nil)
             ?? CIImage(cgImage: cg)
         cacheLock.lock()
-        if rasterCache[key] == nil {
-            rasterCache[key] = image
-            rasterOrder.append(key)
-            if rasterOrder.count > Self.cacheCapacity {
-                rasterCache[rasterOrder.removeFirst()] = nil
-            }
+        if passing {
+            keepPassing(image, for: key, bytes: cg.bytesPerRow * cg.height)
+        } else {
+            keepRaster(image, for: key)
         }
         cacheLock.unlock()
         return image
+    }
+
+    /// Caller holds `cacheLock`.
+    private func keepRaster(_ image: CIImage, for key: RasterKey) {
+        guard rasterCache[key] == nil else { return }
+        rasterCache[key] = image
+        rasterOrder.append(key)
+        if rasterOrder.count > Self.cacheCapacity {
+            rasterCache[rasterOrder.removeFirst()] = nil
+        }
+    }
+
+    /// Caller holds `cacheLock`.
+    private func keepPassing(_ image: CIImage, for key: RasterKey, bytes: Int) {
+        guard passingCache[key] == nil else { return }
+        passingCache[key] = (image, bytes)
+        passingOrder.append(key)
+        passingBytes += bytes
+        while passingOrder.count > Self.cacheCapacity
+                || (passingBytes > Self.passingByteCap && passingOrder.count > 1) {
+            forgetPassing(passingOrder[0])
+        }
+    }
+
+    /// Caller holds `cacheLock`.
+    private func forgetPassing(_ key: RasterKey) {
+        guard let gone = passingCache.removeValue(forKey: key) else { return }
+        passingBytes -= gone.bytes
+        passingOrder.removeAll { $0 == key }
     }
 
     /// A drawing as big as its layer's frame shows the WHOLE of it, in output
@@ -659,6 +705,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         followCache.removeAll()
         rasterCache.removeAll()
         rasterOrder.removeAll()
+        passingCache.removeAll()
+        passingOrder.removeAll()
+        passingBytes = 0
         piecesCache.removeAll()
         piecesOrder.removeAll()
         reachCache.removeAll()
@@ -1016,6 +1065,24 @@ public final class DocumentRenderer: @unchecked Sendable {
         return CrispTile(image: image, region: patch.magnified(by: 1 / scale), scale: scale)
     }
 
+    /// The picture a shape is drawn into where its box is not a whole number
+    /// of pixels, which is every frame of one that is growing: big enough for
+    /// the box and no bigger, the box in its middle. Rounded to whole pixels
+    /// and stretched back instead, its edges stepped by up to half a pixel.
+    /// Nil where the box is whole already, and the drawing is as it was.
+    private func wholePixels(holding points: CGSize, reaching pad: CGFloat, bake: CGFloat)
+        -> (placing: PixelPlacing, name: String, room: (CGFloat) -> CGSize)? {
+        let box = CGSize(width: (points.width + 2 * pad) * bake, height: (points.height + 2 * pad) * bake)
+        guard box.width >= 0.01, box.height >= 0.01,
+              abs(box.width - box.width.rounded()) > 1e-4 || abs(box.height - box.height.rounded()) > 1e-4
+        else { return nil }
+        let placing = PixelPlacing(box: box, corner: nil)
+        return (placing, "|held:\(bake):\(box.width)x\(box.height)", { shown in
+            CGSize(width: (CGFloat(placing.width) - box.width) / 2 * shown,
+                   height: (CGFloat(placing.height) - box.height) / 2 * shown)
+        })
+    }
+
     /// How a raster drawn in document points is blown up into an output whose
     /// unit is bigger: squarely when the canvas would show it squarely (past
     /// 2x, where somebody is inspecting pixels), smoothly otherwise.
@@ -1041,11 +1108,39 @@ public final class DocumentRenderer: @unchecked Sendable {
                                      underlay: nil, in: document, store: store, clip: extent,
                                      onDesignedSurface: false,
                                      contentScale: contentScale, magnifyNearest: magnifyNearest,
-                                     projection: document.isSeenInSpace ? document.projection : nil)
+                                     projection: document.isSeenInSpace ? document.projection : nil,
+                                     playing: document.isDrawnOverTime ? Playing(camera: document.camera) : nil)
 
         // The canvas defines the document's bounds: layers hanging outside it
         // (e.g. after a canvas-size change) must not grow the rendered frame.
         return output.cropped(to: extent)
+    }
+
+    /// What a layer is part of, where the document is drawn at more than one
+    /// moment.
+    private struct Playing {
+        /// Something a key moves across the canvas, or something inside it.
+        var slides = false
+        /// Something a key shows at other sizes, or something inside it, or
+        /// anything at all under a camera that moves.
+        var grows = false
+
+        init(camera: SceneCamera?) {
+            grows = camera.map { !($0.motions ?? []).isEmpty || $0.depth != 0 } ?? false
+        }
+
+        /// What this is for `layer`, or for what is inside it.
+        func into(_ layer: Layer) -> Playing {
+            var inside = self
+            for motion in layer.motions ?? [] where motion.isOn {
+                switch motion.property {
+                case .position: inside.slides = true
+                case .scale, .textSize, .depth: inside.grows = true
+                default: break
+                }
+            }
+            return inside
+        }
     }
 
     /// Draws a stack of layers (bottom-up) onto `base`.
@@ -1060,6 +1155,11 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// background sits above these layers, which is what tells a label on a
     /// button apart from a caption over a screenshot (`Layer.drawnShadow`).
     ///
+    /// `playing` is set where the document has time in it or moves, so a layer
+    /// is put down on exactly the part of a pixel it belongs on rather than
+    /// the nearest half of one: a still picture never shows the difference and
+    /// a moving one jitters by it.
+    ///
     /// `projection` is the camera these layers are seen through, nil where
     /// nothing in the document is seen in space. `inherited` is the move in
     /// space a group keeping its contents in space hands down, and `order`
@@ -1070,7 +1170,7 @@ public final class DocumentRenderer: @unchecked Sendable {
                                  onDesignedSurface: Bool,
                                  contentScale: CGFloat, magnifyNearest: Bool,
                                  projection: Projection3D? = nil, inherited: Affine3D? = nil,
-                                 order: [Int]? = nil) -> CIImage {
+                                 order: [Int]? = nil, playing: Playing?) -> CIImage {
         var output = base
         for index in order ?? Array(layers.indices) {
             let layer = layers[index]
@@ -1115,7 +1215,8 @@ public final class DocumentRenderer: @unchecked Sendable {
                                          underlay: underlay, in: document, store: store, clip: clip,
                                          onDesignedSurface: holdsInside,
                                          contentScale: contentScale, magnifyNearest: magnifyNearest,
-                                         projection: projection, inherited: move, order: depthOrder)
+                                         projection: projection, inherited: move, order: depthOrder,
+                                         playing: playing?.into(layer))
                 continue
             }
 
@@ -1151,7 +1252,7 @@ public final class DocumentRenderer: @unchecked Sendable {
                                            space: placement(of: layer, origin: origin, in: document,
                                                             projection: projection,
                                                             inherited: inherited),
-                                           projection: projection) else { continue }
+                                           projection: projection, playing: playing) else { continue }
             // Zoom callouts carry canvas-space chrome (source outline, leader
             // lines and the tinted band between them) that lives outside the
             // layer frame; composite it beneath the magnified box.
@@ -1210,7 +1311,7 @@ public final class DocumentRenderer: @unchecked Sendable {
                                       space: placement(of: below, origin: origin, in: document,
                                                        projection: projection,
                                                        inherited: inherited),
-                                      projection: projection) {
+                                      projection: projection, playing: playing) {
                     drawn = ChromaKeyFilter.matted(drawn, by: mask, kind: matte, extent: clip,
                                                    space: compositing)
                 }
@@ -1238,7 +1339,7 @@ public final class DocumentRenderer: @unchecked Sendable {
                             backdrop: CIImage, onDesignedSurface: Bool,
                             contentScale: CGFloat, magnifyNearest: Bool,
                             space: SpacePlacement? = nil,
-                            projection: Projection3D? = nil) -> CIImage? {
+                            projection: Projection3D? = nil, playing: Playing?) -> CIImage? {
         let height = document.canvasSize.height
         let box = flipped(layer.localBounds.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
         // A clipping container's buffer IS its box: everything drawn into it
@@ -1282,7 +1383,7 @@ public final class DocumentRenderer: @unchecked Sendable {
                                     underlay: backdrop, in: document, store: store, clip: buffer,
                                     onDesignedSurface: onDesignedSurface || layer.startsDesignedSurface,
                                     contentScale: contentScale, magnifyNearest: magnifyNearest,
-                                    projection: projection?.unmoved)
+                                    projection: projection?.unmoved, playing: playing?.into(layer))
             .cropped(to: buffer)
 
         image = rounded(image, box: box, radii: layer.style.cornerRadii)
@@ -1530,17 +1631,30 @@ public final class DocumentRenderer: @unchecked Sendable {
                          contentScale: CGFloat, magnifyNearest: Bool,
                          space: SpacePlacement? = nil,
                          projection: Projection3D? = nil,
-                         castStandIn: Bool = false) -> CIImage? {
+                         castStandIn: Bool = false, playing: Playing?) -> CIImage? {
         if let group = layer.group {
             return groupImage(layer, group: group, origin: origin, in: document,
                               store: store, backdrop: backdrop,
                               onDesignedSurface: onDesignedSurface,
                               contentScale: contentScale, magnifyNearest: magnifyNearest,
-                              space: space, projection: projection)
+                              space: space, projection: projection, playing: playing)
         }
         // The layer's frame in canvas coordinates: identical to its own frame
         // at the top level, shifted by its parents' origins inside a group.
-        let frame = layer.frame.offsetBy(dx: origin.x, dy: origin.y)
+        var frame = layer.frame.offsetBy(dx: origin.x, dy: origin.y)
+        let plays = playing != nil
+        // Words square on to the camera are only bigger or smaller for being
+        // seen through it, so they are drawn at the size they are seen rather
+        // than drawn once and warped: sharp as it pushes in on them, and
+        // steady (`facedByTheCamera`).
+        var seenAs: CGFloat = 1
+        var facesCamera = false
+        if plays, !magnifyNearest, let space, let seen = facedByTheCamera(layer, frame: frame, space: space,
+                                                         contentScale: contentScale) {
+            seenAs = seen.width / frame.width
+            frame = seen
+            facesCamera = true
+        }
         // The layer's box in DOCUMENT points. It is the frame itself for an
         // ordinary render; on a magnified one the frame is already stated in
         // output pixels, so the rasterizers that draw from a box get theirs
@@ -1565,6 +1679,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         // squashed back into the frame and the outside line lands inside again
         // (`BorderPosition.swift`).
         var contentOutset = layer.contentOutset * contentScale
+        // The clear room round words drawn at the part of a pixel they land
+        // on, and how far the middle of their picture is from the middle of
+        // their box (`PixelPlacing`), both in the picture's own pixels.
+        var steadyRoom = CGSize.zero
+        var inkShift = CGPoint.zero
         switch layer.content {
         // Sound is a layer that occupies time and draws not one pixel
         // (`SoundClip.swift`). Nothing to composite, so it never reaches the
@@ -1609,12 +1728,27 @@ public final class DocumentRenderer: @unchecked Sendable {
             // LETTERS unless its row says it follows the box, in which case it
             // is drawn round the frame below with everything else's ring
             // (`BorderFollows.swift`).
+            //
+            // Words a motion has grown are laid out at the size they were set
+            // and magnified by what it grew them (`TextContent.drawnScale`),
+            // so nothing in their setting changes from frame to frame.
+            let sized = text.drawnScale.map { $0.isFinite && $0 > 0.0001 ? $0 : 1 } ?? 1
+            let grown = sized * seenAs
+            // To a millionth of a point, so the arithmetic of multiplying and
+            // dividing back changes nothing: the system spaces type 59.9999999
+            // points tall as it does 59, a twentieth of a percent tighter, and
+            // the word stepped in and out by it.
+            func back(_ length: CGFloat) -> CGFloat {
+                sized == 1 ? length : (length / sized * 1e6).rounded() / 1e6
+            }
+            let setting = CGSize(width: back(boxInPoints.width), height: back(boxInPoints.height))
             let outlines = layer.letterBorders.map {
-                TextRasterizer.TextOutline(width: $0.width / contentScale, colorHex: $0.colorHex)
+                TextRasterizer.TextOutline(width: $0.width / (contentScale * sized), colorHex: $0.colorHex)
             }
             var variant = outlines.map { "outline:\($0.width):\($0.colorHex)" }.joined(separator: ",")
             if contentScale != 1 { variant += "|crisp" }
-            let bake = crispScale(contentScale, box: boxInPoints)
+            let bake = crispScale(contentScale, box: boxInPoints) * grown
+            if grown != 1 { variant += "|grown:\(bake)" }
             // How its words come in is not part of what they look like once
             // they are in, so a text mid-reveal and the same text at rest
             // share one picture, and so does a reveal retimed.
@@ -1622,6 +1756,38 @@ public final class DocumentRenderer: @unchecked Sendable {
             still.reveal = nil
             still.revealElapsedMS = nil
             still.revealShutterMS = nil
+            if sized != 1 { still.fontSize = back(text.fontSize) }
+            still.drawnScale = nil
+            // Words in something that plays are drawn as outlines, at exactly
+            // the part of a pixel they land on (`SteadyType.swift`). Turned,
+            // warped or cut, they land on no pixel in particular.
+            let shown = contentScale * grown / bake
+            let box = CGSize(width: (setting.width + 2 * layer.contentOutset / sized) * bake,
+                             height: (setting.height + 2 * layer.contentOutset / sized) * bake)
+            var placing: PixelPlacing?
+            if plays || grown != 1, layer.crop == nil,
+               !magnifyNearest, box.width >= 0.01, box.height >= 0.01 {
+                // Words sliding at the size they were set are one picture slid,
+                // drawn once: redrawn at every part of a pixel they passed,
+                // eight of them cost 10ms a frame at 4K for nothing anybody
+                // could see.
+                let moves = playing?.into(layer)
+                let slides = grown == 1 && (moves?.slides ?? false)
+                let lands = !slides && (space == nil || facesCamera) && layer.transform.isIdentity && layer.shownReshape == nil
+                    && !layer.style.cornerRadii.isRound && abs(shown - 1) < 1e-9
+                let held = PixelPlacing(box: box, corner: lands
+                    ? CGPoint(x: frame.minX - contentOutset,
+                              y: document.canvasSize.height - frame.maxY - contentOutset) : nil,
+                    // Never at another size: its letters may rest on whole
+                    // pixels, as sharp as the system draws them.
+                    snapsLetters: grown == 1 && !facesCamera && !(moves?.grows ?? true))
+                variant += "|steady:\(bake):\(held.width)x\(held.height):\(held.origin.x),\(held.origin.y)"
+                if held.snapsLetters { variant += "|snaps" }
+                inkShift = held.shift(box: box)
+                steadyRoom = CGSize(width: (CGFloat(held.width) - box.width) / 2 * shown,
+                                    height: (CGFloat(held.height) - box.height) / 2 * shown)
+                placing = held
+            }
             // Words still arriving a piece at a time are drawn from each
             // piece's own picture, kept until the words change
             // (`TextRevealRasterizer.swift`). Once the last piece is home it is
@@ -1630,13 +1796,14 @@ public final class DocumentRenderer: @unchecked Sendable {
             // a box, and these words are not in one.
             if let reveal = text.reveal, let elapsed = text.revealElapsedMS, text.wordPaint == nil,
                text.onPath == nil,
-               let pieces = revealPieces(for: still, size: layer.frame.size, box: boxInPoints,
-                                         outlines: outlines, bake: bake, variant: variant, unit: reveal.unit),
+               let pieces = revealPieces(for: still, size: layer.frame.size, box: setting,
+                                         outlines: outlines, bake: bake, variant: variant, unit: reveal.unit,
+                                         placing: placing),
                // Under a motion blur a piece landing still smears until the
                // shutter that opened before it landed closes.
                !reveal.hasSettled(atElapsedMS: elapsed - (text.revealShutterMS.map { Int($0 / 2) + 1 } ?? 0),
                                   count: pieces.pieces.count) {
-                let eye = document.projection.eyeDistance * Double(bake)
+                let eye = document.projection.eyeDistance * Double(bake / sized)
                 // A word rising in from under the bottom line, a letter
                 // tracked in from past the end of it or one turned toward its
                 // lens draws past the box the words are laid out in, and is
@@ -1649,14 +1816,15 @@ public final class DocumentRenderer: @unchecked Sendable {
                 image = magnified(TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: elapsed,
                                                              shutterMS: text.revealShutterMS,
                                                              eyeDistance: eye, reach: reach),
-                                  nearest: magnifyNearest, scale: contentScale / bake)
-                contentOutset = reach * contentScale / bake
+                                  nearest: magnifyNearest, scale: shown)
+                contentOutset = reach * shown
                 break
             }
-            guard let raster = raster(for: .text(still), size: layer.frame.size, variant: variant, rasterize: {
-                TextRasterizer.rasterize(still, size: boxInPoints, outlines: outlines, scale: bake)
+            guard let raster = raster(for: .text(still), size: layer.frame.size, variant: variant,
+                                      passing: placing != nil, rasterize: {
+                TextRasterizer.rasterize(still, size: setting, outlines: outlines, scale: bake, placing: placing)
             }) else { return nil }
-            image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
+            image = magnified(raster, nearest: magnifyNearest, scale: shown)
         case .annotation(let annotation):
             // Baked at the resolution it will be SHOWN at, like the text above:
             // a stroke, an arrowhead and a caption pill all come from shapes and
@@ -1681,9 +1849,13 @@ public final class DocumentRenderer: @unchecked Sendable {
                 image = magnified(drifting, nearest: magnifyNearest, scale: contentScale / bake)
                 break
             }
+            let held = plays && frostMask == nil && layer.crop == nil && !magnifyNearest
+                ? wholePixels(holding: boxInPoints, reaching: annotation.strokeOutset, bake: bake) : nil
+            if let held { steadyRoom = held.room(contentScale / bake) }
             guard let raster = raster(for: layer.content, size: layer.frame.size,
-                                      variant: contentScale == 1 ? "" : "crisp", rasterize: {
-                AnnotationRasterizer.rasterize(annotation, size: boxInPoints, scale: bake)
+                                      variant: (contentScale == 1 ? "" : "crisp") + (held?.name ?? ""),
+                                      passing: held != nil, rasterize: {
+                AnnotationRasterizer.rasterize(annotation, size: boxInPoints, scale: bake, placing: held?.placing)
             }) else { return nil }
             image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .path(let path):
@@ -1691,9 +1863,13 @@ public final class DocumentRenderer: @unchecked Sendable {
             // above: a path is curves and a stroke, so it can be as sharp as
             // the words beside it however far in you are zoomed.
             let bake = crispScale(contentScale, box: boxInPoints)
+            let held = plays && layer.crop == nil && !magnifyNearest && path.brush == nil
+                ? wholePixels(holding: boxInPoints, reaching: path.strokeOutset, bake: bake) : nil
+            if let held { steadyRoom = held.room(contentScale / bake) }
             guard let raster = raster(for: layer.content, size: layer.frame.size,
-                                      variant: contentScale == 1 ? "" : "crisp", rasterize: {
-                PathRasterizer.rasterize(path, size: boxInPoints, scale: bake)
+                                      variant: (contentScale == 1 ? "" : "crisp") + (held?.name ?? ""),
+                                      passing: held != nil, rasterize: {
+                PathRasterizer.rasterize(path, size: boxInPoints, scale: bake, placing: held?.placing)
             }) else { return nil }
             image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .paint(let paint):
@@ -1829,6 +2005,10 @@ public final class DocumentRenderer: @unchecked Sendable {
             image = ColorGradeFilter.graded(image, by: grade)
         }
 
+        // The part of the picture that is shown, in its own pixels, where a
+        // document that plays shows only part of it.
+        var seen: CGRect?
+
         // Layer-local crop. On a picture the crop is in the picture's own
         // pixels (`Layer.cropContent`), stated `contentScale` times bigger by a
         // magnified document, and the bitmap in hand need not be the picture's
@@ -1852,8 +2032,16 @@ public final class DocumentRenderer: @unchecked Sendable {
             let flipped = CGRect(x: crop.origin.x,
                                  y: image.extent.height - crop.maxY,
                                  width: crop.width, height: crop.height)
-            image = image.cropped(to: flipped)
-            image = image.transformed(by: CGAffineTransform(translationX: -flipped.origin.x, y: -flipped.origin.y))
+            if plays, case .image = layer.content, crop.width >= 1, crop.height >= 1,
+               image.extent.contains(flipped.insetBy(dx: 0.01, dy: 0.01)) {
+                // Where it plays, cut below at exactly the part of a pixel
+                // the cut falls on.
+                seen = flipped
+            } else {
+                image = image.cropped(to: flipped)
+                image = image.transformed(by: CGAffineTransform(translationX: -flipped.origin.x,
+                                                                y: -flipped.origin.y))
+            }
         }
 
         // A zoom on a clip: only the part of the picture it is on is drawn,
@@ -1863,12 +2051,14 @@ public final class DocumentRenderer: @unchecked Sendable {
         // takes the picture's own pixels rather than fading out, which the
         // enlarging resampler below would show as a soft rim.
         if let window = layer.zoomWindow, image.extent.width > 0, image.extent.height > 0 {
-            let whole = image.extent
+            let whole = seen ?? image.extent
             let part = CGRect(x: whole.minX + window.minX * whole.width,
                               y: whole.minY + (1 - window.maxY) * whole.height,
                               width: window.width * whole.width,
                               height: window.height * whole.height)
-            if part.width >= 1, part.height >= 1 {
+            if part.width >= 1, part.height >= 1, plays {
+                seen = part
+            } else if part.width >= 1, part.height >= 1 {
                 image = image.clampedToExtent().cropped(to: part)
                     .transformed(by: CGAffineTransform(translationX: -part.minX, y: -part.minY))
             }
@@ -1877,10 +2067,34 @@ public final class DocumentRenderer: @unchecked Sendable {
         // Scale content into the layer's frame — grown, where the content is
         // drawn past it, by exactly the room the rasterizer took, so the shape
         // inside the padding still lands on the frame at its true size.
-        let target = contentOutset > 0
-            ? frame.insetBy(dx: -contentOutset, dy: -contentOutset)
-            : frame
-        let contentSize = image.extent.size
+        let outset = CGSize(width: contentOutset + steadyRoom.width, height: contentOutset + steadyRoom.height)
+        let target = outset == .zero ? frame : frame.insetBy(dx: -outset.width, dy: -outset.height)
+        // Only part of the picture, at exactly the part of a pixel it starts
+        // and ends on. Cut out first, the cut fell on whole pixels, and what a
+        // zoom closing on a recording showed stepped by up to a pixel and a
+        // half at 2x (measured 2026-11-24).
+        if let seen {
+            let sx = target.width / seen.width, sy = target.height / seen.height
+            let whole = image.extent
+            let onto = CGAffineTransform(a: sx, b: 0, c: 0, d: sy, tx: -seen.minX * sx, ty: -seen.minY * sy)
+            // A little of what is round it, for the resampling to hold on to.
+            let round = seen.insetBy(dx: -8, dy: -8).integral.intersection(whole)
+            image = image.cropped(to: round == .null ? whole : round).clampedToExtent()
+            if enlargesPhoto, sx > 1, sy > 0 {
+                image = image.applyingFilter("CILanczosScaleTransform", parameters: [
+                    kCIInputScaleKey: sx,
+                    kCIInputAspectRatioKey: sy / sx
+                ]).transformed(by: CGAffineTransform(translationX: onto.tx, y: onto.ty))
+            } else {
+                image = image.transformed(by: onto)
+            }
+            image = image.cropped(to: CGRect(origin: .zero, size: target.size))
+        }
+        let contentSize = seen.map { _ in target.size } ?? image.extent.size
+        // Where the picture's corner is once it is scaled.
+        let contentCorner = CGPoint(
+            x: contentSize.width > 0 ? image.extent.minX * target.width / contentSize.width : 0,
+            y: contentSize.height > 0 ? image.extent.minY * target.height / contentSize.height : 0)
         if contentSize.width > 0, contentSize.height > 0 {
             let sx = target.width / contentSize.width
             let sy = target.height / contentSize.height
@@ -1890,7 +2104,11 @@ public final class DocumentRenderer: @unchecked Sendable {
             // has always done to the whole picture, and it is why the capture
             // under a redline stays as clean as it was before the words on top
             // of it got sharp.
-            if enlargesPhoto, sx > 1, sy > 0 {
+            if seen != nil {
+                // Scaled above, with the part of it that is shown.
+            } else if steadyRoom != .zero, abs(sx - 1) < 1e-6, abs(sy - 1) < 1e-6 {
+                // Drawn at exactly the pixels it lands on: nothing to scale.
+            } else if enlargesPhoto, sx > 1, sy > 0 {
                 // Clamped first: the resampling kernel reaches past the edge of
                 // the bitmap, and without an edge to hold on to it fades the
                 // outermost pixels towards transparent, which shows up as a
@@ -1947,10 +2165,17 @@ public final class DocumentRenderer: @unchecked Sendable {
         // The layer's OWN box inside the picture: the whole extent normally,
         // and the middle of it where an outside stroke padded the bitmap. The
         // corner and the ring follow the box a person sees, never the padding.
-        let box = contentOutset > 0
-            ? image.extent.insetBy(dx: contentOutset, dy: contentOutset)
-            : image.extent
-        image = rounded(image, box: box, radii: maskRadii, keepingOutside: contentOutset > 0)
+        //
+        // Where it plays, worked out rather than read back off the picture:
+        // Core Image rounds the extent of a scaled picture out to whole
+        // pixels, so the middle of one growing smoothly stepped by a quarter
+        // of a pixel and the layer was put down that far off.
+        let exact = (plays || steadyRoom != .zero) && contentSize.width > 0 && contentSize.height > 0
+            && !image.extent.isInfinite && !image.extent.isNull
+        let drawn = exact ? CGRect(origin: contentCorner, size: target.size) : image.extent
+        let box = outset == .zero ? drawn
+            : drawn.insetBy(dx: outset.width, dy: outset.height).offsetBy(dx: -inkShift.x, dy: -inkShift.y)
+        image = rounded(image, box: box, radii: maskRadii, keepingOutside: outset != .zero)
         // Every ring round this layer's BOX, in the order the Effects list
         // holds them. On a label that is only the borders whose row says they
         // follow its frame: the ones following the letters were baked into the
@@ -1999,7 +2224,8 @@ public final class DocumentRenderer: @unchecked Sendable {
             mirrored.rotation = -mirrored.rotation
             mirrored.skewX = -mirrored.skewX
             mirrored.skewY = -mirrored.skewY
-            let center = CGPoint(x: image.extent.midX, y: image.extent.midY)
+            let center = exact ? CGPoint(x: box.midX, y: box.midY)
+                : CGPoint(x: image.extent.midX, y: image.extent.midY)
             let turn = mirrored.affineTransform(around: center)
             image = image.transformed(by: turn)
             frostMask = frostMask?.transformed(by: turn)
@@ -2011,8 +2237,18 @@ public final class DocumentRenderer: @unchecked Sendable {
         // rotated/skewed extents stay anchored where the frame is. Must happen
         // before the shadow, whose expanded extent would skew the centering.
         let frameCenterY = document.canvasSize.height - frame.midY
-        let placing = CGAffineTransform(translationX: frame.midX - image.extent.midX + swing.x,
-                                        y: frameCenterY - image.extent.midY + swing.y)
+        //
+        // Words drawn for the pixels they land on (`SteadyType.swift`) are put
+        // on them by their box, whose middle is not their picture's.
+        let middle = exact || steadyRoom != .zero
+            ? CGPoint(x: box.midX, y: box.midY) : CGPoint(x: image.extent.midX, y: image.extent.midY)
+        var lands = CGPoint(x: frame.midX - middle.x + swing.x, y: frameCenterY - middle.y + swing.y)
+        if exact {
+            // On the pixel it belongs on, not a millionth of one off it.
+            if abs(lands.x - lands.x.rounded()) < 1e-4 { lands.x.round() }
+            if abs(lands.y - lands.y.rounded()) < 1e-4 { lands.y.round() }
+        }
+        let placing = CGAffineTransform(translationX: lands.x, y: lands.y)
         image = image.transformed(by: placing)
         frostMask = frostMask?.transformed(by: placing)
 
@@ -2020,7 +2256,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         // camera sees, after its 2D turn and before its shadow, so a shadow
         // falls from the turned card rather than turning with it, the same
         // bargain the 2D turn strikes (`Space3D.swift`).
-        if let space {
+        if let space, !facesCamera {
             guard let placed = placedInSpace(image, space, canvasHeight: document.canvasSize.height,
                                              fadesEdges: !isPhoto) else { return nil }
             image = placed
@@ -2051,7 +2287,7 @@ public final class DocumentRenderer: @unchecked Sendable {
                 ciImage(for: layer, origin: origin, in: document, store: store, backdrop: backdrop,
                         onDesignedSurface: onDesignedSurface, contentScale: contentScale,
                         magnifyNearest: magnifyNearest, space: space, projection: projection,
-                        castStandIn: true)
+                        castStandIn: true, playing: playing)
             }
             : nil
         image = shadowed(image, glows: glows, shadows: shadows, castFrom: castFrom)
@@ -3419,6 +3655,31 @@ public final class DocumentRenderer: @unchecked Sendable {
         return SpacePlacement(turn: turn, projection: projection, box: box,
                               drawsBackFace: layer.turn3D?.drawsBackFace ?? true,
                               focusBlur: CGFloat(focus))
+    }
+
+    /// Where words square on to the camera land, in place of warping their
+    /// picture there: the plain magnification of `frame` the camera's view of
+    /// it comes to. Nil for anything the camera sees at an angle, and for
+    /// words wearing anything that is stated in the canvas's own units and
+    /// would not grow with them (a softness, a ring, a crop).
+    private func facedByTheCamera(_ layer: Layer, frame: CGRect, space: SpacePlacement,
+                                  contentScale: CGFloat) -> CGRect? {
+        guard layer.text != nil, layer.text?.onPath == nil, space.focusBlur <= 0.25,
+              frame.width > 0, frame.height > 0,
+              layer.transform.isIdentity, layer.shownReshape == nil, layer.crop == nil,
+              layer.style.blurRadius == 0, layer.style.grain == nil, !layer.style.cornerRadii.isRound,
+              layer.ringedBorders.isEmpty,
+              let quad = Space3D.quad(of: frame, through: space.turn, space.projection),
+              Space3D.facesViewer(quad) else { return nil }
+        let seen = CGRect(x: quad[0].x, y: quad[0].y, width: quad[1].x - quad[0].x, height: quad[3].y - quad[0].y)
+        let factor = seen.width / frame.width
+        // The same size both ways, upright, all four corners where that puts
+        // them, and not a picture too big to keep.
+        guard factor > 0, abs(seen.height - frame.height * factor) < 1e-3,
+              hypot(quad[2].x - seen.maxX, quad[2].y - seen.maxY) < 1e-3,
+              abs(quad[1].y - seen.minY) < 1e-3, abs(quad[3].x - seen.minX) < 1e-3,
+              seen.width * seen.height <= Self.crispRasterCap else { return nil }
+        return seen
     }
 
     /// A layer's finished picture, placed on the canvas (Core Image's y-up

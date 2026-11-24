@@ -34,7 +34,12 @@ extension Layer {
     /// drawing keeps its shape. Placement rules answer "the container changed
     /// size, where do I go"; they have no say in a magnification, where the
     /// answer is always "everywhere, by the same amount".
-    public func drawnLarger(by factor: CGFloat, about pivot: CGPoint) -> Layer {
+    ///
+    /// `passing` is a growth that belongs to one frame of a motion: the words
+    /// in it remember the size they were set at (`TextContent.drawnScale`) and
+    /// are drawn as that setting magnified. A layer that is simply BEING made
+    /// another size takes its words' new size as their own.
+    public func drawnLarger(by factor: CGFloat, about pivot: CGPoint, passing: Bool = false) -> Layer {
         // Gone, not full size: a layer told to be nought percent has no box at
         // all, and a renderer handed a box with nothing in it draws nothing.
         guard factor.isFinite, factor > 0 else {
@@ -61,14 +66,14 @@ extension Layer {
         // have to be their new size before anybody measures the box, and an
         // arrow's frame reserves room for its cap, so the cap has to be its new
         // thickness before that room is worked out.
-        out.content = content.inkDrawnLarger(by: factor)
+        out.content = content.inkDrawnLarger(by: factor, passing: passing)
 
         if case .group(var group) = out.content {
             // A child's numbers are its group's own, so the children magnify
             // about that corner and the group's corner magnifies about the
             // pivot. Composed, every point in the group ends up `factor` times
             // as far from the pivot as it was, which is the definition.
-            group.children = group.children.map { $0.drawnLarger(by: factor, about: .zero) }
+            group.children = group.children.map { $0.drawnLarger(by: factor, about: .zero, passing: passing) }
             group.layout = group.layout?.magnified(by: factor)
             out.content = .group(group)
             out.frame = grown
@@ -80,6 +85,12 @@ extension Layer {
         // grows and its content is left exactly as it is, which beats handing
         // back a layer one point across.
         guard !drawsNothingOfItsOwn else {
+            out.frame = grown
+            return out
+        }
+        // Words magnified from the size they were set at break where they did,
+        // so their box grows as the rest does and is never re-fitted to them.
+        if out.text?.drawnScale != nil {
             out.frame = grown
             return out
         }
@@ -138,7 +149,7 @@ extension LayerContent {
     /// The other half of a magnification. The geometry — where the anchors
     /// are, where the endpoints are — is `Layer.resized(to:)`'s business and is
     /// untouched here, so the two never disagree about the same number.
-    func inkDrawnLarger(by factor: CGFloat) -> LayerContent {
+    func inkDrawnLarger(by factor: CGFloat, passing: Bool = false) -> LayerContent {
         guard factor.isFinite, factor > 0, factor != 1 else { return self }
         switch self {
         // Sound draws no ink, so there is none to draw larger.
@@ -156,6 +167,8 @@ extension LayerContent {
             return .annotation(annotation)
         case .text(var text):
             text.fontSize *= factor
+            // Words on a curve are laid along the curve at its own new size.
+            if passing, text.onPath == nil { text.drawnScale = (text.drawnScale ?? 1) * factor }
             return .text(text)
         case .measure(var measure):
             measure.strokeWidth *= factor

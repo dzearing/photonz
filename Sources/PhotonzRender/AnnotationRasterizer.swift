@@ -17,7 +17,7 @@ public enum AnnotationRasterizer {
     /// stated in the same points at every scale, so a shape does not move or
     /// change weight when a sharper copy of it arrives.
     public static func rasterize(_ annotation: AnnotationContent, size: CGSize,
-                                 scale: CGFloat = 1) -> CGImage? {
+                                 scale: CGFloat = 1, placing: PixelPlacing? = nil) -> CGImage? {
         guard scale > 0, scale.isFinite else { return nil }
         // An outline that sits on or past the shape's edge needs somewhere to
         // be drawn, and the shape's own box is exactly the wrong size for it.
@@ -26,8 +26,8 @@ public enum AnnotationRasterizer {
         // go on centring the picture on the frame
         // (`DocumentRenderer.ciImage`, and `BorderPosition.swift`).
         let pad = annotation.strokeOutset
-        let width = Int(((size.width + 2 * pad) * scale).rounded())
-        let height = Int(((size.height + 2 * pad) * scale).rounded())
+        let width = placing?.width ?? Int(((size.width + 2 * pad) * scale).rounded())
+        let height = placing?.height ?? Int(((size.height + 2 * pad) * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
 
         guard let context = CGContext(data: nil, width: width, height: height,
@@ -39,7 +39,11 @@ public enum AnnotationRasterizer {
 
         // Flip so the drawing code below works in top-left coordinates, and
         // scale so it can go on stating everything in document points.
-        context.translateBy(x: 0, y: CGFloat(height))
+        if let placing {
+            context.translateBy(x: placing.origin.x, y: placing.origin.y + (size.height + 2 * pad) * scale)
+        } else {
+            context.translateBy(x: 0, y: CGFloat(height))
+        }
         context.scaleBy(x: scale, y: -scale)
         // ...and everything below goes on stating itself in the shape's own
         // box, unaware that the paper under it got bigger.

@@ -23446,3 +23446,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Fix: while the clock plays, a jump keeps the clock's direction (`MovieFramesInHand.Travel.afterMove`, `whenHandLetsGo`); a jump while playing at a sound speed waits for its first frames like Space from rest (at most 0.8s, sound restarts with the picture).
 - New walk step `expectJumpWhilePlaying` (`JumpPlayReading`) keeps every picture after a jump and reads it against the export; `jumping-back-while-playing-walk` covers 9 cases. Audit: `queue/audits/2026-11-24-jumping-back-while-a-video-plays-never-flickers.json`, reel `2026-11-24-jumping-back-reel.mp4`.
 - Next: nothing open on this; the wait's stand-in can be a frame from elsewhere for one picture (~25ms), noted in the task log.
+
+## 2026-11-24 — Text that grows in a video moves as one piece
+
+- Reproduced: letters slipped 0.4 to 0.7 px on their own as a title scaled (0.50 as it plays, 0.63 in the export), a zoom on a recording stepped up to 1.5 px. Causes: system glyphs snapped to pixels, type set afresh at every in-between size, pictures rounded to whole pixels and stretched, Core Image's rounded extents.
+- Fix: a growing text keeps the size it was set at (`TextContent.drawnScale`, set by `Layer.drawnLarger(passing:)`), drawn as fattened outlines at the exact part of a pixel (`SteadyType.swift`, `PixelPlacing`); in anything drawn over time (`PhotonzDocument.isDrawnOverTime`) layers are placed by their own numbers, and a crop or zoom window is cut exactly. Words square on to a moved camera are drawn at the size seen.
+- New walk step `expectWordsSteady` (`LetterSteadiness`), walk `words-that-grow-move-as-one-walk` (0.007 px played, 0.007 export; 0.50 and 0.63 on the old app). Tests `TextMovesAsOneTests`, `ThingsMoveAsOneTests`. Audit `2026-11-24-text-that-grows-in-a-video-moves-as-one-piece`.
+- Next: labels on arrows and measurements still slip about half a pixel when scaled (filed).

@@ -1,0 +1,241 @@
+{
+  "out": "/tmp/photonz-playtest/words-that-grow-move-as-one-walk",
+  "seed": "Words that grow in a video move as one solid piece (the user, 2026-11-24: the individual characters jitter by a pixel or two independently). At Next defaults with no flag changed: a blank black video, a title typed on it, its letters set loose so they can be told apart, Scale keyed from 50 to 100 over a second. Every letter is followed in the pictures the canvas is handed as it plays and in the export's frames: none may slip against the rest by a tenth of a pixel and the word may never step backwards.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blankVideo",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        500,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Launch day"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "reveal",
+      "control": "Text section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Tracking"
+    },
+    {
+      "do": "type",
+      "text": "15"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Key Menu",
+      "choose": "Animate a Property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "50"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "100"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "describe",
+      "stage": "1-grows-from-half",
+      "note": "A title on a blank video, Scale keyed 50 at the start and 100 a second on"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-grown"
+    },
+    {
+      "do": "expectWordsSteady",
+      "name": "grows",
+      "from": 0.0,
+      "to": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "98"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-drifts",
+      "note": "The same title growing two percent in a second, where rounding shows most"
+    },
+    {
+      "do": "expectWordsSteady",
+      "name": "drifts",
+      "from": 0.0,
+      "to": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "2-drifts"
+    }
+  ]
+}

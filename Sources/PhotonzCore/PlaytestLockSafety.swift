@@ -315,6 +315,8 @@ public enum PlaytestLockSafety {
         // it plays and moves the playhead through the editor's own calls and
         // reads the pictures the canvas is handed, never a name.
         "expectJumpWhilePlaying",
+        // ...and so does this one.
+        "expectWordsSteady",
         // Added 2026-09-28 by reading, NOT yet watched under a lock: it plays
         // through the editor's own calls and reads the picture and the drawn
         // document the editor holds, finding its layer by the layer's own name

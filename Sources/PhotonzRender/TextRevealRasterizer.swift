@@ -50,15 +50,18 @@ extension TextRasterizer {
     /// drawn at `scale` pixels a point, with its outlines. Nil where nothing
     /// can be drawn.
     public static func revealPieces(_ text: TextContent, size: CGSize, outlines: [TextOutline] = [],
-                                    scale: CGFloat = 1, unit: TextRevealUnit) -> TextRevealPieces? {
+                                    scale: CGFloat = 1, unit: TextRevealUnit,
+                                    placing: PixelPlacing? = nil) -> TextRevealPieces? {
         guard scale > 0, scale.isFinite, text.fontSize > 0 else { return nil }
         let text = truncating(text, toFit: size.width)
-        let width = Int((size.width * scale).rounded())
-        let height = Int((size.height * scale).rounded())
+        let width = placing?.width ?? Int((size.width * scale).rounded())
+        let height = placing?.height ?? Int((size.height * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
         // The same box the still picture lays out in, so pieces break where
         // its lines do at every scale.
-        let box = layoutBox(size, pixelHeight: height, scale: scale)
+        let box = placing != nil ? CGRect(origin: .zero, size: size)
+            : layoutBox(size, pixelHeight: height, scale: scale)
+        let corner = placing?.origin ?? .zero
         let path = CGPath(rect: laidOutBox(text, in: box), transform: nil)
         let base = path.boundingBox.origin
         func frame(_ attributed: NSAttributedString) -> CTFrame {
@@ -150,7 +153,7 @@ extension TextRasterizer {
         var drawn: [(piece: Int, image: CIImage, rect: CGRect, box: CGRect)] = []
         for piece in order {
             guard let points = bounds[piece], let parts = stretches[piece] else { continue }
-            let rect = CGRect(x: (points.minX - pad) * scale, y: (points.minY - pad) * scale,
+            let rect = CGRect(x: (points.minX - pad) * scale + corner.x, y: (points.minY - pad) * scale + corner.y,
                               width: (points.width + pad * 2) * scale, height: (points.height + pad * 2) * scale)
                 .integral.intersection(whole)
             guard !rect.isEmpty,
@@ -160,15 +163,21 @@ extension TextRasterizer {
                                               ?? CGColorSpaceCreateDeviceRGB(),
                                           bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
             else { continue }
-            context.translateBy(x: -rect.minX, y: -rect.minY)
+            context.translateBy(x: corner.x - rect.minX, y: corner.y - rect.minY)
             context.scaleBy(x: scale, y: scale)
             context.textMatrix = .identity
             func draw(_ lines: [CTLine]) {
                 for part in parts where part.line < lines.count {
                     guard let runs = CTLineGetGlyphRuns(lines[part.line]) as? [CTRun], part.run < runs.count
                     else { continue }
-                    context.textPosition = CGPoint(x: base.x + origins[part.line].x,
-                                                   y: base.y + origins[part.line].y)
+                    let place = CGPoint(x: base.x + origins[part.line].x, y: base.y + origins[part.line].y)
+                    if let placing {
+                        SteadyType.draw(runs[part.run], from: part.from, count: part.count,
+                                        at: SteadyType.place(origins[part.line], base: base),
+                                        scale: scale, snaps: placing.snapsLetters, in: context)
+                        continue
+                    }
+                    context.textPosition = place
                     CTRunDraw(runs[part.run], context, CFRange(location: part.from, length: part.count))
                 }
             }
@@ -191,7 +200,7 @@ extension TextRasterizer {
                 draw(lines)
             }
             guard let image = context.makeImage() else { continue }
-            let box = CGRect(x: points.minX * scale, y: points.minY * scale,
+            let box = CGRect(x: points.minX * scale + corner.x, y: points.minY * scale + corner.y,
                              width: points.width * scale, height: points.height * scale)
             drawn.append((piece, CIImage(cgImage: image).transformed(
                 by: CGAffineTransform(translationX: rect.minX, y: rect.minY)), rect, box))
@@ -212,6 +221,7 @@ extension TextRasterizer {
                                    bytesPerRow: width * 4,
                                    space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
                                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+            context.translateBy(x: corner.x, y: corner.y)
             context.scaleBy(x: scale, y: scale)
             drawPlate(for: text, hex: plateHex, laidOutIn: path, bounds: box, in: context)
             plate = context.makeImage().map(CIImage.init(cgImage:))

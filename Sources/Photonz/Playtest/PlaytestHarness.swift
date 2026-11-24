@@ -4228,6 +4228,9 @@ private final class Run {
         case .expectJumpWhilePlaying(let jump):
             note(number, step.name, try await checkJumpWhilePlaying(jump), state: describe())
 
+        case .expectWordsSteady(let steady):
+            note(number, step.name, try await checkWordsSteady(steady), state: describe())
+
         case .filmThumb(let film):
             note(number, step.name, try await filmThumb(film, number: number), state: describe())
         case .filmHover(let film):
@@ -13031,6 +13034,83 @@ private final class Run {
             throw Failure(description: summary + "; " + reading.problems.joined(separator: " | "))
         }
         return summary + "; every picture after it showed its own moment, never going back in time"
+    }
+
+    /// Follows every letter of words that grow or travel, as the canvas plays
+    /// them and as the export writes them (`expectWordsSteady`).
+    private func checkWordsSteady(_ steady: PlaytestWordsSteady) async throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "there is no video in this document to play")
+        }
+        let fromMS = Int((steady.fromSeconds * 1000).rounded())
+        let toMS = min(Int((steady.toSeconds * 1000).rounded()), editor.lastDocumentTimeMS)
+        func marks(_ image: CGImage) -> [LetterSteadiness.Mark] {
+            guard let whole = Self.onBlack(image, width: image.width)?.image else { return [] }
+            let bytes = Self.bytes(of: whole)
+            let count = whole.width * whole.height
+            guard bytes.count >= count * 4 else { return [] }
+            return LetterSteadiness.marks(in: (0..<count).map { bytes[$0 * 4 + 1] },
+                                          width: whole.width, height: whole.height)
+        }
+        // As it plays: every picture the canvas is handed over the stretch.
+        var played: [(moment: Int, image: CGImage)] = []
+        editor.pauseDocument()
+        editor.scrubDocument(toMS: fromMS)
+        await sleep(0.8)
+        editor.playtestPictureTap = { image, moment, _, _ in
+            guard moment >= fromMS, moment <= toMS, played.last?.moment != moment else { return }
+            played.append((moment, Self.onBlack(image, width: image.width)?.image ?? image))
+        }
+        defer { editor.playtestPictureTap = nil; editor.playtestTapPresent = [:] }
+        editor.playDocument(rate: 1)
+        let began = Date()
+        while editor.isDocumentPlaying, editor.documentTimeMS < toMS,
+              Date().timeIntervalSince(began) < Double(toMS - fromMS) / 1000 + 4 {
+            await sleep(0.005)
+        }
+        editor.pauseDocument()
+        editor.playtestPictureTap = nil
+        played.sort { $0.moment < $1.moment }
+        guard played.count >= 8 else {
+            throw Failure(description: "the canvas was handed \(played.count) picture(s) of the stretch")
+        }
+        // ...and as the file is written, at the canvas's own size.
+        let frames = DocumentFrames(document: document, store: editor.store,
+                                    movieURLs: MovieLibrary.shared.urls(in: document), streaming: true)
+        defer { frames.putTheStoreBack() }
+        var exported: [CGImage] = []
+        var moment = Double(fromMS)
+        while moment <= Double(toMS) {
+            if let image = await frames.frame(atMS: Int(moment.rounded())) {
+                exported.append(Self.onBlack(image, width: image.width)?.image ?? image)
+            }
+            moment += 1000.0 / 30
+        }
+        let canvas = LetterSteadiness(played.map { marks($0.image) })
+        let file = LetterSteadiness(exported.map(marks))
+        for (index, image) in exported.enumerated() {
+            try writePNG(image, name: String(format: "%@-export-%03d", steady.name, index + 1))
+        }
+        write(json: ["played": played.map(\.moment), "playedSizes": canvas.sizes, "playedSlip": canvas.slip,
+                     "playedUnread": canvas.unread, "exportSizes": file.sizes, "exportSlip": file.slip,
+                     "exportUnread": file.unread], to: "\(steady.name)-steady.json")
+        let summary = String(format: "%d pictures played and %d exported over %.2fs to %.2fs: no letter slips more "
+                             + "than %.3f px as it plays and %.3f px in the export", played.count, exported.count,
+                             Double(fromMS) / 1000, Double(toMS) / 1000, canvas.slip, file.slip)
+        var problems: [String] = []
+        if canvas.unread > 0 || file.unread > 0 {
+            problems.append("\(canvas.unread) played and \(file.unread) exported pictures could not be read: "
+                + "the letters touch, or something else is on screen")
+        }
+        if canvas.slip > steady.within { problems.append("a letter slips on the canvas") }
+        if file.slip > steady.within { problems.append("a letter slips in the export") }
+        if !canvas.sizesKeepGoing() { problems.append("the words step backwards on the canvas") }
+        if !file.sizesKeepGoing() { problems.append("the words step backwards in the export") }
+        guard problems.isEmpty else {
+            throw Failure(description: summary + "; " + problems.joined(separator: " | "))
+        }
+        return summary
     }
 
     /// One look at a playing document for `expectPlaybackShows`: the moment,

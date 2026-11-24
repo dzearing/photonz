@@ -17,7 +17,7 @@ public enum PathRasterizer {
     /// is stated in the same points at every scale, so a sharper copy of a
     /// shape is the same shape.
     public static func rasterize(_ content: PathContent, size: CGSize,
-                                 scale: CGFloat = 1) -> CGImage? {
+                                 scale: CGFloat = 1, placing: PixelPlacing? = nil) -> CGImage? {
         guard scale > 0, scale.isFinite, content.anchors.count >= 2 else { return nil }
         // A line that sits on or past the shape's edge needs somewhere to be
         // drawn, so the bitmap grows by that reach on EVERY side and the
@@ -25,8 +25,8 @@ public enum PathRasterizer {
         // composite go on centring the picture on the frame
         // (`DocumentRenderer.ciImage`, and `BorderPosition.swift`).
         let pad = content.strokeOutset
-        let width = Int(((size.width + 2 * pad) * scale).rounded())
-        let height = Int(((size.height + 2 * pad) * scale).rounded())
+        let width = placing?.width ?? Int(((size.width + 2 * pad) * scale).rounded())
+        let height = placing?.height ?? Int(((size.height + 2 * pad) * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
 
         guard let context = CGContext(
@@ -38,7 +38,11 @@ public enum PathRasterizer {
         // Flip so the drawing below works in top-left coordinates, scale so it
         // can go on stating everything in document points, and shift so it can
         // go on stating itself in the shape's own box.
-        context.translateBy(x: 0, y: CGFloat(height))
+        if let placing {
+            context.translateBy(x: placing.origin.x, y: placing.origin.y + (size.height + 2 * pad) * scale)
+        } else {
+            context.translateBy(x: 0, y: CGFloat(height))
+        }
         context.scaleBy(x: scale, y: -scale)
         if pad != 0 { context.translateBy(x: pad, y: pad) }
 

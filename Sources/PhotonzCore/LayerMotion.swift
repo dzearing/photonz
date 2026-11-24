@@ -1659,7 +1659,7 @@ extension Layer {
         }) {
             moved = motion.property.applied(motion.value(atMS: ms, cycleMS: cycleMS),
                                             to: moved, authored: self,
-                                            magnification: magnification, effect: motion.effectOrdinal)
+                                            magnification: magnification, effect: motion.effectOrdinal, passing: true)
         }
         // ...and text whose words come in a piece at a time says how far in
         // it is, on the same clock (`TextReveal.swift`).
@@ -1683,8 +1683,11 @@ extension MotionProperty {
     ///
     /// `effect` is which shadow, glow or border a value of one of those moves,
     /// counting from nought among its kind (`LayerMotion.effect`).
+    ///
+    /// `passing` is a value a motion has for one frame, rather than one the
+    /// layer is being given to keep (`Layer.drawnLarger`).
     func applied(_ value: MotionValue, to layer: Layer, authored: Layer,
-                 magnification: CGFloat = 1, effect: Int = 0) -> Layer {
+                 magnification: CGFloat = 1, effect: Int = 0, passing: Bool = false) -> Layer {
         var moved = layer
         // A growth of nought leaves nothing to draw and a growth that is not a
         // number is not one, so neither is allowed to eat the distance.
@@ -1730,7 +1733,7 @@ extension MotionProperty {
                 ? (moved.hasKeyedCrop ? authored.frame.standardized : moved.frame.standardized)
                 : moved.localBounds
             moved = moved.drawnLarger(by: CGFloat(percent) / 100,
-                                      about: CGPoint(x: middle.midX, y: middle.midY))
+                                      about: CGPoint(x: middle.midX, y: middle.midY), passing: passing)
         case let (.rotation, .number(degrees)):
             moved.transform.rotation = CGFloat(degrees) * .pi / 180
         case let (.opacity, .number(percent)):
@@ -1788,6 +1791,7 @@ extension MotionProperty {
             let size = CGFloat(max(1, points)) * grown
             let factor = size / text.fontSize
             text.fontSize = size
+            if passing, text.onPath == nil { text.drawnScale = (text.drawnScale ?? 1) * factor }
             moved.content = .text(text)
             let box = moved.frame.standardized
             let grownBox = CGSize(width: box.width * factor, height: box.height * factor)
@@ -1924,6 +1928,13 @@ extension PhotonzDocument {
     /// started, so a still document costs nothing.
     public var hasMotion: Bool {
         allLayers.contains { $0.hasMotion } || !(camera?.motions ?? []).isEmpty
+    }
+
+    /// Whether the picture is ever drawn at more than one moment: it has time
+    /// in it, or something on it moves. What such a picture draws is put down
+    /// on exactly the part of a pixel it belongs on, so it never jitters.
+    public var isDrawnOverTime: Bool {
+        hasTime || layers.contains { $0.hasMotionInside } || !(camera?.motions ?? []).isEmpty
     }
 
     /// How long one cycle of the loop is, in milliseconds: whatever has been

@@ -19066,3 +19066,16 @@
 {"t":"2026-11-24T15:46:00.003Z","ev":"task_note","id":"jumping-back-while-a-video-plays-never-flickers"}
 {"t":"2026-11-24T15:46:00.081Z","ev":"task_note","id":"jumping-back-while-a-video-plays-never-flickers"}
 {"t":"2026-11-24T15:46:15.648Z","ev":"task_done","id":"jumping-back-while-a-video-plays-never-flickers","from":"in_progress","note":"Fixed the flicker after jumping while a video plays (commit 6b8a6695a). Cause: a jump back while playing left the playhead marked as going backwards, so frames were stood in from the place it had left (A-B-A). It now keeps the clock's direction, and a jump at a sound speed waits for its first frames like Space from rest (max 0.8s). New walk step expectJumpWhilePlaying plus jumping-back-while-playing-walk: 9 cases (long and short back, forward, drag back, 0.5x, 2x, a cut, a dissolve, Retina) fail on the old code and pass now. New place on screen 0-48ms after the jump, every later picture its own frame (export diff at most 2.3/255), no reversal. 13 neighbouring playback walks pass, full test.sh green. Audit and reel in queue/audits/2026-11-24-jumping-back-*."}
+{"t":"2026-11-24T15:51:02.094Z","ev":"task_resequenced","id":"a-60-frame-a-second-recording-edits-and-exports","from":90,"to":62}
+{"t":"2026-11-24T15:51:02.171Z","ev":"task_resequenced","id":"a-60-frame-a-second-edit-plays-every-one-of-its","from":92,"to":64}
+{"t":"2026-11-24T15:51:02.247Z","ev":"task_resequenced","id":"every-frame-the-whole-reference-edit-plays-is-th","from":94,"to":66}
+{"t":"2026-11-24T15:51:02.326Z","ev":"task_resequenced","id":"toasts-are-smaller-sit-closer-to-the-screen-corn","from":70,"to":68}
+{"t":"2026-11-24T15:51:56.603Z","ev":"slice_pass","walks":6,"passed":5,"failed":0,"seconds":286,"of":1200,"couldNotRun":0,"timedOut":false,"rotating":true,"from":173,"to":176,"moved":3}
+{"t":"2026-11-24T15:51:56.798Z","ev":"task_started","id":"text-that-zooms-or-scales-in-a-video-moves-as-on","title":"Text that zooms or scales in a video moves as one smooth piece, with no letter jittering on its own","priority":"p1-high"}
+{"t":"2026-11-24T16:09:44.533Z","ev":"task_created","id":"a-video-that-changed-on-disk-shows-its-new-frame","priority":"p1-high","title":"A video that changed on disk shows its new frames everywhere the moment it is opened again"}
+{"t":"2026-11-24T16:09:44.651Z","ev":"task_resequenced","id":"a-video-that-changed-on-disk-shows-its-new-frame","from":4070,"to":5}
+{"t":"2026-11-24T18:16:56.686Z","ev":"task_created","id":"labels-on-arrows-and-measurements-move-as-one-sm","priority":"p2-normal","title":"Labels on arrows and measurements move as one smooth piece when they grow in a video"}
+{"t":"2026-11-24T18:32:02.019Z","ev":"task_walks","id":"text-that-zooms-or-scales-in-a-video-moves-as-on","walks":["words-that-grow-move-as-one-walk"]}
+{"t":"2026-11-24T18:32:02.099Z","ev":"task_note","id":"text-that-zooms-or-scales-in-a-video-moves-as-on"}
+{"t":"2026-11-24T18:32:02.181Z","ev":"task_note","id":"text-that-zooms-or-scales-in-a-video-moves-as-on"}
+{"t":"2026-11-24T18:32:02.259Z","ev":"task_note","id":"text-that-zooms-or-scales-in-a-video-moves-as-on"}

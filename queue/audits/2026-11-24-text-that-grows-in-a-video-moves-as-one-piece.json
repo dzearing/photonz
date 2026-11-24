@@ -1,0 +1,49 @@
+{
+  "feature": "Text that grows in a video moves as one piece",
+  "epic": "video-perf",
+  "summary": "Words that zoom or scale in a video now move as one solid piece, with no letter jumping on its own, as it plays and in the exported file. Zooms on a recording, shapes, pictures and camera pushes hold just as steady.",
+  "setup": "Photonz Dev, release Next, no flag changed. The same thing as a script is the walk words-that-grow-move-as-one-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Watch the before and after reel, full size above and 4x below, twice at speed and once at quarter speed.",
+      "shot": "2026-11-24-text-moves-as-one-reel.mp4"
+    },
+    {
+      "do": "Look at one letter before and after across the zoom.",
+      "shot": "2026-11-24-text-moves-as-one-sheet.png"
+    },
+    {
+      "do": "File > New > Video, press T, click the canvas and type a few words."
+    },
+    {
+      "do": "In Properties press Add Key's arrow > Animate a Property > Scale, type 50, step on one second and type 100.",
+      "shot": "2026-11-24-text-moves-as-one-1-sc.png"
+    },
+    {
+      "do": "Press Space and watch the letters as the title grows."
+    },
+    {
+      "do": "Change the first key to 98 and play again: a slow drift, where jitter shows most."
+    },
+    {
+      "do": "Open a recording, add a zoom on it and play: the words in the recording glide instead of stepping.",
+      "shot": "2026-11-24-text-moves-as-one-side-by-side.png"
+    }
+  ],
+  "evaluate": [
+    "Do the letters of a growing title hold together, with nothing jumping on its own?",
+    "Is a still title as sharp and as heavy as it was before?",
+    "Is the zoom on your own recording smooth now?",
+    "Does the video that started this look right when you export it again?"
+  ],
+  "rough": [
+    "Cause, measured: each letter was redrawn by the system on every frame, snapped to its own part of a pixel (0.58 px apart on its own), and the words were set again at every in-between size, which spaces them a little differently each time (0.97 px with both). The picture was also rounded to whole pixels and stretched back, and Core Image rounds the box of a scaled layer, a quarter to a third of a pixel on shapes and pictures. A zoom on a recording cut its window on whole pixels: 1.5 px at worst.",
+    "Numbers, worst letter against the word, before to after: the walk's title 0.50 to 0.007 px as it plays and 0.63 to 0.007 px in the export; 1080p and 4K type 0.40 to 0.69 before and 0.005 to 0.04 after; a 2 percent drift 0.69 to 0.009; the built-in titles that grow 0.59 to 0.70 before (Keynote Section, Gradient Word, Spotlight) and under 0.01 after; text in a group 0.03; camera push 0.08 to 0.006; box and oval 0.3 to under 0.001; picture 0.23 to 0.03; zoom on a recording 1.3 to 1.5 before and 0.01 to 0.03 after. Slow turns were already steady.",
+    "Ruled out: no cache switched between two sizes, and no stepped zoom. Found on the way: type 59.9999 points tall is spaced by the system as 59, so a title could step by 0.05 percent on some frames; fixed.",
+    "Sharpness of a title that never grows, against the same words on a still picture (which the system draws): 0.99 to 1.06 times at 14 to 120 points, weight within 1 percent. A title that is keyed to grow rests 1 to 2 percent softer, because its letters may not snap to whole pixels without slipping again. A zoomed recording is sharper than before: 118 against 108 at 1.3x, 76 against 61 at 2x.",
+    "Frame cost, release build, 8 titles: scaling at 1080p 6.9 to 5.9 ms, at 4K 14.0 to 12.3 (worst 25 to 14), letters coming in while scaling 22.7 to 21.0, sliding unchanged. A camera pushing in on 8 titles went from 2.6 to 5.4 ms: the words are now drawn at the size they are seen, so they stay sharp.",
+    "Labels on arrows still slip 0.48 px when they are scaled in a video; filed as labels-on-arrows-and-measurements-move-as-one-sm.",
+    "The video that prompted this was not available, so it is checked on titles, zooms and camera moves made the same ways rather than on that file."
+  ]
+}

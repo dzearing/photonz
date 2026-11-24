@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:14:27.652Z",
-  "updated": "2026-11-24T15:51:56.797Z",
+  "updated": "2026-11-24T18:32:02.258Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"this needs to be a really high priority. Fixing the perf in video. Also the quality. For example I had a video claude made where the text zoomed in, but the individaul characters jitted by a pixel or 2 independently, making it very distracting during the transition. We need not just perf but high fidelity rendering that doesn't have jittery artifacts\". The video was made through the Photonz MCP tools (so possibly a title's scale entrance, a zoom from apply_zooms, or a transition between clips with titles); I did not see it.\n\nCode: Sources/PhotonzRender/TextRasterizer.swift rasterize(_:size:scale:) builds a fresh 8-bit sRGB CGContext of round(size*scale) pixels and context.scaleBy(scale) (lines ~81-106); it never sets setAllowsFontSubpixelQuantization(false) / setShouldSubpixelQuantizeFonts(false) or setShouldSubpixelPositionFonts(true), so glyph origins likely snap to the pixel grid differently at each scale. Fix directions to weigh (runner decides, measured): turn off subpixel quantization and allow fractional glyph positioning; or rasterize text once at a size at or above its largest on-screen size and scale the bitmap with a good filter during the animation, re-rasterizing only at rest; or draw glyph outlines as paths. Watch the existing promise that 'a label does not change its line breaks at any scale' (TextRasterizer doc comment ~32-36): keep it.\n\nThe user made video quality part of the same top priority as video speed: this task sits with the video-perf tasks at the head of the queue.",
@@ -38,7 +38,26 @@
     {
       "t": "2026-11-24T15:51:56.788Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T18:32:02.017Z",
+      "note": "owns these walks: words-that-grow-move-as-one-walk"
+    },
+    {
+      "t": "2026-11-24T18:32:02.097Z",
+      "note": "Cause measured: system glyphs snap per letter (0.58 px), type set afresh each size (0.97), pictures rounded to whole pixels and stretched, Core Image rounds scaled extents (0.3 on shapes), zoom window cut on whole pixels (1.5). Before to after: walk 0.50/0.63 to 0.007/0.007 px, unit tests 0.40-0.69 to 0.005-0.04, built-in titles 0.59-0.70 to under 0.01. Release frame cost of 8 scaling titles 6.9 to 5.9 ms (1080p), 14.0 to 12.3 (4K)."
+    },
+    {
+      "t": "2026-11-24T18:32:02.179Z",
+      "note": "Chose redrawing outlines at the exact size each frame over scaling one cached bitmap because a held size then stays as sharp as the system draws it, and it measured faster. Chose whole-pixel letters only for words never keyed to grow, so a still title is no softer."
+    },
+    {
+      "t": "2026-11-24T18:32:02.257Z",
+      "note": "Looked at my audit pictures: the reel frame and sheet show the letters at 4x, before soft and shifting, after crisp and even; the window capture shows the title grown on its keyed Scale. Left rough: arrow and measurement labels, filed as labels-on-arrows-and-measurements-move-as-one-sm (0.48 px)."
     }
   ],
-  "started": "2026-11-24T15:51:56.787Z"
+  "started": "2026-11-24T15:51:56.787Z",
+  "walks": [
+    "words-that-grow-move-as-one-walk"
+  ]
 }

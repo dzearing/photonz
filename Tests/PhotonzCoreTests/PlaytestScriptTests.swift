@@ -4207,6 +4207,28 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("An expectWordsSteady step reads the stretch it watches and the slip it allows")
+    func expectWordsSteadyParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectWordsSteady", "name": "x", "from": 1, "to": 2.5 },
+                     { "do": "expectWordsSteady", "name": "y", "from": 0, "to": 1, "within": 0.2 } ] }
+        """)
+        guard case .expectWordsSteady(let first) = script.steps[0],
+              case .expectWordsSteady(let second) = script.steps[1] else {
+            Issue.record("expectWordsSteady"); return
+        }
+        #expect(first == PlaytestWordsSteady(name: "x", fromSeconds: 1, toSeconds: 2.5, within: 0.1))
+        #expect(second == PlaytestWordsSteady(name: "y", fromSeconds: 0, toSeconds: 1, within: 0.2))
+        #expect(PlaytestStep.names.contains("expectWordsSteady"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectWordsSteady"))
+        for bad in [#""from": 2, "to": 1"#, #""from": -1, "to": 1"#, #""from": 0, "to": 9"#,
+                    #""from": 0, "to": 1, "within": 0"#] {
+            #expect(throws: (any Error).self) {
+                try decode(#"{ "steps": [ { "do": "expectWordsSteady", "name": "x", "# + bad + " } ] }")
+            }
+        }
+    }
+
     @Test("An expectJumpWhilePlaying step reads where it plays, where it jumps, how and how fast")
     func expectJumpWhilePlayingParses() throws {
         let script = try decode("""

@@ -91,6 +91,16 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// way it travels in that time (`MotionSmear.swift`). Set only on the
     /// frame drawn at a moment, like `revealElapsedMS`.
     public var revealShutterMS: Double?
+    /// How many times bigger than they were set these words are being drawn,
+    /// where a motion has grown them (`MotionScale.swift`): `fontSize` and the
+    /// box are already that much bigger, and this is what divides back out to
+    /// the type as it was set. The renderer lays the words out at THAT size
+    /// and magnifies the result, so a word growing from half its size is one
+    /// shape growing, rather than a fresh setting of the type on every frame
+    /// with its letters a little differently spaced. Set only on the frame
+    /// drawn at a moment, like `revealElapsedMS`, and nil for words drawn at
+    /// the size they were set.
+    public var drawnScale: CGFloat?
     /// When the number in these words counts up from nought to its value
     /// (`TextCount.swift`), or nil for words that simply show it.
     public var count: TextCount?

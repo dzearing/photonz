@@ -81,6 +81,20 @@ struct PlacedTitlesOpenTheSameTests {
         }
         let url = try #require(Bundle.module.url(forResource: "Fixtures/\(Self.fixtureName)",
                                                  withExtension: "json"))
+        if ProcessInfo.processInfo.environment["PHOTONZ_WRITE_TITLE_FIXTURE"] == "fingerprints" {
+            // The placed titles kept exactly as they are, only what they draw
+            // measured again: for a change meant to alter every title's
+            // drawing, such as growing words remembering the size they were
+            // set at (`TextContent.drawnScale`, 2026-11-24).
+            var kept = try JSONDecoder().decode(Fixture.self, from: Data(contentsOf: url))
+            for moment in kept.drawn.keys {
+                kept.drawn[moment] = try Self.fingerprint(kept.document, atMS: try #require(Int(moment)))
+            }
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.sortedKeys]
+            try encoder.encode(kept).write(to: Self.writeURL)
+            return
+        }
         let fixture = try JSONDecoder().decode(Fixture.self, from: Data(contentsOf: url))
         #expect(fixture.drawn.count >= 8 * 10)
         for (moment, expected) in fixture.drawn {
