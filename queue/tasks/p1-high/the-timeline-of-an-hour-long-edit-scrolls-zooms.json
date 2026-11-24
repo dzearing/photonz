@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T03:21:31.395Z",
+  "updated": "2026-11-24T04:02:18.728Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T03:21:31.394Z",
-      "note": "... 74 earlier entries elided",
-      "elided": 74
-    },
-    {
-      "t": "2026-11-19T15:36:46.497Z",
-      "note": "Pass 12 after (3 runs, final build): near Fit 12.2-12.4 ms mean (late 243-277 of 648, was 370-444), zoom in 10.9-11.1, out 9.6-10.2, scroll 8.86-8.91 (p95 11.8-12.1, late 10-13, worst 23-34). Verified: Scripts/test.sh exit 0; 13 timeline/pinch walks ok (task walks + an-editing-session, reference-edit-opens, timeline-pinch-direction); 12 of 14 Zoom lane walks ok, the two failing (a-transition-is-picked-at-the-cut step 46, clicking-a-timeline-item-moves-the-playhead step 58) fail on main, owned by walks-that-fail-in-the-full-sweep-27. Looked at held-vs-fresh crops at Fit and 4x (6 min edit): positions identical. Audit queue/audits/2026-11-19-timeline-hour-long-pass12-held-painting.json. Left rough, not filed: hasClickMarks still copies a layer per clip in sight per frame (~0.1 ms; caching needs the pointer track's late arrival handled)."
-    },
-    {
-      "t": "2026-11-19T15:36:46.563Z",
-      "note": "Still open, bars not reached: near Fit ~12.3 ms mean vs 8.3, scroll worst 23-34 vs 16, edits (inspector). Next: what is left is SwiftUI graph and layout (~60% of a zoom frame) across every view reading the ruler; next lever is lane structure that does not re-evaluate per held zoom frame (memoise paintedBars while held, full-view ForEach), then the scroll's worst frames (stretch moves)."
+      "t": "2026-11-24T04:02:18.727Z",
+      "note": "... 76 earlier entries elided",
+      "elided": 76
     },
     {
       "t": "2026-11-19T15:36:46.628Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-24T03:21:31.393Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T04:02:13.183Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T04:02:18.726Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-24T03:21:27.195Z",
+  "started": "2026-11-24T04:02:13.182Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
