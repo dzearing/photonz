@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T07:03:50.239Z",
+  "updated": "2026-11-24T07:34:05.913Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T07:03:50.238Z",
-      "note": "... 88 earlier entries elided",
-      "elided": 88
-    },
-    {
-      "t": "2026-11-20T15:54:50.357Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-20T17:31:56.975Z",
-      "note": "Pass 15 (2026-11-20). Baseline at 43699e1c7 (60 min edit, timeline measure only, machine load ~5): near Fit 12.1-12.9 ms mean (held 9.9-10.8, fresh 15.2-15.7), zoom in 11.3-11.7, out 10.1-10.7, scroll 9.5-10.9 (p95 13.8-16.6, worst 22-41). New in the speed line: scroll split into frames that only slid the painting (122, mean 8.2-8.3 = the floor) and frames that moved the drawn stretch (238, mean 11.6-11.9); paintings laid a frame and ms each (TimelinePaintedPicture via ViewBuildMeter.paintedPicture): 0.26-0.44 ms each, ~1 ms of a moved frame. Profile of the scroll (trace-bursts --from/--to, new --without): AG update 36%, bodies 20%, CA 16%, accessibility 11% (probe), layout 11%; picture laying 0.85 ms a frame."
+      "t": "2026-11-24T07:34:05.912Z",
+      "note": "... 90 earlier entries elided",
+      "elided": 90
     },
     {
       "t": "2026-11-20T17:31:57.061Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-24T07:03:50.237Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T07:34:01.199Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T07:34:05.911Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-24T07:03:45.834Z",
+  "started": "2026-11-24T07:34:01.198Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
