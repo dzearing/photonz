@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-24T06:33:34.771Z",
+  "updated": "2026-11-24T07:03:50.239Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-24T06:33:34.770Z",
-      "note": "... 86 earlier entries elided",
-      "elided": 86
-    },
-    {
-      "t": "2026-11-19T18:18:17.479Z",
-      "note": "Still open, bars not reached: near Fit ~11.0 ms mean (p95 16.7) vs 8.3, scroll worst 21-22 vs 16, edits (inspector). What is left near Fit: frames painted afresh (13.5 ms, 40% of the loop: ImageRenderer of the paint closure plus lane bodies) and ~0.8 ms a held frame over the 8.4 floor (Zoom lanes ~0.5, the stretched image). Next: fewer fresh paints per zoom (a zoom out lets go every two frames because the window leaves the 1/32 margin; a wider margin now costs only picture width), and Zoom lanes held like the tracks. Left rough, not filed: none new."
-    },
-    {
-      "t": "2026-11-19T18:18:43.674Z",
-      "note": "Pass 14 landed 77f9ec5ee: busy lanes are painted into a picture once and a zoom stretches it. Near Fit 11.6-11.9 -> 11.0 ms a frame (held frames 10.5 -> 9.1), zoom out ~9.9 -> 9.3, scroll 8.8 -> 8.6; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+      "t": "2026-11-24T07:03:50.238Z",
+      "note": "... 88 earlier entries elided",
+      "elided": 88
     },
     {
       "t": "2026-11-20T15:54:50.357Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-24T06:33:34.769Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-11-24T07:03:45.835Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T07:03:50.237Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
   ],
-  "started": "2026-11-24T06:33:30.377Z",
+  "started": "2026-11-24T07:03:45.834Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
