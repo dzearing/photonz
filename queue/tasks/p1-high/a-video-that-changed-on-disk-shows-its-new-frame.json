@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T16:09:44.529Z",
-  "updated": "2026-11-24T16:09:44.650Z",
+  "updated": "2026-11-24T19:43:30.161Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"major bug - if I load a video that has been updated on disk, scrubbing backwards seems to show the old video frames until i play\". Not reproduced by me.\n\nLikely cause (read in code): Sources/Photonz/MovieFrames.swift MovieLibrary.movie(at:as:) (~46-73) returns the cached MovieRef for a URL it has seen before (refsByURL keyed by the standardized URL alone, 'the same file asked for twice is the same reference, so re-opening a recording re-uses whatever frames of it are already decoded'), with no check that the file is still the same. Everything downstream keys by that MovieRef id: MovieDecoder's AVAssetImageGenerator lanes (generators keyed by movie id, ~176-240, built on the OLD AVURLAsset, which can keep reading the old file's data), keyFrameTables and glimpseGenerators (~246-256), and any frame and filmstrip caches keyed by movie id. Playing likely builds a fresh reader on the URL, which is why play shows the new file. The length and size in the ref are stale too.\n\nFix direction: identify a file by path plus a fingerprint (file resource identifier / inode, size and content modification date) and treat a changed fingerprint as a new movie: a new MovieRef (or the same id with every per-movie cache forgotten via MovieDecoder.forget and the frame and filmstrip caches dropped), re-read duration, size, sound and pointer track. Check CaptureThumbnail and the History store for path-keyed thumbnails too. Trap: documents hold MovieRef ids; if the ref id changes, an open document's clips must be re-pointed or the old id kept and its caches flushed instead. Sits with the video-perf tasks at the head of the queue at the user's word ('major bug').",
@@ -28,6 +28,65 @@
     {
       "t": "2026-11-24T16:09:44.649Z",
       "note": "seq 4070 -> 5"
+    },
+    {
+      "t": "2026-11-24T18:32:47.426Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-24T18:35:51.010Z",
+      "note": "Read before building: MovieLibrary knows a file by path alone (MovieFrames.swift refsByURL), SoundLibrary has the same hole, and everything downstream (decoder lanes, key frame tables, filmstrip pictures, waveforms, cleaned sounds, frame refs) is keyed by the id it hands back. A window has its own ImageStore, so the old frames come from the shared MovieDecoder's generators still holding the old asset. History only watches its folder, so a file written over in place is not noticed there."
+    },
+    {
+      "t": "2026-11-24T18:35:51.087Z",
+      "note": "Plan: a file is path plus stamp (inode, size, modified); a changed stamp is a NEW MovieRef, so nothing keyed by the old id can show and a late decode of the old file lands where nobody looks. Open windows and reopened projects are re-pointed old id to new id across the document, its undo steps and its saved baseline. Trap found: exporting over the recording's own name changes a file a window plays."
+    },
+    {
+      "t": "2026-11-24T18:35:51.168Z",
+      "note": "owns these walks: a-recording-replaced-on-disk-shows-its-new-frames-walk"
+    },
+    {
+      "t": "2026-11-24T18:49:24.829Z",
+      "note": "REPRODUCED at Next defaults, unfixed build. Window left open while the file changes (in place or replaced, same result): scrubbing backwards showed 26 red (old) pictures of 91 and scrubbing forwards 0, which is the report word for word: the frames the window already holds are the old file's and backwards is where they are; playing pushes them out. Length, size, sound, clicks and timeline pictures all stayed the old file's. Window closed and opened again (both ways): canvas 0 old frames of 182 looks, but length 6000 for 9000, size 1280x800 for 1440x810, no sound, no clicks, and 6 of 6 timeline pictures old. History's tile was right once its folder was listed again, which a write in place does not cause."
+    },
+    {
+      "t": "2026-11-24T18:49:24.911Z",
+      "note": "So the notes' guess (decoder generators on the old asset) is not what showed old frames in either case measured; the window's own frames and the shared timeline pictures are. Both are keyed by the recording's id, so the plan stands: a changed file gets a new id, and an open window is re-pointed."
+    },
+    {
+      "t": "2026-11-24T19:03:54.609Z",
+      "note": "walks a-recording-replaced-on-disk-shows-its-new-frames-walk -> a-recording-replaced-on-disk-shows-its-new-frames-walk, a-recording-replaced-while-open-reloads-walk"
+    },
+    {
+      "t": "2026-11-24T19:18:50.617Z",
+      "note": "After the fix, reopen walk green both ways: 0 old pictures of 182 looks, 0 of 321 decoded frames, 9 of 9 timeline pictures new, 9000 ms, 1440x810, sound with a waveform, the click, and History's tile noticed without the folder being listed again. Unchanged file opened again: 11 microseconds (2 of them the stamp) against 2.0 ms to read it, same reference, no readers let go."
+    },
+    {
+      "t": "2026-11-24T19:18:50.698Z",
+      "note": "Chose taking on the new file silently over a notice because it is what Premiere does and nothing needs doing; chose keeping an edit's cuts, canvas and length over stretching it to the new file. Exporting over the open recording's own name now keeps the recording in the hidden originals folder and plays that, or the reload would have made the cut a second time (walk: exporting-over-the-open-recording-keeps-the-edit-walk)."
+    },
+    {
+      "t": "2026-11-24T19:43:29.552Z",
+      "note": "walks a-recording-replaced-on-disk-shows-its-new-frames-walk, a-recording-replaced-while-open-reloads-walk -> a-recording-replaced-on-disk-shows-its-new-frames-walk, a-recording-replaced-while-open-reloads-walk, exporting-over-the-open-recording-keeps-the-edit-walk"
+    },
+    {
+      "t": "2026-11-24T19:43:29.629Z",
+      "note": "left rough: a music or sound file changed under a window already playing it is not re-read until reopened (recordings are); copies kept by exporting over the open recording sit in .photonz-originals and nothing clears them; a reopened project on changed footage is unit tested, not walked. None was reported or seen to bite, so no tasks filed. a-video-edit-saves-as-a-project-walk fails at step 36 before any saving; it is owned by a-picked-transition-shows-its-own-settings-in-th."
+    },
+    {
+      "t": "2026-11-24T19:43:29.706Z",
+      "note": "Opened the audit pictures: before (OLD FILE at 1280x800 0:06 over a blue file; blue at 0:06), after open window (NEW FILE 8.1s, 1440x810, 0:09, sound and click on the clip), after an edit (cut kept, picture fitted with bars), after reopening (NEW FILE 8.1s, 0:09), after exporting over (edit of 0:03 still showing 5.7s of its recording). Full suite: 16,982 tests green. Perf: the composite path is untouched; an unchanged file costs one stat call, 2 microseconds."
+    },
+    {
+      "t": "2026-11-24T19:43:30.159Z",
+      "note": "A recording replaced on disk shows only its new file: reopened (0 old pictures of 182 looks, was old length, size, sound, clicks and timeline pictures) or with its window open (reloads 0.9s after the file settles, playhead kept, no blank, 0 old of 182; was 26 of 91 scrubbing back). Three walks at Next defaults, new unit tests that failed on the old code, full suite green. Audit 2026-11-24-a-video-that-changed-on-disk."
     }
-  ]
+  ],
+  "started": "2026-11-24T18:32:47.425Z",
+  "walks": [
+    "a-recording-replaced-on-disk-shows-its-new-frames-walk",
+    "a-recording-replaced-while-open-reloads-walk",
+    "exporting-over-the-open-recording-keeps-the-edit-walk"
+  ],
+  "completed": "2026-11-24T19:43:30.160Z"
 }

@@ -19080,3 +19080,19 @@
 {"t":"2026-11-24T18:32:02.181Z","ev":"task_note","id":"text-that-zooms-or-scales-in-a-video-moves-as-on"}
 {"t":"2026-11-24T18:32:02.259Z","ev":"task_note","id":"text-that-zooms-or-scales-in-a-video-moves-as-on"}
 {"t":"2026-11-24T18:32:02.701Z","ev":"task_done","id":"text-that-zooms-or-scales-in-a-video-moves-as-on","from":"in_progress","note":"Words that grow in a video move as one piece: letters slip 0.007 px at most in playback and export (0.50 and 0.63 before); shapes, pictures, zooms on recordings and camera pushes steady too. Verified by full test suite, words-that-grow-move-as-one-walk at Next defaults and 11 neighbouring walks. Audit 2026-11-24-text-that-grows-in-a-video-moves-as-one-piece with reel."}
+{"t":"2026-11-24T18:32:46.570Z","ev":"loop_reloaded","from":"34d7ce29f87b","to":"9e8aec2a4749"}
+{"t":"2026-11-24T18:32:46.697Z","ev":"loop_started","pid":36463}
+{"t":"2026-11-24T18:32:46.748Z","ev":"loop_awake","held":true,"pid":36473,"screenLocked":false}
+{"t":"2026-11-24T18:32:47.432Z","ev":"task_started","id":"a-video-that-changed-on-disk-shows-its-new-frame","title":"A video that changed on disk shows its new frames everywhere the moment it is opened again","priority":"p1-high"}
+{"t":"2026-11-24T18:35:51.012Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
+{"t":"2026-11-24T18:35:51.089Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
+{"t":"2026-11-24T18:35:51.170Z","ev":"task_walks","id":"a-video-that-changed-on-disk-shows-its-new-frame","walks":["a-recording-replaced-on-disk-shows-its-new-frames-walk"]}
+{"t":"2026-11-24T18:49:24.831Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
+{"t":"2026-11-24T18:49:24.913Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
+{"t":"2026-11-24T19:03:54.611Z","ev":"task_walks","id":"a-video-that-changed-on-disk-shows-its-new-frame","walks":["a-recording-replaced-on-disk-shows-its-new-frames-walk","a-recording-replaced-while-open-reloads-walk"]}
+{"t":"2026-11-24T19:18:50.619Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
+{"t":"2026-11-24T19:18:50.700Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
+{"t":"2026-11-24T19:43:29.554Z","ev":"task_walks","id":"a-video-that-changed-on-disk-shows-its-new-frame","walks":["a-recording-replaced-on-disk-shows-its-new-frames-walk","a-recording-replaced-while-open-reloads-walk","exporting-over-the-open-recording-keeps-the-edit-walk"]}
+{"t":"2026-11-24T19:43:29.631Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
+{"t":"2026-11-24T19:43:29.708Z","ev":"task_note","id":"a-video-that-changed-on-disk-shows-its-new-frame"}
+{"t":"2026-11-24T19:43:30.162Z","ev":"task_done","id":"a-video-that-changed-on-disk-shows-its-new-frame","from":"in_progress","note":"A recording replaced on disk shows only its new file: reopened (0 old pictures of 182 looks, was old length, size, sound, clicks and timeline pictures) or with its window open (reloads 0.9s after the file settles, playhead kept, no blank, 0 old of 182; was 26 of 91 scrubbing back). Three walks at Next defaults, new unit tests that failed on the old code, full suite green. Audit 2026-11-24-a-video-that-changed-on-disk."}
