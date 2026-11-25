@@ -19118,3 +19118,4 @@
 {"t":"2026-11-25T03:40:29.732Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T03:40:29.814Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T03:40:29.895Z","ev":"task_pending","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"Pass 2 landed: vertical scroll meets its bar (p95 12 -> 4 ms), zoom a third of what it was, export identical, 100 tracks measured, reel made. Zoom in and six edits while playing are still over their bars; see the log."}
+{"t":"2026-11-25T03:41:01.595Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
