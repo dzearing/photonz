@@ -1,0 +1,36 @@
+{
+  "id": "while-a-video-plays-in-view-the-controls-fade-aw",
+  "title": "While a video plays in View, the controls fade away and come back when you move the mouse or pause",
+  "goal": "When you watch a video in View, the play bar and the rest of the player controls stay on screen over the picture the whole time. Like QuickTime, they should fade out shortly after play starts, come back the moment you move the mouse or press Space to pause, and also fade out after about 5 seconds of sitting paused with nothing happening.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-25T23:04:19.293Z",
+  "updated": "2026-11-25T23:04:19.424Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-25: \"when in playback mode, and we start a video, i'd like the controls to fade out and only show up on mouse move or spacebar to pause\" and then \"when we're paused, they can also fade out after some time (5s?)\". 'Playback mode' is read as View (the player state of a video window, EditorState.isWatching, Sources/Photonz/EditorState.swift:2045); not confirmed with the user. Then: \"if themouse is over the controls they stay visible\". I did not run it myself.\n\nWhere: the View transport is the dock's transport bar (Sources/Photonz/TimelineDock.swift ~1620-1690: VideoKit.TransportBar, the Full Screen button shown only when isWatching, TimelineToggleButton). Prior art to reuse rather than reinvent: the old recording player Sources/Photonz/VideoEditorView.swift already fades its controls (controlsVisible ~26/95, reveal ~198, scheduleHide 2.4 s ~207, hideSoon, forceHide on play ~222 (do NOT copy this: it hides the controls from under a resting pointer, which the user ruled out), hover pin, guide pin pinnedOnArrival). Pointer hiding: NSCursor.setHiddenUntilMouseMoves(true) is the standard call.\n\nTraps: the dock and canvas sizes must not change when the controls fade (fade opacity and hit testing, never remove them from layout, or the picture refits and jumps; ViewEditSlideEffects.swift slides these pieces into Edit, so the fade must not fight the slide). Hit testing off while hidden, but the first mouse move must still reach the window. Walks that photograph or click the View transport will find it faded: a walk must wake it (move) first, or a playtest setting keeps it up; update the walks rather than turning the feature off for them. Playback must not re-render SwiftUI on each tick for this (use one timer, not playhead observation). Shared code, so both releases get it unless the runner finds View is Next-only.",
+  "acceptance": [
+    "Reproduced first in the probe at Next defaults: open a recording in View, press Space, and record what stays on screen while it plays and while it sits paused (play bar, Full Screen and timeline buttons, title bar, pointer), with pictures.",
+    "Playing: about 2 seconds after play starts with the pointer still, the controls fade out (a short ease, not a cut) and the pointer hides over the picture, as QuickTime does. Any mouse movement over the window brings them straight back and starts the 2 seconds again. The title bar and window buttons fade with them when the window is not full screen; say in the audit if that turns out wrong for the window and why.",
+    "Paused: after about 5 seconds of no mouse movement and no key, the controls fade out the same way. Moving the mouse brings them back.",
+    "Space to pause brings the controls back at once and they stay for the 5 second paused timer. Space to play starts the playing timer. Arrow keys, J, K, L and a click on the picture show them too.",
+    "While the pointer is over the controls they stay fully visible, playing or paused, however long it rests there (the user, 2026-11-25: \"if the mouse is over the controls they stay visible\"); the timer starts when it leaves. Also never hidden while the speed menu, a popover, a tooltip or a guide's card is up, or while scrubbing or dragging the play bar. Edit mode never fades anything.",
+    "Both times are measured in the audit (time from play or last move to fully faded) and come from one place so they can be tuned. Reduce Motion fades without movement. Fading costs nothing on the play path: the speed walk's playback numbers on the reference edit are no worse before and after.",
+    "A walk at Next defaults: play, wait, check the controls are gone and the pointer hidden; move the mouse, check they are back; pause, wait 5 seconds, check they are gone; Space, check they are back. Focus drill reads clean.",
+    "Audit under queue/audits/ with before and after pictures and a short screen capture of play, fade, mouse move and pause. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-25T23:04:19.295Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-25T23:04:19.423Z",
+      "note": "seq 4080 -> 25"
+    }
+  ]
+}
