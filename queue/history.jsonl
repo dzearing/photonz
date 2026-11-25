@@ -19128,3 +19128,13 @@
 {"t":"2026-11-25T05:44:07.078Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T05:44:07.156Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T05:44:07.235Z","ev":"task_pending","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"Pass 3 landed: edits while playing 9 to 15 ms (add clip and add track 17), no dropped frames at 50 tracks, fewer late zoom frames. Zoom p95, one slow frame scrolling along, add track and the 100 track edit are still over their bars; see the log."}
+{"t":"2026-11-25T05:44:41.740Z","ev":"task_started","id":"picking-letting-go-of-and-cutting-a-clip-while-a","title":"Picking, letting go of and cutting a clip while a long edit plays each finish within one frame","priority":"p1-high"}
+{"t":"2026-11-25T05:58:54.861Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-25T06:44:47.426Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-25T07:06:12.693Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-25T08:03:12.467Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
+{"t":"2026-11-25T08:21:34.348Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
+{"t":"2026-11-25T09:11:56.617Z","ev":"task_walks","id":"picking-letting-go-of-and-cutting-a-clip-while-a","walks":["speed-walk","the-panel-catches-up-when-play-stops-walk","cutting-while-playing-keeps-playing-walk","a-transition-put-on-while-playing-keeps-playing-walk","a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk","closed-windows-give-their-memory-back-walk","the-pointer-in-the-panel-brings-its-sections-in-while-playing-walk"]}
+{"t":"2026-11-25T09:11:56.695Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-25T09:11:56.771Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-25T09:11:56.895Z","ev":"task_done","id":"picking-letting-go-of-and-cutting-a-clip-while-a","from":"in_progress","note":"Closed windows free their editors (13 -> 1). Picks, unpicks, cuts, trims and undo while the 6 minute edit plays: 7.7 to 15.5 ms, worst of 3 speed walks (bar 16); move 14.0, transition 11.6, title 10.2. The clip's name shows in the click's own frame. Walks green at defaults, tests green, baseline rewritten, audit 2026-11-25-a-pick-while-playing. Commits 75f8a3456, 34dbc9a13, 6aa3a183e."}

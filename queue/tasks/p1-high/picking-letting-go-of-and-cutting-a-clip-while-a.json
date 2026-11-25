@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:47:56.154Z",
-  "updated": "2026-11-25T03:51:24.508Z",
+  "updated": "2026-11-25T09:11:56.894Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (28 passes, closed 2026-11-23 per its triage). Measure with Scripts/perf/speed-walk.sh (short form, ~2 min) and Scripts/perf/pass-profile.sh (PassSampler, edits-only walks; Instruments refuses without developer mode). Where the time is (pass 25 to 28): a landing pass has a floor of about 15-17 ms whatever lands: dock stack layout ~4.4, SwiftUI graph ~3.8, accessibility focus ~3.0 (AccessibilityNode.updateFocus -> ViewRendererHost.focusResponder walking every responder; SwiftUI accessibility is switched on in the probe by another process, so a person with any accessibility client sees it too), title bar drag regions ~1.3 (-[NSWindow _resetDragMargins] asks the hosting view acceptsFirstResponder, which walks every focusable control). A pick from nothing is ~30 passes over 0.7 s, one section or row set each. Leads not tried: fewer AppKit-backed controls in the panel (TextField and Picker as NSView, ~170 in the window) so the focus walk shrinks; land only the sections in sight during play and the rest after play stops; keep the clip sections built and hidden across unpick (13.5 ms of unpick is SwiftUI graph teardown). Tried and reverted: a Layout cache for PanelFieldRowLayout (worse), caching control minimums (no gain). Related panel-cost tasks: folding-a-section-that-lets-the-panel-fit-again, leaving-preview-slides-back-without-a-hitch.",
@@ -221,6 +221,38 @@
     {
       "t": "2026-11-25T03:51:24.507Z",
       "note": "rotating check 2026-11-25T03:51:24Z, 12 walks run from 182 onward in the rotation: closed-windows-give-their-memory-back-walk failing."
+    },
+    {
+      "t": "2026-11-25T05:44:41.734Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-25T05:58:54.859Z",
+      "note": "Pass 3: memory regression reproduced (13 editors alive) and fixed: the panel's closure on EditorState.panelPiecesMayLand held the editor; it is a subject the panel subscribes to now. closed-windows-give-their-memory-back-walk: 13 -> 1 editor, ok. Scripts/test.sh exit 0, pushed."
+    },
+    {
+      "t": "2026-11-25T06:44:47.424Z",
+      "note": "Pass 3: telling everything but the canvas of the pick a pass late (the value stays live; what is watched differs): pick 15.8 -> 12, unpick 10.8 -> 8.5, second pick from nothing 17 -> 12; first pick from nothing still 20-22. Tried and reverted: Captions staying a pass longer when the pick moves (20.3, no gain, so it is not what the first pick pays for)."
+    },
+    {
+      "t": "2026-11-25T07:06:12.691Z",
+      "note": "Pass 3: a pick while playing now lands in four passes (canvas + bars + PanelPickLine; timeline rows; panel; playhead answers). One run: pick from nothing 14.2 (was 22.9), pick 8.9, unpick 10.4, blade 13.5, undo picked 14.3, trim picked 11.3. Name line (PanelPickLine) is in the click's own pass. Still to do: pictures, walks, full-panel-built pick, baseline."
+    },
+    {
+      "t": "2026-11-25T09:11:56.615Z",
+      "note": "walks speed-walk, the-panel-catches-up-when-play-stops-walk, cutting-while-playing-keeps-playing-walk, a-transition-put-on-while-playing-keeps-playing-walk, a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk, closed-windows-give-their-memory-back-walk -> speed-walk, the-panel-catches-up-when-play-stops-walk, cutting-while-playing-keeps-playing-walk, a-transition-put-on-while-playing-keeps-playing-walk, a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk, closed-windows-give-their-memory-back-walk, the-pointer-in-the-panel-brings-its-sections-in-while-playing-walk"
+    },
+    {
+      "t": "2026-11-25T09:11:56.693Z",
+      "note": "Pass 3 fixes, speed walk worst of 3 (before -> after): step-by-step pick + name line + shedding: pick from nothing 22.8 -> 15.5, pick 17.5 -> 7.7, unpick 12.8 -> 8.6, blade picked 16.6 -> 14.0, trim picked 12.1 -> 11.4, undo picked 13.0 -> 13.2; move 14.0, transition 11.6, title 10.2. Pick with the panel built 18.4 -> 13.4, unpick 26.1 -> 15.4 (edit 'fill', new). Baseline rewritten with --baseline. An earlier baseline run of this pass read 17.3 once for pick from nothing; plain-drawing name line fixed it (six runs since: worst 14.4). Chose a Properties name line standing in for the section over building the section during play because the section costs the frame."
+    },
+    {
+      "t": "2026-11-25T09:11:56.769Z",
+      "note": "Looked at queue/audits/2026-11-25-a-pick-while-playing-1.png (Properties, Clip, Tutorial Sample over Time while playing) and -2.png (every section, header in the same place). One render stopwatch test (TextDepthPerspectiveTests, 1080p headline) failed in one full test run and passed in the next; not touched here. section-fold-motion-walk and caption-pick-answers-at-once-walk fail the same on the build before this work. Left rough: name line has no question mark or three dots until the section lands; menus and tool bar follow a pick about 0.1 s behind during play."
+    },
+    {
+      "t": "2026-11-25T09:11:56.892Z",
+      "note": "Closed windows free their editors (13 -> 1). Picks, unpicks, cuts, trims and undo while the 6 minute edit plays: 7.7 to 15.5 ms, worst of 3 speed walks (bar 16); move 14.0, transition 11.6, title 10.2. The clip's name shows in the click's own frame. Walks green at defaults, tests green, baseline rewritten, audit 2026-11-25-a-pick-while-playing. Commits 75f8a3456, 34dbc9a13, 6aa3a183e."
     }
   ],
   "walks": [
@@ -229,13 +261,15 @@
     "cutting-while-playing-keeps-playing-walk",
     "a-transition-put-on-while-playing-keeps-playing-walk",
     "a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk",
-    "closed-windows-give-their-memory-back-walk"
+    "closed-windows-give-their-memory-back-walk",
+    "the-pointer-in-the-panel-brings-its-sections-in-while-playing-walk"
   ],
-  "started": "2026-11-24T12:36:38.017Z",
+  "started": "2026-11-25T05:44:41.733Z",
   "failures": 1,
   "lastError": {
     "at": "2026-11-23T18:22:12.384Z",
     "exit": 1,
     "message": "Failed to authenticate: OAuth session expired and could not be refreshed"
-  }
+  },
+  "completed": "2026-11-25T09:11:56.893Z"
 }
