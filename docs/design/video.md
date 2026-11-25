@@ -1354,8 +1354,23 @@ The rule, for any view added to the editor window:
    its own clips' must come in its model or through another watch, or it will
    go stale. A list's closure runs outside the body that holds it, so nothing
    in it may read the document (2026-11-24). Nothing fades in while the
-   timeline moves, and half the lanes take a zoom's fresh layout a frame after
-   the rest (`TimelineLaneFrame.stands(for:)`).
+   timeline moves.
+   **The lanes never all lay out again in one frame** (`TimelineLaneWaves`,
+   2026-11-25). They are dealt into eight groups. A lane at rest reads
+   `timelineRestFrame` in place of the window, and that holds still as a
+   scroll or a zoom begins, so the first frame builds no lane: each is slid
+   (and for a zoom stretched) from its layout at rest, and the groups take
+   the moving layout one a step. A zoom's fresh frame is taken by half and by
+   the other half a step later. Any group whose layout would not cover the
+   window (`TimelineLaneFrame.stands(for:)`) takes the new one at once, and at
+   rest the groups go back one a refresh. So a view in a lane places itself
+   through `EditorState.laneRuler(_:)` and never against the window: inside a
+   slid lane the window's own ruler is applied twice. A picture laid late is
+   shown with the timeline's next step (`LatePictures`), never in a pass of
+   its own, and late laying stops after 2 ms a gap (`AfterTheFrame`). What is
+   painted is cut to the canvas: zoomed in, a gap is hundreds of screens wide.
+   Far sleeping rows are left out of what the window asks every view
+   (accessibility, hit testing) until they come near.
 8. **A busy lane paints its plain clips and cuts; a clip somebody is working
    on is its full view again.** A lane builds only what is in sight plus half
    a window each side (`TimelineSight`). When 24 or more clips are in sight,

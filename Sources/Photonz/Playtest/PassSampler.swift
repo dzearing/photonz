@@ -104,7 +104,7 @@ final class PassSampler: @unchecked Sendable {
         guard !label.isEmpty else { return }
         lock.withLock {
             let inside = ring.filter { $0.t >= start && $0.t <= end }
-            if kept.count < 12_000 { kept.append((label, start, (end - start) * 1000, inside)) }
+            if kept.count < 40_000 { kept.append((label, start, (end - start) * 1000, inside)) }
         }
     }
 

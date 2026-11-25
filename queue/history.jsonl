@@ -19138,3 +19138,9 @@
 {"t":"2026-11-25T09:11:56.695Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
 {"t":"2026-11-25T09:11:56.771Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
 {"t":"2026-11-25T09:11:56.895Z","ev":"task_done","id":"picking-letting-go-of-and-cutting-a-clip-while-a","from":"in_progress","note":"Closed windows free their editors (13 -> 1). Picks, unpicks, cuts, trims and undo while the 6 minute edit plays: 7.7 to 15.5 ms, worst of 3 speed walks (bar 16); move 14.0, transition 11.6, title 10.2. The clip's name shows in the click's own frame. Walks green at defaults, tests green, baseline rewritten, audit 2026-11-25-a-pick-while-playing. Commits 75f8a3456, 34dbc9a13, 6aa3a183e."}
+{"t":"2026-11-25T09:23:49.979Z","ev":"slice_pass","walks":10,"passed":10,"failed":0,"seconds":560,"of":1206,"couldNotRun":0,"timedOut":false,"rotating":true,"from":189,"to":192,"moved":3}
+{"t":"2026-11-25T09:23:50.203Z","ev":"task_started","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","title":"An edit with 50 tracks and 100 clips scrolls, plays and edits without lag or flashes","priority":"p1-high"}
+{"t":"2026-11-25T09:35:47.732Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T10:08:24.413Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T11:54:32.804Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T11:54:32.880Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}

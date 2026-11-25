@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:13:00.798Z",
-  "updated": "2026-11-25T05:44:07.234Z",
+  "updated": "2026-11-25T11:54:32.879Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"the perf of photonz is still pretty rough with video editing. when i add like 50 tracks with 100 clips, scroll starts to lag, i get weird behaviors like flashes during playback, very sluggish behavior\".\n\nContext: the loop could not sign in from about 2026-11-23 19:00 to 2026-11-24 14:10, so the open video-perf tasks made no progress in that window; the user re-logged in on 2026-11-24.\n\nOverlaps, and why this is separate: the-timeline-of-an-hour-long-edit-scrolls-zooms (p1, pending) is about a LONG edit (60 minutes, hundreds of clips) on the 3+ track reference edit, horizontal scroll and zoom; this one is WIDE (50 to 100 tracks): vertical scroll, many track headers, many clips overlapping at one moment for the compositor and decoders. Reuse that task's speed walk, ViewBuildMeter and busy-lane painting rather than building a second harness; if its painted-lane fix also fixes vertical scroll here, record it and move on. picking-letting-go-of-and-cutting-a-clip-while-a (p1, seq 10) covers edit latency while playing; jumping-back-while-a-video-plays-never-flickers covers flicker after a jump. I did not reproduce the user's lag or flashes myself.",
@@ -126,9 +126,29 @@
     {
       "t": "2026-11-25T05:44:07.233Z",
       "note": "Pass 3 landed: edits while playing 9 to 15 ms (add clip and add track 17), no dropped frames at 50 tracks, fewer late zoom frames. Zoom p95, one slow frame scrolling along, add track and the 100 track edit are still over their bars; see the log."
+    },
+    {
+      "t": "2026-11-25T09:23:50.198Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-25T09:35:47.730Z",
+      "note": "Pass 4, remeasured first (wide-50, build of 6aa3a183e): every edit but add track is under 16 now (add track 19, add clip 15, move 11, trim 9, pick 13, blade 13); 0 of 3636 dropped; no clip wrong. Zoom p95 10.8/10.0/9.9, worst 18 (first frame of a zoom in) and 52; along worst 40, which is the scroll's FIRST frame: every lane goes from its rest layout to a scroll's in one pass, and after a zoom paints the wide stretch too. Frames of a zoom over the bar are nearly all the one after a fresh frame: the half that follow plus a pass of its own for each late painting landing (3.3 ms)."
+    },
+    {
+      "t": "2026-11-25T10:08:24.411Z",
+      "note": "Pass 4, measured on a first build: zoom in p95 10.8 -> 7.7 worst 18 -> 10.5; out 10.0 -> 7.7 worst 52 -> 8.8; near fit 9.9 -> 7.2 worst 15 -> 11.2; along p95 5.8 -> 5.4 worst 40 -> 15.2. Lanes leave their rest layout a group at a time (TimelineLaneWaves, TimelineRest), late pictures show with the next step (LatePictures) and are laid 2 ms a gap (AfterTheFrame), a gap's stripes are drawn only on the canvas. Add track: its row makes room in the edit's frame and is built 40 ms later."
+    },
+    {
+      "t": "2026-11-25T11:54:32.802Z",
+      "note": "Pass 4 measured (wide-50.json, wide-100.json; three more timeline runs). MET: every zoom and scroll p95 under 8.3 in five runs (zoom in 6.9, out 7.4, near fit 6.8, along 5.7, down 4.1); 0 of 3636 dropped (1 in two earlier runs); no clip frame wrong; move 12, trim 9, undo 10, pick 14, blade 13, add clip 14 to 16. Export compared: worst frame 100.7 dB, sound identical. NOT MET: add track 19 to 25 (bar 16), its undo 12 to 17; 'none over 16' missed by single frames in two of five runs (zoom in 21, near fit 40; a profile of the same code read 9.5 worst). Walks: 30 green, clicking-a-timeline-item-moves-the-playhead-walk red and already on the standing task (its points are for a wider window; the click lands exactly under the pointer). Scripts/test.sh green. Film and sheet opened: every lane lines up with the ruler at each moment of a zoom, a scroll and a zoom out, none blank."
+    },
+    {
+      "t": "2026-11-25T11:54:32.878Z",
+      "note": "Left for the next pass: add track only. Its long pass is the display cycle after the row goes in: AccessibilityNode.updateFocusResponder searching every responder for each new node (3 ms), NSWindow _resetDragMargins walking every view (3), accessibility (2 to 4), RBLayer surfaces (3). Tried and taken out: the new row as a bare slot built 40 ms later (20 ms all the same, so it is making room that costs). Far rows out of accessibility and hit testing did not move it either (kept: it took 0.8 ms off a zoom frame). The first add of a run reads 19 to 25, the ones after 16 to 17. Measure with Scripts/perf/pass-profile.sh on a walk of addTrack and undo; lldb once left the probe stopped, so check ps if it hangs. 100 tracks has no bar; its numbers are in the audit. Not checked: the hitch as the lanes come to rest after a gesture, which no measure times."
     }
   ],
-  "started": "2026-11-25T03:53:29.927Z",
+  "started": "2026-11-25T09:23:50.197Z",
   "walks": [
     "a-tall-edit-s-far-tracks-answer-walk"
   ]

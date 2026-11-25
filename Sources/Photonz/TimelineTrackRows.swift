@@ -532,8 +532,11 @@ struct TimelineTrackRow: View {
         // at a time, and `TimelineLaneSlide` slides and stretches it to the
         // window: this body is built again only when the frame moves
         // (`TimelineLaneFrame`). At rest, and while a hand is on anything
-        // in a lane, the frame is the window itself.
-        let frame = row.isCaptions ? nil : editorState.timelineLaneFrameStanding(onTrack: track.id)
+        // in a lane, the frame is the window itself, and as a scroll or a
+        // zoom begins the window it was at rest in until its turn comes
+        // (`EditorState.timelineRestFrame`).
+        let frame = row.isCaptions ? nil
+            : editorState.timelineLaneFrameStanding(onTrack: track.id) ?? editorState.timelineRestFrame
         let ruler = frame?.ruler ?? editorState.motionStripRuler
         // Only what is in sight, and half a window each side, is built: on
         // the hour-long reference edit a lane of every clip, gap and cut made
@@ -739,10 +742,10 @@ struct TimelineTrackRow: View {
                        carrying: Set<UUID>, document: PhotonzDocument?,
                        builds: @escaping (MotionStripGroup) -> Bool,
                        drawn: @escaping (MotionStripGroup) -> ClosedRange<Double>?) -> some View {
-        // Gaps are cut to the window at rest; laid against a frame, to the
-        // stretch it builds, which holds every window it stands for.
-        let lowX = frame == nil ? 0 : laneWidth * ruler.fraction(ofMS: sight.fromMS)
-        let highX = frame == nil ? laneWidth : laneWidth * ruler.fraction(ofMS: sight.toMS)
+        // Gaps are cut to the stretch the frame builds, which holds every
+        // window it stands for.
+        let lowX = laneWidth * ruler.fraction(ofMS: sight.fromMS)
+        let highX = laneWidth * ruler.fraction(ofMS: sight.toMS)
         ZStack(alignment: .topLeading) {
             // Each gap between two clips is the same empty space, with its own
             // right-click menu that leads with Ripple Delete, as Premiere's

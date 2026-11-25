@@ -23488,3 +23488,9 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - A pick while playing lands a step at a time (`EditorState.tellOfThePick`, `PickReader`), the clip's name in the click's own pass (`PanelPickLine`), and a let-go clip's sections leave one at a time (`PanelSectionDeparture.shedding`). Speed walk, worst of 3: pick from nothing 22.8 -> 15.5 ms, pick 17.5 -> 7.7, unpick 12.8 -> 8.6, blade picked 16.6 -> 14.0, undo picked 13.2, trim picked 11.4; with the whole panel built, pick 13.4 and unpick 15.4 (new to the walk, edit `fill`). Baseline rewritten.
 - `caption-pick-answers-at-once-walk` and `section-fold-motion-walk` fail the same on the build before this work (checked interleaved); both are on the standing walk task.
 - Next: nothing open on this task.
+
+## 2026-11-25 — Fifty tracks, a hundred clips (pass 4)
+
+- The lanes of a tall timeline leave their rest layout a group at a time (`TimelineLaneWaves`, `TimelineRest`, `timelineRestFrame`), late pictures land with the next step (`LatePictures`), gap stripes are cut to the canvas, far rows are out of accessibility and hit testing. Main thread p95, pass 3 build -> now: zoom in 10.8 -> 6.9, out 10.0 -> 7.4, near fit 9.9 -> 6.8, along 5.8 -> 5.7 (its first frame 40 -> 9 to 13), tracks down 5.8 -> 4.1. 0 of 3636 frames dropped.
+- Export against the one from before any of this work: worst frame 100.7 dB, sound identical.
+- Left: add track 19 to 25 ms (bar 16), the odd single frame over 16 (one zoom frame of 21 in five runs). Task pending.

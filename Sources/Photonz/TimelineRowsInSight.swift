@@ -169,7 +169,7 @@ func keptAsleep<Content: View>(_ sleep: TimelineRowSleep?, _ kept: KeptBuild, _ 
         guard task == nil else { return }
         task = Task { @MainActor [weak self] in
             while let self, !self.waiting.isEmpty || !self.staleOnes.isEmpty {
-                try? await Task.sleep(for: .milliseconds(25))
+                try? await Task.sleep(for: .milliseconds(16))
                 guard let editor = self.editor else { break }
                 if NSEvent.pressedMouseButtons != 0 || Date().timeIntervalSince(self.lastMoved) < 0.25 { continue }
                 self.next(whilePlaying: editor.isDocumentPlaying)
@@ -195,8 +195,9 @@ func keptAsleep<Content: View>(_ sleep: TimelineRowSleep?, _ kept: KeptBuild, _ 
             waiting.remove(at: index).work()
             return
         }
-        // A lane and its names together.
-        for _ in 0..<2 where !staleOnes.isEmpty {
+        // A row's few builds together: 36 far rows after a zoom are caught up
+        // in half a second, so a scroll that follows finds them ready.
+        for _ in 0..<4 where !staleOnes.isEmpty {
             guard let kept = staleOnes.removeFirst().kept, kept.isAsleep, kept.isStale else { continue }
             kept.catchesUp = true
             kept.nudge.count += 1
@@ -232,6 +233,9 @@ struct TimelineRowInSight<Content: View>: View {
     private enum Place { case away, leaving, near }
     @State private var built: Bool
     @State private var awake: Bool
+    /// Asleep and out of sight: left out of what the window asks every view
+    /// in it about.
+    @State private var isFar = false
 
     init(row: TimelineTrackRowModel, height: CGFloat, laneHeight: CGFloat, gates: Bool, startsNear: Bool,
          @ViewBuilder content: @escaping () -> Content) {
@@ -249,6 +253,9 @@ struct TimelineRowInSight<Content: View>: View {
             Group {
                 if built { content() } else { away }
             }
+            .accessibilityElement(children: isFar ? .ignore : .contain)
+            .accessibilityHidden(isFar)
+            .allowsHitTesting(!isFar)
             .environment(\.timelineRowSleep, TimelineRowSleep(row: row.id, isAsleep: !awake,
                                                               chores: editorState.timelineRowChores))
             .onDisappear { editorState.timelineRowChores.letGo(row.id) }
@@ -270,6 +277,7 @@ struct TimelineRowInSight<Content: View>: View {
         chores.moved()
         switch place {
         case .near:
+            if isFar { isFar = false }
             if !built {
                 chores.drop(row.id)
                 built = true
@@ -292,6 +300,7 @@ struct TimelineRowInSight<Content: View>: View {
                 if editorState.rulerReadsTheHand || editorState.clipTransitionDrag != nil
                     || editorState.zoomDrag != nil || editorState.trackRowDrag.isCarrying { return }
                 awake = false
+                isFar = true
             }
         }
     }

@@ -116,7 +116,9 @@ extension EditorState {
     func holdTimelinePainting(to newValue: TimelineZoom, isZoom: Bool,
                               atRest: (stretch: ClosedRange<Double>, leftEdge: ClosedRange<Double>)? = nil) {
         if !isZoom, newValue == timelineZoom { return }
-        guard isZoom, motionStripMeasuresADocument, canOpenOutTheTimeline else {
+        // Nor with a hand in a lane, whose lanes are laid out against the
+        // window (`noteTimelineLaneFrame`).
+        guard isZoom, motionStripMeasuresADocument, canOpenOutTheTimeline, !timelineLanesHaveAHandIn else {
             letGoOfTheHeldPainting()
             return
         }
@@ -168,45 +170,87 @@ extension EditorState {
             frame = .scrolling(motionStripRuler, anchorMS: edge.lowerBound, drawnMS: timelineDrawnMS,
                                leftEdgeMS: timelineLeftEdgeRangeMS, zoomScale: timelineScaleOnly.scale)
         }
-        // Half the lanes take a zoom's fresh frame a frame later, while what
-        // they have can stand for the window (`stands(for:)`).
-        let steps = frame != timelineLaneFrame
-        let waits = steps && timelineLaneFrame != nil && frame.isZoom
-            && timelineLaneFrameFollowing?.stands(for: motionStripRuler) == true
-            && timelineLaneFrameFollowing == timelineLaneFrame
-        if steps { timelineLaneFrame = frame }
-        if !waits, timelineLaneFrameFollowing != frame { timelineLaneFrameFollowing = frame }
+        timelineLaneWaves.step(to: frame, window: motionStripRuler, rest: timelineRestFrame)
+        showTimelineLaneWaves()
         timelineLaneFrameSettle?.cancel()
         timelineLaneFrameSettle = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .milliseconds(TimelineHeldPainting.settleMS))
-            guard !Task.isCancelled else { return }
-            self?.letGoOfTheLaneFrame()
+            // The lanes back on the window, a group a refresh.
+            while !Task.isCancelled, let self, self.restSomeTimelineLanes() {
+                try? await Task.sleep(for: .milliseconds(12))
+            }
         }
     }
 
-    /// The lanes back on the window.
+    /// The lanes back on the window, all at once.
     func letGoOfTheLaneFrame() {
         timelineLaneFrameSettle?.cancel()
         timelineLaneFrameSettle = nil
-        if timelineLaneFrame != nil { timelineLaneFrame = nil }
-        if timelineLaneFrameFollowing != nil { timelineLaneFrameFollowing = nil }
+        timelineLaneWaves.restAll()
+        showTimelineLaneWaves()
     }
 
-    /// The frame a lane lays out against now: nil at rest, and nil while a
-    /// hand is on anything in a lane, which reads the window
-    /// (`noteTimelineLaneFrame`). Read only while there is a frame, so a
+    /// The next group of lanes back on the window; false once all are. What
+    /// rests paints the whole drawn stretch again, as before a zoom, so the
+    /// scroll that follows one finds it painted.
+    private func restSomeTimelineLanes() -> Bool {
+        letTheZoomsPaintingRest()
+        let more = timelineLaneWaves.restNext()
+        showTimelineLaneWaves()
+        return more
+    }
+
+    /// What each group stands on, where its lanes read it; and what a lane at
+    /// rest is laid out from, which holds still while any lane stands on its
+    /// layout at rest and the timeline moves.
+    private func showTimelineLaneWaves() {
+        for (group, frame) in zip(timelineLaneGroups, timelineLaneWaves.groups) where group.frame != frame {
+            group.frame = frame
+        }
+        if timelineLaneWaves.frame == nil || !timelineLaneWaves.someRest { restTimelineWhereItIs() }
+    }
+
+    /// How a lane at rest is laid out: against the window, or while a scroll
+    /// or a zoom has begun and its turn has not come, the window it rested in
+    /// (`TimelineLaneWaves`). Read by the lanes in place of the window, so
+    /// the first frame of a scroll or a zoom lays none of them out again.
+    var timelineRestFrame: TimelineLaneFrame {
+        guard motionStripMeasuresADocument else {
+            let drawn = timelineDrawnMS
+            return .resting(motionStripRuler, painted: drawn, drawnMS: drawn, leftEdgeMS: 0...0, zoomScale: 1)
+        }
+        let rest = timelineRest
+        let length = timelineLengthForZoomMS
+        let canZoom = canOpenOutTheTimeline
+        let zoom = canZoom ? rest.zoom.clamped(documentMS: length) : .fit
+        let ruler = MotionStripRuler(documentMS: motionStripCycleMS, zoom: zoom)
+        let scale = canZoom ? TimelineZoom(scale: rest.zoom.scale).clamped(documentMS: length) : .fit
+        let visible = scale.visibleMS(documentMS: length)
+        let drawn = rest.drawnStretch.stretchMS(visibleMS: visible, documentMS: length)
+        return .resting(ruler,
+                        painted: TimelinePaint.paintedMS(window: ruler, stretch: drawn, isZooming: rest.paintsTheWindow),
+                        drawnMS: drawn,
+                        leftEdgeMS: rest.paintsTheWindow ? TimelinePaint.leftEdgeWhileZooming(window: ruler)
+                            : rest.drawnStretch.leftEdgeMS(visibleMS: visible, documentMS: length),
+                        zoomScale: scale.scale)
+    }
+
+    /// The frame one track's lane lays out against while the timeline moves:
+    /// nil at rest, before its turn, and while a hand is on anything in a
+    /// lane, which reads the window. Read only while there is a frame, so a
     /// lane at rest is not woken by every move of a drag.
-    var timelineLaneFrameStanding: TimelineLaneFrame? {
-        guard let frame = timelineLaneFrame, !timelineLanesHaveAHandIn else { return nil }
+    func timelineLaneFrameStanding(onTrack id: UUID) -> TimelineLaneFrame? {
+        guard let frame = timelineLaneGroups[timelineLaneGroup(of: id)].frame, !timelineLanesHaveAHandIn else { return nil }
         return frame
     }
 
-    /// The same for one track's lane, which may be one of the half that take
-    /// a zoom's fresh frame a frame later.
-    func timelineLaneFrameStanding(onTrack id: UUID) -> TimelineLaneFrame? {
-        guard id.uuid.15 & 1 == 1 else { return timelineLaneFrameStanding }
-        guard let frame = timelineLaneFrameFollowing, !timelineLanesHaveAHandIn else { return nil }
-        return frame
+    /// Which group a track's lane goes with: dealt out in the order the lanes
+    /// are built, so the ones on screen together are spread evenly.
+    private func timelineLaneGroup(of id: UUID) -> Int {
+        if let group = timelineLaneGroupOf[id] { return group }
+        let group = timelineLaneGroupOf.count % TimelineLaneWaves.groupCount
+        timelineLaneGroupOf[id] = group
+        return group
     }
 
     /// Something in a lane in a hand, being renamed, or a carried thing over

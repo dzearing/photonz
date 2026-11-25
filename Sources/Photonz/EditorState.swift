@@ -2307,6 +2307,7 @@ final class EditorState {
                 timelinePaintsTheWindow = false
             }
             holdTimelinePainting(to: newValue, isZoom: isZoom, atRest: painted)
+            LatePictures.showAll()
             if newValue.scale != timelineZoomScale { timelineZoomScale = newValue.scale }
             if newValue.startMS != timelineZoomStartMS { timelineZoomStartMS = newValue.startMS }
             let stretch = TimelineDrawnStretch(windowStartMS: newValue.startMS,
@@ -2364,17 +2365,30 @@ final class EditorState {
     /// zoom stops, so what rests on screen is always freshly painted.
     var timelineHeldPainting: TimelineHeldPainting?
     @ObservationIgnored var timelineHeldPaintingSettle: Task<Void, Never>?
-    /// What a busy lane lays out against while the timeline moves, which
-    /// holds still for frames at a time; nil while the lanes lay out against
-    /// the window, as they do at rest (`TimelineLaneFrame`,
+    /// What the lanes lay out against while the timeline moves, which holds
+    /// still for frames at a time, a group of lanes after another; at rest
+    /// they lay out against the window (`TimelineLaneWaves`,
     /// `noteTimelineLaneFrame`).
-    var timelineLaneFrame: TimelineLaneFrame?
-    /// The frame half the lanes lay out against: `timelineLaneFrame`, a frame
-    /// of a zoom later (`TimelineLaneFrame.stands(for:)`).
-    var timelineLaneFrameFollowing: TimelineLaneFrame?
+    @ObservationIgnored var timelineLaneWaves = TimelineLaneWaves()
+    /// What each group of lanes stands on, one each so only its own lanes
+    /// are told.
+    @ObservationIgnored let timelineLaneGroups = (0..<TimelineLaneWaves.groupCount).map { _ in TimelineLaneGroup() }
+    @ObservationIgnored var timelineLaneGroupOf: [UUID: Int] = [:]
+    /// What a lane at rest is laid out from (`timelineRestFrame`).
+    private(set) var timelineRest = TimelineRest()
+    /// The lanes at rest are laid out where the window is now.
+    func restTimelineWhereItIs() {
+        let now = TimelineRest(zoom: timelineZoom, paintsTheWindow: timelinePaintsTheWindow,
+                               drawnStretch: timelineDrawnStretch)
+        if now != timelineRest { timelineRest = now }
+    }
+    /// A zoom has come to rest: the lanes paint the drawn stretch again.
+    func letTheZoomsPaintingRest() {
+        if timelinePaintsTheWindow { timelinePaintsTheWindow = false }
+    }
     /// Whether the timeline is scrolling or zooming, read without being
     /// watched: for what is being drawn now anyway.
-    var timelineMovesNow: Bool { _timelineLaneFrame != nil }
+    var timelineMovesNow: Bool { timelineLaneWaves.frame != nil }
     @ObservationIgnored var timelineLaneFrameSettle: Task<Void, Never>?
     /// What a row outside the lanes (a clip's Zoom lane) is culled by: a wide
     /// sight that holds still for windows of a scroll at a time

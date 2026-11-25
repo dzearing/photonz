@@ -47,9 +47,15 @@ public struct TimelineLaneFrame: Hashable, Sendable {
     /// drawn stretch to the window at the same scale); on a scroll's step it
     /// lays at once (`TimelinePaintedPicture`, pass 23).
     public let isZoom: Bool
+    /// A lane's layout at rest: the window it is seen through, or while a
+    /// scroll or a zoom has begun and its turn has not come, the window it
+    /// was last at rest in, slid (`TimelineLaneWaves`).
+    public let isRest: Bool
 
     public init(ruler: MotionStripRuler, paintedMS: ClosedRange<Double>, drawnMS: ClosedRange<Double>,
-                sightMargin: Double, leftEdgeMS: ClosedRange<Double>, zoomScale: Double, isZoom: Bool = false) {
+                sightMargin: Double, leftEdgeMS: ClosedRange<Double>, zoomScale: Double, isZoom: Bool = false,
+                isRest: Bool = false) {
+        self.isRest = isRest
         self.ruler = ruler
         self.paintedMS = paintedMS
         self.drawnMS = drawnMS
@@ -101,17 +107,35 @@ public struct TimelineLaneFrame: Hashable, Sendable {
                           sightMargin: scrollSightMargin, leftEdgeMS: leftEdgeMS, zoomScale: zoomScale)
     }
 
+    /// The layout of a lane at rest in `window`, painted across `painted`.
+    public static func resting(_ window: MotionStripRuler, painted: ClosedRange<Double>,
+                               drawnMS: ClosedRange<Double>, leftEdgeMS: ClosedRange<Double>,
+                               zoomScale: Double) -> TimelineLaneFrame {
+        TimelineLaneFrame(ruler: window, paintedMS: painted, drawnMS: drawnMS, sightMargin: TimelineSight.margin,
+                          leftEdgeMS: leftEdgeMS, zoomScale: zoomScale, isRest: true)
+    }
+
     /// Whether a lane laid out against this frame can stand for `window` a
-    /// frame longer: a zoom's, its painting still covering the window, and
-    /// stretched no more than a step past what a hold is let. A zoom's fresh
-    /// frame is then taken by half the lanes in sight and by the other half a
-    /// frame later: all at once, ten lanes were 10 to 11 ms of it on a 50
-    /// track timeline (2026-11-24).
+    /// frame longer: its painting and what it built still cover the window,
+    /// and it is stretched no more than a step past what a hold is let, not
+    /// at all for a scroll. What a lane stands on while the others take a new
+    /// frame: all at once, ten lanes were 10 to 11 ms of a zoom's fresh frame
+    /// on a 50 track timeline, and 25 to 40 ms of a scroll's first
+    /// (2026-11-24, 2026-11-25).
     public func stands(for window: MotionStripRuler) -> Bool {
-        guard isZoom, ruler.spanMS > 0, window.spanMS > 0 else { return false }
-        return abs(ruler.spanMS / window.spanMS - 1) <= TimelinePaint.quickHeldStretch + 0.05
-            && window.startMS >= paintedMS.lowerBound - 1e-6
-            && window.startMS + window.spanMS <= paintedMS.upperBound + 1e-6
+        guard ruler.spanMS > 0, window.spanMS > 0 else { return false }
+        let allowed = isZoom || isRest ? TimelinePaint.quickHeldStretch + 0.05 : 1e-9
+        guard abs(ruler.spanMS / window.spanMS - 1) <= allowed else { return false }
+        let from = window.startMS, to = window.startMS + window.spanMS
+        guard from >= paintedMS.lowerBound - 1e-6, to <= paintedMS.upperBound + 1e-6 else { return false }
+        let built = ruler.spanMS * sightMargin
+        return from >= ruler.startMS - built && to <= ruler.startMS + ruler.spanMS + built
+    }
+
+    /// Whether a lane laid out against `other` shows what one laid out
+    /// against this would.
+    public func laysOut(as other: TimelineLaneFrame) -> Bool {
+        ruler == other.ruler && paintedMS == other.paintedMS && sightMargin == other.sightMargin
     }
 
     /// How content laid out against this frame is put on the lane under
@@ -138,4 +162,69 @@ public struct TimelineLaneFrame: Hashable, Sendable {
         let (stretch, offset) = slide(to: window, laneWidth: laneWidth, scale: scale)
         return x * stretch + offset
     }
+}
+
+/// Which frame each lane stands on while the timeline moves.
+///
+/// The lanes are dealt into groups, and a frame that changes what they are
+/// laid out against is not taken by all of them at once: a lane can be slid,
+/// and for a zoom stretched a little, from the layout it has, so the ones
+/// whose turn has not come stand on it while it covers the window. The first
+/// frame of a scroll on a 50 track timeline laid ten lanes out again in one
+/// pass, 25 to 40 ms; now none of them is laid out again for the first frame
+/// and a few are for each after it (2026-11-25).
+public struct TimelineLaneWaves: Equatable, Sendable {
+    public static let groupCount = 8
+
+    /// The newest frame, or nil at rest.
+    public private(set) var frame: TimelineLaneFrame?
+    /// What each group stands on; nil for its layout at rest.
+    public private(set) var groups: [TimelineLaneFrame?] = Array(repeating: nil, count: groupCount)
+    /// How many steps ago `frame` came.
+    private var age = 0
+
+    public init() {}
+
+    /// A group still stands on its layout at rest, so that layout must not
+    /// move with the window yet.
+    public var someRest: Bool { groups.contains { $0 == nil } }
+
+    /// The timeline stepped to `window`, and a lane laid out now would be
+    /// laid out against `frame`; `rest` is how the resting ones are.
+    public mutating func step(to new: TimelineLaneFrame, window: MotionStripRuler, rest: TimelineLaneFrame) {
+        let previous = frame
+        let isFresh = new != frame
+        age = isFresh ? 0 : age + 1
+        frame = new
+        for group in groups.indices where groups[group] != new {
+            let standing = groups[group] ?? rest
+            let waits: Bool
+            if new.isZoom {
+                // A hold that begins at rest shows the layout at rest.
+                if groups[group] == nil, standing.laysOut(as: new), standing.stands(for: window) { continue }
+                // A fresh frame: half now, half a step later.
+                waits = isFresh && group % 2 == 1 && (groups[group] == nil || groups[group] == previous)
+            } else {
+                // A scroll's frame stands for many steps: a group a step.
+                waits = age <= group
+            }
+            if !waits || !standing.stands(for: window) { groups[group] = new }
+        }
+    }
+
+    /// The timeline has come to rest: the next group goes back to its layout
+    /// at rest. False once none is left on a frame.
+    public mutating func restNext() -> Bool {
+        frame = nil
+        guard let group = groups.firstIndex(where: { $0 != nil }) else { return false }
+        groups[group] = nil
+        return someOnAFrame
+    }
+
+    /// All of them back at once.
+    public mutating func restAll() {
+        self = TimelineLaneWaves()
+    }
+
+    public var someOnAFrame: Bool { groups.contains { $0 != nil } }
 }

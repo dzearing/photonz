@@ -263,6 +263,17 @@ public enum TimelinePaint {
         return ratio
     }
 
+    /// Where the first stripe of a gap is drawn from: the gap's own first,
+    /// `lean` before its start, or the first of the same run, `pitch` apart,
+    /// that reaches `reach` across into a canvas starting at `canvasFrom`. The
+    /// stripes drawn fall exactly where they would with every one drawn.
+    public static func firstStripe(gapFrom: CGFloat, reach: CGFloat, pitch: CGFloat,
+                                   canvasFrom: CGFloat, lean: CGFloat) -> CGFloat {
+        let first = gapFrom - lean
+        guard pitch > 0, first + reach < canvasFrom else { return first }
+        return first + ((canvasFrom - reach - first) / pitch).rounded(.down) * pitch
+    }
+
     /// Whether moving the window from `old` to `new` is a zoom: its scale
     /// changed. A move along at the same scale is a scroll.
     public static func isZoom(from old: TimelineZoom, to new: TimelineZoom) -> Bool {

@@ -128,6 +128,7 @@ struct TimelinePaintedClips: View, Equatable {
         let gaps = self.gaps
         let gapInk = self.gapInk
         let ruler = canvas.ruler
+        let canvasWidth = canvas.width
         let laneWidth = self.laneWidth
         let laneHeight = self.laneHeight
         let gridlines = self.gridlines
@@ -158,8 +159,8 @@ struct TimelinePaintedClips: View, Equatable {
         let paint: (inout GraphicsContext, TimeInterval) -> Void = { context, now in
             Self.paintGridlines(gridlines, ruler: ruler, laneWidth: laneWidth, height: laneHeight,
                                 ink: gridInk, in: &context)
-            Self.paintGaps(gaps, ruler: ruler, laneWidth: laneWidth, height: laneHeight, ink: gapInk,
-                           in: &context)
+            Self.paintGaps(gaps, ruler: ruler, laneWidth: laneWidth, height: laneHeight, across: canvasWidth,
+                           ink: gapInk, in: &context)
             for (one, strip) in zip(placed, strips) {
                 var alpha: (Fade) -> Double = { _ in 1 }
                 if !moves, !fades.isEmpty || before != nil {
@@ -497,8 +498,13 @@ struct TimelinePaintedClips: View, Equatable {
     /// whole-hour view of the hour-long reference edit about seventy gaps
     /// were each a striped canvas, an edge, a press and a menu, about 5 ms
     /// of every frame of a zoom (2026-11-17).
+    ///
+    /// Only the stripes the canvas, `across` wide, shows are drawn: zoomed
+    /// right in, a long gap is hundreds of screens across, and drawing every
+    /// stripe of it was 3 to 6 ms of a zoom's frame on a 50 track timeline
+    /// (2026-11-25).
     private static func paintGaps(_ gaps: [Range<Int>], ruler: MotionStripRuler, laneWidth: CGFloat,
-                                  height: CGFloat, ink: GapInk, in context: inout GraphicsContext) {
+                                  height: CGFloat, across: CGFloat, ink: GapInk, in context: inout GraphicsContext) {
         guard !gaps.isEmpty else { return }
         let scale = context.environment.displayScale
         let corner = RoundedRectangle(cornerRadius: radius)
@@ -518,8 +524,10 @@ struct TimelinePaintedClips: View, Equatable {
             edges.append(edge.path(in: rect))
             // Each stripe cut to its own gap's ends, so under the one clip
             // a stripe never reaches into the gap beside it.
-            var x = rect.minX - rect.height
-            while x < rect.maxX {
+            var x = TimelinePaint.firstStripe(gapFrom: rect.minX, reach: rect.height + step, pitch: step * 2,
+                                              canvasFrom: 0, lean: rect.height)
+            let end = min(rect.maxX, across)
+            while x < end {
                 let stripe = Self.cut([CGPoint(x: x, y: rect.minY), CGPoint(x: x + step, y: rect.minY),
                                        CGPoint(x: x + step + rect.height, y: rect.maxY),
                                        CGPoint(x: x + rect.height, y: rect.maxY)],
@@ -1223,7 +1231,7 @@ struct TimelinePaintedPicture: View {
            let picture = kept.picture {
             return (picture, unmoved)
         }
-        if laneFrame != nil, let canvas, laneWidth > 0, let picture = kept.picture, let last = kept.shape,
+        if laneFrame?.isRest == false, let canvas, laneWidth > 0, let picture = kept.picture, let last = kept.shape,
            let lastCanvas = last.canvas, last.height == height, last.scale == scale, last.scheme == scheme,
            lastCanvas.ruler.spanMS != canvas.ruler.spanMS || (laneFrame?.isZoom == true && lastCanvas != canvas),
            fits {
@@ -1264,7 +1272,7 @@ struct TimelinePaintedPicture: View {
             kept.asked = waiting.asked
             kept.landed = true
             kept.laidLate = true
-            landings.wrappedValue &+= 1
+            LatePictures.land { if kept.landed { landings.wrappedValue &+= 1 } }
         }
     }
 
@@ -1305,17 +1313,61 @@ struct TimelinePaintedPicture: View {
 /// handed over (`TimelinePaintedPicture`, 2026-11-22).
 @MainActor enum AfterTheFrame {
     private static var waiting: [@MainActor () -> Void] = []
+    private static var listens = false
+    /// How much of it is done between two frames: what is left waits for the
+    /// next, so ten waveforms laid again in a zoom are not all charged to one.
+    private static let budget = 0.002
+    private static var nextAt: CFTimeInterval = 0
 
     static func run(_ work: @escaping @MainActor () -> Void) {
         waiting.append(work)
-        guard waiting.count == 1 else { return }
-        let observer = CFRunLoopObserverCreateWithHandler(nil, CFRunLoopActivity.afterWaiting.rawValue, false, 0) { _, _ in
+        guard !listens else { return }
+        listens = true
+        let observer = CFRunLoopObserverCreateWithHandler(nil, CFRunLoopActivity.afterWaiting.rawValue, true, 0) { observer, _ in
             MainActor.assumeIsolated {
-                let all = AfterTheFrame.waiting
-                AfterTheFrame.waiting = []
-                for work in all { work() }
+                let began = CACurrentMediaTime()
+                guard began >= AfterTheFrame.nextAt else { return }
+                repeat {
+                    AfterTheFrame.waiting.removeFirst()()
+                } while !AfterTheFrame.waiting.isEmpty && CACurrentMediaTime() - began < AfterTheFrame.budget
+                // The next frame's gap, if any is left: a frame at 120 Hz.
+                AfterTheFrame.nextAt = began + 0.007
+                if AfterTheFrame.waiting.isEmpty {
+                    AfterTheFrame.listens = false
+                    AfterTheFrame.nextAt = 0
+                    CFRunLoopObserverInvalidate(observer)
+                }
             }
         }
         CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
+    }
+}
+
+/// Pictures laid late and not shown yet. Shown one by one as each landed, a
+/// picture was a pass and a commit of its own: 3 ms of the frame after every
+/// fresh one of a zoom on a 50 track timeline (2026-11-25). They are shown
+/// with the timeline's next step, in the pass it makes anyway, or a moment
+/// later when none comes.
+@MainActor enum LatePictures {
+    private static var waiting: [@MainActor () -> Void] = []
+    private static var fallback: Task<Void, Never>?
+
+    static func land(_ show: @escaping @MainActor () -> Void) {
+        waiting.append(show)
+        guard fallback == nil else { return }
+        fallback = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(25))
+            showAll()
+        }
+    }
+
+    /// Called as the timeline steps.
+    static func showAll() {
+        fallback?.cancel()
+        fallback = nil
+        guard !waiting.isEmpty else { return }
+        let all = waiting
+        waiting = []
+        for show in all { show() }
     }
 }

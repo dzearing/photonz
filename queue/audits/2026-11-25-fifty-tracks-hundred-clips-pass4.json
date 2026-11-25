@@ -1,0 +1,29 @@
+{
+  "feature": "Fifty tracks and a hundred clips, fourth pass",
+  "epic": "video-perf",
+  "summary": "Zooming and scrolling the timeline of a 50 track edit now fit in a 120 Hz frame, and the hitch at the start of every scroll is gone. Adding a track while it plays is still over one frame.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe with Scripts/perf/speed-walk.sh --wide 50 and --wide 100; numbers in Scripts/perf/baselines/wide-50.json and wide-100.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open Reference Edit 50 tracks.photonz with File > Open.", "shot": "2026-11-25-wide-edit-pass4-sc.png" },
+    { "do": "Pinch the timeline in and out." },
+    { "do": "Scroll sideways with two fingers, stop, and scroll again." },
+    { "do": "Scroll down through all the tracks and back up." },
+    { "do": "Compare with the filmed zoom and scroll: queue/audits/2026-11-25-wide-edit-zoom-scroll.mp4.", "shot": "2026-11-25-wide-edit-zoom-scroll-sheet.png" },
+    { "do": "Press Space, and add a video track from a track's right-click menu while it plays." }
+  ],
+  "evaluate": [
+    "Does the timeline keep up with a pinch from start to finish?",
+    "Does a sideways scroll start without a hitch?",
+    "Does the long edit of your own that lagged feel smooth now?"
+  ],
+  "rough": [
+    "Main thread a frame, 50 tracks, before this pass / now (bar p95 8.3, none over 16): zoom in p95 10.8 / 6.9, out 10.0 / 7.4, near Fit 9.9 / 6.8, along 5.8 / 5.7, tracks down 5.8 / 4.1. Worst frame along 40 / 9. Over five runs every p95 was under 8.3; three single frames went over 16: one of 21 zooming in, one of 40 near Fit, and one of 17 scrolling along on a build before the last change.",
+    "Add track while it plays is not at its bar of 16 ms: 19 to 25, and 12 to 17 for its undo. Every other edit is 9 to 16.",
+    "Played end to end: 0 or 1 of 3637 frames dropped in four runs, no clip frame wrong with ten up. Starting play at 0:58 from rest still waits about 727 ms.",
+    "Export against the one made before any of this work: 3600 frames, worst frame 100.7 dB (a few dozen pixels off by one level), sound identical.",
+    "100 tracks: zoom p95 7.8 to 8.2, along 7.4, up and down 10.4 (17.2 before), 7 of 3637 frames dropped, edits 13 to 35 ms.",
+    "VoiceOver and other helper apps see a far track only once it has been scrolled near, as in any long Mac list.",
+    "No mock covers a 50 track timeline. The film shows this build only; the before and after side by side is in the second pass's report."
+  ]
+}

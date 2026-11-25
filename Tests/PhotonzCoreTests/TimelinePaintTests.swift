@@ -381,4 +381,23 @@ import Testing
         #expect(TimelinePaint.gap(atMS: 5_000, in: gaps) == gaps[1])
         #expect(TimelinePaint.gap(atMS: 3_000, in: gaps) == nil)
     }
+
+    /// A long gap's stripes are drawn only where the canvas shows them, and
+    /// each falls exactly where it would with every one drawn.
+    @Test func aLongGapsStripesStartAtTheCanvas() {
+        let pitch: CGFloat = 14.142135623730951, lean: CGFloat = 28, reach = lean + pitch / 2
+        // A gap that starts on the canvas, or just before it: its own first.
+        #expect(TimelinePaint.firstStripe(gapFrom: 100, reach: reach, pitch: pitch, canvasFrom: 0, lean: lean) == 72)
+        #expect(TimelinePaint.firstStripe(gapFrom: -5, reach: reach, pitch: pitch, canvasFrom: 0, lean: lean) == -33)
+        for gapFrom in [CGFloat(-60), -1_000, -250_003.5] {
+            let first = TimelinePaint.firstStripe(gapFrom: gapFrom, reach: reach, pitch: pitch, canvasFrom: 0, lean: lean)
+            // In step with the gap's own run.
+            let steps = (first - (gapFrom - lean)) / pitch
+            #expect(abs(steps - steps.rounded()) < 1e-6)
+            // The one before it reaches no canvas, and it is no more than one
+            // before the first that does.
+            #expect(first - pitch + reach <= 1e-6)
+            #expect(first + pitch + reach > 0)
+        }
+    }
 }

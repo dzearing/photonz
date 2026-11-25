@@ -5,9 +5,21 @@ import SwiftUI
 // moves, and slid and stretched to the window by one small view
 // (`TimelineLaneFrame`, `EditorState.noteTimelineLaneFrame`).
 
+/// What one group of lanes stands on while the timeline moves
+/// (`TimelineLaneWaves`).
+@Observable @MainActor final class TimelineLaneGroup { var frame: TimelineLaneFrame? }
+
+/// What a lane at rest is laid out from (`EditorState.timelineRestFrame`).
+@MainActor struct TimelineRest: Equatable {
+    var zoom = EditorState.openingTimelineZoom
+    var paintsTheWindow = false
+    var drawnStretch = TimelineDrawnStretch(windowStartMS: 0, visibleMS: 1)
+}
+
 extension EnvironmentValues {
-    /// The frame the lane this view is in lays out against while the
-    /// timeline moves, or nil when it lays out against the window. A view in
+    /// The frame the lane this view is in lays out against, or nil when it
+    /// is in no lane, or in a Captions track's, which lays out against the
+    /// window. A view in
     /// a lane that places itself in time reads its ruler through
     /// `EditorState.laneRuler(_:)`, so it is laid out against the same frame
     /// as the lane round it and slid with it.
