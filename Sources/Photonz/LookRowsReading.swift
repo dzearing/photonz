@@ -35,7 +35,7 @@ func readingForTheLookRows<Content>(_ build: () -> Content) -> Content {
     let was = EditorState.readsForTheLookRows
     EditorState.readsForTheLookRows = true
     defer { EditorState.readsForTheLookRows = was }
-    return build()
+    return readingThePick(as: .look, build)
 }
 
 /// Reads the document as it is, and is told it changed by
@@ -49,6 +49,25 @@ func readingALatePass<Content>(_ build: () -> Content) -> Content {
     let was = EditorState.readsALatePass
     EditorState.readsALatePass = true
     defer { EditorState.readsALatePass = was }
+    return build()
+}
+
+/// Reads the pick watching the pick itself, so what `build` makes follows it
+/// in its own frame even while a video plays, when everything else that shows
+/// the pick follows a pass later (`EditorState.tellOfThePick`). For what a
+/// person looks at to see the click land: the canvas's handles and the name
+/// at the top of the panel.
+@MainActor
+func readingThePickNow<Content>(_ build: () -> Content) -> Content {
+    readingThePick(as: .now, build)
+}
+
+/// Reads the pick watching it as `reader` does (`EditorState.tellOfThePick`).
+@MainActor
+func readingThePick<Content>(as reader: EditorState.PickReader, _ build: () -> Content) -> Content {
+    let was = EditorState.pickReader
+    EditorState.pickReader = reader
+    defer { EditorState.pickReader = was }
     return build()
 }
 
@@ -72,7 +91,9 @@ func buildingALatePass<Content: View>(@ViewBuilder _ build: () -> Content) -> Co
 func readingForAClipBar<Content>(_ id: UUID, _ build: () -> Content) -> Content {
     let was = EditorState.readsForClipBar
     EditorState.readsForClipBar = id
-    defer { EditorState.readsForClipBar = was }
+    let reader = EditorState.pickReader
+    EditorState.pickReader = .timeline
+    defer { EditorState.readsForClipBar = was; EditorState.pickReader = reader }
     return readingALatePass(build)
 }
 
@@ -88,7 +109,9 @@ func readingForAClipBar<Content>(_ id: UUID, _ build: () -> Content) -> Content 
 func readingForATrackRow<Content>(_ id: UUID, _ build: () -> Content) -> Content {
     let was = EditorState.readsForTrackRow
     EditorState.readsForTrackRow = id
-    defer { EditorState.readsForTrackRow = was }
+    let reader = EditorState.pickReader
+    EditorState.pickReader = .timeline
+    defer { EditorState.readsForTrackRow = was; EditorState.pickReader = reader }
     return readingALatePass(build)
 }
 

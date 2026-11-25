@@ -22,6 +22,9 @@ public struct PanelSectionDeparture: Sendable, Equatable {
     /// The sections that have left the screen and are still built, oldest
     /// first, each in the order it stood.
     public private(set) var lingering: [String] = []
+    /// The sections still shown after the pick went to nothing, leaving one a
+    /// pass from the bottom (`shedding`).
+    public private(set) var stayers: [String] = []
     private var drawn: [String] = []
     private var pick: String?
 
@@ -47,6 +50,36 @@ public struct PanelSectionDeparture: Sendable, Equatable {
         drawn = sections
         self.pick = pick
         return lingering
+    }
+
+    /// `target` with what the pick had brought still standing where it stood,
+    /// when the pick has gone to nothing and the panel `sheds`: while a video
+    /// plays, when pulling a clip's eight sections down in one pass held the
+    /// 6 minute reference edit for 26 ms (2026-11-24). `shedOne` takes the
+    /// lowest away, a pass each. Any other move of the pick sheds nothing: a
+    /// section about one clip never stands under another's name.
+    ///
+    /// Call it before `draw`; safe to call more than once a pass.
+    public mutating func shedding(_ target: [String], pick: String?, sheds: Bool) -> [String] {
+        let wanted = Set(target)
+        if !sheds || pick != nil {
+            stayers = []
+        } else if self.pick != nil {
+            stayers = drawn.filter { !wanted.contains($0) }
+        } else {
+            stayers.removeAll { wanted.contains($0) }
+        }
+        guard !stayers.isEmpty else { return target }
+        let staying = Set(stayers)
+        let standing = drawn.filter { staying.contains($0) || wanted.contains($0) }
+        return standing + target.filter { !standing.contains($0) }
+    }
+
+    public var isShedding: Bool { !stayers.isEmpty }
+
+    /// Takes the lowest of the sections leaving off the dock.
+    public mutating func shedOne() {
+        if !stayers.isEmpty { stayers.removeLast() }
     }
 
     /// True while something lingers, so the dock owes a pass that pulls it down.

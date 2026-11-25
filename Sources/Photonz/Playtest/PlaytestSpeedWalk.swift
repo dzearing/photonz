@@ -317,7 +317,19 @@ final class SpeedWalkProbe {
         PassSampler.shared.startIfOn()
         defer { PassSampler.label = ""; PassSampler.shared.dump() }
         var lines: [String] = []
+        var panelIsFull = false
         for (index, named) in edits.enumerated() {
+            // Stopping fills the panel with the picked clip's sections, and
+            // playing on leaves them there: how a person who set a clip up
+            // and pressed Space has it. Not timed itself.
+            if named == "fill" {
+                editor.pauseDocument()
+                try? await Task.sleep(for: .seconds(2))
+                editor.playDocument(rate: 1)
+                try? await Task.sleep(for: .seconds(1))
+                panelIsFull = true
+                continue
+            }
             // A blade stops play. Starting it again is not part of the next
             // edit: a person presses Space, watches, then edits, so play has
             // a second to get going before the edit is counted. Until
@@ -335,6 +347,16 @@ final class SpeedWalkProbe {
             if named == "blade", try handTheBladeItsClip(editor) {
                 try? await Task.sleep(for: .seconds(1.5))
             }
+            // A pick is a click on a clip, and a click never moves the
+            // playhead. With no recording under it to pick, a person first
+            // parks on the next one and plays on from there, then clicks it:
+            // two acts, and only the click is the pick. Until 2026-11-23 the
+            // walk parked in the pick's own turn, and the playhead jumping
+            // and play starting again were charged to it: 3 to 5 ms more
+            // than the same pick made over a recording already playing.
+            if named == "pick", parkForThePick(editor) {
+                try? await Task.sleep(for: .seconds(1.5))
+            }
             // Every edit is counted under the state the window is really in
             // when it is made (`PlaytestSpeedMeasure.tallyName`): with a clip
             // picked the panel's sections answer the edit too and it costs
@@ -343,7 +365,8 @@ final class SpeedWalkProbe {
             // was counted as an undo with nothing picked: 25 ms where one
             // with nothing picked is 12.
             let picked = editor.selectedLayerID != nil
-            let edit = PlaytestSpeedMeasure.tallyName(named, picked: picked, fromNothing: named == "pick" && !picked)
+            let edit = PlaytestSpeedMeasure.tallyName(named, picked: picked, fromNothing: named == "pick" && !picked,
+                                                      panelIsFull: panelIsFull)
             MainThreadMeter.shared.reset()
             ViewBuildMeter.shared.reset()
             PassSampler.label = "\(index) \(edit)"
@@ -363,6 +386,7 @@ final class SpeedWalkProbe {
             let call = (CACurrentMediaTime() - began) * 1000
             try? await Task.sleep(for: .seconds(1.5))
             PassSampler.label = ""
+            if named == "unpick" { panelIsFull = false }
             let longest = max(MainThreadMeter.shared.longestMS, call)
             let stillPlaying = editor.isDocumentPlaying
             SpeedWalk.EditTally.keepWorse(SpeedWalk.EditTally(edit: edit, did: did, callMS: call, longestPassMS: longest),
@@ -426,6 +450,28 @@ final class SpeedWalkProbe {
         return true
     }
 
+    /// A recording a pick takes while it plays: under the playhead, with
+    /// time left in it to be cut and trimmed while it plays on.
+    private func pickable(_ layer: Layer, playhead: Int) -> Bool {
+        (layer.time?.inMS ?? 0) + 100 < playhead && playhead < (layer.time?.outMS ?? 0) - 6000
+    }
+
+    /// Parks the playhead just inside the next main recording and plays on
+    /// from there when a pick from nothing has no recording under it to take
+    /// (`edits`). True when it parked, so the walk lets the window settle
+    /// before the pick is timed.
+    private func parkForThePick(_ editor: EditorState) -> Bool {
+        guard editor.selectedLayerID == nil, let document = editor.document else { return false }
+        let playhead = editor.documentTimeMS
+        let main = recordings(in: document).main
+        guard !main.contains(where: { pickable($0, playhead: playhead) }),
+              let next = main.first(where: { ($0.time?.inMS ?? 0) > playhead }), let time = next.time
+        else { return false }
+        editor.moveDocumentPlayhead(toMS: time.inMS + 300)
+        editor.playDocument(rate: 1)
+        return true
+    }
+
     private func perform(_ edit: String, on editor: EditorState) throws -> String {
         guard let document = editor.document else { throw Failure(description: "no document") }
         let playhead = editor.documentTimeMS
@@ -462,9 +508,7 @@ final class SpeedWalkProbe {
         case "pick":
             // The recording under the playhead with time left in it to be
             // cut and trimmed while it plays on, else the next one, parked in.
-            var under = main.first {
-                ($0.time?.inMS ?? 0) + 100 < playhead && playhead < ($0.time?.outMS ?? 0) - 6000
-            }
+            var under = main.first(where: { pickable($0, playhead: playhead) })
             // With a clip picked, a pick is a click on ANOTHER clip: the
             // panel moves from one clip to the next. Picking the one already
             // picked changes nothing and read 5 ms, so a walk that happened
@@ -474,10 +518,10 @@ final class SpeedWalkProbe {
                 editor.selectLayer(other.id)
                 return "\(other.name) picked, from \(document.layer(id: held)?.name ?? "another clip")"
             }
-            if under == nil, let next = main.first(where: { ($0.time?.inMS ?? 0) > playhead }), let time = next.time {
-                editor.moveDocumentPlayhead(toMS: time.inMS + 300)
-                editor.playDocument(rate: 1)
-                under = next
+            // `parkForThePick` parked on the next one when there was none.
+            if under == nil {
+                under = main.first(where: { ($0.time?.inMS ?? 0) <= playhead && playhead < ($0.time?.outMS ?? 0) })
+                    ?? main.first(where: { ($0.time?.inMS ?? 0) > playhead })
             }
             guard let clip = under else {
                 throw Failure(description: "no recording under or after the playhead at \(SpeedWalk.clock(playhead)) to pick")

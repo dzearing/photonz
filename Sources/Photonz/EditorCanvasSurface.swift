@@ -25,7 +25,11 @@ import SwiftUI
 struct EditorCanvasSurface: View {
     @Environment(EditorState.self) private var editorState
 
-    var body: some View {
+    // The handles are round the thing picked in the click's own frame, even
+    // while a video plays (`EditorState.tellOfThePick`).
+    var body: some View { readingThePickNow { surface } }
+
+    private var surface: some View {
         CanvasView(image: editorState.renderedImage,
                    crispTile: editorState.crispTile,
                    crispTileViewport: editorState.crispTileViewport,

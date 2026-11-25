@@ -86,6 +86,12 @@ extension EditorState {
             DispatchQueue.main.async { MainActor.assumeIsolated { self?.watchPanelPlayhead() } }
         }
         guard answers != panelPlayhead || keyAnswers != panelKeyPlayhead else { return }
+        // A pick being told a pass at a time while a video plays: these
+        // answers land in the pass after the panel's (`tellOfThePick`).
+        if isTellingOfThePick {
+            panelPlayheadOwed = true
+            return
+        }
         // A hand moving the playhead along crosses a clip on almost every
         // move of a quick scrub, and every write here is a pass over the
         // window: on the 6 minute reference edit a medium scrub was answered

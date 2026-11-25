@@ -587,6 +587,9 @@ struct SpeedWalkStepTests {
         // Never made unasked: it changes what every edit after it acts on.
         #expect(!PlaytestSpeedMeasure.edits.contains("unpick"))
         #expect(PlaytestSpeedMeasure.tallyName("unpick", picked: true) == "unpick")
+        #expect(PlaytestSpeedMeasure.tallyName("pick", picked: true, panelIsFull: true) == "pick, panel full")
+        #expect(PlaytestSpeedMeasure.tallyName("unpick", picked: true, panelIsFull: true) == "unpick, panel full")
+        #expect(PlaytestSpeedMeasure.namedOnlyEdits.contains("fill"))
         // The pick after it builds the panel's sections from nothing, which
         // costs far more than moving a pick between clips, so it is a number
         // of its own and never overwrites the other.

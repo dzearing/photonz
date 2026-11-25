@@ -52,6 +52,10 @@ final class EditorState {
     /// marked by `catchUpOnTheNextPass`. What a read inside
     /// `readingALatePass` watches instead of the document.
     private(set) var latePassRevision = 0
+    /// `latePassRevision` for the panel's own body, which an edit made while a
+    /// video plays reaches a pass after the timeline (`catchUpOnTheNextPass`):
+    /// in one pass, an undo of a blade held the window 16 ms.
+    private var panelPassRevision = 0
     /// True while `readingALatePass` runs.
     static var readsALatePass = false
     /// The clip whose bar is being built (`readingForAClipBar`): a read of
@@ -102,6 +106,97 @@ final class EditorState {
         if let new, let watch = clipPickWatches[new], !watch.isPicked { watch.isPicked = true }
     }
 
+    /// What a read of `selectedLayerID` watches: moves on when the pick does,
+    /// and while a video plays a few passes after it (`tellOfThePick`).
+    private var latePickRevision = 0
+    /// The same for the timeline's rows and bars (`readingForATrackRow`,
+    /// `readingForAClipBar`): a pass after it while a video plays.
+    private var timelinePickRevision = 0
+    /// The same for the panel's own body, a pass after the timeline.
+    private var panelPickRevision = 0
+    /// The same for Appearance, Effects and what else reads through
+    /// `readingForTheLookRows`, a pass after everyone else.
+    private var lookPickRevision = 0
+    /// The panel is taking a let-go clip's sections down, a pass each
+    /// (`PanelSectionDeparture.shedding`).
+    @ObservationIgnored var panelIsShedding = false
+    /// Who is being told of a pick made while a video plays.
+    enum PickReader { case now, timeline, panel, everyoneElse, look }
+    static var pickReader = PickReader.everyoneElse
+    /// A pick is being told in pieces, and moved again before it was done.
+    @ObservationIgnored private(set) var isTellingOfThePick = false
+    @ObservationIgnored private var pickMovedAgain = false
+    /// Answers of the panel's that depend on the playhead and the pick came
+    /// due while a pick was being told (`watchPanelPlayhead`).
+    @ObservationIgnored var panelPlayheadOwed = false
+    /// The last pick was made while a video played, so the panel's pieces for
+    /// it are not all there (`PanelPickLine`).
+    @ObservationIgnored private(set) var pickedWhilePlaying = false
+
+    /// Tells everything that shows the pick that it moved. While a video plays
+    /// on Next it is told a step at a time: the canvas's handles, the two clip
+    /// bars and the panel's name line in the click's own pass, then the
+    /// timeline's rows, then the panel's body, then its sections and the rest,
+    /// then Appearance and Effects, then the panel's answers
+    /// that hang off the playhead. In one pass a pick from nothing on the
+    /// 6 minute reference edit held the window 22 ms, where a frame is 16
+    /// (`picking-letting-go-of-and-cutting-a-clip-while-a`, 2026-11-24).
+    private func tellOfThePick(movedFrom old: UUID?) {
+        guard old != _pickInHand else { return }
+        pickedWhilePlaying = picksLandInPieces
+        guard picksLandInPieces || isTellingOfThePick else {
+            timelinePickRevision &+= 1
+            panelPickRevision &+= 1
+            latePickRevision &+= 1
+            lookPickRevision &+= 1
+            return
+        }
+        guard !isTellingOfThePick else {
+            pickMovedAgain = true
+            return
+        }
+        isTellingOfThePick = true
+        // Each step has the pass after its own too: SwiftUI often builds in one
+        // and lays out and commits in the next, and a step that landed on that
+        // one read 19 ms where each alone is 8 to 11.
+        func nextStep() async {
+            await NextRunLoopPass.start()
+            await NextRunLoopPass.start()
+        }
+        Task { @MainActor [weak self] in
+            repeat {
+                self?.pickMovedAgain = false
+                await nextStep()
+                self?.timelinePickRevision &+= 1
+                await nextStep()
+                self?.panelPickRevision &+= 1
+                // A let-go clip's sections go one at a time, and are never
+                // drawn with nothing picked; never waited for longer than
+                // they take.
+                var steps = 0
+                repeat {
+                    await nextStep()
+                    steps += 1
+                } while self?.panelIsShedding == true && steps < 24
+                self?.latePickRevision &+= 1
+                await nextStep()
+                self?.lookPickRevision &+= 1
+                await nextStep()
+            } while self?.pickMovedAgain == true
+            guard let self else { return }
+            self.isTellingOfThePick = false
+            if self.panelPlayheadOwed {
+                self.panelPlayheadOwed = false
+                self.watchPanelPlayhead()
+            }
+        }
+    }
+
+    /// Whether a pick is told in pieces: a video playing on Next.
+    private var picksLandInPieces: Bool {
+        isDocumentPlaying && documentHasTime && Experiments.shared.panelWaitsForPlayToStopEnabled
+    }
+
     private func clipBarWatch(_ id: UUID) -> ClipBarWatch {
         if let watch = clipBarWatches[id] { return watch }
         let watch = ClipBarWatch()
@@ -112,8 +207,9 @@ final class EditorState {
     /// Moves `latePassRevision` on, and with it the watch of every clip bar
     /// and track row whose drawing the document's change since the last move
     /// reaches.
-    private func moveTheLatePassOn() {
+    private func moveTheLatePassOn(panelLater: Bool = false) {
         latePassRevision &+= 1
+        if !panelLater { panelPassRevision &+= 1 }
         let now = _history?.current
         defer { clipBarsSaw = now }
         guard !clipBarWatches.isEmpty || !trackRowWatches.isEmpty else { return }
@@ -296,7 +392,12 @@ final class EditorState {
                 self.rulerOwed = false
                 self.rulerDocumentRevision &+= 1
             }
-            self.moveTheLatePassOn()
+            let panelLater = self.picksLandInPieces
+            self.moveTheLatePassOn(panelLater: panelLater)
+            if panelLater {
+                await NextRunLoopPass.start()
+                self.panelPassRevision &+= 1
+            }
             guard self.lookRowsOwed else { return }
             await NextRunLoopPass.start()
             if self.lookRowsOwed {
@@ -1388,8 +1489,28 @@ final class EditorState {
     /// moved, and a click that set five unchanged properties re-ran every
     /// section of the inspector that reads any of them (measured 2026-09-03:
     /// part of a 40-60ms main-thread stall per click).
+    ///
+    /// Read anywhere but inside `readingThePickNow`, what is watched is
+    /// `latePickRevision`: the value is always the live one, and a view is
+    /// told it moved in the same pass, or while a video plays a little later
+    /// (`tellOfThePick`).
     var selectedLayerID: UUID? {
+        get {
+            switch Self.pickReader {
+            case .now: return pickInHand
+            case .timeline: _ = timelinePickRevision
+            case .panel: _ = panelPickRevision
+            case .everyoneElse: _ = latePickRevision
+            case .look: _ = lookPickRevision
+            }
+            return _pickInHand
+        }
+        set { pickInHand = newValue }
+    }
+    /// Where `selectedLayerID` is kept.
+    private var pickInHand: UUID? {
         didSet {
+            tellOfThePick(movedFrom: oldValue)
             if oldValue != selectedLayerID {
                 notePickMoved(from: oldValue, to: selectedLayerID)
                 if !multiSelectedLayerIDs.isEmpty { multiSelectedLayerIDs = [] }
@@ -3056,7 +3177,7 @@ final class EditorState {
             return _history?.current
         }
         if Self.readsALatePass {
-            _ = latePassRevision
+            if Self.pickReader == .panel { _ = panelPassRevision } else { _ = latePassRevision }
             return _history?.current
         }
         // The menu bar reads the document as it is, and is told it changed

@@ -400,7 +400,9 @@ extension EditorState {
 
     /// What the timeline's rows need to hand each track its share of the
     /// pick (`TrackPickShare`), read once for every row.
-    var timelinePickShares: TimelinePickShares {
+    var timelinePickShares: TimelinePickShares { readingThePick(as: .timeline) { pickShares } }
+
+    private var pickShares: TimelinePickShares {
         TimelinePickShares(primary: selectedLayerID, multi: multiSelectedLayerIDs,
                            pickedTracks: selectedTrackIDs, tracksInHand: tracksInHand,
                            keyLayer: Experiments.shared.drawnOnTheTimelineEnabled ? keyLayer?.id : nil)

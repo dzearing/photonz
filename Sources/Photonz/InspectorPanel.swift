@@ -347,7 +347,9 @@ struct InspectorPanel: View {
     /// the spot until then.
     @State private var watchedTimeFacts: PanelTimeFacts?
 
-    var body: some View { readingALatePass { lateBody } }
+    // The panel's own body is told of a pick made while a video plays a pass
+    // before its sections are (`EditorState.tellOfThePick`).
+    var body: some View { readingThePick(as: .panel) { readingALatePass { lateBody } } }
 
     @ViewBuilder private var lateBody: some View {
         #if PHOTONZ_PLAYTEST
@@ -361,9 +363,15 @@ struct InspectorPanel: View {
         // then (`readingALatePass`).
         let wanted = readingALatePass { orderedAvailableSections }
         // Sliding in with Edit mode, the dock waits its turn (`EditModeArrival`).
-        let sections = arrivals.showing(wanted) {
+        let arrived = arrivals.showing(wanted) {
             !editorState.editArrival.panelMayFill || editorState.secondsUntilTheSlideLands > 0
         }
+        // A clip let go while a video plays: its sections leave a pass each
+        // (`PanelSectionDeparture.shedding`), and what is left is told of the
+        // pick after they have gone (`EditorState.tellOfThePick`).
+        let sections = departures.shedding(arrived, pick: editorState.selectedLayerID,
+                                           sheds: editorState.panelPiecesWait)
+        let _ = (editorState.panelIsShedding = departures.isShedding)
         let _ = arrivalPass // the catch-up pass reads its own trigger
         // A pass that finds sections still owed, with Edit far enough in for
         // the dock to fill, asks for the catch-up itself rather than trusting
@@ -382,8 +390,9 @@ struct InspectorPanel: View {
         // down in the next (`PanelSectionDeparture`).
         let _ = departurePass
         let lingering = departures.draw(sections, pick: editorState.selectedLayerID,
-                                        lingers: holdsBodiesOutOfSight)
+                                        lingers: holdsBodiesOutOfSight && !departures.isShedding)
         let _ = departures.releaseNextPass { departurePass &+= 1 }
+        let _ = departures.shedNextPass { departurePass &+= 1 }
         // Layers in a pane on top, the pick and the Library under it (Next,
         // `next-lists-pane`): one part each, and with the pane off the lower
         // part is every section, exactly the dock it always was. `pick` is
@@ -474,6 +483,9 @@ struct InspectorPanel: View {
                                   stored: listsPaneStored)
                 }
             }
+            // A pick made while a video plays, named in the click's own frame.
+            let pickLine = !split.pick.contains(.keys)
+            PanelPickLine(standsIn: pickLine, fold: folds.cell(.keys)) { toggleCollapsed(.keys) }
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -525,7 +537,11 @@ struct InspectorPanel: View {
                     // whole panel a second time on every fold that moved the
                     // pane, after a first pass that had shared the part out
                     // at its old height.
-                    if listsReveal.drawnSections.isEmpty { budget.viewportHeight = $0 }
+                    // ...nor for the few points a pick line of another height
+                    // gives or takes: it goes when its section comes, and
+                    // until then nothing the dock could share out changes.
+                    if listsReveal.drawnSections.isEmpty,
+                       !(pickLine && editorState.panelPickLineShows) { budget.viewportHeight = $0 }
                     recordInspectorViewportHeight($0)
                 }
                 // Where the dock sits in the window. Only a scripted walk reads
@@ -635,7 +651,7 @@ struct InspectorPanel: View {
                               stored: shelfStored,
                               onCarry: { shelfReveal.heldWhilePointerInside = nil })
                 shelfPane(split.shelf, ceilings: ceilings)
-                    .frame(height: shelfHeight)
+                    .modifier(GivesThePickLineRoom(height: shelfHeight, floor: floor, standsIn: pickLine))
             }
           }
           // The height the pick and the lists share, which the pane is
@@ -2865,6 +2881,31 @@ private struct SectionDrag: Equatable {
     func draw(_ sections: [InspectorSectionID], pick: UUID?, lingers: Bool) -> [InspectorSectionID] {
         state.draw(sections.map(\.rawValue), pick: pick?.uuidString, lingers: lingers)
             .compactMap(InspectorSectionID.init(rawValue:))
+    }
+
+    /// `sections` with what a let-go clip brought still leaving.
+    func shedding(_ sections: [InspectorSectionID], pick: UUID?, sheds: Bool) -> [InspectorSectionID] {
+        state.shedding(sections.map(\.rawValue), pick: pick?.uuidString, sheds: sheds)
+            .compactMap(InspectorSectionID.init(rawValue:))
+    }
+
+    var isShedding: Bool { state.isShedding }
+    private var isSheddingOne = false
+
+    /// Asks once for the pass after this one's commit, which takes the lowest
+    /// leaving section away.
+    func shedNextPass(_ redraw: @escaping @MainActor () -> Void) {
+        guard state.isShedding, !isSheddingOne else { return }
+        isSheddingOne = true
+        Task { @MainActor in
+            // The pass after one leaves is for laying the dock out again.
+            await NextRunLoopPass.start()
+            await NextRunLoopPass.start()
+            isSheddingOne = false
+            guard state.isShedding else { return }
+            state.shedOne()
+            redraw()
+        }
     }
 
     /// `ceilings` for the sections shown, and the last ceiling of each one

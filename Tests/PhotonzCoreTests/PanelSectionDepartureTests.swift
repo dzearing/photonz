@@ -44,6 +44,43 @@ struct PanelSectionDepartureTests {
         #expect(departure.draw(["keys", "time"], pick: "other").isEmpty)
     }
 
+    @Test func anUnpickThatShedsTakesOneSectionAtATimeFromTheBottom() {
+        // A clip let go while a video plays: what it brought leaves a section
+        // a pass, so no pass pulls all of it down.
+        var departure = PanelSectionDeparture()
+        departure.draw(["keys", "color", "time", "sound"], pick: "clip")
+        for _ in 0..<2 { // SwiftUI may ask for the body twice in one pass
+            let shown = departure.shedding(["time"], pick: nil, sheds: true)
+            #expect(shown == ["keys", "color", "time", "sound"])
+            departure.draw(shown, pick: nil, lingers: false)
+        }
+        #expect(departure.isShedding)
+        var order: [[String]] = []
+        while departure.isShedding {
+            departure.shedOne()
+            let shown = departure.shedding(["time"], pick: nil, sheds: true)
+            departure.draw(shown, pick: nil, lingers: false)
+            order.append(shown)
+        }
+        #expect(order == [["keys", "color", "time"], ["keys", "time"], ["time"]])
+    }
+
+    @Test func aPickThatMovesToAnotherThingShedsNothing() {
+        var departure = PanelSectionDeparture()
+        departure.draw(["keys", "sound"], pick: "clip")
+        #expect(departure.shedding(["keys"], pick: "other", sheds: true) == ["keys"])
+        #expect(departure.isShedding == false)
+    }
+
+    @Test func sheddingEndsAtOnceWhenPlayStopsOrSomethingIsPicked() {
+        var departure = PanelSectionDeparture()
+        departure.draw(["keys", "time", "sound"], pick: "clip")
+        departure.draw(departure.shedding(["time"], pick: nil, sheds: true), pick: nil, lingers: false)
+        var stopped = departure
+        #expect(stopped.shedding(["time"], pick: nil, sheds: false) == ["time"])
+        #expect(departure.shedding(["keys", "time"], pick: "other", sheds: true) == ["keys", "time"])
+    }
+
     @Test func releasingLetsTheLingeringSectionsGo() {
         var departure = PanelSectionDeparture()
         departure.draw(piece, pick: "clip")

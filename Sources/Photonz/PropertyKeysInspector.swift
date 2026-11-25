@@ -65,9 +65,7 @@ struct PropertyKeysInspector: View {
     /// The one layer picked: its clip line, and what is keyed on it.
     @ViewBuilder private var keysOfOneLayer: some View {
         // A layer in a picture is there all the time: no in, no out, no speed.
-        if editorState.documentHasTime, let line = editorState.keyClipLine {
-            ClipLineRow(line: line)
-        }
+        if editorState.documentHasTime { PickedClipLine() }
         // A recording's clicks, drawn or not (`ClickEffectRows`): a
         // setting of the clip itself, so it sits with the clip line
         // rather than among what is animating.
@@ -297,6 +295,91 @@ struct PropertiesPanelMenu: View {
     private static let copyImage = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
     private static let pasteImage = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
     private static let resetImage = NSImage(systemSymbolName: "arrow.uturn.backward", accessibilityDescription: nil)
+}
+
+/// The clip line of the thing picked, following the pick in the click's own
+/// frame even while a video plays, when the rest of the panel follows a little
+/// later (`EditorState.tellOfThePick`).
+struct PickedClipLine: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        readingThePickNow {
+            readingALatePass {
+                editorState.readingThePlayheadForThePanel {
+                    Group {
+                        if let line = editorState.keyClipLine { ClipLineRow(line: line) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Properties' header and the picked thing's name, over the panel's other
+/// sections, for a pick made while a video plays: the section itself waits for
+/// play to stop (`PanelPlayHold`), and without this nothing in the panel said
+/// which clip was picked. It goes in the pass the section lands.
+struct PanelPickLine: View {
+    @Environment(EditorState.self) private var editorState
+    /// The panel has no Properties section.
+    let standsIn: Bool
+    let fold: PanelFoldCell
+    let onToggle: () -> Void
+
+    var body: some View {
+        let shows = standsIn && readingThePickNow { editorState.panelPickLineShows }
+        if shows {
+            VStack(spacing: 0) {
+                CollapsibleSection(title: InspectorSectionID.keys.title, fold: fold, onToggle: onToggle,
+                                   onReorder: { _, _ in }, onReorderEnd: {},
+                                   chip: readingThePickNow { chip }) {
+                    PickedClipLine()
+                        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+                        .padding(.vertical, 6)
+                }
+                Divider().opacity(0.4)
+            }
+            // Where the section's own header stands, under the dock's top
+            // margin, which the sections below then already have.
+            .padding(.top, DockMetrics.listTopPadding)
+            .padding(.bottom, -DockMetrics.listTopPadding)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { Self.lastHeight = $0 }
+        }
+    }
+
+    private var chip: DockHeaderChip.Content? {
+        DockGroupHeader.chip(editorState.keyLayerKind).map { .init(text: $0, field: "Properties Kind") }
+    }
+
+    /// How tall it was last drawn; a header and a name on two lines at first.
+    @MainActor static var lastHeight: CGFloat = 92
+}
+
+/// The Library's pane under the dock, shorter by the pick line while that is
+/// up, so the sections between them keep the room they had.
+struct GivesThePickLineRoom: ViewModifier {
+    @Environment(EditorState.self) private var editorState
+    let height: CGFloat
+    let floor: CGFloat
+    let standsIn: Bool
+
+    func body(content: Content) -> some View {
+        let shows = standsIn && readingThePickNow { editorState.panelPickLineShows }
+        content.frame(height: shows ? max(min(floor, height), height - PanelPickLine.lastHeight) : height)
+    }
+}
+
+extension EditorState {
+    /// Whether the panel's pick line is up for what is picked
+    /// (`PanelPickLine`): one clip, title or sound picked while a video plays,
+    /// with nothing in hand the panel would speak for instead.
+    var panelPickLineShows: Bool {
+        guard selectedLayerID != nil, pickedWhilePlaying, documentHasTime, !isACutPicked,
+              let layer = readingALatePass({ keyLayer }), TimePanelOrder.role(of: layer) != .captioned
+        else { return false }
+        return timelinePickSummary == nil && zoomInHand == nil && tracksInHand.isEmpty
+    }
 }
 
 /// `Sample Talk        2.0s → 14.9s  12.9s · 1.0x`: the mock's `.cliphead`.

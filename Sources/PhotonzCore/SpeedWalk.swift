@@ -1025,8 +1025,10 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     /// `addTrack` adds a picture track and `addClip` a recording on one of its
     /// own ahead of the playhead, both of which leave the edit taller;
     /// `unpick` picks nothing, so the next `pick` is a click on a clip with
-    /// nothing picked, the one that builds the panel's sections from nothing.
-    public static let namedOnlyEdits = ["pick", "unpick", "addTrack", "addClip"]
+    /// nothing picked, the one that builds the panel's sections from nothing;
+    /// `fill` stops and plays on, untimed, so the panel holds every section of
+    /// the clip picked and the next `pick` or `unpick` moves it whole.
+    public static let namedOnlyEdits = ["pick", "unpick", "fill", "addTrack", "addClip"]
     /// Timed exactly like an edit and changing nothing: what the main thread
     /// does in the same second and a half of playing with no edit made, so
     /// an edit's number can be told from the floor it stands on. Measured on
@@ -1039,8 +1041,11 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     /// an edit holds the panel's sections too and costs more, so it is a
     /// number of its own rather than one that overwrites the other; so is a
     /// pick made after `unpick` (`fromNothing`), against one that moves the
-    /// pick from a clip the panel already describes.
-    public static func tallyName(_ edit: String, picked: Bool, fromNothing: Bool = false) -> String {
+    /// pick from a clip the panel already describes, and a pick or unpick made
+    /// with every section of the clip in the panel (`panelIsFull`).
+    public static func tallyName(_ edit: String, picked: Bool, fromNothing: Bool = false,
+                                 panelIsFull: Bool = false) -> String {
+        if panelIsFull, !fromNothing, edit == "pick" || edit == "unpick" { return "\(edit), panel full" }
         if edit == "pick", fromNothing { return "pick, from nothing" }
         return picked && edit != "pick" && edit != "unpick" ? "\(edit), picked" : edit
     }

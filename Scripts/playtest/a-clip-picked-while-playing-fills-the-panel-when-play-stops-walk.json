@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk",
-  "seed": "At Next defaults, no switch touched: while a video plays, the sections a pick brings into the right hand panel wait for play to stop (next-panel-waits-for-play-to-stop), because each one that landed while it played held the window a frame or two. The sample recording opens with nothing picked, Space plays it, and a real click on its clip picks it while it plays: the clip is picked and play carries on, and the panel still shows only Time: Properties and the sound's Fades have not come in. Space stops it and every section of the picked clip comes in, from Properties down to Audio Effects.",
+  "seed": "At Next defaults, no switch touched: while a video plays, the sections a pick brings into the right hand panel wait for play to stop (next-panel-waits-for-play-to-stop), because each one that landed while it played held the window a frame or two. The sample recording opens with nothing picked, Space plays it, and a real click on its clip picks it while it plays: the clip is picked and play carries on, and the panel names the clip under a Properties header at once, over Time, and its sections wait: Properties' own rows and the sound's Fades have not come in. Space stops it and every section of the picked clip comes in, from Properties down to Audio Effects.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -80,6 +80,17 @@
         "Color",
         "Fades"
       ]
+    },
+    {
+      "do": "expect",
+      "field": "Properties Kind",
+      "reads": "Clip"
+    },
+    {
+      "comment": "The clip is named at the top of the panel while it plays.",
+      "do": "expect",
+      "field": "Clip line",
+      "reads": "Tutorial Sample 0.0s → 8.0s · 8.0s · 1.0x"
     },
     {
       "do": "snapshot",
