@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:13:00.798Z",
-  "updated": "2026-11-25T11:54:32.879Z",
+  "updated": "2026-11-25T11:54:33.242Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"the perf of photonz is still pretty rough with video editing. when i add like 50 tracks with 100 clips, scroll starts to lag, i get weird behaviors like flashes during playback, very sluggish behavior\".\n\nContext: the loop could not sign in from about 2026-11-23 19:00 to 2026-11-24 14:10, so the open video-perf tasks made no progress in that window; the user re-logged in on 2026-11-24.\n\nOverlaps, and why this is separate: the-timeline-of-an-hour-long-edit-scrolls-zooms (p1, pending) is about a LONG edit (60 minutes, hundreds of clips) on the 3+ track reference edit, horizontal scroll and zoom; this one is WIDE (50 to 100 tracks): vertical scroll, many track headers, many clips overlapping at one moment for the compositor and decoders. Reuse that task's speed walk, ViewBuildMeter and busy-lane painting rather than building a second harness; if its painted-lane fix also fixes vertical scroll here, record it and move on. picking-letting-go-of-and-cutting-a-clip-while-a (p1, seq 10) covers edit latency while playing; jumping-back-while-a-video-plays-never-flickers covers flicker after a jump. I did not reproduce the user's lag or flashes myself.",
@@ -146,6 +146,10 @@
     {
       "t": "2026-11-25T11:54:32.878Z",
       "note": "Left for the next pass: add track only. Its long pass is the display cycle after the row goes in: AccessibilityNode.updateFocusResponder searching every responder for each new node (3 ms), NSWindow _resetDragMargins walking every view (3), accessibility (2 to 4), RBLayer surfaces (3). Tried and taken out: the new row as a bare slot built 40 ms later (20 ms all the same, so it is making room that costs). Far rows out of accessibility and hit testing did not move it either (kept: it took 0.8 ms off a zoom frame). The first add of a run reads 19 to 25, the ones after 16 to 17. Measure with Scripts/perf/pass-profile.sh on a walk of addTrack and undo; lldb once left the probe stopped, so check ps if it hangs. 100 tracks has no bar; its numbers are in the audit. Not checked: the hitch as the lanes come to rest after a gesture, which no measure times."
+    },
+    {
+      "t": "2026-11-25T11:54:33.241Z",
+      "note": "Pass 4 landed: zoom and scroll meet their p95 bars, export unchanged. Adding a track while it plays (19 to 25 ms, bar 16) and the odd single frame over 16 are left; see the log."
     }
   ],
   "started": "2026-11-25T09:23:50.197Z",

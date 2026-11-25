@@ -19144,3 +19144,4 @@
 {"t":"2026-11-25T10:08:24.413Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T11:54:32.804Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T11:54:32.880Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T11:54:33.243Z","ev":"task_pending","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"Pass 4 landed: zoom and scroll meet their p95 bars, export unchanged. Adding a track while it plays (19 to 25 ms, bar 16) and the odd single frame over 16 are left; see the log."}
