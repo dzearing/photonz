@@ -1,0 +1,39 @@
+{
+  "id": "an-edit-with-100-tracks-scrolls-plays-and-edits",
+  "title": "An edit with 100 tracks scrolls, plays and edits as smoothly as one with 50",
+  "goal": "At 50 tracks the timeline, playback and every edit are now inside their limits. At 100 tracks and 200 clips scrolling and zooming are half as fast as they should be, edits while playing take longer than a frame, and playback drops or misplaces a few frames. The focus promises 50 to 100 tracks.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-25T15:11:24.867Z",
+  "updated": "2026-11-25T15:12:01.667Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Focus success line 7 (\"50 to 100 tracks with 100 or more clips scroll in both directions at 120 Hz, play without dropped or wrong frames, and edit within one frame\"). The 50 track task measures 100 tracks but sets it no bar, so nothing owned it. Command: Scripts/perf/speed-walk.sh --wide 100; its output is Scripts/perf/baselines/wide-100.json (written 2026-11-25 14:38Z by that task's fifth pass): main thread a frame p95 zoom in 12.3, out 12.4, along 11.9, tracks down 17.1, up 11.9 ms (bar 8.3); longest pass add track 21.0, its undo 21.6, add clip 23.4, move 20.6, trim 17.6, pick 20.6, blade 20.2, undo 13.8 ms (bar 16); 6 of 3639 frames dropped; 11 clip frames shown from ahead of their time at 1:06 (pass 5 audit). Tracks down read 10.5 in pass 2 and 17.1 in passes 3 and 5: not explained. Reuse the 50 track work (TimelineRowsInSight, TimelineLaneWaves, LateTrackRows).",
+  "acceptance": [
+    "Scripts/perf/speed-walk.sh --wide 100, worst of three runs: zoom in, zoom out, along, tracks down and up all p95 under 8.3 ms",
+    "Every edit in that walk reads 16 ms or less while it plays",
+    "Played end to end 0 dropped frames, and no clip frame from another time at 1:06 or anywhere in the ten up stretch; where the decoder cannot keep up it holds a frame and the audit says so with numbers",
+    "What made tracks down go from 10.5 to 17.1 between passes 2 and 3 is named",
+    "The 50 track and 6 minute speed walks read no worse than their baselines, and the export is compared equal if the composite path is touched",
+    "Both baselines rewritten with --baseline; a short film of scrolling 100 tracks for the user to look at",
+    "Audit written under queue/audits/ with before and after numbers. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-25T15:11:24.869Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-25T15:12:00.421Z",
+      "note": "Triage 2026-11-25: the 100 track numbers moved a lot between passes. Pass 4's audit read zoom p95 7.8 to 8.2, along 7.4, down and up 10.4; pass 5's baseline reads 12.3, 12.4, 11.9, 17.1, 11.9 on one run. Run it three times first: either pass 5 (bare room rows, LateTrackRows, TitleBarRegionLater) cost 100 tracks what it saved 50, or one run is not enough to judge by."
+    },
+    {
+      "t": "2026-11-25T15:12:01.666Z",
+      "note": "seq 4090 -> 90"
+    }
+  ]
+}

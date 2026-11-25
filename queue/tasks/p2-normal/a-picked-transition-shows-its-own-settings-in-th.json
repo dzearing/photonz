@@ -4,12 +4,12 @@
   "goal": "Since the video panel started running the full height on 2026-11-23, choosing a dissolve at a cut leaves the panel showing only the grid of transitions to choose from. The transition's own settings (its type, its length and how it sits over the cut) are nowhere in the panel, so a person who just added a dissolve cannot change how long it lasts from the panel.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 20,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-23T15:11:10.391Z",
-  "updated": "2026-11-23T15:11:23.410Z",
+  "updated": "2026-11-25T15:12:47.679Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-11-23 by the daily triage while reading the full set run's failures. Command: Scripts/playtest.sh Scripts/playtest/transition-band-reads-as-the-mock-walk.json --no-build. Output: step 19 (expect): no menu called \"Type\" is in the panel to read; the ones that are: 1x, Add Track, Transition Menu, Add Key Menu, Transitions menu, Add to Library. Picture after picking Cross dissolve at the cut: queue/audits/2026-11-23-picked-transition-shows-no-settings-sc.png (Properties says Transition but shows the clip's own line, then the Transitions grid, then Library; no settings section). Likely cause: d4bfb48eb TimePanelOrder.arrange(pairFirst:) and underThePair giving way to the fold, which the panel task measured for a clip and a title but not for a picked transition. Same failure in the sweep: transition-picker-at-a-cut-walk (no field Out), a-video-edit-saves-as-a-project-walk (no menu Type), shorten-the-cut-for-a-dissolve-walk (no field Spare before strip; owned by clicking-shorten-the-cut-trims-the-clips-and-pla).",
@@ -32,6 +32,14 @@
     {
       "t": "2026-11-23T15:11:23.409Z",
       "note": "seq 4150 -> 20"
+    },
+    {
+      "t": "2026-11-25T15:12:02.817Z",
+      "note": "seq 20 -> 60"
+    },
+    {
+      "t": "2026-11-25T15:12:47.678Z",
+      "note": "Triage 2026-11-25: when you settle what a picked transition shows, write the one rule into docs/design/mocks/shared/UX-PATTERNS.md section 2: whatever is picked, its Properties header and name always show, also while a video plays (shipped 6aa3a183e as the name line), and only the sections under it may wait. No mock or rule covers the panel during play."
     }
   ],
   "walks": [

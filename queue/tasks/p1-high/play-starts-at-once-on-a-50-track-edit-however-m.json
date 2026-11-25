@@ -1,0 +1,34 @@
+{
+  "id": "play-starts-at-once-on-a-50-track-edit-however-m",
+  "title": "Play starts at once on a 50 track edit, however many clips are up",
+  "goal": "On a 50 track edit, pressing Space freezes the picture for more than half a second before anything moves, and for most of a second where ten recordings are up. On the 6 minute edit it starts within a twentieth of a second. Pressing Space on a wide edit should feel just as immediate.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-25T15:11:24.738Z",
+  "updated": "2026-11-25T15:12:01.132Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split off an-edit-with-50-tracks-and-100-clips-scrolls-pla (the user's report of a sluggish 50 track edit), whose audits carried \"starting play at 0:58 from rest waits about 727 ms\" through four passes with no task owning it. Reproduced 2026-11-25 by the triage pass on the probe built from main that morning: a walk with setup {\"forget\":[\"all\"],\"wideEdit\":50} and steps wait 3, then {\"do\":\"speed\",\"measure\":\"play\",\"fromMS\":58000,\"seconds\":3}, the same from 10000, then 58000 again (Scripts/playtest.sh <walk> --no-build). Output: \"played 3.0s from 0:58.0 to 1:00.6: 66 of 91 frames shown, 25 dropped, worst gap 858ms, first new picture 858ms after Space\"; \"from 0:10.0: 73 of 90 frames shown, 17 dropped, first new picture 625ms after Space\"; second time at 0:58: 850ms. The same walk with referenceEdit 6: 50, 58, 58 ms and 0 dropped. Main thread is not the hold (longest pass 6 to 25 ms). Not diagnosed. Place to look first, from reading only: the start waits for first frames of every clip (preRollWithSound, capped at 0.8 s), and 0:10 is slow with few clips up. Played end to end from 0:00 the wait is 75 ms (baselines/wide-50.json firstPictureMS), so the resting frames are in hand there: compare.",
+  "acceptance": [
+    "Reproduced with the walk in the notes, and where the wait goes is named with numbers (reads, places in the read queue, the pre-roll wait) at 0:10 and 0:58 before any fix",
+    "First new picture at most 100 ms after Space on the 50 track edit at 0:10, 0:30 and 0:58, worst of three runs, at rest for 2 seconds first and right after a jump (today 625 and 858 ms); where ten recordings cannot all be ready, the canvas moves on and says nothing wrong (no flash, no frame from another time) instead of holding",
+    "0 frames dropped in the first 3 seconds at 0:10, and the figure at 0:58 stated (today 17 and 25)",
+    "The speed walk --wide records time to the first picture from rest at those places, in its baseline, so it cannot grow back unseen",
+    "The 6 minute edit starts no later than today (50 to 58 ms) and its sound stays in step; jumping-back-while-playing-walk and the play walks stay green",
+    "Audit written under queue/audits/ with before and after numbers. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-25T15:11:24.740Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-25T15:12:01.131Z",
+      "note": "seq 4080 -> 20"
+    }
+  ]
+}

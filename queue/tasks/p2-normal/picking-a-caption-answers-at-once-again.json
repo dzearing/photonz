@@ -1,0 +1,38 @@
+{
+  "id": "picking-a-caption-answers-at-once-again",
+  "title": "Picking a caption answers at once again",
+  "goal": "Clicking a caption on a captioned recording freezes the app for about a tenth of a second, up to 150 ms, before it answers. It answered inside 80 ms until about 20 November and got slower since. It should be back under that, and heading for one frame like every other pick.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-25T15:11:24.999Z",
+  "updated": "2026-11-25T15:12:02.647Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by the triage pass 2026-11-25: Scripts/playtest.sh Scripts/playtest/caption-pick-answers-at-once-walk.json --no-build, three runs: \"the main thread froze for 95.9ms in one pass, and this walk allows under 80ms\", then 149.5, then 130.0, each with a second pass of 87 to 89 ms about 0.5 s later. Passed on 2026-11-20, 84.5 in the 2026-11-23 sweep. A runner compared 75f8a3456 and the commit after it, nine interleaved runs each: the same (91 to 98, with 144 to 149 in three of nine), so it is not the pick-while-playing work. Never bisected between 20 and 23 November; git log --since=2026-11-20 --until=2026-11-23 -- Sources, first suspect from reading only the full-height panel (the-panel-keeps-its-promise-on-a-video-document, landed 22 November). Earlier fix: picking-or-retyping-a-caption-answers-at-once (done). Moved here from walks-that-fail-in-the-full-sweep-28.",
+  "acceptance": [
+    "The commit between 2026-11-20 and 2026-11-23 that slowed it is named, with the walk read on both sides of it",
+    "caption-pick-answers-at-once-walk passes five runs in a row, with its 80 ms limit unchanged, and the longest pass after the click is written down before and after",
+    "What the panel shows for a picked caption is the same as before (pictures side by side)"
+  ],
+  "log": [
+    {
+      "t": "2026-11-25T15:11:25.001Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-25T15:12:00.655Z",
+      "note": "owns these walks: caption-pick-answers-at-once-walk"
+    },
+    {
+      "t": "2026-11-25T15:12:02.646Z",
+      "note": "seq 9.375 -> 40"
+    }
+  ],
+  "walks": [
+    "caption-pick-answers-at-once-walk"
+  ]
+}

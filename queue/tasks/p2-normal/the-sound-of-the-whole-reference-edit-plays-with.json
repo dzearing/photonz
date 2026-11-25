@@ -4,12 +4,12 @@
   "goal": "Sound that clicks, drops out or stutters for a moment is the first thing a person notices in a video, before a dropped frame. The speed walk checks once a second that the sound due is playing and how far it is from the picture, but a dropout of a few milliseconds between those looks is never seen. Measure every moment of the sound coming out while the reference edit plays and is edited, and fix any dropout found.",
   "epic": "video-perf",
   "priority": "p2-normal",
-  "seq": 5,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:24:29.911Z",
-  "updated": "2026-11-24T14:24:40.928Z",
+  "updated": "2026-11-25T15:12:02.416Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Focus success line 2 says sound never stutters, measured over the whole reference edit. Today Scripts/perf/baselines/short-6.json sound: {looks:60, piecesLeftOut:0, silentLooks:0, sync:{median 4 ms behind, -11 to +20}}: one look a second, so it proves the sound is on, not that it is unbroken. Not reproduced as a bug (nobody has reported a stutter), so p2 and measure-first. Engine: DocumentAudioEngine (there was a crash in its play, the-app-crashed-in-documentaudioengine-play-2, done). Edits during play rebuild the sound schedule: blade (next-blade-keeps-playing) and transitions (next-transition-keeps-playing) are the likely places for a gap.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-11-24T14:24:40.927Z",
       "note": "seq 5 -> 5"
+    },
+    {
+      "t": "2026-11-25T15:12:02.415Z",
+      "note": "seq 5 -> 10"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "When a picture or video fills the canvas, the little size badge drawn under the picked layer (for example 3456 x 2234) lands behind the floating tool bar and is cut in half, so the one number it exists to show cannot be read. It should always sit where it can be read, above the tool bar or flipped inside the picture's edge.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 440,
+  "seq": 480,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-23T15:09:47.348Z",
-  "updated": "2026-11-23T15:11:26.289Z",
+  "updated": "2026-11-25T15:12:06.071Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-23 in queue/audits/2026-11-22-panel-full-height-1-clip.png (real app capture from the-panel-keeps-its-promise-on-a-video-document): the 3456 x 2234 badge sits at about y 855 to 890 in a 1440 point tall capture and the tool bar starts at about 880, so the badge's lower half is hidden. In the same picture the chip above the top handle is cut off by the title bar. Related done task: a-picture-or-video-fits-above-the-tool-bar-not-u (the picture fits above the bar, but its readouts do not).",
@@ -30,6 +30,10 @@
     {
       "t": "2026-11-23T15:11:26.288Z",
       "note": "seq 4140 -> 440"
+    },
+    {
+      "t": "2026-11-25T15:12:06.070Z",
+      "note": "seq 440 -> 480"
     }
   ]
 }

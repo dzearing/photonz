@@ -4,12 +4,12 @@
   "goal": "Once an edit made from 60 frame recordings is a 60 frame edit, playing it should show all 60 frames a second, through every cut and transition, without the sound, scrubbing or editing getting any slower. Today playback steps at 30 a second, so a recording that was smooth when it was made looks half as smooth in the editor.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 64,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:24:09.055Z",
-  "updated": "2026-11-24T15:51:02.170Z",
+  "updated": "2026-11-25T15:12:01.443Z",
   "deps": [
     "a-60-frame-a-second-recording-edits-and-exports"
   ],
@@ -35,6 +35,10 @@
     {
       "t": "2026-11-24T15:51:02.169Z",
       "note": "seq 92 -> 64"
+    },
+    {
+      "t": "2026-11-25T15:12:01.442Z",
+      "note": "seq 64 -> 60"
     }
   ]
 }

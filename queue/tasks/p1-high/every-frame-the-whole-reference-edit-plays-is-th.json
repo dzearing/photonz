@@ -4,12 +4,12 @@
   "goal": "A person should never see a blank, a stale picture or a frame from somewhere else flash by while an edit plays, and what they watch should be what they export. Today that is checked only on short fixtures and in a few spots; nothing watches a whole long edit play through its dissolves, its 3D transition, its titles and its zooms and compares each shown frame against the export.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 66,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:24:29.780Z",
-  "updated": "2026-11-24T15:51:02.246Z",
+  "updated": "2026-11-25T15:12:01.517Z",
   "deps": [
     "jumping-back-while-a-video-plays-never-flickers"
   ],
@@ -36,6 +36,14 @@
     {
       "t": "2026-11-24T15:51:02.245Z",
       "note": "seq 94 -> 66"
+    },
+    {
+      "t": "2026-11-25T15:12:00.809Z",
+      "note": "Triage 2026-11-25: find-out-whether-an-export-of-a-screen-recording (p3) asks whether the export reads an uneven recording's frames earlier than the canvas. If your comparison shows frames one step apart, read that task: the cause may be there."
+    },
+    {
+      "t": "2026-11-25T15:12:01.516Z",
+      "note": "seq 66 -> 70"
     }
   ]
 }

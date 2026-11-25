@@ -4,12 +4,12 @@
   "goal": "Setting a title or text line spacing tighter than normal does nothing like what was asked on fonts that carry their own extra line gap (DIN Condensed among them): at 80% the lines sit as far apart as at 100%. Make line spacing mean the same distance between lines on every font.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 400,
+  "seq": 440,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-21T23:23:06.858Z",
-  "updated": "2026-11-23T15:11:26.018Z",
+  "updated": "2026-11-25T15:12:05.753Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-21 in task keynote-clean-soft-gradient-glass-kinetic-bold-t. A probe test printed for Condensed Poster (DIN Condensed, 360 pt, lineHeight 0.8, \"YOUR\\nTITLE\"): frame height 726, and CTFontGetAscent/Descent/Leading = 256.3 / 103.7 / 72.0. Measuring the rendered hold frame (PHOTONZ_REEL=1 ... --filter TitleRedesignReel, after/hold-kinetic.png) the two lines of capitals had ink rows (130,386) and (488,748): a pitch of 358, not 288. Cause, as read: TextRasterizer.paragraphStyle sets minimumLineHeight = maximumLineHeight = lineHeight * size, and CoreText adds the font own leading on top of that, so every line is a leading taller than asked; naturalSize then measures the same. The inspector Leading control is the same number, so a person sees it too. Fix in Sources/PhotonzRender/TextRasterizer.swift (paragraphStyle, naturalSize, lineOverhang), e.g. a negative lineSpacing of the leading or a font with leading stripped; mind TextBreaksAtEveryScaleTests, MaskRevealTightLeadingTests and the calm set transcriptions.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-11-23T15:11:26.017Z",
       "note": "seq 530 -> 400"
+    },
+    {
+      "t": "2026-11-25T15:12:05.752Z",
+      "note": "seq 400 -> 440"
     }
   ]
 }

@@ -4,24 +4,33 @@
   "goal": "When an arrow with a label, or a measurement, is scaled over time in a video, the letters of its label still slip against each other by about half a pixel, which reads as a faint jitter. They should move as one solid piece, the way titles now do.",
   "epic": "video-perf",
   "priority": "p2-normal",
-  "seq": 7.5,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T18:16:56.682Z",
-  "updated": "2026-11-24T18:16:56.685Z",
+  "updated": "2026-11-25T15:12:02.493Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-11-24 at the end of text-that-zooms-or-scales-in-a-video-moves-as-on with a throwaway PhotonzRender test: an arrow (caption \"H n m o w\", captionFontSize 44) with a Scale motion 50 to 100 over 1000ms, frames 250..1000ms through DocumentRenderer(compositing: .sRGB), LetterSteadiness on the marks. Output: DBG arrow label slip 0.4784191451886863 unread 0. Titles read 0.005 to 0.04 on the same measure. Cause is the same: PillRasterizer / ChipRasterizer / MeasureRasterizer lay the label out afresh at captionFontSize times the growth and draw it as system glyphs (TextRasterizer.rasterize with no placing), and PillRasterizer rounds its ink offset to whole pixels. Titles keep the size they were set at (TextContent.drawnScale) and draw outlines (SteadyType).",
   "acceptance": [
     "An arrow label and a measurement number scaling 50 to 100 percent over a second in a video: no letter slips more than 0.1 px on any frame, in playback and in the export (LetterSteadiness)",
     "A still label is no softer and weighs the same as today",
-    "A PhotonzRender test that fails on today's code"
+    "A PhotonzRender test that fails on today's code",
+    "A reel under queue/audits/ of an arrow label and a measurement number growing, before and after, at full size and 4x on a few letters, named in the audit for the user to look at"
   ],
   "log": [
     {
       "t": "2026-11-24T18:16:56.684Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-25T15:12:00.974Z",
+      "note": "Triage 2026-11-25: added the reel the visual bar asks for; the measured bar was already there (today 0.48 px against 0.1)."
+    },
+    {
+      "t": "2026-11-25T15:12:02.492Z",
+      "note": "seq 7.5 -> 20"
     }
   ]
 }
