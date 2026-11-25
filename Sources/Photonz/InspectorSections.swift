@@ -809,7 +809,7 @@ struct CollapsibleSection<Content: View>: View {
 
 /// The chevron on a section's header, turned by the fold. A view of its own so
 /// a fold redraws the chevron and not the header round it.
-private struct SectionFoldChevron<Style: ShapeStyle>: View {
+struct SectionFoldChevron<Style: ShapeStyle>: View {
     let fold: PanelFoldCell?
     let isCollapsed: Bool
     let size: CGFloat

@@ -1,0 +1,40 @@
+{
+  "feature": "Picking a clip while a video plays",
+  "epic": "video-perf",
+  "summary": "Clicking a clip, clicking away, and cutting or trimming the picked clip while the 6 minute edit plays now each finish within one frame (16 ms), and the panel names the clip the moment you click it. Closing a window gives its pictures' memory back again.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Timings are from the speed walk on the 6 minute reference edit, worst of three runs.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording, press Escape so nothing is picked, and press Space to play it."
+    },
+    {
+      "do": "While it plays, click the clip on V1. Properties and the clip's name come up at the top of the panel at once.",
+      "shot": "2026-11-25-a-pick-while-playing-1.png"
+    },
+    {
+      "do": "Press Space to stop. The rest of the clip's sections come in under the name, which does not move.",
+      "shot": "2026-11-25-a-pick-while-playing-2.png"
+    },
+    {
+      "do": "Press Space again, then Escape while it plays. The sections leave from the bottom up."
+    },
+    {
+      "do": "Click the clip while it plays, then move the pointer over the panel. Every section comes in and it plays on."
+    },
+    {
+      "do": "Open the 6 minute reference edit in Photonz Dev with the button below, play it, and click clips, press B and undo. Watch whether the picture stutters.",
+      "referenceEdit": 6
+    }
+  ],
+  "evaluate": [
+    "Does the name at the top of the panel tell you soon enough that your click landed?",
+    "When you let a clip go while it plays, do the sections leaving one by one read as quick rather than fussy?",
+    "Do any picks, cuts or undos while it plays make the picture hesitate?"
+  ],
+  "rough": [
+    "While it plays, the Properties header shows without its question mark and three dots; they come with the section when play stops or the pointer comes in.",
+    "Tool bar and menus follow a pick made during play about a tenth of a second behind the panel's name line.",
+    "No mock covers how the panel behaves during playback."
+  ]
+}

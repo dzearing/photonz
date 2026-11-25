@@ -392,7 +392,10 @@ struct InspectorPanel: View {
         let lingering = departures.draw(sections, pick: editorState.selectedLayerID,
                                         lingers: holdsBodiesOutOfSight && !departures.isShedding)
         let _ = departures.releaseNextPass { departurePass &+= 1 }
-        let _ = departures.shedNextPass { departurePass &+= 1 }
+        let _ = departures.shedNextPass {
+            departurePass &+= 1
+            if !departures.isShedding { shareOutTheHeightAgain() }
+        }
         // Layers in a pane on top, the pick and the Library under it (Next,
         // `next-lists-pane`): one part each, and with the pane off the lower
         // part is every section, exactly the dock it always was. `pick` is
@@ -485,7 +488,7 @@ struct InspectorPanel: View {
             }
             // A pick made while a video plays, named in the click's own frame.
             let pickLine = !split.pick.contains(.keys)
-            PanelPickLine(standsIn: pickLine, fold: folds.cell(.keys)) { toggleCollapsed(.keys) }
+            PanelPickLine(standsIn: pickLine, fold: folds.cell(.keys))
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -539,8 +542,9 @@ struct InspectorPanel: View {
                     // at its old height.
                     // ...nor for the few points a pick line of another height
                     // gives or takes: it goes when its section comes, and
-                    // until then nothing the dock could share out changes.
-                    if listsReveal.drawnSections.isEmpty,
+                    // until then nothing the dock could share out changes. Nor
+                    // while a let-go clip's sections leave one at a time.
+                    if listsReveal.drawnSections.isEmpty, !departures.isShedding,
                        !(pickLine && editorState.panelPickLineShows) { budget.viewportHeight = $0 }
                     recordInspectorViewportHeight($0)
                 }
@@ -630,6 +634,7 @@ struct InspectorPanel: View {
                 // stores, because a plain click and a shift click are the same act
                 // as far as the panel is concerned. A no-op in Next.
                 .onChange(of: editorState.selectedLayerID) { revealer(proxy).requestPick() }
+                .onChange(of: pickLine) { shareOutTheHeightAgain() }
                 .onChange(of: editorState.multiSelectedLayerIDs) { revealer(proxy).requestPick() }
             }
             // The Library, in a pane of its own under everything the pick
@@ -1169,6 +1174,18 @@ struct InspectorPanel: View {
         // that answer for a file.
         .onDrop(of: FileDrop.types,
                 delegate: SectionFileDrop(item: id, editorState: editorState))
+    }
+
+    /// The dock's height as it stands, once what held its reading off is over
+    /// (the pick line, a let-go clip's sections leaving).
+    private func shareOutTheHeightAgain() {
+        Task { @MainActor in
+            await NextRunLoopPass.start()
+            let height = reveal.viewportHeight
+            guard listsReveal.drawnSections.isEmpty, !departures.isShedding, height > 0,
+                  budget.viewportHeight != height else { return }
+            budget.viewportHeight = height
+        }
     }
 
     /// One more waiting section, a pass from now; the pass it makes asks for

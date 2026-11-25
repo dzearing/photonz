@@ -23481,3 +23481,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Zoom: no fades while the timeline moves, and half the lanes step a frame later; frames over 8.3 ms zooming in 38-43 -> 17-23 of 158, p95 9.7-11.5 (bar 8.3).
 - `Scripts/perf/pass-profile.sh` now waits for the walk's last measure and leaves the harness's own look out.
 - Left: zoom p95, add track and its undo (13-20), one 35-51 ms frame scrolling along, the 100 track edit. Task pending.
+
+## 2026-11-25 — Picks while a long edit plays, pass 3
+
+- Closed windows kept their editors (13 of 12 opened and closed): the panel left a closure on `EditorState.panelPiecesMayLand` that held the editor. It is a subject the panel subscribes to now: 1.
+- A pick while playing lands a step at a time (`EditorState.tellOfThePick`, `PickReader`), the clip's name in the click's own pass (`PanelPickLine`), and a let-go clip's sections leave one at a time (`PanelSectionDeparture.shedding`). Speed walk, worst of 3: pick from nothing 22.8 -> 15.5 ms, pick 17.5 -> 7.7, unpick 12.8 -> 8.6, blade picked 16.6 -> 14.0, undo picked 13.2, trim picked 11.4; with the whole panel built, pick 13.4 and unpick 15.4 (new to the walk, edit `fill`). Baseline rewritten.
+- `caption-pick-answers-at-once-walk` and `section-fold-motion-walk` fail the same on the build before this work (checked interleaved); both are on the standing walk task.
+- Next: nothing open on this task.

@@ -1,0 +1,125 @@
+{
+  "out": "/tmp/photonz-playtest/the-pointer-in-the-panel-brings-its-sections-in-while-playing-walk",
+  "seed": "At Next defaults: a clip picked while the sample recording plays shows its Properties header and name at once and its other sections wait for play to stop (next-panel-waits-for-play-to-stop). Bringing the pointer into the panel says somebody has come to use it, so every section comes in while it plays on.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5,
+      "onTheClock": true
+    },
+    {
+      "comment": "A real click on the clip while it plays picks it.",
+      "do": "windowClick",
+      "lane": "V1",
+      "seconds": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4,
+      "onTheClock": true
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Tutorial Sample"
+      ]
+    },
+    {
+      "do": "expectTimeline",
+      "rate": 1.0
+    },
+    {
+      "do": "expectSections",
+      "leading": [
+        "Time"
+      ],
+      "absent": [
+        "Properties",
+        "Color",
+        "Fades"
+      ]
+    },
+    {
+      "do": "expect",
+      "field": "Properties Kind",
+      "reads": "Clip"
+    },
+    {
+      "comment": "The clip is named at the top of the panel while it plays.",
+      "do": "expect",
+      "field": "Clip line",
+      "reads": "Tutorial Sample 0.0s → 8.0s · 8.0s · 1.0x"
+    },
+    {
+      "do": "hover",
+      "at": [
+        1600,
+        200
+      ],
+      "window": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0,
+      "onTheClock": true
+    },
+    {
+      "do": "expectTimeline",
+      "rate": 1.0
+    },
+    {
+      "do": "expectSections",
+      "leading": [
+        "Properties",
+        "Color",
+        "Effects"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "h"
+    }
+  ]
+}

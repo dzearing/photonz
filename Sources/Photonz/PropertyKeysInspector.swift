@@ -325,18 +325,17 @@ struct PanelPickLine: View {
     /// The panel has no Properties section.
     let standsIn: Bool
     let fold: PanelFoldCell
-    let onToggle: () -> Void
 
     var body: some View {
         let shows = standsIn && readingThePickNow { editorState.panelPickLineShows }
         if shows {
             VStack(spacing: 0) {
-                CollapsibleSection(title: InspectorSectionID.keys.title, fold: fold, onToggle: onToggle,
-                                   onReorder: { _, _ in }, onReorderEnd: {},
-                                   chip: readingThePickNow { chip }) {
+                header
+                if !fold.isFoldedUnwatched {
                     PickedClipLine()
                         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
                         .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Divider().opacity(0.4)
             }
@@ -346,6 +345,28 @@ struct PanelPickLine: View {
             .padding(.bottom, -DockMetrics.listTopPadding)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { Self.lastHeight = $0 }
         }
+    }
+
+    /// The section's heading, drawn and nothing more. A pointer coming into
+    /// the panel brings the section itself in its place, so nothing here is
+    /// ever clicked; with the real header's focus, gesture and help, building
+    /// it made the window work its key loop and drag regions out again.
+    private var header: some View {
+        HStack(spacing: 8) {
+            SectionFoldChevron(fold: fold, isCollapsed: false,
+                               size: 9, weight: .bold, style: VideoKit.Palette.faint)
+            Text(DockGroupHeader.title(InspectorSectionID.keys.title))
+                .font(.system(size: DockGroupHeader.titleSize, weight: .semibold))
+                .tracking(DockGroupHeader.titleTracking)
+                .foregroundStyle(VideoKit.Palette.faint)
+                .lineLimit(1)
+            if let chip = readingThePickNow({ chip }) { DockHeaderChip(content: chip) }
+            Spacer(minLength: 8)
+        }
+        .padding(.leading, EditorChromeLayout.panelStartInset)
+        .panelEdgePadding()
+        .padding(.vertical, 8)
+        .frame(minHeight: DockMetrics.headerRowHeight)
     }
 
     private var chip: DockHeaderChip.Content? {

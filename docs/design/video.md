@@ -1191,6 +1191,17 @@ in one pass; holding those needs the panel's sections to read a held pick,
 which they do not yet. `a-clip-picked-while-playing-fills-the-panel-when-play-stops-walk`
 fails with the switch off.
 
+**A pick while it plays lands a step at a time (2026-11-25).** Same switch.
+`selectedLayerID` always reads the live pick; what differs is when a reader is
+told (`EditorState.tellOfThePick`, `PickReader`): the canvas's handles, the
+clip bars and the panel's name line in the click's own pass, then the
+timeline's rows, the panel's body, its sections, Appearance and Effects, and
+the answers that hang off the playhead, two run loop passes apart. Not playing,
+everyone is told at once. A new view that must show the pick in the click's own
+frame reads it inside `readingThePickNow`. `PanelPickLine` stands in for the
+Properties section until it lands; a clip let go sheds its sections one at a
+time (`PanelSectionDeparture.shedding`).
+
 **The dropped frames left in a minute of play are the display's, not the
 app's (2026-11-22, pass 26).** 0 to 3 a minute on 2026-11-22, where passes 18
 to 21 read 0. Every one was a stretch of 20 to 35 ms in which the window's
