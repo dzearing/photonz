@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:13:00.798Z",
-  "updated": "2026-11-25T03:26:22.809Z",
+  "updated": "2026-11-25T03:40:29.894Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"the perf of photonz is still pretty rough with video editing. when i add like 50 tracks with 100 clips, scroll starts to lag, i get weird behaviors like flashes during playback, very sluggish behavior\".\n\nContext: the loop could not sign in from about 2026-11-23 19:00 to 2026-11-24 14:10, so the open video-perf tasks made no progress in that window; the user re-logged in on 2026-11-24.\n\nOverlaps, and why this is separate: the-timeline-of-an-hour-long-edit-scrolls-zooms (p1, pending) is about a LONG edit (60 minutes, hundreds of clips) on the 3+ track reference edit, horizontal scroll and zoom; this one is WIDE (50 to 100 tracks): vertical scroll, many track headers, many clips overlapping at one moment for the compositor and decoders. Reuse that task's speed walk, ViewBuildMeter and busy-lane painting rather than building a second harness; if its painted-lane fix also fixes vertical scroll here, record it and move on. picking-letting-go-of-and-cutting-a-clip-while-a (p1, seq 10) covers edit latency while playing; jumping-back-while-a-video-plays-never-flickers covers flicker after a jump. I did not reproduce the user's lag or flashes myself.",
@@ -90,6 +90,18 @@
     {
       "t": "2026-11-25T03:26:22.808Z",
       "note": "owns these walks: a-tall-edit-s-far-tracks-answer-walk"
+    },
+    {
+      "t": "2026-11-25T03:40:29.730Z",
+      "note": "Pass 2 measured (wide-50.json, wide-100.json). MET: vertical scroll p95 4.2/4.0, all but one first frame under 16 (22 ms, SwiftUI starting a scroll, 16.8 before this work); along p95 5.5; zoom out p95 8.6, near fit 8.3 (at the bar); no clip frame wrong ten up; export 3600 frames and sound identical before and after (ffmpeg psnr infinite); reel and sheet made, opened: scroll both sides alike, play before shows the frame held at 0:58. NOT MET: zoom in p95 10.9 worst 31; along worst 35 in one run (12 in others); edits over 16: add track 21, add clip 17, its undo 22, move 18-25 (14 in pass 1), pick 17, blade 22; 1 of 3637 dropped; 100 tracks: 10 dropped, 12 frames from ahead at 1:06, edits 20-39."
+    },
+    {
+      "t": "2026-11-25T03:40:29.812Z",
+      "note": "Left for the next pass, in order: (1) move, pick and trim went up 3 to 8 ms from pass 1: fifty built rows cost each edit's layout pass; profile with Scripts/perf/pass-profile.sh on a walk of only the edits measure, look for what in the dock still stacks (TimelineSlot is the fix that worked three times). (2) add track and add clip: 7 to 9 visible rows are built again by every edit (TimelineTrackRow reads the document in readingALatePass: keyedMotionsAtRest, clipsWithParts, trackHasKeyLanes). Blade and pick are also picking-letting-go-of-and-cutting-a-clip-while-a's. (3) zoom in: the frames that paint afresh are RBLayer redraws of the visible lanes (the hour-long task's lead too). (4) the 100 track playback frames. Chose sleeping rows over a lite picture of a row, because every row on screen must answer a click."
+    },
+    {
+      "t": "2026-11-25T03:40:29.893Z",
+      "note": "Pass 2 landed: vertical scroll meets its bar (p95 12 -> 4 ms), zoom a third of what it was, export identical, 100 tracks measured, reel made. Zoom in and six edits while playing are still over their bars; see the log."
     }
   ],
   "started": "2026-11-24T23:29:45.465Z",
