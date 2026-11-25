@@ -23526,3 +23526,10 @@ announced 0.25.0.
 - First moving picture, worst of 3, at 0:10/0:30/0:58: rested 632/258/877 -> 66/58/67 ms; Space as the jump's picture is in 694/600/861 -> 56/50/50. Ten clips at 1:02, half a second after a jump: 775 -> 83. 6 minute edit unchanged (67 -> 66 rested).
 - Speed walk measure `starts` (in `--wide`, baselines wide-50/100) and `play-starts-at-once-on-a-wide-edit-walk`.
 - Open: Space in the same instant as a jump 230 to 545 ms, and a paused jump draws in pieces; filed as a p2.
+
+## 2026-11-25 — The hour-long timeline, pass 24
+
+- Edits on the 60 minute edit while it plays, longest pass: move 25-27 -> 15-16 ms, trim 27-28 -> 13-16, blade 53-56 -> 14-17, undo 13-28 -> 11-12, undo of a cut 28 -> 15-17. The mix's loudness is read again only where an edit changed the sound (`AudioHeadroomReader`), whole-document answers read clips in place and live in `DocumentDerived`/`TreeFacts`, painted clip facts survive an edit that left the clip alone, and the passes after an edit draw lanes, then pictures, then the panel.
+- Old and new core checked identical (sound plan, transitions, tracks, bars, frames, drawn documents) on the 6, 20 and 60 minute edits.
+- Timeline: zoom waves in thirds, a fast scroll's lanes shared out by clips, a scroll's lane pictures laid between frames. Main thread p95: zoom 6.4-8.4, near Fit 9.4-10.0, fast scroll 8.5-8.7 (bar 8.3).
+- Open on the task: scroll and near-Fit p95, the edits that still read 17-20 at worst, the rare system frame.

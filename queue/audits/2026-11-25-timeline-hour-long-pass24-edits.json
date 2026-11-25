@@ -1,0 +1,29 @@
+{
+  "feature": "Edits on an hour-long timeline land in one frame",
+  "epic": "video-perf",
+  "summary": "Moving, trimming, cutting and undoing on the 60 minute edit while it plays used to hold the window 25 to 56 ms. It is now 11 to 17 ms. Zooming is inside 120 Hz, and a fast scroll is a little closer to it.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 60 minute edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev. Measured in the probe with a speed walk of the timeline and of edits made while it plays, four runs or more each, before and after on the same Mac.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 60 },
+    { "do": "Press Space, then drag a clip on V1 a little to the right while it plays." },
+    { "do": "Press B over a clip while it plays, then press Command-Z.", "shot": "2026-11-25-timeline-hour-long-pass24-edited-sc.png" },
+    { "do": "Drag the end of a clip to trim it while it plays, then press Command-Z." },
+    { "do": "Pinch the timeline in and out from the whole hour." },
+    { "do": "Flick the timeline along from the start to the end with two fingers." }
+  ],
+  "evaluate": [
+    "Does playback carry on without a hitch when you cut, trim or move a clip?",
+    "Does undo after a cut feel instant?",
+    "Does a pinch from the whole hour feel smooth from its first frame?",
+    "Does a fast flick along the hour still stutter anywhere?"
+  ],
+  "rough": [
+    "Longest main thread pass of an edit while it plays, before / now (bar 16 ms): move 25-27 / 15-16, trim 27-28 / 13-16, blade 53-56 / 14-17 (one 19 in six runs), undo 13-28 / 11-12, undo of the cut 28 / 15-17 (a 21 under load), add a clip 32 / 17-20. The edit as you see it on screen lands in the first of these passes; the timeline's lanes, their pictures and the panel follow a pass each.",
+    "Main thread a frame, p95, before / now (bar 8.3 ms): zoom in 7.8-8.4 / 6.4-7.8, zoom out 7.8-8.4 / 7.6-8.4, near the whole hour 10.0-10.2 / 9.4-10.0, fast scroll 8.6-9.1 / 8.5-8.7. Not reached: the fast scroll and near the whole hour. In the second half of the hour nearly every clip is on V1, so one lane is most of a step's work and cannot be split further.",
+    "Not reached: no frame over 16 ms. One zoom frame in a few hundred still holds 20 to 40 ms; the 50 track work traced these to the system's own drawing cleanup waiting on the window server, filed as no-frame-of-a-50-track-zoom-is-held-up-by-the-sy.",
+    "Nothing changed in what plays or exports: the sound plan, the transitions, the tracks, the bars, the frames asked for and the documents drawn were checked identical against the code before this pass on the 6, 20 and 60 minute edits, as built and after two edits.",
+    "While a new picture of a lane is laid between frames, its last picture shows for one more frame, with any clip it lacks drawn over it. Nothing in the walks or the pictures here shows a seam, but a very fast flick is where to look.",
+    "No mock covers the timeline's speed; nothing about how the timeline looks at rest changed."
+  ]
+}
