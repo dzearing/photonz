@@ -2,6 +2,18 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.25.0 — 2026-11-25
+
+**Video editing is much faster.** A timeline with 50 tracks and 100 clips scrolls, zooms and edits within a single frame, and ten recordings on screen at once never flash. Edits made while a video plays land right away and keep it playing, a pick no longer stalls playback, and long edits open, play and export faster while using less memory.
+
+**Video looks right.** Text that grows or zooms in a video moves as one smooth piece instead of letters jittering on their own. Jumping back while a video plays no longer flickers between two frames. A video that changed on disk shows its new frames everywhere, and soft gradients in recordings play smooth.
+
+**New in video (Next).** A spotlight dims and blurs everything except the area you want people to look at. Music ducks under speech in one step, a colour grade can be its own track, View > Timecode reads video time in frames, and Add Zooms from Clicks makes one zoom per burst of clicks. In Edit the panel runs the full height with the timeline under the picture.
+
+**Better titles.** Twelve built-in titles are redesigned with refined colour pairings and type.
+
+**Fixes worth naming.** Opening a recording from Finder opens one window, not an extra empty one. An arrow's caption repaints at once when you change the arrow's look while typing. A closed window gives its memory back. A song longer than the edit stops where the picture stops.
+
 ## 0.24.0 — 2026-11-16
 
 **Recordings look like your screen.** Photonz now writes screen recordings itself, in 10-bit HEVC and your display's own colours, so they keep the screen's colours and far smoother gradients than before. Recording starts faster than it did, with no dropped frames. If you would rather keep files small, Settings > Recording > Quality has Smaller Files.
