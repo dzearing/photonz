@@ -59,5 +59,15 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+      # deploy-pages asks for the artifact half a second after the upload
+      # finishes, and on 2026-11-25 GitHub had not listed it yet three runs in
+      # a row ("No artifacts named github-pages"). Give it a moment, and try
+      # once more if the first ask still comes back empty.
+      - run: sleep 20
       - id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - if: steps.deployment.outcome == 'failure'
+        run: sleep 60
+      - if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
