@@ -47,10 +47,16 @@ struct ZoomLane: View {
 
     /// Every zoom on the lane is picked.
     private var allPicked: Bool {
-        let refs = clipIDs.flatMap { id in
-            (editorState.document?.layer(id: id)?.zooms ?? []).map { ClipZoomRef(layerID: id, zoomID: $0.id) }
+        guard let document = editorState.document else { return false }
+        // Stops at the first that is not: nearly always the first of all.
+        var count = 0
+        for id in clipIDs {
+            for zoom in document.readingClip(id, { $0.zooms ?? [] }) ?? [] {
+                guard editorState.isZoomPicked(ClipZoomRef(layerID: id, zoomID: zoom.id)) else { return false }
+                count += 1
+            }
         }
-        return refs.count > 1 && refs.allSatisfy(editorState.isZoomPicked)
+        return count > 1
     }
 
     /// What it reads off the document (the clip's zooms) follows an edit a

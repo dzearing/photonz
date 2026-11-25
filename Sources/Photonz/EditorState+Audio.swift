@@ -620,18 +620,12 @@ extension EditorState {
 
     /// How loud this document's mix gets, and by how much it is over.
     ///
-    /// Kept between asks: the player and an export ask for it often and the
-    /// answer is a walk over every twenty milliseconds of sound there is, while
-    /// noticing that nothing changed costs one pass over the segments.
+    /// Kept between asks, and after an edit read again only where the sound
+    /// changed (`AudioHeadroomReader`): the player asks on every step of the
+    /// playhead, and the whole answer is a walk over every twenty milliseconds
+    /// of sound there is.
     var audioHeadroom: AudioHeadroom {
-        let plan = audioPlan
-        let shapes = soundShapes
-        if let cached = audioHeadroomCache, cached.shapes == shapes.count, cached.plan == plan {
-            return cached.reading
-        }
-        let reading = AudioHeadroom.reading(of: plan, peaks: shapes)
-        audioHeadroomCache = (plan, shapes.count, reading)
-        return reading
+        audioHeadroomReader.reading(of: audioPlan, peaks: soundShapes)
     }
 
     /// Whether the mix has to be held down to fit in a file.

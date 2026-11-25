@@ -266,12 +266,22 @@ extension PhotonzDocument {
     /// pushed in on.
     public func frameRings(shown: PhotonzDocument) -> [UUID: CGRect] {
         var rings: [UUID: CGRect] = [:]
-        forEachLayer { layer in
+        // Every clip of an hour long edit on every step of the playhead, and
+        // nearly every one is where it rests: those are passed over where
+        // they stand, without copying either out.
+        func atRest(_ index: Int) -> Bool {
+            guard shown.layers.indices.contains(index), shown.layers[index].id == layers[index].id,
+                  !layers[index].isGroup else { return false }
+            return !layers[index].takesAReframe || shown.layers[index].frame == layers[index].frame
+        }
+        let moved = layers.indices.filter { !atRest($0) }
+        func ring(_ layer: Layer) {
             guard layer.takesAReframe, let posed = shown.layer(id: layer.id),
                   let ring = frameRing(layerID: layer.id, drawnBox: posed.drawnBounds())
             else { return }
             rings[layer.id] = ring
         }
+        for index in moved { for layer in layers[index].selfAndDescendants { ring(layer) } }
         return rings
     }
 

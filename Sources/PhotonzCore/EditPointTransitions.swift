@@ -79,8 +79,13 @@ extension PhotonzDocument {
               editPoints(onTrack: trackID).contains(where: {
                   $0.outgoing == outgoing && $0.incoming == incoming
               }),
-              let out = layer(id: outgoing), let into = layer(id: incoming),
-              let outPieces = out.clipPieces, let inPieces = into.clipPieces,
+              let out = layer(id: outgoing), let into = layer(id: incoming) else { return nil }
+        return Self.editPointCut(outgoing: out, incoming: into)
+    }
+
+    /// The cut between two clips that meet at an edit point.
+    private static func editPointCut(outgoing out: Layer, incoming into: Layer) -> ClipCut? {
+        guard let outPieces = out.clipPieces, let inPieces = into.clipPieces,
               let last = outPieces.pieces.last, var first = inPieces.piece(at: 0),
               let at = out.time?.outMS, let start = into.time?.inMS else { return nil }
         // The hold is the gap, read off the timeline rather than trusted from
@@ -207,7 +212,7 @@ extension PhotonzDocument {
     /// Whether any clip carries a transition on the cut it arrives at, which
     /// is nearly never: the one question every frame asks before any of the
     /// work below.
-    var hasEditPointTransitions: Bool { layers.contains { $0.arrivalTransition != nil } }
+    var hasEditPointTransitions: Bool { treeFacts.arrivals }
 
     /// A transition between two clips running at a moment: which clip is on
     /// screen, which one is borrowed beside it, and where in its recording the
@@ -236,13 +241,24 @@ extension PhotonzDocument {
     func editPointTransitions() -> [DocumentDerived.EditPointTransition] {
         guard hasEditPointTransitions else { return [] }
         return derived.answer(\.editPointTransitions) {
-            layers.compactMap { incoming in
-                guard incoming.arrivalTransition != nil,
-                      let trackID = trackID(ofClip: incoming.id),
-                      let point = editPoints(onTrack: trackID).first(where: { $0.incoming == incoming.id }),
-                      let cut = editPointCut(outgoing: point.outgoing, incoming: incoming.id)
+            let arriving = layers.indices.filter { layers[$0].arrivalTransition != nil }
+            var tracks: Set<UUID> = []
+            for index in arriving { if let track = trackID(ofClip: layers[index].id) { tracks.insert(track) } }
+            // Each clip to the edit point it arrives at, only ever one; a
+            // track only shows a picture's cuts.
+            var arrivals: [UUID: UUID] = [:]
+            for track in trackLayout().tracks where track.kind == .video && tracks.contains(track.id) {
+                for point in editPoints(onTrack: track.id) where arrivals[point.incoming] == nil {
+                    arrivals[point.incoming] = point.outgoing
+                }
+            }
+            let places = topLevelIndex
+            return arriving.compactMap { index in
+                let incoming = layers[index].id
+                guard let outgoing = arrivals[incoming], let out = places[outgoing],
+                      let cut = Self.editPointCut(outgoing: layers[out], incoming: layers[index])
                 else { return nil }
-                return DocumentDerived.EditPointTransition(incoming: incoming.id, outgoing: point.outgoing, cut: cut)
+                return DocumentDerived.EditPointTransition(incoming: incoming, outgoing: outgoing, cut: cut)
             }
         }
     }
@@ -253,8 +269,7 @@ extension PhotonzDocument {
         var moments: [EditPointMoment] = []
         for found in editPointTransitions() {
             let cut = found.cut
-            guard let drawn = cut.drawnTransition,
-                  ms >= cut.atMS - drawn.beforeMS, ms < cut.atMS + drawn.holdMS + drawn.afterMS,
+            guard found.spanMS.contains(ms), let drawn = found.drawn,
                   let incoming = layer(id: found.incoming),
                   let outgoing = layer(id: found.outgoing) else { continue }
             let outgoingOnScreen = ms < cut.atMS + drawn.holdMS

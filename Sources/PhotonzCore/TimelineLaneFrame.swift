@@ -117,14 +117,14 @@ public struct TimelineLaneFrame: Hashable, Sendable {
 
     /// Whether a lane laid out against this frame can stand for `window` a
     /// frame longer: its painting and what it built still cover the window,
-    /// and it is stretched no more than a step past what a hold is let, not
+    /// and it is stretched no more than two steps past what a hold is let, not
     /// at all for a scroll. What a lane stands on while the others take a new
     /// frame: all at once, ten lanes were 10 to 11 ms of a zoom's fresh frame
     /// on a 50 track timeline, and 25 to 40 ms of a scroll's first
     /// (2026-11-24, 2026-11-25).
     public func stands(for window: MotionStripRuler) -> Bool {
         guard ruler.spanMS > 0, window.spanMS > 0 else { return false }
-        let allowed = isZoom || isRest ? TimelinePaint.quickHeldStretch + 0.05 : 1e-9
+        let allowed = isZoom || isRest ? TimelinePaint.quickHeldStretch + 0.10 : 1e-9
         guard abs(ruler.spanMS / window.spanMS - 1) <= allowed else { return false }
         let from = window.startMS, to = window.startMS + window.spanMS
         guard from >= paintedMS.lowerBound - 1e-6, to <= paintedMS.upperBound + 1e-6 else { return false }
@@ -180,8 +180,11 @@ public struct TimelineLaneWaves: Equatable, Sendable {
     public private(set) var frame: TimelineLaneFrame?
     /// What each group stands on; nil for its layout at rest.
     public private(set) var groups: [TimelineLaneFrame?] = Array(repeating: nil, count: groupCount)
-    /// How many steps ago `frame` came.
+    /// How many steps ago `frame` came, and the one it took over from.
     private var age = 0
+    private var before: TimelineLaneFrame?
+    /// The window the last step came to, for how far a scroll goes a step.
+    private var lastWindow: MotionStripRuler?
 
     public init() {}
 
@@ -191,25 +194,67 @@ public struct TimelineLaneWaves: Equatable, Sendable {
 
     /// The timeline stepped to `window`, and a lane laid out now would be
     /// laid out against `frame`; `rest` is how the resting ones are.
-    public mutating func step(to new: TimelineLaneFrame, window: MotionStripRuler, rest: TimelineLaneFrame) {
-        let previous = frame
+    /// `clips` is how many clips each group's lanes hold, which is what
+    /// laying them out costs: every group the same where it is not said.
+    public mutating func step(to new: TimelineLaneFrame, window: MotionStripRuler, rest: TimelineLaneFrame,
+                              clips: [Int] = []) {
         let isFresh = new != frame
+        if isFresh { before = frame }
         age = isFresh ? 0 : age + 1
         frame = new
+        let due = new.isZoom ? [] : dueNow(new, window: window, rest: rest, clips: clips)
+        lastWindow = window
         for group in groups.indices where groups[group] != new {
             let standing = groups[group] ?? rest
             let waits: Bool
             if new.isZoom {
                 // A hold that begins at rest shows the layout at rest.
                 if groups[group] == nil, standing.laysOut(as: new), standing.stands(for: window) { continue }
-                // A fresh frame: half now, half a step later.
-                waits = isFresh && group % 2 == 1 && (groups[group] == nil || groups[group] == previous)
+                // A fresh frame: a third now, a third a step later, and the
+                // last a step after. Half and half, the two steps were each
+                // over a 120 Hz frame on the hour long edit, whose few lanes
+                // hold hundreds of clips (2026-11-25).
+                waits = age < group % 3 && (groups[group] == nil || groups[group] == before)
             } else {
-                // A scroll's frame stands for many steps: a group a step.
-                waits = age <= group
+                // A scroll's frame stands for many steps: a group a step, and
+                // more where it will not stand that long.
+                waits = age <= group && !due.contains(group)
             }
             if !waits || !standing.stands(for: window) { groups[group] = new }
         }
+    }
+
+    /// The groups a fast scroll takes to `new` this step so the ones behind
+    /// are not all taken by the last step they can stand for. A scroll of a
+    /// third of a window a step moves the stretch every third step, and left
+    /// to a group a step, six of eight went in one. Shared out by clips, not
+    /// groups: the hour long edit's are nearly all on four lanes (2026-11-25).
+    private func dueNow(_ new: TimelineLaneFrame, window: MotionStripRuler, rest: TimelineLaneFrame,
+                        clips: [Int]) -> Set<Int> {
+        guard let lastWindow, lastWindow.spanMS == window.spanMS else { return [] }
+        let step = window.startMS - lastWindow.startMS
+        guard step != 0 else { return [] }
+        let behind = groups.indices.filter { groups[$0] != new }
+        // How many steps more like this one the first of them stands for.
+        var stepsLeft = Self.groupCount
+        for group in behind {
+            let standing = groups[group] ?? rest
+            var steps = 0
+            while steps < stepsLeft, standing.stands(for: window.measured(fromMS: window.startMS + step * Double(steps + 1))) {
+                steps += 1
+            }
+            stepsLeft = min(stepsLeft, steps)
+        }
+        guard stepsLeft < behind.count else { return [] }
+        func weight(_ group: Int) -> Double { clips.count == groups.count ? Double(clips[group]) : 1 }
+        let share = behind.reduce(0) { $0 + weight($1) } / Double(stepsLeft + 1)
+        var due: Set<Int> = [], taken = 0.0
+        for group in behind {
+            guard taken + weight(group) / 2 <= share || due.isEmpty else { continue }
+            due.insert(group)
+            taken += weight(group)
+        }
+        return due
     }
 
     /// The timeline has come to rest: the next group goes back to its layout

@@ -195,9 +195,17 @@ extension PhotonzDocument {
             var home: [UUID: UUID] = [:]
             for (track, members) in layout.clips { for clip in members { home[clip] = track } }
             var map: [UUID: UUID] = [:]
-            for layer in layers {
-                guard let track = home[layer.id] else { continue }
-                for inside in layer.selfAndDescendants where map[inside.id] == nil { map[inside.id] = track }
+            map.reserveCapacity(layers.count)
+            func put(_ list: [Layer], on track: UUID) {
+                for index in list.indices {
+                    if map[list[index].id] == nil { map[list[index].id] = track }
+                    if case .group(let group) = list[index].content { put(group.children, on: track) }
+                }
+            }
+            for index in layers.indices {
+                guard let track = home[layers[index].id] else { continue }
+                if map[layers[index].id] == nil { map[layers[index].id] = track }
+                if case .group(let group) = layers[index].content { put(group.children, on: track) }
             }
             return map
         }[id]
@@ -246,25 +254,42 @@ extension PhotonzDocument {
         derived.answer(\.trackLayout) { layingOutTracks() }
     }
 
+    /// What laying the tracks out reads off one clip, so the clip itself is
+    /// read once, in place.
+    private struct LaidClip {
+        let id: UUID
+        let index: Int
+        let trackID: UUID?
+        let kind: DocumentTrack.Kind
+        /// Where its own sound, if it has some, was once kept.
+        let speaks: Bool
+        let soundTrackID: UUID?
+    }
+
     func layingOutTracks() -> TrackLayout {
-        let clipLayers = timelineClipLayers
+        // Topmost first, as `timelineClipLayers` lists them.
+        let clipLayers: [LaidClip] = !hasTime ? [] : layers.indices.reversed().compactMap {
+            guard layers[$0].isOnTheTimeline else { return nil }
+            return LaidClip(id: layers[$0].id, index: $0, trackID: layers[$0].trackID, kind: layers[$0].clipTrackKind,
+                            speaks: layers[$0].hasLinkedSound, soundTrackID: layers[$0].soundTrackID)
+        }
         guard !clipLayers.isEmpty || !tracks.isEmpty else { return TrackLayout() }
         // A picture track's sound row is laid out under its picture track
         // further down, wherever it was written; clips go on the others.
         let plain = tracks.filter { $0.attachedTo == nil }
         let written = Dictionary(plain.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         var clips: [UUID: [UUID]] = [:]
-        var loosePicture: [Layer] = []
-        var looseSound: [Layer] = []
+        var loosePicture: [LaidClip] = []
+        var looseSound: [LaidClip] = []
         for layer in clipLayers {
-            if let id = layer.trackID, let track = written[id], track.accepts(layer.clipTrackKind) {
+            if let id = layer.trackID, let track = written[id], track.accepts(layer.kind) {
                 clips[id, default: []].append(layer.id)
-            } else if let own = written[layer.id], own.accepts(layer.clipTrackKind) {
+            } else if let own = written[layer.id], own.accepts(layer.kind) {
                 // The track this clip was given when the tracks were first
                 // written down carries its id; it goes home rather than making
                 // a second track with the same id.
                 clips[own.id, default: []].append(layer.id)
-            } else if layer.clipTrackKind == .audio {
+            } else if layer.kind == .audio {
                 looseSound.append(layer)
             } else {
                 loosePicture.append(layer)
@@ -274,7 +299,7 @@ extension PhotonzDocument {
         // track of its own and pointed the clip at it. That track, holding
         // nothing else, goes: the sound is under its video now, and the
         // track's switches go with it (`carried`).
-        let speakers = clipLayers.filter(\.hasLinkedSound)
+        let speakers = clipLayers.filter(\.speaks)
         let pins = Set(speakers.compactMap(\.soundTrackID))
         let retired = Set(plain.filter {
             $0.kind == .audio && pins.contains($0.id) && (clips[$0.id] ?? []).isEmpty
@@ -286,7 +311,7 @@ extension PhotonzDocument {
         var picture: [DocumentTrack] = []
         var looseCaptions: [DocumentTrack] = []
         for layer in loosePicture.reversed() {
-            let kind = layer.clipTrackKind
+            let kind = layer.kind
             // Captions get a row of their own under the picture, over the
             // sound, the way the mock lists them (`CaptionsDrawOnTop.swift`).
             if kind == .captions {
@@ -301,8 +326,9 @@ extension PhotonzDocument {
             // shape, a picture, a lens drawn on the recording) gets a track
             // named after it, the way its row in the layers list reads; clips
             // are numbered V1, V2.
-            let name = layer.isTitleText ? Self.freeTitleTrackName(used: used)
-                : layer.isDrawnGraphic ? Self.freeNamedTrackName(layer.name, used: used)
+            let clip = layers[layer.index]
+            let name = clip.isTitleText ? Self.freeTitleTrackName(used: used)
+                : clip.isDrawnGraphic ? Self.freeNamedTrackName(clip.name, used: used)
                 : Self.freeTrackName(kind, used: used)
             used.insert(name)
             picture.insert(DocumentTrack(id: layer.id, name: name, kind: kind), at: 0)
@@ -335,7 +361,7 @@ extension PhotonzDocument {
         // stack into a second row.
         var home: [UUID: UUID] = [:]
         for (track, members) in clips { for id in members { home[id] = track } }
-        var speaking: [UUID: [Layer]] = [:]
+        var speaking: [UUID: [LaidClip]] = [:]
         var carried: [UUID: DocumentTrack] = [:]
         for clip in speakers {
             guard let owner = home[clip.id] else { continue }
@@ -352,8 +378,9 @@ extension PhotonzDocument {
             let rowsWritten = tracks.filter { $0.attachedTo == owner.id }
             var spans: [[Range<Int>]] = []
             var members: [[UUID]] = []
-            for clip in theirs.sorted(by: { ($0.time?.inMS ?? 0) < ($1.time?.inMS ?? 0) }) {
-                let span = clipSpan(clip, movedTo: nil)
+            let placed = theirs.map { (id: $0.id, inMS: layers[$0.index].time?.inMS ?? 0, span: clipSpan(layers[$0.index], movedTo: nil)) }
+            for clip in placed.sorted(by: { $0.inMS < $1.inMS }) {
+                let span = clip.span
                 let row = spans.firstIndex { taken in
                     !taken.contains { $0.lowerBound < span.upperBound && span.lowerBound < $0.upperBound }
                 } ?? spans.count
@@ -392,7 +419,7 @@ extension PhotonzDocument {
         // the music before there is any. A clip's own sound is inside the
         // clip, so it is no such place.
         if !all.contains(where: { $0.kind == .audio && $0.attachedTo == nil }),
-           clipLayers.contains(where: \.isClip) {
+           clipLayers.contains(where: { layers[$0.index].isClip }) {
             all.append(DocumentTrack(id: Self.waitingAudioTrackID,
                                      name: Self.freeTrackName(.audio, used: used), kind: .audio))
         }

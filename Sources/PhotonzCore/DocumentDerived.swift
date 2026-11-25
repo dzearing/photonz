@@ -32,6 +32,21 @@ struct DocumentDerived: Hashable, Sendable {
         let incoming: UUID
         let outgoing: UUID
         let cut: ClipCut
+        /// The transition as the cut can draw it, and the stretch of the
+        /// document it runs over, or nil where the cut draws none.
+        let drawn: ClipTransition?
+        let spanMS: Range<Int>
+
+        init(incoming: UUID, outgoing: UUID, cut: ClipCut) {
+            self.incoming = incoming
+            self.outgoing = outgoing
+            self.cut = cut
+            drawn = cut.drawnTransition
+            spanMS = drawn.map {
+                let start = cut.atMS - $0.beforeMS
+                return start..<max(start, cut.atMS + $0.holdMS + $0.afterMS)
+            } ?? 0..<0
+        }
     }
 
     struct Answers: Sendable {
@@ -51,6 +66,9 @@ struct DocumentDerived: Hashable, Sendable {
         /// the document has been asked for layers by id a few times
         /// (`layerPath(of:)`).
         var layerPaths: [UUID: [Int]]?
+        /// Where each top level layer is, for what reads every clip on the
+        /// timeline after an edit (`topLevelIndex`).
+        var topLevelIndex: [UUID: Int]?
         /// How many times this document has been asked for a layer by id
         /// without its index.
         var layerLookups = 0
@@ -66,6 +84,11 @@ struct DocumentDerived: Hashable, Sendable {
         /// Whether anything anywhere in the tree fades, zooms or shows its
         /// clicks (`TreeFacts`).
         var treeFacts: TreeFacts?
+        /// Which layers drawing a moment has to work out, as far as no moment
+        /// is needed to say (`layersWorkedOut(atTimeMS:)`).
+        var workPlan: [WorkedOut]?
+        /// The timeline's bars (`motionStrip()`).
+        var motionStrip: [MotionStripGroup]?
         /// Which layers play a recording and when (`moviePlan`).
         var moviePlan: MoviePlan?
         /// Every main in the document, the library's first
@@ -85,6 +108,31 @@ struct DocumentDerived: Hashable, Sendable {
         var pictureFades = false
         var zooms = false
         var clickEffects = false
+        /// A chart with a later set of numbers.
+        var chartSets = false
+        /// A clip carrying a transition on the cut it arrives at.
+        var arrivals = false
+        /// A layer put under a mask.
+        var mattes = false
+        /// A motion blur that smears.
+        var motionBlur = false
+        var captions = false
+        /// A measurement, or the two that measure a size.
+        var measures = false
+        /// A component's original, or a copy of one, in the picture.
+        var mains = false
+        var instances = false
+        /// A caliper or guide itself.
+        var calipers = false
+        var groups = false
+        var frames = false
+    }
+
+    /// Whether drawing a moment works a layer out: always, or only inside a
+    /// stretch of the document.
+    enum WorkedOut: Sendable, Equatable {
+        case always
+        case from(Int, to: Int)
     }
 
     /// Which top level layers play a recording, and when: what a moment's
@@ -242,8 +290,54 @@ extension PhotonzDocument {
                 if layer.pictureFade != nil { facts.pictureFades = true }
                 if layer.zooms?.isEmpty == false { facts.zooms = true }
                 if layer.clickEffect?.isOn == true { facts.clickEffects = true }
+                if layer.style.motionBlur?.smears == true { facts.motionBlur = true }
+                if layer.isCaption { facts.captions = true }
+                if layer.measure != nil { facts.calipers = true }
+                if layer.measure != nil || layer.isSizeMeasurement { facts.measures = true }
+                guard case .group(let group) = layer.content else { return }
+                facts.groups = true
+                if layer.isFrame { facts.frames = true }
+                if group.titleRecipe?.chart?.steps != nil { facts.chartSets = true }
+                if group.componentID != nil { facts.mains = true }
+                if group.instanceOf != nil { facts.instances = true }
+            }
+            for index in layers.indices {
+                if layers[index].arrivalTransition != nil { facts.arrivals = true }
+                if layers[index].style.matte != nil { facts.mattes = true }
             }
             return facts
+        }
+    }
+
+    /// Works out and keeps what the player and the timeline ask of a document
+    /// in the passes after an edit: the sound plan and the bars. Run off the
+    /// main thread while the edit's own frame is drawn; asked for before it
+    /// is ready, each is simply worked out where it is asked for.
+    public func workOutWhatAnEditAsksNext() {
+        _ = audioMix()
+        _ = motionStrip()
+        _ = pictureOnlyHolds
+        for track in timelineTracks { _ = editPoints(onTrack: track.id) }
+    }
+
+    /// What the panel's sections ask of the whole tree
+    /// (`PanelSectionVisibility.Situation`): a caliper or guide, a component's
+    /// original or copy, a group, a frame.
+    public var panelFacts: (measurement: Bool, component: Bool, container: Bool, frame: Bool) {
+        let facts = treeFacts
+        return (facts.calipers, facts.mains || facts.instances, facts.groups, facts.frames)
+    }
+
+    /// Where each top level layer is in `layers`: a clip read in place by its
+    /// index costs nothing, and read by its id costs a copy of everything it
+    /// holds, which after every edit of an hour long timeline was hundreds of
+    /// them (2026-11-25).
+    var topLevelIndex: [UUID: Int] {
+        derived.answer(\.topLevelIndex) {
+            var found: [UUID: Int] = [:]
+            found.reserveCapacity(layers.count)
+            for index in layers.indices where found[layers[index].id] == nil { found[layers[index].id] = index }
+            return found
         }
     }
 }

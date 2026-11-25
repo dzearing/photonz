@@ -2025,6 +2025,27 @@ picked reads `layerStyleTargetIDs`; a recording has no edge to follow.
 `Scripts/perf/trace-bursts.py --below '<SwiftUI frame>'` names the app's own
 views and layouts under a frame (which scroll view a pass re-measures, say).
 
+**What an edit of a long timeline may work out again (2026-11-25, pass 24).**
+An edit changes a clip or two; an hour long edit holds five hundred. So:
+
+- Anything worked out from the whole document is kept with it
+  (`DocumentDerived`) and worked out in ONE walk that reads each layer where it
+  stands (`layers[index]`, `readingClip`, `clip(_:is:)`, `containsLayer`).
+  `layers.contains { }`, `for layer in layers` and `layer(id:)` copy a layer
+  each time, and five hundred copies are half a millisecond. A yes or no about
+  the tree is a `TreeFacts` field, not another walk.
+- The loudness of the mix is read again only under the sounds an edit changed
+  (`AudioHeadroomReader`): the whole walk was 12 ms, twice in a cut.
+- What a painted clip is (`TimelinePaintedFacts`) is carried over an edit for
+  every clip the edit left alone (`clipIsUnchanged`).
+- The sound plan and the bars are worked out off the main thread while the
+  edit's own frame draws (`workOutWhatAnEditAsksNext`).
+- The frames after an edit: the timeline's lanes, then their pictures
+  (`followsAnEdit`), then the panel, each on a pass of its own.
+- A zoom's fresh frame is taken by a third of the lanes a step, and a scroll's
+  is shared out by clips over the steps the old one still covers
+  (`TimelineLaneWaves`).
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

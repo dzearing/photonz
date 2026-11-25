@@ -65,10 +65,19 @@ extension PhotonzDocument {
         return max(0, ms - time.inMS + time.sourceInMS)
     }
 
+    /// Whether this layer's clip has any diamond (`clipKeyMarks`).
+    public func hasClipKeyMarks(_ layer: Layer) -> Bool {
+        guard let motions = layer.motions, !motions.isEmpty else { return false }
+        return !clipKeyMarks(of: layer).isEmpty
+    }
+
     /// Every diamond on this layer's clip, first to last. Keys within
     /// `PropertyKeys.nearMS` of each other are one diamond.
     public func clipKeyMarks(layerID: UUID) -> [ClipKeyMark] {
-        guard let layer = layer(id: layerID) else { return [] }
+        layer(id: layerID).map { clipKeyMarks(of: $0) } ?? []
+    }
+
+    private func clipKeyMarks(of layer: Layer) -> [ClipKeyMark] {
         var found: [(ms: Int, property: MotionProperty, ref: KeyRef)] = []
         for motion in keyedMotions(of: layer) {
             for key in motion.keyframes {

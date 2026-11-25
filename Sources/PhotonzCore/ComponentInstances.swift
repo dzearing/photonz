@@ -148,13 +148,7 @@ extension PhotonzDocument {
     /// builds nothing: a document that has never seen a component pays one
     /// walk of the tree and no allocation.
     public var holdsComponentInstance: Bool {
-        func search(_ list: [Layer]) -> Bool {
-            for layer in list where layer.isGroup {
-                if layer.isComponentInstance || search(layer.children) { return true }
-            }
-            return false
-        }
-        return search(layers) || search(componentOriginals)
+        treeFacts.instances || componentOriginals.contains { $0.containsSelfOrDescendant(where: \.isComponentInstance) }
     }
 
     /// Whether any original in the document exposes a knob, or any copy
@@ -162,11 +156,18 @@ extension PhotonzDocument {
     /// stops at the first one it finds: a document that has never seen a
     /// component pays one walk of the tree and no allocation.
     var holdsComponentKnob: Bool {
+        // A knob is an original's, an answer a copy's.
+        holdsGroup { !$0.properties.isEmpty || !$0.overrides.isEmpty }
+    }
+
+    /// Whether any group in the picture or the library answers yes. Read in
+    /// place: asked after every edit, and copying each clip of an hour long
+    /// edit out to look at it was half a millisecond of it (2026-11-25).
+    private func holdsGroup(where test: (GroupContent) -> Bool) -> Bool {
         func search(_ list: [Layer]) -> Bool {
-            for layer in list {
-                guard let group = layer.group else { continue }
-                if !group.properties.isEmpty || !group.overrides.isEmpty { return true }
-                if search(group.children) { return true }
+            for index in list.indices {
+                guard case .group(let group) = list[index].content else { continue }
+                if test(group) || search(group.children) { return true }
             }
             return false
         }

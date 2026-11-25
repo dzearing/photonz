@@ -244,8 +244,15 @@ extension EditorState {
         // Handles, outlines and clicks all read this, so they all sit on what
         // you can see.
         let moment = shownMomentMS ?? documentTimeMS
-        return document.posedForCanvas(atTimeMS: moment)
+        // Kept for the one moment: the outlines, the handles, the clicks and
+        // a picture landing each ask in one pass, and posing copies every
+        // clip of the edit.
+        if let kept = canvasGeometryMemo, kept.moment == moment,
+           kept.document.sharesWorkedOutAnswers(with: document), kept.document == document { return kept.posed }
+        let posed = document.posedForCanvas(atTimeMS: moment)
             .hidingWhatIsOffScreen(atTimeMS: moment)
+        canvasGeometryMemo = (document, moment, posed)
+        return posed
     }
 
     /// The canvas edit `mutate` makes to layer `id`, with every change to a

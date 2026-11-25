@@ -1059,7 +1059,17 @@ struct TimelineTrackRow: View {
     /// What one clip is, as the painting reads it off the document: worked
     /// out once per document (`TimelinePaintedFacts`).
     private func paintedFacts(of id: UUID, in document: PhotonzDocument) -> TimelinePaintedFacts.Clip? {
-        guard let layer = document.layer(id: id) else { return nil }
+        // Read where it stands, once: an edit that moves a whole track along
+        // works this out again for every clip on it.
+        let switches = paintedFactsSwitches
+        let canFade = switches.pictureFades && document.hasTime && !document.isClipOnLockedTrack(id)
+        let read = { (layer: Layer) in paintedFacts(of: layer, in: document, switches, canFade: canFade) }
+        // A caption's cue is inside its Captions layer.
+        return document.readingClip(id, read) ?? document.layer(id: id).map(read)
+    }
+
+    private func paintedFacts(of layer: Layer, in document: PhotonzDocument, _ switches: TimelinePaintedFacts.Switches,
+                              canFade: Bool) -> TimelinePaintedFacts.Clip {
         let pieces = layer.clipPieces
         let piece = pieces?.piece(at: 0)
         var known = TimelinePaintedFacts.Clip()
@@ -1069,14 +1079,15 @@ struct TimelineTrackRow: View {
         known.pictureHidden = piece?.pictureHidden ?? false
         known.hasBadge = ClipPiecesBar.badge(piece, isSound: false) != nil
         known.hasSoundBadge = ClipPiecesBar.badge(piece, isSound: true) != nil
-        known.hasKeys = !editorState.clipKeyMarks(onBarOf: id).isEmpty
-        known.hasDrift = !editorState.holdDrifts(onBarOf: id).isEmpty
+        known.hasKeys = switches.keys && document.hasClipKeyMarks(layer)
+        known.hasDrift = switches.cutRecording && document.hasPictureOnlyHolds
+            && !document.holdDrifts(forLayer: layer.id).isEmpty
         let level = layer.soundLevel ?? AudioLevel()
         known.level = level
         known.levelHasBadge = level.clipGainLabel != nil || level.activeNoiseReduction != nil
             || piece?.noiseReduction != nil
         if piece?.playsSound == true { known.playedSound = layer.playedSound(ofPiece: 0) }
-        if editorState.pictureFadeLayer(id) != nil {
+        if canFade, layer.canFadePicture {
             known.fadeInMS = layer.pictureFadeMS(.in)
             known.fadeOutMS = layer.pictureFadeMS(.out)
         }

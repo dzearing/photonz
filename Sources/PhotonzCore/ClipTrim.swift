@@ -159,10 +159,17 @@ extension PhotonzDocument {
         // its middle four seconds IS four seconds long, in the transport, on
         // the ruler and everywhere else that reads the clock.
         if durationMS != nil {
-            durationMS = allLayers.compactMap { $0.time?.outMS }.max()
+            durationMS = lastOutMS
             keepChosenLength()
         }
         return true
+    }
+
+    /// Where the last thing on the timeline ends, or nil with nothing on it.
+    private var lastOutMS: Int? {
+        var last: Int?
+        forEachLayer { if let out = $0.time?.outMS, out > last ?? .min { last = out } }
+        return last
     }
 
     /// The document as it looks WHILE a trim is running: the clip laid out at
@@ -187,7 +194,7 @@ extension PhotonzDocument {
         var opened = self
         opened.updateLayer(id: session.layerID) { $0.setClipPieces(pieces) }
         if opened.durationMS != nil {
-            opened.durationMS = opened.allLayers.compactMap { $0.time?.outMS }.max()
+            opened.durationMS = opened.lastOutMS
         }
         return opened
     }

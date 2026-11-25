@@ -17,7 +17,8 @@ public enum MeasureSpecList {
     /// A Size measurement is ONE row: its group, which holds the width and the
     /// height (`MeasureSizeGroup`).
     public static func measureLayers(in document: PhotonzDocument) -> [Layer] {
-        document.layers.reversed().filter(\.isMeasurement)
+        guard document.treeFacts.measures else { return [] }
+        return document.layers.reversed().filter(\.isMeasurement)
     }
 
     /// The calipers and guides a row stands for: itself, or a size group's

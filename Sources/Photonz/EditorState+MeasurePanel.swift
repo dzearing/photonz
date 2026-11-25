@@ -35,7 +35,8 @@ extension EditorState {
     /// moment keeps what it found instead of finding nothing.
     var alignmentPicture: AlignmentPicture? {
         guard let document else { return nil }
-        guard let ref = document.layers.compactMap(\.imageRef).first else { return AlignmentPicture.none }
+        guard let place = document.layers.indices.first(where: { document.layers[$0].imageRef != nil }),
+              let ref = document.layers[place].imageRef else { return AlignmentPicture.none }
         guard let ready = readyEdgeMaps[ref.id] else { return nil }
         return AlignmentPicture(edges: ready.edges, luma: ready.luma, pixelScale: document.pixelScale)
     }

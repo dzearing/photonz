@@ -222,6 +222,10 @@ extension PhotonzDocument {
     /// places, and dragging a row up the layers list moves its bar up the
     /// timeline to match.
     public func motionStrip() -> [MotionStripGroup] {
+        derived.answer(\.motionStrip) { workOutMotionStrip() }
+    }
+
+    private func workOutMotionStrip() -> [MotionStripGroup] {
         var groups: [MotionStripGroup] = []
         // **A part inherits the clock of the thing it is inside**, which is
         // the rule `drawn(atTimeMS:)` already samples motion by
@@ -236,19 +240,20 @@ extension PhotonzDocument {
         // the thing it is inside, and its keys go where its bar was slid
         // (`LayerPartTime.swift`).
         func walk(_ list: [Layer], shiftMS: Int, inside: LayerTime?) {
-            for layer in list.reversed() {
-                var shift = layer.occupiesTime ? layer.motionShiftMS : shiftMS
-                var stretch = layer.time ?? inside
-                if !layer.occupiesTime, let part = layer.partTime, let window = inside {
+            // Read in place: every clip of an hour long edit, after each edit.
+            for index in list.indices.reversed() {
+                var shift = list[index].occupiesTime ? list[index].motionShiftMS : shiftMS
+                var stretch = list[index].time ?? inside
+                if !list[index].occupiesTime, let part = list[index].partTime, let window = inside {
                     let start = min(max(shiftMS + part.fromMS, window.inMS), window.outMS)
                     stretch = LayerTime(inMS: start, outMS: max(start, min(shiftMS + part.toMS, window.outMS)))
                     shift += part.shiftMS
                 }
-                if var group = stripGroup(layer, shiftMS: shift) {
+                if var group = stripGroup(list[index], shiftMS: shift) {
                     if group.bar == nil { group.span = stretch }
                     groups.append(group)
                 }
-                if layer.isGroup { walk(layer.children, shiftMS: shift, inside: stretch) }
+                if list[index].isGroup { walk(list[index].children, shiftMS: shift, inside: stretch) }
             }
         }
         walk(layers, shiftMS: 0, inside: nil)

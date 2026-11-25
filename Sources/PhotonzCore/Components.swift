@@ -89,12 +89,14 @@ extension PhotonzDocument {
             var found: [Layer] = []
             func walk(_ list: [Layer]) {
                 for index in list.indices {
+                    // Only a group is a main, and only a group holds one.
+                    guard case .group(let group) = list[index].content else { continue }
                     if list[index].isMainComponent { found.append(list[index]) }
-                    if case .group(let group) = list[index].content { walk(group.children) }
+                    walk(group.children)
                 }
             }
             walk(componentOriginals)
-            forEachLayer { if $0.isMainComponent { found.append($0) } }
+            walk(layers)
             return found
         }
     }

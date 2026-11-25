@@ -21,29 +21,15 @@ extension EditorState {
         // (`WindowMode.libraryWaitsToBeTurnedOn`).
         situation.isLibraryAskedFor = activeWindowMode?.libraryAsked(isLibraryVisible) ?? isLibraryVisible
         guard let document else { return situation }
-        // Walked rather than flattened. `Document.allLayers` builds a new array
-        // holding a copy of every layer in the document, and this is asked on
-        // every pass the dock draws; walking `children`, which hands back the
-        // array that is already there, costs a retain instead. It also stops
-        // the moment every answer is yes, which on a document that is doing all
-        // of these jobs is usually within the first few layers.
-        func scan(_ layers: [Layer]) {
-            for layer in layers {
-                if layer.measure != nil { situation.documentHasMeasurement = true }
-                if layer.isMainComponent || layer.isComponentInstance {
-                    situation.documentHasComponent = true
-                }
-                if layer.isGroup { situation.documentHasContainer = true }
-                // A screen, whether or not it has been given any columns yet:
-                // the tick box that gives it some is inside the section this
-                // decides (`PanelSectionVisibility`).
-                if layer.isFrame { situation.documentHasFrame = true }
-                if situation.isSettled { return }
-                scan(layer.children)
-                if situation.isSettled { return }
-            }
-        }
-        scan(document.layers)
+        // Kept with the document, since this is asked on every pass the dock
+        // draws. A frame counts whether or not it has been given any columns
+        // yet: the tick box that gives it some is inside the section this
+        // decides (`PanelSectionVisibility`).
+        let facts = document.panelFacts
+        if facts.measurement { situation.documentHasMeasurement = true }
+        if facts.component { situation.documentHasComponent = true }
+        if facts.container { situation.documentHasContainer = true }
+        if facts.frame { situation.documentHasFrame = true }
         return situation
     }
 

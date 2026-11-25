@@ -333,11 +333,26 @@ extension PhotonzDocument {
     /// is drawn out of, and any whose keys or parts move, since where they
     /// stand is read off the drawn document past their end too.
     private func layersWorkedOut(atTimeMS ms: Int) -> [Bool] {
-        if layers.contains(where: { $0.style.matte != nil }) { return layers.map { _ in true } }
+        if treeFacts.mattes { return Array(repeating: true, count: layers.count) }
         let borrowed = hasEditPointTransitions ? Set(editPointMoments(atMS: ms).map(\.borrowed)) : []
-        return layers.map {
-            $0.time == nil || $0.isGroup || !($0.motions ?? []).isEmpty
-                || $0.isOnScreen(atTimeMS: ms) || borrowed.contains($0.id)
+        // What each layer says whatever the moment, kept with the document:
+        // asked on every step of the playhead.
+        let plan = derived.answer(\.workPlan) {
+            layers.indices.map { index -> DocumentDerived.WorkedOut in
+                if layers[index].time == nil || layers[index].isGroup || !(layers[index].motions ?? []).isEmpty {
+                    return .always
+                }
+                guard let time = layers[index].time else { return .always }
+                return .from(time.inMS, to: time.outMS)
+            }
+        }
+        return plan.indices.map { index in
+            switch plan[index] {
+            case .always: true
+            case .from(let start, let end):
+                (ms >= start && ms < end && layers[index].isOnScreen(atTimeMS: ms))
+                    || (!borrowed.isEmpty && borrowed.contains(layers[index].id))
+            }
         }
     }
 
@@ -347,14 +362,21 @@ extension PhotonzDocument {
     public func hidingWhatIsOffScreen(atTimeMS ms: Int) -> PhotonzDocument {
         guard hasTime else { return self }
         let moment = min(max(0, ms), lastDrawableTimeMS)
-        func hide(_ layer: Layer) -> Layer {
-            var shown = layer
-            if !layer.isOnScreen(atTimeMS: moment) { shown.isVisible = false }
-            if shown.isVisible, shown.isGroup { shown.children = layer.children.map(hide) }
-            return shown
+        // Each layer changed where it stands in one copy of the list: this is
+        // asked on every step of the playhead.
+        func hide(_ list: inout [Layer]) {
+            for index in list.indices {
+                if !list[index].isOnScreen(atTimeMS: moment) { list[index].isVisible = false }
+                guard list[index].isVisible, list[index].isGroup else { continue }
+                var children = list[index].children
+                hide(&children)
+                list[index].children = children
+            }
         }
         var shown = self
-        shown.layers = layers.map(hide)
+        var list = layers
+        hide(&list)
+        shown.layers = list
         return shown
     }
 }

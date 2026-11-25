@@ -170,7 +170,7 @@ extension EditorState {
             frame = .scrolling(motionStripRuler, anchorMS: edge.lowerBound, drawnMS: timelineDrawnMS,
                                leftEdgeMS: timelineLeftEdgeRangeMS, zoomScale: timelineScaleOnly.scale)
         }
-        timelineLaneWaves.step(to: frame, window: motionStripRuler, rest: timelineRestFrame)
+        timelineLaneWaves.step(to: frame, window: motionStripRuler, rest: timelineRestFrame, clips: timelineLaneGroupClips)
         showTimelineLaneWaves()
         timelineLaneFrameSettle?.cancel()
         timelineLaneFrameSettle = Task { @MainActor [weak self] in
@@ -242,6 +242,14 @@ extension EditorState {
     func timelineLaneFrameStanding(onTrack id: UUID) -> TimelineLaneFrame? {
         guard let frame = timelineLaneGroups[timelineLaneGroup(of: id)].frame, !timelineLanesHaveAHandIn else { return nil }
         return frame
+    }
+
+    /// How many clips each group's lanes hold.
+    private var timelineLaneGroupClips: [Int] {
+        var clips = Array(repeating: 0, count: TimelineLaneWaves.groupCount)
+        guard let document else { return clips }
+        for (track, group) in timelineLaneGroupOf { clips[group] += document.clipIDs(onTrack: track).count }
+        return clips
     }
 
     /// Which group a track's lane goes with: dealt out in the order the lanes

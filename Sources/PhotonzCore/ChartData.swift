@@ -421,14 +421,7 @@ extension PhotonzDocument {
 
     /// Whether any chart in it has a later set, the one thing that makes a
     /// frame lay a chart out again.
-    var hasChartSets: Bool {
-        func has(_ layer: Layer) -> Bool {
-            guard case .group(let content) = layer.content else { return false }
-            if let chart = content.titleRecipe?.chart { return chart.steps != nil }
-            return content.children.contains(where: has)
-        }
-        return layers.contains(where: has)
-    }
+    var hasChartSets: Bool { treeFacts.chartSets }
 
     /// `layer`, with every chart in it that has later sets laid out from
     /// the numbers of the moment `ms` of the document's clock is at it.

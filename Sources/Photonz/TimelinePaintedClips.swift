@@ -177,6 +177,10 @@ struct TimelinePaintedClips: View, Equatable {
                 Self.paint(one, strip: strip, alpha: alpha, in: &context)
             }
         }
+        // An edit's bars the last painting did not hold, few enough to draw
+        // over it while the new one is laid.
+        let follows = editorState.drawsALateEdit && before != nil
+        let newcomers = follows ? zip(placed, strips).filter { before?.contains($0.0.bar.layerID) != true } : []
         ZStack(alignment: .topLeading) {
             Group {
                 if fades.isEmpty {
@@ -185,7 +189,11 @@ struct TimelinePaintedClips: View, Equatable {
                     // (`TimelinePaintedPicture`).
                     TimelinePaintedPicture(width: canvas.width, height: laneHeight, scale: displayScale,
                                            scheme: colorScheme, canvas: canvas, laneWidth: laneWidth,
-                                           asked: TimelinePaintedPicture.ask()) { context in
+                                           asked: TimelinePaintedPicture.ask(),
+                                           followsAnEdit: follows && newcomers.count <= 4,
+                                           newcomers: newcomers.isEmpty ? nil : { context in
+                        for (one, strip) in newcomers { Self.paint(one, strip: strip, alpha: { _ in 1 }, in: &context) }
+                    }) { context in
                         paint(&context, Date.timeIntervalSinceReferenceDate)
                     }
                 } else {
@@ -1015,6 +1023,7 @@ struct TimelinePaintedCuts: View, Equatable {
         case band(fromMS: Int, spanMS: Int, isDip: Bool, leadingGrip: Bool, trailingGrip: Bool)
     }
 
+    @Environment(EditorState.self) private var editorState
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.displayScale) private var displayScale
     let marks: [Mark]
@@ -1031,7 +1040,8 @@ struct TimelinePaintedCuts: View, Equatable {
         let ruler = canvas.ruler
         // Laid into a picture once, as the clips are (`TimelinePaintedPicture`).
         TimelinePaintedPicture(width: canvas.width, height: height, scale: displayScale, scheme: scheme,
-                               canvas: canvas, laneWidth: laneWidth, asked: TimelinePaintedPicture.ask()) { context in
+                               canvas: canvas, laneWidth: laneWidth, asked: TimelinePaintedPicture.ask(),
+                               followsAnEdit: editorState.drawsALateEdit) { context in
             let scale = max(1, context.environment.displayScale)
             func snap(_ v: CGFloat) -> CGFloat { (v * scale).rounded() / scale }
             for mark in marks {
@@ -1130,6 +1140,12 @@ struct TimelinePaintedCuts: View, Equatable {
 /// once: laid late it showed no gain on the frame that steps and cost the
 /// frame after (16 to 27 late frames of 360 against 9 to 13).
 ///
+/// **An edit's picture may follow the edit by a pass more.** The timeline
+/// draws an edit a pass after it landed (`EditorState.catchUpOnTheNextPass`),
+/// and the last picture stands while the new one is laid between frames. The
+/// few clips it does not hold, one whose full view just went among them, are
+/// drawn over it meanwhile (`newcomers`), so no clip is drawn by nothing.
+///
 /// **A zoom's frame that changes nothing painted keeps the picture.** The lane
 /// frame is read from the environment, so this body runs again when a zoom
 /// begins even when the painting view above it did not change; `asked` says
@@ -1149,6 +1165,12 @@ struct TimelinePaintedPicture: View {
     /// lane's frame changed and this body runs again for it, a new one when
     /// the painting was built again and may paint something else.
     var asked = 0
+    /// The picture is of an edit the timeline draws a pass after it landed,
+    /// and what it paints is in the last picture too, but for what
+    /// `newcomers` paints, so the last one may stand for one pass more.
+    var followsAnEdit = false
+    /// The few bars the last picture does not hold, drawn over it meanwhile.
+    var newcomers: ((inout GraphicsContext) -> Void)?
     let paint: (inout GraphicsContext) -> Void
 
     @Environment(\.timelineLaneFrame) private var laneFrame
@@ -1205,6 +1227,9 @@ struct TimelinePaintedPicture: View {
                        height: height + margin * 2)
                 .offset(x: place.x - margin * place.stretch, y: -margin)
                 .frame(width: width, height: height, alignment: .topLeading)
+                .overlay {
+                    if shown.waits, let newcomers { Canvas { context, _ in newcomers(&context) } }
+                }
         } else {
             Canvas { context, _ in paint(&context) }
                 .frame(width: width, height: height)
@@ -1212,14 +1237,15 @@ struct TimelinePaintedPicture: View {
     }
 
     /// The picture to show this frame, and where on the canvas it goes.
-    private var shownPicture: (picture: CGImage?, place: (x: CGFloat, stretch: CGFloat)) {
+    /// `waits` while it is the one from before an edit.
+    private var shownPicture: (picture: CGImage?, place: (x: CGFloat, stretch: CGFloat), waits: Bool) {
         let _ = landings
         let shape = Kept.Shape(width: width, height: height, scale: scale, scheme: scheme, canvas: canvas)
         let unmoved: (x: CGFloat, stretch: CGFloat) = (0, 1)
         // A late picture that has landed, for the painting this frame asks for.
         if kept.landed {
             kept.landed = false
-            if kept.shape == shape, kept.waiting == nil { return (kept.picture, unmoved) }
+            if kept.shape == shape, kept.waiting == nil { return (kept.picture, unmoved, false) }
         }
         // A zoom beginning, or a frame that changes nothing this picture
         // paints: only the lane's frame moved, so the picture laid for this
@@ -1229,7 +1255,7 @@ struct TimelinePaintedPicture: View {
         // (2026-11-22, pass 23). Laid again at rest, like any other.
         if laneFrame?.isZoom == true, kept.asked == asked, kept.shape == shape, kept.waiting == nil,
            let picture = kept.picture {
-            return (picture, unmoved)
+            return (picture, unmoved, false)
         }
         if laneFrame?.isRest == false, let canvas, laneWidth > 0, let picture = kept.picture, let last = kept.shape,
            let lastCanvas = last.canvas, last.height == height, last.scale == scale, last.scheme == scheme,
@@ -1241,7 +1267,17 @@ struct TimelinePaintedPicture: View {
             #if PHOTONZ_PLAYTEST
             Self.laidLate += 1
             #endif
-            return (picture, canvas.place(ofPictureLaidOn: lastCanvas, laneWidth: laneWidth))
+            return (picture, canvas.place(ofPictureLaidOn: lastCanvas, laneWidth: laneWidth), false)
+        }
+        // An edit a frame old already: its lanes are built in this pass, and
+        // laying their pictures in it too was 2 to 4 ms of an 18 ms pass of a
+        // trim of the hour-long reference edit (2026-11-25).
+        // Never twice running: a second build lays at once, with the first's
+        // newcomers.
+        if followsAnEdit, kept.waiting == nil, kept.asked != asked, kept.shape == shape, let picture = kept.picture, fits {
+            kept.waiting = (shape, asked, paint)
+            layLate()
+            return (picture, unmoved, true)
         }
         // Anything else lays at once, as it always has: a picture laid late
         // included, when the timeline stops, in case what it was laid from
@@ -1252,7 +1288,7 @@ struct TimelinePaintedPicture: View {
         kept.picture = picture
         kept.shape = shape
         kept.asked = asked
-        return (picture, unmoved)
+        return (picture, unmoved, false)
     }
 
     private var fits: Bool {

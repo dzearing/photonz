@@ -577,7 +577,7 @@ extension PhotonzDocument {
         return found.sorted { ($0.time?.inMS ?? 0) < ($1.time?.inMS ?? 0) }
     }
 
-    public var hasCaptions: Bool { layers.contains { $0.containsSelfOrDescendant(where: \.isCaption) } }
+    public var hasCaptions: Bool { treeFacts.captions }
 
     /// How long captions are on screen, in seconds, added up across every
     /// cue: what the Export sheet counts when it says what a film with its

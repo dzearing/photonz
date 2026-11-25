@@ -176,7 +176,8 @@ struct DocumentDerivedTests {
 
     @Test("What the tree holds (fades, zooms, click effects) is kept, and a change to a layer is seen at once")
     func treeFactsKept() throws {
-        var doc = Self.six
+        // A copy of its own: the edit's answers are shared with every test.
+        var doc = Self.fresh(Self.six)
         #expect(doc.derived.keptTreeFacts == nil)
         let first = (doc.hasPictureFades, doc.hasZooms, doc.hasClickEffects)
         #expect(doc.derived.keptTreeFacts != nil)

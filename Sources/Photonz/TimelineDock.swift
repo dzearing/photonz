@@ -1973,7 +1973,9 @@ private struct TimelineSoundShapesReader: View {
 
     var body: some View {
         Color.clear
-            .task(id: editorState.audioPlan.count) {
+            // A pass late for an edit, which has its own frame to make: what
+            // plays is worked out from every clip there is.
+            .task(id: readingALatePass { editorState.audioPlan.count }) {
                 if editorState.documentHasAudio {
                     editorState.loadSoundShapes()
                     editorState.readyAudio()

@@ -105,7 +105,7 @@ extension Layer {
 extension PhotonzDocument {
 
     /// Whether anything in the document asks for motion blur.
-    var hasMotionBlur: Bool { layers.contains { $0.carriesMotionBlur } }
+    var hasMotionBlur: Bool { treeFacts.motionBlur }
 
     /// `shown`, the document's top-level layers as drawn at `moment`, with
     /// every part that moved far enough while the shutter was open told where

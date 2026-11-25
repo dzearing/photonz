@@ -49,10 +49,8 @@ extension EditorState {
     /// for everything else, which is almost always: only a picture on the
     /// timeline can be pushed in on.
     var frameRings: [UUID: CGRect] {
-        guard documentHasTime, let document else { return [:] }
-        var clips = false
-        document.forEachLayer { clips = clips || $0.takesAReframe }
-        guard clips, let shown = canvasGeometryDocument else { return [:] }
+        guard documentHasTime, let document, document.containsLayer(where: \.takesAReframe),
+              let shown = canvasGeometryDocument else { return [:] }
         return document.frameRings(shown: shown)
     }
 

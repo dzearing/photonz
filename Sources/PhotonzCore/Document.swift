@@ -323,6 +323,13 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         try walk(layers)
     }
 
+    /// Whether any layer anywhere in the tree answers yes, stopping at the
+    /// first that does: what `allLayers.contains(where:)` says, without
+    /// copying every layer out of the document to ask it.
+    public func containsLayer(where test: (Layer) -> Bool) -> Bool {
+        layers.indices.contains { layers[$0].containsSelfOrDescendant(where: test) }
+    }
+
     /// The ids of `allLayers`, in the same order, without copying a layer:
     /// a caption carries its every word, so a list of 170 of them is a lot to
     /// build just to read their ids.
@@ -416,14 +423,43 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
 
     /// The layer at a tree path, nil if the path does not lead anywhere.
     public func layer(atPath path: [Int]) -> Layer? {
-        var list = layers
-        var found: Layer?
-        for index in path {
+        // Walked in place, so only the layer found is copied.
+        func walk(_ list: [Layer], _ depth: Int) -> Layer? {
+            let index = path[depth]
             guard list.indices.contains(index) else { return nil }
-            found = list[index]
-            list = list[index].children
+            if depth == path.count - 1 { return list[index] }
+            guard case .group(let group) = list[index].content else { return nil }
+            return walk(group.children, depth + 1)
         }
-        return found
+        return path.isEmpty ? nil : walk(layers, 0)
+    }
+
+    /// What `body` reads off the top level layer called `id`, without copying
+    /// the layer out of the document, or nil when no top level layer is. A
+    /// lane of an hour long timeline asks this of every clip on it after
+    /// every edit, and a clip is a lot to copy to read one fact off.
+    public func readingClip<T>(_ id: UUID, _ body: (Layer) -> T) -> T? {
+        guard let index = topLevelIndex[id] else { return nil }
+        return layers.withUnsafeBufferPointer { body($0[index]) }
+    }
+
+    /// Whether the top level layer called `id` answers yes, without copying it
+    /// out of the document.
+    public func clip(_ id: UUID, is test: (Layer) -> Bool) -> Bool {
+        guard let index = topLevelIndex[id] else { return false }
+        return test(layers[index])
+    }
+
+    /// Whether a top level layer is called `id`.
+    public func hasClip(_ id: UUID) -> Bool { topLevelIndex[id] != nil }
+
+    /// Whether the top level layer called `id` is, all of it, as it is in
+    /// `other`: what an edit somewhere else in the document left alone.
+    public func clipIsUnchanged(_ id: UUID, since other: PhotonzDocument) -> Bool {
+        guard let index = topLevelIndex[id], let was = other.topLevelIndex[id] else { return false }
+        return layers.withUnsafeBufferPointer { now in
+            other.layers.withUnsafeBufferPointer { now[index] == $0[was] }
+        }
     }
 
     /// The group a layer lives in, nil when it sits loose on the canvas.

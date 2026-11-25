@@ -114,30 +114,13 @@ public struct AudioHeadroom: Hashable, Sendable {
     ///
     /// Walked in the same twenty millisecond buckets a waveform is kept in, so
     /// the answer is exactly as fine-grained as the shape it is read off and
-    /// costs one pass over the sound in the document.
+    /// costs one pass over the sound in the document. Anyone asking after every
+    /// edit keeps an `AudioHeadroomReader` instead, which reads only what the
+    /// edit changed.
     public static func reading(of mix: [AudioMixSegment],
                                peaks: [UUID: Waveform]) -> AudioHeadroom {
-        var sums: [Int: Double] = [:]
-        var assumed: Set<UUID> = []
-        for segment in mix where segment.lengthMS > 0 {
-            let shape = self.shape(of: segment, in: peaks)
-            if shape == nil { assumed.insert(segment.sound.id) }
-            let first = segment.startMS / Waveform.bucketMS
-            let last = max(first, (segment.endMS - 1) / Waveform.bucketMS)
-            for bucket in first...last {
-                let ms = max(segment.startMS, bucket * Waveform.bucketMS)
-                let level = self.level(of: segment, shape: shape, atMS: ms)
-                if level > 0 { sums[bucket, default: 0] += level }
-            }
-        }
-        var loudest: Double = 0
-        var loudestBucket = 0
-        for bucket in sums.keys.sorted() where sums[bucket, default: 0] > loudest {
-            loudest = sums[bucket, default: 0]
-            loudestBucket = bucket
-        }
-        return AudioHeadroom(peak: loudest, atMS: loudestBucket * Waveform.bucketMS,
-                             assumedFiles: assumed.count)
+        var reader = AudioHeadroomReader()
+        return reader.reading(of: mix, peaks: peaks)
     }
 
     /// How loud the mix is at one moment: everything laid over it, added up.

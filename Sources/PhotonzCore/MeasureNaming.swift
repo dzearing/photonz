@@ -75,6 +75,9 @@ extension PhotonzDocument {
     /// somebody chose is never touched, and neither is a name changed by this
     /// very edit.
     public mutating func keepMeasureNamesInStep(since before: PhotonzDocument?) {
+        // Nearly every document measures nothing, and a long edit is a lot of
+        // layers to ask after every change to it.
+        guard treeFacts.measures else { return }
         keepSizeMeasureNamesInStep(since: before)
         var renames: [UUID: String] = [:]
         forEachLayer { layer in

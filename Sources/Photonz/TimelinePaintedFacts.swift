@@ -69,17 +69,36 @@ final class TimelinePaintedFacts {
         if let kept = self.document, kept.sharesWorkedOutAnswers(with: document), self.switches == switches {
             return
         }
+        // An edit leaves nearly every clip as it was. A fact of a clip is read
+        // off the clip, its track and the holds that pushed the picture alone,
+        // so with the last two as they were, a clip that is the same clip
+        // keeps its facts (2026-11-25: working all of an hour's out again was
+        // 4 ms of every edit).
+        if let was = self.document, self.switches == switches, was.tracks == document.tracks,
+           !was.hasPictureOnlyHolds, !document.hasPictureOnlyHolds {
+            before = (was, clips, cuts)
+        } else {
+            before = nil
+        }
         self.document = document
         self.switches = switches
         clips.removeAll(keepingCapacity: true)
         cuts.removeAll(keepingCapacity: true)
     }
 
+    /// What was kept for the document before this one, for the clips an edit
+    /// left alone.
+    private var before: (document: PhotonzDocument, clips: [UUID: Clip?], cuts: [TimelineCutKey: Cut])?
+
     /// The clip's facts in `document`, worked out by `make` the first time it
     /// is asked for this document. Nil (no layer) is kept too.
     func clip(_ id: UUID, in document: PhotonzDocument, _ switches: Switches, make: () -> Clip?) -> Clip? {
         keep(for: document, switches)
         if let kept = clips[id] { return kept }
+        if let before, let kept = before.clips[id], document.clipIsUnchanged(id, since: before.document) {
+            clips[id] = .some(kept)
+            return kept
+        }
         let made = make()
         clips[id] = .some(made)
         return made
@@ -120,6 +139,11 @@ final class TimelinePaintedFacts {
     func cut(_ id: TimelineCutKey, in document: PhotonzDocument, _ switches: Switches, make: () -> Cut) -> Cut {
         keep(for: document, switches)
         if let kept = cuts[id] { return kept }
+        if let before, let kept = before.cuts[id], document.clipIsUnchanged(id.outgoing, since: before.document),
+           document.clipIsUnchanged(id.incoming, since: before.document) {
+            cuts[id] = .some(kept)
+            return kept
+        }
         let made = make()
         cuts[id] = .some(made)
         return made

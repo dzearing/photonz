@@ -374,10 +374,11 @@ extension PhotonzDocument {
     }
 
     private func findingEditPoints(onTrack id: UUID) -> [TimelineEditPoint] {
+        let places = topLevelIndex
         let clips = clipIDs(onTrack: id)
             .compactMap { clip -> (id: UUID, time: LayerTime, hold: Int)? in
-                guard let layer = layer(id: clip), let time = layer.time else { return nil }
-                return (clip, time, layer.arrivalTransition?.holdMS ?? 0)
+                guard let place = places[clip], let time = layers[place].time else { return nil }
+                return (clip, time, layers[place].arrivalTransition?.holdMS ?? 0)
             }
             .sorted { $0.time.inMS < $1.time.inMS }
         return zip(clips, clips.dropFirst()).compactMap { a, b in

@@ -103,13 +103,7 @@ extension PhotonzDocument {
 
     /// Whether any original sits in the picture. Stops at the first.
     var holdsMainInPicture: Bool {
-        func search(_ list: [Layer]) -> Bool {
-            for layer in list where layer.isGroup {
-                if layer.isMainComponent || search(layer.children) { return true }
-            }
-            return false
-        }
-        return search(layers)
+        treeFacts.mains
     }
 
     /// Moves every original in the picture into the library and leaves an

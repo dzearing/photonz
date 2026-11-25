@@ -754,14 +754,18 @@ extension PhotonzDocument {
         // A keyed picture's layers are as often inside a frame as not: an
         // icon's always are (`PictureKeys.swift`).
         if isKeyedPicture { return posedPicture(atTimeMS: ms, posing: posing) }
-        guard hasKeyClock, cameraMoves || layers.contains(where: { layer in
-            (layer.motions ?? []).contains { posing.contains($0.property) }
-        }) else { return self }
+        // Read in place: asked on every step of the playhead.
+        let posedLayers = hasKeyClock ? layers.indices.filter {
+            (layers[$0].motions ?? []).contains { posing.contains($0.property) }
+        } : []
+        guard hasKeyClock, cameraMoves || !posedLayers.isEmpty else { return self }
         let cycle = max(1, timelineLengthMS)
         var posed = self
         if cameraMoves { posed.camera = camera?.shown(atMS: ms, cycleMS: cycle) }
-        posed.layers = layers.map { layer in
-            guard (layer.motions ?? []).contains(where: { posing.contains($0.property) }) else { return layer }
+        guard !posedLayers.isEmpty else { return posed }
+        var list = layers
+        for index in posedLayers {
+            let layer = layers[index]
             let clock = layer.motionClockMS(atDocumentTimeMS: ms)
             var uncut = layer
             if layer.hasKeyedCrop { uncut.motions = layer.motions?.filter { !$0.property.isCrop } }
@@ -771,8 +775,9 @@ extension PhotonzDocument {
             pose.frame = moved.frame
             pose.transform.rotation = moved.transform.rotation
             pose.turn3D = moved.turn3D
-            return pose
+            list[index] = pose
         }
+        posed.layers = list
         return posed
     }
 }

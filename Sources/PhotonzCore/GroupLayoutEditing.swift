@@ -175,13 +175,33 @@ extension PhotonzDocument {
     /// safety net: passes are capped, so a pair of rules that disagreed could
     /// never spin, and the loop stops the moment a pass changes nothing.
     public mutating func reflowLayouts() {
+        // Only what arranges what it holds, or words an arrangement once
+        // wrapped: the flow hands every other layer back as it was, and
+        // working that out copied and compared every clip of the document
+        // (2026-11-25).
         for _ in 0..<Self.reflowPasses {
-            let flowed = layers.map(GroupFlow.flowing)
-            let originals = componentOriginals.map(GroupFlow.flowing)
-            guard flowed != layers || originals != componentOriginals else { return }
-            layers = flowed
-            componentOriginals = originals
+            var changed = false
+            func flow(_ list: [Layer]) -> [Layer]? {
+                var flowed: [Layer]?
+                for index in list.indices where list[index].containsSelfOrDescendant(where: Self.mayFlow) {
+                    let one = GroupFlow.flowing(list[index])
+                    guard one != list[index] else { continue }
+                    flowed = flowed ?? list
+                    flowed?[index] = one
+                    changed = true
+                }
+                return flowed
+            }
+            if let flowed = flow(layers) { layers = flowed }
+            if let originals = flow(componentOriginals) { componentOriginals = originals }
+            guard changed else { return }
         }
+    }
+
+    private static func mayFlow(_ layer: Layer) -> Bool {
+        if layer.wrappedByItsContainer == true { return true }
+        guard case .group(let group) = layer.content else { return false }
+        return group.layout != nil
     }
 
     /// How many times the flow may run before it gives up and leaves the

@@ -220,8 +220,9 @@ extension EditorState {
                 return row
             }
             for id in document.clipIDs(onTrack: track.id) {
-                guard let layer = document.layer(id: id) else { continue }
-                if var group = byLayer[id] ?? Self.partsOnlyBar(layer, in: document) {
+                guard document.hasClip(id) else { continue }
+                let isGroup = document.clip(id) { $0.isGroup }
+                if var group = byLayer[id] ?? document.layer(id: id).flatMap({ Self.partsOnlyBar($0, in: document) }) {
                     // A clip with its own sound is drawn as two halves: this
                     // is the picture, and its waveform and level line are on
                     // the half under it.
@@ -235,14 +236,14 @@ extension EditorState {
                 // picked keeps its row, and the groups it is in, so picking
                 // never pushes the tracks under it out of sight
                 // (`any-timeline-row-that-holds-sub-layers-expands-a`).
-                for child in document.timelineChildRows(of: id, open: open, picked: selectedLayerID) {
+                for child in isGroup ? document.timelineChildRows(of: id, open: open, picked: selectedLayerID) : [] {
                     guard let piece = document.layer(id: child.layerID) else { continue }
                     var group = byLayer[piece.id]
                         ?? Self.partsOnlyBar(piece, in: document)
                         ?? MotionStripGroup(layerID: piece.id, layerName: piece.displayName(readWords: [:]),
                                             lanes: [], span: document.partStretch(of: piece.id).map {
                                                 LayerTime(inMS: $0.startMS, outMS: $0.endMS)
-                                            } ?? layer.time,
+                                            } ?? document.readingClip(id, { $0.time }).flatMap { $0 },
                                             trackKind: piece.timelineTrackKind, mark: piece.mark)
                     // A part's moving values open under it with its arrow, and
                     // under the part picked.
@@ -276,13 +277,13 @@ extension EditorState {
             row.soundIsOff = row.soundIsMuted || (soloSound && !soundRows.contains(where: \.isSolo))
             if isKeyTrackOpen(track.id) {
                 row.rampedClips = clips.map(\.layerID).filter {
-                    document.layer(id: $0)?.clipPieces?.pieces.contains { $0.speedRamp != nil } == true
+                    document.clip($0) { $0.clipPieces?.pieces.contains { $0.speedRamp != nil } == true }
                 }
             }
             row.expandsCut = trackHasExpandedCut(track.id)
             if Experiments.shared.zoomRegionsEnabled {
                 row.zoomedClips = clips.map(\.layerID).filter {
-                    document.layer(id: $0)?.zooms?.isEmpty == false
+                    document.clip($0) { $0.zooms?.isEmpty == false }
                 }
             }
             return row

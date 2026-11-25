@@ -160,7 +160,9 @@ extension EditorState {
                .pieceIndex(atMS: documentTimeMS - time.inMS - 1) {
             selectClipPiece(layerID: id, index: landed, aPassLater: true)
         }
-        documentMomentChanged()
+        // Playing, the clock's next step does this anyway, and doing it here
+        // as well drew the same moment twice in the cut's own frame.
+        if !isDocumentPlaying || documentClockWaiting { documentMomentChanged() }
     }
 
     /// Whether ⌫ means "throw this piece away" rather than "delete this

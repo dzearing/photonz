@@ -140,9 +140,9 @@ import Testing
     }
 
     /// A zoom that begins holds the painting at rest, so no lane is laid out
-    /// for it; its first fresh frame is taken by half, and by the rest a step
-    /// later.
-    @Test func aZoomTakesItsLanesInHalves() {
+    /// for it; its first fresh frame is taken by a third, another a step
+    /// later, and the rest a step after that.
+    @Test func aZoomTakesItsLanesInThirds() {
         var waves = TimelineLaneWaves()
         let held = TimelineLaneFrame.holding(rest.ruler, leftEdgeMS: 0...1, zoomScale: 4, painted: rest.paintedMS)
         for scale in [4.16, 4.3] {
@@ -153,9 +153,75 @@ import Testing
         let fresh = at(30_500, scale: 4.5)
         let zooming = TimelineLaneFrame.zooming(fresh, leftEdgeMS: 0...1, zoomScale: 4.5)
         waves.step(to: zooming, window: fresh, rest: rest)
-        #expect(waves.groups.count { $0 == zooming } == TimelineLaneWaves.groupCount / 2)
+        #expect(waves.groups.count { $0 == zooming } == 3)
         waves.step(to: zooming, window: at(30_600, scale: 4.6), rest: rest)
+        #expect(waves.groups.count { $0 == zooming } == 6)
+        waves.step(to: zooming, window: at(30_700, scale: 4.7), rest: rest)
         #expect(waves.groups.allSatisfy { $0 == zooming })
+    }
+
+    /// A lane two zoom frames behind is stretched no further than a wave
+    /// allows: it takes the new frame at once instead.
+    @Test func aZoomPastWhatALaneCoversTakesItAtOnce() {
+        var waves = TimelineLaneWaves()
+        let held = TimelineLaneFrame.holding(rest.ruler, leftEdgeMS: 0...1, zoomScale: 4, painted: rest.paintedMS)
+        waves.step(to: held, window: at(30_300, scale: 4.16), rest: rest)
+        let fresh = at(31_000, scale: 5.2)
+        let zooming = TimelineLaneFrame.zooming(fresh, leftEdgeMS: 0...1, zoomScale: 5.2)
+        waves.step(to: zooming, window: fresh, rest: rest)
+        #expect(waves.groups.allSatisfy { $0 == zooming })
+    }
+
+    /// A fast scroll moves the stretch every few steps. The lanes that have to
+    /// take it before the next are spread over the steps they can wait, not
+    /// left to the last of them.
+    @Test func aFastScrollSpreadsItsLanesOverTheStepsTheyCanWait() {
+        var waves = TimelineLaneWaves()
+        var laid: [Int] = []
+        var start = 2_000.0
+        for step in 0..<24 {
+            start += 3_000
+            let window = at(start, scale: 10)
+            let stretch = TimelineDrawnStretch(windowStartMS: start, visibleMS: 10_000, stepShare: 1)
+            let edge = stretch.leftEdgeMS(visibleMS: 10_000, documentMS: 100_000)
+            let frame = TimelineLaneFrame.scrolling(window, anchorMS: edge.lowerBound,
+                                                    drawnMS: stretch.stretchMS(visibleMS: 10_000, documentMS: 100_000),
+                                                    leftEdgeMS: edge, zoomScale: 10)
+            let before = waves.groups
+            waves.step(to: frame, window: window, rest: rest)
+            for group in waves.groups { #expect((group ?? rest).stands(for: window), "step \(step)") }
+            if step > 4 { laid.append(zip(before, waves.groups).count { $0 != $1 }) }
+        }
+        // About a stretch every three steps and eight groups a stretch: never
+        // all eight in one.
+        #expect(laid.max() ?? 0 <= 4, "\(laid)")
+        #expect(laid.reduce(0, +) >= 8 * 4)
+    }
+
+    /// The busy lanes are the ones spread: with every clip in four of the
+    /// groups, no step takes three of the four.
+    @Test func aFastScrollSpreadsTheBusyLanes() {
+        var waves = TimelineLaneWaves()
+        var busiest = 0, taken = 0
+        var start = 2_000.0
+        for step in 0..<24 {
+            start += 3_000
+            let window = at(start, scale: 10)
+            let stretch = TimelineDrawnStretch(windowStartMS: start, visibleMS: 10_000, stepShare: 1)
+            let edge = stretch.leftEdgeMS(visibleMS: 10_000, documentMS: 100_000)
+            let frame = TimelineLaneFrame.scrolling(window, anchorMS: edge.lowerBound,
+                                                    drawnMS: stretch.stretchMS(visibleMS: 10_000, documentMS: 100_000),
+                                                    leftEdgeMS: edge, zoomScale: 10)
+            let before = waves.groups
+            waves.step(to: frame, window: window, rest: rest, clips: [120, 120, 120, 120, 0, 3, 0, 1])
+            for group in waves.groups { #expect((group ?? rest).stands(for: window), "step \(step)") }
+            guard step > 4 else { continue }
+            let busy = (0..<4).count { before[$0] != waves.groups[$0] }
+            busiest = max(busiest, busy)
+            taken += busy
+        }
+        #expect(busiest <= 2)
+        #expect(taken >= 4 * 4)
     }
 
     /// Whatever the steps, every group stands on a layout that covers the

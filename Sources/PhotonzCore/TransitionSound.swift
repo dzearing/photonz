@@ -189,11 +189,12 @@ extension PhotonzDocument {
     /// sound: exactly the ones the picture draws (`editPointMoments`).
     func editPointSoundCrossings() -> [TransitionSoundCrossing] {
         guard hasEditPointTransitions else { return [] }
+        let places = topLevelIndex
         return editPointTransitions().compactMap { found in
             let cut = found.cut
-            guard let drawn = cut.drawnTransition,
+            guard let drawn = found.drawn,
                   !(drawn.kind.needsOverlap && cut.isContinuous),
-                  let outPieces = layer(id: found.outgoing)?.clipPieces else { return nil }
+                  let out = places[found.outgoing], let outPieces = layers[out].clipPieces else { return nil }
             return TransitionSoundCrossing(
                 outgoing: TransitionSoundPiece(layerID: found.outgoing, index: outPieces.count - 1),
                 incoming: TransitionSoundPiece(layerID: found.incoming, index: 0),
@@ -276,20 +277,25 @@ extension PhotonzDocument {
                 sourceInMS: 0, sourceLengthMS: 0, speedPercent: speed,
                 ramps: PhotonzDocument.ramps(for: heard.level, startMS: start, lengthMS: length,
                                              layerInMS: heard.layerInMS))
-            var moments = Set(own.ramps.map(\.fromMS) + [end])
+            var moments = own.ramps.map(\.fromMS) + [end]
             for shape in shapes {
                 for ms in shape.shape.moments(cutAtMS: shape.cutAtMS) where ms > start && ms < end {
-                    moments.insert(ms)
+                    moments.append(ms)
                 }
             }
-            let sorted = moments.sorted()
+            moments.sort()
+            var sorted: [Int] = []
+            sorted.reserveCapacity(moments.count)
+            for ms in moments where ms != sorted.last { sorted.append(ms) }
             func gain(_ ms: Int) -> Double {
                 shapes.reduce(own.gain(atMS: ms)) {
                     $0 * $1.shape.gain(atMS: ms, cutAtMS: $1.cutAtMS, side: $1.side)
                 }
             }
-            let ramps = zip(sorted, sorted.dropFirst()).map { from, to in
-                AudioGainRamp(fromMS: from, toMS: to, fromGain: gain(from), toGain: gain(to))
+            // A corner is the end of one ramp and the start of the next.
+            let gains = sorted.map(gain)
+            let ramps = (0..<max(0, sorted.count - 1)).map {
+                AudioGainRamp(fromMS: sorted[$0], toMS: sorted[$0 + 1], fromGain: gains[$0], toGain: gains[$0 + 1])
             }
             return AudioMixSegment(
                 layerID: segment.layerID, sound: segment.sound,

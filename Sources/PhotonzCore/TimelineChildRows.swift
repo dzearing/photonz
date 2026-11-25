@@ -50,6 +50,7 @@ extension PhotonzDocument {
     public func timelineChildRows(of clipID: UUID, open: Set<UUID>, picked: UUID?) -> [TimelineChildRow] {
         // The part picked and every group it is in.
         var chain = Set<UUID>()
+        var pickIsInside = false
         if let picked, picked != clipID {
             chain.insert(picked)
             var here = parentID(of: picked)
@@ -57,7 +58,12 @@ extension PhotonzDocument {
                 chain.insert(id)
                 here = parentID(of: id)
             }
+            pickIsInside = here == clipID
         }
+        // Closed, and the part picked is not one of its own: no rows, and no
+        // need to look inside it. An hour long edit asks this of every title
+        // after every edit.
+        guard open.contains(clipID) || pickIsInside else { return [] }
         var rows: [TimelineChildRow] = []
         func walk(_ id: UUID, depth: Int) {
             let isOpen = open.contains(id)

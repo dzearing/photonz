@@ -288,7 +288,7 @@ extension PhotonzDocument {
         let looks = Dictionary(savedStrokes.map { ($0.id, $0.look) },
                                uniquingKeysWith: { first, _ in first })
         let drifted = { (layer: Layer) in layer.hasDriftedSavedStroke(looks) }
-        guard allLayers.contains(where: drifted)
+        guard containsLayer(where: drifted)
                 || componentOriginals.contains(where: { $0.selfAndDescendants.contains(where: drifted) })
         else { return 0 }
         var broken = 0

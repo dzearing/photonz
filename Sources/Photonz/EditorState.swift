@@ -393,11 +393,15 @@ final class EditorState {
                 self.rulerDocumentRevision &+= 1
             }
             let panelLater = self.picksLandInPieces
+            self.drawsALateEdit = true
             self.moveTheLatePassOn(panelLater: panelLater)
-            if panelLater {
-                await NextRunLoopPass.start()
-                self.panelPassRevision &+= 1
-            }
+            // Two passes, as a pick's steps: SwiftUI often builds in one and
+            // lays out in the next, and one step landing on that read as one
+            // pass of both (the hour-long edit's undo of a cut, 2026-11-25).
+            await NextRunLoopPass.start()
+            await NextRunLoopPass.start()
+            self.drawsALateEdit = false
+            if panelLater { self.panelPassRevision &+= 1 }
             guard self.lookRowsOwed else { return }
             await NextRunLoopPass.start()
             if self.lookRowsOwed {
@@ -406,6 +410,12 @@ final class EditorState {
             }
         }
     }
+
+    /// True while the timeline draws an edit a pass after it landed
+    /// (`catchUpOnTheNextPass`): its pictures may follow a pass after that
+    /// (`TimelinePaintedPicture`). Never while a hand is on a lane, whose
+    /// bars have to move as one.
+    @ObservationIgnored private(set) var drawsALateEdit = false
 
     /// Whether `event` is a button let go or a drag still moving: the edit it
     /// carries ends something the hand was holding on screen.
@@ -2649,15 +2659,11 @@ final class EditorState {
     /// drags one (`ScrubAudioPlayer.swift`). Its own engine because a scrub
     /// and a playthrough want opposite things from the same plan.
     @ObservationIgnored var scrubAudioStorage: ScrubAudioPlayer?
-    /// The last answer to how loud the mix gets, against the plan and the
-    /// shapes it was worked out from (`EditorState+Audio.swift`).
-    ///
-    /// Kept because the meter asks thirty times a second and the answer is a
-    /// walk over every twenty milliseconds of sound in the document. Checking
-    /// whether the plan changed costs one pass over the segments; working it
-    /// out again costs one pass over the whole timeline.
-    @ObservationIgnored var audioHeadroomCache:
-        (plan: [AudioMixSegment], shapes: Int, reading: AudioHeadroom)?
+    /// The document posed for the canvas at one moment
+    /// (`canvasGeometryDocument`).
+    @ObservationIgnored var canvasGeometryMemo: (document: PhotonzDocument, moment: Int, posed: PhotonzDocument)?
+    /// How loud the mix gets, kept between asks (`EditorState+Audio.swift`).
+    @ObservationIgnored var audioHeadroomReader = AudioHeadroomReader()
     /// The listening running in this window, or nil where none is
     /// (`EditorState+Captions`). It is what the Captions section's progress
     /// line is drawn from, so it is observed rather than ignored.
@@ -3782,7 +3788,7 @@ final class EditorState {
     /// The document as it was last opened or saved — the clean baseline for
     /// close confirmation. Value equality means undoing back to the last save
     /// counts as clean again.
-    @ObservationIgnored private var savedDocument: PhotonzDocument?
+    @ObservationIgnored private var savedDocument: PhotonzDocument? { didSet { needsSavingMemo = nil } }
 
     /// The window hosting this editor, captured by `WindowCloseGuard` so the
     /// close confirmation can attach and the edited-dot can track dirtiness.
@@ -3942,12 +3948,22 @@ final class EditorState {
         // save box, as it does on any untitled document, and an edited one's
         // close sheet offers Export beside Save (`unsavedRecording`). Once
         // saved it is an ordinary package and Save writes it in place.
-        .forDocument(isLoaded: document != nil,
-                     hasChanges: ClosePrompt.needsSavePrompt(current: document,
-                                                             savedBaseline: savedDocument),
+        .forDocument(isLoaded: document != nil, hasChanges: documentNeedsSaving,
                      isSaving: false,
                      isUnsavedRecording: isRecordingDocument)
     }
+
+    /// Kept for the document it was answered for: five views ask after every
+    /// edit, and each answer compared every clip of an hour long edit.
+    private var documentNeedsSaving: Bool {
+        guard let document else { return false }
+        if let kept = needsSavingMemo, kept.document.sharesWorkedOutAnswers(with: document),
+           kept.document == document { return kept.answer }
+        let answer = ClosePrompt.needsSavePrompt(current: document, savedBaseline: savedDocument)
+        needsSavingMemo = (document, answer)
+        return answer
+    }
+    @ObservationIgnored private var needsSavingMemo: (document: PhotonzDocument, answer: Bool)?
 
     /// The document was persisted somewhere the user considers safe (package
     /// save, capture-history save): the current state becomes the clean baseline.
@@ -6474,6 +6490,11 @@ final class EditorState {
             shelfThumbnails = [:]
             iconPreviews = [:]
             return
+        }
+        // What the passes after this one ask of the edit is worked out off
+        // the main thread while this one draws, and kept with the document.
+        if documentHasTime, isCatchingUpOnTheNextPass {
+            Task.detached(priority: .userInitiated) { document.workOutWhatAnEditAsksNext() }
         }
         // A page open in the browser follows the drawing.
         if webPreview != nil { rewriteWebPreviewSoon() }
