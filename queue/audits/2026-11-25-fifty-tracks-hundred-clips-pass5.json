@@ -1,0 +1,44 @@
+{
+  "feature": "Fifty tracks and a hundred clips, fifth pass",
+  "epic": "video-perf",
+  "summary": "Adding a track or a clip to a 50 track edit while it plays, and taking it back, now fits in one 60 Hz frame. Every edit measured is 10 to 14 ms.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe with Scripts/perf/speed-walk.sh --wide 50 and --wide 100; numbers in Scripts/perf/baselines/wide-50.json and wide-100.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open Reference Edit 50 tracks.photonz with File > Open."
+    },
+    {
+      "do": "Press Space to play it."
+    },
+    {
+      "do": "Click + at the foot of the tracks and choose Video Track."
+    },
+    {
+      "do": "Double-click the new track's name, type a name and press Return.",
+      "shot": "2026-11-25-wide-edit-pass5-added-sc.png"
+    },
+    {
+      "do": "Press Command-Z twice."
+    },
+    {
+      "do": "While it plays, drag a recording in from the Library onto a track of its own."
+    }
+  ],
+  "evaluate": [
+    "Does the picture keep playing smoothly as the track comes in?",
+    "Does the new track appear at once, with nothing flashing?",
+    "Does your own edit that lagged feel smooth now?"
+  ],
+  "rough": [
+    "Longest main thread hold, 50 tracks, last pass / now (bar 16 ms), worse of two full runs: add track 25.2 / 14.3, its undo 14.4 / 13.5, add clip 16.3 / 13.3, move 12.3 / 12.2, trim 9.4 / 10.8, pick 14.1 / 14.0, blade 13.0 / 13.9, undo of the blade 9.6 / 12.2.",
+    "Scrolling and zooming, main thread a frame, worse of the same two runs (bar p95 8.3): zoom in p95 7.4, out 6.9, near Fit 6.9, along 6.0, tracks down 4.8. One frame near Fit read 20.5 ms (bar none over 16). The one I caught was 21.9 ms, nearly all of it the main thread waiting inside the system's own drawing library.",
+    "Played end to end: 0 and 1 of 3637 frames dropped in the two runs, no clip frame wrong with ten up. Starting play at 0:58 from rest still waits about 728 ms.",
+    "An added empty track is bare room for two to four frames before its name and lane are drawn. Read from the timings, not filmed: the film step cannot add a track.",
+    "When a clip with sound comes or goes, the tracks under it take their new sound colour about a tenth of a second later.",
+    "For 0.4 seconds after an edit to an edit of more than 24 tracks, the window cannot be dragged by its title bar.",
+    "100 tracks has no bar: edits 14 to 23 ms, tracks down p95 17, 6 of 3639 frames dropped, 11 clip frames from ahead at 1:06.",
+    "Export not compared again: nothing in this pass touches drawing the picture. Nothing new was filmed; the film of zoom and scroll is in the fourth pass's report.",
+    "No mock covers a 50 track timeline."
+  ]
+}

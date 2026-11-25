@@ -13,6 +13,8 @@ enum TimelineRowsInSight {
     /// how far past it a row falls asleep.
     static let reach: CGFloat = 0.2
     static let leaves: CGFloat = 0.5
+    /// How long an added track's row is bare room.
+    static let arrivalMS = 34
 }
 
 /// Which row of a tall edit a view is in, and whether it is far from the part
@@ -104,6 +106,11 @@ func keptAsleep<Content: View>(_ sleep: TimelineRowSleep?, _ kept: KeptBuild, _ 
     /// wakes each at once when something does.
     private var sleepingNear: [UUID: () -> Void] = [:]
     weak var editor: EditorState?
+    /// The rows on the timeline now, and since when there have been any.
+    private var shown: Set<UUID> = []
+    private var shownSince: Date?
+    /// The added row that is bare room now (`makesRoomFirst`).
+    fileprivate(set) var arriving: UUID?
     fileprivate var windowHasGone = false
     private var task: Task<Void, Never>?
     /// When the rows last scrolled, or something in one last changed.
@@ -145,6 +152,24 @@ func keptAsleep<Content: View>(_ sleep: TimelineRowSleep?, _ kept: KeptBuild, _ 
         }
         drop(row)
         for one in kept.removeValue(forKey: row) ?? [] { one.kept?.letGo() }
+        shown.remove(row)
+        if shown.isEmpty { shownSince = nil }
+    }
+
+    func shows(_ row: UUID) {
+        if shown.isEmpty { shownSince = Date() }
+        shown.insert(row)
+    }
+
+    /// An empty track added to a timeline that has been up a while. Its row
+    /// is bare room in the frame the others move aside in, and what it shows
+    /// is built a couple of frames later. Both in one frame held the main
+    /// thread 16 to 24 ms at 50 tracks, 13 to 15 apart: the window asks every
+    /// view in it about focus, accessibility and its title bar for each
+    /// (2026-11-25). A track that comes with a clip is never held back.
+    func makesRoomFirst(_ row: TimelineTrackRowModel) -> Bool {
+        guard row.clips.isEmpty, row.linked.isEmpty, !shown.contains(row.id), let shownSince else { return false }
+        return Date().timeIntervalSince(shownSince) > 1
     }
 
     fileprivate func stale(_ kept: KeptBuild, in row: UUID) {
@@ -231,6 +256,9 @@ struct TimelineRowInSight<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     private enum Place { case away, leaving, near }
+    /// False for the moment an added track's row is bare room
+    /// (`TimelineRowChores.makesRoomFirst`).
+    @State private var arrived: Bool
     @State private var built: Bool
     @State private var awake: Bool
     /// Asleep and out of sight: left out of what the window asks every view
@@ -238,18 +266,26 @@ struct TimelineRowInSight<Content: View>: View {
     @State private var isFar = false
 
     init(row: TimelineTrackRowModel, height: CGFloat, laneHeight: CGFloat, gates: Bool, startsNear: Bool,
-         @ViewBuilder content: @escaping () -> Content) {
+         makesRoomFirst: Bool, @ViewBuilder content: @escaping () -> Content) {
         self.row = row
         self.height = height
         self.laneHeight = laneHeight
         self.gates = gates
         self.content = content
+        _arrived = State(initialValue: !makesRoomFirst)
         _built = State(initialValue: startsNear)
         _awake = State(initialValue: startsNear)
     }
 
     var body: some View {
-        if gates {
+        if gates, !arrived {
+            away.task {
+                editorState.timelineRowChores.arriving = row.id
+                try? await Task.sleep(for: .milliseconds(TimelineRowsInSight.arrivalMS))
+                arrived = true
+                if editorState.timelineRowChores.arriving == row.id { editorState.timelineRowChores.arriving = nil }
+            }
+        } else if gates {
             Group {
                 if built { content() } else { away }
             }
@@ -258,6 +294,7 @@ struct TimelineRowInSight<Content: View>: View {
             .allowsHitTesting(!isFar)
             .environment(\.timelineRowSleep, TimelineRowSleep(row: row.id, isAsleep: !awake,
                                                               chores: editorState.timelineRowChores))
+            .onAppear { editorState.timelineRowChores.shows(row.id) }
             .onDisappear { editorState.timelineRowChores.letGo(row.id) }
             .onGeometryChange(for: Place.self) { proxy in
                 guard let shown = proxy.bounds(of: .scrollView) else { return .near }
@@ -314,4 +351,3 @@ struct TimelineRowInSight<Content: View>: View {
             }
     }
 }
-

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:13:00.798Z",
-  "updated": "2026-11-25T11:54:33.242Z",
+  "updated": "2026-11-25T14:48:25.544Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"the perf of photonz is still pretty rough with video editing. when i add like 50 tracks with 100 clips, scroll starts to lag, i get weird behaviors like flashes during playback, very sluggish behavior\".\n\nContext: the loop could not sign in from about 2026-11-23 19:00 to 2026-11-24 14:10, so the open video-perf tasks made no progress in that window; the user re-logged in on 2026-11-24.\n\nOverlaps, and why this is separate: the-timeline-of-an-hour-long-edit-scrolls-zooms (p1, pending) is about a LONG edit (60 minutes, hundreds of clips) on the 3+ track reference edit, horizontal scroll and zoom; this one is WIDE (50 to 100 tracks): vertical scroll, many track headers, many clips overlapping at one moment for the compositor and decoders. Reuse that task's speed walk, ViewBuildMeter and busy-lane painting rather than building a second harness; if its painted-lane fix also fixes vertical scroll here, record it and move on. picking-letting-go-of-and-cutting-a-clip-while-a (p1, seq 10) covers edit latency while playing; jumping-back-while-a-video-plays-never-flickers covers flicker after a jump. I did not reproduce the user's lag or flashes myself.",
@@ -150,9 +150,29 @@
     {
       "t": "2026-11-25T11:54:33.241Z",
       "note": "Pass 4 landed: zoom and scroll meet their p95 bars, export unchanged. Adding a track while it plays (19 to 25 ms, bar 16) and the odd single frame over 16 are left; see the log."
+    },
+    {
+      "t": "2026-11-25T11:55:09.361Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-25T13:19:11.999Z",
+      "note": "Pass 5 so far: a row not being named holds no FocusState (TrackNameField), an added empty track's row is bare room in the edit's frame and built 34 ms later (TimelineRowChores.makesRoomFirst), and its pick waits for that. Add track 19-25 -> 13 to 17, its undo 13 to 17. Earlier passes' slot trials never took effect: a new video track goes in at the top, so startsNear was true. Tried, no gain: header button focusable(false), no contextMenu, no help, no accessibilityElement on the row; the harness window watcher is not in the numbers."
+    },
+    {
+      "t": "2026-11-25T14:48:25.375Z",
+      "note": "Pass 5 measured (wide-50 twice, wide-100 once). MET: every edit 9.9 to 14.3 ms in both full runs (add track 25 -> 13-14, its undo 11-14, add clip 16-17 -> 13; addTrack, addClip and undos repeated: 11 to 14); every zoom and scroll p95 7.4 or under; no clip frame wrong ten up. What did it: the row split over two frames, TitleBarRegionLater (window.isMovable off for 0.4 s: AppKit's drag region walk, 3.5 ms), soundNumber no longer rebuilding every row under an added clip (LateTrackRows, found by diffing row models), one FocusState instead of one a row. Pictures opened: 5-back-at-the-top and 6-the-added-track, new row named, picked and drawn. Scripts/test.sh green (17,013 tests). Walks green: the tall edit's own (now adds, renames and takes back a track), tracks-you-can-add, pick-a-track, group-name, empty-track-slot, delete-track-menu, a-clip-s-sound-stays, an-editing-session, undo-redo-cost, captions-on-demand."
+    },
+    {
+      "t": "2026-11-25T14:48:25.464Z",
+      "note": "NOT MET, so left pending: (1) 'none over 16': one near Fit frame of 20.5 ms in one of two full runs, and 25.6 worst in one of three profiled ones; the caught pass (21.9) had 31 of 35 samples in CA run_commit_handlers waiting by dispatch_sync on RenderBox's queue (SharedSurfaceGroup::render_updates), with no app code in the wait: next is who holds that queue (sample every thread, not only main). (2) 'drops no frames': 0 and 1 of 3637. (3) one wait of 728 ms as play starts from rest at 0:58. Not filmed: the bare room of an added track. Export not compared again, composite path untouched."
+    },
+    {
+      "t": "2026-11-25T14:48:25.543Z",
+      "note": "Pass 5 landed: every edit on 50 tracks is 10 to 14 ms. One zoom frame over 16 ms (the system's drawing queue) and 0 or 1 dropped frame in a 2 minute play are left; see the log."
     }
   ],
-  "started": "2026-11-25T09:23:50.197Z",
+  "started": "2026-11-25T11:55:09.360Z",
   "walks": [
     "a-tall-edit-s-far-tracks-answer-walk"
   ]

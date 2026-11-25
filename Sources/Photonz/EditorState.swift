@@ -430,7 +430,12 @@ final class EditorState {
     func catchUpOnTheNextPassOnAVideo() {
         guard documentHasTime, Experiments.shared.panelBuildsWhatYouSeeEnabled else { return }
         catchUpOnTheNextPass()
+        // A tall timeline's rows move in the frames that follow.
+        if let tracks = document?.tracks.count, tracks > TimelineRowsInSight.tallEdit {
+            titleBarRegionLater.hold(hostWindow)
+        }
     }
+    @ObservationIgnored private let titleBarRegionLater = TitleBarRegionLater()
 
     /// Whether a document is open, changing only when that answer does. The
     /// window's shell asks this in a dozen places; asking `document != nil`

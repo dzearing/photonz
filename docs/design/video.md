@@ -1343,6 +1343,10 @@ The rule, for any view added to the editor window:
    the window must go through `keptAsleep` or it stays awake in every far row,
    and a kind of row with anything open under its lane must stay out of it
    (`isOneLane`).
+   An added empty track's row is bare room in the edit's frame and built two
+   frames later (`makesRoomFirst`); other rows take a new sound number after
+   that (`LateTrackRows`), and the title bar's drag regions are worked out once
+   the edit's frames are over (`TitleBarRegionLater`).
    Anything in the dock that changes on every frame is laid over a slot of a
    known size (`TimelineSlot`), never stacked: stacked, the ruler and the
    window's label had SwiftUI check where all fifty rows go on every frame of a

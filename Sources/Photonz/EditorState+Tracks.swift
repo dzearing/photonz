@@ -468,6 +468,14 @@ extension EditorState {
         let held = (selectedLayerID, multiSelectedLayerIDs, selectedTrackIDs)
         Task { @MainActor [weak self] in
             for _ in 0..<3 { await NextRunLoopPass.start() }
+            // A tall timeline's new row is bare room first, and built a couple
+            // of frames later: the pick waits for that frame to be over too.
+            if let self, self.timelineRowChores.arriving == made {
+                for _ in 0..<20 where self.timelineRowChores.arriving == made {
+                    try? await Task.sleep(for: .milliseconds(8))
+                }
+                try? await Task.sleep(for: .milliseconds(32))
+            }
             // Nothing else picked, and the track not taken back, meanwhile.
             guard let self, held == (self.selectedLayerID, self.multiSelectedLayerIDs, self.selectedTrackIDs),
                   self.document?.track(id: made) != nil else { return }

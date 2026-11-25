@@ -55,6 +55,33 @@ struct ReferenceWideEditTests {
         }
     }
 
+    @Test("A recording added on a track of its own, and its undo, reach no other track's bars or row")
+    func addedClipReachesOnlyItsOwnRow() throws {
+        let doc = Self.fifty
+        let pictures = doc.timelineTracks.filter { $0.kind == .video }
+        let main = try #require(pictures.map { doc.clipIDs(onTrack: $0.id) }.max { $0.count < $1.count })
+        let like = try #require(main.compactMap { doc.layer(id: $0) }
+            .first { $0.movie != nil && ($0.time?.inMS ?? 0) > 22_000 })
+        let time = try #require(like.time)
+        var after = doc
+        var layer = Layer(name: "Added", content: like.content, frame: like.frame)
+        layer.movie = like.movie
+        layer.time = LayerTime(inMS: time.inMS, outMS: time.outMS, sourceInMS: time.sourceInMS,
+                               sourceLengthMS: like.movie?.durationMS ?? 0)
+        let landed = after.land(layer, at: ClipLanding(target: .newTrack(at: 0), startMS: time.inMS,
+                                                       lengthMS: time.lengthMS, edit: .overwrite,
+                                                       trackName: "Added", allowed: true))
+        let added = try #require(landed)
+        let track = try #require(after.trackID(ofClip: added))
+        for (now, was) in [(after, doc), (doc, after)] {
+            let change = now.clipBarsChange(since: was)
+            #expect(change == .only([added]))
+            // Its own row, and the row of its own sound.
+            let sound = (now.timelineTracks + was.timelineTracks).filter { $0.attachedTo == track }.map(\.id)
+            #expect(now.tracksDrawn(differentlyBy: change, since: was)?.subtracting([track] + sound).isEmpty == true)
+        }
+    }
+
     /// A moment worked out the way it was before 2026-11-24: every layer at
     /// every step, on screen or not.
     static func workedOutInFull(_ doc: PhotonzDocument, atMS ms: Int) -> [Layer] {

@@ -1,0 +1,27 @@
+{
+  "id": "a-gif-or-heic-export-on-a-busy-mac-never-loses-a",
+  "title": "A GIF or HEIC export on a busy Mac never loses a frame or comes out empty",
+  "goal": "When the Mac is under heavy load, an exported GIF can silently come out a frame short, and a HEIC can come out with no pictures at all, with no error. A person exporting should always get every frame, or be told the export failed.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 4070,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-25T11:56:04.552Z",
+  "updated": "2026-11-25T11:56:04.555Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CI red on main, seen on run 45583153492 (commit 34bcb4395, Test slice 2 of 3, 2026-11-25). Command: gh run view 45583153492 --log-failed | grep -A2 'recorded an issue'. Output: 'short gif at high held (count: 48, width: 640, height: 400) and then (count: 47, width: 640, height: 400) pictures'; 'longer heic at small held (count: 40, width: 480, height: 300) and then (count: 0, width: 0, height: 0) pictures'; 'longer gif at high held (count: 95, ...) and then (count: 96, ...)'; GIF bytes 113275 then 111114 and 205656 then 208277. The test took 648 s and the slice 955 s, so that runner was starved. Not reproduced on this Mac. Likely place, from reading only: Sources/PhotonzMedia/VideoExporter.swift exportAnimated, 'guard var frame = try? await generator.image(at: time).image else { continue }' skips a frame whose read threw. The HEIC with 0 pictures is not explained: CGImageDestinationFinalize returned true. Found by the runner of an-edit-with-50-tracks-and-100-clips-scrolls-pla.",
+  "acceptance": [
+    "A frame that cannot be read is read again before it is given up on, and a frame given up on for good is an error or is logged, never a silent gap: a test makes the first read of a frame fail and the written GIF still holds every frame",
+    "An animated file that finishes with no readable pictures is an error, never a success: a test covers it",
+    "The test 'written twice, a GIF is the same file and a HEIC the same pictures' passes on CI, and its expectations are unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-11-25T11:56:04.554Z",
+      "note": "created (manual)"
+    }
+  ]
+}

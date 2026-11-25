@@ -23505,3 +23505,9 @@ one window (the user's 0.23.0 app opened an extra empty one). The site deploy
 failed three times on deploy-pages not finding the pages artifact half a second
 after upload; site.yml now waits 20 s and retries once, and the fourth run
 announced 0.25.0.
+
+## 2026-11-25 — Fifty tracks, a hundred clips (pass 5)
+
+- An added empty track's row is bare room in the edit's frame and built 34 ms later (`TimelineRowChores.makesRoomFirst`), its pick waits for it; the sounds' renumbering comes 80 ms later (`LateTrackRows`); the title bar's drag regions are worked out after the edit's frames (`TitleBarRegionLater`); only the row being named holds a FocusState (`TrackNameField`). Add track 19 to 25 -> 13 to 14 ms, its undo 11 to 14, add clip 16 -> 13.
+- Left: one zoom frame in about 1,900 held 20 ms (RenderBox waiting on its own queue), 0 or 1 dropped frame in a 2 minute play. Task pending.
+- CI was red on a GIF/HEIC export losing frames on a starved runner; filed as its own p1.

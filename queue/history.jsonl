@@ -19145,3 +19145,10 @@
 {"t":"2026-11-25T11:54:32.804Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T11:54:32.880Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T11:54:33.243Z","ev":"task_pending","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"Pass 4 landed: zoom and scroll meet their p95 bars, export unchanged. Adding a track while it plays (19 to 25 ms, bar 16) and the odd single frame over 16 are left; see the log."}
+{"t":"2026-11-25T11:55:09.366Z","ev":"task_started","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","title":"An edit with 50 tracks and 100 clips scrolls, plays and edits without lag or flashes","priority":"p1-high"}
+{"t":"2026-11-25T11:56:04.556Z","ev":"task_created","id":"a-gif-or-heic-export-on-a-busy-mac-never-loses-a","priority":"p1-high","title":"A GIF or HEIC export on a busy Mac never loses a frame or comes out empty"}
+{"t":"2026-11-25T13:19:12.001Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T14:48:11.758Z","ev":"task_created","id":"find-out-why-the-title-rows-walk-starts-a-part-h","priority":"p2-normal","title":"Find out why the title rows walk starts a part half a second early on some runs"}
+{"t":"2026-11-25T14:48:25.377Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T14:48:25.466Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T14:48:25.545Z","ev":"task_pending","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"Pass 5 landed: every edit on 50 tracks is 10 to 14 ms. One zoom frame over 16 ms (the system's drawing queue) and 0 or 1 dropped frame in a 2 minute play are left; see the log."}

@@ -1,0 +1,29 @@
+{
+  "id": "find-out-why-the-title-rows-walk-starts-a-part-h",
+  "title": "Find out why the title rows walk starts a part half a second early on some runs",
+  "goal": "A check that drags the start of a title part fails on some runs because the part starts half a second earlier than expected before anything is dragged. Find out whether the app places the part differently from run to run, or the check is at fault.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 8.75,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-25T14:48:11.754Z",
+  "updated": "2026-11-25T14:48:11.757Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Command: Scripts/playtest.sh Scripts/playtest/timeline-sub-layer-rows-walk.json --no-build, run alone five times on 2026-11-25: 2 failed, 3 passed. Output of both failures: [31 dragPart] FAILED: Subtitle starts at 0.95s into the title after the drag, not 1.45s (it started at 0.45s). Also failed once in pass 3 of an-edit-with-50-tracks-and-100-clips-scrolls-pla on 2026-11-24. Not checked against an older build.",
+  "acceptance": [
+    "What makes the Subtitle start at 0.45 s on some runs and 0.95 s on others is named, with two logs side by side",
+    "timeline-sub-layer-rows-walk passes ten runs in a row, or the app bug behind it is fixed"
+  ],
+  "log": [
+    {
+      "t": "2026-11-25T14:48:11.756Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "timeline-sub-layer-rows-walk"
+  ]
+}

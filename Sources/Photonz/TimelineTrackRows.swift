@@ -34,7 +34,6 @@ struct TimelineTrackRow: View {
     var pick: TrackPickShare = .none
 
     @State private var isHovered = false
-    @State private var draftName = ""
     /// The clip under the pointer on a busy lane, drawn as its full bar so a
     /// hand that reaches it finds the real grips (`TimelinePaintedClips`).
     @State private var pointerClipID: UUID?
@@ -52,7 +51,6 @@ struct TimelineTrackRow: View {
     /// What this lane last worked out for its painting, kept while nothing it
     /// was worked out from has changed (`LanePaintingKept`).
     @State private var keptPainting = LanePaintingKept()
-    @FocusState private var isNaming: Bool
     /// Far from the part of the timeline on screen (`TimelineRowInSight`).
     @Environment(\.timelineRowSleep) private var sleep
     @State private var keptBody = KeptBuild()
@@ -234,7 +232,7 @@ struct TimelineTrackRow: View {
         let layout = layout
         return HStack(spacing: 0) {
             if editorState.renamingTrackID == track.id {
-                nameField
+                TrackNameField(track: track)
             } else {
                 // The name gives the switches room rather than sitting under
                 // them, so a click on the name is always a click on the name.
@@ -421,38 +419,7 @@ struct TimelineTrackRow: View {
         return said + " (\(count) clip\(count == 1 ? "" : "s"))"
     }
 
-    private var nameField: some View {
-        TextField("", text: $draftName)
-            .textFieldStyle(.plain)
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(VideoKit.Palette.ink)
-            .padding(.horizontal, 4)
-            .frame(width: TimelineDock.gutter - 4, height: 20)
-            .background(RoundedRectangle(cornerRadius: 4).fill(VideoKit.Palette.glassThin))
-            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(VideoKit.Palette.accent))
-            .focused($isNaming)
-            .onSubmit { editorState.renameTrack(track.id, to: draftName) }
-            .onExitCommand { editorState.renamingTrackID = nil }
-            .onChange(of: isNaming) { _, focused in
-                if !focused, editorState.renamingTrackID == track.id {
-                    editorState.renameTrack(track.id, to: draftName)
-                }
-            }
-            .onAppear {
-                draftName = track.name
-                // A beat later, once the field is in the window: asked for in
-                // the same pass that builds it, the canvas keeps the keyboard.
-                DispatchQueue.main.async { isNaming = true }
-            }
-            .playtestControl("Track name", detail: "Timeline")
-            .panelReadout("naming \(track.name): \(isNaming ? "typing" : "not holding the keyboard")")
-    }
-
-    private func beginRenaming() {
-        draftName = track.name
-        editorState.beginRenamingTrack(track.id)
-        isNaming = true
-    }
+    private func beginRenaming() { editorState.beginRenamingTrack(track.id) }
 
     private var showsAllSwitches: Bool { isHovered }
     private var isSound: Bool { track.kind == .audio }
@@ -2407,5 +2374,41 @@ extension TimelineTrackRow: Equatable {
         case let (a?, b?): return a.sharesWorkedOutAnswers(with: b)
         default: return false
         }
+    }
+}
+
+/// The field a track is named in: its own view, so the rows not being named
+/// (every row but one) hold no focus for the window to ask after.
+private struct TrackNameField: View {
+    @Environment(EditorState.self) private var editorState
+    let track: DocumentTrack
+    @State private var draftName = ""
+    @FocusState private var isNaming: Bool
+
+    var body: some View {
+        TextField("", text: $draftName)
+            .textFieldStyle(.plain)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(VideoKit.Palette.ink)
+            .padding(.horizontal, 4)
+            .frame(width: TimelineDock.gutter - 4, height: 20)
+            .background(RoundedRectangle(cornerRadius: 4).fill(VideoKit.Palette.glassThin))
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(VideoKit.Palette.accent))
+            .focused($isNaming)
+            .onSubmit { editorState.renameTrack(track.id, to: draftName) }
+            .onExitCommand { editorState.renamingTrackID = nil }
+            .onChange(of: isNaming) { _, focused in
+                if !focused, editorState.renamingTrackID == track.id {
+                    editorState.renameTrack(track.id, to: draftName)
+                }
+            }
+            .onAppear {
+                draftName = track.name
+                // A beat later, once the field is in the window: asked for in
+                // the same pass that builds it, the canvas keeps the keyboard.
+                DispatchQueue.main.async { isNaming = true }
+            }
+            .playtestControl("Track name", detail: "Timeline")
+            .panelReadout("naming \(track.name): \(isNaming ? "typing" : "not holding the keyboard")")
     }
 }

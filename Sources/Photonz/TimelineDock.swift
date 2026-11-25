@@ -1832,7 +1832,9 @@ struct TimelineGridRow: View, Equatable {
                                    gates: gates && readingForATrackRow(track.id) {
                                        TimelineDock.isOneLane(track, editorState)
                                    },
-                                   startsNear: startsNear) {
+                                   startsNear: startsNear,
+                                   makesRoomFirst: gates
+                                       && editorState.timelineRowChores.makesRoomFirst(track)) {
                     TimelineTrackRow(row: track, inGroup: inGroup, laneWidth: laneWidth, isBlade: isBlade,
                                      rows: rows, pick: pick)
                         .equatable()
@@ -1858,17 +1860,49 @@ struct TimelineGridRow: View, Equatable {
 /// `readingALatePass` alone does not hold it: the grid is drawn again in
 /// that pass for other reasons too (the text editor closing), and a read
 /// there sees the document as it is.
-@MainActor final class LateTrackRows {
-    private var last: [TimelineRowModel]?
+@Observable @MainActor final class LateTrackRows {
+    @ObservationIgnored private var last: [TimelineRowModel]?
+    /// Moved on when the sounds' new numbers are due to be drawn.
+    private var numbersRevision = 0
+    @ObservationIgnored private var numbersAreDue = false
+    @ObservationIgnored private var numbersTask: Task<Void, Never>?
 
     func read(_ editorState: EditorState,
               _ fresh: () -> [TimelineRowModel]) -> [TimelineRowModel] {
         // Watched in every case, so the pass after brings the tracks round.
         _ = editorState.latePassRevision
+        _ = numbersRevision
         if editorState.isCatchingUpOnTheNextPass, let last { return last }
-        let now = readingALatePass(fresh)
+        var now = readingALatePass(fresh)
+        if let last, now.count > TimelineRowsInSight.tallEdit { keepNumbers(of: last, in: &now) }
         last = now
         return now
+    }
+
+    /// A clip with sound that comes or goes renumbers the sound of every
+    /// track under it, which picks its colour: each of them was built again,
+    /// in the same pass as the row that came, 17 to 22 ms on a 50 track
+    /// timeline (2026-11-25). They wear the new one a few frames later.
+    private func keepNumbers(of last: [TimelineRowModel], in now: inout [TimelineRowModel]) {
+        guard !numbersAreDue else { return numbersAreDue = false }
+        let before = Dictionary(last.compactMap { row in row.trackRow.map { ($0.id, $0.soundNumber) } },
+                                uniquingKeysWith: { a, _ in a })
+        var kept = false
+        for index in now.indices {
+            guard case .track(var row, let inGroup) = now[index], let was = before[row.id],
+                  was != row.soundNumber else { continue }
+            row.soundNumber = was
+            now[index] = .track(row, inGroup: inGroup)
+            kept = true
+        }
+        guard kept, numbersTask == nil else { return }
+        numbersTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(80))
+            guard let self else { return }
+            self.numbersTask = nil
+            self.numbersAreDue = true
+            self.numbersRevision += 1
+        }
     }
 }
 
