@@ -431,7 +431,6 @@ struct InspectorPanel: View {
         let _ = foldBudgetPass
         let _ = folds.syncs
         let _ = (folds.onFoldFromAnotherWindow = { checkFoldBudget() })
-        let _ = (editorState.panelPiecesMayLand = { catchUp() })
         // Before `drawnSections` moves on: a section new to the dock is placed
         // by where the one above it ended LAST pass.
         let _ = bodies.draw(split.pick, after: reveal, holding: holdsBodiesOutOfSight)
@@ -720,6 +719,8 @@ struct InspectorPanel: View {
         // Which sections the playhead's place brings in, handed over only
         // when that changes (`PanelTimeFacts`).
         .background { PanelTimeFactsWatcher { watchedTimeFacts = $0 } }
+        // Play stopped, or the pointer came in: what waited lands now.
+        .onReceive(editorState.panelPiecesMayLand) { catchUp() }
         .onAppear(perform: loadOrder)
         .onChange(of: order) { persistOrder() }
         // A panel that goes away mid-drag takes its key watch with it, and

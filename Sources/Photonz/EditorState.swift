@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import CoreGraphics
 import Observation
 import PhotonzCore
@@ -2357,14 +2358,18 @@ final class EditorState {
         didSet {
             // The panel's pieces that waited for play to stop land now
             // (`PanelPlayHold`).
-            if oldValue, !isDocumentPlaying { panelPiecesMayLand?() }
+            if oldValue, !isDocumentPlaying { panelPiecesMayLand.send() }
         }
     }
     /// The pointer is over the right hand panel, as its hover last said.
     @ObservationIgnored private(set) var pointerInPanel = false
-    /// What the panel does when the pieces a pick brought in may land after
-    /// waiting for play to stop: its next catch-up (`InspectorPanel.catchUp`).
-    @ObservationIgnored var panelPiecesMayLand: (() -> Void)?
+    /// Said when the pieces a pick brought in may land after waiting for play
+    /// to stop; the panel hears it and asks for its next catch-up
+    /// (`InspectorPanel.catchUp`). The panel subscribes rather than leaving a
+    /// closure here: a closure made in its body holds this editor, and every
+    /// closed window's editor stayed in memory with its pictures that way
+    /// (2026-11-23, `closed-windows-give-their-memory-back-walk`).
+    @ObservationIgnored let panelPiecesMayLand = PassthroughSubject<Void, Never>()
     /// Whether a section or a set of rows the panel owes waits for play to
     /// stop (`PanelPlayHold`). Read where pieces are let in, never in a body.
     var panelPiecesWait: Bool {
@@ -2377,7 +2382,7 @@ final class EditorState {
     func notePointerInPanel(_ inside: Bool) {
         guard inside != pointerInPanel else { return }
         pointerInPanel = inside
-        if inside, isDocumentPlaying { panelPiecesMayLand?() }
+        if inside, isDocumentPlaying { panelPiecesMayLand.send() }
     }
     /// True while this window holds a recording opened the moment it was
     /// stopped, whose file macOS is still closing: it shows the frame the
