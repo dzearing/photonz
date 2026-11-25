@@ -23494,3 +23494,14 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - The lanes of a tall timeline leave their rest layout a group at a time (`TimelineLaneWaves`, `TimelineRest`, `timelineRestFrame`), late pictures land with the next step (`LatePictures`), gap stripes are cut to the canvas, far rows are out of accessibility and hit testing. Main thread p95, pass 3 build -> now: zoom in 10.8 -> 6.9, out 10.0 -> 7.4, near fit 9.9 -> 6.8, along 5.8 -> 5.7 (its first frame 40 -> 9 to 13), tracks down 5.8 -> 4.1. 0 of 3636 frames dropped.
 - Export against the one from before any of this work: worst frame 100.7 dB, sound identical.
 - Left: add track 19 to 25 ms (bar 16), the odd single frame over 16 (one zoom frame of 21 in five runs). Task pending.
+
+## 2026-11-25 — release v0.25.0
+
+Released v0.25.0 from 6857111bb (CI green), cut from a separate worktree so the
+loop's in-flight 50 track work stayed out of it. Headline: video speed on wide
+and long edits, text that zooms without letter jitter, no flicker on jump back,
+a changed file shows its new frames, and opening a recording from Finder opens
+one window (the user's 0.23.0 app opened an extra empty one). The site deploy
+failed three times on deploy-pages not finding the pages artifact half a second
+after upload; site.yml now waits 20 s and retries once, and the fourth run
+announced 0.25.0.
