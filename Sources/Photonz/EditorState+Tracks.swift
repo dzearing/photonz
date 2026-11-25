@@ -151,7 +151,7 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
 }
 
 /// One row of the dock's grid: a group's heading or a track.
-enum TimelineRowModel: Identifiable {
+enum TimelineRowModel: Identifiable, Equatable {
     case group(DocumentTrackGroup, isCollapsed: Bool, tracks: [TimelineTrackRowModel])
     case track(TimelineTrackRowModel, inGroup: Bool)
 
@@ -160,6 +160,12 @@ enum TimelineRowModel: Identifiable {
         case .group(let group, _, _): group.id
         case .track(let row, _): row.id
         }
+    }
+
+    /// The track, for a row that is one.
+    var trackRow: TimelineTrackRowModel? {
+        if case .track(let row, _) = self { return row }
+        return nil
     }
 }
 
@@ -447,8 +453,24 @@ extension EditorState {
 
     func addTrack(_ kind: DocumentTrack.Kind, at index: Int? = nil) {
         var made: UUID?
+        // Nothing on screen is in the hand that picked the menu row, so its
+        // click is no reason to build it all in one pass (`perform`).
+        catchUpOnTheNextPassOnAVideo()
         perform { made = $0.addTrack(kind, at: index) }
-        if let made { holdTracks([made]) }
+        guard let made else { return }
+        // Where the edit is drawn in pieces (`catchUpOnTheNextPassOnAVideo`),
+        // the new row comes a pass after it and the pick a pass after that:
+        // the panel letting go of what it showed, in the frame the row is
+        // built, held a 50 track timeline 20 ms (2026-11-24).
+        guard isCatchingUpOnTheNextPass else { return holdTracks([made]) }
+        let held = (selectedLayerID, multiSelectedLayerIDs, selectedTrackIDs)
+        Task { @MainActor [weak self] in
+            for _ in 0..<3 { await NextRunLoopPass.start() }
+            // Nothing else picked, and the track not taken back, meanwhile.
+            guard let self, held == (self.selectedLayerID, self.multiSelectedLayerIDs, self.selectedTrackIDs),
+                  self.document?.track(id: made) != nil else { return }
+            self.holdTracks([made])
+        }
     }
 
     // MARK: The sound inside a track's clips

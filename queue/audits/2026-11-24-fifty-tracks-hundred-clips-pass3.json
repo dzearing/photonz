@@ -1,0 +1,30 @@
+{
+  "feature": "Fifty tracks and a hundred clips, third pass",
+  "epic": "video-perf",
+  "summary": "Moving, trimming, picking and cutting a clip while a 50 track edit plays each take 9 to 15 ms now, and a two minute play dropped no frames. Zooming the timeline has fewer late frames but is not at its bar yet.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe with Scripts/perf/speed-walk.sh --wide 50 and --wide 100; numbers in Scripts/perf/baselines/wide-50.json and wide-100.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open Reference Edit 50 tracks.photonz with File > Open.", "shot": "2026-11-24-wide-edit-pass3-sc.png" },
+    { "do": "Press Space and let it play." },
+    { "do": "While it plays, drag a clip along its track, then press Command Z." },
+    { "do": "While it plays, click a clip and press Command B." },
+    { "do": "Add a video track from a track's right-click menu, then press Command Z." },
+    { "do": "Pinch the timeline in and out." }
+  ],
+  "evaluate": [
+    "Does a clip land the moment you let go while the video plays?",
+    "Does the timeline keep up with a pinch, thumbnails included?",
+    "Does a new track being picked a few frames after it appears feel right?"
+  ],
+  "rough": [
+    "Edits while it plays, longest pass, pass 2 / now (bar 16 ms): move 18 to 25 / 10, trim 14 / 10, undo 12 to 18 / 11 to 14, pick 17 / 11, blade 22 / 15, add clip 17 / 17 (15 to 18 over four runs), add track 21 / 17 (17 to 19), undo of add track 16 / 14 (13 to 20).",
+    "Zoom is still over its bar of 8.3 ms. In this run p95 is in 11.5, out 10.8, near Fit 9.9; a run before it of the same code but for one reverted change read 9.7 to 9.9, 9.5 to 10.4 and 9.1. Pass 2's own run read 10.9, 8.6 and 8.3, which I could not get back: two runs before the zoom work, on this busier Mac, read 12.9 and 14.7 zooming in. Zoom in frames over 8.3 ms: 38 and 43 of 158 in those two runs, 17 to 23 in the three after. Worst zoom frame 18.6.",
+    "Scroll along p95 6.0, one frame of 35 to 51 ms in every run; up and down the tracks p95 4.3, first frame 14.",
+    "A thumbnail that arrives while you zoom or scroll appears whole, up to a tenth of a second later, rather than fading in.",
+    "50 tracks played end to end: 0 of 3636 frames dropped, no clip frame wrong in the ten up stretch, worst picture 2.4 of 255 from the export. Starting play at 0:58 from rest still waits 733 ms.",
+    "100 tracks: 5 of 3637 dropped (10 before), 11 clip frames from ahead at 1:06 (12 before), edits 13 to 35 ms, zoom p95 11.8 to 14.8, along 8.9. Down the tracks read p95 17.1 where pass 2 read 10.5; not explained.",
+    "Export was not compared again in this pass. What each moment needs is unchanged: a test holds the new lookup against the old way all along the 50 track edit.",
+    "No mock covers a 50 track timeline."
+  ]
+}

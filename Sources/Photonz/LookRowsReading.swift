@@ -76,6 +76,22 @@ func readingForAClipBar<Content>(_ id: UUID, _ build: () -> Content) -> Content 
     return readingALatePass(build)
 }
 
+/// What a track's row and its lane are built inside: every read of the
+/// document in `build` watches only that track, which moves on a pass late
+/// with the rest of the timeline but only for an edit that reached a clip on
+/// it (`PhotonzDocument.tracksDrawn`). Every row in sight had been built again
+/// for every edit to any track: 6 to 9 rows and lanes, 6 to 8 ms of the pass
+/// after each edit on a 50 track timeline (2026-11-24). What a row reads that
+/// is not its own clips' goes through other watches: the ruler
+/// (`rulerDocument`), and everything in its model, which the grid hands it.
+@MainActor
+func readingForATrackRow<Content>(_ id: UUID, _ build: () -> Content) -> Content {
+    let was = EditorState.readsForTrackRow
+    EditorState.readsForTrackRow = id
+    defer { EditorState.readsForTrackRow = was }
+    return readingALatePass(build)
+}
+
 /// Whether one clip is the single pick (`EditorState.isClipPicked`).
 @Observable @MainActor
 final class ClipPickWatch {

@@ -266,8 +266,8 @@ extension PhotonzDocument {
         let styles = Dictionary(textStyles.map { ($0.id, $0.treatment) },
                                 uniquingKeysWith: { first, _ in first })
         var stale: Set<UUID> = []
-        for layer in allLayers {
-            guard let styleID = layer.textStyleID else { continue }
+        forEachLayer { layer in
+            guard let styleID = layer.textStyleID else { return }
             // A name this document no longer has is a claim that cannot be
             // true, which is the state a file can arrive in; type that no
             // longer matches the name is the quiet one an edit leaves behind.

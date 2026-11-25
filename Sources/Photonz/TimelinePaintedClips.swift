@@ -83,6 +83,7 @@ struct TimelinePaintedClips: View, Equatable {
     @State private var fades: [Fade: TimeInterval] = [:]
     /// What was painted last time, kept without painting again.
     @State private var painted = Painted()
+    @Environment(EditorState.self) private var editorState
 
     /// The clips painted last time, and which of them showed pictures: a
     /// strip that comes in with a zoom on a clip already painted fades in
@@ -96,6 +97,8 @@ struct TimelinePaintedClips: View, Equatable {
     private final class Painted {
         var clips: Set<UUID>?
         var strips: Set<UUID> = []
+        /// Pictures that landed while the timeline moved, painted together.
+        var landing: Task<Void, Never>?
     }
 
     private struct Showing: Hashable {
@@ -141,7 +144,14 @@ struct TimelinePaintedClips: View, Equatable {
         let seen = painted.strips
         let showing = Showing(clips: Set(placed.map(\.bar.layerID)),
                               strips: Set(zip(placed, strips).compactMap { $1 == nil ? nil : $0.bar.layerID }))
-        let fades = self.fades
+        // Nothing fades while the timeline moves: a fade paints its lane again
+        // on every frame, and a zoom brings strips and pictures on to every
+        // lane in sight at once. Seven lanes of it were most of a late zoom
+        // frame on a 50 track timeline (2026-11-24). What lands is painted
+        // whole instead, and a zoom stretches it with the rest. Read where
+        // reading it wakes nothing (`EditorState.timelineMovesNow`).
+        let moves = editorState.timelineMovesNow
+        let fades = moves ? [:] : self.fades
         // Side by side rather than one over the other as an overlay: the
         // painting takes no presses, and a hit-testing switch on a view is
         // inherited by anything overlaid on it.
@@ -152,7 +162,7 @@ struct TimelinePaintedClips: View, Equatable {
                            in: &context)
             for (one, strip) in zip(placed, strips) {
                 var alpha: (Fade) -> Double = { _ in 1 }
-                if !fades.isEmpty || before != nil {
+                if !moves, !fades.isEmpty || before != nil {
                     alpha = { fade in
                         // New on a clip painted last time: clear
                         // until its fade starts.
@@ -204,7 +214,7 @@ struct TimelinePaintedClips: View, Equatable {
             let fresh = now.strips.subtracting(painted.strips).intersection(clips)
             painted.clips = now.clips
             painted.strips = now.strips
-            guard !fresh.isEmpty else { return }
+            guard !fresh.isEmpty, !editorState.timelineMovesNow else { return }
             let at = Date.timeIntervalSinceReferenceDate
             for id in fresh { self.fades[.strip(id)] = at }
             clearFades()
@@ -225,6 +235,10 @@ struct TimelinePaintedClips: View, Equatable {
                 }
                 for await key in group {
                     guard let key, !Task.isCancelled else { continue }
+                    if editorState.timelineMovesNow {
+                        landTogether()
+                        continue
+                    }
                     self.fades[.tile(key)] = Date.timeIntervalSinceReferenceDate
                     landed &+= 1
                     clearFades()
@@ -273,6 +287,17 @@ struct TimelinePaintedClips: View, Equatable {
             let done = fades.filter { now - $0.value >= Self.fadeSeconds }.map(\.key)
             guard !done.isEmpty else { return }
             for key in done { fades[key] = nil }
+        }
+    }
+
+    /// Paints the pictures landing while the timeline moves a tenth of a
+    /// second at a time, rather than the lane again for each.
+    private func landTogether() {
+        guard painted.landing == nil else { return }
+        painted.landing = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(100))
+            painted.landing = nil
+            landed &+= 1
         }
     }
 

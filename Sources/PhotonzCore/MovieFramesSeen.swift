@@ -20,34 +20,81 @@ extension PhotonzDocument {
         let all = movieFrames(atTimeMS: ms)
         guard all.count > 1 else { return all }
         let moment = min(max(0, ms), lastDrawableTimeMS)
-        let off = layersOffScreenByTrack()
-        var hidden = Set<UUID>()
-        func hide(_ layer: Layer) {
-            for inside in layer.selfAndDescendants {
-                hidden.insert(inside.id)
-                hidden.insert(Layer.transitionPartnerID(of: inside.id))
-            }
-        }
-        for layer in layers where off.contains(layer.id) { hide(layer) }
+        let plan = moviePlan
         // A camera or a lens can show a layer from anywhere, so nothing is
         // taken to be covered then.
-        if camera == nil, let cover = layers.lastIndex(where: {
-            !off.contains($0.id) && fillsTheFrame($0, atTimeMS: moment)
-        }), cover > 0 {
+        var cover = 0
+        if camera == nil, let top = plan.covers.last(where: {
+            $0.inMS <= moment && moment < $0.outMS && fillsTheFrame(layers[$0.index], atTimeMS: moment)
+        }), top.index > 0 {
             let changing = hasEditPointTransitions
-                ? Set(editPointMoments(atMS: moment).flatMap { [$0.onScreen, $0.borrowed] }) : []
-            if !changing.contains(layers[cover].id) {
-                for layer in layers[..<cover] { hide(layer) }
+                && editPointMoments(atMS: moment).contains {
+                    $0.onScreen == layers[top.index].id || $0.borrowed == layers[top.index].id
+                }
+            if !changing { cover = top.index }
+        }
+        guard cover > 0 || !plan.off.isEmpty else { return all }
+        return all.filter {
+            guard let index = plan.topLayer[$0.layerID] else { return true }
+            return index >= cover && !plan.off.contains(index)
+        }
+    }
+
+    /// Which layers play a recording and when, read off the layers once and
+    /// kept until one changes. A playing clock asks what each moment needs
+    /// dozens of times after an edit and on every tick, and each answer went
+    /// through every layer, copying it, whether or not it was on screen: 5 ms
+    /// of every edit's pass on a 100 clip edit (2026-11-24).
+    var moviePlan: DocumentDerived.MoviePlan {
+        derived.answer(\.moviePlan) {
+            var plan = DocumentDerived.MoviePlan()
+            let off = layersOffScreenByTrack()
+            for index in layers.indices {
+                let id = layers[index].id
+                if layers[index].merged != nil { plan.merged.append(index) }
+                if off.contains(id) { plan.off.insert(index) }
+                guard Self.playsSomething(layers[index]) else { continue }
+                // A layer alone answers only while it is on screen; one with
+                // layers inside is asked at every moment, for theirs.
+                let alone: Bool = if case .group = layers[index].content { false } else { true }
+                let time = alone ? layers[index].time : nil
+                plan.plays.append(.init(index: index, inMS: time?.inMS ?? .min, outMS: time?.outMS ?? .max))
+                if alone, let time, !off.contains(id), layers[index].movie != nil {
+                    plan.covers.append(.init(index: index, inMS: time.inMS, outMS: time.outMS))
+                }
+            }
+            func place(_ list: [Layer], under top: Int) {
+                for index in list.indices {
+                    plan.topLayer[list[index].id] = top
+                    plan.topLayer[Layer.transitionPartnerID(of: list[index].id)] = top
+                    if case .group(let group) = list[index].content { place(group.children, under: top) }
+                }
+            }
+            for index in layers.indices { place([layers[index]], under: index) }
+            return plan
+        }
+    }
+
+    private static func playsSomething(_ layer: Layer) -> Bool {
+        if layer.movie != nil { return true }
+        guard case .group(let group) = layer.content else { return false }
+        return group.children.indices.contains { playsSomething(group.children[$0]) }
+    }
+
+    /// The frames a layer and everything inside it needs at a moment.
+    static func movieFrameRequests(of layer: Layer, atTimeMS ms: Int, into all: inout [MovieFrameRequest]) {
+        if layer.movie != nil { all += layer.movieFrameRequests(atTimeMS: ms) }
+        if case .group(let group) = layer.content {
+            for index in group.children.indices {
+                movieFrameRequests(of: group.children[index], atTimeMS: ms, into: &all)
             }
         }
-        guard !hidden.isEmpty else { return all }
-        return all.filter { !hidden.contains($0.layerID) }
     }
 
     /// Whether this clip covers every pixel of the canvas at a moment and
     /// lets nothing under it show: a recording (which has no transparency as
     /// it is read) over the whole frame, with nothing done to it.
-    private func fillsTheFrame(_ layer: Layer, atTimeMS ms: Int) -> Bool {
+    func fillsTheFrame(_ layer: Layer, atTimeMS ms: Int) -> Bool {
         layer.isVisible && layer.movie != nil && layer.movieFrameSourceMS(atTimeMS: ms) != nil
             && layer.incomingMovieFrameSourceMS(atTimeMS: ms) == nil
             && layer.frame.contains(CGRect(origin: .zero, size: canvasSize))

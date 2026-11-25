@@ -1336,6 +1336,15 @@ The rule, for any view added to the editor window:
    known size (`TimelineSlot`), never stacked: stacked, the ruler and the
    window's label had SwiftUI check where all fifty rows go on every frame of a
    zoom (about 3 ms of it).
+   A row of the grid is a `TimelineGridRow`, equal while nothing handed to it
+   changed, and reads the document inside `readingForATrackRow`: it is told
+   only of an edit that reached a clip on its track
+   (`PhotonzDocument.tracksDrawn`). Anything a row starts to read that is not
+   its own clips' must come in its model or through another watch, or it will
+   go stale. A list's closure runs outside the body that holds it, so nothing
+   in it may read the document (2026-11-24). Nothing fades in while the
+   timeline moves, and half the lanes take a zoom's fresh layout a frame after
+   the rest (`TimelineLaneFrame.stands(for:)`).
 8. **A busy lane paints its plain clips and cuts; a clip somebody is working
    on is its full view again.** A lane builds only what is in sight plus half
    a window each side (`TimelineSight`). When 24 or more clips are in sight,

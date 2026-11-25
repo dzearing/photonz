@@ -35,12 +35,13 @@ extension PhotonzDocument {
 
     /// What changed for the timeline's clip bars between `old` and this one.
     public func clipBarsChange(since old: PhotonzDocument) -> ClipBarsChange {
-        let was = Dictionary(old.layers.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        let now = Dictionary(layers.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        let same = old.layers.count == layers.count && zip(old.layers, layers).allSatisfy { $0.id == $1.id }
+        // By place, not by copy: a layer is big, and a long edit has hundreds.
+        let same = old.layers.count == layers.count && layers.indices.allSatisfy { old.layers[$0].id == layers[$0].id }
+        let was = same ? [:] : Self.places(old.layers)
+        let now = same ? [:] : Self.places(layers)
         // The layers in both, in the one order.
-        guard same || old.layers.filter({ now[$0.id] != nil }).map(\.id)
-            == layers.filter({ was[$0.id] != nil }).map(\.id) else { return .every }
+        guard same || old.layers.indices.map({ old.layers[$0].id }).filter({ now[$0] != nil })
+            == layers.indices.map({ layers[$0].id }).filter({ was[$0] != nil }) else { return .every }
         var outside = old
         outside.layers = []
         var mine = self
@@ -53,11 +54,16 @@ extension PhotonzDocument {
         }
         guard outside == mine else { return .every }
         var changed: [(old: Layer?, new: Layer?)] = []
-        for layer in old.layers {
-            let still = now[layer.id]
-            if still != layer { changed.append((layer, still)) }
+        for index in old.layers.indices {
+            guard let still = same ? index : now[old.layers[index].id] else {
+                changed.append((old.layers[index], nil))
+                continue
+            }
+            if layers[still] != old.layers[index] { changed.append((old.layers[index], layers[still])) }
         }
-        for layer in layers where was[layer.id] == nil { changed.append((nil, layer)) }
+        if !same {
+            for index in layers.indices where was[layers[index].id] == nil { changed.append((nil, layers[index])) }
+        }
         let oldLayout = old.trackLayout(), newLayout = trackLayout()
         if changed.isEmpty, oldLayout.tracks == newLayout.tracks { return .none }
         guard Self.sameWhereBothStand(oldLayout, newLayout, goneOrCome: Set(changed.compactMap { pair in
@@ -85,6 +91,28 @@ extension PhotonzDocument {
             }
         }
         return .only(ids)
+    }
+
+    private static func places(_ layers: [Layer]) -> [UUID: Int] {
+        Dictionary(layers.indices.map { (layers[$0].id, $0) }, uniquingKeysWith: { a, _ in a })
+    }
+
+    /// The tracks whose rows draw something `change` (this document's change
+    /// since `old`) reached: the ones that hold a changed clip now or held it
+    /// before. Nil for every row, where every bar may draw differently or the
+    /// document came to have a clock or lost it. A row draws nothing else of
+    /// another track's: its gaps, cuts, marks and key lanes are all read off
+    /// its own clips, and its place and the ruler reach it another way.
+    public func tracksDrawn(differentlyBy change: ClipBarsChange, since old: PhotonzDocument) -> Set<UUID>? {
+        guard case .only(let ids) = change, hasKeyClock == old.hasKeyClock else { return nil }
+        guard !ids.isEmpty else { return [] }
+        var tracks = Set<UUID>()
+        for layout in [old.trackLayout(), trackLayout()] {
+            for members in [layout.clips, layout.linked] {
+                for (track, clips) in members where clips.contains(where: ids.contains) { tracks.insert(track) }
+            }
+        }
+        return tracks
     }
 
     /// Whether the tracks in both hold the same clips in the same order, apart

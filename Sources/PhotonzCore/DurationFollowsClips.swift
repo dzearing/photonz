@@ -19,7 +19,12 @@ import Foundation
 extension PhotonzDocument {
 
     /// Where the last thing with a stretch of time in it ends.
-    var lastClipEndMS: Int? { allLayers.compactMap { $0.time?.outMS }.max() }
+    var lastClipEndMS: Int? {
+        var last: Int?
+        // In place: every edit asks twice, and a layer is big to copy.
+        forEachLayer { if let out = $0.time?.outMS { last = max(last ?? out, out) } }
+        return last
+    }
 
     /// After an edit from `before`: a written length that ended with the last
     /// clip ends with the last clip now.

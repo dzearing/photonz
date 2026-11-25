@@ -23474,3 +23474,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - Undo of an added clip 33 -> 19-22 ms: `clipBarsChange` follows layers and tracks that come and go; a clip just taken away is no longer built as a bar. Rows no longer carry their index.
 - Export before all of this work and now: 3600 frames and the sound identical. Reel `queue/audits/2026-11-24-wide-edit-before-after.mp4`. 100 track edit measured (`baselines/wide-100.json`).
 - Left: zoom worst frames, the first frame of a scroll (22 ms), edits at 17-25 ms, the 100 track edit's edits and playback. Task pending.
+
+## 2026-11-24 — Fifty tracks, a hundred clips (pass 3)
+
+- Edits while it plays, longest pass: move 10, trim 10, undo 11-14, pick 11, blade 15, add clip 17, add track 17 ms. Rows are equal and watch only their own track (`TimelineGridRow`, `readingForATrackRow`), the frames a moment needs are read off a kept plan (`PhotonzDocument.moviePlan`), `clipBarsChange` and the edit's own clean-up copy no layers. 0 of 3636 frames dropped.
+- Zoom: no fades while the timeline moves, and half the lanes step a frame later; frames over 8.3 ms zooming in 38-43 -> 17-23 of 158, p95 9.7-11.5 (bar 8.3).
+- `Scripts/perf/pass-profile.sh` now waits for the walk's last measure and leaves the harness's own look out.
+- Left: zoom p95, add track and its undo (13-20), one 35-51 ms frame scrolling along, the 100 track edit. Task pending.

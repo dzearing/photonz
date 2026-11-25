@@ -63,7 +63,7 @@ struct TimelineTrackRow: View {
 
     // A pass late for an edit marked to catch up next pass
     // (`readingALatePass`), exactly as before for every other.
-    var body: some View { keptAsleep(sleep, keptBody) { readingALatePass { lateBody } } }
+    var body: some View { keptAsleep(sleep, keptBody) { readingForATrackRow(track.id) { lateBody } } }
 
     @ViewBuilder private var lateBody: some View {
         #if PHOTONZ_PLAYTEST
@@ -79,7 +79,7 @@ struct TimelineTrackRow: View {
                     header
                     // The lane follows the timeline's window and the header
                     // does not, so a scroll along time redraws the lane alone.
-                    DrawnOnItsOwn { readingALatePass { lane } }
+                    DrawnOnItsOwn { readingForATrackRow(track.id) { lane } }
                 }
                 .frame(height: laneHeight)
             }
@@ -533,7 +533,7 @@ struct TimelineTrackRow: View {
         // window: this body is built again only when the frame moves
         // (`TimelineLaneFrame`). At rest, and while a hand is on anything
         // in a lane, the frame is the window itself.
-        let frame = row.isCaptions ? nil : editorState.timelineLaneFrameStanding
+        let frame = row.isCaptions ? nil : editorState.timelineLaneFrameStanding(onTrack: track.id)
         let ruler = frame?.ruler ?? editorState.motionStripRuler
         // Only what is in sight, and half a window each side, is built: on
         // the hour-long reference edit a lane of every clip, gap and cut made

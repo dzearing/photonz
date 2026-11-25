@@ -464,32 +464,14 @@ struct TimelineDock: View, Equatable {
                                 if listening, row.id == listeningBefore {
                                     TimelineCaptionsListeningRow(laneWidth: laneWidth)
                                 }
-                                Group {
-                                    switch row {
-                                    case .group(let group, let isCollapsed, let tracks):
-                                        TimelineGroupRow(group: group, isCollapsed: isCollapsed,
-                                                         tracks: tracks, laneWidth: laneWidth)
-                                    case .track(let track, let inGroup):
-                                        TimelineRowInSight(row: track, height: Self.height(of: track, rows: rows),
-                                                           laneHeight: rows.height(track.restingLaneHeight),
-                                                           gates: gates && Self.isOneLane(track, editorState),
-                                                           startsNear: firstRows.contains(row.id)) {
-                                            TimelineTrackRow(row: track, inGroup: inGroup,
-                                                             laneWidth: laneWidth, isBlade: isBlade,
-                                                             rows: rows, pick: picks.share(of: track))
-                                                .equatable()
-                                        }
-                                    }
-                                }
-                                // Where each row stands, measured before it is
-                                // moved aside, for a track carried by its header.
-                                .onGeometryChange(for: CGRect.self) { proxy in
-                                    proxy.frame(in: .named(Self.tracksSpace))
-                                } action: { frame in
-                                    carry.rowFrames[row.id] = frame
-                                    editorState.revealOpenedTimelineRow(row.id, at: frame)
-                                }
-                                .modifier(TrackRowDragPlacement(id: row.id, session: carry))
+                                // Equal rows are the same row, so an edit or a
+                                // pick builds only the ones it reaches
+                                // (`TimelineGridRow`).
+                                TimelineGridRow(row: row, laneWidth: laneWidth, isBlade: isBlade, rows: rows,
+                                                pick: row.trackRow.map { picks.share(of: $0) } ?? .none,
+                                                gates: gates, startsNear: firstRows.contains(row.id),
+                                                session: carry)
+                                    .equatable()
                             }
                             if listening, listeningBefore == nil {
                                 TimelineCaptionsListeningRow(laneWidth: laneWidth)
@@ -1812,6 +1794,63 @@ private struct TimelinePlayheadLine: View {
 }
 
 
+/// One row of the grid, a track or a group of them.
+///
+/// Built again only when something handed to it changes. Built straight in
+/// the grid's list instead, every row of the list was made again whenever the
+/// grid was: for every edit and every pick, and in the edit's own pass as
+/// well, since what a list makes for each row is made outside the body that
+/// holds it, where that body's late reading does not reach
+/// (`readingALatePass`), and each asked the document whether its track has
+/// key lanes. Fifty rows of it, on a 50 track timeline, were some 6 ms of an
+/// edit's own pass and again of the one after (2026-11-24).
+struct TimelineGridRow: View, Equatable {
+    @Environment(EditorState.self) private var editorState
+    let row: TimelineRowModel
+    let laneWidth: CGFloat
+    let isBlade: Bool
+    let rows: TimelineRowZoom
+    let pick: TrackPickShare
+    let gates: Bool
+    /// Built with the list; only asked as the row is made.
+    let startsNear: Bool
+    let session: TrackRowDragSession
+
+    nonisolated static func == (a: Self, b: Self) -> Bool {
+        a.row == b.row && a.laneWidth == b.laneWidth && a.isBlade == b.isBlade && a.rows == b.rows
+            && a.pick == b.pick && a.gates == b.gates && a.session === b.session
+    }
+
+    var body: some View {
+        Group {
+            switch row {
+            case .group(let group, let isCollapsed, let tracks):
+                TimelineGroupRow(group: group, isCollapsed: isCollapsed, tracks: tracks, laneWidth: laneWidth)
+            case .track(let track, let inGroup):
+                TimelineRowInSight(row: track, height: TimelineDock.height(of: track, rows: rows),
+                                   laneHeight: rows.height(track.restingLaneHeight),
+                                   gates: gates && readingForATrackRow(track.id) {
+                                       TimelineDock.isOneLane(track, editorState)
+                                   },
+                                   startsNear: startsNear) {
+                    TimelineTrackRow(row: track, inGroup: inGroup, laneWidth: laneWidth, isBlade: isBlade,
+                                     rows: rows, pick: pick)
+                        .equatable()
+                }
+            }
+        }
+        // Where each row stands, measured before it is moved aside, for a
+        // track carried by its header.
+        .onGeometryChange(for: CGRect.self) { proxy in
+            proxy.frame(in: .named(TimelineDock.tracksSpace))
+        } action: { frame in
+            session.rowFrames[row.id] = frame
+            editorState.revealOpenedTimelineRow(row.id, at: frame)
+        }
+        .modifier(TrackRowDragPlacement(id: row.id, session: session))
+    }
+}
+
 /// The tracks the timeline last drew, drawn again unchanged in the pass of an
 /// edit marked by `EditorState.catchUpOnTheNextPass`, so a track that edit
 /// brings (a new title's) arrives in the next pass with the rest of the
@@ -1870,7 +1909,8 @@ struct TimelineGridHeight: ViewModifier {
     let fit: TimelineDockFit
 
     func body(content: Content) -> some View {
-        content.frame(height: fit.bodyHeight(editorState))
+        // With the tracks themselves, a pass late for an edit marked so.
+        content.frame(height: readingALatePass { fit.bodyHeight(editorState) })
     }
 }
 
@@ -1882,7 +1922,7 @@ private struct TimelineHeightReadout: View {
 
     var body: some View {
         Color.clear
-            .panelReadout("timeline \(Int(fit.bodyHeight(editorState).rounded())) tall, "
+            .panelReadout("timeline \(Int(readingALatePass { fit.bodyHeight(editorState) }.rounded())) tall, "
                           + (fit.isChosen ? "chosen" : "default"))
     }
 }

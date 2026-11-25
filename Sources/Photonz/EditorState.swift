@@ -65,6 +65,20 @@ final class EditorState {
     /// The document the clip bars' watches last answered for.
     @ObservationIgnored private var clipBarsSaw: PhotonzDocument?
 
+    /// The track whose row is being built (`readingForATrackRow`): a read of
+    /// the document then watches that track's own watch.
+    static var readsForTrackRow: UUID?
+    /// One per track whose row has been drawn, moved on as the clip bars' are,
+    /// for an edit that reached a clip on it (`tracksDrawn`).
+    @ObservationIgnored private var trackRowWatches: [UUID: ClipBarWatch] = [:]
+
+    private func trackRowWatch(_ id: UUID) -> ClipBarWatch {
+        if let watch = trackRowWatches[id] { return watch }
+        let watch = ClipBarWatch()
+        trackRowWatches[id] = watch
+        return watch
+    }
+
     /// One per clip bar that has asked whether its clip is the single pick
     /// (`isClipPicked`), set when the pick moves onto it or off it.
     @ObservationIgnored private var clipPickWatches: [UUID: ClipPickWatch] = [:]
@@ -95,12 +109,13 @@ final class EditorState {
     }
 
     /// Moves `latePassRevision` on, and with it the watch of every clip bar
-    /// whose drawing the document's change since the last move reaches.
+    /// and track row whose drawing the document's change since the last move
+    /// reaches.
     private func moveTheLatePassOn() {
         latePassRevision &+= 1
         let now = _history?.current
         defer { clipBarsSaw = now }
-        guard !clipBarWatches.isEmpty else { return }
+        guard !clipBarWatches.isEmpty || !trackRowWatches.isEmpty else { return }
         let change: ClipBarsChange
         switch (clipBarsSaw, now) {
         case (nil, nil): return
@@ -113,6 +128,15 @@ final class EditorState {
             if let now { clipBarWatches = clipBarWatches.filter { now.layer(id: $0.key) != nil } }
         case .only(let ids):
             for id in ids { clipBarWatches[id]?.revision &+= 1 }
+        }
+        if let now, let saw = clipBarsSaw, let tracks = now.tracksDrawn(differentlyBy: change, since: saw) {
+            for id in tracks { trackRowWatches[id]?.revision &+= 1 }
+        } else {
+            for watch in trackRowWatches.values { watch.revision &+= 1 }
+            if let now {
+                let standing = Set(now.timelineTracks.map(\.id))
+                trackRowWatches = trackRowWatches.filter { standing.contains($0.key) }
+            }
         }
     }
     /// Which pictures in the document are one flat colour, by bitmap id, with
@@ -2223,6 +2247,12 @@ final class EditorState {
     /// the window, as they do at rest (`TimelineLaneFrame`,
     /// `noteTimelineLaneFrame`).
     var timelineLaneFrame: TimelineLaneFrame?
+    /// The frame half the lanes lay out against: `timelineLaneFrame`, a frame
+    /// of a zoom later (`TimelineLaneFrame.stands(for:)`).
+    var timelineLaneFrameFollowing: TimelineLaneFrame?
+    /// Whether the timeline is scrolling or zooming, read without being
+    /// watched: for what is being drawn now anyway.
+    var timelineMovesNow: Bool { _timelineLaneFrame != nil }
     @ObservationIgnored var timelineLaneFrameSettle: Task<Void, Never>?
     /// What a row outside the lanes (a clip's Zoom lane) is culled by: a wide
     /// sight that holds still for windows of a scroll at a time
@@ -3014,6 +3044,10 @@ final class EditorState {
         }
         if let clip = Self.readsForClipBar {
             _ = clipBarWatch(clip).revision
+            return _history?.current
+        }
+        if let track = Self.readsForTrackRow {
+            _ = trackRowWatch(track).revision
             return _history?.current
         }
         if Self.readsALatePass {

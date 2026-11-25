@@ -301,14 +301,16 @@ extension PhotonzDocument {
         guard hasTime else { return [] }
         let moment = min(max(0, ms), lastDrawableTimeMS)
         var own: [MovieFrameRequest] = []
-        forEachLayer { own += $0.movieFrameRequests(atTimeMS: moment) }
+        // Only the layers that play something, on screen then (`moviePlan`).
+        let plan = moviePlan
+        for play in plan.plays where play.inMS <= moment && moment <= play.outMS {
+            Self.movieFrameRequests(of: layers[play.index], atTimeMS: moment, into: &own)
+        }
         // Clips merged into one fetch what the clips they hold need
         // (`MergedClip.swift`).
-        if hasMergedClips {
-            for layer in layers where layer.merged != nil {
-                own += layer.mergedFrameRequests(atTimeMS: moment, canvasSize: canvasSize,
-                                                 pixelScale: pixelScale)
-            }
+        for index in plan.merged {
+            own += layers[index].mergedFrameRequests(atTimeMS: moment, canvasSize: canvasSize,
+                                                     pixelScale: pixelScale)
         }
         guard hasEditPointTransitions else { return own }
         return own + editPointFrameRequests(atMS: moment)

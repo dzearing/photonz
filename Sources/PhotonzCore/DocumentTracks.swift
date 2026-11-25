@@ -733,14 +733,18 @@ extension PhotonzDocument {
         }
         // Captions stay at the top of the stack wherever their row is listed,
         // since they are drawn over everything (`CaptionsDrawOnTop.swift`).
-        for layer in layers where layer.isCaptionsLayer && rank[layer.id] != nil { rank[layer.id] = -1 }
+        for index in layers.indices where rank[layers[index].id] != nil && layers[index].isCaptionsLayer {
+            rank[layers[index].id] = -1
+        }
         let slots = layers.indices.filter { rank[layers[$0].id] != nil }
-        let moving = slots.map { layers[$0] }
-        let sorted = moving.enumerated().sorted { a, b in
-            let ra = rank[a.element.id] ?? 0, rb = rank[b.element.id] ?? 0
-            return ra != rb ? ra > rb : a.offset < b.offset
-        }.map(\.element)
-        for (slot, layer) in zip(slots, sorted) { layers[slot] = layer }
+        let ranks = slots.map { rank[layers[$0].id] ?? 0 }
+        let standing = slots.indices.sorted { ranks[$0] != ranks[$1] ? ranks[$0] > ranks[$1] : $0 < $1 }
+        // Written once, and only when something moves: every write to
+        // `layers` throws away all that has been worked out from them.
+        guard standing != Array(slots.indices) else { return }
+        var restacked = layers
+        for (place, from) in standing.enumerated() { restacked[slots[place]] = layers[slots[from]] }
+        layers = restacked
     }
 
     // MARK: Carrying a track up or down

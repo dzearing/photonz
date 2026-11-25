@@ -77,6 +77,26 @@ import Testing
 
     /// A scroll's frame keeps the window's scale, so it is only slid, never
     /// stretched, and the slide lands on a whole pixel.
+    @Test func aZoomsFrameStandsAStepPastWhatAHoldIsLet() {
+        let window = MotionStripRuler(documentMS: 100_000, zoom: TimelineZoom(scale: 4, startMS: 30_000))
+        let frame = TimelineLaneFrame.zooming(window, leftEdgeMS: 0...1, zoomScale: 4)
+        func zoomed(_ by: Double) -> MotionStripRuler {
+            let span = window.spanMS / by
+            return MotionStripRuler(documentMS: 100_000,
+                                    zoom: TimelineZoom(scale: 4 * by, startMS: 30_000 + (window.spanMS - span) / 2))
+        }
+        #expect(frame.stands(for: window))
+        for by in [1.2, 0.84] {
+            #expect(TimelinePaint.stretch(painted: window, to: zoomed(by), heldForMS: 0) == nil)
+            #expect(frame.stands(for: zoomed(by)), "\(by)")
+        }
+        // Past what is painted, or stretched too far, it does not.
+        for by in [1.5, 0.7] { #expect(!frame.stands(for: zoomed(by)), "\(by)") }
+        let scrolled = TimelineLaneFrame.scrolling(window, anchorMS: 20_000, drawnMS: 0...90_000,
+                                                   leftEdgeMS: 0...1, zoomScale: 4)
+        #expect(!scrolled.stands(for: window))
+    }
+
     @Test func aScrollIsSlidNotStretched() {
         let now = window(scale: 120, startMS: 1_000_000)
         let frame = TimelineLaneFrame.scrolling(now, anchorMS: 990_000, drawnMS: 960_000...1_090_000,

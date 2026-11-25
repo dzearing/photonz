@@ -104,6 +104,44 @@ struct ClipBarsChangeTests {
         #expect(doc.clipBarsChange(since: more) == .none)
     }
 
+    @Test("A trim reaches the row of its own track, and no other track's")
+    func trimReachesItsRow() throws {
+        let (base, _, _, far) = try Self.edit()
+        var doc = base
+        doc.addTrack(.video)
+        let v1 = try #require(doc.trackID(ofClip: far))
+        var trimmed = doc
+        trimmed.updateLayer(id: far) {
+            $0.time = LayerTime(inMS: 20_000, outMS: 23_000, sourceInMS: 0, sourceLengthMS: 6000)
+        }
+        let change = trimmed.clipBarsChange(since: doc)
+        #expect(trimmed.tracksDrawn(differentlyBy: change, since: doc) == [v1])
+    }
+
+    @Test("A clip that moves to another track reaches the row it left and the one it landed on")
+    func moveReachesBothRows() throws {
+        let (base, _, _, far) = try Self.edit()
+        var doc = base
+        let v1 = try #require(doc.trackID(ofClip: far))
+        let other = doc.addTrack(.video)
+        var moved = doc
+        let landed = moved.moveClip(far, toTrack: other)
+        try #require(landed && moved.trackID(ofClip: far) == other)
+        let change = moved.clipBarsChange(since: doc)
+        let rows = moved.tracksDrawn(differentlyBy: change, since: doc)
+        #expect(rows == nil || rows.map { $0.contains(v1) && $0.contains(other) } == true)
+    }
+
+    @Test("An empty track reaches no row, and a change to every bar reaches every row")
+    func rowsOfEveryBar() throws {
+        var (doc, _, _, _) = try Self.edit()
+        doc.addTrack(.video)
+        var added = doc
+        added.addTrack(.video)
+        #expect(added.tracksDrawn(differentlyBy: added.clipBarsChange(since: doc), since: doc) == [])
+        #expect(doc.tracksDrawn(differentlyBy: .every, since: doc) == nil)
+    }
+
     @Test("Layers put in another order change every bar")
     func reordered() throws {
         let (doc, _, _, _) = try Self.edit()

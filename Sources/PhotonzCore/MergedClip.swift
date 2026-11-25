@@ -153,7 +153,7 @@ extension PhotonzDocument {
 
     /// Whether any merged clip is in the document, the one question every
     /// frame asks before any of the work of drawing one.
-    var hasMergedClips: Bool { layers.contains { $0.merged != nil } }
+    var hasMergedClips: Bool { !moviePlan.merged.isEmpty }
 
     /// Every layer merged clips hold, however deep, which is what saving a
     /// project has to keep the media of.

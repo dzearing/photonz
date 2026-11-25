@@ -80,4 +80,69 @@ struct MovieFramesSeenTests {
         #expect(points.now.map(\.layerID) == [over.id])
         #expect(points.coming.map(\.layerID) == [under.id])
     }
+
+    /// What a moment needs, worked out the long way: every layer gone through.
+    static func slowly(_ doc: PhotonzDocument, atTimeMS ms: Int) -> (all: [MovieFrameRequest], seen: [MovieFrameRequest]) {
+        let moment = min(max(0, ms), doc.lastDrawableTimeMS)
+        var all: [MovieFrameRequest] = []
+        doc.forEachLayer { all += $0.movieFrameRequests(atTimeMS: moment) }
+        for layer in doc.layers where layer.merged != nil {
+            all += layer.mergedFrameRequests(atTimeMS: moment, canvasSize: doc.canvasSize, pixelScale: doc.pixelScale)
+        }
+        if doc.hasEditPointTransitions { all += doc.editPointFrameRequests(atMS: moment) }
+        let off = doc.layersOffScreenByTrack()
+        var hidden = Set<UUID>()
+        func hide(_ layer: Layer) {
+            for inside in layer.selfAndDescendants {
+                hidden.insert(inside.id)
+                hidden.insert(Layer.transitionPartnerID(of: inside.id))
+            }
+        }
+        for layer in doc.layers where off.contains(layer.id) { hide(layer) }
+        if doc.camera == nil, let cover = doc.layers.lastIndex(where: {
+            !off.contains($0.id) && doc.fillsTheFrame($0, atTimeMS: moment)
+        }) {
+            let changing = Set(doc.editPointMoments(atMS: moment).flatMap { [$0.onScreen, $0.borrowed] })
+            if !changing.contains(doc.layers[cover].id) { for layer in doc.layers[..<cover] { hide(layer) } }
+        }
+        return (all, all.count > 1 ? all.filter { !hidden.contains($0.layerID) } : all)
+    }
+
+    @Test("What a moment needs is what going through every layer says, all along the wide edit")
+    func matchesTheLongWay() {
+        var doc = ReferenceWideEditTests.fifty
+        for step in 0..<2 {
+            if step == 1, let track = doc.tracks.lastIndex(where: { $0.kind == .video }) {
+                doc.tracks[track].isHidden = true
+                doc.layers.append(Self.clip("cover", from: 10_000, to: 40_000,
+                                            frame: CGRect(origin: .zero, size: doc.canvasSize)))
+            }
+            for ms in stride(from: 0, through: ReferenceEdit.wideLengthMS, by: 370) {
+                let slow = Self.slowly(doc, atTimeMS: ms)
+                #expect(doc.movieFrames(atTimeMS: ms) == slow.all, "\(ms)")
+                #expect(doc.movieFramesSeen(atTimeMS: ms) == slow.seen, "\(ms)")
+            }
+        }
+    }
+
+    @Test("A recording inside a group is read whatever the group's own time says")
+    func insideAGroup() {
+        let inner = Self.clip("inner", from: 0, to: 9000, frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        var group = Layer(name: "group", content: .group(GroupContent(children: [inner])),
+                          frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        group.time = LayerTime(inMS: 5000, outMS: 8000)
+        let doc = Self.document([group])
+        for ms in [0, 4000, 6000, 8500, 9500] {
+            #expect(doc.movieFrames(atTimeMS: ms) == Self.slowly(doc, atTimeMS: ms).all)
+        }
+    }
+
+    @Test("A clip moved, and a merge made, are known at once")
+    func planFollowsTheLayers() {
+        var doc = Self.document([Self.clip("one", from: 0, to: 2000)])
+        #expect(doc.movieFrames(atTimeMS: 5000).isEmpty)
+        doc.layers[0].time = LayerTime(inMS: 4000, outMS: 6000, sourceInMS: 0, sourceLengthMS: 20_000)
+        #expect(doc.movieFrames(atTimeMS: 5000).count == 1)
+        #expect(!doc.hasMergedClips)
+    }
 }

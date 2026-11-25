@@ -168,7 +168,14 @@ extension EditorState {
             frame = .scrolling(motionStripRuler, anchorMS: edge.lowerBound, drawnMS: timelineDrawnMS,
                                leftEdgeMS: timelineLeftEdgeRangeMS, zoomScale: timelineScaleOnly.scale)
         }
-        if frame != timelineLaneFrame { timelineLaneFrame = frame }
+        // Half the lanes take a zoom's fresh frame a frame later, while what
+        // they have can stand for the window (`stands(for:)`).
+        let steps = frame != timelineLaneFrame
+        let waits = steps && timelineLaneFrame != nil && frame.isZoom
+            && timelineLaneFrameFollowing?.stands(for: motionStripRuler) == true
+            && timelineLaneFrameFollowing == timelineLaneFrame
+        if steps { timelineLaneFrame = frame }
+        if !waits, timelineLaneFrameFollowing != frame { timelineLaneFrameFollowing = frame }
         timelineLaneFrameSettle?.cancel()
         timelineLaneFrameSettle = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .milliseconds(TimelineHeldPainting.settleMS))
@@ -182,6 +189,7 @@ extension EditorState {
         timelineLaneFrameSettle?.cancel()
         timelineLaneFrameSettle = nil
         if timelineLaneFrame != nil { timelineLaneFrame = nil }
+        if timelineLaneFrameFollowing != nil { timelineLaneFrameFollowing = nil }
     }
 
     /// The frame a lane lays out against now: nil at rest, and nil while a
@@ -190,6 +198,14 @@ extension EditorState {
     /// lane at rest is not woken by every move of a drag.
     var timelineLaneFrameStanding: TimelineLaneFrame? {
         guard let frame = timelineLaneFrame, !timelineLanesHaveAHandIn else { return nil }
+        return frame
+    }
+
+    /// The same for one track's lane, which may be one of the half that take
+    /// a zoom's fresh frame a frame later.
+    func timelineLaneFrameStanding(onTrack id: UUID) -> TimelineLaneFrame? {
+        guard id.uuid.15 & 1 == 1 else { return timelineLaneFrameStanding }
+        guard let frame = timelineLaneFrameFollowing, !timelineLanesHaveAHandIn else { return nil }
         return frame
     }
 

@@ -36,6 +36,9 @@ for line in open(f"{folder}/syms.txt"):
     address, _module, name = line.rstrip("\n").split("\t")
     names[int(address, 16)] = name
 
+# The harness's own look for windows over the person: the meter leaves it out
+# of every pass it times, so the profile does too.
+harness = re.compile(r"watchForWindowsOverThePerson")
 passes, current = [], None
 for line in open(f"{folder}/passes.txt"):
     if line.startswith("pid"):
@@ -45,7 +48,9 @@ for line in open(f"{folder}/passes.txt"):
         current = {"label": label, "ms": float(ms), "start": float(start), "samples": []}
         passes.append(current)
     elif current is not None:
-        current["samples"].append([names.get(int(x, 16), "?") for x in line.split()])
+        stack = [names.get(int(x, 16), "?") for x in line.split()]
+        if not any(harness.search(f) for f in stack):
+            current["samples"].append(stack)
 
 # "3 trim, picked" -> every pass of that one edit, in order.
 by_edit = collections.defaultdict(list)

@@ -66,6 +66,8 @@ struct DocumentDerived: Hashable, Sendable {
         /// Whether anything anywhere in the tree fades, zooms or shows its
         /// clicks (`TreeFacts`).
         var treeFacts: TreeFacts?
+        /// Which layers play a recording and when (`moviePlan`).
+        var moviePlan: MoviePlan?
         /// Every main in the document, the library's first
         /// (`PhotonzDocument.mainComponents`). Putting the copies in step
         /// after an edit asks for it several times a copy, and each answer
@@ -83,6 +85,28 @@ struct DocumentDerived: Hashable, Sendable {
         var pictureFades = false
         var zooms = false
         var clickEffects = false
+    }
+
+    /// Which top level layers play a recording, and when: what a moment's
+    /// frames are read off without going through every layer (`moviePlan`).
+    struct MoviePlan: Sendable {
+        struct Span: Sendable {
+            let index: Int
+            let inMS: Int
+            let outMS: Int
+        }
+        /// The layers that play something, or hold something that does, in
+        /// order, and the stretch each can need a frame in.
+        var plays: [Span] = []
+        /// The clips that may fill the frame, in order.
+        var covers: [Span] = []
+        /// The layers holding clips merged into one.
+        var merged: [Int] = []
+        /// The layers a switched off track takes off screen.
+        var off: Set<Int> = []
+        /// Every layer, and the partner of every transition, to the top level
+        /// layer it is in.
+        var topLayer: [UUID: Int] = [:]
     }
 
     struct PictureOnlyHold: Sendable {

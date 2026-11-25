@@ -101,6 +101,19 @@ public struct TimelineLaneFrame: Hashable, Sendable {
                           sightMargin: scrollSightMargin, leftEdgeMS: leftEdgeMS, zoomScale: zoomScale)
     }
 
+    /// Whether a lane laid out against this frame can stand for `window` a
+    /// frame longer: a zoom's, its painting still covering the window, and
+    /// stretched no more than a step past what a hold is let. A zoom's fresh
+    /// frame is then taken by half the lanes in sight and by the other half a
+    /// frame later: all at once, ten lanes were 10 to 11 ms of it on a 50
+    /// track timeline (2026-11-24).
+    public func stands(for window: MotionStripRuler) -> Bool {
+        guard isZoom, ruler.spanMS > 0, window.spanMS > 0 else { return false }
+        return abs(ruler.spanMS / window.spanMS - 1) <= TimelinePaint.quickHeldStretch + 0.05
+            && window.startMS >= paintedMS.lowerBound - 1e-6
+            && window.startMS + window.spanMS <= paintedMS.upperBound + 1e-6
+    }
+
     /// How content laid out against this frame is put on the lane under
     /// `window`: stretched by `stretch` from its left edge, then moved along
     /// by `offset` points, a whole pixel at `scale`.

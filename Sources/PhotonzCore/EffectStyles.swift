@@ -343,8 +343,8 @@ extension PhotonzDocument {
         let styles = Dictionary(effectStyles.map { ($0.id, $0.effect) },
                                 uniquingKeysWith: { first, _ in first })
         var stale: [UUID: [Int]] = [:]
-        for layer in allLayers {
-            guard let bindings = layer.effectStyleBindings, !bindings.isEmpty else { continue }
+        forEachLayer { layer in
+            guard let bindings = layer.effectStyleBindings, !bindings.isEmpty else { return }
             for binding in bindings {
                 // A name this document no longer has is a claim that cannot be
                 // true, which is the state a file can arrive in; an effect that

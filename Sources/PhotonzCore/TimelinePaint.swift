@@ -174,7 +174,7 @@ public enum TimelinePaint {
     public static func paintedMS(window: MotionStripRuler, stretch: ClosedRange<Double>,
                                  isZooming: Bool) -> ClosedRange<Double> {
         guard isZooming else { return stretch }
-        let sliver = window.spanMS * zoomSliver
+        let sliver = window.spanMS * zoomPaintedSliver
         return (window.startMS - sliver)...(window.startMS + window.spanMS + sliver)
     }
 
@@ -208,6 +208,11 @@ public enum TimelinePaint {
     /// held painting still covers the window a zoom out has grown to: a
     /// twelfth, three steps of four per cent about the window's middle.
     public static let zoomSliver = 1.0 / 12
+
+    /// What is really painted past the window: a step of four per cent more
+    /// than a hold is let reach, for the lanes that follow a fresh painting a
+    /// frame later (`TimelineLaneFrame.stands(for:)`).
+    public static let zoomPaintedSliver = 0.1
 
     /// The stretch a painting held `heldForMS` may be drawn at.
     static func stretchAllowed(heldForMS: Double) -> Double {
@@ -252,9 +257,9 @@ public enum TimelinePaint {
         guard painted.spanMS > 0, window.spanMS > 0 else { return nil }
         let ratio = painted.spanMS / window.spanMS
         guard abs(ratio - 1) <= stretchAllowed(heldForMS: heldForMS) + 1e-9 else { return nil }
-        let covered = paintedMS(window: painted, stretch: 0...0, isZooming: true)
-        guard window.startMS >= covered.lowerBound - 1e-6,
-              window.startMS + window.spanMS <= covered.upperBound + 1e-6 else { return nil }
+        let reach = painted.spanMS * zoomSliver
+        guard window.startMS >= painted.startMS - reach - 1e-6,
+              window.startMS + window.spanMS <= painted.startMS + painted.spanMS + reach + 1e-6 else { return nil }
         return ratio
     }
 

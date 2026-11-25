@@ -54,7 +54,12 @@ if [ ! -s "$folder/passes.txt" ]; then
   wait $walker || true
   echo "!! the walk wrote no passes (does it time edits?); its output: $folder/walk.txt"; exit 1
 fi
-sleep 1
+# Each measure of the walk writes the file again, so wait for the last: one
+# that has been left alone for 25 seconds.
+while [ $(( $(date +%s) - $(stat -f %m "$folder/passes.txt") )) -lt 25 ]; do
+  pgrep -f "Photonz Probe.app/Contents/MacOS" > /dev/null || break
+  sleep 1
+done
 pid=$(head -1 "$folder/passes.txt" | cut -d' ' -f2)
 grep -v '^PASS\|^pid' "$folder/passes.txt" | tr ' ' '\n' | grep . | sort -u | sed 's/^/0x/' > "$folder/addresses.txt"
 cat > "$folder/name_them.py" <<'EOF'
@@ -72,6 +77,15 @@ def __lldb_init_module(debugger, internal_dict):
 EOF
 lldb -p "$pid" --batch -o "command script import $folder/name_them.py" -o name_them -o detach \
   > "$folder/lldb.txt" 2>&1 || true
+# lldb leaves the app's own closures unnamed; atos names those.
+grep -F "	?" "$folder/syms.txt" | cut -f1 > "$folder/unnamed.txt" || true
+if [ -s "$folder/unnamed.txt" ]; then
+  atos -p "$pid" -f "$folder/unnamed.txt" 2>/dev/null | sed 's/ (in .*//' > "$folder/atos.txt" || true
+  if [ "$(wc -l < "$folder/atos.txt")" = "$(wc -l < "$folder/unnamed.txt")" ]; then
+    { grep -vF "	?" "$folder/syms.txt"; paste "$folder/unnamed.txt" "$folder/atos.txt" | awk -F'\t' '{print $1 "\tatos\t" $2}'; } > "$folder/named.txt"
+    mv "$folder/named.txt" "$folder/syms.txt"
+  fi
+fi
 wait $walker || true
 [ -s "$folder/syms.txt" ] || { echo "!! lldb named nothing (did the probe quit first?): $folder/lldb.txt"; exit 1; }
 python3 Scripts/perf/pass-profile.py "$folder" ${match[@]+"${match[@]}"}

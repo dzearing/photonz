@@ -356,7 +356,7 @@ extension PhotonzDocument {
     /// seconds long, on the ruler and in the transport and everywhere else.
     mutating func refreshDuration() {
         guard durationMS != nil else { return }
-        durationMS = allLayers.compactMap { $0.time?.outMS }.max()
+        durationMS = lastClipEndMS
         keepChosenLength()
     }
 }
