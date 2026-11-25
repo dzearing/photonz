@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:13:00.798Z",
-  "updated": "2026-11-25T03:40:29.894Z",
+  "updated": "2026-11-25T05:44:07.234Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"the perf of photonz is still pretty rough with video editing. when i add like 50 tracks with 100 clips, scroll starts to lag, i get weird behaviors like flashes during playback, very sluggish behavior\".\n\nContext: the loop could not sign in from about 2026-11-23 19:00 to 2026-11-24 14:10, so the open video-perf tasks made no progress in that window; the user re-logged in on 2026-11-24.\n\nOverlaps, and why this is separate: the-timeline-of-an-hour-long-edit-scrolls-zooms (p1, pending) is about a LONG edit (60 minutes, hundreds of clips) on the 3+ track reference edit, horizontal scroll and zoom; this one is WIDE (50 to 100 tracks): vertical scroll, many track headers, many clips overlapping at one moment for the compositor and decoders. Reuse that task's speed walk, ViewBuildMeter and busy-lane painting rather than building a second harness; if its painted-lane fix also fixes vertical scroll here, record it and move on. picking-letting-go-of-and-cutting-a-clip-while-a (p1, seq 10) covers edit latency while playing; jumping-back-while-a-video-plays-never-flickers covers flicker after a jump. I did not reproduce the user's lag or flashes myself.",
@@ -102,9 +102,33 @@
     {
       "t": "2026-11-25T03:40:29.893Z",
       "note": "Pass 2 landed: vertical scroll meets its bar (p95 12 -> 4 ms), zoom a third of what it was, export identical, 100 tracks measured, reel made. Zoom in and six edits while playing are still over their bars; see the log."
+    },
+    {
+      "t": "2026-11-25T03:53:29.928Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-25T04:35:10.154Z",
+      "note": "Pass 3, so far (longest pass, 50 tracks, after the timeline measure as in wide-50.json): a track row watches only its own track (readingForATrackRow), rows of the grid are equal when nothing handed to them changed (TimelineGridRow: the grid's list had made all 50 again in every edit's own pass, each asking the document about key lanes), and which frames a moment needs is read off a kept plan (PhotonzDocument.moviePlan) instead of copying every layer: move 16 -> 14, trim 14 -> 12, undo 12-18 -> 11-15, pick 17 -> 11, blade 24 -> 15, add clip 18 -> 17, add track 25 -> 20."
+    },
+    {
+      "t": "2026-11-25T05:09:35.415Z",
+      "note": "Tried and taken out: a new row as a bare slot for the frame that makes room and built in the next (TimelineRowInSight startsNear false). Add track stayed 18 to 19 ms and add clip went 15 to 18: the geometry that wakes it lands in the same pass. What is left of add track is the commit of the row going in: title bar drag regions 3.6 ms (AppKit asks every host whether it takes the keyboard whenever an NSView comes or goes), accessibility 3, drawing 4.5."
+    },
+    {
+      "t": "2026-11-25T05:44:07.076Z",
+      "note": "Pass 3 measured (wide-50.json, wide-100.json, code built before the commit). MET: 0 of 3636 dropped, no clip frame wrong ten up; vertical scroll p95 4.3; along p95 6.0; move 10, trim 10, undo 11-14, pick 11, blade 15. NOT MET: zoom p95 in 11.5 / out 10.8 / near fit 9.9 (bar 8.3; 9.7-9.9 in the runs before), worst 18.6; one frame of 35 to 51 ms scrolling along in every run; add clip 17 (15-18), add track 17-19, its undo 13-20; first scroll frame 14. 100 tracks: 5 dropped, 11 frames from ahead at 1:06, edits 13-35, tracks down p95 17.1 (10.5 in pass 2, not explained). Scripts/test.sh green. 30 of 32 walks green; the-timeline-is-the-layer-list-walk and premiere-keys-on-the-timeline-walk fail and were already on the standing walks task; timeline-sub-layer-rows-walk failed once while I had two walks running at once and passed 3 times alone. Export not compared again this pass."
+    },
+    {
+      "t": "2026-11-25T05:44:07.154Z",
+      "note": "Left for the next pass, in order: (1) the 35 to 51 ms frame scrolling along: profile with Scripts/perf/pass-profile.sh --match 'scroll' (labels 'scroll slid'/'scroll moved'); it is one slid frame and not a stretch moving. (2) zoom: fresh frames are about 10 ms (layout 4, graph 3.4, accessibility 1.8); held ones are under the bar but for a few. (3) the commit of a row going in or out for add track and its undo: title bar drag regions 3.6, accessibility 3, drawing 4.5. (4) 100 tracks. (5) compare the export once more. Chose to pick a new track 3 passes after adding it over in the same frame because the panel letting go then held the frame 20 ms. The release build takes 10 minutes, so batch changes: measuring scripts are not kept, use speed-walk.sh --wide 50."
+    },
+    {
+      "t": "2026-11-25T05:44:07.233Z",
+      "note": "Pass 3 landed: edits while playing 9 to 15 ms (add clip and add track 17), no dropped frames at 50 tracks, fewer late zoom frames. Zoom p95, one slow frame scrolling along, add track and the 100 track edit are still over their bars; see the log."
     }
   ],
-  "started": "2026-11-24T23:29:45.465Z",
+  "started": "2026-11-25T03:53:29.927Z",
   "walks": [
     "a-tall-edit-s-far-tracks-answer-walk"
   ]

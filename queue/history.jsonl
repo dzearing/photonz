@@ -19119,3 +19119,12 @@
 {"t":"2026-11-25T03:40:29.814Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T03:40:29.895Z","ev":"task_pending","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"Pass 2 landed: vertical scroll meets its bar (p95 12 -> 4 ms), zoom a third of what it was, export identical, 100 tracks measured, reel made. Zoom in and six edits while playing are still over their bars; see the log."}
 {"t":"2026-11-25T03:41:01.595Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
+{"t":"2026-11-25T03:51:24.509Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-25T03:51:24.549Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
+{"t":"2026-11-25T03:53:29.726Z","ev":"slice_pass","walks":12,"passed":10,"failed":2,"seconds":596,"of":1205,"couldNotRun":0,"timedOut":false,"rotating":true,"from":182,"to":189,"moved":7}
+{"t":"2026-11-25T03:53:29.933Z","ev":"task_started","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","title":"An edit with 50 tracks and 100 clips scrolls, plays and edits without lag or flashes","priority":"p1-high"}
+{"t":"2026-11-25T04:35:10.157Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T05:09:35.418Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T05:44:07.078Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T05:44:07.156Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T05:44:07.235Z","ev":"task_pending","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"Pass 3 landed: edits while playing 9 to 15 ms (add clip and add track 17), no dropped frames at 50 tracks, fewer late zoom frames. Zoom p95, one slow frame scrolling along, add track and the 100 track edit are still over their bars; see the log."}
