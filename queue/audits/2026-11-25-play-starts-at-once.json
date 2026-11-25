@@ -1,0 +1,31 @@
+{
+  "feature": "Play starts at once on a 50 track edit",
+  "epic": "video-perf",
+  "summary": "Space on the 50 track edit moves the picture within about a twentieth of a second, at rest and right after a jump, where it used to stand still for 230 to 880 ms.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe, worst of three, before and after on the same Mac. First moving picture after Space, two seconds at rest at 0:10 / 0:30 / 0:58: before 632 / 258 / 877 ms, after 66 / 58 / 67. Space the moment a jump's picture is in: before 694 / 600 / 861, after 56 / 50 / 50. Half a second after a jump: before 642 / 392 / 858, after 50 / 50 / 50, and at 1:02 with ten recordings up 775 before, 83 after. Frames dropped in the first 3 seconds at rest: 0:10 17 before, 0 after; 0:58 24 before, 0 after. The walk is play-starts-at-once-on-a-wide-edit-walk; Scripts/perf/speed-walk.sh --wide records the same numbers.",
+  "switched": {},
+  "try": [
+    { "do": "Open Reference Edit 50 tracks.photonz with File > Open." },
+    { "do": "Click the ruler at 0:10, wait two seconds, press Space." },
+    { "do": "Press Space to stop, click the ruler at 0:58, press Space as soon as the picture is there." },
+    { "do": "Stop, click at 1:02, where ten recordings play, and press Space.", "shot": "2026-11-25-play-starts-at-once-sc.png" },
+    { "do": "Stop and start with Space a few times in a row without moving the playhead." },
+    { "do": "Click somewhere new and press Space in the same instant, to see the one case that still waits." },
+    { "do": "Open the 6 minute reference edit in Photonz Dev with the button below and press Space: it starts as it did.", "referenceEdit": 6 }
+  ],
+  "evaluate": [
+    "Does Space feel immediate at 0:10, 0:58 and 1:02?",
+    "Does any clip flash, or show a picture from another moment, as play starts?",
+    "Is the sound in step from the first moment?",
+    "When you press Space in the same instant as a jump, would you rather wait a third of a second, or see it play with a few small clips still missing?"
+  ],
+  "rough": [
+    "Space in the very same instant as a jump still waits 230 to 545 ms (545 to 870 before): each clip has to be decoded up from its key frame, which the Mac's decoder cannot do for six clips in a tenth of a second. It waits for the big clips and half of all of them, keeping the picture that was up.",
+    "With ten recordings up in that case, up to four small clips join as late as 0.6 s after play starts. Each is left out until its own frame is there, never shown from another time.",
+    "Started at 1:02 with nothing waited for, two small clips were missing for 1.8 s, so it waits for half.",
+    "A jump while paused still draws the new place piece by piece as each clip is read. That was so before. Filed as its own task, a-jump-on-a-wide-edit-shows-its-picture-whole-an.",
+    "Frames held ready at rest take about 220 MB where ten recordings are up, and one percent of a core. They are let go after two minutes at rest, and when the Mac is short of memory.",
+    "Right after a minute of editing the same starts read 79 to 91 ms. The whole edit played three times dropped 0 of 10,908 frames; one run right after all the other measures dropped 3.",
+    "100 tracks: 94 to 109 ms at rest, 74 to 78 after a jump. That edit is not held to this bar yet."
+  ]
+}

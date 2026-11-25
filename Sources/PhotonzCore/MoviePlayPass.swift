@@ -86,6 +86,27 @@ public enum MoviePlayPass {
     /// key frame; a few frames in hand means it has arrived and outruns the
     /// clock from there.
     public static let startsWithFramesAhead = 3
+    /// How many grid frames ahead a pass opened for a playhead at rest reads
+    /// before it waits for Space: what a start asks for and two more, the
+    /// least the pass can be behind when the clock wakes it
+    /// (`MovieFrameFetcher.readAheadOfRest`). Not the reach it plays with: ten
+    /// clips on screen hold that many full frames each for as long as the
+    /// playhead rests.
+    public static let restReach = startsWithFramesAhead + 2
+    /// How far ahead of a playhead at rest a stretch about to come on is
+    /// opened too: a cut a moment after Space is otherwise decoded up from its
+    /// key frame with the clock already running.
+    public static let restLeadMS = 700
+    /// How long the passes at rest stay open with nobody pressing anything.
+    /// Where ten recordings are on screen they hold about 220 MB (2026-11-25),
+    /// less than playing does and too much to keep for a Mac left alone.
+    public static let restHoldsMS = 120_000
+    /// How long a pass waiting ahead of the playhead sleeps between looks: a
+    /// moment while it plays, where it waits a frame at a time, and longer
+    /// once it has waited a while, so ten of them waiting on a playhead at
+    /// rest do not wake the Mac 2,500 times a second.
+    public static func waitStepMS(waitedMS: Int) -> Int { waitedMS < 500 ? 4 : 25 }
+
     /// The longest a clock starting with sound waits for them. Space right
     /// after a scrub that landed a second past a key frame of a 3456x2234 HEVC
     /// screen recording took 614ms to decode its first frame (2026-11-20);
@@ -93,6 +114,63 @@ public enum MoviePlayPass {
     /// for half a second. Long enough to cover that, short enough that Space
     /// never feels ignored: the transport shows it playing at once.
     public static let soundStartWaitMS = 800
+    /// With more than this many clips on screen, a clock starting with sound
+    /// goes without the last of them (`starts`).
+    public static let waitsForEveryClipUpTo = 3
+    /// ...after this long: a frame of the clock, which with the tick after it
+    /// and the drawing has the first new picture up within a tenth of a
+    /// second of Space.
+    public static let movesOnAfterMS = 30
+
+    /// How much of what a start shows first is in hand, clip by clip
+    /// (`PhotonzDocument.startReady`): how many clips are seen, how many have
+    /// the frame under the playhead, and how many the next few too. `waitsOn`
+    /// are the ones without it a start never goes without: those that fill
+    /// `bigShare` of the frame or more.
+    public struct StartReady: Equatable, Sendable {
+        public var clips: Int
+        public var landed: Int
+        public var ready: Int
+        public var waitsOn: Int
+
+        public init(clips: Int, landed: Int, ready: Int, waitsOn: Int) {
+            self.clips = clips
+            self.landed = landed
+            self.ready = ready
+            self.waitsOn = waitsOn
+        }
+
+        /// Whether what is in hand is a picture of the moment: every clip, or
+        /// with many on screen every big one and most of the rest.
+        public var isAPicture: Bool {
+            landed == clips || (clips > waitsForEveryClipUpTo && waitsOn == 0
+                && Double(landed) >= Double(clips) * goesWithShare)
+        }
+    }
+    /// How much of the frame a clip fills to be one a start waits for.
+    public static let bigShare = 0.2
+    /// How many of the clips a start goes with at least. The rest chase a
+    /// running clock on the decoder the others play from: with none waited
+    /// for, two tiles of ten were missing for 1.8 s (2026-11-25).
+    public static let goesWithShare = 0.5
+    /// How far behind a clip's stand-in may be when a start went without it.
+    public static let startStandInFrames = 15
+    /// The longest a clip a start went without is left out for.
+    public static let startGoesWithoutMS = 1500
+
+    /// Whether a clock that has waited `waitedMS` to start with sound goes
+    /// now: once every clip seen has its first frames, at most
+    /// `soundStartWaitMS`. With many on screen it goes sooner, once each big
+    /// one has the frame under the playhead and one of them all the next few:
+    /// ten recordings decode up from ten key frames on one decoder, and the
+    /// last of them was most of a second away with the canvas standing still
+    /// for all ten (2026-11-25). A clip still on its way holds the frame it
+    /// is on, and a small one without any joins when its own lands.
+    public static func starts(_ start: StartReady, waitedMS: Double) -> Bool {
+        if start.ready == start.clips || waitedMS >= Double(soundStartWaitMS) { return true }
+        return start.clips > waitsForEveryClipUpTo && start.isAPicture && start.ready > 0
+            && waitedMS >= Double(movesOnAfterMS)
+    }
 
     /// The grid frames a pass for a playhead on `frame` reads: from there to
     /// the end of the recording. It waits, rather than stops, so a long play
@@ -294,6 +372,27 @@ public enum MoviePlayPass {
     /// Whether passes skip the frames nothing is decoded from at this load.
     public static func skipsUnreferenced(load: Double) -> Bool { load > screensReadWhole }
 
+    /// Whether a pass starting at `startingAtMS` of the recording skips a
+    /// sample nothing is decoded from, on screen over `onScreen`. One gone
+    /// again by then, always: it is only on the way up from the key frame.
+    /// The one on screen there, never: it is the frame a still playhead shows.
+    /// After it, as the speed and the load say (`afterIt`).
+    public static func skips(onScreen: ClosedRange<Double>, startingAtMS: Double, afterIt: Bool) -> Bool {
+        if onScreen.upperBound <= startingAtMS { return true }
+        if onScreen.lowerBound <= startingAtMS + Double(MovieRef.frameStepMS) { return false }
+        return afterIt
+    }
+
+    /// Whether a playhead come to rest after a move of `strideMS` reads its
+    /// frames and the ones a start needs in one pass each
+    /// (`MovieFrameFetcher.openRestPasses`): after a jump, and a step
+    /// forwards, which the pass already goes to. Not a step back: a pass
+    /// starts over for each, and holding the arrow down stops every one
+    /// before its first frame, where reads of one frame land as they come.
+    public static func restsOnPasses(movedMS: Int, travel: MovieFramesInHand.Travel) -> Bool {
+        travel == .forward || movedMS >= 500
+    }
+
     // MARK: More than one pass in a recording
 
     /// A pass reading a recording: what it covers, the first frame it has not
@@ -343,12 +442,14 @@ public enum MoviePlayPass {
     /// no key frame between it and the playhead is kept (`serves`).
     ///
     /// `needed` says how wide the place on a frame has to be read, nil for one
-    /// any width does for (`serves(width:needed:)`).
+    /// any width does for (`serves(width:needed:)`). `reach` is how far ahead
+    /// a pass reads, the speed's own when left out (`restReach`).
     public static func plan(now: [Int], coming: [Int], passes: [Running],
                             inHand: (Int) -> Bool, speed: Double = 1,
                             keyFrames: MovieKeyFrames? = nil,
-                            needed: (Int) -> Int? = { _ in nil }) -> Plan {
+                            needed: (Int) -> Int? = { _ in nil }, reach atRest: Int? = nil) -> Plan {
         var plan = Plan()
+        let reach = atRest ?? self.reach(speed: speed)
         let stride = MoviePlayBackward.stride(speed: speed)
         for frame in unique(now) {
             let serving = passes.indices.filter {
@@ -357,7 +458,7 @@ public enum MoviePlayPass {
                     && serves(running: passes[$0].running, reached: passes[$0].reached,
                               playhead: frame, inHand: inHand, speed: speed, keyFrames: keyFrames)
             }
-            let aim = Aim(playhead: frame, reach: reach(speed: speed))
+            let aim = Aim(playhead: frame, reach: reach)
             if let best = serving.min(by: { abs(passes[$0].reached - frame) < abs(passes[$1].reached - frame) }) {
                 // A pass opened ahead that the playhead has not reached yet
                 // is aimed at its own start, so it reads rather than waits.
@@ -709,13 +810,6 @@ extension PhotonzDocument {
         }
     }
 
-    /// Whether a playhead at `ms` about to play forwards at `speed` has the
-    /// first frame it will show in hand: for every recording on at `ms`, the
-    /// first frame kept at that speed at or after the one under the playhead
-    /// (`MoviePlayPass.keeps`). Only waited for above double speed, which is
-    /// silent: the first decode from a key frame took half a second on the
-    /// reference edit, and at 4x the playhead ran 15 frames past it meanwhile
-    /// (2026-11-13).
     /// Whether a playhead at `ms` about to start playing forwards from rest
     /// at `speed` has what it shows first in hand. Above double speed, which
     /// is silent, the first frame it keeps (`readyToPlayForward`). At a speed
@@ -725,29 +819,64 @@ extension PhotonzDocument {
     /// under it alone was often in hand from a scrub while the frames after it
     /// were half a second of decoding away.
     public func readyToStartPlaying(atTimeMS ms: Int, inHand: MovieFramesInHand, speed: Double) -> Bool {
+        let start = startReady(atTimeMS: ms, inHand: inHand, speed: speed)
+        return start.ready == start.clips
+    }
+
+    /// How much of what a start at `ms` shows is in hand, counted clip by
+    /// clip (`readyToStartPlaying`, `MoviePlayPass.starts`). Only the clips
+    /// that are seen (`movieFramesSeen`): nothing reads one hidden under a
+    /// clip that fills the frame while it plays, so a start that waited for
+    /// it waited out its whole limit (the 50 track edit at 0:58, 2026-11-25).
+    public func startReady(atTimeMS ms: Int, inHand: MovieFramesInHand, speed: Double) -> MoviePlayPass.StartReady {
         guard PlaybackSpeed.playsSound(atRate: speed) else {
-            return readyToPlayForward(atTimeMS: ms, inHand: inHand, speed: speed)
+            let seen = movieFramesSeen(atTimeMS: ms)
+            let there = seen.count { Self.isKeptFrameInHand($0, inHand: inHand, speed: speed) }
+            return MoviePlayPass.StartReady(clips: seen.count, landed: there, ready: there, waitsOn: seen.count - there)
         }
         let end = documentDurationMS
+        var clips = Set<UUID>(), late = Set<UUID>(), notLanded = Set<UUID>()
         for step in 0...MoviePlayPass.startsWithFramesAhead {
             // On by grid frames, never by 33ms, which falls short of a
             // frame once every hundred and would look one frame too few ahead.
             let moment = step == 0 ? ms : MovieRef.gridMS(steppedFrom: ms, byFrames: step)
             guard moment < end || step == 0 else { break }
-            let ready = movieFrames(atTimeMS: moment).allSatisfy {
-                inHand.contains(movie: $0.movie.id, frameIndex: $0.movie.frameIndex(atSourceMS: $0.sourceMS))
+            for request in movieFramesSeen(atTimeMS: moment) {
+                clips.insert(request.layerID)
+                guard !inHand.contains(movie: request.movie.id,
+                                       frameIndex: request.movie.frameIndex(atSourceMS: request.sourceMS))
+                else { continue }
+                late.insert(request.layerID)
+                if step == 0 { notLanded.insert(request.layerID) }
             }
-            if !ready { return false }
         }
-        return true
+        // The second picture of a dissolve has no layer of its own: big.
+        let big = notLanded.count { id in
+            guard let size = layer(id: id)?.frame.size else { return true }
+            return size.width * size.height >= canvasSize.width * canvasSize.height * MoviePlayPass.bigShare
+        }
+        return MoviePlayPass.StartReady(clips: clips.count, landed: clips.count - notLanded.count,
+                                        ready: clips.count - late.count, waitsOn: big)
     }
 
-    public func readyToPlayForward(atTimeMS ms: Int, inHand: MovieFramesInHand, speed: Double) -> Bool {
+    private static func isKeptFrameInHand(_ request: MovieFrameRequest, inHand: MovieFramesInHand,
+                                          speed: Double) -> Bool {
         let stride = MoviePlayBackward.stride(speed: speed)
-        return movieFrames(atTimeMS: ms).allSatisfy {
-            let frame = $0.movie.frameIndex(atSourceMS: $0.sourceMS)
-            let kept = frame + (stride - frame % stride) % stride
-            return inHand.contains(movie: $0.movie.id, frameIndex: kept)
+        let frame = request.movie.frameIndex(atSourceMS: request.sourceMS)
+        let kept = frame + (stride - frame % stride) % stride
+        return inHand.contains(movie: request.movie.id, frameIndex: kept)
+    }
+
+    /// Whether a playhead at `ms` about to play forwards at `speed` has the
+    /// first frame it will show in hand: for every recording seen at `ms`, the
+    /// first frame kept at that speed at or after the one under the playhead
+    /// (`MoviePlayPass.keeps`). Only waited for above double speed, which is
+    /// silent: the first decode from a key frame took half a second on the
+    /// reference edit, and at 4x the playhead ran 15 frames past it meanwhile
+    /// (2026-11-13).
+    public func readyToPlayForward(atTimeMS ms: Int, inHand: MovieFramesInHand, speed: Double) -> Bool {
+        movieFramesSeen(atTimeMS: ms).allSatisfy {
+            Self.isKeptFrameInHand($0, inHand: inHand, speed: speed)
         }
     }
 }

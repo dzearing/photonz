@@ -2564,6 +2564,9 @@ final class EditorState {
     /// A clock starting from rest is waiting for its first frames
     /// (`preRollWithSound`): the sound starts when it does, not before.
     @ObservationIgnored var documentClockWaiting = false
+    /// Until when a clock that has just started, or is about to, may leave a
+    /// clip out rather than draw it from another time (`startGoesWithout`).
+    @ObservationIgnored var startGoesWithoutUntil = 0.0
     /// A hand is on the playhead: between `beginPlayheadDrag` and
     /// `endPlayheadDrag` (`EditorState+Time`).
     @ObservationIgnored var playheadInHand = false
@@ -3860,6 +3863,7 @@ final class EditorState {
         timelineRowChores.letGo()
         tileRenderer.letGo()
         previewRenderer.letGo()
+        movieFramesStorage?.stop()
         store.removeAll()
         MemoryRelief.giveBackSoon()
     }
@@ -3867,6 +3871,7 @@ final class EditorState {
     /// Memory is short on the Mac: drop what is only kept to be quick, all of
     /// which is drawn again when next needed (`MemoryRelief`).
     func letGoOfCaches() {
+        movieFramesStorage?.closeRestPasses()
         ask.card.letGoOfPictures()
         thumbnailCache = [:]
         flatPictureMemo = [:]
@@ -6617,6 +6622,7 @@ final class EditorState {
             var inHand = movieFramesStorage?.inHand
             inHand?.travel = playheadTravel
             inHand?.nearest = !isDocumentPlaying
+            if startGoesWithout(inHand, in: document) { inHand?.nearOnly = MoviePlayPass.startStandInFrames }
             if let replaying = titlePartReplaying, isDocumentPlaying {
                 document = document.drawn(atTimeMS: documentTimeMS, onlyMoving: replaying.piece,
                                           inTitle: replaying.title, framesInHand: inHand)

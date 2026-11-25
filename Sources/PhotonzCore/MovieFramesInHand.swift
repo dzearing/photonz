@@ -37,6 +37,15 @@ public struct MovieFramesInHand: Equatable, Sendable {
     /// frame off (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
     public var nearest = false
 
+    /// Set while a clock has started without every clip
+    /// (`MoviePlayPass.starts`): a stand-in is at most this many frames behind
+    /// the one wanted, and a clip with none shows nothing until its own lands.
+    /// Right after a jump what is in hand of its recording is from wherever
+    /// else that was read, another scene put in a tile for a third of a
+    /// second (2026-11-25). Nil at every other time: a late frame is stood in
+    /// for rather than left blank.
+    public var nearOnly: Int?
+
     public init() {}
 
     public mutating func insert(movie: UUID, frameIndex: Int) {
@@ -76,6 +85,7 @@ public struct MovieFramesInHand: Equatable, Sendable {
     public func frameIndexToShow(_ wanted: Int, of movie: UUID, within: ClosedRange<Int>? = nil) -> Int? {
         guard let held = frames[movie], !held.isEmpty else { return nil }
         if held.contains(wanted) { return wanted }
+        if let nearOnly { return held.filter { $0 < wanted && $0 >= wanted - nearOnly }.max() }
         if let within, within.contains(wanted) {
             let inside = held.filter { within.contains($0) }
             if !inside.isEmpty { return standIn(for: wanted, among: inside) }

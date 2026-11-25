@@ -140,6 +140,108 @@ struct MoviePlayBackwardTests {
         #expect(MoviePlayPass.soundStartWaitMS > 614 && MoviePlayPass.soundStartWaitMS <= 1000)
     }
 
+    // Space on the 50 track edit at 0:58 waited out its whole 800 ms for
+    // frames of clips under a full-frame one, which nothing reads while it
+    // plays (2026-11-25).
+    @Test("A start waits for the clips that are seen, never for one hidden under another")
+    func startsWithoutTheHidden() {
+        let size = CGSize(width: 1600, height: 1000)
+        func clip(_ movie: MovieRef) -> Layer {
+            var layer = Layer(name: "clip", content: .image(movie.frameRef(atSourceMS: 0)),
+                              frame: CGRect(origin: .zero, size: size))
+            layer.movie = movie
+            layer.time = LayerTime(inMS: 0, outMS: 8000, sourceInMS: 0, sourceLengthMS: movie.durationMS)
+            return layer
+        }
+        let under = MovieRef(pixelSize: size, durationMS: 8000), over = MovieRef(pixelSize: size, durationMS: 8000)
+        var document = PhotonzDocument(canvasSize: size, layers: [clip(under), clip(over)])
+        document.durationMS = 8000
+        let at = MovieRef.gridMS(ofFrame: 60)
+        var hand = MovieFramesInHand()
+        for frame in 60...(60 + MoviePlayPass.startsWithFramesAhead) { hand.insert(movie: over.id, frameIndex: frame) }
+        #expect(document.movieFrames(atTimeMS: at).count == 2)
+        for speed in [0.5, 1, 2, 4] {
+            #expect(document.readyToStartPlaying(atTimeMS: at, inHand: hand, speed: speed))
+        }
+    }
+
+    // Ten recordings decode up from ten key frames on one decoder: half a
+    // second and more before the last of them has the frames ahead
+    // (2026-11-25). The clock goes once some of them are there.
+    @Test("With many recordings on screen the clock does not hold for the last of them")
+    func movesOnWithoutThemAll() {
+        let moveOn = Double(MoviePlayPass.movesOnAfterMS)
+        #expect(moveOn < 80)
+        func start(_ clips: Int, landed: Int, ready: Int, waitsOn: Int = 0) -> MoviePlayPass.StartReady {
+            MoviePlayPass.StartReady(clips: clips, landed: landed, ready: ready, waitsOn: waitsOn)
+        }
+        let six = start(6, landed: 6, ready: 2)
+        #expect(!MoviePlayPass.starts(six, waitedMS: moveOn - 1))
+        #expect(MoviePlayPass.starts(six, waitedMS: moveOn))
+        // Everything there: at once.
+        #expect(MoviePlayPass.starts(start(6, landed: 6, ready: 6), waitedMS: 0))
+        #expect(MoviePlayPass.starts(start(0, landed: 0, ready: 0), waitedMS: 0))
+        // Few on screen: the picture IS those clips, and a clock run on
+        // without them is a frozen picture over moving sound (2026-11-20).
+        #expect(!MoviePlayPass.starts(start(2, landed: 2, ready: 1), waitedMS: moveOn))
+        #expect(!MoviePlayPass.starts(start(3, landed: 2, ready: 2), waitedMS: moveOn))
+        #expect(!MoviePlayPass.starts(start(6, landed: 6, ready: 0), waitedMS: moveOn))
+        // A small clip with no frame of its own is left out meanwhile; a big
+        // one is not, it would be a hole in the picture.
+        #expect(MoviePlayPass.starts(start(6, landed: 4, ready: 2), waitedMS: moveOn))
+        #expect(!MoviePlayPass.starts(start(6, landed: 5, ready: 5, waitsOn: 1), waitedMS: moveOn))
+        // ...and at least half of them are there: more would be chasing the
+        // clock than the decoder has room for.
+        #expect(MoviePlayPass.starts(start(10, landed: 5, ready: 5), waitedMS: moveOn))
+        #expect(!MoviePlayPass.starts(start(10, landed: 4, ready: 4), waitedMS: moveOn))
+        #expect(!start(6, landed: 5, ready: 5, waitsOn: 1).isAPicture)
+        // Never longer than the wait.
+        #expect(MoviePlayPass.starts(start(6, landed: 0, ready: 0, waitsOn: 1),
+                                     waitedMS: Double(MoviePlayPass.soundStartWaitMS)))
+    }
+
+    @Test("A clip a start went without is never stood in for from another time")
+    func nothingFromAnotherTime() {
+        var hand = MovieFramesInHand()
+        hand.insert(movie: movie.id, frameIndex: 10)
+        hand.insert(movie: movie.id, frameIndex: 200)
+        #expect(hand.frameIndexToShow(60, of: movie.id) == 10)
+        hand.nearOnly = MoviePlayPass.startStandInFrames
+        #expect(hand.frameIndexToShow(60, of: movie.id) == nil)
+        hand.insert(movie: movie.id, frameIndex: 61)
+        #expect(hand.frameIndexToShow(60, of: movie.id) == nil)
+        hand.insert(movie: movie.id, frameIndex: 55)
+        #expect(hand.frameIndexToShow(60, of: movie.id) == 55)
+        #expect(hand.frameIndexToShow(61, of: movie.id) == 61)
+    }
+
+    @Test("What a start has ready is counted clip by clip")
+    func startReady() {
+        let size = CGSize(width: 1600, height: 1000)
+        let movies = (0..<5).map { _ in MovieRef(pixelSize: size, durationMS: 8000) }
+        let layers = movies.enumerated().map { index, movie -> Layer in
+            var layer = Layer(name: "clip", content: .image(movie.frameRef(atSourceMS: 0)),
+                              frame: CGRect(x: CGFloat(index) * 100, y: 0, width: 90, height: 60))
+            layer.movie = movie
+            layer.time = LayerTime(inMS: 0, outMS: 8000, sourceInMS: 0, sourceLengthMS: movie.durationMS)
+            return layer
+        }
+        var document = PhotonzDocument(canvasSize: size, layers: layers)
+        document.durationMS = 8000
+        let at = MovieRef.gridMS(ofFrame: 60)
+        var hand = MovieFramesInHand()
+        for movie in movies { hand.insert(movie: movie.id, frameIndex: 60) }
+        for frame in 61...63 { hand.insert(movie: movies[0].id, frameIndex: frame) }
+        hand.insert(movie: movies[1].id, frameIndex: 61)
+        #expect(document.startReady(atTimeMS: at, inHand: hand, speed: 1)
+            == MoviePlayPass.StartReady(clips: 5, landed: 5, ready: 1, waitsOn: 0))
+        hand.remove(movie: movies[4].id, frameIndex: 60)
+        #expect(document.startReady(atTimeMS: at, inHand: hand, speed: 1)
+            == MoviePlayPass.StartReady(clips: 5, landed: 4, ready: 1, waitsOn: 0))
+        document.layers[4].frame.size = size
+        #expect(document.startReady(atTimeMS: at, inHand: hand, speed: 1).waitsOn == 1)
+    }
+
     // Played backwards across a cut, the playhead jumps to the frame before
     // the cut, and a block opened only on arrival left the picture 22 frames
     // behind there, while the stretch playing read on past the cut into

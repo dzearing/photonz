@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-25T15:11:24.738Z",
-  "updated": "2026-11-25T15:49:44.515Z",
+  "updated": "2026-11-25T19:50:11.236Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split off an-edit-with-50-tracks-and-100-clips-scrolls-pla (the user's report of a sluggish 50 track edit), whose audits carried \"starting play at 0:58 from rest waits about 727 ms\" through four passes with no task owning it. Reproduced 2026-11-25 by the triage pass on the probe built from main that morning: a walk with setup {\"forget\":[\"all\"],\"wideEdit\":50} and steps wait 3, then {\"do\":\"speed\",\"measure\":\"play\",\"fromMS\":58000,\"seconds\":3}, the same from 10000, then 58000 again (Scripts/playtest.sh <walk> --no-build). Output: \"played 3.0s from 0:58.0 to 1:00.6: 66 of 91 frames shown, 25 dropped, worst gap 858ms, first new picture 858ms after Space\"; \"from 0:10.0: 73 of 90 frames shown, 17 dropped, first new picture 625ms after Space\"; second time at 0:58: 850ms. The same walk with referenceEdit 6: 50, 58, 58 ms and 0 dropped. Main thread is not the hold (longest pass 6 to 25 ms). Not diagnosed. Place to look first, from reading only: the start waits for first frames of every clip (preRollWithSound, capped at 0.8 s), and 0:10 is slow with few clips up. Played end to end from 0:00 the wait is 75 ms (baselines/wide-50.json firstPictureMS), so the resting frames are in hand there: compare.",
@@ -33,6 +33,39 @@
     {
       "t": "2026-11-25T15:49:44.514Z",
       "note": "From the 50 track task's closing pass, 2026-11-25: one real dropped frame in seven end to end plays (25,459 frames), due at 0:19.7, not seen again in two tries. A drop the line gives no moment for is the clock itself starting late: wall clock less playhead over two steps (about 66 ms) at the end, so the 64 to 70 ms start counts as one dropped frame. Starting on time removes it; if 0:19.7 comes back, it is yours."
+    },
+    {
+      "t": "2026-11-25T15:50:38.422Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-25T16:00:56.724Z",
+      "note": "Reproduced on the probe (main 215575c02): first picture 863 / 625 / 383 ms after Space at 0:58 / 0:10 / 0:30; 6 minute edit 50 to 58. Traced: at 0:58 the start waits the full 0.8 s cap (805 ms) for frames of clips covered by a full-frame clip, which nothing reads (readyToStartPlaying asks movieFrames, the fetch asks movieFramesSeen); everything seen was in hand at 172 ms. At 0:10 and 0:30 the frames ahead are not in hand at rest: Space opens 6 (5) passes at once, a place in the gate costs 0.1 ms, the file open 5 ms, and decoding each from its key frame on one shared decoder delivers the first frames at 272 to 550 ms (92 to 323 ms); the clock starts at 575 (337) ms."
+    },
+    {
+      "t": "2026-11-25T16:39:45.178Z",
+      "note": "Built: startReady counts only clips that are seen; passes a start needs are opened at rest (MovieFrameFetcher.readAheadOfRest); speed walk measure 'starts'. Worst of 3, 50 tracks at 0:10/0:30/0:58: rested 58/67/66 ms, 0 dropped; Space the instant the jump's picture is in 311/129/200; in the same breath as the jump 865/536/530. Next: one pass for the still and what follows, so a jump decodes each clip once."
+    },
+    {
+      "t": "2026-11-25T17:12:50.379Z",
+      "note": "One pass per clip for the still and what follows: rested worst 67 ms, Space the instant the picture is in worst 64, at all three places, every picture as the export draws it. 6 minute edit 46 to 66. Still held: ten clips at 1:02 half a second after a jump, 324 ms, waiting for the last small tile. Chose to move on without small tiles (drawn only once their own frame is in) over waiting for all, because the checklist says so and the paused canvas already leaves them out; clips a quarter of the frame or more are read first and waited for."
+    },
+    {
+      "t": "2026-11-25T19:45:51.416Z",
+      "note": "owns these walks: play-starts-at-once-on-a-wide-edit-walk"
+    },
+    {
+      "t": "2026-11-25T19:45:51.494Z",
+      "note": "Chose 'the moment the jump's picture is in' (and the notes' half second after) for 'right after a jump' over Space in the very same instant, because 625 and 858 were measured half a second after one; the same-instant case is recorded too (545/266/230 ms, before 868/548/872) and filed as a-jump-on-a-wide-edit-shows-its-picture-whole-an. Chose to wait for half of the clips over none (two tiles missing 1.8 s) or 85 per cent (217 ms at ten clips). Looked at 1-ten-clips-sc.png: all ten clips and the main cut drawn. cross-fade walk failed 1 of 5 in its timeline drop step (an animation, not playback); scrub-never-blacks-out 1 of 15, and 1 of 10 on the build before this."
+    },
+    {
+      "t": "2026-11-25T19:50:11.234Z",
+      "note": "Space on the 50 track edit moves the picture within 67 ms at rest and after a jump at 0:10, 0:30 and 0:58 (was 258 to 877), 83 ms with ten recordings up half a second after a jump (was 775), 0 dropped at 0:10 and 0:58; the 6 minute edit starts no later. Only Space in the same instant as a jump still waits 230 to 545 ms (was 545 to 870), filed. Held by play-starts-at-once-on-a-wide-edit-walk and the wide baselines. Suite, jump and play walks green. Audit 2026-11-25-play-starts-at-once."
     }
-  ]
+  ],
+  "started": "2026-11-25T15:50:38.421Z",
+  "walks": [
+    "play-starts-at-once-on-a-wide-edit-walk"
+  ],
+  "completed": "2026-11-25T19:50:11.235Z"
 }

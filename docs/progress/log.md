@@ -23518,3 +23518,11 @@ announced 0.25.0.
 - `PassSampler` also keeps every other thread's stack while the main thread stands still in a pass of 14 ms or more; `Scripts/perf/pass-profile.py <folder> --waits` prints it. It named the odd slow zoom frame: RenderBox's `prune_removed_locked` holds its queue while it waits for the window server. Filed as its own task.
 - Seven end to end plays: 1 dropped frame of 25,459. Edits 9 to 14 ms, scroll and zoom p95 under 7.5 ms. Task closed.
 - Next: play starts at once on a 50 track edit; 100 tracks.
+
+## 2026-11-25 — Play starts at once on a 50 track edit
+
+- Two causes: the start waited for clips hidden under another, which nothing reads (0:58, the whole 800 ms), and the frames just ahead were decoded up to from a key frame per clip only at Space (0:10, 0:30).
+- `PhotonzDocument.startReady` counts only clips seen; passes a start needs are opened at rest and wait (`MovieFrameFetcher.openRestPasses`, 2 minutes, let go under memory pressure); after a jump one pass reads the still and what follows. With more than three clips a start goes with every big one and half of all (`MoviePlayPass.starts`); the rest are left out until their own frame lands (`MovieFramesInHand.nearOnly`), and passes decode up two at a time, big first (`LandingOrder`).
+- First moving picture, worst of 3, at 0:10/0:30/0:58: rested 632/258/877 -> 66/58/67 ms; Space as the jump's picture is in 694/600/861 -> 56/50/50. Ten clips at 1:02, half a second after a jump: 775 -> 83. 6 minute edit unchanged (67 -> 66 rested).
+- Speed walk measure `starts` (in `--wide`, baselines wide-50/100) and `play-starts-at-once-on-a-wide-edit-walk`.
+- Open: Space in the same instant as a jump 230 to 545 ms, and a paused jump draws in pieces; filed as a p2.

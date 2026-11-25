@@ -41,12 +41,13 @@ final class SpeedWalkProbe {
         defer { write() }
         switch step.measure {
         case .play: return try await play(editor, fromMS: step.fromMS ?? 0, seconds: step.seconds ?? 60)
+        case .starts: return try await starts(editor, step)
         case .scrub: return try await scrub(editor, speeds: step.speeds)
         case .edits: return try await edits(editor, step.edits, fromMS: step.fromMS)
         case .idleBuilds: return try await idleBuilds(editor, seconds: step.seconds ?? 3, fromMS: step.fromMS)
         case .timeline: return try await timeline(editor, parts: step.parts)
         case .pictures: return try await pictures(editor, fromMS: step.fromMS ?? 0, seconds: step.seconds ?? 6,
-                                                  keep: step.keep)
+                                                  keep: step.keep, when: step.when.first)
         case .memory: return try await memory(editor, step)
         case .export: return try await export(editor, step)
         case .compare: return try compare(step)
@@ -208,6 +209,71 @@ final class SpeedWalkProbe {
             await frames.next()
             if editor.shownMomentMS == editor.documentTimeMS, CACurrentMediaTime() - start > 0.5 { break }
         }
+    }
+
+    // MARK: - Starting
+
+    /// Puts the playhead on `ms` and waits until Space should go down there
+    /// (`PlaytestSpeedMeasure.whens`). It comes from a place a person would
+    /// jump from, far enough that nothing of this one is in hand.
+    private func arrive(_ editor: EditorState, at ms: Int, when: String, frames: DisplayFrames) async {
+        editor.pauseDocument()
+        editor.scrubDocument(toMS: ms > editor.documentLengthMS / 2 ? ms / 4 : ms + editor.documentLengthMS / 3)
+        await settle(editor, frames: frames)
+        let rested = CACurrentMediaTime()
+        while CACurrentMediaTime() - rested < 1 { await frames.next() }
+        editor.scrubDocument(toMS: ms)
+        let start = CACurrentMediaTime()
+        switch when {
+        case "rested":
+            while CACurrentMediaTime() - start < 2 { await frames.next() }
+        case "jumped":
+            while CACurrentMediaTime() - start < 3, editor.playtestShownExactMomentMS != ms { await frames.next() }
+        default:
+            break
+        }
+    }
+
+    /// How long after Space the first moving picture comes, from each place.
+    private func starts(_ editor: EditorState, _ step: PlaytestSpeedMeasure) async throws -> String {
+        guard editor.document?.hasTime == true else {
+            throw Failure(description: "there is no video in this window to play")
+        }
+        let frames = try frames(editor)
+        defer { frames.invalidate() }
+        let seconds = step.seconds ?? 3
+        var lines: [String] = []
+        var tallies: [SpeedWalk.StartTally] = []
+        for when in step.when.isEmpty ? PlaytestSpeedMeasure.whens : step.when {
+            for place in step.places {
+                let label = "\(SpeedWalk.clock(place)) \(when)"
+                var worst: SpeedWalk.StartTally?
+                var each: [String] = []
+                for _ in 0..<step.runs {
+                    await arrive(editor, at: place, when: when, frames: frames)
+                    editor.playDocument(rate: 1)
+                    let start = CACurrentMediaTime()
+                    var samples = [SpeedWalk.PlaySample(wallMS: 0, playheadMS: place, shownMS: editor.shownMomentMS)]
+                    while CACurrentMediaTime() - start < seconds, editor.isDocumentPlaying {
+                        await frames.next()
+                        samples.append(SpeedWalk.PlaySample(wallMS: (CACurrentMediaTime() - start) * 1000,
+                                                            playheadMS: editor.documentTimeMS,
+                                                            shownMS: editor.shownMomentMS))
+                    }
+                    editor.pauseDocument()
+                    guard let one = SpeedWalk.start(samples, label: label, fromMS: place,
+                                                    frameStepMS: MovieRef.frameStepMS) else {
+                        throw Failure(description: "nothing moved in \(seconds)s from \(label)")
+                    }
+                    each.append(String(format: "%.0f (%d dropped, gap %.0f)", one.firstPictureMS, one.dropped, one.worstGapMS))
+                    worst = worst?.worst(with: one) ?? one
+                }
+                if let worst { tallies.append(worst) }
+                lines.append("\(label): " + each.joined(separator: ", "))
+            }
+        }
+        run.starts = tallies
+        return "first moving picture after Space, in ms: " + lines.joined(separator: "; ")
     }
 
     // MARK: - Scrubbing
@@ -838,16 +904,21 @@ final class SpeedWalkProbe {
     /// against one of its moment drawn offscreen the way an export draws it:
     /// what each wrong picture got wrong, clip by clip (a frame missing, one
     /// held from before, one from somewhere else), is the line.
-    private func pictures(_ editor: EditorState, fromMS: Int, seconds: Double, keep: String?) async throws -> String {
+    private func pictures(_ editor: EditorState, fromMS: Int, seconds: Double, keep: String?,
+                          when: String? = nil) async throws -> String {
         guard let document = editor.document, document.hasTime else {
             throw Failure(description: "there is no video in this window to play")
         }
         struct Look { let moment: Int; let picture: CGImage; let drawn: PhotonzDocument; let present: Set<UUID>; let at: Double }
         let frames = try frames(editor)
         defer { frames.invalidate() }
-        editor.pauseDocument()
-        editor.scrubDocument(toMS: fromMS)
-        await settle(editor, frames: frames)
+        if let when {
+            await arrive(editor, at: fromMS, when: when, frames: frames)
+        } else {
+            editor.pauseDocument()
+            editor.scrubDocument(toMS: fromMS)
+            await settle(editor, frames: frames)
+        }
         let width = 480
         // Shrunk off the main thread: on it, shrinking was a quarter of what
         // the main thread did while this watched (2026-11-24). A picture holds

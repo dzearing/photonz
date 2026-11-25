@@ -421,6 +421,53 @@ struct SpeedWalkTests {
         #expect(SpeedCompare.regressions(baseline: base, run: slowHunt, marginPercent: 50).count == 4)
     }
 
+    // Space on the 50 track edit stood still for 625 ms at 0:10 and 858 at
+    // 0:58, and no number of the speed walk said so (2026-11-25).
+    @Test("A start counts from Space to the first picture past where it started")
+    func startFromAPlace() throws {
+        func look(_ wall: Double, _ playhead: Int, _ shown: Int) -> SpeedWalk.PlaySample {
+            SpeedWalk.PlaySample(wallMS: wall, playheadMS: playhead, shownMS: shown)
+        }
+        // A jump from 0:50: its picture, then the landing's, then moving.
+        var samples = [look(0, 10_000, 50_000), look(8, 10_000, 10_000), look(40, 10_000, 10_000)]
+        for n in 1...30 { samples.append(look(40 + Double(n) * 33, 10_000 + n * 33, 10_000 + n * 33)) }
+        let tally = try #require(SpeedWalk.start(samples, label: "0:10.0 atOnce", fromMS: 10_000, frameStepMS: 33))
+        #expect(tally.firstPictureMS == 73)
+        #expect(tally.dropped == 0)
+        #expect(abs(tally.worstGapMS - 33) < 0.1)
+        // Held half a second, the clock running on: that start, and the frames never shown.
+        var held = [look(0, 10_000, 10_000)]
+        for n in 1...30 { held.append(look(Double(n) * 33, 10_000 + n * 33, n < 16 ? 10_000 : 10_000 + n * 33)) }
+        let late = try #require(SpeedWalk.start(held, label: "0:10.0 atOnce", fromMS: 10_000, frameStepMS: 33))
+        #expect(late.firstPictureMS > 500)
+        #expect(late.dropped > 10)
+        #expect(SpeedWalk.start([look(0, 10_000, 10_000), look(900, 10_000, 10_000)], label: "", fromMS: 10_000,
+                                frameStepMS: 33) == nil)
+
+        var base = Self.run(dropped: 0, gap: 40, peak: 1000)
+        base.starts = [tally]
+        var slow = base
+        slow.starts = [late]
+        #expect(SpeedCompare.regressions(baseline: base, run: slow, marginPercent: 50)
+            .contains { $0.hasPrefix("start 0:10.0 atOnce: first picture") })
+        #expect(try #require(SpeedRun.envelope(of: [base, slow])).starts == [tally.worst(with: late)])
+        // A file from before it was measured still reads.
+        base.starts = nil
+        #expect(try JSONDecoder().decode(SpeedRun.self, from: JSONEncoder().encode(base)) == base)
+    }
+
+    @Test("A starts step names its places and when Space goes down")
+    func startsStep() {
+        #expect(PlaytestSpeedMeasure(measure: "starts", places: [10_000]).problem == nil)
+        #expect(PlaytestSpeedMeasure(measure: "starts").problem?.field == "places")
+        #expect(PlaytestSpeedMeasure(measure: "starts", places: [1], when: ["later"]).problem?.field == "when")
+        #expect(PlaytestSpeedMeasure(measure: "starts", places: [1], runs: 0).problem?.field == "runs")
+        #expect(PlaytestSpeedMeasure(measure: "play", places: [1]).problem?.field == "places")
+        #expect(PlaytestSpeedMeasure(measure: "pictures", when: ["jumped"]).problem == nil)
+        #expect(PlaytestSpeedMeasure(measure: "pictures", when: ["jumped", "rested"]).problem?.field == "when")
+        #expect(PlaytestSpeedMeasure(measure: "scrub", when: ["jumped"]).problem?.field == "when")
+    }
+
     @Test("A baseline from several runs is the worst of them, number by number")
     func envelopeIsTheWorst() throws {
         var a = Self.run(dropped: 100, gap: 900, peak: 1000)

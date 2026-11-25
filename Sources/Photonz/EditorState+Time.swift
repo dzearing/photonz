@@ -48,6 +48,10 @@ extension EditorState {
         if let already = movieFramesStorage { return already }
         let fetcher = MovieFrameFetcher(store: store)
         fetcher.onFrameLanded = { [weak self] in self?.movieFrameLanded() }
+        fetcher.onUnreadable = { [weak self] in
+            guard let self, !isDocumentPlaying else { return }
+            documentMomentChanged()
+        }
         movieFramesStorage = fetcher
         // A window that shows recordings is told when one changes on disk.
         MovieFileWatch.shared.add(self)
@@ -461,13 +465,14 @@ extension EditorState {
     /// a second back; the clock ran on, and a dissolve held a frame up to 10
     /// behind for half a second (2026-11-20). Premiere waits the same way.
     private func preRollWithSound() async {
-        let deadline = Date().addingTimeInterval(Double(MoviePlayPass.soundStartWaitMS) / 1000)
+        let asked = CACurrentMediaTime()
+        startGoesWithoutUntil = asked + Double(MoviePlayPass.startGoesWithoutMS) / 1000
         documentClockWaiting = true
         documentMomentChanged()
-        while !Task.isCancelled, isDocumentPlaying, Date() < deadline,
-              let document = shownDocument,
-              !document.readyToStartPlaying(atTimeMS: documentTimeMS, inHand: movieFrames.inHand,
-                                            speed: documentPlaybackRate) {
+        while !Task.isCancelled, isDocumentPlaying, let document = shownDocument,
+              !MoviePlayPass.starts(document.startReady(atTimeMS: documentTimeMS, inHand: movieFrames.inHand,
+                                                        speed: documentPlaybackRate),
+                                    waitedMS: (CACurrentMediaTime() - asked) * 1000) {
             try? await Task.sleep(for: .milliseconds(4))
         }
         // A clock cancelled while it waited: whoever cancelled it put the flag
@@ -564,6 +569,15 @@ extension EditorState {
                 ? moviePlayLookahead.points(in: document, atTimeMS: documentTimeMS,
                                             leadMS: MoviePlayPass.comingLead(speed: abs(documentPlaybackRate)))
                 : nil
+            // At rest, with no hand on it, what Space would show first is read
+            // and waits (`MovieFrameFetcher.readAheadOfRest`).
+            let starting = !isDocumentPlaying && !playheadInHand ? startingPoints(in: document) : nil
+            // ...and the clips that are seen come first, before any under one
+            // that fills the frame.
+            if let starting {
+                wanted = starting.now + wanted
+                underHand += starting.now.count
+            }
             // ...and a clock playing backwards reads the stretch behind it a
             // block at a time (`MoviePlayBackward`).
             let playingBackward = isDocumentPlaying && playheadTravel == .backward
@@ -573,19 +587,41 @@ extension EditorState {
             } ?? []
             movieFrames.fetch(wanted, size: movieDecodeSize(in: document),
                               handMoving: handMoving, handPace: playheadPace.editMSPerSecond,
-                              played: { request in
-                                  document.layer(id: request.layerID)?.playedSourceSpanMS.map {
-                                      request.movie.frameIndex(atSourceMS: $0.lowerBound)
-                                          ... request.movie.frameIndex(atSourceMS: $0.upperBound)
-                                  }
-                              },
+                              played: playedFrames(in: document),
                               underHand: underHand,
                               backward: playheadTravel == .backward,
-                              playing: playing,
+                              playing: playing, starting: starting,
+                              jumped: MoviePlayPass.restsOnPasses(movedMS: playheadStrideMS, travel: playheadTravel),
                               playingSpeed: isDocumentPlaying ? abs(documentPlaybackRate) : 1,
                               playingBackward: playingBackward, backPlaces: backPlaces)
         }
+        guard !holdsPictureForStart(document) else { return }
         submit(document)
+    }
+
+    /// Whether a clip still without its own frames is left out of the picture
+    /// for now: in the moment after Space, with many clips on screen, until
+    /// every one of them has landed (`MoviePlayPass.starts`).
+    func startGoesWithout(_ inHand: MovieFramesInHand?, in document: PhotonzDocument) -> Bool {
+        guard startGoesWithoutUntil > 0, let inHand else { return false }
+        let start = document.startReady(atTimeMS: documentTimeMS, inHand: inHand, speed: documentPlaybackRate)
+        guard isDocumentPlaying, CACurrentMediaTime() < startGoesWithoutUntil,
+              start.clips > MoviePlayPass.waitsForEveryClipUpTo, start.landed < start.clips else {
+            if !documentClockWaiting { startGoesWithoutUntil = 0 }
+            return false
+        }
+        return true
+    }
+
+    /// A clock waiting to start keeps the picture that is up until every clip
+    /// seen (every big one, with many) has the frame under the playhead: Space in the same breath as a
+    /// jump drew the new place with frames of wherever else the same
+    /// recordings had been read, or nothing, until each clip's own landed
+    /// (2026-11-25). Never past the wait (`MoviePlayPass.soundStartWaitMS`).
+    private func holdsPictureForStart(_ document: PhotonzDocument) -> Bool {
+        guard documentClockWaiting else { return false }
+        return !document.startReady(atTimeMS: documentTimeMS, inHand: movieFrames.inHand,
+                                    speed: documentPlaybackRate).isAPicture
     }
 
     /// The canvas zoomed: read the frames on screen again if the new zoom
@@ -596,7 +632,26 @@ extension EditorState {
         guard documentHasTime, let document = shownDocument else { return }
         let wanted = document.movieFrames(atTimeMS: documentTimeMS)
         guard !wanted.isEmpty else { return }
-        movieFrames.fetch(wanted, size: movieDecodeSize(in: document))
+        movieFrames.fetch(wanted, size: movieDecodeSize(in: document),
+                          played: playedFrames(in: document),
+                          starting: !isDocumentPlaying && !playheadInHand ? startingPoints(in: document) : nil)
+    }
+
+    /// What a clock starting forwards from where the playhead rests shows
+    /// first, and what comes on just after.
+    private func startingPoints(in document: PhotonzDocument) -> MoviePlayPoints? {
+        guard documentTimeMS < lastDocumentTimeMS else { return nil }
+        return moviePlayLookahead.points(in: document, atTimeMS: documentTimeMS, leadMS: MoviePlayPass.restLeadMS)
+    }
+
+    /// The grid frames of its recording a clip plays.
+    private func playedFrames(in document: PhotonzDocument) -> (MovieFrameRequest) -> ClosedRange<Int>? {
+        { request in
+            document.layer(id: request.layerID)?.playedSourceSpanMS.map {
+                request.movie.frameIndex(atSourceMS: $0.lowerBound)
+                    ... request.movie.frameIndex(atSourceMS: $0.upperBound)
+            }
+        }
     }
 
     /// For each frame the moment under the playhead draws: how wide it is worth
@@ -665,6 +720,7 @@ extension EditorState {
         // drawing the whole canvas on its own held the main thread so that
         // the next ones landed late, and were drawn on their own in turn
         // (2026-11-24). The first one to land is still drawn at once.
+        guard !holdsPictureForStart(document) else { return }
         let now = CACurrentMediaTime()
         let due = landingDrawnAt + Self.landingsApart
         if now >= due {

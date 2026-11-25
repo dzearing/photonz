@@ -75,6 +75,54 @@ public enum SpeedWalk {
         }
     }
 
+    /// How soon a play starts after Space, from one place in one situation
+    /// (`PlaytestSpeedMeasure.whens`): the worst of its runs.
+    public struct StartTally: Codable, Equatable, Sendable {
+        /// "0:10.0 rested".
+        public var label: String
+        /// How long after Space the first picture past the place it started
+        /// from came on screen.
+        public var firstPictureMS: Double
+        /// Frames never shown in the seconds after Space.
+        public var dropped: Int
+        /// The longest wait between two new pictures after the first.
+        public var worstGapMS: Double
+
+        public init(label: String, firstPictureMS: Double, dropped: Int, worstGapMS: Double) {
+            self.label = label
+            self.firstPictureMS = firstPictureMS
+            self.dropped = dropped
+            self.worstGapMS = worstGapMS
+        }
+
+        /// The worse of two, number by number.
+        public func worst(with other: StartTally) -> StartTally {
+            StartTally(label: label, firstPictureMS: max(firstPictureMS, other.firstPictureMS),
+                       dropped: max(dropped, other.dropped), worstGapMS: max(worstGapMS, other.worstGapMS))
+        }
+    }
+
+    /// One start: `samples` from the moment Space went down on `fromMS`. A
+    /// picture still of `fromMS` or of wherever the playhead jumped from is
+    /// not playing yet: the first one past it, within the stretch, is.
+    /// Nil when nothing moved at all.
+    public static func start(_ samples: [PlaySample], label: String, fromMS: Int, frameStepMS: Int) -> StartTally? {
+        guard let first = samples.first, let last = samples.last,
+              let moved = samples.firstIndex(where: { sample in
+                  sample.shownMS.map { $0 > fromMS && $0 <= last.playheadMS } ?? false
+              }) else { return nil }
+        var worst = 0.0, previous = samples[moved]
+        for sample in samples[moved...] where sample.shownMS != previous.shownMS {
+            worst = max(worst, sample.wallMS - previous.wallMS)
+            previous = sample
+        }
+        // Judged from the place itself, whatever picture was up before.
+        let from = PlaySample(wallMS: first.wallMS, playheadMS: fromMS, shownMS: fromMS)
+        let whole = tally([from] + samples[moved...], frameStepMS: frameStepMS)
+        return StartTally(label: label, firstPictureMS: samples[moved].wallMS - first.wallMS,
+                          dropped: whole.dropped, worstGapMS: worst)
+    }
+
     /// A stretch of the document worth its own numbers: a transition.
     public struct Span: Equatable, Sendable {
         public var label: String
@@ -704,6 +752,9 @@ public struct SpeedRun: Codable, Equatable, Sendable {
     public var machine: String
     public var frameStepMS: Int
     public var plays: [SpeedWalk.PlayTally] = []
+    /// How soon play starts, place by place (nil in a run that measured none,
+    /// and in every file from before 2026-11-25).
+    public var starts: [SpeedWalk.StartTally]?
     public var sound: SpeedWalk.SoundTally?
     public var composites: SpeedWalk.CompositeTally?
     public var scrubs: [SpeedWalk.ScrubTally] = []
@@ -761,6 +812,10 @@ public struct SpeedRun: Codable, Equatable, Sendable {
             if let pass = play.longestPassMS {
                 out.append(Metric(key: Self.playLongestPassKey, value: pass, unit: .ms))
             }
+        }
+        for start in starts ?? [] {
+            out.append(Metric(key: "start \(start.label): first picture", value: start.firstPictureMS, unit: .ms))
+            out.append(Metric(key: "start \(start.label): dropped", value: Double(start.dropped), unit: .frames))
         }
         if let sound {
             out.append(Metric(key: "sound: pieces left out", value: Double(sound.piecesLeftOut), unit: .bodies))
@@ -831,6 +886,13 @@ extension SpeedRun {
                     }
                 } else {
                     out.plays.append(play)
+                }
+            }
+            for start in run.starts ?? [] {
+                if let i = out.starts?.firstIndex(where: { $0.label == start.label }), let mine = out.starts?[i] {
+                    out.starts?[i] = mine.worst(with: start)
+                } else {
+                    out.starts = (out.starts ?? []) + [start]
                 }
             }
             if let sound = run.sound {
@@ -1005,6 +1067,7 @@ public enum SpeedCompare {
 /// {"do": "speed", "measure": "play", "fromMS": 15000, "seconds": 60}
 /// {"do": "speed", "measure": "scrub", "speeds": ["slow", "medium", "fling"]}
 /// {"do": "speed", "measure": "edits", "edits": ["trim", "move", "blade", "undo", "transition", "title"]}
+/// {"do": "speed", "measure": "starts", "places": [10000, 58000], "when": ["rested", "jumped", "atOnce"], "runs": 3}
 /// {"do": "speed", "measure": "idleBuilds", "seconds": 3}
 /// {"do": "speed", "measure": "timeline"}
 /// {"do": "speed", "measure": "memory", "seconds": 600, "ceilingMB": 2600, "growthPercent": 10}
@@ -1015,7 +1078,7 @@ public enum SpeedCompare {
 /// `form` ("short" or "long") on any of them names the run in its file.
 public struct PlaytestSpeedMeasure: Equatable, Sendable {
     public enum Measure: String, CaseIterable, Sendable {
-        case play, scrub, edits, idleBuilds, timeline, pictures, memory, export, compare
+        case play, starts, scrub, edits, idleBuilds, timeline, pictures, memory, export, compare
     }
     public static let speeds = ["slow", "medium", "fling", "hunt"]
     public static let edits = ["trim", "move", "blade", "undo", "transition", "title"]
@@ -1080,7 +1143,18 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     /// profile's buffer fills before the last of them, so it names one.
     public static let timelineParts = ["zoom", "along", "tracks"]
 
+    /// When Space goes down in a `starts` step, after the playhead is put on a
+    /// place: with two seconds' rest there, the moment its picture is in
+    /// (exact), or in the same breath as the jump. A `pictures` step takes one
+    /// of them, and starts from a settled window when it names none.
+    public static let whens = ["rested", "jumped", "atOnce"]
+
     public var measure: Measure?
+    /// Where a `starts` step starts from, in milliseconds, and when.
+    public var places: [Int]
+    public var when: [String]
+    /// How many times it starts from each: the worst is kept.
+    public var runs: Int
     public var rawMeasure: String
     public var parts: [String]
     public var seconds: Double?
@@ -1107,7 +1181,11 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     public init(measure: String, seconds: Double? = nil, fromMS: Int? = nil, speeds: [String] = [],
                 edits: [String] = [], form: String? = nil, baseline: String? = nil, marginPercent: Double? = nil,
                 keep: String? = nil, throughPictures: Bool = false, ceilingMB: Double? = nil,
-                growthPercent: Double? = nil, parts: [String] = []) {
+                growthPercent: Double? = nil, parts: [String] = [], places: [Int] = [], when: [String] = [],
+                runs: Int? = nil) {
+        self.places = places
+        self.when = when
+        self.runs = runs ?? 3
         self.parts = parts.isEmpty ? Self.timelineParts : parts
         self.ceilingMB = ceilingMB
         self.growthPercent = growthPercent
@@ -1139,6 +1217,15 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
         if let bad = parts.first(where: { !Self.timelineParts.contains($0) }) {
             return ("parts", "\(bad) is not a part of the timeline measure: they are " + Self.timelineParts.joined(separator: ", "))
         }
+        if let bad = when.first(where: { !Self.whens.contains($0) }) {
+            return ("when", "\(bad) is not a moment to press Space: they are " + Self.whens.joined(separator: ", "))
+        }
+        if measure == .starts, places.isEmpty { return ("places", "names where to start from, in milliseconds") }
+        if measure != .starts, !places.isEmpty { return ("places", "is for a starts step") }
+        if !when.isEmpty, measure != .starts, !(measure == .pictures && when.count == 1) {
+            return ("when", "is for a starts step, or one of them for the pictures played")
+        }
+        if runs < 1 { return ("runs", "must be at least one") }
         if let seconds, seconds <= 0 { return ("seconds", "must be more than nothing") }
         if let form, form != "short", form != "long" { return ("form", "is short or long") }
         if measure == .compare, baseline == nil { return ("baseline", "names the results file to compare with") }

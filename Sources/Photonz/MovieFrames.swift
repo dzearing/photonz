@@ -97,10 +97,12 @@ enum MovieSweeper {
     /// decoded, but only those are turned into pictures, which is most of the
     /// cost (`MoviePlayBackward.stride`).
     ///
-    /// `skipsUnreferenced`, asked at each sample, decodes only the frames
-    /// other frames are decoded from while it answers yes
-    /// (`MoviePlayPass.skipsUnreferenced`); a skipped frame's grid frames
-    /// show the one decoded before it. Nil reads every one, always.
+    /// `skipsUnreferenced`, asked at each sample with when it is on screen,
+    /// decodes only the frames other frames are decoded from while it answers
+    /// yes (`MoviePlayPass.skipsUnreferenced`); a skipped frame's grid frames
+    /// show the one decoded before it. Nil reads every one, always. A sample
+    /// off screen again by `shownFromMS` is decoded for what comes after it
+    /// and no picture of it is asked for.
     ///
     /// `yieldsWhileWaiting` gives the pass's place among those reading at once
     /// (`gate`) to another while `waitsAt` holds it, and takes one again to
@@ -115,7 +117,8 @@ enum MovieSweeper {
                       waitsAt: (@Sendable (Int) -> Bool)? = nil,
                       yieldsWhileWaiting: Bool = false,
                       keeps: (@Sendable (Int) -> Bool)? = nil,
-                      skipsUnreferenced: (@Sendable () -> Bool)? = nil,
+                      skipsUnreferenced: (@Sendable (ClosedRange<Double>) -> Bool)? = nil,
+                      shownFromMS: Double = 0,
                       deliver: @escaping @Sendable (Int, SurfaceFrame) -> Void) async -> Bool {
         // Only a few read at once (`SweepGate`); one asked to stop while it
         // waited for its turn reads nothing.
@@ -146,7 +149,8 @@ enum MovieSweeper {
         // that way is read the usual way.
         let skipping: SkippingDecoder?
         if let skipsUnreferenced, let description {
-            skipping = SkippingDecoder(format: description, attributes: format, skips: skipsUnreferenced)
+            skipping = SkippingDecoder(format: description, attributes: format, shownFromMS: shownFromMS,
+                                       skips: skipsUnreferenced)
         } else {
             skipping = nil
         }
@@ -175,15 +179,19 @@ enum MovieSweeper {
         }
         // Stopped between samples only: `cancelReading` from another thread
         // while a sample is being read crashes (tried 2026-09-27).
+        var waitedMS = 0
         while !Task.isCancelled {
             if let waitsAt, waitsAt(grid.nextFrame) {
                 if yieldsWhileWaiting, holding {
                     gate.leave()
                     holding = false
                 }
-                try? await Task.sleep(for: .milliseconds(4))
+                let step = MoviePlayPass.waitStepMS(waitedMS: waitedMS)
+                waitedMS += step
+                try? await Task.sleep(for: .milliseconds(step))
                 continue
             }
+            waitedMS = 0
             if !holding {
                 await gate.enter()
                 holding = true
@@ -228,10 +236,13 @@ enum MovieSweeper {
         /// Only touched by the one task reading the pass.
         private var order = MovieDecodeReorder<CVPixelBuffer>(depth: 3)
         private var ended = false
-        private let skips: @Sendable () -> Bool
+        private let skips: @Sendable (ClosedRange<Double>) -> Bool
+        private let shownFromMS: Double
 
-        init?(format: CMFormatDescription, attributes: [String: Any], skips: @escaping @Sendable () -> Bool) {
+        init?(format: CMFormatDescription, attributes: [String: Any], shownFromMS: Double,
+              skips: @escaping @Sendable (ClosedRange<Double>) -> Bool) {
             self.skips = skips
+            self.shownFromMS = shownFromMS
             var made: VTDecompressionSession?
             let status = VTDecompressionSessionCreate(
                 allocator: nil, formatDescription: format, decoderSpecification: nil,
@@ -253,9 +264,13 @@ enum MovieSweeper {
                     ended = true
                     continue
                 }
-                guard CMSampleBufferGetNumSamples(sample) > 0, !(skips() && Self.unreferenced(sample)) else { continue }
+                guard CMSampleBufferGetNumSamples(sample) > 0 else { continue }
+                let on = Self.onScreen(sample)
+                if skips(on), Self.unreferenced(sample) { continue }
+                var flags: VTDecodeFrameFlags = [._EnableAsynchronousDecompression]
+                if on.upperBound <= shownFromMS { flags.insert(._DoNotOutputFrame) }
                 let status = VTDecompressionSessionDecodeFrame(
-                    session, sampleBuffer: sample, flags: [._EnableAsynchronousDecompression],
+                    session, sampleBuffer: sample, flags: flags,
                     infoFlagsOut: nil
                 ) { [finished] status, _, image, shown, _ in
                     guard status == noErr, let image else { return }
@@ -274,6 +289,15 @@ enum MovieSweeper {
             for frame in finished.takeAll() {
                 order.insert(frame.ms, frame.buffer)
             }
+        }
+
+        /// When a sample is on screen, in the recording's milliseconds; to the
+        /// end of time where the file does not say for how long.
+        private static func onScreen(_ sample: CMSampleBuffer) -> ClosedRange<Double> {
+            let from = CMSampleBufferGetPresentationTimeStamp(sample).seconds * 1000
+            let length = CMSampleBufferGetDuration(sample).seconds * 1000
+            guard from.isFinite else { return 0...Double.greatestFiniteMagnitude }
+            return length.isFinite && length > 0 ? from...(from + length) : from...Double.greatestFiniteMagnitude
         }
 
         /// Whether nothing else in the recording is decoded from this sample.
@@ -509,6 +533,49 @@ final class MovieFrameFetcher {
         }
     }
     private let playLoad = PlayLoad()
+    /// Whose turn it is to decode up from its key frame, with many clips on
+    /// screen: the big ones first, then the small tiles, `atOnce` at a time.
+    /// Side by side on one decoder all ten landed together at the end of it,
+    /// 700 ms after the jump; in turn the first are there in 100 and a start
+    /// has most of them to go on (`MoviePlayPass.starts`).
+    private final class LandingOrder: Sendable {
+        static let atOnce = 2
+        private let state = Mutex((turns: [(token: UUID, big: Bool)](), until: 0.0))
+        func joins(_ token: UUID, big: Bool) {
+            state.withLock {
+                let at = big ? ($0.turns.firstIndex { !$0.big } ?? $0.turns.endIndex) : $0.turns.endIndex
+                $0.turns.insert((token, big), at: at)
+                $0.until = CACurrentMediaTime() + 1.2
+            }
+        }
+        func landed(_ token: UUID) { state.withLock { $0.turns.removeAll { $0.token == token } } }
+        /// Whether the pass waits for the ones before it, never for long.
+        func waits(_ token: UUID) -> Bool {
+            state.withLock {
+                guard CACurrentMediaTime() < $0.until,
+                      let place = $0.turns.firstIndex(where: { $0.token == token }) else { return false }
+                return place >= Self.atOnce
+            }
+        }
+    }
+    private let landingOrder = LandingOrder()
+    /// How wide the biggest clip on screen is read, with many of them.
+    private var widestOfMany: CGFloat?
+    /// The clock is playing forwards now: the passes are being played from,
+    /// rather than waiting at a rest.
+    private var playsNow = false
+    /// What a clock starting from this rest shows first, how big, and what
+    /// each clip plays, while the playhead rests (`readAheadOfRest`); whether
+    /// its passes have been opened, and whether they have had their time.
+    private var starting: (points: MoviePlayPoints, size: (MovieFrameRequest) -> CGSize,
+                           played: (MovieFrameRequest) -> ClosedRange<Int>?)?
+    private var restPassesOpen = false
+    /// Reads for clips nobody sees, waiting for the ones that are seen.
+    private var deferred: [Read] = []
+    private var restPassesLate = false
+    private var restPassTask: Task<Void, Never>?
+    /// The frames last asked for again because no pass had made them.
+    private var askedAgain = Set<UUID>()
     /// Every how many frames the passes in `playPasses` keep
     /// (`MoviePlayBackward.stride`). A pass keeps what it was opened to keep,
     /// so a change of speed that changes this starts them all over: a pass
@@ -563,6 +630,10 @@ final class MovieFrameFetcher {
     /// redraw with a picture it did not have a moment ago.
     var onFrameLanded: (() -> Void)?
 
+    /// Called when a recording the passes at rest were to read turns out to
+    /// need reading frame by frame: the moment is asked for again.
+    var onUnreadable: (() -> Void)?
+
     /// The frames most recently let go to stay inside the budget, newest last.
     /// A walk reads it to tell a frame that was never read from one that was
     /// read and then dropped (`expectScrubSmooth`).
@@ -615,16 +686,21 @@ final class MovieFrameFetcher {
     /// before the playhead gets there. Only a frame no pass will reach soon is
     /// read on its own. Any other call stops those passes.
     ///
+    /// While it rests (`starting`, the same points for a clock about to start
+    /// there), the passes a start needs are opened once the frames on screen
+    /// are in, read a few frames ahead, and wait (`readAheadOfRest`).
+    ///
     /// While the clock plays it backwards (`playingBackward`, at that speed),
     /// the stretch just behind the playhead is read in blocks, each in one
     /// pass, rather than one frame at a time from its key frame, and so is
     /// the far side of a cut it is about to cross (`backPlaces`,
     /// `MoviePlayBackward`). Any other call stops those blocks.
-    func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize,
+    func fetch(_ requests: [MovieFrameRequest], size: @escaping (MovieFrameRequest) -> CGSize,
                handMoving: Bool = false, handPace: Double = 0,
-               played: (MovieFrameRequest) -> ClosedRange<Int>? = { _ in nil },
+               played: @escaping (MovieFrameRequest) -> ClosedRange<Int>? = { _ in nil },
                underHand: Int = .max, backward: Bool = false,
                playing: MoviePlayPoints? = nil,
+               starting: MoviePlayPoints? = nil, jumped: Bool = false,
                playingSpeed: Double = 1,
                playingBackward: Double? = nil, backPlaces: [MovieBackPlace] = []) {
         if !handMoving {
@@ -638,19 +714,34 @@ final class MovieFrameFetcher {
         handGoesBack = handMoving ? backward : nil
         handMovies = handMoving ? Set(requests.prefix(max(0, underHand)).map(\.movie.id)) : []
         let playsAhead = playing != nil && !handMoving && !backward
-        if !playsAhead { stopPlayPasses() }
+        let starting = playsAhead || handMoving || playingBackward != nil ? nil : starting
+        self.starting = starting.map { ($0, size, played) }
+        if !playsAhead, starting == nil { stopPlayPasses() }
         let stride = MoviePlayBackward.stride(speed: playingSpeed)
         let skips = MoviePlayPass.skipsUnreferenced(speed: playingSpeed)
-        if playsAhead, stride != playPassStride || skips != playPassSkips {
+        if playsAhead || starting != nil, stride != playPassStride || skips != playPassSkips {
             stopPlayPasses()
             playPassStride = stride
             playPassSkips = skips
         }
-        if playsAhead, let playing { playLoad.value = MoviePlayPass.load(playing.now + playing.coming) }
+        if let points = playsAhead ? playing : starting {
+            playLoad.value = MoviePlayPass.load(points.now + points.coming)
+            widestOfMany = points.now.count > MoviePlayPass.waitsForEveryClipUpTo
+                ? points.now.map { size($0).width }.max() : nil
+        }
+        playsNow = playsAhead
+        if let starting {
+            keepPassesForRest(starting, size: size, played: played)
+            // After a jump the passes are opened first and read the frames on
+            // screen too: read on their own, each was decoded up to from its
+            // key frame, and then up to again by the pass, with the picture
+            // standing still for both (2026-11-25).
+            if jumped { openRestPasses() }
+        }
         let playsBack = playingBackward != nil && !handMoving
         if !playsBack { stopBackBlocks() }
         backSpeed = playsBack ? playingBackward : nil
-        coming = [:]
+        if starting == nil { coming = [:] }
         // Only what this moment shows keeps a place, so the frames of a clip
         // the playhead jumped away from are the first the budget lets go
         // (`MovieFrameQueue.placesStillShown`).
@@ -708,7 +799,8 @@ final class MovieFrameFetcher {
             if handMoving, !unsweepable.contains(request.movie.id) { continue }
             if let filed = filedWidth(request.ref),
                filed >= width.width - 1 || (playsAhead && MoviePlayPass.anySizeServes(speed: playingSpeed)) { continue }
-            if playsAhead, coveredByPlay(request, width: played(request) == nil ? .zero : width, speed: playingSpeed) { continue }
+            if playsAhead || (starting != nil && jumped),
+               coveredByPlay(request, width: played(request) == nil ? .zero : width, speed: playingSpeed) { continue }
             if playsBack, coveredByBack(request, width: width) { continue }
             // ...and at a speed that keeps only some frames, one it does not
             // keep is never read on its own: a seek from the key frame for a
@@ -767,6 +859,14 @@ final class MovieFrameFetcher {
                                 MovieSweep.roughSize(for: size(request))))
             }
         }
+        // After a jump a clip hidden under another waits for the ones seen: its
+        // read is decoded on the same decoder.
+        deferred = []
+        if let starting, jumped {
+            let seen = Set(starting.now.map(\.ref.id))
+            deferred = wanted.filter { !seen.contains($0.request.ref.id) }
+            wanted.removeAll { !seen.contains($0.request.ref.id) }
+        }
         queue.replace(with: wanted)
         startReads()
     }
@@ -776,7 +876,18 @@ final class MovieFrameFetcher {
     /// hunts has a picture for its first move instead of the frame it
     /// started on for a fifth of a second (`MovieSweep.restingWindow`).
     private func readAroundRest() {
-        guard !resting.isEmpty, queue.waiting.isEmpty, queue.running == 0 else { return }
+        // Once the frames on screen are in, or on their way to a decoder that
+        // is done with the rest: a frame of a clip hidden under another is
+        // no reason to keep a start waiting.
+        let seenIn = starting.map { $0.points.now.allSatisfy { has($0.ref) } } ?? false
+        if seenIn || restPassesLate, !deferred.isEmpty {
+            queue.replace(with: queue.waiting + deferred)
+            deferred = []
+            startReads()
+            return
+        }
+        let idle = queue.waiting.isEmpty && queue.running == 0 && deferred.isEmpty
+        guard seenIn || idle, readAheadOfRest(), idle, !resting.isEmpty else { return }
         let places = resting
         resting = []
         for place in places where sweeps[place.movie.id] == nil {
@@ -831,6 +942,80 @@ final class MovieFrameFetcher {
                 task.cancel()
                 sweeps[movie.id] = nil
             }
+        }
+    }
+
+    // MARK: Ready to start playing
+
+    /// Open the passes a clock starting from this rest plays from, and say
+    /// whether they have what it starts on in hand. Each is read a few frames
+    /// ahead and waits there (`MoviePlayPass.restReach`), and the clock goes
+    /// on with it. Opened at Space instead, six of them decoded up from six
+    /// key frames with the picture standing still: 625 ms before the first
+    /// new picture on the 50 track edit (2026-11-25).
+    ///
+    /// The small read around the rest waits for them: it decodes the same
+    /// stretch beside them, and made both late.
+    private func readAheadOfRest() -> Bool {
+        guard let points = starting?.points, !points.now.isEmpty else { return true }
+        openRestPasses()
+        return restPassesLate || points.now.allSatisfy { request in
+            let frame = request.movie.frameIndex(atSourceMS: request.sourceMS)
+            let last = request.movie.frameIndex(atSourceMS: request.movie.durationMS)
+            return unsweepable.contains(request.movie.id)
+                || has(request.movie.frameRef(atFrame: min(last, frame + MoviePlayPass.restReach)))
+        }
+    }
+
+    private func openRestPasses() {
+        guard !restPassesOpen, let (points, size, played) = starting else { return }
+        restPassesOpen = true
+        for movie in Set((points.now + points.coming).map(\.movie)) where !unsweepable.contains(movie.id) {
+            guard let url = MovieLibrary.shared.url(for: movie) else { continue }
+            play(movie, url: url, points: points, speed: 1, size: size, played: played, atRest: true)
+        }
+        restPassTask?.cancel()
+        restPassTask = Task { [weak self] in
+            // One that cannot be read ahead never holds the small read up...
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled, let self else { return }
+            restPassesLate = true
+            // ...and a frame it never made is asked for on its own, once.
+            let missing = Set(starting?.points.now.map(\.ref.id).filter { !self.has(ImageRef(id: $0, pixelSize: .zero)) } ?? [])
+            if !missing.isEmpty, missing != askedAgain {
+                askedAgain = missing
+                onUnreadable?()
+            }
+            readAroundRest()
+            // ...and a playhead left alone that long is not about to play.
+            try? await Task.sleep(for: .milliseconds(MoviePlayPass.restHoldsMS))
+            guard !Task.isCancelled else { return }
+            closeRestPasses()
+        }
+    }
+
+    /// Let go of what is held ready for a start from this rest: nobody has
+    /// pressed Space for a while, or the Mac is short of memory. The frames on
+    /// screen stay.
+    func closeRestPasses() {
+        guard starting != nil else { return }
+        stopPlayPasses()
+        keepInsideBudget()
+    }
+
+    /// The passes open that a clock starting from this rest would play from
+    /// stay, aimed at it; every other one stops. What is missing is opened
+    /// once the frames on screen are in (`readAheadOfRest`).
+    private func keepPassesForRest(_ points: MoviePlayPoints, size: (MovieFrameRequest) -> CGSize,
+                                   played: (MovieFrameRequest) -> ClosedRange<Int>?) {
+        restPassesOpen = false
+        restPassesLate = false
+        let shown = Dictionary((points.now + points.coming).map { ($0.movie.id, $0.movie) }, uniquingKeysWith: { a, _ in a })
+        for id in playPasses.keys where shown[id] == nil { stopPlayPasses(of: id) }
+        coming = coming.filter { shown[$0.key] != nil }
+        for (id, movie) in shown where playPasses[id]?.isEmpty == false {
+            guard let url = MovieLibrary.shared.url(for: movie) else { continue }
+            play(movie, url: url, points: points, speed: 1, size: size, played: played, atRest: true, opens: false)
         }
     }
 
@@ -1043,7 +1228,8 @@ final class MovieFrameFetcher {
     /// few frames into each stretch about to come on (`MoviePlayPass.plan`).
     /// Passes nobody needs any more stop.
     private func play(_ movie: MovieRef, url: URL, points: MoviePlayPoints, speed: Double,
-                      size: (MovieFrameRequest) -> CGSize, played: (MovieFrameRequest) -> ClosedRange<Int>?) {
+                      size: (MovieFrameRequest) -> CGSize, played: (MovieFrameRequest) -> ClosedRange<Int>?,
+                      atRest: Bool = false, opens: Bool = true) {
         // How big each place has to be read. Two clips of one recording are
         // often drawn at different sizes; the second picture of a dissolve,
         // which has no layer of its own, takes whatever is being read there.
@@ -1061,7 +1247,8 @@ final class MovieFrameFetcher {
                 if isComing { next.append(frame) } else { now.append(frame) }
             }
         }
-        if !now.isEmpty { focus[movie.id] = now }
+        // (At rest the frames on screen are the place, hidden clips' too.)
+        if !now.isEmpty, !atRest { focus[movie.id] = now }
         coming[movie.id] = next
         let passes = playPasses[movie.id] ?? []
         // Above double speed one read at another size goes on
@@ -1073,7 +1260,8 @@ final class MovieFrameFetcher {
         let plan = MoviePlayPass.plan(now: now, coming: next, passes: passes.map(\.running),
                                       inHand: { [self] in has(movie.frameRef(atFrame: $0)) },
                                       speed: speed, keyFrames: keyFrames[movie.id],
-                                      needed: { anySize ? nil : needed[$0] })
+                                      needed: { anySize ? nil : needed[$0] },
+                                      reach: atRest ? MoviePlayPass.restReach : nil)
         var kept: [PlayPass] = []
         for (index, pass) in passes.enumerated() {
             if let aim = plan.aim[index] {
@@ -1084,7 +1272,7 @@ final class MovieFrameFetcher {
             }
         }
         playPasses[movie.id] = kept
-        for aim in plan.open {
+        for aim in plan.open where opens {
             let wanted = sizes[aim.playhead] ?? sizes[now.min { abs($0 - aim.playhead) < abs($1 - aim.playhead) } ?? 0]
             open(movie, url: url, aim: aim, speed: speed, size: wanted ?? movie.pixelSize)
         }
@@ -1110,6 +1298,10 @@ final class MovieFrameFetcher {
             } else {
                 unsweepable.insert(movie.id)
                 stopPlayPasses(of: movie.id)
+                if starting != nil {
+                    onUnreadable?()
+                    readAroundRest()
+                }
             }
         }
         // A pass opened at 8x keeps every third frame for as long as it runs;
@@ -1127,21 +1319,31 @@ final class MovieFrameFetcher {
         // Too fast to read every frame, or more on screen than the decoder
         // can (`MoviePlayPass.screensReadWhole`), it skips what nothing is
         // decoded from: for good at that speed, and for as long as it is that
-        // busy otherwise.
+        // busy otherwise. Getting from its key frame to where it starts it
+        // always skips them, which is half the decoding and changes nothing
+        // anybody sees (`MoviePlayPass.skips`).
         let fast = MoviePlayPass.skipsUnreferenced(speed: speed)
         let load = playLoad
-        let skips: (@Sendable () -> Bool)?
-        if fast {
-            skips = { @Sendable in true }
-        } else if MoviePlayPass.skipsUnreferenced(load: load.value) {
-            skips = { @Sendable in MoviePlayPass.skipsUnreferenced(load: load.value) }
-        } else {
-            skips = nil
+        let busy = MoviePlayPass.skipsUnreferenced(load: load.value)
+        let from = Double(MovieRef.gridMS(ofFrame: frames.lowerBound))
+        let skips: @Sendable (ClosedRange<Double>) -> Bool = { onScreen in
+            MoviePlayPass.skips(onScreen: onScreen, startingAtMS: from,
+                                afterIt: fast || (busy && MoviePlayPass.skipsUnreferenced(load: load.value)))
+        }
+        let order = landingOrder
+        if let widestOfMany, !has(movie.frameRef(atFrame: aim.playhead)) {
+            order.joins(token, big: size.width >= widestOfMany * 0.9)
+        }
+        let waits: @Sendable (Int) -> Bool = { next in
+            (next == frames.lowerBound && order.waits(token)) || mark.passed(next)
         }
         let task = Task.detached(priority: .userInitiated) {
+            defer { order.landed(token) }
             let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size,
-                                                 waitsAt: { mark.passed($0) }, yieldsWhileWaiting: true,
-                                                 keeps: keeps, skipsUnreferenced: skips) { index, image in
+                                                 waitsAt: waits, yieldsWhileWaiting: true,
+                                                 keeps: keeps, skipsUnreferenced: skips,
+                                                 shownFromMS: from) { index, image in
+                order.landed(token)
                 Task { @MainActor in file(index, image) }
             }
             if !Task.isCancelled { await finished(swept) }
@@ -1219,6 +1421,8 @@ final class MovieFrameFetcher {
     /// Stop every pass reading ahead of a playhead: it stopped, or turned
     /// round, or a hand took it.
     private func stopPlayPasses() {
+        restPassTask?.cancel()
+        restPassTask = nil
         for pass in playPasses.values.joined() { pass.task.cancel() }
         playPasses.removeAll()
         coming.removeAll()
@@ -1245,6 +1449,8 @@ final class MovieFrameFetcher {
         resident.removeAll { $0.ref.id == ref.id }
         resident.append(Resident(ref: ref, movie: movie.id, frameIndex: frameIndex))
         keepInsideBudget()
+        // At rest: the last of what a start needs lets the small read go on.
+        if starting != nil { readAroundRest() }
         // With two shots of one recording playing, a frame belongs to the
         // nearer of them: the outgoing shot's frames are all before the
         // incoming one's, and must not redraw the canvas for it.
@@ -1275,6 +1481,17 @@ final class MovieFrameFetcher {
         resident.append(Resident(ref: ref, movie: movie.id, frameIndex: frameIndex, rough: true))
         keepInsideBudget()
         if !quiet { onFrameLanded?() }
+    }
+
+    /// The window has closed: nothing is read for it any more.
+    func stop() {
+        queue.replace(with: [])
+        deferred = []
+        resting = []
+        starting = nil
+        stopSweeps()
+        stopPlayPasses()
+        stopBackBlocks()
     }
 
     /// A recording nothing here plays any more (its file was replaced): stop
@@ -1379,7 +1596,7 @@ final class MovieFrameFetcher {
                 let kind = resident.indices.filter { resident[$0].rough == rough }
                 guard let farthest = MovieFrameQueue<Read>.farthest(
                     kind.map { (resident[$0].movie, resident[$0].frameIndex) }, from: foci,
-                    forward: !playPasses.isEmpty || handGoesBack == false,
+                    forward: playsNow || handGoesBack == false,
                     backward: backSpeed != nil || handGoesBack == true,
                     aside: rough && handGoesBack != nil ? Set(foci.keys).subtracting(handMovies) : []) else { break }
                 let gone = resident.remove(at: kind[farthest]).ref

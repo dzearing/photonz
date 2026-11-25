@@ -381,6 +381,62 @@
       "outputLatencyMS": 1.25
     }
   },
+  "starts": [
+    {
+      "dropped": 0,
+      "firstPictureMS": 94.20220833271742,
+      "label": "0:10.0 rested",
+      "worstGapMS": 63.24029201641679
+    },
+    {
+      "dropped": 1,
+      "firstPictureMS": 108.50154142826796,
+      "label": "0:30.0 rested",
+      "worstGapMS": 50.601250026375055
+    },
+    {
+      "dropped": 1,
+      "firstPictureMS": 99.80737511068583,
+      "label": "0:58.0 rested",
+      "worstGapMS": 52.8436666354537
+    },
+    {
+      "dropped": 0,
+      "firstPictureMS": 76.42858335748315,
+      "label": "0:10.0 jumped",
+      "worstGapMS": 55.2842915058136
+    },
+    {
+      "dropped": 0,
+      "firstPictureMS": 73.96012498065829,
+      "label": "0:30.0 jumped",
+      "worstGapMS": 52.213041577488184
+    },
+    {
+      "dropped": 0,
+      "firstPictureMS": 77.587999869138,
+      "label": "0:58.0 jumped",
+      "worstGapMS": 43.456833343952894
+    },
+    {
+      "dropped": 12,
+      "firstPictureMS": 495.31008349731565,
+      "label": "0:10.0 atOnce",
+      "worstGapMS": 61.42325000837445
+    },
+    {
+      "dropped": 15,
+      "firstPictureMS": 594.9154999107122,
+      "label": "0:30.0 atOnce",
+      "worstGapMS": 53.59787493944168
+    },
+    {
+      "dropped": 3,
+      "firstPictureMS": 176.89620843157172,
+      "label": "0:58.0 atOnce",
+      "worstGapMS": 49.02829183265567
+    }
+  ],
   "timeline": [
     {
       "frames": 158,

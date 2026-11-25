@@ -7203,7 +7203,10 @@ public enum PlaytestStep: Sendable, Equatable {
                 throughPictures: try f.optionalFlag("throughPictures") ?? false,
                 ceilingMB: try f.optionalNumber("ceilingMB"),
                 growthPercent: try f.optionalNumber("growthPercent"),
-                parts: try f.optionalStrings("parts"))
+                parts: try f.optionalStrings("parts"),
+                places: (f.fields["places"] as? [Any])?.compactMap { ($0 as? NSNumber)?.intValue } ?? [],
+                when: try f.optionalStrings("when"),
+                runs: try f.optionalNumber("runs").map { Int($0) })
             if let problem = measure.problem { throw f.invalid(problem.field, problem.reason) }
             self = .speed(measure)
         case "memory":

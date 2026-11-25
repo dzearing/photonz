@@ -17,6 +17,48 @@ struct MoviePlayPassTests {
     private let movie = MovieRef(pixelSize: CGSize(width: 3456, height: 2234), durationMS: 3600)
     private var last: Int { movie.frameIndex(atSourceMS: movie.durationMS) }
 
+    // A pass decodes up from the key frame before where it starts: half of
+    // what is on the way is decoded from by nothing (2026-11-25).
+    @Test("On the way up from its key frame a pass skips what nothing is decoded from, never the frame it starts on")
+    func skipsOnTheWay() {
+        for busy in [false, true] {
+            #expect(MoviePlayPass.skips(onScreen: 900...916, startingAtMS: 1000, afterIt: busy))
+            #expect(MoviePlayPass.skips(onScreen: 984...1000, startingAtMS: 1000, afterIt: busy))
+            // On screen at the start, however long it has been.
+            #expect(!MoviePlayPass.skips(onScreen: 992...1008, startingAtMS: 1000, afterIt: busy))
+            #expect(!MoviePlayPass.skips(onScreen: 200...1008, startingAtMS: 1000, afterIt: busy))
+            #expect(!MoviePlayPass.skips(onScreen: 1000...1016, startingAtMS: 1000, afterIt: busy))
+            // A file that does not say how long a sample shows skips none of them.
+            #expect(!MoviePlayPass.skips(onScreen: 10...Double.greatestFiniteMagnitude, startingAtMS: 1000, afterIt: busy))
+            #expect(MoviePlayPass.skips(onScreen: 1100...1116, startingAtMS: 1000, afterIt: busy) == busy)
+        }
+    }
+
+    @Test("A jump and a step forwards rest on passes; a held step back reads frame by frame")
+    func restsOnPasses() {
+        #expect(MoviePlayPass.restsOnPasses(movedMS: 33, travel: .forward))
+        #expect(MoviePlayPass.restsOnPasses(movedMS: 20_000, travel: .forward))
+        #expect(MoviePlayPass.restsOnPasses(movedMS: 20_000, travel: .backward))
+        #expect(!MoviePlayPass.restsOnPasses(movedMS: 33, travel: .backward))
+    }
+
+    @Test("At rest a pass reads only what a start asks for, and wakes the Mac seldom")
+    func atRest() {
+        #expect(MoviePlayPass.restReach >= MoviePlayPass.startsWithFramesAhead)
+        #expect(MoviePlayPass.restReach < MoviePlayPass.aheadFrames)
+        let plan = MoviePlayPass.plan(now: [60], coming: [], passes: [], inHand: { _ in false },
+                                      reach: MoviePlayPass.restReach)
+        #expect(plan.open == [MoviePlayPass.Aim(playhead: 60, reach: MoviePlayPass.restReach)])
+        // The clock goes on with the pass it was opened with.
+        let resting = MoviePlayPass.Running(running: 60...500, reached: 66, playhead: 60, reach: MoviePlayPass.restReach)
+        let on = MoviePlayPass.plan(now: [60], coming: [], passes: [resting], inHand: { _ in true })
+        #expect(on.open.isEmpty)
+        #expect(on.aim[0]?.reach == MoviePlayPass.aheadFrames)
+        #expect(MoviePlayPass.waitStepMS(waitedMS: 0) <= 4)
+        // Asleep it wakes inside the frames a resting pass has in hand.
+        #expect(MoviePlayPass.waitStepMS(waitedMS: 60_000) < MoviePlayPass.restReach * MovieRef.frameStepMS)
+    }
+
     @Test("A pass runs from the playhead to the end of the recording")
     func window() {
         #expect(MoviePlayPass.window(from: 30, movie: movie) == 30...last)

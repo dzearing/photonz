@@ -1,0 +1,14 @@
+{
+  "out": "/tmp/photonz-playtest/play-starts-at-once-on-a-wide-edit-walk",
+  "clock": 240,
+  "seed": "Space starts the 50 track edit at once, at Next defaults: from 0:10, 0:30 and 0:58, after two seconds at rest there and the moment a jump's picture is in, the first moving picture is up within the time Scripts/perf/baselines/wide-50.json holds for that place, plus 50 ms. Until 2026-11-25 it stood still for 230 to 880 ms: frames of clips hidden under another were waited for and never read, and the frames just ahead were decoded up to from a key frame for every clip only once Space went down. Then every picture of the second after a jump to ten recordings is held against the export's.",
+  "setup": { "forget": ["all"], "wideEdit": 50 },
+  "steps": [
+    { "do": "wait", "seconds": 3 },
+    { "do": "speed", "measure": "starts", "places": [10000, 30000, 58000], "when": ["rested", "jumped"], "runs": 2, "seconds": 2 },
+    { "do": "speed", "measure": "pictures", "fromMS": 62000, "seconds": 2, "when": ["jumped"], "keep": "wrong.png" },
+    { "do": "speed", "measure": "compare", "baseline": "../perf/baselines/wide-50.json", "marginPercent": 0 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "snapshot", "name": "1-ten-clips" }
+  ]
+}

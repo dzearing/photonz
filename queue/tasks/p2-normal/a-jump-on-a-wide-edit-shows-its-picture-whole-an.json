@@ -1,0 +1,30 @@
+{
+  "id": "a-jump-on-a-wide-edit-shows-its-picture-whole-an",
+  "title": "A jump on a wide edit shows its picture whole, and Space with it starts sooner",
+  "goal": "Clicking somewhere new on a paused 50 track edit draws the new place in pieces, some clips missing until each is read, and Space pressed in the same instant waits a quarter to half a second. A jump should show the new place once, whole, and playing from it should follow as fast as it can.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 45,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-25T19:45:41.201Z",
+  "updated": "2026-11-25T19:45:41.204Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-25: walk with setup {forget:[all],wideEdit:50}, steps speed pictures fromMS 10000 (and 62000) when [atOnce]: 5 nothing drawn at 0:10.0, 10 at 1:02.0, both in the one picture the jump itself submits (scrubDocument -> documentMomentChanged -> submit). speed starts when [atOnce] gives the waits. The wait is decoding: skipped/decoded counts per clip showed 30 to 110 samples from the key frame each, few of them skippable, about 600 a second on one decoder. Ideas not tried: hold the picture on a paused jump the way holdsPictureForStart does; small all-intra stand-ins kept per recording.",
+  "acceptance": [
+    "A jump while paused on the 50 track edit hands the canvas no picture with a clip missing or from another time (today 5 missing at 0:10, 10 at 1:02)",
+    "Space in the same instant as a jump: first moving picture stated before and after at 0:10, 0:30, 0:58 and 1:02 (today 545, 266, 230 and 409 ms), and lower at each",
+    "The starts held by play-starts-at-once-on-a-wide-edit-walk do not grow, and a scrub still shows a picture on every move"
+  ],
+  "log": [
+    {
+      "t": "2026-11-25T19:45:41.203Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "play-starts-at-once-on-a-wide-edit-walk"
+  ]
+}
