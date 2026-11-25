@@ -19232,3 +19232,7 @@
 {"t":"2026-11-25T15:12:47.680Z","ev":"task_note","id":"a-picked-transition-shows-its-own-settings-in-th"}
 {"t":"2026-11-25T15:12:59.649Z","ev":"triage","summary":"0 merged, 0 dropped, 0 moved, 0 reset, 3 filed (play start on 50 tracks p1, 100 tracks p1, caption pick p2), p1 and p2 renumbered, 1 acceptance item added, 1 walk moved off the standing task; open 69 to 72"}
 {"t":"2026-11-25T15:12:59.679Z","ev":"digest","file":"2026-11-25.md"}
+{"t":"2026-11-25T15:13:09.193Z","ev":"task_started","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","title":"An edit with 50 tracks and 100 clips scrolls, plays and edits without lag or flashes","priority":"p1-high"}
+{"t":"2026-11-25T15:34:13.250Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T15:49:44.397Z","ev":"task_created","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy","priority":"p1-high","title":"No frame of a 50 track zoom is held up by the system's drawing cleanup"}
+{"t":"2026-11-25T15:49:44.516Z","ev":"task_note","id":"play-starts-at-once-on-a-50-track-edit-however-m"}

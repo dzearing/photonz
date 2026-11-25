@@ -23511,3 +23511,10 @@ announced 0.25.0.
 - An added empty track's row is bare room in the edit's frame and built 34 ms later (`TimelineRowChores.makesRoomFirst`), its pick waits for it; the sounds' renumbering comes 80 ms later (`LateTrackRows`); the title bar's drag regions are worked out after the edit's frames (`TitleBarRegionLater`); only the row being named holds a FocusState (`TrackNameField`). Add track 19 to 25 -> 13 to 14 ms, its undo 11 to 14, add clip 16 -> 13.
 - Left: one zoom frame in about 1,900 held 20 ms (RenderBox waiting on its own queue), 0 or 1 dropped frame in a 2 minute play. Task pending.
 - CI was red on a GIF/HEIC export losing frames on a starved runner; filed as its own p1.
+
+## 2026-11-25 — Fifty tracks, a hundred clips (closing pass)
+
+- The title bar hold after an edit ends 26 ms after the pointer reaches the title bar (`TitleBarRegionLater`).
+- `PassSampler` also keeps every other thread's stack while the main thread stands still in a pass of 14 ms or more; `Scripts/perf/pass-profile.py <folder> --waits` prints it. It named the odd slow zoom frame: RenderBox's `prune_removed_locked` holds its queue while it waits for the window server. Filed as its own task.
+- Seven end to end plays: 1 dropped frame of 25,459. Edits 9 to 14 ms, scroll and zoom p95 under 7.5 ms. Task closed.
+- Next: play starts at once on a 50 track edit; 100 tracks.

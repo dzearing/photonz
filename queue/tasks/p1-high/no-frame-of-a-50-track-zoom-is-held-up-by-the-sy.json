@@ -1,0 +1,29 @@
+{
+  "id": "no-frame-of-a-50-track-zoom-is-held-up-by-the-sy",
+  "title": "No frame of a 50 track zoom is held up by the system's drawing cleanup",
+  "goal": "Zooming the timeline of a 50 track edit is smooth but for a rare single frame, about one in 3,000, that takes 20 to 58 milliseconds and reads as a tiny hitch. Every frame of a zoom should be as smooth as the rest.",
+  "epic": "video-perf",
+  "priority": "p1-high",
+  "seq": 4070,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-25T15:49:44.393Z",
+  "updated": "2026-11-25T15:49:44.396Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split off an-edit-with-50-tracks-and-100-clips-scrolls-pla (its acceptance: what is not reached is filed, one cost each). Measure: a walk with setup {\"forget\":[\"all\"],\"wideEdit\":50}, wait 3, then {\"do\":\"speed\",\"measure\":\"timeline\",\"form\":\"long\"} six times and {\"do\":\"wait\",\"seconds\":90,\"onTheClock\":true}; profile it with Scripts/perf/pass-profile.sh <walk> then Scripts/perf/pass-profile.py /tmp/photonz-pass-sampler --waits. Caught 2026-11-25, two of two: 'PASS 139 zoom out held | 38.9' and 'PASS 576 near fit fresh | 31.6'. Main thread: CA::Transaction::run_commit_handlers -> _dispatch_sync_f_slow on RenderBox's queue (27 looks of the first on CoreAnimation's own mutex in CA::Context::commit_transaction). Holder in both, a dispatch worker: RB::SharedSurfaceGroup::prune_removed_locked -> test_markers -> RB::CommitMarker::Observer::test_displayed -> -[CAContext waitForCommitId:timeout:] -> CA::Context::ping / wait_for_synchronize -> mach_msg, 27 to 36 ms, that is the window server. No app code on it. The only lead: that cleanup runs when drawings that share a surface (RBLayer, SwiftUI Canvas and drawn text) go away or change size, so fewer drawings coming and going in a zoom (held paintings as plain CGImage layers, no Canvas) should mean fewer cleanups. Not tried.",
+  "acceptance": [
+    "Over ten runs of the timeline measure on the 50 track edit (about 17,000 frames), no frame holds the main thread over 16 ms (today: 21 ms once, 33 ms once, 58 ms once in eleven runs, unprofiled)",
+    "No change in what the timeline draws: film of a zoom in, out and near Fit before and after, opened and compared, none blank",
+    "Zoom and scroll p95 stay under 8.3 ms and the edits under 16 ms in Scripts/perf/speed-walk.sh --wide 50",
+    "If the hold cannot be avoided from the app, the audit says so with what was tried, and the task is dropped with that rather than worked round at a cost a person would see",
+    "Audit under queue/audits/ with before and after numbers. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-25T15:49:44.395Z",
+      "note": "created (user)"
+    }
+  ]
+}

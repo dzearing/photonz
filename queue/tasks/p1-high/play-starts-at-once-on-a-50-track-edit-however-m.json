@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-25T15:11:24.738Z",
-  "updated": "2026-11-25T15:12:01.132Z",
+  "updated": "2026-11-25T15:49:44.515Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split off an-edit-with-50-tracks-and-100-clips-scrolls-pla (the user's report of a sluggish 50 track edit), whose audits carried \"starting play at 0:58 from rest waits about 727 ms\" through four passes with no task owning it. Reproduced 2026-11-25 by the triage pass on the probe built from main that morning: a walk with setup {\"forget\":[\"all\"],\"wideEdit\":50} and steps wait 3, then {\"do\":\"speed\",\"measure\":\"play\",\"fromMS\":58000,\"seconds\":3}, the same from 10000, then 58000 again (Scripts/playtest.sh <walk> --no-build). Output: \"played 3.0s from 0:58.0 to 1:00.6: 66 of 91 frames shown, 25 dropped, worst gap 858ms, first new picture 858ms after Space\"; \"from 0:10.0: 73 of 90 frames shown, 17 dropped, first new picture 625ms after Space\"; second time at 0:58: 850ms. The same walk with referenceEdit 6: 50, 58, 58 ms and 0 dropped. Main thread is not the hold (longest pass 6 to 25 ms). Not diagnosed. Place to look first, from reading only: the start waits for first frames of every clip (preRollWithSound, capped at 0.8 s), and 0:10 is slow with few clips up. Played end to end from 0:00 the wait is 75 ms (baselines/wide-50.json firstPictureMS), so the resting frames are in hand there: compare.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-11-25T15:12:01.131Z",
       "note": "seq 4080 -> 20"
+    },
+    {
+      "t": "2026-11-25T15:49:44.514Z",
+      "note": "From the 50 track task's closing pass, 2026-11-25: one real dropped frame in seven end to end plays (25,459 frames), due at 0:19.7, not seen again in two tries. A drop the line gives no moment for is the clock itself starting late: wall clock less playhead over two steps (about 66 ms) at the end, so the 64 to 70 ms start counts as one dropped frame. Starting on time removes it; if 0:19.7 comes back, it is yours."
     }
   ]
 }

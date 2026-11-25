@@ -18,6 +18,11 @@
 # where its milliseconds went. The folder stays behind for another reading:
 #   Scripts/perf/pass-profile.py /tmp/photonz-pass-sampler --match undo
 #
+# A pass of 14 ms or more also keeps, for each look at which the main thread
+# stood still, what every other thread was doing (others.txt), so a pass spent
+# waiting says who it waited for:
+#   Scripts/perf/pass-profile.py /tmp/photonz-pass-sampler --waits
+#
 # The sampling stops the main thread for a few microseconds every half
 # millisecond, so a profiled pass reads a little longer than it does without:
 # judge a fix with the speed walk, never with this.
@@ -61,7 +66,9 @@ while [ $(( $(date +%s) - $(stat -f %m "$folder/passes.txt") )) -lt 25 ]; do
   sleep 1
 done
 pid=$(head -1 "$folder/passes.txt" | cut -d' ' -f2)
-grep -v '^PASS\|^pid' "$folder/passes.txt" | tr ' ' '\n' | grep . | sort -u | sed 's/^/0x/' > "$folder/addresses.txt"
+{ grep -v '^PASS\|^pid' "$folder/passes.txt"
+  [ -f "$folder/others.txt" ] && sed -n 's/^M [^ ]* //p; s/^T [^ ]* [^ ]* [^ ]* //p' "$folder/others.txt"
+  true; } | tr ' ' '\n' | grep . | sort -u | sed 's/^/0x/' > "$folder/addresses.txt"
 cat > "$folder/name_them.py" <<'EOF'
 import lldb
 def name_them(debugger, command, result, internal_dict):

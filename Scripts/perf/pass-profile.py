@@ -22,12 +22,15 @@ args = sys.argv[1:]
 folder = "/tmp/photonz-pass-sampler"
 match = None
 top = 12
+waits = False
 while args:
     a = args.pop(0)
     if a == "--match":
         match = args.pop(0)
     elif a == "--top":
         top = int(args.pop(0))
+    elif a == "--waits":
+        waits = True
     else:
         folder = a
 
@@ -35,6 +38,37 @@ names = {}
 for line in open(f"{folder}/syms.txt"):
     address, _module, name = line.rstrip("\n").split("\t")
     names[int(address, 16)] = name
+
+if waits:
+    # Each pass of 14 ms or more: where the main thread stood, and what the
+    # other threads were doing while it stood there.
+    idle = re.compile(r"workq_kernreturn|mach_msg2_trap|__semwait_signal|kevent")
+    def said(frames, n=14):
+        return "\n        ".join(f[:120] for f in frames[:n])
+    def show():
+        if head is None:
+            return
+        print(f"\n{head}")
+        for stack, n in main.most_common(4):
+            print(f"  main, {n} looks:\n        {said(stack, 24)}")
+        for (who, state, stack), n in sorted(other.items(), key=lambda x: -x[1])[:top]:
+            print(f"  thread {who} {state}, {n} looks:\n        {said(stack)}")
+    head, main, other = None, collections.Counter(), collections.Counter()
+    for line in open(f"{folder}/others.txt"):
+        kind, rest = line.rstrip("\n").split(" ", 1)
+        if kind == "PASS":
+            show()
+            head, main, other = line.rstrip(), collections.Counter(), collections.Counter()
+        elif kind == "M":
+            _at, *pcs = rest.split()
+            main[tuple(names.get(int(x, 16), "?") for x in pcs)] += 1
+        else:
+            _at, who, state, *pcs = rest.split()
+            stack = tuple(names.get(int(x, 16), "?") for x in pcs)
+            if state == "run" or not idle.search(stack[0]):
+                other[(who, state, stack)] += 1
+    show()
+    sys.exit(0)
 
 # The harness's own look for windows over the person: the meter leaves it out
 # of every pass it times, so the profile does too.

@@ -1,0 +1,50 @@
+{
+  "feature": "Fifty tracks and a hundred clips, closing pass",
+  "epic": "video-perf",
+  "summary": "Scrolling, zooming, playing and editing a 50 track, 100 clip edit now stay inside their limits, but for a rare single zoom frame that waits on the system. The window can be grabbed by its title bar right after an edit again.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe with Scripts/perf/speed-walk.sh --wide 50. The walk is a-tall-edit-s-far-tracks-answer-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open Reference Edit 50 tracks.photonz with File > Open."
+    },
+    {
+      "do": "Scroll the timeline to the bottom track and back.",
+      "shot": "2026-11-25-wide-edit-pass6-sc.png"
+    },
+    {
+      "do": "Zoom the timeline in and out with Command-scroll or a pinch."
+    },
+    {
+      "do": "Drag the playhead to 0:55 and press Space; ten recordings come up at 0:58."
+    },
+    {
+      "do": "While it plays, drag a clip sideways, then press Command-Z."
+    },
+    {
+      "do": "Click + at the foot of the tracks, choose Video Track, and at once drag the window by its title bar."
+    },
+    {
+      "do": "Look at scrolling and playing before (left) and after (right); the film is 2026-11-24-wide-edit-before-after.mp4 in queue/audits.",
+      "shot": "2026-11-24-wide-edit-before-after-sheet.png"
+    }
+  ],
+  "evaluate": [
+    "Does your own wide edit scroll and zoom smoothly now?",
+    "Have the flashes while playing gone?",
+    "Does anything still feel sluggish, and what were you doing?"
+  ],
+  "rough": [
+    "Main thread a frame, first measured / now (bar p95 8.3 ms): zoom in 66 / 7.4, zoom out 61 / 6.7, near Fit 47 / 6.8, along 17 / 5.2, tracks down 7.3 / 4.7, up 3.8 / 3.8. Opens in 0.7 s (was 1.4), longest hold while opening 264 ms (was 627).",
+    "Longest hold of an edit while playing, first measured / now (bar 16 ms): add track 34 / 12, its undo 27 / 14, add clip 35 / 14, move 25 / 12, trim 23 / 9, pick 20 / 12, blade 31 / 13, undo 27 / 9.",
+    "Flashes: with ten recordings up, 833 wrong clip frames in nine seconds before, none now.",
+    "Not reached: 'no frame over 16 ms'. One zoom frame in about 3,000 takes 20 to 58 ms. Every thread was watched through two of them: the system's own drawing cleanup holds its queue while it waits for the window server, with no Photonz code in it. Filed with its measure as no-frame-of-a-50-track-zoom-is-held-up-by-the-sy.",
+    "Not reached: 'drops no frames'. Seven end to end plays today: one frame dropped of 25,459, at 0:19.7 and not seen again. The other counted drops are the clock starting 64 to 70 ms after Space. Both are logged on play-starts-at-once-on-a-50-track-edit-however-m, which also owns the 733 ms wait when play starts from rest at 0:58.",
+    "For up to 0.4 seconds after an edit on more than 24 tracks the title bar is not asked about dragging; now that ends 26 ms after the pointer comes to it. Timed on its own outside the app; a real grab in the app was not driven, since nothing here may move the mouse in another app.",
+    "As the lanes come to rest after a zoom step the longest hold is 15 to 16 ms. One 400 point turn of the wheel in a single frame, more than a screen of tracks, holds 21 ms.",
+    "Memory over a minute of playing and scrubbing was read between 1.4 and 2.4 GB.",
+    "Export was compared picture by picture in the second and fourth passes and was the same; nothing since touches drawing the picture.",
+    "100 tracks is its own task, an-edit-with-100-tracks-scrolls-plays-and-edits.",
+    "No mock covers a 50 track timeline."
+  ]
+}
