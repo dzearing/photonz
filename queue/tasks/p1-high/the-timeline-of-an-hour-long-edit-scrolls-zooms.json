@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-25T21:26:30.288Z",
+  "updated": "2026-11-25T23:43:45.648Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,29 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-25T21:26:30.287Z",
-      "note": "... 98 earlier entries elided",
-      "elided": 98
-    },
-    {
-      "t": "2026-11-20T20:11:17.330Z",
-      "note": "Pass 16 landed d545006f9: while zooming, only clips near the left edge draw their names live (was every clip on screen, ~95 a lane). Near Fit 13.4-13.5 -> 13.0-13.2 ms, zoom out 11.0-11.2 -> 10.4-10.7, fewer late frames; look unchanged. Found that the track lanes are the whole cost above the 8.3 floor. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
-    },
-    {
-      "t": "2026-11-20T20:11:44.591Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-20T20:44:49.040Z",
-      "note": "Pass 17 (2026-11-20). Baseline at 7c2522030 (60 min edit, timeline measure only, load ~6): near Fit 12.1-12.2 ms mean (held 10.0, fresh 15.0-15.2), zoom in 11.0-11.5, out 9.8-9.9, scroll 9.2-9.4. Pass 16's next step (1) confirmed: PlaytestRulerMarkAnchor (one NSView per ruler number, the ruler and the playhead) ignored both PlaytestMarkers.areHung and PlaytestMarkerHold, so the speed walk timed it and the dev app hung it. Now behind areHung + WhileMarkersHang. A/B one build, 3 runs each, throwaway defaults switch: near Fit 12.08-12.18 -> 11.24-11.34 (held 10.0 -> 9.3, fresh 15.0-15.2 -> 14.0-14.1), scroll 9.2-9.4 -> 8.7-8.9, zoom out 9.8-9.9 -> 9.3-9.7, late near Fit 263-273 -> 217-224 of 648. Profile (xctrace, /tmp/p17.trace): TimelinePaintedPicture.picture ~11% of the main thread over the measure (~2.5 ms a fresh frame: paint 30%, waveforms 24%, bands 22%), lane bodies around it; no leaf over ~1.5%. 9 timeline walks + clip-pictures-when-zoomed-in, speed-walk (scrub lag fail once, ok on rerun), an-editing-session, hour-long/20-min open walks, timeline-zooms-out-past-the-end green. Scripts/test.sh exit 0. history-filter-switch-speed-walk failed twice (blank picture, no timeline: not this change), folded into walks-that-fail-in-the-full-sweep-27. Audit queue/audits/2026-11-20-timeline-hour-long-pass17-ruler-markers.json. Landed 8153b42db."
-    },
-    {
-      "t": "2026-11-20T20:44:49.114Z",
-      "note": "Still open, bars not reached: near Fit ~11.3 ms mean (p95 ~17) vs 8.3, zoom in p95 ~23, scroll worst ~21 vs 16, edits (inspector). What is left near Fit is fresh paints (14 ms vs 9.3 held, 42% of near-Fit frames). Next: lay fresh paintings off the main thread (paint code against CGContext, keep stretching the old picture until the new one lands) so a fresh frame costs a held one; that is the one lever left worth more than ~0.5 ms. Left rough, not filed: none new."
-    },
-    {
-      "t": "2026-11-20T20:44:49.192Z",
-      "note": "Pass 17 landed 8153b42db: the ruler's walk markers come down for timed steps and are not hung in the dev app; near Fit 12.1 -> 11.3 ms a frame, scroll 9.3 -> 8.8, look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: fresh paintings laid off the main thread)."
+      "t": "2026-11-25T23:43:45.647Z",
+      "note": "... 103 earlier entries elided",
+      "elided": 103
     },
     {
       "t": "2026-11-21T14:22:04.874Z",
@@ -506,6 +486,26 @@
     {
       "t": "2026-11-25T21:26:30.286Z",
       "note": "Pass 24 so far (uncommitted): edits while playing, 4 runs, longest pass: move 15.7-16.9 (was 25-27), trim 13.5-14.6 (27-28), undo 11-12 (13-28), blade picked 15.9-19.2 (53-56), undo of the blade 18-23 (28). AudioHeadroomReader, transitions and layout read in place, facts kept for clips an edit left alone, late lay, sound plan off the main thread."
+    },
+    {
+      "t": "2026-11-25T23:43:28.661Z",
+      "note": "Pass 24 landed 352eae966 + e988c5272. Edits while playing, longest pass, before -> now (bar 16): move 25-27 -> 15-16, trim 27-28 -> 13-16, blade 53-56 -> 14-17 (one 19 in six runs), undo 13-28 -> 11-12, undo of the cut 28 -> 15-17 (21 under load), add clip 32 -> 17-20. Causes: AudioHeadroom walked the whole hour of sound twice a cut (12 ms each, now AudioHeadroomReader reads only the changed buckets, tested against the whole walk); editPointTransitions/trackLayout/editPoints copied every Layer (in place now, topLevelIndex, readingClip, clip(_:is:), clipIsUnchanged); TimelinePaintedFacts carried over an edit for clips it left alone; tree-wide yes/no checks folded into TreeFacts (captions, measures, mains, instances, motion blur, mattes, arrivals, chart sets, panel facts); reflow only on layers that may flow; canvasGeometryDocument memo; saveAffordance memo; motionStrip and workPlan kept in DocumentDerived; audio plan/bars worked out off main after an edit (workOutWhatAnEditAsksNext); catch-up pass: lanes, then their pictures late (followsAnEdit + newcomers overlay), then panel two passes later; blade while playing no longer redraws twice. Verified old vs new core identical on 6/20/60 min (sound plan, transitions, tracks, bars, frames, drawn docs, rings) with a throwaway package."
+    },
+    {
+      "t": "2026-11-25T23:43:28.735Z",
+      "note": "Pass 24 timeline: zoom waves in thirds (A/B 4 runs each, same build: near Fit late 46-50 -> 20-32 of 648, p95 10.2-10.7 -> 9.4-9.6); scroll lanes shared out by clips over the steps they stand (dueNow) and a scroll's lane picture laid between frames where the last holds window + 2 steps (A/B 3 pairs: scroll p95 8.76-9.16 -> 8.45-8.70). Tried and dropped: pacing by group count alone (no gain: heavy lanes sat in the first groups). Main thread p95 now: zoom in 6.4-7.8, out 7.6-8.4, near Fit 9.4-10.0, scroll 8.5-8.7. Still open, bars not reached: scroll p95 ~8.6 vs 8.3 (second half of the hour is one dense V1 lane, ~5 ms of its step), near Fit ~9.6, edits blade/undo-cut/add clip 17-20 at worst, rare 20-40 ms system frames (no-frame-of-a-50-track-zoom-is-held-up-by-the-sy). 27 timeline walks + speed-walk green; an-editing-session-walk failed once (75 ms pass at Cmd-Return on a title, load 8-10 right after the full suite), green in 6 reruns at 45-55 ms against its 60 ms bar. Scripts/test.sh exit 0. Audit queue/audits/2026-11-25-timeline-hour-long-pass24-edits.json. Next: split a dense lane's painting into two pictures laid on different steps; the rest of the edit pass is SwiftUI graph upkeep (~5 ms)."
+    },
+    {
+      "t": "2026-11-25T23:43:28.808Z",
+      "note": "left rough, not filed: an-editing-session-walk's step 53 runs 45-55 ms against a 60 ms bar (one 75 under load); if it starts failing in rotating checks it is the title commit's pass, not this task's timeline work (it was green before and after on this build)."
+    },
+    {
+      "t": "2026-11-25T23:43:28.882Z",
+      "note": "walks open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk, a-painted-gap-takes-a-right-click-walk -> open-out-the-timeline-walk, timeline-pinch-both-ways-walk, first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk, cut-on-the-timeline-walk, key-lanes-walk, transitions-where-clips-meet-walk, speed-walk, painted-clips-take-a-hand-walk, a-cut-slid-under-a-still-pointer-walk, a-painted-gap-takes-a-right-click-walk"
+    },
+    {
+      "t": "2026-11-25T23:43:45.646Z",
+      "note": "Pass 24 landed (352eae966, e988c5272): edits on the 60 min edit 25-56 -> 11-17 ms, zoom p95 inside 8.3; bars still open: fast scroll p95 8.5-8.7 and near Fit 9.4-10 vs 8.3, a few edits 17-20 at worst, rare 20-40 ms system frames. Audit 2026-11-25-timeline-hour-long-pass24-edits.json."
     }
   ],
   "started": "2026-11-25T20:02:23.147Z",
