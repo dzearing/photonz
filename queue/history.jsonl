@@ -19236,3 +19236,5 @@
 {"t":"2026-11-25T15:34:13.250Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
 {"t":"2026-11-25T15:49:44.397Z","ev":"task_created","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy","priority":"p1-high","title":"No frame of a 50 track zoom is held up by the system's drawing cleanup"}
 {"t":"2026-11-25T15:49:44.516Z","ev":"task_note","id":"play-starts-at-once-on-a-50-track-edit-however-m"}
+{"t":"2026-11-25T15:50:00.083Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T15:50:00.171Z","ev":"task_done","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"50 tracks and 100 clips: scroll and zoom p95 3.8 to 7.4 ms, every edit while playing 9 to 14 ms, no wrong frame ten up, export same. Short of the bar and filed: one zoom frame in about 3,000 over 16 ms (the system's drawing cleanup, no app code), 1 dropped frame of 25,459, late play start. Audit 2026-11-25-fifty-tracks-hundred-clips-pass6.json. Tests green (Scripts/test.sh), tall edit and editing session walks green."}

@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:13:00.798Z",
-  "updated": "2026-11-25T15:34:13.249Z",
+  "updated": "2026-11-25T15:50:00.170Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"the perf of photonz is still pretty rough with video editing. when i add like 50 tracks with 100 clips, scroll starts to lag, i get weird behaviors like flashes during playback, very sluggish behavior\".\n\nContext: the loop could not sign in from about 2026-11-23 19:00 to 2026-11-24 14:10, so the open video-perf tasks made no progress in that window; the user re-logged in on 2026-11-24.\n\nOverlaps, and why this is separate: the-timeline-of-an-hour-long-edit-scrolls-zooms (p1, pending) is about a LONG edit (60 minutes, hundreds of clips) on the 3+ track reference edit, horizontal scroll and zoom; this one is WIDE (50 to 100 tracks): vertical scroll, many track headers, many clips overlapping at one moment for the compositor and decoders. Reuse that task's speed walk, ViewBuildMeter and busy-lane painting rather than building a second harness; if its painted-lane fix also fixes vertical scroll here, record it and move on. picking-letting-go-of-and-cutting-a-clip-while-a (p1, seq 10) covers edit latency while playing; jumping-back-while-a-video-plays-never-flickers covers flicker after a jump. I did not reproduce the user's lag or flashes myself.",
@@ -190,10 +190,19 @@
     {
       "t": "2026-11-25T15:34:13.248Z",
       "note": "Pass 6: every thread sampled while the main thread stands still (PassSampler others.txt, pass-profile.py --waits). Both late zoom frames caught (38.9 and 31.6 ms, 2 of about 10,000) have one holder: RenderBox's queue, in SharedSurfaceGroup::prune_removed_locked, which waits by CAContext waitForCommitId for the window server with the queue held, while the main thread's commit waits for that queue (and once for CoreAnimation's own lock). No app code on the holder's stack. Full plays: 0 of 10,908 frames dropped in three."
+    },
+    {
+      "t": "2026-11-25T15:50:00.081Z",
+      "note": "Closed as triage asked: what is not reached is filed (no-frame-of-a-50-track-zoom-is-held-up-by-the-sy; the late start and one dropped frame of 25,459 on play-starts-at-once; 100 tracks). Opened the before and after sheet (flash held frame at left gone at right) and the bottom-of-the-timeline picture: every lane drawn, none blank. Lanes coming to rest after a zoom: longest hold 15 to 16 ms. Title bar: timed standalone with the app's own file and a moved pointer, movable 26 ms after it arrives; a real grab not driven. Left rough: a 400 pt turn of the wheel in one frame holds 21 ms (more than a screen of tracks in one step, no hand does it)."
+    },
+    {
+      "t": "2026-11-25T15:50:00.168Z",
+      "note": "50 tracks and 100 clips: scroll and zoom p95 3.8 to 7.4 ms, every edit while playing 9 to 14 ms, no wrong frame ten up, export same. Short of the bar and filed: one zoom frame in about 3,000 over 16 ms (the system's drawing cleanup, no app code), 1 dropped frame of 25,459, late play start. Audit 2026-11-25-fifty-tracks-hundred-clips-pass6.json. Tests green (Scripts/test.sh), tall edit and editing session walks green."
     }
   ],
   "started": "2026-11-25T15:13:09.187Z",
   "walks": [
     "a-tall-edit-s-far-tracks-answer-walk"
-  ]
+  ],
+  "completed": "2026-11-25T15:50:00.169Z"
 }
