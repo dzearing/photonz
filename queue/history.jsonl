@@ -19109,3 +19109,9 @@
 {"t":"2026-11-24T23:14:44.230Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-24T23:14:44.305Z","ev":"task_note","id":"jumping-back-while-a-video-plays-never-flickers"}
 {"t":"2026-11-24T23:14:44.381Z","ev":"task_pending","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","from":"in_progress","note":"Pass 1 landed: no flashes and no drops with ten clips up, zoom and edits 2 to 3 times faster. Vertical scroll (worse than before), zoom and three edits are still over their bars; see the log."}
+{"t":"2026-11-24T23:27:38.505Z","ev":"task_note","id":"picking-letting-go-of-and-cutting-a-clip-while-a"}
+{"t":"2026-11-24T23:29:45.259Z","ev":"slice_pass","walks":14,"passed":13,"failed":1,"seconds":744,"of":1204,"couldNotRun":0,"timedOut":false,"rotating":true,"from":176,"to":182,"moved":6}
+{"t":"2026-11-24T23:29:45.470Z","ev":"task_started","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","title":"An edit with 50 tracks and 100 clips scrolls, plays and edits without lag or flashes","priority":"p1-high"}
+{"t":"2026-11-25T02:23:02.739Z","ev":"task_note","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla"}
+{"t":"2026-11-25T03:22:06.325Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
+{"t":"2026-11-25T03:26:22.810Z","ev":"task_walks","id":"an-edit-with-50-tracks-and-100-clips-scrolls-pla","walks":["a-tall-edit-s-far-tracks-answer-walk"]}

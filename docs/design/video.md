@@ -1322,12 +1322,20 @@ The rule, for any view added to the editor window:
    header key diamond, Add Key and the held-frame badge watch their answers
    in `PanelPlayhead` (rule 2), where they had rebuilt on every tick of a
    video played with a clip picked.
-   A tall edit (more than 24 rows) builds only the rows within reach of the
-   part on screen (`TimelineRowInSight`), three at a time; a new kind of row
-   with anything open under its lane must stay out of it (`isOneLane`). Building
-   them as they come in is what a scroll down costs now (p95 14 ms against 7
-   with all fifty built, 2026-11-24), tried and no better: a step a frame, a
-   step in the scroll's own pass, and taking rows down after the scroll.
+   A tall edit (more than 24 rows) keeps every row built and puts the far ones
+   to sleep (`TimelineRowInSight`, `keptAsleep`): a sleeping row hands back the
+   views it last made and reads nothing after the first change. One that comes
+   near unchanged stays asleep until the scroll rests or something changes; a
+   stale one is built again in its sleep while nothing is being done
+   (`TimelineRowChores`). Built as they came in instead, rows cost a scroll 12
+   ms a frame at p95; asleep, 4 (2026-11-24). A new view in a lane that reads
+   the window must go through `keptAsleep` or it stays awake in every far row,
+   and a kind of row with anything open under its lane must stay out of it
+   (`isOneLane`).
+   Anything in the dock that changes on every frame is laid over a slot of a
+   known size (`TimelineSlot`), never stacked: stacked, the ruler and the
+   window's label had SwiftUI check where all fifty rows go on every frame of a
+   zoom (about 3 ms of it).
 8. **A busy lane paints its plain clips and cuts; a clip somebody is working
    on is its full view again.** A lane builds only what is in sight plus half
    a window each side (`TimelineSight`). When 24 or more clips are in sight,

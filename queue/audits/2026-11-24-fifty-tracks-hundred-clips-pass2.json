@@ -1,0 +1,45 @@
+{
+  "feature": "Fifty tracks and a hundred clips, second pass",
+  "epic": "video-perf",
+  "summary": "Scrolling down and up through 50 tracks is smooth again, and zooming the timeline costs about a third of what it did this morning. Exported video is identical, frame for frame.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe with Scripts/perf/speed-walk.sh --wide 50 and --wide 100; numbers in Scripts/perf/baselines/wide-50.json and wide-100.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Watch the reel: before this work on the left, now on the right; first the scroll, then the ten recordings playing.",
+      "shot": "2026-11-24-wide-edit-before-after.mp4"
+    },
+    {
+      "do": "Open Reference Edit 50 tracks.photonz with File > Open."
+    },
+    {
+      "do": "Scroll down through all the tracks and back up.",
+      "shot": "2026-11-24-wide-edit-bottom-sc.png"
+    },
+    {
+      "do": "Pinch the timeline in, then scroll down at once and draw a box over a clip.",
+      "shot": "2026-11-24-wide-edit-far-track-sc.png"
+    },
+    {
+      "do": "Pinch the timeline in and out."
+    },
+    {
+      "do": "While it plays, add a track, move a clip and press Command B, then undo each."
+    }
+  ],
+  "evaluate": [
+    "Does scrolling through the tracks feel smooth now?",
+    "Does a pinch on the timeline keep up with your fingers?",
+    "Does a track you have just scrolled to ever look out of date or ignore a click?"
+  ],
+  "rough": [
+    "Main thread a frame, p95, start of today's work / after pass 1 / now (bar 8.3): down the tracks 7.3 / 12.4 / 4.2, up 3.8 / 11.0 / 4.0, zoom in 66 / 27.8 / 10.9, zoom out 61 / 23.8 / 8.6, near Fit 47 / 13.6 / 8.3, along 17 / 4.8 / 5.5. Worst frames: along 12 to 35 ms between runs, zoom in 31, zoom out 11. Pass 1 numbers are measured again on today's Mac, so they are not its audit's.",
+    "Over the bar still: zoom in, the worst frame of a zoom, and the first frame of a scroll down (16 to 23 ms, one frame; it was 16.8 before).",
+    "Edits while it plays, longest pass (bar 16 ms): add track 21, undo 16, add clip 17, undo of it 22 (was 33), move 18 to 25 (was 14), trim 14 (was 11), pick from nothing 17 (was 11), blade 22 (was 19). Some got a few ms worse than pass 1: fifty built rows cost every edit a little.",
+    "100 tracks, first time measured: opens in 0.8 s (longest pass 255 ms), zoom p95 12.8 and 11.8, along 8.0, down the tracks 10.5 (some rows were not built yet when it started), up 5.0. Played end to end 10 of 3638 frames dropped, and 12 clip frames came from ahead at 1:06. Edits 20 to 39 ms. Memory 2112 to 2186 MB over a minute.",
+    "50 tracks played end to end: 1 of 3637 dropped, no clip frame wrong in the ten up stretch, worst picture 2.4 of 255 from the export. Starting play at 0:58 from rest still waits 722 ms.",
+    "The export of the 50 track edit from before any of this work and from now: 3600 frames and all the sound identical.",
+    "No mock covers a 50 track timeline.",
+    "A closed window's editor stays in memory, one a window, about 5 MB each; it did before this work too, and walks-that-fail-in-the-full-sweep-28 has the walk that says so."
+  ]
+}

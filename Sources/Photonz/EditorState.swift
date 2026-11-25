@@ -2248,6 +2248,12 @@ final class EditorState {
     /// their view is: what the tracks' scroller draws, and what a row zoom
     /// measures the pointer against.
     var timelineTracksScrollGeometry = TimelineTracksScrollGeometry()
+    /// What a tall edit's far rows have waiting to be done (`TimelineRowInSight`).
+    @ObservationIgnored private(set) lazy var timelineRowChores: TimelineRowChores = {
+        let chores = TimelineRowChores()
+        chores.editor = self
+        return chores
+    }()
     /// When a frame landing while it plays last drew the canvas, and whether
     /// one waits to (`movieFrameLanded`).
     @ObservationIgnored var landingDrawnAt: CFTimeInterval = 0
@@ -3672,6 +3678,7 @@ final class EditorState {
         shownDrawnDocument = nil
         thumbnailCache = [:]
         flatPictureMemo = [:]
+        timelineRowChores.letGo()
         tileRenderer.letGo()
         previewRenderer.letGo()
         store.removeAll()

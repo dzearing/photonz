@@ -7202,7 +7202,8 @@ public enum PlaytestStep: Sendable, Equatable {
                 keep: try f.optionalString("keep"),
                 throughPictures: try f.optionalFlag("throughPictures") ?? false,
                 ceilingMB: try f.optionalNumber("ceilingMB"),
-                growthPercent: try f.optionalNumber("growthPercent"))
+                growthPercent: try f.optionalNumber("growthPercent"),
+                parts: try f.optionalStrings("parts"))
             if let problem = measure.problem { throw f.invalid(problem.field, problem.reason) }
             self = .speed(measure)
         case "memory":

@@ -355,6 +355,7 @@ extension EditorState {
         guard landing != timelineZoom else { return }
         let scaleChanged = landing.scale != timelineZoom.scale
         timelineZoom = landing
+        timelineRowChores.moved()
         // Following the playhead is not a choice anybody made, so only a
         // change of scale, or a move by hand, is worth keeping for next time.
         if scaleChanged { rememberTimelineView() }

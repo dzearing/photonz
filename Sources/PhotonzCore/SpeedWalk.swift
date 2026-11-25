@@ -1070,8 +1070,14 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
         }
     }
 
+    /// What a `timeline` step films, all of it unless it names some: the
+    /// zooms, the scroll along time, the scroll up and down the tracks. A
+    /// profile's buffer fills before the last of them, so it names one.
+    public static let timelineParts = ["zoom", "along", "tracks"]
+
     public var measure: Measure?
     public var rawMeasure: String
+    public var parts: [String]
     public var seconds: Double?
     public var fromMS: Int?
     public var speeds: [String]
@@ -1096,7 +1102,8 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
     public init(measure: String, seconds: Double? = nil, fromMS: Int? = nil, speeds: [String] = [],
                 edits: [String] = [], form: String? = nil, baseline: String? = nil, marginPercent: Double? = nil,
                 keep: String? = nil, throughPictures: Bool = false, ceilingMB: Double? = nil,
-                growthPercent: Double? = nil) {
+                growthPercent: Double? = nil, parts: [String] = []) {
+        self.parts = parts.isEmpty ? Self.timelineParts : parts
         self.ceilingMB = ceilingMB
         self.growthPercent = growthPercent
         self.keep = keep
@@ -1123,6 +1130,9 @@ public struct PlaytestSpeedMeasure: Equatable, Sendable {
         let named = Self.edits + Self.namedOnlyEdits + Self.controls
         if let bad = edits.first(where: { !named.contains($0) }) {
             return ("edits", "\(bad) is not an edit: they are " + named.joined(separator: ", "))
+        }
+        if let bad = parts.first(where: { !Self.timelineParts.contains($0) }) {
+            return ("parts", "\(bad) is not a part of the timeline measure: they are " + Self.timelineParts.joined(separator: ", "))
         }
         if let seconds, seconds <= 0 { return ("seconds", "must be more than nothing") }
         if let form, form != "short", form != "long" { return ("form", "is short or long") }

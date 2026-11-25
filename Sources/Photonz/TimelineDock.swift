@@ -202,7 +202,25 @@ struct TimelineDock: View, Equatable {
             // No zoom buttons (user 2026-09-28: "super weird as buttons"). A
             // pinch on the tracks zooms, = and - step, ⇧Z fits, and the
             // ruler's right-click has Zoom to Fit.
+            // The stretch on screen, at the bar's end. On its own, so a scroll
+            // along time redraws this label and not the bar round it, and laid
+            // over the bar's empty middle, so it is not asked how wide it is
+            // on every frame of one (`TimelineSlot`).
             Spacer(minLength: 8)
+                .overlay(alignment: .trailing) {
+                    if editorState.timelineFileHover == nil, editorState.timelineTransitionHover == nil {
+                        DrawnOnItsOwn {
+                            if editorState.isTimelineOpenedOut {
+                                Text(editorState.timelineWindowReading)
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .monospacedDigit()
+                                    .foregroundStyle(VideoKit.Palette.faint)
+                                    .lineLimit(1)
+                                    .fixedSize()
+                            }
+                        }
+                    }
+                }
             if let hover = editorState.timelineFileHover {
                 // What letting go does, as a label, and the one key that
                 // changes it.
@@ -226,19 +244,6 @@ struct TimelineDock: View, Equatable {
                     .foregroundStyle(VideoKit.Palette.ink)
                     .lineLimit(1)
                     .playtestField("Transition drop")
-            } else {
-                // On its own, so a scroll along time redraws this label and
-                // not the bar round it.
-                DrawnOnItsOwn {
-                    if editorState.isTimelineOpenedOut {
-                        Text(editorState.timelineWindowReading)
-                            .font(.system(size: 10, design: .monospaced))
-                            .monospacedDigit()
-                            .foregroundStyle(VideoKit.Palette.faint)
-                            .lineLimit(1)
-                            .fixedSize()
-                    }
-                }
             }
             if editorState.timelineFileHover == nil, editorState.timelineTransitionHover == nil { keyBar }
         }
@@ -410,7 +415,10 @@ struct TimelineDock: View, Equatable {
                         .padding(.bottom, 4)
                 }
                 VStack(alignment: .leading, spacing: 0) {
-                    rulerRow(laneWidth: laneWidth)
+                    // The ruler is drawn on every frame of a scroll along
+                    // time, and in a slot of its own size it asks nothing of
+                    // the rows under it (`TimelineSlot`).
+                    TimelineSlot(height: Self.rulerHeight) { rulerRow(laneWidth: laneWidth) }
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
                             editorState.timelineRulerFrame = $0
                         }
@@ -424,11 +432,7 @@ struct TimelineDock: View, Equatable {
                     ScrollView(.vertical) {
                         // The tracks a new title brings arrive a frame after
                         // its words (`readingALatePass`).
-                        let (order, trackRows) = lateTrackRows.read(editorState) {
-                            // Where each track is in the document's own list,
-                            // which is what Add Track Above and Below count in.
-                            (editorState.shownDocument?.timelineTracks.map(\.id) ?? [], editorState.timelineRows)
-                        }
+                        let trackRows = lateTrackRows.read(editorState) { editorState.timelineRows }
                         VStack(alignment: .leading, spacing: Self.rowSpacing) {
                             let rows = editorState.timelineRowZoom
                             // Edit mode arriving from View draws its rows a
@@ -471,8 +475,6 @@ struct TimelineDock: View, Equatable {
                                                            gates: gates && Self.isOneLane(track, editorState),
                                                            startsNear: firstRows.contains(row.id)) {
                                             TimelineTrackRow(row: track, inGroup: inGroup,
-                                                             index: order.firstIndex(of: track.id) ?? 0,
-                                                             trackCount: order.count,
                                                              laneWidth: laneWidth, isBlade: isBlade,
                                                              rows: rows, pick: picks.share(of: track))
                                                 .equatable()
@@ -587,9 +589,11 @@ struct TimelineDock: View, Equatable {
                 }
                 // Time's scroller, under the lanes, in a strip that is always
                 // there: at Fit it is empty, opened out it carries the window.
-                TimelineTimeScroller(laneWidth: laneWidth)
-                    .padding(.leading, Self.lanesLeading)
-                    .frame(height: Self.scrollerStrip, alignment: .bottom)
+                TimelineSlot(height: Self.scrollerStrip) {
+                    TimelineTimeScroller(laneWidth: laneWidth)
+                        .padding(.leading, Self.lanesLeading)
+                        .frame(height: Self.scrollerStrip, alignment: .bottom)
+                }
             }
             .panelReadout(editorState.timelineRowsReading)
             .onAppear { editorState.arriveAfterTheWindowDraws() }
@@ -875,11 +879,9 @@ struct TimelineDock: View, Equatable {
         let carry = editorState.trackRowDrag
         if let id = carry.grabbedID,
            let track = editorState.timelineTrackRows.first(where: { $0.id == id }) {
-            let order = editorState.timelineTrackRows.map(\.id)
             LiftedTrackRow(session: carry,
                            row: TimelineTrackRow(row: track, inGroup: carry.grabbedInGroup,
-                                                 index: order.firstIndex(of: track.id) ?? 0,
-                                                 trackCount: order.count, laneWidth: laneWidth,
+                                                 laneWidth: laneWidth,
                                                  isBlade: isBlade, rows: editorState.timelineRowZoom,
                                                  isLifted: true,
                                                  pick: editorState.timelinePickShares.share(of: track))
@@ -1818,10 +1820,10 @@ private struct TimelinePlayheadLine: View {
 /// that pass for other reasons too (the text editor closing), and a read
 /// there sees the document as it is.
 @MainActor final class LateTrackRows {
-    private var last: ([UUID], [TimelineRowModel])?
+    private var last: [TimelineRowModel]?
 
     func read(_ editorState: EditorState,
-              _ fresh: () -> ([UUID], [TimelineRowModel])) -> ([UUID], [TimelineRowModel]) {
+              _ fresh: () -> [TimelineRowModel]) -> [TimelineRowModel] {
         // Watched in every case, so the pass after brings the tracks round.
         _ = editorState.latePassRevision
         if editorState.isCatchingUpOnTheNextPass, let last { return last }

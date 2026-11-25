@@ -20,10 +20,6 @@ struct TimelineTrackRow: View {
     @Environment(EditorState.self) private var editorState
     let row: TimelineTrackRowModel
     let inGroup: Bool
-    /// Where this track is in the whole list, for the line a drop between two
-    /// tracks draws.
-    let index: Int
-    let trackCount: Int
     let laneWidth: CGFloat
     let isBlade: Bool
     /// How tall the rows are zoomed to: the lane and its header grow together.
@@ -57,6 +53,9 @@ struct TimelineTrackRow: View {
     /// was worked out from has changed (`LanePaintingKept`).
     @State private var keptPainting = LanePaintingKept()
     @FocusState private var isNaming: Bool
+    /// Far from the part of the timeline on screen (`TimelineRowInSight`).
+    @Environment(\.timelineRowSleep) private var sleep
+    @State private var keptBody = KeptBuild()
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.displayScale) private var displayScale
 
@@ -64,20 +63,26 @@ struct TimelineTrackRow: View {
 
     // A pass late for an edit marked to catch up next pass
     // (`readingALatePass`), exactly as before for every other.
-    var body: some View { readingALatePass { lateBody } }
+    var body: some View { keptAsleep(sleep, keptBody) { readingALatePass { lateBody } } }
 
     @ViewBuilder private var lateBody: some View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.trackRow)
         #endif
         VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: TimelineDock.gap) {
-                header
-                // The lane follows the timeline's window and the header does
-                // not, so a scroll along time redraws the lane alone.
-                DrawnOnItsOwn { readingALatePass { lane } }
+            // Laid over a slot of the row's own size, so nothing that changes
+            // in a header or a lane asks the stack of rows where every other
+            // row goes: what is laid over a view has no say in its size.
+            // (`TimelineSlot`).
+            TimelineSlot(width: TimelineDock.lanesLeading + laneWidth, height: laneHeight) {
+                HStack(spacing: TimelineDock.gap) {
+                    header
+                    // The lane follows the timeline's window and the header
+                    // does not, so a scroll along time redraws the lane alone.
+                    DrawnOnItsOwn { readingALatePass { lane } }
+                }
+                .frame(height: laneHeight)
             }
-            .frame(height: laneHeight)
             .playtestField("Track \(track.name)")
             // The cut opened into its two clips, A over B, right under the
             // lane they are cut on (`ExpandedCutRows`).
@@ -291,7 +296,7 @@ struct TimelineTrackRow: View {
         // a click is still a click.
         .simultaneousGesture(carryGesture, including: Experiments.shared.draggedLayerLiftsEnabled && !isLifted
                              ? .all : .subviews)
-        .contextMenu { TimelineTrackMenu(track: track, index: index) }
+        .contextMenu { TimelineTrackMenu(track: track) }
         .help(track.name)
         .accessibilityLabel("Track \(track.name)")
         .panelReadout(readout)
@@ -612,12 +617,16 @@ struct TimelineTrackRow: View {
                 .contentShape(Rectangle())
                 .gesture(TimelineLaneMarquee.gesture(editorState, ruler: editorState.motionStripRuler,
                                                      laneWidth: laneWidth, trackID: track.id))
-                .contextMenu { TimelineTrackMenu(track: track, index: index, onTheLane: true) }
+                .contextMenu { TimelineTrackMenu(track: track, onTheLane: true) }
             timed(sight: sight, gaps: gaps, paintsGaps: paintsGaps, painting: painting, laid: laid, canvas: canvas,
                   canvasX: canvasX, paintedMS: paintedMS, paintStretch: paintStretch, stretch: stretch, ruler: ruler,
                   frame: frame, clipsInSight: clipsInSight, linkedInSight: linkedInSight, kept: kept,
                   alternates: alternates, carrying: carrying, document: document, builds: builds, drawn: drawn)
                 .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
+                // Said here and not in the slide, which runs on every frame: an
+                // environment written each frame has every view under it
+                // checked, and the rows' layout with them.
+                .environment(\.timelineLaneFrame, frame)
                 .modifier(TimelineLaneSlide(frame: frame, laneWidth: laneWidth))
             // The names that keep to the window's left edge, drawn against
             // the window over the slid painting they belong to.
@@ -661,7 +670,7 @@ struct TimelineTrackRow: View {
                     .contentShape(Rectangle())
                     .gesture(TimelineLaneMarquee.gesture(editorState, ruler: editorState.motionStripRuler,
                                                          laneWidth: laneWidth, trackID: track.id))
-                    .contextMenu { TimelineTrackMenu(track: track, index: index, onTheLane: true) }
+                    .contextMenu { TimelineTrackMenu(track: track, onTheLane: true) }
             }
             if track.isLocked { lockedHatch }
             dropMark
@@ -762,7 +771,7 @@ struct TimelineTrackRow: View {
                         .gesture(TimelineLaneMarquee.gesture(editorState, ruler: editorState.motionStripRuler,
                                                              laneWidth: laneWidth, trackID: track.id,
                                                              in: .named(Self.laneSpace(track.id))))
-                        .contextMenu { TimelineTrackMenu(track: track, index: index, gap: gap) }
+                        .contextMenu { TimelineTrackMenu(track: track, gap: gap) }
                 }
             }
             if !painting.bars.isEmpty {
@@ -915,6 +924,13 @@ struct TimelineTrackRow: View {
         // view does to it, is worked out on each frame.
         let memo = editorState.timelinePaintedFacts
         for clip in clips {
+            // Taken away, and its lane still to go in this same pass: a full
+            // bar built for it here was 16 ms of undoing a clip added on a
+            // track of its own.
+            if document.layer(id: clip.layerID) == nil {
+                ids.insert(clip.layerID)
+                continue
+            }
             guard let bar = clip.bar, let known = memo.clip(clip.layerID, in: document, switches, make: {
                 paintedFacts(of: clip.layerID, in: document)
             }) else { continue }
@@ -1258,8 +1274,13 @@ struct TimelineTrackRow: View {
 
     /// The line a drop BETWEEN tracks draws, where the new track would go.
     @ViewBuilder private func insertionLine(atTop: Bool) -> some View {
+        // Where this track is in the whole list is read only while something
+        // is carried: handed to the row, a track added anywhere above it built
+        // it again.
         let places = newTrackPlaces
-        if atTop ? places.contains(index) : (places.contains(trackCount) && index == trackCount - 1) {
+        let order = places.isEmpty ? [] : (editorState.shownDocument?.timelineTracks.map(\.id) ?? [])
+        let index = order.firstIndex(of: track.id)
+        if let index, atTop ? places.contains(index) : (places.contains(order.count) && index == order.count - 1) {
             Capsule()
                 .fill(VideoKit.Palette.accent)
                 .frame(height: 2)
@@ -1417,7 +1438,6 @@ private struct TrackSwitch: View {
 struct TimelineTrackMenu: View {
     @Environment(EditorState.self) private var editorState
     let track: DocumentTrack
-    let index: Int
     /// The gap between two clips the right click landed in, whose Ripple
     /// Delete leads (`EditorState+TimelineGap`).
     var gap: TimelineGap?
@@ -1426,6 +1446,11 @@ struct TimelineTrackMenu: View {
     /// gap in it, whose short menu says what can go there and keeps the
     /// header's rows one level down (`TimelineMenuTable`).
     var onTheLane = false
+
+    private func addTrack(_ past: Int) {
+        let index = editorState.shownDocument?.timelineTracks.firstIndex { $0.id == track.id } ?? 0
+        editorState.addTrack(track.kind, at: index + past)
+    }
 
     var body: some View {
         // A range over this track with things picked under it: what it does
@@ -1530,8 +1555,8 @@ struct TimelineTrackMenu: View {
         Divider()
         // A track like this one, either side of it: where Premiere's Add
         // Track puts one. Another kind is the + at the foot of the gutter.
-        Button("Add Track Above") { editorState.addTrack(track.kind, at: index) }
-        Button("Add Track Below") { editorState.addTrack(track.kind, at: index + 1) }
+        Button("Add Track Above") { addTrack(0) }
+        Button("Add Track Below") { addTrack(1) }
         Divider()
         MenuRowsView(rows: editorState.timelineViewMenuRows())
         Divider()
@@ -2263,8 +2288,7 @@ private struct TimingName: ViewModifier {
 /// editor for itself still rebuilds it the moment that changes.
 extension TimelineTrackRow: Equatable {
     nonisolated static func == (a: TimelineTrackRow, b: TimelineTrackRow) -> Bool {
-        a.row == b.row && a.inGroup == b.inGroup && a.index == b.index
-            && a.trackCount == b.trackCount && a.laneWidth == b.laneWidth && a.isBlade == b.isBlade
+        a.row == b.row && a.inGroup == b.inGroup && a.laneWidth == b.laneWidth && a.isBlade == b.isBlade
             && a.rows == b.rows && a.isLifted == b.isLifted && a.pick == b.pick
     }
 }

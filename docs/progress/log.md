@@ -23467,3 +23467,10 @@ Released v0.24.0 (tag at 59f7cf043, on 995e8542b which CI had passed). Preflight
 - New wide reference edit (50 and 100 tracks, `ReferenceWideEdit.swift`), speed walk `--wide`, a vertical scroll measure, `addTrack`/`addClip` edits, and a `pictures` measure that holds every played frame against the export.
 - Flashes reproduced and fixed: ten clips up drew 833 clip frames wrong in nine seconds (284 from ahead), now 0; whole edit drops 0 of 3636. Zoom p95 66 -> 16 ms, along 17 -> 5, edits 20-53 -> 10-33, opening pass 627 -> 230 ms.
 - Not done: vertical scroll p95 14 ms (was 7, worse), zoom p95 16-19, undo of an added clip 33, blade 19, add track 17; the 100 track edit unmeasured, reel and export picture compare not made. Task left pending.
+
+## 2026-11-24 — Fifty tracks, a hundred clips (pass 2)
+
+- Far rows of a tall edit stay built and sleep instead of being taken down (`TimelineRowsInSight.swift`); the ruler, window label, time scroller, header and lane are laid over fixed slots (`TimelineSlot`). Main thread p95: tracks down 12.4 -> 4.2, up 11 -> 4.0, zoom in 27.8 -> 10.9, out 23.8 -> 8.6, near fit 13.6 -> 8.3, along 4.8 -> 5.5.
+- Undo of an added clip 33 -> 19-22 ms: `clipBarsChange` follows layers and tracks that come and go; a clip just taken away is no longer built as a bar. Rows no longer carry their index.
+- Export before all of this work and now: 3600 frames and the sound identical. Reel `queue/audits/2026-11-24-wide-edit-before-after.mp4`. 100 track edit measured (`baselines/wide-100.json`).
+- Left: zoom worst frames, the first frame of a scroll (22 ms), edits at 17-25 ms, the 100 track edit's edits and playback. Task pending.

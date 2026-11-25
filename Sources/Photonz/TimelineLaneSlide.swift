@@ -48,15 +48,22 @@ struct TimelineLaneSlide: ViewModifier {
     let frame: TimelineLaneFrame?
     let laneWidth: CGFloat
 
+    @Environment(\.timelineRowSleep) private var sleep
+    @State private var kept = KeptSlide()
+
     func body(content: Content) -> some View {
-        let slide = frame?.slide(to: editorState.motionStripRuler, laneWidth: laneWidth, scale: displayScale)
-            ?? (stretch: 1, offset: 0)
+        let slide = sleep?.isAsleep == true ? kept.slide
+            : frame?.slide(to: editorState.motionStripRuler, laneWidth: laneWidth, scale: displayScale)
+                ?? (stretch: 1, offset: 0)
+        let _ = kept.slide = slide
         content
-            .environment(\.timelineLaneFrame, frame)
             .scaleEffect(x: slide.stretch, y: 1, anchor: .topLeading)
             .offset(x: slide.offset)
     }
 }
+
+/// How a lane was last slid, kept for while its row is asleep.
+@MainActor private final class KeptSlide { var slide: (stretch: CGFloat, offset: CGFloat) = (1, 0) }
 
 /// The names of painted clips that run off the lane's left edge
 /// (`TimelinePaintedNames`), drawn against the window over the slid lane:
@@ -68,11 +75,15 @@ struct TimelineEdgeNames: View {
     let drawnMS: ClosedRange<Double>
     let laneWidth: CGFloat
     let laneHeight: CGFloat
+    @Environment(\.timelineRowSleep) private var sleep
+    @State private var kept = KeptBuild()
 
     var body: some View {
-        TimelinePaintedNames(bars: bars, ruler: editorState.motionStripRuler, drawnMS: drawnMS,
-                             laneWidth: laneWidth, laneHeight: laneHeight)
-            .equatable()
+        keptAsleep(sleep, kept) {
+            TimelinePaintedNames(bars: bars, ruler: editorState.motionStripRuler, drawnMS: drawnMS,
+                                 laneWidth: laneWidth, laneHeight: laneHeight)
+                .equatable()
+        }
     }
 }
 
@@ -82,9 +93,13 @@ struct TimelineWindowGridlines: View {
     @Environment(EditorState.self) private var editorState
     let laneWidth: CGFloat
     let height: CGFloat
+    @Environment(\.timelineRowSleep) private var sleep
+    @State private var kept = KeptBuild()
 
     var body: some View {
-        TimelineGridlines(ruler: editorState.motionStripRuler, laneWidth: laneWidth, height: height)
+        keptAsleep(sleep, kept) {
+            TimelineGridlines(ruler: editorState.motionStripRuler, laneWidth: laneWidth, height: height)
+        }
     }
 }
 
@@ -94,10 +109,13 @@ struct TimelineWindowGridlines: View {
 struct TimelineWindowMoves: View {
     @Environment(EditorState.self) private var editorState
     let moved: () -> Void
+    @Environment(\.timelineRowSleep) private var sleep
 
     var body: some View {
         Color.clear
             .allowsHitTesting(false)
-            .onChange(of: editorState.motionStripRuler) { moved() }
+            .onChange(of: sleep?.isAsleep == true ? nil : editorState.motionStripRuler) { before, now in
+                if before != nil, now != nil { moved() }
+            }
     }
 }

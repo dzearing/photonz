@@ -755,6 +755,21 @@ struct SpeedWalkMemoryTests {
         #expect(both.export?.seconds == 14 && both.export?.peakFootprintMB == 4200)
     }
 
+    @Test("A timeline step films all of it unless it names its parts")
+    func timelineParts() throws {
+        let json = #"{"steps": [{"do": "speed", "measure": "timeline", "parts": ["tracks"]}, {"do": "speed", "measure": "timeline"}]}"#
+        let script = try PlaytestScript.decode(Data(json.utf8))
+        guard case .speed(let tracks) = script.steps[0], case .speed(let all) = script.steps[1] else {
+            Issue.record("not a speed step")
+            return
+        }
+        #expect(tracks.parts == ["tracks"])
+        #expect(all.parts == ["zoom", "along", "tracks"])
+        #expect(throws: (any Error).self) {
+            try PlaytestScript.decode(Data(#"{"steps": [{"do": "speed", "measure": "timeline", "parts": ["sideways"]}]}"#.utf8))
+        }
+    }
+
     @Test("A memory step carries its ceiling and its growth limit; other steps may not")
     func stepFields() throws {
         let json = #"{"steps": [{"do": "speed", "measure": "memory", "seconds": 600, "ceilingMB": 2600, "growthPercent": 10}]}"#

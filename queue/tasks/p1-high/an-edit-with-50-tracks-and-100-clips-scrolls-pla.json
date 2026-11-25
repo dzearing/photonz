@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:13:00.798Z",
-  "updated": "2026-11-24T23:14:44.380Z",
+  "updated": "2026-11-25T03:26:22.809Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"the perf of photonz is still pretty rough with video editing. when i add like 50 tracks with 100 clips, scroll starts to lag, i get weird behaviors like flashes during playback, very sluggish behavior\".\n\nContext: the loop could not sign in from about 2026-11-23 19:00 to 2026-11-24 14:10, so the open video-perf tasks made no progress in that window; the user re-logged in on 2026-11-24.\n\nOverlaps, and why this is separate: the-timeline-of-an-hour-long-edit-scrolls-zooms (p1, pending) is about a LONG edit (60 minutes, hundreds of clips) on the 3+ track reference edit, horizontal scroll and zoom; this one is WIDE (50 to 100 tracks): vertical scroll, many track headers, many clips overlapping at one moment for the compositor and decoders. Reuse that task's speed walk, ViewBuildMeter and busy-lane painting rather than building a second harness; if its painted-lane fix also fixes vertical scroll here, record it and move on. picking-letting-go-of-and-cutting-a-clip-while-a (p1, seq 10) covers edit latency while playing; jumping-back-while-a-video-plays-never-flickers covers flicker after a jump. I did not reproduce the user's lag or flashes myself.",
@@ -78,7 +78,22 @@
     {
       "t": "2026-11-24T23:14:44.379Z",
       "note": "Pass 1 landed: no flashes and no drops with ten clips up, zoom and edits 2 to 3 times faster. Vertical scroll (worse than before), zoom and three edits are still over their bars; see the log."
+    },
+    {
+      "t": "2026-11-24T23:29:45.466Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-25T02:23:02.737Z",
+      "note": "Pass 2: far rows stay built but asleep (TimelineRowsInSight.swift) instead of being taken down; ruler, window label, time scroller, header and lane in fixed slots (TimelineSlot) so a frame's change no longer re-checks every row. Main thread, before (pass 1, remeasured) -> after: tracks down p95 12.4 -> 5.1 worst 15.3 -> 15.9; up 11.0 -> 3.6; zoom in p95 27.8 -> 9.2, out 23.8 -> 8.8, near fit 13.6 -> 8.4; along 4.8 -> 5.9. Undo of an added clip 35 -> 19 ms (a bar was built for the clip just taken away; clipBarsChange rebuilt every bar when a layer came or went)."
+    },
+    {
+      "t": "2026-11-25T03:26:22.808Z",
+      "note": "owns these walks: a-tall-edit-s-far-tracks-answer-walk"
     }
   ],
-  "started": "2026-11-24T19:44:06.814Z"
+  "started": "2026-11-24T23:29:45.465Z",
+  "walks": [
+    "a-tall-edit-s-far-tracks-answer-walk"
+  ]
 }

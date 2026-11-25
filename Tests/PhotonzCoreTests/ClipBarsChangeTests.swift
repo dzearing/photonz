@@ -63,13 +63,53 @@ struct ClipBarsChangeTests {
         #expect(renamed.clipBarsChange(since: doc) == .only([far]))
     }
 
-    @Test("A clip added or taken away changes every bar")
+    @Test("A clip added or taken away changes its own bar and the ones it meets, and not one far off")
     func clipAddedOrRemoved() throws {
-        let (doc, take, _, _) = try Self.edit()
+        let (doc, take, broll, far) = try Self.edit()
         var fewer = doc
         fewer.layers.removeAll { $0.id == take }
-        #expect(fewer.clipBarsChange(since: doc) == .every)
-        #expect(doc.clipBarsChange(since: fewer) == .every)
+        for change in [fewer.clipBarsChange(since: doc), doc.clipBarsChange(since: fewer)] {
+            #expect(change == .only([take, broll]))
+            #expect(!change.contains(far))
+        }
+    }
+
+    @Test("A clip added on a track of its own, and its undo, change no other bar")
+    func clipOnANewTrack() throws {
+        let (doc, _, _, far) = try Self.edit()
+        var clip = try #require(doc.layer(id: far))
+        clip = Layer(name: "added", content: clip.content, frame: clip.frame)
+        clip.movie = EditPointTransitionTests.broll
+        clip.time = LayerTime(inMS: 0, outMS: 4000, sourceInMS: 0, sourceLengthMS: 6000)
+        var more = doc
+        // The tracks are written down on the first that is added, which is a
+        // change to them, so both documents have theirs.
+        var base = doc
+        base.addTrack(.video)
+        more = base
+        let landed = more.land(clip, at: ClipLanding(target: .newTrack(at: 0), startMS: 0, lengthMS: 4000,
+                                                     edit: .overwrite, trackName: "Added", allowed: true))
+        let added = try #require(landed)
+        #expect(more.clipBarsChange(since: base) == .only([added]))
+        #expect(base.clipBarsChange(since: more) == .only([added]))
+    }
+
+    @Test("An empty track added or taken away changes no bar")
+    func emptyTrack() throws {
+        var (doc, _, _, _) = try Self.edit()
+        doc.addTrack(.video)
+        var more = doc
+        more.addTrack(.video)
+        #expect(more.clipBarsChange(since: doc) == .none)
+        #expect(doc.clipBarsChange(since: more) == .none)
+    }
+
+    @Test("Layers put in another order change every bar")
+    func reordered() throws {
+        let (doc, _, _, _) = try Self.edit()
+        var other = doc
+        other.layers.reverse()
+        #expect(other.clipBarsChange(since: doc) == .every)
     }
 
     @Test("A change to a track changes every bar")

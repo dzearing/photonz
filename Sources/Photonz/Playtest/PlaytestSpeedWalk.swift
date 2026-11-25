@@ -44,7 +44,7 @@ final class SpeedWalkProbe {
         case .scrub: return try await scrub(editor, speeds: step.speeds)
         case .edits: return try await edits(editor, step.edits, fromMS: step.fromMS)
         case .idleBuilds: return try await idleBuilds(editor, seconds: step.seconds ?? 3, fromMS: step.fromMS)
-        case .timeline: return try await timeline(editor)
+        case .timeline: return try await timeline(editor, parts: step.parts)
         case .pictures: return try await pictures(editor, fromMS: step.fromMS ?? 0, seconds: step.seconds ?? 6,
                                                   keep: step.keep)
         case .memory: return try await memory(editor, step)
@@ -571,7 +571,7 @@ final class SpeedWalkProbe {
 
     // MARK: - The timeline
 
-    private func timeline(_ editor: EditorState) async throws -> String {
+    private func timeline(_ editor: EditorState, parts: [String]) async throws -> String {
         guard editor.canOpenOutTheTimeline else {
             throw Failure(description: "the timeline cannot be zoomed in this window")
         }
@@ -613,7 +613,9 @@ final class SpeedWalkProbe {
         // misses its refresh with the main thread mostly idle is waiting on
         // the drawing after it, not on the app's own work.
         var busyPerFrame: [String] = []
-        func film(_ label: String, moves: Int, _ move: () -> Bool) async -> SpeedWalk.FrameTimes {
+        func film(_ label: String, moves asked: Int, _ move: () -> Bool) async -> SpeedWalk.FrameTimes {
+            let part = label.hasPrefix("tracks") ? "tracks" : label == "scroll" ? "along" : "zoom"
+            let moves = parts.contains(part) ? asked : 0
             ViewBuildMeter.shared.reset()
             TimelinePaintedPicture.laidMS = 0
             TimelinePaintedPicture.laidLate = 0
@@ -731,6 +733,9 @@ final class SpeedWalkProbe {
         var upAndDown: [SpeedWalk.FrameTimes] = []
         if let scroller = Self.tracksScroller(editor) {
             await settle(editor, frames: frames)
+            // A second to look before reaching for the wheel: the far rows
+            // catch up with the zooms in it (`TimelineRowChores`).
+            try? await Task.sleep(for: .seconds(1))
             let before = editor.timelineTracksScrollGeometry.offsetY
             for (label, by) in [("tracks down", -12.0), ("tracks up", 12.0)] {
                 upAndDown.append(await film(label, moves: 360) { Self.turn(scroller, by: by) })
@@ -742,7 +747,7 @@ final class SpeedWalkProbe {
                 }
             }
         }
-        run.timeline = [zoomIn, zoomOut, scroll] + upAndDown
+        run.timeline = ([zoomIn, zoomOut, scroll] + upAndDown).filter { $0.frames > 0 }
         return "views at fit: \(viewsAtFit); views zoomed in: \(viewsZoomed); clip bars built a frame: "
             + barsPerFrame.joined(separator: ", ") + "; lanes built a frame: " + lanesPerFrame.joined(separator: ", ")
             + "; paintings laid a frame: " + picturesPerFrame.joined(separator: ", ")

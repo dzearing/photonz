@@ -10,8 +10,10 @@ import Foundation
 /// a hold that pushed the picture alone puts on it, and its track (locked,
 /// which kind). So an edit that only changed some clips' own values changes
 /// those bars and the ones on the same track that touched them before or
-/// touch them now; any other change (a clip added, taken away or reordered,
-/// a track, a hold that pushes the picture alone, anything outside the
+/// touch them now, and a clip added or taken away (a paste, a delete, the undo of
+/// one) changes its own and the ones it meets, on a track that came or went
+/// with it or not. Any other change (clips reordered, a track that stays
+/// changed, a hold that pushes the picture alone, anything else outside the
 /// layers) changes every bar.
 public enum ClipBarsChange: Equatable, Sendable {
     /// Every bar may draw differently.
@@ -33,31 +35,48 @@ extension PhotonzDocument {
 
     /// What changed for the timeline's clip bars between `old` and this one.
     public func clipBarsChange(since old: PhotonzDocument) -> ClipBarsChange {
-        guard old.layers.count == layers.count,
-              zip(old.layers, layers).allSatisfy({ $0.id == $1.id }) else { return .every }
+        let was = Dictionary(old.layers.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let now = Dictionary(layers.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let same = old.layers.count == layers.count && zip(old.layers, layers).allSatisfy { $0.id == $1.id }
+        // The layers in both, in the one order.
+        guard same || old.layers.filter({ now[$0.id] != nil }).map(\.id)
+            == layers.filter({ was[$0.id] != nil }).map(\.id) else { return .every }
         var outside = old
         outside.layers = []
         var mine = self
         mine.layers = []
+        // A track that came or went is drawn on no other track's bar.
+        if outside.tracks != mine.tracks {
+            let before = Set(outside.tracks.map(\.id)), after = Set(mine.tracks.map(\.id))
+            outside.tracks.removeAll { !after.contains($0.id) }
+            mine.tracks.removeAll { !before.contains($0.id) }
+        }
         guard outside == mine else { return .every }
-        var changed: [(old: Layer, new: Layer)] = []
-        for (was, now) in zip(old.layers, layers) where was != now { changed.append((was, now)) }
-        if changed.isEmpty { return .none }
+        var changed: [(old: Layer?, new: Layer?)] = []
+        for layer in old.layers {
+            let still = now[layer.id]
+            if still != layer { changed.append((layer, still)) }
+        }
+        for layer in layers where was[layer.id] == nil { changed.append((nil, layer)) }
         let oldLayout = old.trackLayout(), newLayout = trackLayout()
-        guard oldLayout.tracks == newLayout.tracks, oldLayout.clips == newLayout.clips,
-              oldLayout.linked == newLayout.linked else { return .every }
+        if changed.isEmpty, oldLayout.tracks == newLayout.tracks { return .none }
+        guard Self.sameWhereBothStand(oldLayout, newLayout, goneOrCome: Set(changed.compactMap { pair in
+            pair.old == nil || pair.new == nil ? (pair.old ?? pair.new)?.id : nil
+        })) else { return .every }
         guard Self.sameHolds(old.pictureOnlyHolds, pictureOnlyHolds) else { return .every }
         var ids = Set<UUID>()
         for pair in changed {
-            for layer in [pair.old, pair.new] {
+            for layer in [pair.old, pair.new].compactMap({ $0 }) {
                 for inside in layer.selfAndDescendants { ids.insert(inside.id) }
             }
             // The clips on its track it touched before or touches now: an
             // edit point there may have come or gone.
-            let span = [pair.old.time, pair.new.time].compactMap { $0 }
+            guard let layer = pair.new ?? pair.old else { continue }
+            let span = [pair.old?.time, pair.new?.time].compactMap { $0 }
             guard let start = span.map(\.inMS).min(), let end = span.map(\.outMS).max(),
-                  let track = trackID(ofClip: pair.new.id) else { continue }
-            for other in clipIDs(onTrack: track) where other != pair.new.id {
+                  let track = pair.new != nil ? trackID(ofClip: layer.id) : old.trackID(ofClip: layer.id)
+            else { continue }
+            for other in Set(clipIDs(onTrack: track) + old.clipIDs(onTrack: track)) where other != layer.id {
                 for document in [old, self] {
                     guard let time = document.layer(id: other)?.time,
                           time.inMS <= end, time.outMS >= start else { continue }
@@ -66,6 +85,18 @@ extension PhotonzDocument {
             }
         }
         return .only(ids)
+    }
+
+    /// Whether the tracks in both hold the same clips in the same order, apart
+    /// from the clips that came or went, and a clip in both is on the same one.
+    private static func sameWhereBothStand(_ a: TrackLayout, _ b: TrackLayout, goneOrCome: Set<UUID>) -> Bool {
+        if a.tracks == b.tracks, a.clips == b.clips, a.linked == b.linked { return true }
+        let before = Set(a.tracks.map(\.id)), after = Set(b.tracks.map(\.id))
+        guard a.tracks.filter({ after.contains($0.id) }) == b.tracks.filter({ before.contains($0.id) }) else { return false }
+        func kept(_ clips: [UUID: [UUID]]) -> [UUID: [UUID]] {
+            clips.mapValues { $0.filter { !goneOrCome.contains($0) } }.filter { !$0.value.isEmpty }
+        }
+        return kept(a.clips) == kept(b.clips) && kept(a.linked) == kept(b.linked)
     }
 
     private static func sameHolds(_ a: [DocumentDerived.PictureOnlyHold],
