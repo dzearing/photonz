@@ -1136,9 +1136,12 @@ struct TimelinePaintedCuts: View, Equatable {
 /// zoom already shows it, and the new one is laid once the frame is out
 /// (`AfterTheFrame`). At rest a picture is always laid on the frame that asks
 /// for it, and one laid late is laid again when the timeline stops, so
-/// nothing a late lay missed outlives the movement. A scroll's step lays at
-/// once: laid late it showed no gain on the frame that steps and cost the
-/// frame after (16 to 27 late frames of 360 against 9 to 13).
+/// nothing a late lay missed outlives the movement. A scroll's step lays
+/// late too, where the last picture still holds the window and the next two
+/// steps of the scroll (`EditorState.timelineSoonMS`): main thread p95 of a
+/// fast scroll of the hour-long edit 8.8 to 9.2 ms down to 8.5 to 8.7
+/// (2026-11-25, pass 24; on 2026-11-22, before the lanes took a new frame a
+/// few at a time, laying late cost the frame after as much as it saved).
 ///
 /// **An edit's picture may follow the edit by a pass more.** The timeline
 /// draws an edit a pass after it landed (`EditorState.catchUpOnTheNextPass`),
@@ -1173,6 +1176,7 @@ struct TimelinePaintedPicture: View {
     var newcomers: ((inout GraphicsContext) -> Void)?
     let paint: (inout GraphicsContext) -> Void
 
+    @Environment(EditorState.self) private var editorState
     @Environment(\.timelineLaneFrame) private var laneFrame
     @State private var kept = Kept()
     /// Moved on when a late picture lands, so the body shows it.
@@ -1259,7 +1263,9 @@ struct TimelinePaintedPicture: View {
         }
         if laneFrame?.isRest == false, let canvas, laneWidth > 0, let picture = kept.picture, let last = kept.shape,
            let lastCanvas = last.canvas, last.height == height, last.scale == scale, last.scheme == scheme,
-           lastCanvas.ruler.spanMS != canvas.ruler.spanMS || (laneFrame?.isZoom == true && lastCanvas != canvas),
+           lastCanvas.ruler.spanMS != canvas.ruler.spanMS || (laneFrame?.isZoom == true && lastCanvas != canvas)
+            || (laneFrame?.isZoom == false && lastCanvas != canvas
+                && editorState.timelineSoonMS.map { lastCanvas.covers($0, laneWidth: laneWidth) } == true),
            fits {
             let first = kept.waiting == nil
             kept.waiting = (shape, asked, paint)

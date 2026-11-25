@@ -198,6 +198,17 @@ import Testing
         #expect(laid.reduce(0, +) >= 8 * 4)
     }
 
+    /// A picture still shows every window inside what it was laid across, and
+    /// none a millisecond past either end.
+    @Test func aPictureCoversWhatItWasLaidAcross() {
+        let canvas = TimelinePaint.Canvas(drawnMS: 20_000...60_000, ruler: at(30_000), laneWidth: 1000)
+        #expect(canvas.covers(20_000...60_000, laneWidth: 1000))
+        #expect(canvas.covers(31_000...56_000, laneWidth: 1000))
+        #expect(!canvas.covers(19_000...44_000, laneWidth: 1000))
+        #expect(!canvas.covers(40_000...61_000, laneWidth: 1000))
+        #expect(!canvas.covers(40_000...50_000, laneWidth: 0))
+    }
+
     /// The busy lanes are the ones spread: with every clip in four of the
     /// groups, no step takes three of the four.
     @Test func aFastScrollSpreadsTheBusyLanes() {

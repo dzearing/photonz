@@ -170,6 +170,10 @@ extension EditorState {
             frame = .scrolling(motionStripRuler, anchorMS: edge.lowerBound, drawnMS: timelineDrawnMS,
                                leftEdgeMS: timelineLeftEdgeRangeMS, zoomScale: timelineScaleOnly.scale)
         }
+        let window = motionStripRuler
+        let step = window.startMS - (timelineLastWindowStartMS ?? window.startMS)
+        timelineLastWindowStartMS = window.startMS
+        timelineSoonMS = (window.startMS + min(0, step * 2))...(window.startMS + window.spanMS + max(0, step * 2))
         timelineLaneWaves.step(to: frame, window: motionStripRuler, rest: timelineRestFrame, clips: timelineLaneGroupClips)
         showTimelineLaneWaves()
         timelineLaneFrameSettle?.cancel()

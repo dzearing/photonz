@@ -107,6 +107,13 @@ public enum TimelinePaint {
             return (laneWidth * window.fraction(ofMS: ruler.startMS) * scale).rounded() / scale
         }
 
+        /// Whether a picture laid on this canvas has all of `stretch` in it.
+        public func covers(_ stretch: ClosedRange<Double>, laneWidth: CGFloat) -> Bool {
+            guard laneWidth > 0, ruler.spanMS > 0 else { return false }
+            let endMS = ruler.startMS + ruler.spanMS * Double(width / laneWidth)
+            return stretch.lowerBound >= ruler.startMS - 1e-3 && stretch.upperBound <= endMS + 1e-3
+        }
+
         /// Where a picture laid on `laid` sits on this canvas: its left edge
         /// across this canvas, in points, and how much wider it is drawn. A
         /// lane that moves on to a new canvas while the timeline moves shows

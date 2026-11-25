@@ -2404,6 +2404,10 @@ final class EditorState {
     /// Whether the timeline is scrolling or zooming, read without being
     /// watched: for what is being drawn now anyway.
     var timelineMovesNow: Bool { timelineLaneWaves.frame != nil }
+    /// The window and the next two steps of a scroll at the rate it goes: what
+    /// a lane's last picture has to hold to stand while a new one is laid.
+    @ObservationIgnored var timelineSoonMS: ClosedRange<Double>?
+    @ObservationIgnored var timelineLastWindowStartMS: Double?
     @ObservationIgnored var timelineLaneFrameSettle: Task<Void, Never>?
     /// What a row outside the lanes (a clip's Zoom lane) is culled by: a wide
     /// sight that holds still for windows of a scroll at a time
