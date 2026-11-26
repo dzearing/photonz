@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-25T11:56:04.552Z",
-  "updated": "2026-11-25T15:12:01.592Z",
+  "updated": "2026-11-26T16:35:30.847Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CI red on main, seen on run 45583153492 (commit 34bcb4395, Test slice 2 of 3, 2026-11-25). Command: gh run view 45583153492 --log-failed | grep -A2 'recorded an issue'. Output: 'short gif at high held (count: 48, width: 640, height: 400) and then (count: 47, width: 640, height: 400) pictures'; 'longer heic at small held (count: 40, width: 480, height: 300) and then (count: 0, width: 0, height: 0) pictures'; 'longer gif at high held (count: 95, ...) and then (count: 96, ...)'; GIF bytes 113275 then 111114 and 205656 then 208277. The test took 648 s and the slice 955 s, so that runner was starved. Not reproduced on this Mac. Likely place, from reading only: Sources/PhotonzMedia/VideoExporter.swift exportAnimated, 'guard var frame = try? await generator.image(at: time).image else { continue }' skips a frame whose read threw. The HEIC with 0 pictures is not explained: CGImageDestinationFinalize returned true. Found by the runner of an-edit-with-50-tracks-and-100-clips-scrolls-pla.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-11-25T15:12:01.591Z",
       "note": "seq 4070 -> 80"
+    },
+    {
+      "t": "2026-11-26T16:35:30.846Z",
+      "note": "seq 80 -> 80"
     }
   ]
 }

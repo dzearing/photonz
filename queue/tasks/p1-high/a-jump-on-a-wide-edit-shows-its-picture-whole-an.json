@@ -3,13 +3,13 @@
   "title": "A jump on a wide edit shows its picture whole, and Space with it starts sooner",
   "goal": "Clicking somewhere new on a paused 50 track edit draws the new place in pieces, some clips missing until each is read, and Space pressed in the same instant waits a quarter to half a second. A jump should show the new place once, whole, and playing from it should follow as fast as it can.",
   "epic": "video-perf",
-  "priority": "p2-normal",
-  "seq": 45,
+  "priority": "p1-high",
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-25T19:45:41.201Z",
-  "updated": "2026-11-25T19:45:41.204Z",
+  "updated": "2026-11-26T16:35:30.549Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-25: walk with setup {forget:[all],wideEdit:50}, steps speed pictures fromMS 10000 (and 62000) when [atOnce]: 5 nothing drawn at 0:10.0, 10 at 1:02.0, both in the one picture the jump itself submits (scrubDocument -> documentMomentChanged -> submit). speed starts when [atOnce] gives the waits. The wait is decoding: skipped/decoded counts per clip showed 30 to 110 samples from the key frame each, few of them skippable, about 600 a second on one decoder. Ideas not tried: hold the picture on a paused jump the way holdsPictureForStart does; small all-intra stand-ins kept per recording.",
@@ -22,6 +22,18 @@
     {
       "t": "2026-11-25T19:45:41.203Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-26T16:35:16.631Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-11-26T16:35:16.707Z",
+      "note": "Triage 2026-11-26: moved to p1 with the rest of the wide edit report. Clips missing from the picture after a jump is the 'no frame shows a blank or a stale picture' line of the focus, and a person clicking around a 50 track edit sees it."
+    },
+    {
+      "t": "2026-11-26T16:35:30.548Z",
+      "note": "seq 45 -> 40"
     }
   ],
   "walks": [

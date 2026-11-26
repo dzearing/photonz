@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T11:15:03.181Z",
-  "updated": "2026-11-25T15:12:04.196Z",
+  "updated": "2026-11-26T16:35:33.579Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by brushes-are-picked-from-a-library-of-tiles-that (2026-10-25). LibraryScope.scopes(hasTime:brushes:) adds .brushes after .components only while EditorState.libraryOffersBrushes (Brush in hand). The drawn SegmentedControl (fallsBackToSystem: false) falls back to its dropdown when the words do not fit: 236pt dock, words Media Comps Brushes Styles Systems. Options: tighter segment padding for five, shorter words, or icons with the words in tips. Picture: queue/audits/2026-10-25-brush-library-shelf.png (the Brushes dropdown). brush-library.html draws Media | Brushes | Styles | Systems (no Comps, which a later mock added).",
@@ -106,6 +106,10 @@
     {
       "t": "2026-11-25T15:12:04.195Z",
       "note": "seq 200 -> 240"
+    },
+    {
+      "t": "2026-11-26T16:35:33.578Z",
+      "note": "seq 240 -> 240"
     }
   ]
 }

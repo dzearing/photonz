@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-01T16:35:27.500Z",
-  "updated": "2026-11-25T15:12:04.505Z",
+  "updated": "2026-11-26T16:35:33.885Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by reading and by the walk numbers: CanvasPointerDrags.swift resize branch, snapping = !aspect && !held.isFree && !centred, and aspect is now SelectionDrag.keepsProportions(handle, shift:) which is true for every corner without Shift. selection-grips-walk step 12 corner drag reports no guide. Before next-transform-modes only Shift-corner drags (rare) skipped snapping. Found by the-reworked-selection-ships-cleaner-grips-a-tag.",
@@ -107,6 +107,10 @@
     {
       "t": "2026-11-25T15:12:04.504Z",
       "note": "seq 240 -> 280"
+    },
+    {
+      "t": "2026-11-26T16:35:33.884Z",
+      "note": "seq 280 -> 280"
     }
   ]
 }

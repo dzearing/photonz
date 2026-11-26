@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-21T23:23:06.984Z",
-  "updated": "2026-11-25T15:12:05.832Z",
+  "updated": "2026-11-26T16:35:35.199Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-21 in task keynote-clean-soft-gradient-glass-kinetic-bold-t: queue/audits/2026-11-21-title-redesign-old-new.png, Command Line row, 400 ms shows \"Sh\" with the caret about eight letters to the right, 700 ms \"Ship fas\" with the caret a word away; the old Tech Terminal row shows the same with \"Yo\". Frames come from PHOTONZ_REEL=1 PHOTONZ_REDESIGN_PHASE=after PHOTONZ_REDESIGN_DIR=/tmp/redesign Scripts/test.sh --filter TitleRedesignReel (after/terminal-400.png). The caret is a box after the words in a row stack (TitleSet.swift terminal(), Prompt row); the typewriter reveal hides letters without changing the row layout, so the caret keeps the full words width. TitleSetTests.cursorFollowsTheWords covers only the held state.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-25T15:12:05.831Z",
       "note": "seq 410 -> 450"
+    },
+    {
+      "t": "2026-11-26T16:35:35.198Z",
+      "note": "seq 450 -> 450"
     }
   ]
 }

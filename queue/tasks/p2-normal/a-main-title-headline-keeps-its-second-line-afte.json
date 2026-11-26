@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-22T23:19:20.123Z",
-  "updated": "2026-11-25T15:12:05.909Z",
+  "updated": "2026-11-26T16:35:35.274Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in Scripts/playtest/hand-work-survives-new-numbers-and-a-restyle-walk.json (Scripts/playtest.sh <it> --no-build), picture 6-title-restyled-sc.png, copied to queue/audits/2026-11-22-hand-work-6-title-restyled-sc.png. Playhead at 0:01. The headline is a word reveal (riseAndFade by word, start 105 ms, stagger 63, length 630 at Punchy), so every word should be in by 1 s. Picture 5 (Original theme, before the restyle) shows two lines, The Long Way / Home. In a 1920x1080 core probe the restyled Title frame is 1536x209 (two lines) and the model is identical with and without commit for task a-chart-or-title-keeps-what-you-set-by-hand-when, so this was there before it. Not yet checked: whether the 1280x800 layout re-measures the frame for Editorial, or whether the second line is drawn under the subtitle.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-11-25T15:12:05.908Z",
       "note": "seq 420 -> 460"
+    },
+    {
+      "t": "2026-11-26T16:35:35.273Z",
+      "note": "seq 460 -> 460"
     }
   ]
 }

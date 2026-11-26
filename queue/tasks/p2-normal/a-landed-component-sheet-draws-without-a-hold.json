@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-19T07:03:50.470Z",
-  "updated": "2026-11-25T15:12:05.596Z",
+  "updated": "2026-11-26T16:35:34.967Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-11-18 by find-out-whether-landing-a-component-sheet-holds. Reproduce: Scripts/playtest.sh Scripts/playtest/a-component-sheet-lands-without-a-long-hold-walk.json (scripted replies recorded from a real Qwen3.8 27B run of the component-table eval case; markers down via timedWithoutMarkers). Output line: '[8 wait] 4.0s asked, quiet after 0.88s; mainBusy 1152.9ms over 492 passes, longest 390.4ms from 91ms in'. Time Profiler (xcrun xctrace record --template 'Time Profiler' --attach <probe pid>) splits the ~390 ms pass into two halves: (1) ~200 ms: AskSession.run executes all 12 plan steps in one main-actor pass (AgentWork.run never suspends); each add_component does two EditorState.perform calls (the add, then setCanvasSize), each running History.preparing + syncComponentInstances + LinkBreakReport over the whole sheet. Remaining hot spots: mainComponent(componentID:version:) -> layer(id:) searching componentOriginals linearly (the layer-path index covers only layers), agentArrangeSheet/sheetLabels, and the setCanvasSize perform per component (could be one at the end). (2) ~200 ms: SwiftUI's flushObservers right after: the Layers list's LazyVStack/ForEach placing 91 new rows (LazyHVStack.lengthAndSpacing, DynamicContainerInfo.updateItems), then a second ~150 ms in AccessibilityNode.updateFocus (the focus walk) over the next passes. Options: run the plan's steps across run loop turns (yield between steps) so the stage line can draw, but check that each turn does not re-render the Layers list; give the Layers rows a fixed height so the lazy stack need not size all predecessors; fold the per-component setCanvasSize into one. Already done: mains and layer paths are kept per document (DocumentDerived), which took the hold from 541 to ~390 ms.",
@@ -46,6 +46,10 @@
     {
       "t": "2026-11-25T15:12:05.595Z",
       "note": "seq 380 -> 420"
+    },
+    {
+      "t": "2026-11-26T16:35:34.966Z",
+      "note": "seq 420 -> 420"
     }
   ],
   "walks": [

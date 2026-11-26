@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T19:23:42.365Z",
-  "updated": "2026-11-25T15:12:03.357Z",
+  "updated": "2026-11-26T16:35:32.731Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SpeedInspector.held(_:) draws Hold as VideoKit.DropdownRow over ClipPieces.holdStopsMS. The popover parses with FreezeLength.parse (PhotonzCore/FreezeLength.swift) and commits through PhotonzDocument.setHoldLength, which already moves the track (HoldPush.pushHeldTime). The mock video-freeze-wt.html shows Length 3.0s as a value, not a list. The user, 2026-10-17: why have only a fixed set of options. Also used by ⌘R on a held piece (opensWhenAsked).",
@@ -139,6 +139,10 @@
     {
       "t": "2026-11-25T15:12:03.356Z",
       "note": "seq 90 -> 130"
+    },
+    {
+      "t": "2026-11-26T16:35:32.730Z",
+      "note": "seq 130 -> 130"
     }
   ],
   "walks": []

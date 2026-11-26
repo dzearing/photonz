@@ -4,12 +4,12 @@
   "goal": "Crash watch caught a crash in the loop's probe app at 2026-11-25 20:25:19.00 -0800: EXC_BREAKPOINT (SIGTRAP) in PassSampler.othersNow() < PassSampler.run(). Read the report, reproduce it, fix the cause, and add a test that would have caught it.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 4080,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T05:37:40.028Z",
-  "updated": "2026-11-26T05:37:40.031Z",
+  "updated": "2026-11-26T16:35:31.070Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-25-202519.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nPassSampler.othersNow() (PassSampler.swift:144)\nPassSampler.run() (PassSampler.swift:66)",
@@ -22,6 +22,14 @@
     {
       "t": "2026-11-26T05:37:40.030Z",
       "note": "created (crash-watch)"
+    },
+    {
+      "t": "2026-11-26T16:35:16.556Z",
+      "note": "Triage 2026-11-26: evidence checked. The report (Photonz Probe-2026-11-25-202519.ips) says 'Swift runtime failure: arithmetic overflow' at PassSampler.swift:144, which is 'let low = high - UInt64(pthread_get_stacksize_np(p))': a thread whose stack address reads lower than its stack size (likely one ending between the thread list and the read). One report, during the scrub lag task's walks (04:25Z). Kept p1 and moved up beside the perf work: the pass sampler is how the focus tasks name their stalls, and a crash ends the walk measuring them."
+    },
+    {
+      "t": "2026-11-26T16:35:31.069Z",
+      "note": "seq 4080 -> 110"
     }
   ]
 }

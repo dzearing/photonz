@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-18T11:56:45.518Z",
-  "updated": "2026-11-25T15:12:03.591Z",
+  "updated": "2026-11-26T16:35:32.958Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left from a-title-s-words-can-follow-a-curved-path (2026-10-18). Today: CanvasTextEditing opens the inline editor in the curve box with the words straight; DocumentRenderer skips reveal pieces when text.onPath != nil and InspectorPanel hides the Reveal section for curved words; TextRasterizer.rasterizeOnPath draws text.fillPaint flat (colorHex). Placement maths is TextOnPathLayout/PathWalk in PhotonzCore; TextRasterizer.pathLetters gives each glyph its place.",
@@ -150,6 +150,10 @@
     {
       "t": "2026-11-25T15:12:03.590Z",
       "note": "seq 120 -> 160"
+    },
+    {
+      "t": "2026-11-26T16:35:32.957Z",
+      "note": "seq 160 -> 160"
     }
   ],
   "walks": [

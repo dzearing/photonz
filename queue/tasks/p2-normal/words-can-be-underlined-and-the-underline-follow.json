@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T02:26:02.584Z",
-  "updated": "2026-11-25T15:12:03.891Z",
+  "updated": "2026-11-26T16:35:33.273Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by scenario 4 of claude-can-make-and-edit-pictures-and-videos-in (2026-10-19): a fresh agent session rebuilding GOV.UK links drew 1 pt lines under each title and said in its summary they will not resize with the words (transcript queue/audits/2026-10-19-agent-skill-transcript.md, scenario 4). TextContent has no decoration today (Sources/PhotonzCore/Layer.swift); TextTreatment would need it for styles; SVGExporter text-decoration. Command U on a picture: check Photoshop parity (UX-PATTERNS §7) before taking it. Agent side: add_text/set_layer/add_style get an underline flag once the app has it.",
@@ -135,6 +135,10 @@
     {
       "t": "2026-11-25T15:12:03.890Z",
       "note": "seq 160 -> 200"
+    },
+    {
+      "t": "2026-11-26T16:35:33.272Z",
+      "note": "seq 200 -> 200"
     }
   ]
 }

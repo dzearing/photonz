@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T15:53:00.275Z",
-  "updated": "2026-11-25T15:12:01.742Z",
+  "updated": "2026-11-26T16:35:30.995Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-23: \"can you make the toasts for photonz a bit smaller, a little closer to the corner of the screen, and maybe fade out in half the time? they're rather annoying and stay there too long\". This applies to Current and Next (the toast is shared code and the timing flag is in both releases).\n\nWhere: Sources/Photonz/ToastController.swift: margin = 16 (line ~45), placed at vf.maxX - margin - width, vf.minY + margin (~106, ~159, ~196); NoteToastView .frame(width: 244) .padding(12) .padding(8) for the shadow (~437-440); ToastView thumbnailSize 128x80 (~636), .padding(8), glass corner radius 12, .padding(8) shadow room; a button toast holds captureToastHoldSeconds * 4 (~149). Timing defaults: Sources/PhotonzCore/FeatureCatalog.swift:30-31 captureToastHoldSeconds = 7, captureToastFadeSeconds = 3, also the Experiments parameters (~439-444) and Experiments.swift:136-141. The doc comment at ToastController.swift:12 ('full opacity for 2s, fades over the next 5s') is already stale; fix it to the new truth.\n\nTrap: the 8 point clear area around each toast exists so the shadow and hover controls are not clipped, so to get closer to the corner reduce the margin rather than that area, or the shadow gets cut off. Thumbnail rendering (CaptureThumbnailView, fixedHeight) may size its poster from the old 80 point height: check recordings' poster frames still fill the smaller picture sharply.",
@@ -53,6 +53,10 @@
     {
       "t": "2026-11-25T15:12:01.741Z",
       "note": "seq 68 -> 100"
+    },
+    {
+      "t": "2026-11-26T16:35:30.994Z",
+      "note": "seq 100 -> 100"
     }
   ]
 }

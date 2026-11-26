@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-26T03:33:36.673Z",
+  "updated": "2026-11-26T16:35:30.474Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-26T03:33:36.672Z",
-      "note": "... 113 earlier entries elided",
-      "elided": 113
-    },
-    {
-      "t": "2026-11-21T19:22:52.090Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-21T20:18:59.559Z",
-      "note": "Pass 20 (2026-11-21). Baseline at 11f397c9f (60 min edit, timeline measure, load ~6): near Fit 11.00 ms mean (held 8.45, fresh 14.55; 270 of 648 fresh), 216 late; zoom in 46 late, out 20, scroll 21; busy near Fit 7.94. Every-pass profile: a held near-Fit frame is ~5 ms of passes (2.5 update + 2.0 layout/draw), a fresh one ~11.5 (picture getter 2.6, lane 1.6, graph 2.1). Since pass 19 a held frame builds no lane, so the late frames are the fresh ones."
+      "t": "2026-11-26T16:35:30.473Z",
+      "note": "... 115 earlier entries elided",
+      "elided": 115
     },
     {
       "t": "2026-11-21T20:18:59.636Z",
@@ -506,6 +498,14 @@
     {
       "t": "2026-11-26T03:33:36.671Z",
       "note": "Pass 26 landed 976087bbb: edits on the 60 min edit while playing now 9-15 ms (were 14-18), bar met; timeline p95 under 8.3. Still open: a rare 30 ms main thread frame (about 1 in 1,500) against none over 16."
+    },
+    {
+      "t": "2026-11-26T16:35:16.929Z",
+      "note": "Triage 2026-11-26: 26 passes, and every bar is met but one rare 30 ms frame in about 1,500. Next pass: profile that frame as pass 26 said. If its holder is the system's drawing cleanup (RenderBox prune / CA commit, no app code), log that, move the line to no-frame-of-a-50-track-zoom-is-held-up-by-the-sy and close this task. Do not start pass 28."
+    },
+    {
+      "t": "2026-11-26T16:35:30.472Z",
+      "note": "seq 30 -> 30"
     }
   ],
   "started": "2026-11-26T02:29:50.657Z",

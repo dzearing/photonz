@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T01:16:34.885Z",
-  "updated": "2026-11-25T15:12:05.995Z",
+  "updated": "2026-11-26T16:35:35.360Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-compositing.html line 287 (libtile grade.look preset). The grade track is ColorGradeLayer.swift (a full-frame lens, adjustment colorGrade, graded by its own ColorGradeEffect in style.effects); EditorState+ColorGradeTrack.swift adds one. Split out of a-colour-grade-can-be-its-own-track-over-the-cli, whose notes named the preset but whose checklist did not.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-11-25T15:12:05.994Z",
       "note": "seq 430 -> 470"
+    },
+    {
+      "t": "2026-11-26T16:35:35.359Z",
+      "note": "seq 470 -> 470"
     }
   ]
 }

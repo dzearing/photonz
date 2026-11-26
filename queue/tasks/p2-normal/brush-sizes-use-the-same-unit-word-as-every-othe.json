@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-31T13:22:54.904Z",
-  "updated": "2026-11-25T15:12:04.428Z",
+  "updated": "2026-11-26T16:35:33.808Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-10-31 digest. Evidence: queue/audits/2026-10-31-brush-epic-1-watercolour-in-hand-sc.png shows the tool options reading 'Size 30 pt' and the panel's Brush section 'Size 30 pt'; queue/audits/2026-10-31-path-brush-2-charcoal.png shows a brushed path's Thickness reading '18 px' in the same Appearance panel. Command: grep -rn '\"pt\"' Sources/Photonz | grep -v Playtest prints Sources/Photonz/BrushSettingControls.swift:72 (SliderNumber(suffix: spec.id == \"size\" ? \"pt\" : \"%\")) and Sources/Photonz/KeyLanesView.swift:502 (a position key reads 'N pt'). The rule was settled by the done task the-panel-says-one-word-for-the-unit-it-measures (2026-09-09): every length goes through DocumentUnit in PhotonzCore. The open user-driven task a-redline-of-a-2x-screenshot-reads-in-points-wit may move redlines on 2x pictures to pt; whatever word it settles on for a document, the brush must follow the same source (DocumentUnit), not its own literal.",
@@ -111,6 +111,10 @@
     {
       "t": "2026-11-25T15:12:04.427Z",
       "note": "seq 230 -> 270"
+    },
+    {
+      "t": "2026-11-26T16:35:33.807Z",
+      "note": "seq 270 -> 270"
     }
   ]
 }

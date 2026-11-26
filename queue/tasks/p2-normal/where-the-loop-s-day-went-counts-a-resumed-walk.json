@@ -9,7 +9,7 @@
   "release": "next",
   "area": "loop",
   "created": "2026-10-23T14:08:35.106Z",
-  "updated": "2026-11-25T15:12:04.040Z",
+  "updated": "2026-11-26T16:35:33.425Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the a-full-walk-check-that-gets-stopped-picks-up-whe runner on 2026-10-22 (left rough: count reads one high) and again by the 2026-10-23 digest, which had to read queue/loop.log to find that the three runs were the 2026-10-22T11:15Z run stopped at 989 of 1011, its 7 minute pick-up (queue/sweep/2026-10-22-095234.log, 25 walks), and the 2026-10-23T11:41Z run stopped at 453 of 1015 when the person came back. Code: queue/bin/loop-day.mjs.",
@@ -136,6 +136,10 @@
     {
       "t": "2026-11-25T15:12:04.039Z",
       "note": "seq 180 -> 220"
+    },
+    {
+      "t": "2026-11-26T16:35:33.424Z",
+      "note": "seq 220 -> 220"
     }
   ]
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:24:09.055Z",
-  "updated": "2026-11-25T15:12:01.443Z",
+  "updated": "2026-11-26T16:35:30.698Z",
   "deps": [
     "a-60-frame-a-second-recording-edits-and-exports"
   ],
@@ -39,6 +39,10 @@
     {
       "t": "2026-11-25T15:12:01.442Z",
       "note": "seq 64 -> 60"
+    },
+    {
+      "t": "2026-11-26T16:35:30.697Z",
+      "note": "seq 60 -> 60"
     }
   ]
 }

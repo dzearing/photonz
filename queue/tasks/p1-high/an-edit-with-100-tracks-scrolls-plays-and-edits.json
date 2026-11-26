@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-25T15:11:24.867Z",
-  "updated": "2026-11-25T15:12:01.667Z",
+  "updated": "2026-11-26T16:35:30.922Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Focus success line 7 (\"50 to 100 tracks with 100 or more clips scroll in both directions at 120 Hz, play without dropped or wrong frames, and edit within one frame\"). The 50 track task measures 100 tracks but sets it no bar, so nothing owned it. Command: Scripts/perf/speed-walk.sh --wide 100; its output is Scripts/perf/baselines/wide-100.json (written 2026-11-25 14:38Z by that task's fifth pass): main thread a frame p95 zoom in 12.3, out 12.4, along 11.9, tracks down 17.1, up 11.9 ms (bar 8.3); longest pass add track 21.0, its undo 21.6, add clip 23.4, move 20.6, trim 17.6, pick 20.6, blade 20.2, undo 13.8 ms (bar 16); 6 of 3639 frames dropped; 11 clip frames shown from ahead of their time at 1:06 (pass 5 audit). Tracks down read 10.5 in pass 2 and 17.1 in passes 3 and 5: not explained. Reuse the 50 track work (TimelineRowsInSight, TimelineLaneWaves, LateTrackRows).",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-25T15:12:01.666Z",
       "note": "seq 4090 -> 90"
+    },
+    {
+      "t": "2026-11-26T16:35:30.921Z",
+      "note": "seq 90 -> 90"
     }
   ]
 }

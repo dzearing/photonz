@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-13T21:51:15.337Z",
-  "updated": "2026-11-25T15:12:03.817Z",
+  "updated": "2026-11-26T16:35:33.185Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows every-measurement-shares-one-remembered-look-blu (2026-10-13): MeasureStyles keeps ONE colour set for every role, so measureLegendEntries (EditorState+Measure.swift, near the end) lists Size and Spacing each swatched in its top-most measurement ink, which is now the same #3774D5 by default. The legend is behind next-measure-roles (on at Next defaults); legend-corner-slots walk covers its placement. The redline mock (docs/design/mocks/pages/redline.html) draws Size red and Spacing blue with this legend; the user overrode the colour split on 2026-10-13 (\"gap vs size shouldn't be different\").",
@@ -186,6 +186,10 @@
     {
       "t": "2026-11-25T15:12:03.816Z",
       "note": "seq 150 -> 190"
+    },
+    {
+      "t": "2026-11-26T16:35:33.184Z",
+      "note": "seq 190 -> 190"
     }
   ],
   "walks": [

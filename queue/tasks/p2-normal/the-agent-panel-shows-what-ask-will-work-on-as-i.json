@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-07T13:08:47.309Z",
-  "updated": "2026-11-25T15:12:04.905Z",
+  "updated": "2026-11-26T16:35:34.279Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-works-on-what-you-have-picked-so-make-this-b, which put the scope in the composer as its checklist said (AskViews.swift, AskPicked.scope, editor.pickedForAsk). Mock: docs/design/mocks/pages/agent-edit.html line 179, span.cnt.val beside the Agent title, and its placeholder Ask for a change to the selection where ours reads Ask, or type / for a command. Not built in that task: the held-out run was already going on the probe, and a rebuild would have replaced the app under it.",
@@ -78,6 +78,10 @@
     {
       "t": "2026-11-25T15:12:04.904Z",
       "note": "seq 290 -> 330"
+    },
+    {
+      "t": "2026-11-26T16:35:34.278Z",
+      "note": "seq 330 -> 330"
     }
   ]
 }

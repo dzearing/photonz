@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-25T15:11:24.999Z",
-  "updated": "2026-11-25T15:12:02.647Z",
+  "updated": "2026-11-26T16:35:32.042Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the triage pass 2026-11-25: Scripts/playtest.sh Scripts/playtest/caption-pick-answers-at-once-walk.json --no-build, three runs: \"the main thread froze for 95.9ms in one pass, and this walk allows under 80ms\", then 149.5, then 130.0, each with a second pass of 87 to 89 ms about 0.5 s later. Passed on 2026-11-20, 84.5 in the 2026-11-23 sweep. A runner compared 75f8a3456 and the commit after it, nine interleaved runs each: the same (91 to 98, with 144 to 149 in three of nine), so it is not the pick-while-playing work. Never bisected between 20 and 23 November; git log --since=2026-11-20 --until=2026-11-23 -- Sources, first suspect from reading only the full-height panel (the-panel-keeps-its-promise-on-a-video-document, landed 22 November). Earlier fix: picking-or-retyping-a-caption-answers-at-once (done). Moved here from walks-that-fail-in-the-full-sweep-28.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-11-25T15:12:02.646Z",
       "note": "seq 9.375 -> 40"
+    },
+    {
+      "t": "2026-11-26T16:35:32.041Z",
+      "note": "seq 40 -> 40"
     }
   ],
   "walks": [

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-12T17:47:53.036Z",
-  "updated": "2026-11-25T15:12:05.368Z",
+  "updated": "2026-11-26T16:35:34.740Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-12 on main (811a2e29a + the walk fix in the-library-tile-click-timing-walk-passes-again) with a debug walk: library-tile-click-latency-walk steps 1-9, then press Film Super, wait 1.0, snapshot, panel. The panel listing (panel-*.json) said: \"Film Super\" is 26pt below the bottom of the part of its own scrolling area that is on screen (same for Keynote Section). Inside timeTileClicks the gap was larger: the next press had to scroll 82pt to reach Keynote Section. Picture: queue/audits/2026-11-12-picked-title-tile-slides-under-panel-edge.png (crop: ...-crop.png): the Title Page section shows Film Super above the shelf and the two tiles sit cut off behind the Sections bar. Mechanism: InspectorPanel settleShelfPane() runs EditorState.shelfHoldSeconds + 0.02 after selectedLibraryItemID changes and animates the shelf pane to its unheld height (PanelShelfPane.drawnHeight), which is shorter now that the Title Page section is open, without keeping the picked tile in view. Possible fix: scroll the shelf so the picked tile stays visible when the pane settles (ScrollViewReader proxy is already in shelfPane).",
@@ -66,6 +66,10 @@
     {
       "t": "2026-11-25T15:12:05.367Z",
       "note": "seq 350 -> 390"
+    },
+    {
+      "t": "2026-11-26T16:35:34.739Z",
+      "note": "seq 390 -> 390"
     }
   ],
   "walks": [
