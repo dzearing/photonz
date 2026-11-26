@@ -76,44 +76,6 @@ struct PlayerFullScreenKeyTests {
     }
 }
 
-@Suite("The player's controls in full screen")
-struct PlayerFullScreenControlsTests {
-
-    private func hidden(fullScreen: Bool = true, watching: Bool = true, playing: Bool = true,
-                        still: Double = 5, overControls: Bool = false) -> Bool {
-        PlayerFullScreen.controlsTuckedAway(isFullScreen: fullScreen, watching: watching, playing: playing,
-                                            secondsPointerStill: still, pointerOverControls: overControls)
-    }
-
-    @Test("playing full screen with the pointer still, the controls tuck away")
-    func tuckAway() {
-        #expect(hidden())
-    }
-
-    @Test("they wait a moment before they go")
-    func waitAMoment() {
-        #expect(!hidden(still: 0))
-        #expect(!hidden(still: PlayerFullScreen.secondsBeforeControlsTuckAway - 0.1))
-        #expect(hidden(still: PlayerFullScreen.secondsBeforeControlsTuckAway))
-    }
-
-    @Test("paused, they stay up")
-    func pausedStays() {
-        #expect(!hidden(playing: false))
-    }
-
-    @Test("with the pointer on them, they stay up")
-    func pointerOnThem() {
-        #expect(!hidden(overControls: true))
-    }
-
-    @Test("out of full screen, or in the editor, nothing tucks away")
-    func onlyAPlayerInFullScreen() {
-        #expect(!hidden(fullScreen: false))
-        #expect(!hidden(watching: false))
-    }
-}
-
 @Suite("A walk checks full screen")
 struct PlayerFullScreenWalkClaimTests {
 
@@ -133,5 +95,18 @@ struct PlayerFullScreenWalkClaimTests {
         #expect(second.claimsSomething)
         #expect(PlaytestTimelineClaim().fullScreen == nil)
         #expect(PlaytestTimelineClaim().controlsTucked == nil)
+    }
+
+    @Test("expectTimeline claims the faded controls hide the pointer")
+    func pointerHidden() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "pointerHidden": true } ] }
+        """.utf8))
+        guard case .expectTimeline(let claim) = script.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(claim.pointerHidden == true)
+        #expect(claim.claimsSomething)
+        #expect(PlaytestTimelineClaim().pointerHidden == nil)
     }
 }

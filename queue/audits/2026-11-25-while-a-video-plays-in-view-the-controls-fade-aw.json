@@ -1,0 +1,56 @@
+{
+  "feature": "The player's controls fade away while you watch",
+  "epic": "video-editing",
+  "summary": "In View, the transport, the title, Ask, View | Edit and the window buttons now fade out about 2 seconds after play starts (about 5 seconds when paused) and the pointer hides over the picture, the way QuickTime does. Moving the mouse, a key, a click on the picture or Space brings them straight back.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any recording opened from the Finder or History opens in View. Measured with view-controls-fade-walk and a filmed walk of the 5:19 Long Talk recording; before pictures are the same recording state on the old build.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open any recording so it comes up in View, rest the pointer on the picture and press Space.",
+      "shot": "2026-11-25-view-controls-fade-1-player.png"
+    },
+    {
+      "do": "Keep the mouse still for 2 seconds: the transport, title bar and window buttons fade and the pointer hides.",
+      "shot": "2026-11-25-view-controls-fade-3-faded-playing.png"
+    },
+    {
+      "do": "Nudge the mouse: everything comes straight back, and goes again 2 seconds after you stop.",
+      "shot": "2026-11-25-view-controls-fade-4-back-on-a-move.png"
+    },
+    {
+      "do": "Press Space to pause: they come back at once, then fade after about 5 seconds of nothing.",
+      "shot": "2026-11-25-view-controls-fade-6-faded-paused.png"
+    },
+    {
+      "do": "Rest the pointer on the transport (or the title bar) and press Space: they stay up however long it rests.",
+      "shot": "2026-11-25-view-controls-fade-7-resting-on-the-transport.png"
+    },
+    {
+      "do": "Open the speed menu and leave it open: nothing fades while it is up."
+    },
+    {
+      "do": "Press Command-2 for Edit and play: nothing ever fades in the editor."
+    },
+    {
+      "do": "Compare with before: the reel and contact sheet show play, fade, Space and the paused fade.",
+      "shot": "2026-11-25-view-controls-fade-sheet.png"
+    }
+  ],
+  "evaluate": [
+    "Is 2 seconds playing and 5 seconds paused the right wait, or should playing be a touch longer like QuickTime's?",
+    "Should the title bar and window buttons fade with the transport in a window, or only the transport?",
+    "Does the controls coming back on a mouse move feel instant enough (0.15 s ease in)?",
+    "Is it right that moving the pointer elsewhere on the screen, outside the window, does not bring them back?"
+  ],
+  "rough": [
+    "No mock covers this: the video mocks draw the player with its controls up and say nothing about fading, so there is no mock frame to compare against.",
+    "Measured from the filmed walk (window below its title bar, 120 frames a second): playing, the fade starts 2.23 s after Space and is gone by 2.44 s; paused, Space brings them back in 0.14 s, the fade starts 5.13 s after the pause and is gone by 5.36 s. Times live in one place, PlayerControlsFade, to tune.",
+    "The pointer hiding is the Mac's own hide-until-the-mouse-moves, and only when Photonz is in front with the pointer over that window, so it was not seen in a walk (a walk never brings the probe to the front); the walk checks the app decided to hide it.",
+    "Held up by a menu, popover, guide or a drag on the play bar is built from what the app can see (a menu open, a panel on the window, a guide running, a hand on the playhead), but no walk opens the speed menu for real (that needs the Mac to itself), so that one is yours to try.",
+    "In a window, the transport's strip and the title bar's strip stay as empty dark bands when faded: they keep their room on purpose so the picture never refits or jumps. A player that lets the picture fill those bands would be a separate change.",
+    "Reduce Motion: the fade is opacity only with no movement, so it is the same with Reduce Motion on.",
+    "Found while filming: the Mac hangs a child window of its own on a window that is being shared or filmed (a call, a screen recording), and a first version read it as a popover and never faded. Fixed in this change: only popovers and panels hold the controls up.",
+    "Playback cost: the speed walk on the 6 minute reference edit read 1818 of 1818 frames, worst gap 50 ms, longest pass 7.1 ms, against the baseline's 1817 of 1818, 58 ms, 7.6 ms. That walk plays in the editor; in View the fade adds one 5-a-second look at the pointer and nothing per frame.",
+    "Reel: 2026-11-25-view-controls-fade-reel.mp4 (play then pause; it leaves out the title bar, which the walk pictures show)."
+  ]
+}

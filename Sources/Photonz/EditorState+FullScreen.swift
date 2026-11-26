@@ -4,9 +4,8 @@ import SwiftUI
 
 // Full screen (`PlayerFullScreen`): F in the player, Escape out of it, View ▸
 // Enter Full Screen on ⌃⌘F everywhere, a double click on the canvas, and the
-// transport's button all come here. While a video plays full screen with the
-// pointer still, the transport tucks away and the pointer hides, QuickTime's
-// way; a nudge of the mouse brings both back.
+// transport's button all come here. The transport fades away full screen the
+// same way it does in a window (`EditorState+PlayerControlsFade`).
 extension EditorState {
 
     /// In if out, out if in.
@@ -90,59 +89,16 @@ extension EditorState {
 
     private func noteFullScreen(_ full: Bool) {
         if isWindowFullScreen != full { isWindowFullScreen = full }
-        if full { watchPlayerControls() } else { stopWatchingPlayerControls() }
-    }
-
-    // MARK: The transport tucking away
-
-    /// How often the pointer is looked at while the window fills the screen:
-    /// often enough that the controls come back the moment it moves.
-    private static let pointerLookSeconds: TimeInterval = 0.2
-
-    private func watchPlayerControls() {
-        guard playerControlsWatch == nil else { return }
-        pointerLastSeen = NSEvent.mouseLocation
-        pointerStillSince = Date()
-        let timer = Timer(timeInterval: Self.pointerLookSeconds, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.lookAtThePointer() }
-        }
-        RunLoop.main.add(timer, forMode: .common)
-        playerControlsWatch = timer
-    }
-
-    private func stopWatchingPlayerControls() {
-        playerControlsWatch?.invalidate()
-        playerControlsWatch = nil
-        setPlayerControlsTuckedAway(false)
-    }
-
-    private func lookAtThePointer() {
-        let now = Date()
-        let pointer = NSEvent.mouseLocation
-        if pointer != pointerLastSeen {
-            pointerLastSeen = pointer
-            pointerStillSince = now
-        }
-        var overControls = false
-        if let window = hostWindow {
-            // The transport is the dock along the bottom of the window.
-            let inWindow = window.convertPoint(fromScreen: pointer)
-            overControls = window.frame.contains(pointer) && inWindow.y <= timelineDockFrame.height + 8
-        }
-        setPlayerControlsTuckedAway(PlayerFullScreen.controlsTuckedAway(
-            isFullScreen: isWindowFullScreen, watching: isWatching, playing: isDocumentPlaying,
-            secondsPointerStill: now.timeIntervalSince(pointerStillSince), pointerOverControls: overControls))
-    }
-
-    private func setPlayerControlsTuckedAway(_ tucked: Bool) {
-        guard arePlayerControlsTuckedAway != tucked else { return }
-        withAnimation(.easeInOut(duration: 0.3)) { arePlayerControlsTuckedAway = tucked }
-        if tucked { NSCursor.setHiddenUntilMouseMoves(true) }
+        // The window's own title bar is the Mac's in full screen; whatever
+        // the fade left it at is put back as the window changes over.
+        showPlayerTitleBar()
+        watchPlayerControls()
     }
 }
 
-/// The transport fading out of the way while a video plays full screen, and
-/// back the moment the pointer moves (`PlayerFullScreen`).
+/// The transport fading out of the way while a video is watched, and back the
+/// moment the pointer moves (`PlayerControlsFade`). Opacity and hit testing
+/// only: it keeps its room, so the picture never refits as it comes and goes.
 struct PlayerControlsTuck: ViewModifier {
     @Environment(EditorState.self) private var editorState
 

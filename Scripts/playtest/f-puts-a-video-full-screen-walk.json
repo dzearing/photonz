@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/f-puts-a-video-full-screen-walk",
-  "seed": "F puts the video you are watching full screen, at Next defaults with no flag changed. A five minute recording, opened the way a person opens one, comes up in View (the player); it plays, F fills the screen with the picture and the transport and nothing else, and it keeps playing from where it was, still a player, the Arrow still in hand. With the pointer still, the transport tucks away after a moment, as QuickTime's controls do. Escape brings the window back, still playing. F again goes in and F comes out, even pressed twice quickly while the window is still sliding. View > Enter Full Screen is on the menu bar with the Mac's Control Command F, which does the same, and in the editor F is still the Frame tool. The transport's Full Screen button goes in and out too. Reported on 2026-10-11: 'the video's fullscreen feature lists ctrl-cmd-f as the shortcut but that does not work. and it's a bad shortcut. i expected f to just fullscreen it but it puts it into edit mode'. It needs the Mac to itself: full screen takes over a space of its own.",
+  "seed": "F puts the video you are watching full screen, at Next defaults with no flag changed. A five minute recording, opened the way a person opens one, comes up in View (the player); it plays, F fills the screen with the picture and the transport and nothing else, and it keeps playing from where it was, still a player, the Arrow still in hand. With the pointer still, the transport tucks away after a moment, as QuickTime's controls do (paused, it waits about five seconds, view-controls-fade-walk). Escape brings the window back, still playing. F again goes in and F comes out, even pressed twice quickly while the window is still sliding. View > Enter Full Screen is on the menu bar with the Mac's Control Command F, which does the same, and in the editor F is still the Frame tool. The transport's Full Screen button goes in and out too. Reported on 2026-10-11: 'the video's fullscreen feature lists ctrl-cmd-f as the shortcut but that does not work. and it's a bad shortcut. i expected f to just fullscreen it but it puts it into edit mode'. It needs the Mac to itself: full screen takes over a space of its own.",
   "setup": {
     "front": true,
     "forget": ["all"]
@@ -37,7 +37,7 @@
     { "do": "key", "key": "f" },
     { "do": "wait", "seconds": 1.6, "onTheClock": true },
     { "do": "expectTimeline", "fullScreen": true, "rate": 0, "mode": "view" },
-    { "do": "wait", "seconds": 3.0, "onTheClock": true },
+    { "do": "wait", "seconds": 2.0, "onTheClock": true },
     { "do": "expectTimeline", "fullScreen": true, "controlsTucked": false },
     { "do": "menus", "stage": "view-menu-full", "menu": "View", "oneKeyEach": true },
     { "do": "key", "key": "f" },

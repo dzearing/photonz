@@ -23533,3 +23533,10 @@ announced 0.25.0.
 - Old and new core checked identical (sound plan, transitions, tracks, bars, frames, drawn documents) on the 6, 20 and 60 minute edits.
 - Timeline: zoom waves in thirds, a fast scroll's lanes shared out by clips, a scroll's lane pictures laid between frames. Main thread p95: zoom 6.4-8.4, near Fit 9.4-10.0, fast scroll 8.5-8.7 (bar 8.3).
 - Open on the task: scroll and near-Fit p95, the edits that still read 17-20 at worst, the rare system frame.
+
+## 2026-11-25 — View controls fade while you watch
+
+- In View the transport, title line, Ask, View | Edit and window buttons fade out 2 s after play (5 s paused), the pointer hides over the picture, and a mouse move, key, click on the picture or Space brings them back. Pointer on the controls, a menu, popover, guide or a drag on the play bar holds them up; Edit never fades. Same rule full screen (replaced `PlayerFullScreen.controlsTuckedAway`).
+- Rule: `Sources/PhotonzCore/PlayerControlsFade.swift` (tested). Watcher: `Sources/Photonz/EditorState+PlayerControlsFade.swift`. Walk: `Scripts/playtest/view-controls-fade-walk.json` (new `pointerHidden` claim).
+- Gotcha: macOS hangs an `NSLocalWindowSharingWindow` child on a window being filmed or shared; only panels/popovers count as holding the controls up.
+- Next: user to judge the waits and whether the title bar should fade in a window.

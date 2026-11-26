@@ -464,6 +464,9 @@ struct EditorView: View {
             }
             .ignoresSafeArea(.container, edges: .top)
             .allowsHitTesting(false)
+            // It fades with the window's buttons while a video is watched
+            // (`PlayerControlsFade`).
+            .modifier(PlayerControlsTuck())
         }
         // Edit Original's space: the component's name and Done, in the same
         // strip. Its own overlay because Done takes a click and the line above

@@ -3896,17 +3896,30 @@ final class EditorState {
     /// notices (`EditorState+FullScreen`), so the View menu's row and the
     /// player's controls follow it however full screen was reached.
     var isWindowFullScreen = false
-    /// The transport tucked away, and the pointer hidden, while a video plays
-    /// full screen with the pointer still (`PlayerFullScreen`).
+    /// The player's controls faded away, and the pointer hidden over the
+    /// picture, while a video is watched with nothing happening
+    /// (`PlayerControlsFade`).
     var arePlayerControlsTuckedAway = false
     @ObservationIgnored var fullScreenNotices: [NSObjectProtocol] = []
     /// Where the window is sliding to, full screen or back, while it slides.
     @ObservationIgnored var fullScreenSlideTarget: Bool?
     /// Where a press made during the slide wants it to end up.
     @ObservationIgnored var fullScreenAskedDuringSlide: Bool?
+    /// The one look at the pointer a player window takes, five times a
+    /// second (`EditorState+PlayerControlsFade`).
     @ObservationIgnored var playerControlsWatch: Timer?
-    @ObservationIgnored var pointerLastSeen = CGPoint(x: -1, y: -1)
-    @ObservationIgnored var pointerStillSince = Date()
+    /// Where that look last found the pointer over the window, in the
+    /// window's own coordinates, or nil when it was somewhere else.
+    @ObservationIgnored var playerPointerLastSeen: CGPoint?
+    /// When a person last did something to the player (`CACurrentMediaTime`).
+    @ObservationIgnored var playerIdleSince: CFTimeInterval = 0
+    /// Whether it was playing at the last look, so play starting or stopping
+    /// counts as something done.
+    @ObservationIgnored var playerWasPlaying = false
+    /// The faded controls are hiding the pointer too: it rests on the picture.
+    @ObservationIgnored var playerHidesPointer = false
+    /// What held the controls up at the last look, if anything.
+    @ObservationIgnored var playerControlsHeldBy: String?
 
     /// Every editor a window has been seeded with, held weakly, so opening a
     /// file can find the window already holding it (`windowHolding`).

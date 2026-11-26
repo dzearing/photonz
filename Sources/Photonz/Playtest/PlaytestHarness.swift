@@ -1142,6 +1142,14 @@ private final class Run {
     // MARK: - Steps
 
     private func perform(_ step: PlaytestStep, number: Int) async throws {
+        // A hand that reaches for the window moves the pointer first, and a
+        // move brings a player's faded controls back (`PlayerControlsFade`).
+        switch step {
+        case .click, .move, .drag, .rightClick, .press, .hover, .windowClick, .windowClickOn,
+             .windowClickStill, .windowDrag, .clickRuler, .dragRuler, .dragGrip:
+            if let editor, editor.isWatching { editor.notePlayerActivity() }
+        default: break
+        }
         switch step {
         case .blank(let canvas, let size, let card, let pixelScale):
             try await blank(canvas: canvas, window: size, card: card, pixelScale: pixelScale,
@@ -18590,7 +18598,9 @@ private final class Run {
                 ? ", sound playing" + String(format: " stretched to %.2fx", editor.audioPlayer.speed)
                 : ", no sound playing")
             + (editor.isWindowFullScreen ? ", full screen" : "")
-            + (editor.arePlayerControlsTuckedAway ? ", transport tucked away" : "")
+            + (editor.arePlayerControlsTuckedAway ? ", controls faded" : "")
+            + (editor.playerHidesPointer ? ", pointer hidden" : "")
+            + (editor.playerControlsHeldBy.map { ", controls held up by \($0)" } ?? "")
         var wrong: [String] = []
         if let want = claim.volumePercent, want != editor.playerVolume.percent {
             wrong.append("the volume slider reads \(editor.playerVolume.percent)%, not \(want)%")
@@ -18647,7 +18657,10 @@ private final class Run {
             wrong.append(editor.audioPlayer.isPlaying ? "the sound is playing" : "no sound is playing")
         }
         if let want = claim.controlsTucked, want != editor.arePlayerControlsTuckedAway {
-            wrong.append(editor.arePlayerControlsTuckedAway ? "the transport is tucked away" : "the transport is showing")
+            wrong.append(editor.arePlayerControlsTuckedAway ? "the controls have faded away" : "the controls are showing")
+        }
+        if let want = claim.pointerHidden, want != editor.playerHidesPointer {
+            wrong.append(editor.playerHidesPointer ? "the pointer is hidden" : "the pointer is showing")
         }
         if let want = claim.arrived, want != (editor.editArrival == .settled) {
             wrong.append(editor.editArrival == .settled ? "Edit's tool bar and tracks have all arrived"

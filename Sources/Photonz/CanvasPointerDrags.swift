@@ -48,6 +48,8 @@ extension CanvasNSView {
         // and a double click goes full screen, as it does in QuickTime.
         if isWatching {
             window?.makeFirstResponder(self)
+            // ...and brings its faded controls back.
+            onCanvasPressed()
             if event.clickCount == 2 { window?.toggleFullScreen(nil) }
             return
         }

@@ -6875,6 +6875,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 markerAtMS: try f.optionalNumber("markerAtMS").map { Int($0) },
                 fullScreen: fields["fullScreen"] as? Bool,
                 controlsTucked: fields["controlsTucked"] as? Bool,
+                pointerHidden: fields["pointerHidden"] as? Bool,
                 speed: try f.optionalString("speed"),
                 sound: fields["sound"] as? Bool)
             if let height = claim.dockHeight, height <= 0 {
@@ -6895,7 +6896,7 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
                     + "\"open\", \"mode\", \"tool\", \"timelineTool\", \"tracks\", "
                     + "\"volumePercent\", \"muted\", \"outputGain\", \"zoomScale\", \"rowScale\", \"dockHeight\", \"trackColumn\", \"arrived\", "
-                    + "\"fullScreen\", \"controlsTucked\", \"speed\" or \"sound\"")
+                    + "\"fullScreen\", \"controlsTucked\", \"pointerHidden\", \"speed\" or \"sound\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -7597,9 +7598,11 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var arrived: Bool?
     /// The window fills the screen (`PlayerFullScreen`).
     public var fullScreen: Bool?
-    /// The player's transport is tucked away, as it is while a video plays
-    /// full screen with the pointer still (`PlayerFullScreen`).
+    /// The player's controls have faded away, as they do while a video is
+    /// watched with nothing happening (`PlayerControlsFade`).
     public var controlsTucked: Bool?
+    /// The faded controls hide the pointer too: it rests on the picture.
+    public var pointerHidden: Bool?
     /// What the transport's speed control reads: "1x", "0.5x", a shuttle's
     /// "4x" while it runs (`PlaybackSpeed`).
     public var speed: String?
@@ -7617,7 +7620,8 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
                 outputGain: Double? = nil, zoomScale: Double? = nil, rowScale: Double? = nil,
                 dockHeight: Double? = nil, arrived: Bool? = nil, trackColumn: Double? = nil,
                 markerAtMS: Int? = nil, fullScreen: Bool? = nil, controlsTucked: Bool? = nil,
-                speed: String? = nil, sound: Bool? = nil) {
+                pointerHidden: Bool? = nil, speed: String? = nil, sound: Bool? = nil) {
+        self.pointerHidden = pointerHidden
         self.speed = speed
         self.sound = sound
         self.fullScreen = fullScreen
@@ -7658,7 +7662,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil || tracks != nil
             || volumePercent != nil || muted != nil || outputGain != nil
             || zoomScale != nil || rowScale != nil || dockHeight != nil || arrived != nil
-            || trackColumn != nil || fullScreen != nil || controlsTucked != nil
+            || trackColumn != nil || fullScreen != nil || controlsTucked != nil || pointerHidden != nil
             || speed != nil || sound != nil
     }
 }

@@ -10,9 +10,8 @@ import Foundation
 /// Lens (the user, 2026-10-11, asked for F in the player; the editor's F is a
 /// question of its own).
 ///
-/// While a video plays full screen with the pointer still, the transport
-/// tucks away and the pointer hides, and a nudge of the mouse brings both
-/// back, as QuickTime's controls do. The menu bar is the Mac's own business in
+/// The transport fades away in full screen as it does in a window
+/// (`PlayerControlsFade`). The menu bar is the Mac's own business in
 /// full screen: it stays away until the pointer reaches the top.
 public enum PlayerFullScreen {
 
@@ -51,18 +50,5 @@ public enum PlayerFullScreen {
     /// The View menu's row: what picking it will do, the Mac's own words.
     public static func menuTitle(isFullScreen: Bool) -> String {
         isFullScreen ? "Exit Full Screen" : "Enter Full Screen"
-    }
-
-    /// How long the pointer stays still, while a video plays full screen,
-    /// before the transport tucks away. QuickTime's is about this.
-    public static let secondsBeforeControlsTuckAway: Double = 2.5
-
-    /// Whether the transport is tucked away (and the pointer hidden) right
-    /// now. Only for a player that fills the screen and is playing, with the
-    /// pointer still a moment and not resting on the controls themselves.
-    public static func controlsTuckedAway(isFullScreen: Bool, watching: Bool, playing: Bool,
-                                          secondsPointerStill: Double, pointerOverControls: Bool) -> Bool {
-        isFullScreen && watching && playing && !pointerOverControls
-            && secondsPointerStill >= secondsBeforeControlsTuckAway
     }
 }

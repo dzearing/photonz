@@ -38,6 +38,8 @@ extension EditorState {
     /// is what keeps the toolbar and the menu bar from acting on it too.
     func timelineKeyDown(_ press: TimelineKeyPress) -> Bool {
         guard documentHasTime else { return false }
+        // Any key brings a player's faded controls back (`PlayerControlsFade`).
+        if isWatching { notePlayerActivity() }
         // F fills the screen with the player, and F or Escape bring it back
         // (`PlayerFullScreen`), before a letter can pick a tool below.
         if fullScreenKeyDown(press) { return true }

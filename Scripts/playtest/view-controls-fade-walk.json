@@ -1,0 +1,70 @@
+{
+  "out": "/tmp/photonz-playtest/view-controls-fade-walk",
+  "seed": "While a video is watched in View, at Next defaults with no flag changed, the controls get out of the way the way QuickTime's do. A five minute recording plays with the pointer resting on the picture: about two seconds later the transport and the title bar with its buttons fade out and the pointer hides. A move of the mouse brings them straight back. Paused, they stay about five seconds and then fade too. Space to pause brings them back at once; the pointer resting on the transport keeps them up however long it rests; a key (the right arrow) brings them back; and the editor never fades anything. Asked for on 2026-11-25: 'when in playback mode, and we start a video, i'd like the controls to fade out and only show up on mouse move or spacebar to pause', 'when we're paused, they can also fade out after some time (5s?)' and 'if themouse is over the controls they stay visible'.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openLongTalk" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectTimeline", "mode": "view", "open": false, "rate": 0, "controlsTucked": false },
+    { "do": "move", "at": [520, 300], "space": "window" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "1-player", "note": "the player as it opens, paused, the pointer on the picture: transport, title and window buttons all up" },
+    { "do": "snapshot", "name": "1-player" },
+
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "rate": 1, "mode": "view", "controlsTucked": false, "pointerHidden": false },
+    { "do": "snapshot", "name": "2-playing-just-started" },
+    { "do": "wait", "seconds": 2.3, "onTheClock": true },
+    { "do": "expectTimeline", "rate": 1, "controlsTucked": true, "pointerHidden": true },
+    { "do": "describe", "stage": "3-faded-playing", "note": "THE TEST: about two seconds into play with the pointer still, the transport, the title and the window buttons have faded and the pointer hides; the picture keeps its place" },
+    { "do": "snapshot", "name": "3-faded-playing" },
+
+    { "do": "move", "at": [560, 320], "space": "window" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "rate": 1, "controlsTucked": false, "pointerHidden": false },
+    { "do": "describe", "stage": "4-back-on-a-move", "note": "a move of the mouse over the picture brought them straight back, still playing" },
+    { "do": "snapshot", "name": "4-back-on-a-move" },
+    { "do": "wait", "seconds": 2.6, "onTheClock": true },
+    { "do": "expectTimeline", "rate": 1, "controlsTucked": true },
+
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "rate": 0, "controlsTucked": false },
+    { "do": "describe", "stage": "5-space-pauses", "note": "Space paused it and the controls came back at once" },
+    { "do": "snapshot", "name": "5-space-pauses" },
+    { "do": "wait", "seconds": 3.5, "onTheClock": true },
+    { "do": "expectTimeline", "rate": 0, "controlsTucked": false },
+    { "do": "wait", "seconds": 2.2, "onTheClock": true },
+    { "do": "expectTimeline", "rate": 0, "controlsTucked": true, "pointerHidden": true },
+    { "do": "describe", "stage": "6-faded-paused", "note": "paused and left alone about five seconds, they faded too" },
+    { "do": "snapshot", "name": "6-faded-paused" },
+
+    { "do": "key", "key": "right" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "controlsTucked": false },
+
+    { "do": "move", "control": "Play" },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 4.0, "onTheClock": true },
+    { "do": "expectTimeline", "rate": 1, "controlsTucked": false, "pointerHidden": false },
+    { "do": "describe", "stage": "7-resting-on-the-transport", "note": "playing with the pointer resting on the transport: they stay up however long it rests" },
+    { "do": "snapshot", "name": "7-resting-on-the-transport" },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 6.0, "onTheClock": true },
+    { "do": "expectTimeline", "rate": 0, "controlsTucked": false },
+
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "move", "at": [520, 300], "space": "window" },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 3.0, "onTheClock": true },
+    { "do": "expectTimeline", "mode": "edit", "rate": 1, "controlsTucked": false },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 5.5, "onTheClock": true },
+    { "do": "expectTimeline", "mode": "edit", "rate": 0, "controlsTucked": false },
+    { "do": "describe", "stage": "8-edit-never-fades", "note": "in the editor nothing fades, playing or paused" }
+  ]
+}

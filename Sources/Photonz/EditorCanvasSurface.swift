@@ -161,7 +161,10 @@ struct EditorCanvasSurface: View {
                    canPlayMotion: editorState.canPlayMotion,
                    onDocumentPlayToggle: { editorState.toggleDocumentPlayback() },
                    onDocumentStepFrames: { editorState.stepDocument(byFrames: $0) },
-                   onCanvasPressed: { editorState.releaseTimelineKeyboard() },
+                   onCanvasPressed: {
+                       if editorState.isWatching { editorState.notePlayerActivity() }
+                       editorState.releaseTimelineKeyboard()
+                   },
                    documentHasTime: editorState.documentHasTime,
                    // Read when the canvas needs it, never watched: a playing
                    // clock does not build the canvas again (`CanvasView`).
