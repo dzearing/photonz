@@ -19286,3 +19286,4 @@
 {"t":"2026-11-26T05:37:09.440Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
 {"t":"2026-11-26T05:37:09.515Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
 {"t":"2026-11-26T05:37:09.588Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 1 (2f7341a40): one commit a refresh while scrubbing, the walk's window look held during a timed drag. Medium lag worst 5 -> 3, hunt 3 -> 2, hunt frame/sight 3 -> 2 (item 2 met). Lag worst 1 not reached; composite p95 7-8 ms is the next lead."}
+{"t":"2026-11-26T05:37:40.032Z","ev":"task_created","id":"the-app-crashed-in-passsampler-othersnow","priority":"p1-high","title":"The app crashed in PassSampler.othersNow"}

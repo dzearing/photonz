@@ -1,0 +1,27 @@
+{
+  "id": "the-app-crashed-in-passsampler-othersnow",
+  "title": "The app crashed in PassSampler.othersNow",
+  "goal": "Crash watch caught a crash in the loop's probe app at 2026-11-25 20:25:19.00 -0800: EXC_BREAKPOINT (SIGTRAP) in PassSampler.othersNow() < PassSampler.run(). Read the report, reproduce it, fix the cause, and add a test that would have caught it.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 4080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T05:37:40.028Z",
+  "updated": "2026-11-26T05:37:40.031Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-11-25-202519.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nPassSampler.othersNow() (PassSampler.swift:144)\nPassSampler.run() (PassSampler.swift:66)",
+  "acceptance": [
+    "Reproduced (or the exact conditions shown from the report) before the fix",
+    "The cause fixed in Photonz code, with a test or walk that fails before and passes after",
+    "crash-watch shows no new report with this signature for a week of walks"
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T05:37:40.030Z",
+      "note": "created (crash-watch)"
+    }
+  ]
+}
