@@ -1,0 +1,28 @@
+{
+  "id": "the-library-and-title-restyle-stop-offering-back",
+  "title": "The Library and title restyle stop offering backgrounds that read as stock clip art",
+  "goal": "Three of the moving title backgrounds a person can pick (Energy Streams, Grid Horizon and Color Bubbles) look like stock screensaver art at the strength the Library and the Background picker give them: neon wavy lines, a synthwave sun over a neon grid, and flat purple discs. The user called the closest of them, Wind Streams, amateur and took it out; these need the same look before somebody else picks them.",
+  "epic": "video-sizzle",
+  "priority": "p2-normal",
+  "seq": 4100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T23:20:14.593Z",
+  "updated": "2026-11-26T23:20:14.596Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while taking Wind Streams out (task no-title-has-the-wavy-line-background-wind-strea, 2026-11-26). Contact sheet of every remaining look at 1.0, 2.5 and 4.0 s in its Library tile colours (VideoCatalog.backgroundPaint): queue/audits/2026-11-26-wind-streams-other-looks-sheet.png; the Background picker as drawn: queue/audits/2026-11-26-wind-streams-picker-nine-looks-sc.png. Rows: aurora, energy streams, color bubbles, light rays, light leaks, sketch, particles, liquid gradient, grid horizon. Made by a throwaway render test calling DocumentRenderer on LiveBackdropRenderTests.document(VideoCatalog.backgroundPaint(look)). Judgement against the user words amateur, bland wood grain, clip art: Energy Streams is the same family as Wind Streams (glowing wavy lines); Grid Horizon is the synthwave sun the 2026-11-21 redesign already took off Command Line; Color Bubbles is flat discs (type rule 7: ornament is never a blob). Aurora, Light Leaks, Particles and Sketch read as light. Retiring a look: LiveLook.retiredLooks + TitleBackgroundKind decoding + Paint decoding, as Wind Streams did. Not reproduced as a user complaint, so p2.",
+  "acceptance": [
+    "Each of Energy Streams, Grid Horizon and Color Bubbles is either taken out the way Wind Streams was (old documents still open on their plain ground, a test proves it) or redrawn so it reads as light and not pattern at the strength the Library tile and the Background picker give it (docs/design/video-titles-polish.md, colour rule 7), decided per look and logged.",
+    "Liquid Gradient and Light Rays are looked at at their Library tile strength and either quietened or left with a logged reason.",
+    "Built-in titles that use any of them faintly (Roman and Italic on Energy Streams, Split Wipe on Light Rays, Pill Card on Color Bubbles, the horizontal bar chart on Grid Horizon) still look as refined as they do today, before and after pictures in the audit.",
+    "A reel of every look that remains, at its Library strength, goes through queue/bin/reel-add.mjs."
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T23:20:14.595Z",
+      "note": "created (manual)"
+    }
+  ]
+}

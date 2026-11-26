@@ -5,11 +5,11 @@
   "epic": "video-sizzle",
   "priority": "p1-high",
   "seq": 10.5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T19:10:44.954Z",
-  "updated": "2026-11-26T19:30:09.041Z",
+  "updated": "2026-11-26T23:29:21.932Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26, with a screenshot of the old Kinetic Bold mid swing transition in their 0.23.0 app: \"this screen, the background is so freaking amateur. we need to just remove this. it's like some kind of bland wood grain\". Their app was 0.23.0, but the 2026-11-21 redesign kept the same backdrop: Sources/PhotonzCore/TitleSet.swift:344 Condensed Poster `live(.windStreams, ground: \"#0F0E0D\", ...)` ('ember wind barely in it'). Backdrop: Sources/PhotonzCore/LiveBackdrop.swift (case windStreams, name 'Wind Streams', 'Line Weight' parameter), drawn in Sources/PhotonzRender/LiveBackdrops.swift:482, offered as a restyle at Sources/PhotonzCore/TitleRestyle.swift:246/255/272/765. Keep the enum case decodable for old documents (map it to the plain ground) rather than deleting it outright. Do not redesign the rest of Condensed Poster here; its headline running off the frame is a-main-title-headline-keeps-its-second-line-afte.",
@@ -32,6 +32,41 @@
     {
       "t": "2026-11-26T19:30:09.040Z",
       "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
+    },
+    {
+      "t": "2026-11-26T22:47:44.034Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-26T23:28:48.010Z",
+      "note": "owns these walks: title-set-kinetic-bold-walk, live-title-backgrounds-walk, video-library-catalog-walk"
+    },
+    {
+      "t": "2026-11-26T23:28:48.087Z",
+      "note": "Reproduced on main c3374bd6b at Next defaults: title-set-kinetic-bold-walk's export at 2.5s shows wavy ember lines on warm black behind Condensed Poster (queue/audits/2026-11-26-wind-streams-before-frame.png). Every user of Wind Streams: Condensed Poster's page (TitleSet.kinetic) was the only built-in title or name card; it was also offered in the title Background picker (TitleBackgroundKind.offered) and as a Library Catalog background tile (LiveLook.allCases), no chart used it."
+    },
+    {
+      "t": "2026-11-26T23:28:48.168Z",
+      "note": "Adversarial pass: a person who restyled a title to Wind Streams loses the lines; chose to open those on Solid in the ground the lines moved over (the notes' ask) over mapping to another moving look, because any other look would be a different picture they never picked. Chose a still radial warm black (#171513 behind the words falling to #0B0A09 at the corners) over a flat fill for Condensed Poster because the title rules ask for a ground with a temperature and the task allows a barely visible falloff; dropped the subtitle's shade, which only exists for moving looks (restyle puts it back if a look is picked)."
+    },
+    {
+      "t": "2026-11-26T23:28:48.246Z",
+      "note": "Shipped: LiveLook.windStreams and its Metal kernel removed; LiveLook.retiredLooks lets Paint decode a saved Wind Streams paint as a solid at its first stop and TitleBackgroundKind decode windStreams as .solid. Condensed Poster now hasMovingBackdrop false. Tests: new WindStreamsRetiredTests (not offered, no preset draws it, Condensed Poster's still warm ground, old documents open/restyle/re-save clean, old paint and kind decode); LiveBackdropTests, TitleSetTests, TitleCalmSetTests updated from ten looks to nine. Walks: live-title-backgrounds-walk now expects no Wind Streams tile; notes in it and video-library-catalog-walk say nine. All three walks green; Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-26T23:28:48.323Z",
+      "note": "Pictures looked at: before-frame (lines visible across the frame), after-frame and after-holding-sc (no lines, still warm black, ivory and vermilion legible), a contrast-stretched after-frame (soft falloff, one-level 8-bit steps only visible at 8x stretch), picker-nine-looks-sc (nine looks, no Wind Streams), library catalog (Backgrounds 9). Reels registered: before and after on the Reels page. Other looks judged on queue/audits/2026-11-26-wind-streams-other-looks-sheet.png: Energy Streams, Grid Horizon, Color Bubbles read as stock clip art at tile strength; filed as the-library-and-title-restyle-stop-offering-back (p2: my judgement, not a user report). Rough items: the 8-bit steps and old documents getting plain solid stay in this log and the audit (below the bar); headline running off frame is a-main-title-headline-keeps-its-second-line-afte."
+    },
+    {
+      "t": "2026-11-26T23:29:21.930Z",
+      "note": "Wind Streams removed from the model, renderer, title Background picker and Library (nine looks now); Condensed Poster stands on a still warm black radial ground. Saved documents with Wind Streams open on Solid in their ground (WindStreamsRetiredTests). Verified: Scripts/test.sh green, title-set-kinetic-bold-walk, live-title-backgrounds-walk and video-library-catalog-walk green at Next defaults with real captures; before and after reels on the Reels page; audit queue/audits/2026-11-26-no-title-has-the-wavy-line-background-wind-strea.json. Other looks judged on a sheet; Energy Streams, Grid Horizon and Color Bubbles filed as the-library-and-title-restyle-stop-offering-back. Commit 91a68095c."
     }
-  ]
+  ],
+  "started": "2026-11-26T22:47:44.033Z",
+  "walks": [
+    "title-set-kinetic-bold-walk",
+    "live-title-backgrounds-walk",
+    "video-library-catalog-walk"
+  ],
+  "completed": "2026-11-26T23:29:21.931Z"
 }
