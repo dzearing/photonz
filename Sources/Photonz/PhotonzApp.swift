@@ -128,6 +128,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             RecordingColourDiag.runIfRequested()
             ShortcutDiag.runIfRequested()
             UpdateCheckerDiag.runIfRequested()
+            WindowPeekDiag.runIfRequested()
             if let coordinator = AppDelegate.coordinator {
                 PlaytestHarness.startIfRequested(coordinator: coordinator)
             }

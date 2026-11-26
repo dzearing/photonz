@@ -26,6 +26,24 @@ malformed script fails with a readable error before anything runs.
   After touching anything under `Sources/Photonz/Playtest/`, build the probe
   (`Scripts/probe-app.sh`, which is safe to run as often as you like) before
   believing it builds.
+- **The probe asks for a permission at most once in its life.** On macOS 26 a
+  Screen Recording request from an app without the grant (`CGRequestScreenCaptureAccess`
+  OR any ScreenCaptureKit call) puts up "would like to record this computer's
+  screen and audio" every time, Deny records nothing, and each dialog waits in a
+  queue behind the one on screen after the app has quit. Asking once per launch
+  therefore left the person a stack of them on 2026-11-26 (they denied twelve in
+  a row, each next one up 30 ms later). Every request now goes through
+  `PermissionGate` over `PermissionAskPolicy` (core, tested): never when granted,
+  once per launch in a person's app, once EVER in the probe, remembered in
+  `dist/probe-permission-asks.json`; every capture checks the grant before it
+  touches ScreenCaptureKit (`ScreenCapturer.requireGrant`), and the probe never
+  opens a Settings pane. Without the grant, snapshots fall back to offscreen
+  renders (an excused miss), film steps fail naming the grant, and menu pictures
+  say they were not taken. `queue/bin/permission-drill.sh` launches the probe ten
+  times read as ungranted and must count one ask; it runs at the end of
+  `queue/bin/focus-drill.sh`. To read a system dialog nobody can see, the probe
+  photographs another process's windows with `--window-peek <owner>`
+  (`WindowPeekDiag`).
 - The probe is launched with `--playtest <script.json>` (via `open --args`).
   Nothing is read from a fixed location, so a stale request can never fire.
 - The probe never becomes the active app, and macOS would not let it if we

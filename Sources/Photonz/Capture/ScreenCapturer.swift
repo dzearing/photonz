@@ -23,28 +23,46 @@ enum ScreenCapturer {
     static var playtestPretendedPermission: Bool?
     #endif
 
-    /// Triggers the system permission prompt (no-op if already decided).
-    /// Returns whether access is currently granted.
-    @discardableResult
-    static func requestPermission() -> Bool { CGRequestScreenCaptureAccess() }
+    /// The Screen Recording grant is missing, so nothing was captured. Every
+    /// capture throws this rather than touching ScreenCaptureKit without the
+    /// grant: on macOS 15 and later any such call queues the system's request
+    /// dialog, so a capture would ask behind `PermissionGate`'s back.
+    struct NotGranted: Error {}
+
+    /// Throws `NotGranted` unless the real grant is there. Reads macOS, never asks.
+    static func requireGrant() throws {
+        guard PermissionGate.isGranted(.screenRecording) else { throw NotGranted() }
+    }
 
     /// Gets Photonz listed under System Settings → Privacy & Security → Screen &
-    /// System Audio Recording and surfaces the prompt. `CGRequestScreenCaptureAccess`
-    /// alone covers the legacy path; modern macOS only lists a ScreenCaptureKit
-    /// client once it actually issues an SCK query, so we do both. The SCK call
-    /// throws when undetermined/denied — that's expected; the side effect
-    /// (registration + prompt) is the point.
+    /// System Audio Recording and surfaces the request, when `PermissionGate`
+    /// says it may (never when granted; once per launch for a person; once
+    /// ever for the loop's probe).
+    ///
+    /// One ScreenCaptureKit query does both: it is what lists a client in that
+    /// pane, and without the grant it puts up the request. It used to be preceded
+    /// by `CGRequestScreenCaptureAccess`, which on macOS 26 queues a SECOND
+    /// identical dialog behind the first (seen 2026-11-26), so a person had two
+    /// Denies to give for one question. The query throws until access is
+    /// granted; that is expected, the side effect is the point.
     static func primePermissionRegistration() async {
-        _ = CGRequestScreenCaptureAccess()
-        // Issuing an SCK query is what registers a ScreenCaptureKit client in
-        // System Settings → Screen & System Audio Recording. It throws until
-        // access is granted — expected; the registration is the point.
+        guard PermissionGate.mayAsk(.screenRecording) else { return }
         _ = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+    }
+
+    /// `primePermissionRegistration` without waiting for it: starts the
+    /// request when `PermissionGate` allows it and says whether it did.
+    @discardableResult
+    static func askOnce() -> Bool {
+        guard PermissionGate.mayAsk(.screenRecording) else { return false }
+        Task { _ = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true) }
+        return true
     }
 
     /// Opens the Screen Recording pane in System Settings so the user can grant
     /// access (and see Photonz listed) without hunting through the panes.
     static func openScreenRecordingSettings() {
+        guard PermissionGate.mayOpenSettings else { return }
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
             NSWorkspace.shared.open(url)
         }
@@ -62,6 +80,7 @@ enum ScreenCapturer {
     /// system exactly), so frozen modals/windows looked pasted-on. The WYSIWYG
     /// call includes shadows, omits the cursor, and returns native backing scale.
     static func capture(screen: NSScreen, sourceRect: CGRect? = nil) async throws -> CGImage {
+        try requireGrant()
         let local = sourceRect ?? CGRect(origin: .zero, size: screen.frame.size)
         return try await SCScreenshotManager.captureImage(in: cgGlobalRect(for: local, on: screen))
     }
@@ -80,6 +99,7 @@ enum ScreenCapturer {
     /// over the live screen rather than freezing a picture with its own dim
     /// baked in, which is why this throws instead of degrading to `capture(screen:)`.
     static func capture(screen: NSScreen, excludingWindowNumbers excluded: Set<Int>) async throws -> CGImage {
+        try requireGrant()
         guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
         else { throw CocoaError(.fileNoSuchFile) }
 
@@ -137,6 +157,7 @@ enum ScreenCapturer {
     /// window is no longer on screen or the capture fails; the caller falls
     /// back to the frozen crop.
     static func captureWindow(id: Int, includeShadow: Bool) async throws -> CGImage {
+        try requireGrant()
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
         guard let window = content.windows.first(where: { Int($0.windowID) == id }) else {
             throw CocoaError(.fileNoSuchFile)

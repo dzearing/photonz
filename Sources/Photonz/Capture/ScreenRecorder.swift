@@ -23,7 +23,13 @@ import ScreenCaptureKit
 /// this class is the thin SCK/AVFoundation shell.
 @MainActor
 final class ScreenRecorder: NSObject {
-    enum RecorderError: Error { case displayNotFound, alreadyRecording, notRecording }
+    enum RecorderError: Error {
+        case displayNotFound, alreadyRecording, notRecording
+        /// No Screen Recording grant. Nothing here asks for it: a stream
+        /// started without it would queue macOS's request dialog behind
+        /// `PermissionGate`'s back.
+        case notGranted
+    }
 
     private var stream: SCStream?
     private var recordingOutput: SCRecordingOutput?
@@ -179,7 +185,8 @@ final class ScreenRecorder: NSObject {
         defer { trace("warmUp done (warm \(warm != nil), started \(warm?.started ?? false))") }
         guard !isRecording, !isStarting else { return }
         await coolDown()
-        guard !isRecording, !isStarting, let id = Self.displayID(of: screen) else { return }
+        guard !isRecording, !isStarting, let id = Self.displayID(of: screen),
+              PermissionGate.isGranted(.screenRecording) else { return }
         findingDisplay = true
         // Every window, not only those on screen: the stop control is up but
         // not yet visible while the card is.
@@ -422,6 +429,7 @@ final class ScreenRecorder: NSObject {
             display = reusable.display
             filter = reusable.filter
         } else {
+            guard PermissionGate.isGranted(.screenRecording) else { throw RecorderError.notGranted }
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
             lastStart.contentReady = PointerTracker.hostNow()
             guard let screenNumber,

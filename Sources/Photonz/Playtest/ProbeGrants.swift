@@ -27,24 +27,36 @@ enum ProbeGrants {
             .appendingPathComponent("probe-grants.json")
     }
 
-    /// Records the grant, and asks for it at most once per launch when it is
-    /// still undetermined.
+    /// Records the grant, and asks for it at most ONCE EVER when it is missing.
     ///
     /// The preflight never prompts, so the file lands immediately and the shell
-    /// is never left waiting. Only when the answer is no does the probe issue
-    /// the real request, and it does that off the launch path: a
-    /// ScreenCaptureKit query is what gets the probe listed in System Settings
-    /// at all, and `CGRequestScreenCaptureAccess` raises the dialog only while
-    /// the grant is undetermined. Once a person has answered, granted or
-    /// denied, both return the standing answer in silence, so relaunching the
-    /// probe all day can never turn into a prompt loop (the rule CaptureCenter
-    /// already follows, learned the hard way on 2026-07-07).
+    /// is never left waiting. When the answer is no, the request goes through
+    /// `PermissionGate`, which lets this probe ask exactly once in its life
+    /// (remembered in `probe-permission-asks.json` beside the bundle) and never
+    /// again, whatever the answer was. It used to ask once per LAUNCH, on the
+    /// belief that macOS asks only while the grant is undetermined; on macOS 26
+    /// it asks every time, Deny records nothing, and each dialog waits behind
+    /// the one on screen after the probe has quit. The loop launches the probe
+    /// for every walk, so on 2026-11-26 the person came back to a stack of
+    /// "Photonz Probe would like to record this computer's screen and audio"
+    /// and denied a dozen in a row while each next one came straight up.
     static func recordOnLaunch() {
+        #if PHOTONZ_PLAYTEST
+        if PermissionGate.drill != nil {
+            // The drill: the same launch path, read as never granted, with no
+            // file written over the real one and no request reaching macOS.
+            if !PermissionGate.isGranted(.screenRecording) { ScreenCapturer.askOnce() }
+            Task {
+                try? await Task.sleep(for: .milliseconds(300))
+                NSApp.terminate(nil)
+            }
+            return
+        }
+        #endif
         guard let fileURL else { return }
-        let granted = CGPreflightScreenCaptureAccess()
-        write(granted: granted, prompted: !granted, to: fileURL)
-        guard !granted else { return }
-        Task { await ScreenCapturer.primePermissionRegistration() }
+        let granted = PermissionGate.isGranted(.screenRecording)
+        let asked = !granted && ScreenCapturer.askOnce()
+        write(granted: granted, prompted: asked, to: fileURL)
     }
 
     private static func write(granted: Bool, prompted: Bool, to url: URL) {

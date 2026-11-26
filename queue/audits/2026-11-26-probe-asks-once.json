@@ -1,0 +1,25 @@
+{
+  "feature": "The loop's test app asks for screen recording once, ever",
+  "epic": "",
+  "summary": "The dialog you kept denying was macOS's Screen Recording request for Photonz Probe. It was a stack of dialogs that piled up while nobody was at the Mac, one for every launch the probe made without the grant. The probe now asks once in its life and never again, whatever you answer.",
+  "setup": "Nothing to switch on. The loop's probe already holds Screen Recording on this Mac, so it asks for nothing today. Proof that it asks once: queue/bin/permission-drill.sh launches the probe ten times read as never granted and counts 1 ask and 9 'asked before'; it also runs at the end of queue/bin/focus-drill.sh.",
+  "switched": {},
+  "try": [
+    { "do": "Leave the loop running while you are away, as usual.", "shot": "2026-11-26-probe-screen-recording-dialog.png" },
+    { "do": "When you come back, look for a Screen Recording dialog from Photonz Probe. There should be none while the probe holds the grant, and never more than one in total." },
+    { "do": "If that one dialog does appear, click Open System Settings and turn on Photonz Probe under Screen & System Audio Recording. That is the answer to give." },
+    { "do": "If you click Deny instead, nothing asks again: the probe keeps running its walks with offscreen pictures, and every launch's Grants line says it asked once and when." },
+    { "do": "To let it ask one more time later, delete dist/probe-permission-asks.json while you are at the Mac." }
+  ],
+  "evaluate": [
+    "After a night of walks, did you find no Screen Recording dialog from Photonz Probe waiting for you?",
+    "Is 'asks once ever, then only says what is missing' the right rule for the loop's test app, or would you rather it never asked at all?",
+    "Is the Grants line's note (when it asked, and the file to delete to let it ask again) enough to fix it yourself if the grant goes missing?"
+  ],
+  "rough": [
+    "If you deny it, about 23 walks lose something real: 11 walks that film the window or the menu bar fail naming the grant, and 12 that photograph an open menu say the picture was not taken. The other walks still pass, with offscreen pictures in place of real ones, which an audit has to say.",
+    "How the probe lost the grant before today is not known. macOS only keeps its detailed permission records for minutes, and the dialog app had been running since 3 November, so the stack could have been building for weeks. Today every probe launch reads the grant as given.",
+    "To read the dialog behind your terminal, the probe gained a small diagnostic that photographs another app's window (--window-peek). The dialog left on screen was cleared by restarting macOS's dialog helper (universalAccessAuthWarn), which macOS restarts by itself.",
+    "Your own Photonz and Photonz Dev follow the same gate: at most one Screen Recording or microphone request per launch, and none while the grant is there. That rule is unit tested. It was not re-checked by hand on a Mac without the grant, because that would have put a real dialog in front of you."
+  ]
+}

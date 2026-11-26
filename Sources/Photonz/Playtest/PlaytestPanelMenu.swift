@@ -209,6 +209,12 @@ enum PlaytestPanelMenu {
     /// the dark with no clue where it came from.
     nonisolated static func capture(menuWindow: Int, over hostWindow: Int, host frame: CGRect,
                                     to url: URL, then done: @escaping @Sendable (String) -> Void) {
+        // Without the grant a ScreenCaptureKit call queues macOS's request
+        // dialog on the person's screen (`PermissionGate`), so read it first.
+        guard CGPreflightScreenCaptureAccess() else {
+            done("the probe has no Screen Recording grant, so the open menu was not photographed")
+            return
+        }
         SCShareableContent.getExcludingDesktopWindows(false, onScreenWindowsOnly: true) { content, error in
             guard let content else {
                 done("could not read the screen: \(error?.localizedDescription ?? "unknown")")

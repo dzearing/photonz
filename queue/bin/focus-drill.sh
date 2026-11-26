@@ -138,5 +138,10 @@ done
 
 pgrep -f "$CANARY" >/dev/null && pkill -f "$CANARY"
 echo "==> traces in $RUN"
+# The other way a walk reaches the person: a permission dialog. Ten launches of
+# the probe without the Screen Recording grant must ask once and never again
+# (queue/bin/permission-drill.sh; 2026-11-26 the person denied a dozen queued
+# "would like to record this computer's screen and audio" dialogs in a row).
+queue/bin/permission-drill.sh | tail -1 || WORST=1
 (( DEFERRED )) && { echo "==> Verdict: DEFERRED  somebody came back part way through"; exit 6; }
 exit "$WORST"

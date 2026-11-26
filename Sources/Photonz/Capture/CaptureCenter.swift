@@ -254,6 +254,12 @@ final class CaptureCenter {
             // behind the frontmost app and never be seen (same reason the
             // welcome flow activates). This OS prompt only exists while the
             // status is notDetermined, so it inherently fires at most once.
+            // Through the one gate like every request: the loop's probe asks
+            // once in its life, never per launch (`PermissionGate`).
+            guard PermissionGate.mayAsk(.microphone) else {
+                presentMicrophoneBlocked(for: config)
+                return
+            }
             AppFront.activate()
             if await AVCaptureDevice.requestAccess(for: .audio) {
                 launchRecording(with: config)
@@ -432,9 +438,12 @@ final class CaptureCenter {
         }
     }
 
-    /// TCC prompts must never storm. Each `primePermissionRegistration` call
-    /// can put TWO system dialogs on screen (CGRequest via WindowServer, the
-    /// SCK query via replayd) — and when the stored grant no longer matches the
+    /// TCC prompts must never storm. Every request now goes through
+    /// `PermissionGate` (once per launch here, once ever in the loop's probe),
+    /// and `primePermissionRegistration` makes one request, not two: on macOS 26
+    /// each request without the grant queues its own dialog, even after a Deny
+    /// (2026-11-26). This flag also keeps the Settings pane to one opening per
+    /// launch. And when the stored grant no longer matches the
     /// app's code signature (e.g. a rebuilt bundle at the same path), macOS
     /// re-prompts on EVERY attempt even though Settings shows Photonz enabled.
     /// Re-requesting can never fix that state, so we ask once per launch and

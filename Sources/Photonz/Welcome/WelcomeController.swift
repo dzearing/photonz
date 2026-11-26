@@ -349,6 +349,10 @@ final class WelcomeController: NSObject, NSWindowDelegate {
             // system prompt appears behind whatever is frontmost — easy to
             // never see, and until it's answered macOS doesn't list Photonz in
             // the Microphone settings pane at all.
+            guard PermissionGate.mayAsk(.microphone) else {
+                state?.refresh()
+                return
+            }
             AppFront.activate()
             AVCaptureDevice.requestAccess(for: .audio) { _ in
                 Task { @MainActor [weak self] in self?.state?.refresh() }

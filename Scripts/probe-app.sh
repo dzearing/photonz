@@ -308,6 +308,16 @@ if [[ "$SCREEN" != "granted" ]]; then
   echo "    No real screenshots: the probe can only write offscreen renders, and an audit"
   echo "    must say so. Fix once in System Settings > Privacy & Security > Screen & System"
   echo "    Audio Recording: tick \"Photonz Probe\"."
+  # The probe asks for it once in its life and never again, whatever the answer
+  # (PermissionGate): macOS 26 queues a dialog per request even after a Deny, so
+  # asking per launch left the person a stack of them on 2026-11-26.
+  ASKS="$(dirname "$APP")/probe-permission-asks.json"
+  ASKED_AT="$(node -e 'try { const l = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    console.log(l.askedAt?.screenRecording ?? "") } catch { console.log("") }' "$ASKS" 2>/dev/null || true)"
+  if [[ -n "$ASKED_AT" ]]; then
+    echo "    The probe asked for it once, at $ASKED_AT, and will not ask again. To let it ask"
+    echo "    one more time, with somebody at the Mac to answer: rm \"$ASKS\""
+  fi
 fi
 if [[ "$AX" != "granted" ]]; then
   echo "    No driving OTHER apps: keystrokes and clicks aimed outside Photonz fail."
