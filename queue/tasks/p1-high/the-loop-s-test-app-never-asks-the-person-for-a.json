@@ -5,11 +5,11 @@
   "epic": "",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T20:01:39.658Z",
-  "updated": "2026-11-26T20:01:39.778Z",
+  "updated": "2026-11-26T21:34:53.154Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26 ~11:45: \"i am getting an endless loop of permission requests for photonz probe and i keep deny and it pops back up\"; they said the dialog was about screen or audio recording. The intake window stopped the loop (11:50) and restarted it at 12:01 after the user chose to allow it once. Not reproduced by me: I could not read TCC.db or see the dialog, and `log show` with tccd predicates returned nothing from this shell. The runner at the time was the scrubbing task, running Scripts/playtest.sh /tmp/scrub-like.json repeatedly (speed walk play and scrub on reference edit 6); the speed walk itself has no ScreenCaptureKit call (grep), so the request likely comes from app launch paths (ProbeGrants.recordOnLaunch, CaptureCenter, the recorder warm up in Sources/Photonz/Capture/ScreenRecorder.swift:177, RecordingCoordinator.swift:61) or a snapshot step. Probe is signed with the stable Photonz Dev cert (codesign Authority=Photonz Dev), so a changing code identity is not the cause. Sits right after the-loop-s-test-app-never-plays-sound-out-of-the, which also touches what the probe sends to the person.",
@@ -27,6 +27,33 @@
     {
       "t": "2026-11-26T20:01:39.777Z",
       "note": "seq 4070 -> 2"
+    },
+    {
+      "t": "2026-11-26T20:41:56.643Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-26T20:59:36.041Z",
+      "note": "Reproduced and identified. The dialog is macOS's Screen Recording request ('Photonz Probe would like to record this computer's screen and audio', Open System Settings / Deny), drawn by universalAccessAuthWarn; one was still on screen behind the terminal at 12:45 (photographed through a new probe-only --window-peek diag). The user's 12 clicks at 11:37:50-11:38:16 each brought the next one up 30 ms later with NO request from the probe in between (log: no probe TCCAccessRequest 11:37:35-11:38:30), so it was a backlog, not a live loop. Drill with a never-granted throwaway app: CGRequestScreenCaptureAccess AND a plain SCShareableContent query each hand tccd a prompt that universalAccessAuthWarn queues behind the one showing (order window 0x56ec8), the call returns at once, the dialog outlives the app, and after a Deny the next call queues another ('The user declined TCCs' and still prompts). So 'once per launch' is a storm for a probe the loop launches hundreds of times a sweep: every launch without the grant (ProbeGrants.recordOnLaunch) and every unguarded SCK call adds one. Today the probe IS granted (tccd auth_value=2, every launch preflight only), so nothing new is queued now; the backlog came from earlier ungranted runs (dialog host running since Nov 3). Cleared the stale dialog by restarting universalAccessAuthWarn."
+    },
+    {
+      "t": "2026-11-26T21:34:40.643Z",
+      "note": "owns these walks: never-granting-walk, setup-steps-brand-new-mac-walk, setup-steps-everything-done-walk"
+    },
+    {
+      "t": "2026-11-26T21:34:40.713Z",
+      "note": "Fixed. PermissionAskPolicy (core, 6 tests) + PermissionGate: never ask when granted; person's app once per launch; probe once EVER (dist/probe-permission-asks.json). ProbeGrants asks through it; prime makes one SCK request instead of CGRequest+SCK (two queued dialogs per ask; chose SCK-only because the SCK query both lists the app in Settings and raises the request); every ScreenCaptureKit capture, recorder warmUp/start and the menu-picture step check the grant first (ScreenCapturer.requireGrant, RecorderError.notGranted); the probe never opens a Settings pane; both mic requests go through the gate. Drill queue/bin/permission-drill.sh: 10 launches read as ungranted -> 1 ask, 9 'asked before', no real dialog (window list empty); runs at the end of focus-drill.sh. Walks green: never-granting, setup-steps-brand-new-mac, setup-steps-everything-done, a-captured-window-s-shadow, a-busy-recording, opening-a-recording, redline, svg-export-redline. Scripts/test.sh green (second run; first run had IconPreviewRenderTests speed budget over under load, passes alone, unrelated). Left rough, not filed: how the probe lost its grant before today is unknowable from logs (tccd detail persists minutes); no follow-up clears the bar, since nothing is broken now and the drill guards the rule."
+    },
+    {
+      "t": "2026-11-26T21:34:53.152Z",
+      "note": "Found: the dialog was macOS's Screen Recording request for Photonz Probe, a backlog stacked one per ungranted request (macOS 26 queues a dialog per CGRequest or SCK call, even after Deny; the probe asked per launch, twice). Shipped 0fb59679f: PermissionAskPolicy (core, tested) + PermissionGate: never when granted, person once per launch, probe once ever (dist/probe-permission-asks.json); one request per ask; every capture checks the grant first; probe never opens Settings. queue/bin/permission-drill.sh: 10 launches -> 1 ask (runs in focus-drill). Walks + Scripts/test.sh green. Audit queue/audits/2026-11-26-probe-asks-once.json."
     }
-  ]
+  ],
+  "started": "2026-11-26T20:41:56.642Z",
+  "walks": [
+    "never-granting-walk",
+    "setup-steps-brand-new-mac-walk",
+    "setup-steps-everything-done-walk"
+  ],
+  "completed": "2026-11-26T21:34:53.153Z"
 }
