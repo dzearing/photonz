@@ -714,7 +714,8 @@ extension Layer {
             let over = drawn.transitionPartner(standingFor: id,
                                                showing: .image(movie.frameRef(atSourceMS: incoming,
                                                                               holding: framesInHand,
-                                                                              within: playedSourceFrames)))
+                                                                              within: playedSourceFrames)),
+                                               of: movie)
             let pictures = Layer.transitionDrawn(kind, progress: moment.progress,
                                                  outgoing: drawn, incoming: over, direction: moment.direction)
             guard moment.motionBlur, let projection else { return pictures }
@@ -732,10 +733,22 @@ extension Layer {
     /// the same place, showing `content`, under the partner id of the layer
     /// on screen (`transitionPartnerID`). Locked and timeless, since it exists
     /// for one frame of one render and nobody can pick it.
-    func transitionPartner(standingFor onScreen: UUID, showing content: LayerContent) -> Layer {
-        Layer(id: Layer.transitionPartnerID(of: onScreen), name: name, content: content,
-              frame: frame, crop: crop, transform: transform, style: style,
-              isVisible: true, isLocked: true, placement: placement)
+    ///
+    /// `movie` is the recording `content` is a frame of, when it is one. The
+    /// renderer draws a frame of a recording its own way: its shadow cast from
+    /// a box that is the same on every frame, and a frame read small while a
+    /// hand scrubs enlarged in one pass (`DocumentRenderer`). Without it the
+    /// incoming shot of every dissolve was drawn as an ordinary picture, its
+    /// shadow blurred afresh each frame and its enlargement three passes, and
+    /// a scrub over a transition missed the refresh (2026-11-26,
+    /// `scrubbing-a-long-edit-never-trails-the-pointer-b`).
+    func transitionPartner(standingFor onScreen: UUID, showing content: LayerContent,
+                           of movie: MovieRef? = nil) -> Layer {
+        var partner = Layer(id: Layer.transitionPartnerID(of: onScreen), name: name, content: content,
+                            frame: frame, crop: crop, transform: transform, style: style,
+                            isVisible: true, isLocked: true, placement: placement)
+        partner.movie = movie
+        return partner
     }
 
     /// A panel of colour over this layer and nothing else, `amount` of the

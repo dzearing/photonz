@@ -197,6 +197,10 @@ struct FramesInHandTests {
             movie.frameRef(atFrame: movie.frameIndex(atSourceMS: $0.sourceMS) - 2)
         }
         #expect(Set(refs) == Set(wantedHeld))
+        // The incoming shot is a frame of the same recording, and says so, so
+        // the renderer draws it as one (`DocumentRenderer.opaqueCastStandIn`,
+        // `MovieSweep.isReadInPassing`).
+        #expect(shown.layers.allSatisfy { $0.movie == movie })
     }
 
     // MARK: - How big a frame is worth reading

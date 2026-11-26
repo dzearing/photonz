@@ -155,6 +155,20 @@ struct EditPointTransitionTests {
         #expect(requests.contains { $0.layerID == partner.id })
     }
 
+    @Test("A borrowed shot says which recording its frame is from, so it is drawn as a frame of one")
+    func borrowedShotKeepsItsRecording() throws {
+        var (doc, take, broll) = try Self.edit()
+        _ = doc.setTransition(ClipTransition(kind: .dissolve, lengthMS: 1000),
+                              at: .edit(outgoing: take, incoming: broll))
+        // Before the cut the b-roll is borrowed; after it, the take.
+        let before = doc.drawn(atTimeMS: 7750)
+        let early = try #require(before.layers.first { $0.id != take && $0.id != broll && $0.isVisible })
+        #expect(early.movie == Self.broll)
+        let after = doc.drawn(atTimeMS: 8250)
+        let late = try #require(after.layers.first { $0.id != take && $0.id != broll && $0.isVisible })
+        #expect(late.movie == Self.take)
+    }
+
     @Test("After the cut the incoming clip is on screen and the outgoing one runs on under it")
     func afterTheCut() throws {
         var (doc, take, broll) = try Self.edit()

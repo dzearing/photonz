@@ -353,14 +353,16 @@ extension PhotonzDocument {
             guard layer(id: moment.borrowed)?.isVisible == true,
                   let other = shown.layers.first(where: { $0.id == moment.borrowed }) else { continue }
             var content = other.content
+            var recording: MovieRef?
             if let source = moment.borrowedSourceMS, let movie = other.movie {
                 content = .image(movie.frameRef(atSourceMS: source, holding: framesInHand,
                                                 within: other.playedSourceFrames))
+                recording = movie
             } else if let source = moment.borrowedSourceMS, other.merged != nil {
                 content = other.mergedContent(atInnerMS: source, canvasSize: canvasSize,
                                               pixelScale: pixelScale, framesInHand: framesInHand)
             }
-            let borrowed = other.transitionPartner(standingFor: moment.onScreen, showing: content)
+            let borrowed = other.transitionPartner(standingFor: moment.onScreen, showing: content, of: recording)
             let pair = moment.onScreenIsOutgoing ? (onScreen, borrowed) : (borrowed, onScreen)
             let transition = moment.transition
             func pictures(at progress: Double) -> [Layer] {
