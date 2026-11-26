@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:48:45.395Z",
-  "updated": "2026-11-26T20:37:06.117Z",
+  "updated": "2026-11-26T22:39:47.769Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (closed 2026-11-23). lag = refreshes since the hand was at the moment the picture carries (a stand-in frame counts as caught up); frame lag = the exact frame under the hand; sight lag = the frames the picture is really drawn from (SpeedWalk.ScrubTally). The medium drag's frame lag and sight lag worst are shown but not judged since 2026-11-23 (SpeedCompare.isJudged: 17 to 81 at the median on unchanged code); its lag worst is judged. Passes 20 to 22 made the hunt follow the hand (MovieSweep.window(follows:), restingPass, MovieFrameQueue.placesStillShown): hunt frame worst 43 -> 3. Lead from pass 22: the hunt's ~20 ms looks with an idle main thread (display link or render server; Metal System Trace needs developer mode). Lag worst 3-10 on medium in 45 runs: which moment is late is chance, so look at the per-look dump (temporary) before changing anything.",
@@ -163,6 +163,34 @@
     {
       "t": "2026-11-26T20:37:06.116Z",
       "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-11-26T21:39:36.926Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-26T22:14:05.198Z",
+      "note": "Pass 5 (this run). The previous attempt was cut off by a loop restart and left its work in the tree: a rework that blurs a turned card's shadow flat and carries it into space (one GPU pass fewer on the hunt's first frames, 5 -> 4) plus measuring code. Measured as left: medium lag worst 3,3,2 hunt 2,2,2 in 3 short play-then-scrub runs, no better than pass 4, and the hunt's early 2s fell with or without it (noise). Chose setting it aside over landing it because it changes how a turned card's shadow is drawn for no measured gain; saved as /tmp/scrubana/pass5-wip.patch."
+    },
+    {
+      "t": "2026-11-26T22:14:05.277Z",
+      "note": "Pass 5: the medium drag's 3 is the same look in every run (look 109-110, hand 2:44.0): the first picture of the 'Capture' title (letter-by-letter reveal) spends 9.1 ms setting out its letters in the recipe build. Fix under way: PhotonzDocument.momentsToDrawWordsAhead (core, tested) gives a moment mid-reveal and one at rest per title; EditorState.drawWordsAhead poses them once per set of titles and shown size and RenderScheduler.drawWordsAhead builds their recipes at utility priority (DocumentRenderer.drawWordsAhead, tested: the pictures that show them miss nothing)."
+    },
+    {
+      "t": "2026-11-26T22:39:29.795Z",
+      "note": "Pass 5 measured on the clean probe (57e79e49c): short speed walk 4 runs (2026-11-26 14:27-14:33), exit 0, 51 numbers within baseline each; lag worst medium 2,3,2,2 (pass 4: 2,3,3), hunt 2,3,2,2 (pass 4: 1,2,2); hunt frame and sight worst 2,3,2,2 (item 2 met in 3 of 4). The 2:44 title's first picture: recipe build 9.1 -> 0.4 ms, and look 110 (the repeatable lag 3) now reads 1. Green: scrub-never-blacks-out, hear-the-scrub, an-editing-session, title-words-mask-reveal, title-words-turn-in-depth; Scripts/test.sh exit 0. Baseline not rewritten: item 1 not reached."
+    },
+    {
+      "t": "2026-11-26T22:39:29.872Z",
+      "note": "Not reached: lag worst 1 (medium 2-3, hunt 2-3). Leads for pass 6: (1) the title's first picture still reads lag 2: Core Image planning a recipe it has not seen (startTask 4.6 ms, 4 passes) on top of 2.3 ms GPU. Lead: in drawWordsAhead, also draw each posed moment once onto a scratch surface of the same size and format (BGRA8 IOSurface pixel buffer, same CIContext) so its programs are compiled; the posed moments carry no recording frames, so check the recipe shape matches. (2) HUNT: its first 5 looks are a clip turned slightly in space with a drop shadow over the live background (4 passes, startTask 4-6 ms, kernel time 10-14 ms: cold planning plus a GPU not yet clocked up); mid-hunt 2s are 2-pass draws whose GPU wait spikes from 3.3 to 5+ ms (tail of a 7.6 ms window). (3) MEDIUM: early looks 1-9 (4-pass transitions, build 1-2 ms) and the end-of-drag settle tick (12-17 ms gap). Measuring kit: /tmp/scrubana/like.sh with the per-look dump (instrumentation was reverted before commit; re-create from /tmp/scrubana/pass4-instrumentation.patch)."
+    },
+    {
+      "t": "2026-11-26T22:39:29.948Z",
+      "note": "Set aside, not landed: the previous attempt's turned-card shadow rework (blur the opaque stand-in flat, carry the blurred shadow into space with the card's warp; CastInSpace in DocumentRenderer). In the app it took the hunt's first frames from 5 passes to 4 with no change in lag across runs, and it changes how a turned card's shadow is drawn with no test written for it. Patch kept at /tmp/scrubana/pass5-wip.patch (temporary)."
+    },
+    {
+      "t": "2026-11-26T22:39:30.025Z",
+      "note": "Pass 5 landed 57e79e49c: titles' words drawn ahead once the edit is open, so the first crossing of the 2:44 title no longer sets out letters inside a refresh (9.1 -> 0.4 ms; medium worst 2,3,2,2 against pass 4's 2,3,3). Lag worst 1 not reached; leads in the log."
     }
   ],
   "walks": [
@@ -170,6 +198,6 @@
     "scrub-never-blacks-out-walk",
     "hear-the-scrub-walk"
   ],
-  "started": "2026-11-26T18:27:43.931Z",
-  "failures": 1
+  "started": "2026-11-26T21:39:36.925Z",
+  "failures": 0
 }
