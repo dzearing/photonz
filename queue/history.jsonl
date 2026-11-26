@@ -19287,3 +19287,11 @@
 {"t":"2026-11-26T05:37:09.515Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
 {"t":"2026-11-26T05:37:09.588Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 1 (2f7341a40): one commit a refresh while scrubbing, the walk's window look held during a timed drag. Medium lag worst 5 -> 3, hunt 3 -> 2, hunt frame/sight 3 -> 2 (item 2 met). Lag worst 1 not reached; composite p95 7-8 ms is the next lead."}
 {"t":"2026-11-26T05:37:40.032Z","ev":"task_created","id":"the-app-crashed-in-passsampler-othersnow","priority":"p1-high","title":"The app crashed in PassSampler.othersNow"}
+{"t":"2026-11-26T05:54:35.850Z","ev":"slice_pass","walks":9,"passed":9,"failed":0,"seconds":482,"of":1208,"couldNotRun":0,"timedOut":false,"rotating":true,"from":199,"to":204,"moved":5}
+{"t":"2026-11-26T05:54:36.043Z","ev":"task_started","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","title":"Scrubbing a long edit never trails the pointer by more than one display frame","priority":"p1-high"}
+{"t":"2026-11-26T07:31:45.769Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T07:31:45.843Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T07:31:45.922Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T07:31:45.996Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T07:31:46.073Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T07:31:46.149Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 2 landed 0f62e5d96: landed frames ride with the hand's next move, frames read in passing are enlarged in one pass (draw p95 7.3 -> 5.1 ms). Lag worst 1 not reached (medium 3, hunt 2, the first looks of a drag); leads in the log."}

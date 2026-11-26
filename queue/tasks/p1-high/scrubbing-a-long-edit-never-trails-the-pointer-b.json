@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:48:45.395Z",
-  "updated": "2026-11-26T05:37:09.587Z",
+  "updated": "2026-11-26T07:31:46.148Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (closed 2026-11-23). lag = refreshes since the hand was at the moment the picture carries (a stand-in frame counts as caught up); frame lag = the exact frame under the hand; sight lag = the frames the picture is really drawn from (SpeedWalk.ScrubTally). The medium drag's frame lag and sight lag worst are shown but not judged since 2026-11-23 (SpeedCompare.isJudged: 17 to 81 at the median on unchanged code); its lag worst is judged. Passes 20 to 22 made the hunt follow the hand (MovieSweep.window(follows:), restingPass, MovieFrameQueue.placesStillShown): hunt frame worst 43 -> 3. Lead from pass 22: the hunt's ~20 ms looks with an idle main thread (display link or render server; Metal System Trace needs developer mode). Lag worst 3-10 on medium in 45 runs: which moment is late is chance, so look at the per-look dump (temporary) before changing anything.",
@@ -67,6 +67,34 @@
     {
       "t": "2026-11-26T05:37:09.586Z",
       "note": "Pass 1 (2f7341a40): one commit a refresh while scrubbing, the walk's window look held during a timed drag. Medium lag worst 5 -> 3, hunt 3 -> 2, hunt frame/sight 3 -> 2 (item 2 met). Lag worst 1 not reached; composite p95 7-8 ms is the next lead."
+    },
+    {
+      "t": "2026-11-26T05:54:36.038Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-26T07:31:45.767Z",
+      "note": "Pass 2 (0f62e5d96). A per-look dump (temporary, removed) showed the hand's move waiting behind a redraw for a landed frame made at the start of each refresh (e.g. ask 855: drawn 7.7 ms, shown 12.5 ms after asked). Fix: while the hand moves, a landed frame rides with its next move; drawn once the hand holds still a refresh (ScrubPictureAsks.refreshed(atRefresh:)). Asks now match looks one to one."
+    },
+    {
+      "t": "2026-11-26T07:31:45.841Z",
+      "note": "Pass 2: a split of each scrub draw (graph build / CI startTask / GPU wait) plus sample(1) showed CI planning dominated by create_intermediate -> GetSurfaceFromCache -> IOSurface purgeable kernel calls. Toggling pieces off: Lanczos enlargement of frames read in passing was 3 of the 5 passes. Fix: MovieSweep.isReadInPassing (frame <= 800 wide of a wider recording) -> plain one-pass enlargement (DocumentRenderer, enlargesPhoto); sharp frames, punch-ins and photos keep Lanczos. Scrub-only walk: passes 5 -> 2 (transition 10 -> 4), draw p95 7.3 -> 5.1 ms, p99 8.1 -> 6.1. Tried and dropped: insertingIntermediate(cache:) on the stand-in shadow (worse: GPU up, CI does not reuse it); a bigger stand-in cache (no change: the shadow is already reused)."
+    },
+    {
+      "t": "2026-11-26T07:31:45.920Z",
+      "note": "Pass 2 measured: short speed walk 3 runs, 51 numbers within baseline each; lag worst medium 3,3,3 hunt 2,2,2 (unchanged), hunt frame and sight worst 2 (item 2 still met), longest refresh hunt 9 ms (was 10-11), medium 12-18 (was 13-20). Scrub-only walk (4 drags each): late looks fell from tens per drag to about two, and a hunt read worst 1 in 3 of 12 drags. Green: scrub-never-blacks-out, hear-the-scrub, an-editing-session, a-cross-fade-plays-as-exported, clips-snap-to-markers, scrubbing-shows-the-zoom; Scripts/test.sh exit 0. Baseline not rewritten: item 1 not reached."
+    },
+    {
+      "t": "2026-11-26T07:31:45.994Z",
+      "note": "Not reached: lag worst 1 (medium 3, hunt 2). Leads for pass 3: (1) what is left is the first looks of each drag: in the medium drag one refresh is missed around looks 4-9 (move to look 16-19 ms, the main thread held ~10 ms), and the hunt's first 2-3 draws take 7-8 ms (cold). PassSampler records nothing during scrubs (the main thread meter reports no passes there), so feed it the gaps between looks by hand (at[i]-at[i-1] > 14 -> PassSampler.shared.passEnded) to name the stall. (2) Mid-drag 3s in the medium drag are titles typeset the first time the hand crosses them: 9-15 ms of compositeImage CPU (per-letter rasters, a 2769-wide band), e.g. around 2:44 of the edit. (3) Draws that land right at a refresh pay a 0.6-1 ms hop to the main thread, which is busy with the refresh's own work. Instrumented copies of DocumentRenderer/EditorState/PlaytestSpeedWalk from this pass were in /tmp/scrubana (not committed)."
+    },
+    {
+      "t": "2026-11-26T07:31:46.071Z",
+      "note": "Visible change this pass: a frame shown while the hand is still moving is enlarged with the plain resampler, so it reads a touch softer until the hand stops and the sharp frame arrives (within a quarter second, as before). Chose this over keeping Lanczos because the frame is a small scrub preview anyway and Premiere and Final Cut drop resolution while scrubbing; left rough, not filed: if the user finds moving frames too soft, the knob is MovieSweep.isReadInPassing."
+    },
+    {
+      "t": "2026-11-26T07:31:46.147Z",
+      "note": "Pass 2 landed 0f62e5d96: landed frames ride with the hand's next move, frames read in passing are enlarged in one pass (draw p95 7.3 -> 5.1 ms). Lag worst 1 not reached (medium 3, hunt 2, the first looks of a drag); leads in the log."
     }
   ],
   "walks": [
@@ -74,5 +102,5 @@
     "scrub-never-blacks-out-walk",
     "hear-the-scrub-walk"
   ],
-  "started": "2026-11-26T03:34:18.611Z"
+  "started": "2026-11-26T05:54:36.037Z"
 }

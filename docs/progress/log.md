@@ -23547,3 +23547,9 @@ announced 0.25.0.
 - Short speed walk, 3 runs: medium lag worst 5 -> 3, hunt 3 -> 2, hunt frame/sight 3 -> 2; longest refresh 34 -> 13-20 ms.
 - Next: lag worst 1 needs every composite under ~6.5 ms (p95 is 7-8). Core Image intermediates and GPU scheduling are most of it; leads in the task log.
 - Open: clicking-a-timeline-item-moves-the-playhead-walk fails on main already (logged on the standing walk task).
+
+## 2026-11-25 — scrub lag pass 2 (`scrubbing-a-long-edit-never-trails-the-pointer-b`)
+
+- Landed 0f62e5d96: while the hand drags the playhead, a frame that lands from the decoder rides with the hand's next move instead of being drawn alone at the refresh (the move used to wait behind that picture); frames read in passing (at most 800 wide) are enlarged in one plain pass instead of Lanczos's three (`MovieSweep.isReadInPassing`).
+- Scrub-only walk: passes per picture 5 -> 2 (transition 10 -> 4), draw p95 7.3 -> 5.1 ms, p99 8.1 -> 6.1. Short speed walk, 3 runs: within baseline; lag worst medium 3 and hunt 2 unchanged (the first looks of each drag); longest refresh hunt 10-11 -> 9 ms.
+- Next: the drag's first looks (a ~10 ms main-thread stall in the medium drag around looks 4-9, cold first draws in the hunt) and titles typeset the first time the hand crosses them (9-15 ms CPU). Leads in the task log.
