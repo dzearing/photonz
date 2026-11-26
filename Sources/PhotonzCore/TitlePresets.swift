@@ -394,7 +394,9 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
     public var hasMovingBackdrop: Bool {
         guard !isCalm else { return false }
         switch self {
-        case .underline, .midnight, .sunrise, .paper, .spotlight, .bar, .clean, .accent, .minimal: return false
+        // Condensed Poster stands on a still warm black since Wind Streams
+        // was taken out on 2026-11-26.
+        case .underline, .kinetic, .midnight, .sunrise, .paper, .spotlight, .bar, .clean, .accent, .minimal: return false
         default: return true
         }
     }

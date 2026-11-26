@@ -34,13 +34,14 @@ struct LiveBackdropTests {
 
     // MARK: - The looks
 
-    @Test("Ten looks, each clearly named, each with a knob of its own")
-    func tenLooks() {
+    // Wind Streams was taken out on 2026-11-26 (`WindStreamsRetiredTests`).
+    @Test("Nine looks, each clearly named, each with a knob of its own")
+    func nineLooks() {
         let looks = LiveLook.allCases
-        #expect(looks.count >= 10)
+        #expect(looks.count >= 9)
         #expect(Set(looks.map(\.title)).count == looks.count)
         for name in ["Aurora", "Energy Streams", "Color Bubbles", "Light Rays", "Light Leaks",
-                     "Wind Streams", "Architectural Sketch", "Particles", "Liquid Gradient", "Grid Horizon"] {
+                     "Architectural Sketch", "Particles", "Liquid Gradient", "Grid Horizon"] {
             #expect(looks.contains { $0.title == name }, "missing \(name)")
         }
         for look in looks {

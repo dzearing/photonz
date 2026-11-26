@@ -314,6 +314,15 @@ extension Paint: Codable {
         }
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let hex = try c.decodeIfPresent(String.self, forKey: .hex) ?? "#000000"
+        // A moving look that was taken out opens as the plain ground it moved
+        // over: the first stop, which is what the look drew everything over.
+        if let look = try? c.decodeIfPresent(RetiredLook.self, forKey: .live),
+           LiveLook.retiredLooks.contains(look.look) {
+            let stops = try c.decodeIfPresent([GradientStop].self, forKey: .stops) ?? []
+            let ground = stops.min { $0.position < $1.position }?.hex
+            self.init(hex: ground ?? hex)
+            return
+        }
         self.init(hex: hex,
                   kind: try c.decodeIfPresent(Kind.self, forKey: .kind) ?? .solid,
                   stops: try c.decodeIfPresent([GradientStop].self, forKey: .stops) ?? [],
@@ -323,6 +332,12 @@ extension Paint: Codable {
                   drift: try c.decodeIfPresent(Double.self, forKey: .drift) ?? 0,
                   live: try c.decodeIfPresent(LiveBackdrop.self, forKey: .live))
     }
+}
+
+/// Just the name of a saved moving look, read before the look itself so one
+/// that was taken out never stops a document opening.
+private struct RetiredLook: Decodable {
+    let look: String
 }
 
 // MARK: - Where the geometry lands

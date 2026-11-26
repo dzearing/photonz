@@ -13,13 +13,17 @@ import Foundation
 // with, worked out from the title's theme so the words over it stay legible.
 
 /// One of the moving looks a title's background can wear.
+///
+/// Wind Streams, thin wavy lines drifting across the frame, was taken out on
+/// 2026-11-26: the user called it amateur, "like some kind of bland wood
+/// grain". A document saved with it opens on the plain ground it moved over
+/// (`Paint`'s decoding, `retiredLooks`).
 public enum LiveLook: String, CaseIterable, Hashable, Codable, Sendable {
     case aurora
     case energyStreams
     case colorBubbles
     case lightRays
     case lightLeaks
-    case windStreams
     case sketch
     case particles
     case liquidGradient
@@ -32,7 +36,6 @@ public enum LiveLook: String, CaseIterable, Hashable, Codable, Sendable {
         case .colorBubbles: "Color Bubbles"
         case .lightRays: "Light Rays"
         case .lightLeaks: "Light Leaks"
-        case .windStreams: "Wind Streams"
         case .sketch: "Architectural Sketch"
         case .particles: "Particles"
         case .liquidGradient: "Liquid Gradient"
@@ -48,7 +51,6 @@ public enum LiveLook: String, CaseIterable, Hashable, Codable, Sendable {
         case .colorBubbles: "Softness"
         case .lightRays: "Angle"
         case .lightLeaks: "Warmth"
-        case .windStreams: "Line Weight"
         case .sketch: "Line Weight"
         case .particles: "Depth"
         case .liquidGradient: "Gloss"
@@ -64,7 +66,6 @@ public enum LiveLook: String, CaseIterable, Hashable, Codable, Sendable {
         case .colorBubbles: 60
         case .lightRays: 30
         case .lightLeaks: 70
-        case .windStreams: 35
         case .sketch: 35
         case .particles: 60
         case .liquidGradient: 50
@@ -75,10 +76,15 @@ public enum LiveLook: String, CaseIterable, Hashable, Codable, Sendable {
     /// Whether the look is soft enough to be worked out at half the frame's
     /// size and enlarged with nothing lost: a look made of glows and blends.
     /// A look made of thin lines or points is worked out at full size.
+    /// Looks a build once offered and no longer draws, by the name a saved
+    /// document holds. A paint saved on one opens as its plain ground and a
+    /// title's background saved as one opens as Solid.
+    public static let retiredLooks: Set<String> = ["windStreams"]
+
     public var drawnAtHalfSize: Bool {
         switch self {
         case .aurora, .colorBubbles, .lightRays, .lightLeaks, .liquidGradient: true
-        case .energyStreams, .windStreams, .sketch, .particles, .gridHorizon: false
+        case .energyStreams, .sketch, .particles, .gridHorizon: false
         }
     }
 }

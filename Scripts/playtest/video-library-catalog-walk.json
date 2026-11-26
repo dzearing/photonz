@@ -181,7 +181,7 @@
     {
       "do": "describe",
       "stage": "3-backgrounds",
-      "note": "Backgrounds picked: the ten moving looks as cards"
+      "note": "Backgrounds picked: the nine moving looks as cards"
     },
     {
       "do": "snapshot",

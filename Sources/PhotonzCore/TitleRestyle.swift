@@ -243,7 +243,7 @@ public enum TitleBackgroundKind: String, CaseIterable, Hashable, Codable, Sendab
     case glass
     // The moving looks (`LiveBackdrop.swift`), one each.
     case aurora, energyStreams, colorBubbles, lightRays, lightLeaks
-    case windStreams, sketch, particles, liquidGradient, gridHorizon
+    case sketch, particles, liquidGradient, gridHorizon
 
     public init(look: LiveLook) {
         switch look {
@@ -252,7 +252,6 @@ public enum TitleBackgroundKind: String, CaseIterable, Hashable, Codable, Sendab
         case .colorBubbles: self = .colorBubbles
         case .lightRays: self = .lightRays
         case .lightLeaks: self = .lightLeaks
-        case .windStreams: self = .windStreams
         case .sketch: self = .sketch
         case .particles: self = .particles
         case .liquidGradient: self = .liquidGradient
@@ -269,7 +268,6 @@ public enum TitleBackgroundKind: String, CaseIterable, Hashable, Codable, Sendab
         case .colorBubbles: .colorBubbles
         case .lightRays: .lightRays
         case .lightLeaks: .lightLeaks
-        case .windStreams: .windStreams
         case .sketch: .sketch
         case .particles: .particles
         case .liquidGradient: .liquidGradient
@@ -284,6 +282,20 @@ public enum TitleBackgroundKind: String, CaseIterable, Hashable, Codable, Sendab
         case .mesh: "Mesh"
         case .glass: "Glass"
         default: look?.title ?? rawValue
+        }
+    }
+
+    /// A recipe saved on a look that was taken out (`LiveLook.retiredLooks`)
+    /// opens as Solid, which is what its paint opens as.
+    public init(from decoder: any Decoder) throws {
+        let name = try decoder.singleValueContainer().decode(String.self)
+        if let kind = TitleBackgroundKind(rawValue: name) {
+            self = kind
+        } else if LiveLook.retiredLooks.contains(name) {
+            self = .solid
+        } else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath,
+                                                    debugDescription: "No title background called \(name)"))
         }
     }
 
@@ -762,7 +774,7 @@ struct TitleRestyler {
             }
             paint.stops = Self.recoloured(paint.orderedStops, colours)
         case .aurora, .energyStreams, .colorBubbles, .lightRays, .lightLeaks,
-             .windStreams, .sketch, .particles, .liquidGradient, .gridHorizon:
+             .sketch, .particles, .liquidGradient, .gridHorizon:
             guard let look = kind.look else { break }
             // The same look keeps where its knobs stand through a new theme;
             // another look starts at its own.

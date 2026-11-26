@@ -1,5 +1,23 @@
 [
   {
+    "file": "2026-11-26-condensed-poster-after-still-warm-black.mp4",
+    "title": "Condensed Poster after: still warm black",
+    "added": "2026-11-26T23:20:01.768Z",
+    "task": "no-title-has-the-wavy-line-background-wind-strea",
+    "madeOn": "main with this task, probe",
+    "kind": "after",
+    "notes": "No lines; a still warm black lit a few levels lighter behind the words"
+  },
+  {
+    "file": "2026-11-26-condensed-poster-before-wind-streams.mp4",
+    "title": "Condensed Poster before: Wind Streams",
+    "added": "2026-11-26T23:20:01.716Z",
+    "task": "no-title-has-the-wavy-line-background-wind-strea",
+    "madeOn": "main at c3374bd6b (before this task), probe",
+    "kind": "before",
+    "notes": "Wavy ember lines drifting behind the headline, the ground the user called bland wood grain"
+  },
+  {
     "file": "2026-11-26-agent-sizzle-attempt-on-0-25-0.mp4",
     "title": "Agent sizzle attempt on 0.25.0",
     "added": "2026-11-26T19:28:55.534Z",

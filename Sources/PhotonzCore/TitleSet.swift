@@ -338,11 +338,17 @@ extension BuiltInTitle {
 
     private static func kinetic(_ pen: TitlePen) -> [Layer] {
         // Condensed Poster: condensed capitals stacked tight and flush left,
-        // nine times the size of the line under them, ivory on a warm black
-        // with ember wind barely in it; the one colour is the vermilion of
-        // the small line, which the wind takes too.
-        let background = pen.fullFrame(live(.windStreams, ground: "#0F0E0D",
-                                            lights: ["#5A2A1E", "#4A241A", "#6A3022"], speed: 22, strength: 2))
+        // nine times the size of the line under them, ivory on a warm black;
+        // the one colour is the vermilion of the small line. The ground is
+        // still, lit a few levels warmer where the words sit and falling off
+        // to the corners, as a poster under one light. Until 2026-11-26 it
+        // drew Wind Streams, wavy ember lines the user called "bland wood
+        // grain" (task `no-title-has-the-wavy-line-background-wind-strea`).
+        let background = pen.fullFrame(Paint(hex: "#0F0E0D", kind: .radial,
+                                             stops: [GradientStop(hex: "#171513", position: 0),
+                                                     GradientStop(hex: "#0F0E0D", position: 0.55),
+                                                     GradientStop(hex: "#0B0A09", position: 1)],
+                                             center: CGPoint(x: 0.32, y: 0.34)))
         let left = (pen.canvas.width * 0.125).rounded()
         // DIN Condensed carries 72 points of its own leading at this size,
         // which a set line height does not take back: 0.62 of the size plus
@@ -356,7 +362,7 @@ extension BuiltInTitle {
                                  weight: .bold, color: "#EE4B2B",
                                  origin: CGPoint(x: left + pen.u(10), y: title.frame.maxY - pen.u(36)),
                                  tracking: 0.08, lineHeight: 1.2)
-        return [background, title, TitleLook.shadedOverALook(subtitle)]
+        return [background, title, subtitle]
     }
 
     // The seven below were redesigned on 2026-11-22 by the same rules (task

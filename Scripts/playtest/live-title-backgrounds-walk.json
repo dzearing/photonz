@@ -98,7 +98,7 @@
   {
    "do": "describe",
    "stage": "picker",
-   "note": "The Background row opened as tiles: None, Solid, Gradient, then ten moving looks each playing in the title's own colours (Aurora, Energy Streams, Color Bubbles, Light Rays, Light Leaks, Wind Streams, Architectural Sketch, Particles, Liquid Gradient, Grid Horizon). No Mesh."
+   "note": "The Background row opened as tiles: None, Solid, Gradient, then nine moving looks each playing in the title's own colours (Aurora, Energy Streams, Color Bubbles, Light Rays, Light Leaks, Architectural Sketch, Particles, Liquid Gradient, Grid Horizon). No Mesh."
   },
   {
    "do": "expect",
@@ -115,6 +115,12 @@
   {
    "do": "expect",
    "control": "Mesh",
+   "in": "Background picker",
+   "present": false
+  },
+  {
+   "do": "expect",
+   "control": "Wind Streams",
    "in": "Background picker",
    "present": false
   },

@@ -48,8 +48,10 @@ struct TitleCalmSetTests {
         #expect(BuiltInTitle.calmSet.allSatisfy { $0.kind == .titlePage && !$0.isMoreStyle && $0.isCalm })
         // The name cards are not part of the study and stay as they were.
         #expect(BuiltInTitle.presets(of: .nameCard).allSatisfy { !$0.isMoreStyle && !$0.isCalm })
-        // None of them needs a moving backdrop, so every release offers them.
-        #expect(BuiltInTitle.presets(of: .titlePage, movingBackdrops: false) == BuiltInTitle.calmSet)
+        // None of them needs a moving backdrop, so every release offers them;
+        // nor, since Wind Streams was taken out on 2026-11-26, does Condensed
+        // Poster, which stands on a still warm black.
+        #expect(BuiltInTitle.presets(of: .titlePage, movingBackdrops: false) == BuiltInTitle.calmSet + [.kinetic])
     }
 
     @Test("The catalog files the old pages under their own More Styles header below the ten")

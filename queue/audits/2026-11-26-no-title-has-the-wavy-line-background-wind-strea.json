@@ -1,0 +1,26 @@
+{
+  "feature": "Wind Streams is taken out",
+  "epic": "video-sizzle",
+  "summary": "No title draws the thin wavy lines any more, and you can no longer pick them as a background. Condensed Poster now stands on a still warm black, a few shades lighter behind its words. Documents saved with the wavy lines open on that plain warm black.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Pictures are from the probe on today's main via title-set-kinetic-bold-walk, live-title-backgrounds-walk and video-library-catalog-walk, all green, with Screen Recording granted and the screen unlocked.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording, open the Library's Catalog and search for Condensed Poster.", "shot": "2026-11-26-wind-streams-before-after.png" },
+    { "do": "Insert it before the clip and play it. The ground behind MAKE NOISE is still warm black with no lines.", "shot": "2026-11-26-wind-streams-after-holding-sc.png" },
+    { "do": "With the title picked, open the Background row in the panel. Nine moving looks, no Wind Streams.", "shot": "2026-11-26-wind-streams-picker-nine-looks-sc.png" },
+    { "do": "Open the Library's Catalog, pick Backgrounds. It says 9." },
+    { "do": "Open a video saved last week with Condensed Poster in it. The title opens on plain warm black." }
+  ],
+  "evaluate": [
+    "Does Condensed Poster's still warm black read as refined next to the other title pages, or does it now feel too empty?",
+    "Is the lighter patch behind the words visible enough to matter, or would a flat warm black be just as good?",
+    "On the other-looks sheet, do Energy Streams, Grid Horizon and Color Bubbles strike you the same way Wind Streams did?"
+  ],
+  "rough": [
+    "Other moving looks: at the strength the Library and the Background picker give them, Energy Streams (neon wavy lines), Grid Horizon (synthwave sun and grid) and Color Bubbles (flat discs) read as stock clip art. Liquid Gradient and Light Rays are borderline. Aurora, Light Leaks, Particles and Architectural Sketch read as light. Sheet at 1.0, 2.5 and 4.0 s: 2026-11-26-wind-streams-other-looks-sheet.png. Filed as the-library-and-title-restyle-stop-offering-back.",
+    "The lighter patch behind the words is a radial gradient only about ten levels deep. Stretched eight times in contrast it shows one-level 8-bit steps. At normal contrast in the export they do not show.",
+    "A document saved with Wind Streams opens on Solid in the ground colour Wind Streams drew over. It does not get Condensed Poster's new lighter patch, because a saved title may have been recoloured.",
+    "Condensed Poster's headline running off the frame is not touched here; that is a-main-title-headline-keeps-its-second-line-afte.",
+    "No mock covers the title grounds; the rules followed are docs/design/video-titles-polish.md, colour rules 1, 3 and 7."
+  ]
+}

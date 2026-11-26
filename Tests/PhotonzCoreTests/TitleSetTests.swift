@@ -118,7 +118,7 @@ struct TitleSetTests {
         }
     }
 
-    @Test("Every title stands on a moving look, except one deliberately bare name card")
+    @Test("Every title stands on a moving look, except a bare name card and Condensed Poster's still warm black")
     func movingLooks() {
         var still: [BuiltInTitle] = []
         for preset in Self.twelve {
@@ -130,8 +130,10 @@ struct TitleSetTests {
             if !live && !frosted { still.append(preset) }
             #expect(preset.hasMovingBackdrop == (live || frosted), "\(preset.name) says it moves: \(preset.hasMovingBackdrop)")
         }
-        #expect(still == [.underline], "standing on something still: \(still.map(\.name))")
-        // Ten looks, and the set uses most of them. Since 2026-11-21 (task
+        // Condensed Poster's wavy Wind Streams was taken out on 2026-11-26
+        // (`WindStreamsRetiredTests`): it stands on a still warm black now.
+        #expect(still == [.kinetic, .underline], "standing on something still: \(still.map(\.name))")
+        // Nine looks, and the set uses most of them. Since 2026-11-21 (task
         // `keynote-clean-soft-gradient-glass-kinetic-bold-t`) Command Line
         // shares the liquid gradient with Frosted Glass, dark under one and
         // pale under the other: the grid it stood on draws a synthwave sun.
@@ -142,7 +144,7 @@ struct TitleSetTests {
             return (live.look, LivePalette(fill).lightGround)
         }
         let looks = grounds.map(\.0)
-        #expect(Set(looks).count >= 9, "only \(Set(looks).count) looks: \(looks)")
+        #expect(Set(looks).count >= 8, "only \(Set(looks).count) looks: \(looks)")
         for look in Set(looks) {
             let sharing = grounds.filter { $0.0 == look }
             #expect(sharing.count <= 2, "\(look) is used \(sharing.count) times")
@@ -191,7 +193,9 @@ struct TitleSetTests {
             let later = try Self.drawn(doc, atMS: min(arrived + 1500, time.outMS - 700))
             if preset.hasMovingBackdrop {
                 #expect(early != later, "\(preset.name) stands still while it holds")
-            } else {
+            } else if preset == .underline {
+                // Condensed Poster's ground is still too, but its words keep
+                // their slow hold over it.
                 #expect(early == later, "\(preset.name) moves while it holds")
             }
         }

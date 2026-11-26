@@ -231,12 +231,6 @@ public enum LiveBackdropPainter {
 
     }
 
-    // Fine lines following the wind: the streamlines of a slowly turning
-    // flow, with streaks of light running along them.
-    inline float windPotential(float2 p, float t) {
-        return p.y * 1.15 + 0.55 * live::fbmT(p * 1.1 + float2(-t * 0.10, 0.0), t * 0.07);
-    }
-
     // A two point perspective sketch of a building, drawn line by line with
     // its construction lines running off to the horizon, then held with a
     // slow drift, over a faint blueprint grid and a light passing over it.
@@ -299,7 +293,7 @@ public enum LiveBackdropPainter {
     /// Each look's own program. Every look is compiled ON ITS OWN with the
     /// shared part: Core Image hands back the last function for every kernel
     /// of one source whose arguments match (measured 2026-10-12, two kernels
-    /// returning red and green both drew green), and all ten take the same
+    /// returning red and green both drew green), and all of them take the same
     /// arguments.
     static func source(_ look: LiveLook) -> String {
         switch look {
@@ -477,34 +471,6 @@ public enum LiveBackdropPainter {
             glow += mix(c1, warm[0], k.w) * edge;
             weight += edge;
             return live::finish(ground, glow, weight, f);
-        }
-        """#
-        case .windStreams:
-            return common + #"""
-        extern "C" float4 live_windStreams(float3 ground, float3 c1, float3 c2, float3 c3,
-                                           float4 k, float4 f, coreimage::destination d) [[stitchable]] {
-            float2 uv = live::place(d, f);
-            float t = k.x;
-            float px = 1.0 / f.y;
-            float zoom = 2.4 / k.z;
-            float2 p = uv * zoom;
-            float e = 0.004;
-            float psi = windPotential(p, t);
-            float gx = (windPotential(p + float2(e, 0.0), t) - psi) / e;
-            float gy = (windPotential(p + float2(0.0, e), t) - psi) / e;
-            float g = max(length(float2(gx, gy)), 0.05);
-            float lines = 10.0;
-            float s = psi * lines;
-            float across = min(fract(s), 1.0 - fract(s)) / (lines * g) / zoom;
-            float width = max(mix(0.0005, 0.0040, k.w), 0.7 * px);
-            float line = exp(-(across * across) / (width * width));
-            float id = floor(s + 0.5);
-            float h = live::hash1(id * 1.37);
-            float dash = smoothstep(0.30, 0.85, live::noise(float2(p.x * 1.4 - t * (0.9 + 0.7 * h), id * 3.7)));
-            float w = line * (0.08 + 1.1 * dash) * k.y * 0.9;
-            float haze = 0.06 * k.y * live::fbmT(p * 0.6, t * 0.1);
-            float3 glow = live::lights(h, c1, c2, c3) * w + c3 * haze;
-            return live::finish(ground, glow, w + haze, f);
         }
         """#
         case .sketch:
