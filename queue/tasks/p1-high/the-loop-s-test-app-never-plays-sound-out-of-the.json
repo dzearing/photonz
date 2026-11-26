@@ -1,0 +1,32 @@
+{
+  "id": "the-loop-s-test-app-never-plays-sound-out-of-the",
+  "title": "The loop's test app never plays sound out of the Mac's speakers",
+  "goal": "While the loop tests, its copy of Photonz plays videos with their soundtrack out loud, so the person at the Mac hears strange music and synth voices coming from nowhere. Tests must stay silent to the room while still checking that the sound is right.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T19:38:24.646Z",
+  "updated": "2026-11-26T19:38:24.775Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-26: \"there is weird music with weird vocal synth playing in the background, wheres it coming from\". Traced in the intake window: not the user's apps and not the intake reel (stop: 'needs the video playing' in both); `pmset -g assertions` showed audio-out on BuiltInSpeakerDevice created for PID 19693, `/Users/dzearing/git/photonz/dist/Photonz Probe.app/Contents/MacOS/Photonz Probe --playtest /tmp/scrub-like.json`, the scrubbing task's runner. No mute exists for walks today (grep mute in Scripts/playtest.sh and Sources/Photonz/Playtest finds none). Walks were made to leave the person's keyboard, focus and screen alone on 2026-09-26 (CLAUDE.md 'Walks run while the person works'); sound was never part of that. Likely place: the document audio engine's output node (DocumentAudioEngine), volume zero at the main mixer output, or render to an offline/null device when a playtest is running; Experiments/feature flags are not the switch, the playtest launch is. Trap: the probe captures its own output in some diagnostics; keep those measuring the mix.",
+  "acceptance": [
+    "Reproduced first: run a walk that plays a reference edit with sound (the speed walk, hear-the-scrub-walk, the scrub task's walks) and show with `pmset -g assertions` (audio-out BuiltInSpeakerDevice created for the Photonz Probe pid) and a recording of the system output that sound reaches the speakers today. Seen 2026-11-26 11:40: pid 19693 `Photonz Probe --playtest /tmp/scrub-like.json` held audio-out.",
+    "Whenever the probe is driven by a walk, a drill or the speed walk, nothing it plays reaches the Mac's output device: the editor's sound engine still runs and mixes exactly as in real use (so its sync, dropout and level checks still measure the real mix, tapped before the output), and only the last step to the speakers is silent. Say in the audit where the tap sits and prove each sound measurement in the suite still reads the same numbers before and after (speed walk sound tally, the sound sync checks, AudioCaptureDiag if it reads system output: move it to the tap or give it its own explicit opt in).",
+    "A person running a walk by hand who wants to hear it can (an environment switch, written in docs/design/playtest-harness.md). The dev app and the release app are untouched.",
+    "A check that runs with the rotating walk check: while a sound walk plays, the probe holds no audio-out assertion. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T19:38:24.648Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-26T19:38:24.774Z",
+      "note": "seq 4070 -> 1"
+    }
+  ]
+}
