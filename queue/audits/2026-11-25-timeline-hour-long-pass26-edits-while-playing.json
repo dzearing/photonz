@@ -1,0 +1,26 @@
+{
+  "feature": "Edits on an hour-long edit while it plays stay inside 16 ms",
+  "epic": "video-perf",
+  "summary": "Trimming, moving, cutting, undoing, adding a transition or rewording a title on the 60 minute edit while it plays now holds the window 9 to 15 ms at worst, inside the 16 ms bar. An edit made while it plays no longer draws the picture itself: the play clock draws it a refresh later, as it does every frame anyway.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 60 minute edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev. Measured in the probe with the timeline and edit parts of the long speed walk, three runs on the final build, plus three alternating pairs with and without the change on one build.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 60 },
+    { "do": "Press Space to play, then drag the end of a clip on V1 a little shorter while it plays." },
+    { "do": "Click a clip on V1, press B to cut it while it plays, then press Command-Z.", "shot": "2026-11-25-timeline-hour-long-pass26-cut-while-playing-sc.png" },
+    { "do": "Right-click a cut just ahead of the playhead and add a Cross Dissolve while it plays.", "shot": "2026-11-25-timeline-hour-long-pass26-transition-while-playing-sc.png" },
+    { "do": "Watch the playhead and the picture through each edit." }
+  ],
+  "evaluate": [
+    "Does play carry on smoothly through each edit, with no catch at the moment you let go or press the key?",
+    "Does the change show in the picture as soon as you expect it, or can you see it arrive a moment late?",
+    "Does Command-Z after a cut feel as quick as the cut did?"
+  ],
+  "rough": [
+    "Longest main thread pass per edit while it plays, before / after (bar 16 ms, three runs each on the 60 minute edit): trim 17 / 11-14, move 14 / 9-10, cut 14 / 13-15, undo 15 / 13-15, transition 18 / 10-15, title 16 / 11-12.",
+    "Part of the before number was the speed walk's own work: it looked up which clip or cut to edit among an hour of clips inside the timed pass, 1 to 3 ms that a person's click never costs. The walk now finds its target before the clock starts. With the walk fixed and the app unchanged the edits read 13 to 16 ms; the app change took them to 9 to 15.",
+    "An edit made while it plays now shows in the picture one refresh (about 8 ms) later than before, on the clock's next frame. Stopped, nothing changed.",
+    "Not reached: no frame over 16 ms while zooming and scrolling. Two of three runs had one main thread frame of 30 to 32 ms (one scroll, one near the whole hour) in about 1,500; the rest stay under 14 ms, and p95 stays under 8.3 ms (zoom in 6.2-7.3, out 6.4-7.3, near the whole hour 7.5-8.2, scroll 7.9-8.3). Not profiled yet; it stays on this task.",
+    "No mock covers the timeline's speed; nothing about how the timeline or the picture looks at rest changed."
+  ]
+}

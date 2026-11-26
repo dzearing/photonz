@@ -59,7 +59,9 @@ extension PhotonzDocument {
                 changed.append((old.layers[index], nil))
                 continue
             }
-            if layers[still] != old.layers[index] { changed.append((old.layers[index], layers[still])) }
+            if !layers.layer(at: still, isTheSameAs: index, in: old.layers) {
+                changed.append((old.layers[index], layers[still]))
+            }
         }
         if !same {
             for index in layers.indices where was[layers[index].id] == nil { changed.append((nil, layers[index])) }

@@ -840,7 +840,12 @@ write every number into one `speed.json`:
   the pick the window really has when it is made (`trim` or `trim, picked`),
   and a blade is made the way a person makes one, the clip clicked first and
   B pressed once the panel has settled, so the click is never charged to the
-  cut. See "What an edit costs, by what is on screen" below.
+  cut. What an edit acts on (the clip a trim shortens, the cut a transition
+  goes on, the title reworded) is found before the clock starts, since a
+  person's click or drag carries it: until 2026-11-25 the walk's own lookup
+  among an hour of clips (every recording on every track, every cut) was
+  timed with the edit, 1 to 3 ms of it (`SpeedWalkProbe.aim`). See "What an
+  edit costs, by what is on screen" below.
 - **idleBuilds**: view bodies built per new picture while it plays untouched
   (`ViewBuildMeter`).
 - **timeline**: refresh times zooming in and out and scrolling end to end.
@@ -1794,6 +1799,27 @@ The rule, for any view added to the editor window:
    builds one row, one lane and one bar and holds it about 31. A new thing
    on a track row or a clip bar that depends on what is picked reads it from
    the share or from the clip's watch, or is added to them.
+11. **While it plays, an edit leaves drawing its moment to the clock.** The
+   play clock draws the document at its moment on every step
+   (`documentMomentChanged`), a refresh apart, so an edit made while it plays
+   does not draw the moment itself in its own pass: `rerender` hands nothing
+   to the renderer while `clockDrawsTheNextMoment` (the clock is stepping, not
+   waiting for its first frames), and neither the blade nor a transition put
+   on while playing calls `documentMomentChanged` of its own. Drawing a
+   moment of an edit that has just changed works the whole moment out again
+   (which clips are on, the cuts and their transitions), and on the hour-long
+   reference edit (2026-11-25) that was 2.5 to 4 ms of every trim, move,
+   blade, undo and transition's own pass, and a transition drew it twice.
+   What changed shows a refresh later, with the frame the clock draws next.
+   Stopped, or while the clock waits for its first frames, an edit draws its
+   moment as before. A new edit made while playing does not call
+   `documentMomentChanged` itself unless `clockDrawsTheNextMoment` is false.
+   The same pass after an edit asks, of every clip on a busy lane, whether
+   the edit left it alone (`clipIsUnchanged`, `clipBarsChange`); a clip the
+   edit did not touch is the same bits in both documents, so that is asked of
+   its bytes first and of its values only when they differ
+   (`Array<Layer>.layer(at:isTheSameAs:in:)`): comparing values copied every
+   clip out of both lists.
 
 Measured with these in place (short speed walk, 2026-11-13): a minute of 1x
 play dropped 4 of about 1,820 frames, against 379 before; every transition

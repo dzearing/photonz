@@ -169,7 +169,9 @@ extension EditorState {
             } else {
                 perform { $0.setTransition(nil, at: place) }
             }
-            documentMomentChanged()
+            // The clock's next step does this anyway: done here as well, the
+            // moment was drawn twice in the edit's own pass (2026-11-25).
+            if !clockDrawsTheNextMoment { documentMomentChanged() }
             return
         }
         pauseDocument()

@@ -162,7 +162,7 @@ extension EditorState {
         }
         // Playing, the clock's next step does this anyway, and doing it here
         // as well drew the same moment twice in the cut's own frame.
-        if !isDocumentPlaying || documentClockWaiting { documentMomentChanged() }
+        if !clockDrawsTheNextMoment { documentMomentChanged() }
     }
 
     /// Whether ⌫ means "throw this piece away" rather than "delete this

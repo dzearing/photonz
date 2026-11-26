@@ -430,16 +430,23 @@ final class SpeedWalkProbe {
             // and an undo after a blade, made with the blade's piece picked,
             // was counted as an undo with nothing picked: 25 ms where one
             // with nothing picked is 12.
+            var began = CACurrentMediaTime()
             let picked = editor.selectedLayerID != nil
             let edit = PlaytestSpeedMeasure.tallyName(named, picked: picked, fromNothing: named == "pick" && !picked,
                                                       panelIsFull: panelIsFull)
-            MainThreadMeter.shared.reset()
-            ViewBuildMeter.shared.reset()
-            PassSampler.label = "\(index) \(edit)"
-            let began = CACurrentMediaTime()
+            // What the edit acts on is found first, untimed: a person's
+            // click or drag carries its clip or cut, and the walk looking one
+            // up among an hour of clips (every recording on every track, every
+            // cut in the edit) is the walk's work, not the app's. Until
+            // 2026-11-25 the lookup was timed with the edit: 1 to 3 ms of it.
             let did: String
             do {
-                did = try perform(named, on: editor)
+                let act = try aim(named, on: editor)
+                MainThreadMeter.shared.reset()
+                ViewBuildMeter.shared.reset()
+                PassSampler.label = "\(index) \(edit)"
+                began = CACurrentMediaTime()
+                did = try act()
             } catch let refused as Failure {
                 // One edit that finds nothing to act on does not cost the
                 // others their numbers: it is written down as not made.
@@ -538,26 +545,31 @@ final class SpeedWalkProbe {
         return true
     }
 
-    private func perform(_ edit: String, on editor: EditorState) throws -> String {
+    /// What one named edit acts on, found in the document, and the edit
+    /// itself handed back to be made and timed (`edits`).
+    private func aim(_ edit: String, on editor: EditorState) throws -> () throws -> String {
         guard let document = editor.document else { throw Failure(description: "no document") }
         let playhead = editor.documentTimeMS
         let (byTrack, main) = recordings(in: document)
         switch edit {
         case "nothing":
-            return "nothing done"
+            return { "nothing done" }
         case "trim":
             guard let clip = main.first(where: { ($0.time?.inMS ?? 0) > playhead + 2000 }),
                   let session = ClipTrimSession(layer: clip) else {
                 throw Failure(description: "no clip ahead of the playhead to trim")
             }
-            var refusal: String?
-            editor.perform { refusal = $0.agentTrim(clip.id, keepFromMS: nil, keepToMS: session.keepOutMS - 500,
-                                                     ripple: false) }
-            if let refusal { throw Failure(description: "the trim was refused: \(refusal)") }
-            return "half a second off the end of \(clip.name)"
+            let id = clip.id, name = clip.name, keepTo = session.keepOutMS - 500
+            return {
+                var refusal: String?
+                editor.perform { refusal = $0.agentTrim(id, keepFromMS: nil, keepToMS: keepTo, ripple: false) }
+                if let refusal { throw Failure(description: "the trim was refused: \(refusal)") }
+                return "half a second off the end of \(name)"
+            }
         case "move":
             let broll = byTrack.filter { $0 != main }.flatMap { $0 }
                 .filter { ($0.time?.inMS ?? 0) > playhead + 2000 }
+            var tries: [(id: UUID, name: String, to: Int, delta: Int)] = []
             for clip in broll + main {
                 guard let time = clip.time, let track = document.trackID(ofClip: clip.id) else { continue }
                 for delta in [500, -500] {
@@ -565,12 +577,19 @@ final class SpeedWalkProbe {
                     guard to > playhead,
                           document.agentClipInTheWay(of: clip.id, span: to..<(to + time.lengthMS), onTrack: track) == nil
                     else { continue }
-                    var moved = false
-                    editor.perform { moved = $0.moveClip(clip.id, toInMS: to) }
-                    if moved { return "\(clip.name) \(delta > 0 ? "later" : "earlier") by half a second" }
+                    tries.append((clip.id, clip.name, to, delta))
                 }
+                if tries.count >= 4 { break }
             }
-            throw Failure(description: "no clip ahead of the playhead had room to move")
+            guard !tries.isEmpty else { throw Failure(description: "no clip ahead of the playhead had room to move") }
+            return {
+                for one in tries {
+                    var moved = false
+                    editor.perform { moved = $0.moveClip(one.id, toInMS: one.to) }
+                    if moved { return "\(one.name) \(one.delta > 0 ? "later" : "earlier") by half a second" }
+                }
+                throw Failure(description: "no clip ahead of the playhead had room to move")
+            }
         case "pick":
             // The recording under the playhead with time left in it to be
             // cut and trimmed while it plays on, else the next one, parked in.
@@ -581,8 +600,8 @@ final class SpeedWalkProbe {
             // to land on it timed nothing (2026-11-21).
             if let held = editor.selectedLayerID, under?.id == held || under == nil,
                let other = main.first(where: { $0.id != held && ($0.time?.inMS ?? 0) > playhead }) {
-                editor.selectLayer(other.id)
-                return "\(other.name) picked, from \(document.layer(id: held)?.name ?? "another clip")"
+                let said = "\(other.name) picked, from \(document.layer(id: held)?.name ?? "another clip")"
+                return { editor.selectLayer(other.id); return said }
             }
             // `parkForThePick` parked on the next one when there was none.
             if under == nil {
@@ -592,43 +611,47 @@ final class SpeedWalkProbe {
             guard let clip = under else {
                 throw Failure(description: "no recording under or after the playhead at \(SpeedWalk.clock(playhead)) to pick")
             }
-            editor.selectLayer(clip.id)
-            return "\(clip.name) picked"
+            return { editor.selectLayer(clip.id); return "\(clip.name) picked" }
         case "blade":
             // B cuts the clip in hand, picked untimed before this
             // (`handTheBladeItsClip`), the way a person clicks it first.
             guard let clip = editor.selectedLayerID.flatMap({ document.layer(id: $0) }) else {
                 throw Failure(description: "no clip in hand to cut at \(SpeedWalk.clock(playhead))")
             }
-            guard editor.canSplitClipAtPlayhead else { throw Failure(description: "\(clip.name) cannot be cut there") }
-            editor.splitClipAtPlayhead()
-            return "\(clip.name) cut at \(SpeedWalk.clock(editor.documentTimeMS))"
+            let name = clip.name
+            return {
+                guard editor.canSplitClipAtPlayhead else { throw Failure(description: "\(name) cannot be cut there") }
+                editor.splitClipAtPlayhead()
+                return "\(name) cut at \(SpeedWalk.clock(editor.documentTimeMS))"
+            }
         case "addTrack":
-            editor.addTrack(.video)
-            return "a picture track added"
+            return { editor.addTrack(.video); return "a picture track added" }
         case "addClip":
             guard let like = main.first(where: { ($0.time?.inMS ?? 0) > playhead + 2000 }), let movie = like.movie,
                   let time = like.time else {
                 throw Failure(description: "no clip ahead of the playhead to add one like")
             }
-            editor.perform { document in
-                var layer = like
-                layer = Layer(name: "Added", content: like.content, frame: like.frame)
-                layer.movie = movie
-                layer.time = LayerTime(inMS: time.inMS, outMS: time.outMS, sourceInMS: time.sourceInMS,
-                                       sourceLengthMS: movie.durationMS)
-                _ = document.land(layer, at: ClipLanding(target: .newTrack(at: 0), startMS: time.inMS,
-                                                         lengthMS: time.lengthMS, edit: .overwrite,
-                                                         trackName: "Added", allowed: true))
+            var layer = Layer(name: "Added", content: like.content, frame: like.frame)
+            layer.movie = movie
+            layer.time = LayerTime(inMS: time.inMS, outMS: time.outMS, sourceInMS: time.sourceInMS,
+                                   sourceLengthMS: movie.durationMS)
+            let added = layer
+            return {
+                editor.perform { document in
+                    _ = document.land(added, at: ClipLanding(target: .newTrack(at: 0), startMS: time.inMS,
+                                                             lengthMS: time.lengthMS, edit: .overwrite,
+                                                             trackName: "Added", allowed: true))
+                }
+                return "a recording on a track of its own at \(SpeedWalk.clock(time.inMS))"
             }
-            return "a recording on a track of its own at \(SpeedWalk.clock(time.inMS))"
         case "unpick":
-            editor.selectLayer(nil)
-            return "nothing picked"
+            return { editor.selectLayer(nil); return "nothing picked" }
         case "undo":
-            guard editor.canUndo else { throw Failure(description: "there was nothing to undo") }
-            editor.undo()
-            return "the last edit taken back"
+            return {
+                guard editor.canUndo else { throw Failure(description: "there was nothing to undo") }
+                editor.undo()
+                return "the last edit taken back"
+            }
         case "transition":
             let ahead = document.transitionCuts().filter { $0.atMS > playhead + 2000 }
             guard let cut = ahead.first(where: { $0.cut.transition == nil && $0.cut.fitted(.dissolve) != nil })
@@ -636,8 +659,11 @@ final class SpeedWalkProbe {
                 throw Failure(description: "no cut ahead of the playhead takes a transition")
             }
             let kind: ClipTransitionKind = cut.cut.transition == nil ? .dissolve : .wipe
-            editor.setTransition(kind, at: cut.place)
-            return "\(kind.title.lowercased()) at \(SpeedWalk.clock(cut.atMS))"
+            let place = cut.place, atMS = cut.atMS
+            return {
+                editor.setTransition(kind, at: place)
+                return "\(kind.title.lowercased()) at \(SpeedWalk.clock(atMS))"
+            }
         case "title":
             let titles = document.timelineClipLayers
                 .filter { $0.group?.titleRecipe != nil && ($0.time?.inMS ?? 0) > playhead }
@@ -645,8 +671,11 @@ final class SpeedWalkProbe {
             guard let title = titles.first, let words = title.selfAndDescendants.first(where: { $0.text != nil }) else {
                 throw Failure(description: "no title ahead of the playhead to reword")
             }
-            AgentVideoWork.reword(words.id, to: "Speed walk \(Int.random(in: 10...99))", in: editor)
-            return "the words of \(title.name)"
+            let wordsID = words.id, name = title.name
+            return {
+                AgentVideoWork.reword(wordsID, to: "Speed walk \(Int.random(in: 10...99))", in: editor)
+                return "the words of \(name)"
+            }
         default:
             throw Failure(description: "\(edit) is not an edit")
         }

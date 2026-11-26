@@ -345,6 +345,7 @@ extension EditorState {
         documentPlaybackTask?.cancel()
         documentPlaybackTask = nil
         documentClockWaiting = false
+        documentClockStepping = false
         documentPlaybackStartedAt = nil
         catchUpOnQuietPictures()
         // The panel held the clip it showed while it played past others
@@ -359,6 +360,7 @@ extension EditorState {
     private func restartDocumentClock(fromRest: Bool = false) {
         documentPlaybackTask?.cancel()
         documentClockWaiting = false
+        documentClockStepping = false
         documentPlaybackStartedAt = Date()
         documentPlaybackStartedAtMS = documentTimeMS
         let rate = documentPlaybackRate
@@ -378,6 +380,7 @@ extension EditorState {
             // Ticks on its own beat, not a frame after each tick's work
             // (`PlayClockPace`).
             let beat = ContinuousClock.now
+            if !Task.isCancelled { self?.documentClockStepping = true }
             while !Task.isCancelled {
                 let sinceBeat = beat.duration(to: .now)
                 let elapsedMS = Double(sinceBeat.components.seconds) * 1000
@@ -483,6 +486,14 @@ extension EditorState {
         documentPlaybackStartedAt = Date()
         documentPlaybackStartedAtMS = documentTimeMS
         if playsSoundAtRate { startAudio() }
+    }
+
+    /// Whether the play clock's next step, a refresh away, draws the document
+    /// as it is then, so an edit made while it plays has no need to draw its
+    /// moment itself: the clock is stepping on its beat, not waiting for its
+    /// first frames (`rerender`, `splitClipAtPlayhead`, `setTransition`).
+    var clockDrawsTheNextMoment: Bool {
+        isDocumentPlaying && documentClockStepping && !documentClockWaiting && documentPlaybackTask != nil
     }
 
     // MARK: Drawing the moment

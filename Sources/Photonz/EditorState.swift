@@ -2578,6 +2578,10 @@ final class EditorState {
     /// A clock starting from rest is waiting for its first frames
     /// (`preRollWithSound`): the sound starts when it does, not before.
     @ObservationIgnored var documentClockWaiting = false
+    /// The clock is past any wait for its first frames and stepping on its
+    /// beat: every step calls `documentMomentChanged`, which draws the
+    /// document as it is then (`clockDrawsTheNextMoment`).
+    @ObservationIgnored var documentClockStepping = false
     /// Until when a clock that has just started, or is about to, may leave a
     /// clip out rather than draw it from another time (`startGoesWithout`).
     @ObservationIgnored var startGoesWithoutUntil = 0.0
@@ -6581,6 +6585,12 @@ final class EditorState {
             editingCaptionLayerID = nil
         }
         notePreviewOffer(document)
+        // Playing, the clock's next step draws this document at its moment
+        // anyway, a refresh from now. Drawing it here as well worked the whole
+        // moment out twice, and the first time in the edit's own pass: 2.5 to
+        // 4 ms of every trim, move, blade, undo and transition made while an
+        // hour long edit played (2026-11-25).
+        if clockDrawsTheNextMoment { return }
         submit(document)
     }
 

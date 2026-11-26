@@ -457,9 +457,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// `other`: what an edit somewhere else in the document left alone.
     public func clipIsUnchanged(_ id: UUID, since other: PhotonzDocument) -> Bool {
         guard let index = topLevelIndex[id], let was = other.topLevelIndex[id] else { return false }
-        return layers.withUnsafeBufferPointer { now in
-            other.layers.withUnsafeBufferPointer { now[index] == $0[was] }
-        }
+        return layers.layer(at: index, isTheSameAs: was, in: other.layers)
     }
 
     /// The group a layer lives in, nil when it sits loose on the canvas.
@@ -1516,5 +1514,30 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             }
         }
         scaleAll(&layers)
+    }
+}
+
+extension Array where Element == Layer {
+    /// Whether the layer at `index` here is, all of it, the layer at `other`
+    /// in `list`, read where both stand.
+    ///
+    /// A layer an edit left alone was copied along with its list, so it is
+    /// the same bits in both: the same values and the same storage behind
+    /// them. Asked that first, nothing is copied; comparing the two as values
+    /// copied each of them out, and after every edit of an hour long timeline
+    /// the lane's repaint asked it once a clip and twice a cut: a millisecond
+    /// of the pass (2026-11-25). Bits that differ (padding, a layer rebuilt in
+    /// new storage) are compared as values.
+    func layer(at index: Int, isTheSameAs other: Int, in list: [Layer]) -> Bool {
+        withUnsafeBufferPointer { here in
+            list.withUnsafeBufferPointer { there in
+                guard here.indices.contains(index), there.indices.contains(other) else { return false }
+                if let a = here.baseAddress, let b = there.baseAddress,
+                   memcmp(a + index, b + other, MemoryLayout<Layer>.size) == 0 {
+                    return true
+                }
+                return here[index] == there[other]
+            }
+        }
     }
 }

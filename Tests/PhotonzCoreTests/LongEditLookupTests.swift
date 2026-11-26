@@ -96,6 +96,31 @@ struct LongEditLookupTests {
         #expect(!after.clipIsUnchanged(UUID(), since: before))
     }
 
+    @Test("A clip is unchanged when it is the same clip, however it came to be so, and changed by any write to it")
+    func unchangedHoweverMade() throws {
+        let before = Self.document
+        let id = before.layers[7].id
+        // Read back from a save: the same clip in new storage.
+        let reopened = try JSONDecoder().decode(PhotonzDocument.self, from: JSONEncoder().encode(before))
+        #expect(reopened.clipIsUnchanged(id, since: before))
+        // Written and written back.
+        var back = before
+        back.updateLayer(id: id) { $0.name = "Renamed" }
+        back.updateLayer(id: id) { $0.name = before.layers[7].name }
+        #expect(back.clipIsUnchanged(id, since: before))
+        // Somewhere else in the list.
+        var moved = before
+        moved.layers.insert(moved.layers.remove(at: 7), at: 2)
+        #expect(moved.clipIsUnchanged(id, since: before))
+        // Any write to it at all, the smallest included.
+        var nudged = before
+        nudged.updateLayer(id: id) { $0.frame.origin.x += 0.5 }
+        #expect(!nudged.clipIsUnchanged(id, since: before))
+        var timed = before
+        timed.updateLayer(id: id) { $0.time = $0.time.map { $0.withOut($0.outMS - 1) } }
+        #expect(!timed.clipIsUnchanged(id, since: before))
+    }
+
     @Test("A layer by its path is the one there, at the top, inside a group, and nowhere")
     func byPath() throws {
         var document = Self.document
