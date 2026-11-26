@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:48:45.395Z",
-  "updated": "2026-11-26T18:27:43.936Z",
+  "updated": "2026-11-26T20:37:06.117Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (closed 2026-11-23). lag = refreshes since the hand was at the moment the picture carries (a stand-in frame counts as caught up); frame lag = the exact frame under the hand; sight lag = the frames the picture is really drawn from (SpeedWalk.ScrubTally). The medium drag's frame lag and sight lag worst are shown but not judged since 2026-11-23 (SpeedCompare.isJudged: 17 to 81 at the median on unchanged code); its lag worst is judged. Passes 20 to 22 made the hunt follow the hand (MovieSweep.window(follows:), restingPass, MovieFrameQueue.placesStillShown): hunt frame worst 43 -> 3. Lead from pass 22: the hunt's ~20 ms looks with an idle main thread (display link or render server; Metal System Trace needs developer mode). Lag worst 3-10 on medium in 45 runs: which moment is late is chance, so look at the per-look dump (temporary) before changing anything.",
@@ -159,6 +159,10 @@
     {
       "t": "2026-11-26T18:27:43.932Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-26T20:37:06.116Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
     }
   ],
   "walks": [
@@ -166,5 +170,6 @@
     "scrub-never-blacks-out-walk",
     "hear-the-scrub-walk"
   ],
-  "started": "2026-11-26T18:27:43.931Z"
+  "started": "2026-11-26T18:27:43.931Z",
+  "failures": 1
 }

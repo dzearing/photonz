@@ -19388,3 +19388,55 @@
 {"t":"2026-11-26T18:25:30.011Z","ev":"task_note","id":"a-jump-on-a-wide-edit-shows-its-picture-whole-an"}
 {"t":"2026-11-26T18:25:30.085Z","ev":"task_note","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy"}
 {"t":"2026-11-26T18:25:30.159Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 4 landed 7c6025ec9: the scrub sound is started before a drag, so its speakers no longer hold the window server up a few refreshes in (medium 3,3,3 -> 2,3,3; hunt 2,2,2 -> 1,2,2). Lag worst 1 not reached: the first crossing of a title (medium) and the hunt's first sharp-frame draws; leads in the log."}
+{"t":"2026-11-26T18:27:43.748Z","ev":"slice_pass","walks":4,"passed":4,"failed":0,"seconds":84,"of":1208,"couldNotRun":0,"timedOut":false,"rotating":true,"from":204,"to":205,"moved":1}
+{"t":"2026-11-26T18:27:43.937Z","ev":"task_started","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","title":"Scrubbing a long edit never trails the pointer by more than one display frame","priority":"p1-high"}
+{"t":"2026-11-26T18:37:13.407Z","ev":"task_created","id":"3d-transitions-ease-in-and-out-of-the-picture-in","priority":"p1-high","title":"3D transitions ease in and out of the picture instead of slamming over it or spinning through black"}
+{"t":"2026-11-26T18:37:13.526Z","ev":"task_resequenced","id":"3d-transitions-ease-in-and-out-of-the-picture-in","from":4070,"to":11}
+{"t":"2026-11-26T18:37:13.608Z","ev":"task_created","id":"speeding-up-a-clip-in-an-edit-leaves-no-black-ho","priority":"p1-high","title":"Speeding up a clip in an edit leaves no black hole and keeps the transition after it"}
+{"t":"2026-11-26T18:37:13.737Z","ev":"task_resequenced","id":"speeding-up-a-clip-in-an-edit-leaves-no-black-ho","from":4070,"to":12}
+{"t":"2026-11-26T18:37:13.820Z","ev":"task_created","id":"music-made-of-several-sound-clips-plays-without","priority":"p1-high","title":"Music made of several sound clips plays without dropping out where they meet"}
+{"t":"2026-11-26T18:37:13.936Z","ev":"task_resequenced","id":"music-made-of-several-sound-clips-plays-without","from":105,"to":13}
+{"t":"2026-11-26T18:37:14.015Z","ev":"task_created","id":"music-presets-that-build-a-library-of-scored-tra","priority":"p1-high","title":"Music presets that build: a library of scored tracks with build ups, drops and swells that fit any edit length"}
+{"t":"2026-11-26T18:37:14.137Z","ev":"task_resequenced","id":"music-presets-that-build-a-library-of-scored-tra","from":4070,"to":125}
+{"t":"2026-11-26T18:37:14.218Z","ev":"task_created","id":"screen-recordings-sit-on-a-designed-backdrop-no","priority":"p1-high","title":"Screen recordings sit on a designed backdrop: no black bars, framed like a product film"}
+{"t":"2026-11-26T18:37:14.333Z","ev":"task_resequenced","id":"screen-recordings-sit-on-a-designed-backdrop-no","from":4070,"to":126}
+{"t":"2026-11-26T18:37:14.411Z","ev":"task_created","id":"transitions-that-feel-expensive-a-modern-set-wit","priority":"p1-high","title":"Transitions that feel expensive: a modern set with motion blur, light and sound, not slideshow effects"}
+{"t":"2026-11-26T18:37:14.527Z","ev":"task_resequenced","id":"transitions-that-feel-expensive-a-modern-set-wit","from":4070,"to":127}
+{"t":"2026-11-26T18:37:27.424Z","ev":"task_reprioritized","id":"a-main-title-headline-keeps-its-second-line-afte","from":"p2-normal","to":"p1-high"}
+{"t":"2026-11-26T18:37:27.499Z","ev":"task_resequenced","id":"a-main-title-headline-keeps-its-second-line-afte","from":460,"to":14}
+{"t":"2026-11-26T18:37:27.574Z","ev":"task_note","id":"a-main-title-headline-keeps-its-second-line-afte"}
+{"t":"2026-11-26T18:37:27.661Z","ev":"task_note","id":"kinetic-type-that-hits-letters-words-and-lines-a"}
+{"t":"2026-11-26T18:37:27.748Z","ev":"task_note","id":"an-agent-makes-a-sizzle-reel-of-a-real-app-end-t"}
+{"t":"2026-11-26T18:37:27.826Z","ev":"task_note","id":"3d-transitions-ease-in-and-out-of-the-picture-in"}
+{"t":"2026-11-26T18:37:27.902Z","ev":"task_note","id":"transitions-that-feel-expensive-a-modern-set-wit"}
+{"t":"2026-11-26T19:10:44.958Z","ev":"task_created","id":"no-title-has-the-wavy-line-background-wind-strea","priority":"p1-high","title":"No title has the wavy line background: Wind Streams is taken out"}
+{"t":"2026-11-26T19:10:45.080Z","ev":"task_resequenced","id":"no-title-has-the-wavy-line-background-wind-strea","from":4070,"to":10.5}
+{"t":"2026-11-26T19:10:45.157Z","ev":"task_note","id":"3d-transitions-ease-in-and-out-of-the-picture-in"}
+{"t":"2026-11-26T19:10:45.233Z","ev":"task_note","id":"speeding-up-a-clip-in-an-edit-leaves-no-black-ho"}
+{"t":"2026-11-26T19:10:45.321Z","ev":"task_note","id":"music-made-of-several-sound-clips-plays-without"}
+{"t":"2026-11-26T19:10:45.397Z","ev":"task_note","id":"screen-recordings-sit-on-a-designed-backdrop-no"}
+{"t":"2026-11-26T19:10:45.484Z","ev":"task_note","id":"a-main-title-headline-keeps-its-second-line-afte"}
+{"t":"2026-11-26T19:30:08.408Z","ev":"task_note","id":"an-agent-makes-a-sizzle-reel-of-a-real-app-end-t"}
+{"t":"2026-11-26T19:30:08.482Z","ev":"task_note","id":"music-presets-that-build-a-library-of-scored-tra"}
+{"t":"2026-11-26T19:30:08.562Z","ev":"task_note","id":"screen-recordings-sit-on-a-designed-backdrop-no"}
+{"t":"2026-11-26T19:30:08.659Z","ev":"task_note","id":"transitions-that-feel-expensive-a-modern-set-wit"}
+{"t":"2026-11-26T19:30:08.737Z","ev":"task_note","id":"3d-transitions-ease-in-and-out-of-the-picture-in"}
+{"t":"2026-11-26T19:30:08.813Z","ev":"task_note","id":"kinetic-type-that-hits-letters-words-and-lines-a"}
+{"t":"2026-11-26T19:30:08.890Z","ev":"task_note","id":"motion-that-feels-like-apple-springs-speed-ramps"}
+{"t":"2026-11-26T19:30:08.966Z","ev":"task_note","id":"a-sizzle-reel-skill-how-an-agent-plans-paces-and"}
+{"t":"2026-11-26T19:30:09.042Z","ev":"task_note","id":"no-title-has-the-wavy-line-background-wind-strea"}
+{"t":"2026-11-26T19:30:09.118Z","ev":"task_note","id":"music-drives-the-cut-photonz-finds-the-beats-bar"}
+{"t":"2026-11-26T19:30:09.193Z","ev":"task_note","id":"an-agent-can-record-the-most-credible-moments-of"}
+{"t":"2026-11-26T19:38:24.650Z","ev":"task_created","id":"the-loop-s-test-app-never-plays-sound-out-of-the","priority":"p1-high","title":"The loop's test app never plays sound out of the Mac's speakers"}
+{"t":"2026-11-26T19:38:24.776Z","ev":"task_resequenced","id":"the-loop-s-test-app-never-plays-sound-out-of-the","from":4070,"to":1}
+{"t":"2026-11-26T20:01:15.962Z","ev":"loop_started","pid":8405}
+{"t":"2026-11-26T20:01:16.012Z","ev":"loop_awake","held":true,"pid":8415,"screenLocked":false}
+{"t":"2026-11-26T20:01:16.594Z","ev":"task_started","id":"the-loop-s-test-app-never-plays-sound-out-of-the","title":"The loop's test app never plays sound out of the Mac's speakers","priority":"p1-high"}
+{"t":"2026-11-26T20:01:39.662Z","ev":"task_created","id":"the-loop-s-test-app-never-asks-the-person-for-a","priority":"p1-high","title":"The loop's test app never asks the person for a screen or audio permission over and over"}
+{"t":"2026-11-26T20:01:39.779Z","ev":"task_resequenced","id":"the-loop-s-test-app-never-asks-the-person-for-a","from":4070,"to":2}
+{"t":"2026-11-26T20:36:13.515Z","ev":"task_walks","id":"the-loop-s-test-app-never-plays-sound-out-of-the","walks":["hear-the-scrub-walk","an-editing-session-walk"]}
+{"t":"2026-11-26T20:36:13.592Z","ev":"task_note","id":"the-loop-s-test-app-never-plays-sound-out-of-the"}
+{"t":"2026-11-26T20:36:13.673Z","ev":"task_note","id":"the-loop-s-test-app-never-plays-sound-out-of-the"}
+{"t":"2026-11-26T20:36:13.749Z","ev":"task_note","id":"the-loop-s-test-app-never-plays-sound-out-of-the"}
+{"t":"2026-11-26T20:36:40.106Z","ev":"task_done","id":"the-loop-s-test-app-never-plays-sound-out-of-the","from":"in_progress","note":"The probe is inaudible to the room and holds no audio-out assertion while it plays (PlaytestSilentProbe: Core Audio ProcessIsAudible 0 + SleepingIsAllowed 1 at launch; engines unchanged, every walk measurement upstream). Before: probe held audio-out 8 s in hear-the-scrub-walk; after: 0 over four sound walks, all ok, 440 Hz tone heard within 0.07%. PHOTONZ_PROBE_SOUND=1 to hear (docs/design/playtest-harness.md). soundExpectPlaying/soundScrubAcrossIt fail if audible; hear-the-scrub-walk in every rotating check. Commit 7bdabd7e4; test.sh green."}
+{"t":"2026-11-26T20:37:06.118Z","ev":"task_reset","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","attempt":1}
