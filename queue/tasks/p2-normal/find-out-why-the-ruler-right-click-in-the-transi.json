@@ -1,0 +1,29 @@
+{
+  "id": "find-out-why-the-ruler-right-click-in-the-transi",
+  "title": "Find out why the ruler right-click in the transitions walk sometimes misses the cut",
+  "goal": "A scripted check of transitions sometimes right-clicks the time ruler beside a cut and gets a menu without Transition… (it offers Add Zoom instead), and sometimes the same click gets Transition…. Find what decides it, so the check gives the same answer every run.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 47.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T02:19:17.583Z",
+  "updated": "2026-11-26T02:19:17.586Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-11-25 by the hour-long timeline task (pass 25). Step 70 (rightClick at window 621,833 after clickRuler 7.4 s and hover 621,860) failed three runs in a row between 17:44 and 17:50: rows were Add Marker, Set In, Set Out, Split Everything Here, Add Zoom, Zoom to Fit (no Transition…). It failed on HEAD a7a4d254e with and without that task's change, passed at e988c5272, then passed four times on HEAD + change (17:58-18:05). Command: Scripts/playtest-all.sh --no-build transitions-where-clips-meet-walk. The snapshot at step 67 was pixel-identical in failing and passing runs, so the layout did not move. Rows come from EditorState+TimelineMenus rulerMenuRows: Transition… needs a cut within clipCutReachMS of the ms the click maps to (rulerTransitionMenuRows), Add Zoom needs a recording under it, so the click mapped to a time away from the cut at ~7.5 s. Theory, unconfirmed: the ruler menu reads the time from the real pointer or from a hover state left by an earlier step rather than from the event location.",
+  "acceptance": [
+    "The cause is named: what made the same right-click on the ruler at (621, 833) read a different time on 2026-11-25 17:44-17:50 than on the runs after",
+    "transitions-where-clips-meet-walk passes ten runs in a row, with the pointer of the person at the Mac left wherever it is"
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T02:19:17.585Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "transitions-where-clips-meet-walk"
+  ]
+}

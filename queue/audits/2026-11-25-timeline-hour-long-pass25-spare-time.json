@@ -1,0 +1,28 @@
+{
+  "feature": "An hour-long timeline zooms and scrolls inside 120 Hz",
+  "epic": "video-perf",
+  "summary": "Pinching near the whole hour and flicking along the 60 minute edit now keep the main thread inside a 120 Hz frame in 95 per cent of frames. A lane's new picture now waits for a frame with room for it instead of landing on the frame that just rebuilt that lane.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 60 minute edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev. Measured in the probe with the timeline and edit parts of the long speed walk, three runs of the old way and three of the new on one build, alternating.",
+  "switched": {},
+  "try": [
+    { "do": "Open the 60 minute reference edit in Photonz Dev with the button below.", "referenceEdit": 60 },
+    { "do": "Pinch the timeline in a little from the whole hour, then back out, several times quickly." },
+    { "do": "Flick the timeline with two fingers from the start to the end of the hour." },
+    { "do": "Let go and look at the lanes once they settle.", "shot": "2026-11-25-timeline-hour-long-pass25-after-zoom-and-scroll-sc.png" },
+    { "do": "Press Space and trim the end of a clip on V1 while it plays, then press Command-Z." }
+  ],
+  "evaluate": [
+    "Does a quick pinch near the whole hour feel smooth now, with no catch every few frames?",
+    "Does a fast flick along the hour stay smooth to the end?",
+    "While you pinch, do you ever see a lane's clips stretched or out of place for a moment before they sharpen?",
+    "Once the timeline stops, is every lane exactly as it was before you moved it?"
+  ],
+  "rough": [
+    "Main thread a frame, p95, old / new (bar 8.3 ms, three alternating pairs): near the whole hour 9.4-9.6 / 7.3-8.1 (frames over 8.3 ms: 60-67 / 17-29 of 648), fast scroll 8.5-8.7 / 7.6-7.8 (23-32 / 7-8 of 360), zoom out 7.7-8.4 / 6.8-7.1, zoom in 6.8-7.2 / 6.4-6.7. All four now meet the 95 per cent bar.",
+    "Not reached: no frame over 16 ms. The longest main thread frame is now 9-13 ms in most runs, with one 33 ms scroll frame in six runs; frames held up by the system's own drawing (20-37 ms between refreshes) are no-frame-of-a-50-track-zoom-is-held-up-by-the-sy.",
+    "Not reached: every edit inside 16 ms. Longest pass while it plays: trim 14-18, move 14-15, blade 15-16, undo 15-18, add a transition 16-18, change a title 15-17. Unchanged by this pass.",
+    "While the timeline moves, a lane can show its previous picture, stretched to the new zoom, for up to about five frames before the new one shows (it was one or two). The pictures here are at rest; a moving frame cannot be photographed, because a snapshot waits for the timeline to settle.",
+    "transitions-where-clips-meet-walk failed three runs in a row and then passed four, on the same code and on the code before this change; filed as find-out-why-the-ruler-right-click-in-the-transi.",
+    "No mock covers the timeline's speed; nothing about how the timeline looks at rest changed."
+  ]
+}

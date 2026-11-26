@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-25T23:43:45.648Z",
+  "updated": "2026-11-26T02:29:09.393Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,29 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-25T23:43:45.647Z",
-      "note": "... 103 earlier entries elided",
-      "elided": 103
-    },
-    {
-      "t": "2026-11-21T14:22:04.874Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-21T15:26:16.216Z",
-      "note": "Pass 18 (2026-11-21). Baseline at 35790c9f4 (60 min edit, timeline measure only, load ~4-5): near Fit 11.39 ms mean (held 9.10, fresh 14.60), zoom in 11.08, out 9.69, scroll 9.48 (slid 7.95, moved 12.58). Instruments would not attach (developer mode off, xctrace 'Cannot find process' even unsandboxed), so the timeline measure now labels its frames for PassSampler (frame number + near fit held/fresh, scroll slid/moved), pass-profile.sh keeps EVERY pass of it (PassSampler.keepsEveryPass), and the speed line says main thread busy a frame per measure (MainThreadMeter.takeBusy)."
-    },
-    {
-      "t": "2026-11-21T15:26:16.295Z",
-      "note": "Pass 18 tried and backed out (A/B on one build, throwaway defaults switch, 2 runs each): three groups of lanes (row index % 3) each holding its own painting and letting go on a step of its own (TimelinePaint.lettingGo: forced past 20% or uncovered, else the furthest past 8.5%, one a step; sliver 1/16 so a zoom out holds three steps; tests written and passing). Pictures laid near Fit 2.4 -> 1.8 a frame, but near Fit 11.03/11.57 staggered vs 10.92/11.32 together: every frame ~11 ms instead of one in three ~15. Pass 17's off-main-thread idea also not built: pictures are ~2.7 ms of a fresh frame (2.2 paint closures, 0.6 rasterise) = ~1.1 ms a frame averaged, and a held frame is already ~8 ms of main thread."
-    },
-    {
-      "t": "2026-11-21T15:26:16.373Z",
-      "note": "Pass 18 finding: near Fit the main thread is busy 8.98 ms a frame against an 8.3 ms refresh. Every-pass profile of a held frame: update pass 5.4 ms (lane bodies 1.3 spread thin: painting key 0.23, observation tracking 0.22, paintedBars 0.17, LanePaintingKept 0.19, nothing over 0.25; SwiftUI graph 1.6), layout+drawing pass 1.9, a trail of passes under 0.5. So the 8.3 ms bar cannot be reached by trimming: the lanes must leave SwiftUI's per-frame update (one CALayer per lane holding the picture as contents, slid/stretched by the ruler outside SwiftUI; full clip views and overlays stay SwiftUI). Written into docs/design/video.md 8f. Final build: near Fit 11.18 (held 9.25, fresh 13.87), zoom in 10.55, out 9.72, scroll 8.86 (p95 12.9, worst 23). Scripts/test.sh exit 0. Audit queue/audits/2026-11-21-timeline-hour-long-pass18-main-thread-floor.json. Main CI red is owned by main-checks-go-green-again-the-stopped-sweep-dri (logged there). Left rough, not filed: none new."
-    },
-    {
-      "t": "2026-11-21T15:26:30.694Z",
-      "note": "Pass 18 landed 48862dbbf: the speed walk now reports main thread busy a frame and profiles every pass; found near Fit is ~9 ms of main thread a frame, ~8 even when nothing is painted, so the bar needs the lanes out of SwiftUI's per-frame update. Lanes taking turns to repaint tried and backed out (no gain). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+      "t": "2026-11-26T02:29:09.392Z",
+      "note": "... 108 earlier entries elided",
+      "elided": 108
     },
     {
       "t": "2026-11-21T15:57:06.044Z",
@@ -506,9 +486,29 @@
     {
       "t": "2026-11-25T23:43:45.646Z",
       "note": "Pass 24 landed (352eae966, e988c5272): edits on the 60 min edit 25-56 -> 11-17 ms, zoom p95 inside 8.3; bars still open: fast scroll p95 8.5-8.7 and near Fit 9.4-10 vs 8.3, a few edits 17-20 at worst, rare 20-40 ms system frames. Audit 2026-11-25-timeline-hour-long-pass24-edits.json."
+    },
+    {
+      "t": "2026-11-26T01:05:05.443Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-26T02:29:04.288Z",
+      "note": "Pass 25 (2026-11-25). Baseline at a7a4d254e (60 min edit, timeline + edits measure): main thread p95 a frame zoom in 6.5, out 7.8, near Fit 9.4 (68 of 648 over 8.3), scroll 8.6 (19 of 360); edits trim 18 / move 14 / blade 15 / undo 14 / transition 18 / title 17 ms. Every-pass profile by frame: near Fit's late frames were the ones that built V1's lane again (~2.5 ms; the hour-long edit has 5 lanes, V1 holds 378 of 524 clips, so it is a wave on its own) AND laid its new picture in the gap right after (AfterTheFrame ~3 ms) on top of a ~4 ms frame."
+    },
+    {
+      "t": "2026-11-26T02:29:04.363Z",
+      "note": "Pass 25 change (6642090b5): AfterTheFrame runs held work only in a gap where the main thread's time over the last 8.3 ms plus what that picture cost to lay last time (TimelinePaintedPicture.Kept.layCost) stays under 6.5 ms; overdue after 4 refreshes or on an idle thread it runs anyway (SpareFrameTime, PhotonzCore, 8 tests); a dispatch wake a refresh later so waiting work never waits for an event. A/B one build, throwaway file switch, 3 alternating pairs: busy p95 near Fit 9.4-9.6 -> 7.3-8.1 (late 60-67 -> 17-29 of 648), scroll 8.5-8.7 -> 7.6-7.8, zoom out 7.7-8.4 -> 6.8-7.1, zoom in 6.8-7.2 -> 6.4-6.7; edits unchanged. Tried first: waiting one refresh blindly (scroll 7.8-8.1 but near Fit 9.0-9.5: lays landed on the next wave's frame). Walks: 10 of the task's + timeline-zooms-out-past-the-end, an-editing-session, hour-long open, speed-walk (and 3 other speed walks) green; Scripts/test.sh exit 0. Looked at the at-rest capture after the pinch and flick: every lane filled, V1 dense, titles, V2, background in place. Rule in docs/design/video.md 8f. Audit queue/audits/2026-11-25-timeline-hour-long-pass25-spare-time.json."
+    },
+    {
+      "t": "2026-11-26T02:29:04.437Z",
+      "note": "Still open, bars not reached: none over 16 ms (busy worst 9-13 ms, one 33 ms scroll frame in 6 runs; 20-37 ms system frames are no-frame-of-a-50-track-zoom-is-held-up-by-the-sy), edits 14-18 ms vs 16 (trim, undo, transition, title at worst; most of each edit's pass is SwiftUI graph upkeep). transitions-where-clips-meet-walk failed 3 runs in a row 17:44-17:50 then passed 4, on HEAD with and without this change (green at e988c5272): filed find-out-why-the-ruler-right-click-in-the-transi (p2). Left rough, not filed: a moving lane may show its previous picture stretched for up to ~5 frames instead of 1-2 (not seen in any capture; at rest every picture is laid again)."
+    },
+    {
+      "t": "2026-11-26T02:29:09.391Z",
+      "note": "Pass 25 landed 6642090b5: a lane's late picture waits for a frame with room; main thread p95 near the whole hour 9.4-9.6 -> 7.3-8.1 ms, fast scroll 8.5-8.7 -> 7.6-7.8, both zooms under 8.3 too (95% bar now met in all four). Bars still open: none over 16 ms, edits 14-18 vs 16. Audit 2026-11-25-timeline-hour-long-pass25-spare-time.json."
     }
   ],
-  "started": "2026-11-25T20:02:23.147Z",
+  "started": "2026-11-26T01:05:05.442Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
