@@ -19278,3 +19278,11 @@
 {"t":"2026-11-26T03:33:36.516Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-26T03:33:36.600Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-26T03:33:36.674Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 26 landed 976087bbb: edits on the 60 min edit while playing now 9-15 ms (were 14-18), bar met; timeline p95 under 8.3. Still open: a rare 30 ms main thread frame (about 1 in 1,500) against none over 16."}
+{"t":"2026-11-26T03:34:18.617Z","ev":"task_started","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","title":"Scrubbing a long edit never trails the pointer by more than one display frame","priority":"p1-high"}
+{"t":"2026-11-26T05:09:44.631Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T05:09:44.713Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T05:23:19.448Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-28"}
+{"t":"2026-11-26T05:37:09.362Z","ev":"task_walks","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","walks":["speed-walk","scrub-never-blacks-out-walk","hear-the-scrub-walk"]}
+{"t":"2026-11-26T05:37:09.440Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T05:37:09.515Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T05:37:09.588Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 1 (2f7341a40): one commit a refresh while scrubbing, the walk's window look held during a timed drag. Medium lag worst 5 -> 3, hunt 3 -> 2, hunt frame/sight 3 -> 2 (item 2 met). Lag worst 1 not reached; composite p95 7-8 ms is the next lead."}

@@ -23540,3 +23540,10 @@ announced 0.25.0.
 - Rule: `Sources/PhotonzCore/PlayerControlsFade.swift` (tested). Watcher: `Sources/Photonz/EditorState+PlayerControlsFade.swift`. Walk: `Scripts/playtest/view-controls-fade-walk.json` (new `pointerHidden` claim).
 - Gotcha: macOS hangs an `NSLocalWindowSharingWindow` child on a window being filmed or shared; only panels/popovers count as holding the controls up.
 - Next: user to judge the waits and whether the title bar should fade in a window.
+
+## 2026-11-25 — Scrub lag, pass 1 (scrubbing-a-long-edit-never-trails-the-pointer-b)
+
+- Landed 2f7341a40: while scrubbing, the canvas picture and the four playhead islands now go to the window server in one Core Animation commit per refresh (`CATransaction.inThisTurnsCommit`, `Sources/Photonz/VideoKit/VideoKitOneCommit.swift`) instead of five. The speed walk holds its own window-list look while a drag is timed.
+- Short speed walk, 3 runs: medium lag worst 5 -> 3, hunt 3 -> 2, hunt frame/sight 3 -> 2; longest refresh 34 -> 13-20 ms.
+- Next: lag worst 1 needs every composite under ~6.5 ms (p95 is 7-8). Core Image intermediates and GPU scheduling are most of it; leads in the task log.
+- Open: clicking-a-timeline-item-moves-the-playhead-walk fails on main already (logged on the standing walk task).
