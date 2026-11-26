@@ -1,0 +1,32 @@
+{
+  "id": "the-loop-s-test-app-never-asks-the-person-for-a",
+  "title": "The loop's test app never asks the person for a screen or audio permission over and over",
+  "goal": "While the loop tested, Photonz Probe kept putting up a macOS screen or audio recording permission dialog; the user denied it and it came straight back, again and again. Whatever the probe asks for, a person's answer must stick: asked at most once, and never again after a no.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T20:01:39.658Z",
+  "updated": "2026-11-26T20:01:39.778Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-26 ~11:45: \"i am getting an endless loop of permission requests for photonz probe and i keep deny and it pops back up\"; they said the dialog was about screen or audio recording. The intake window stopped the loop (11:50) and restarted it at 12:01 after the user chose to allow it once. Not reproduced by me: I could not read TCC.db or see the dialog, and `log show` with tccd predicates returned nothing from this shell. The runner at the time was the scrubbing task, running Scripts/playtest.sh /tmp/scrub-like.json repeatedly (speed walk play and scrub on reference edit 6); the speed walk itself has no ScreenCaptureKit call (grep), so the request likely comes from app launch paths (ProbeGrants.recordOnLaunch, CaptureCenter, the recorder warm up in Sources/Photonz/Capture/ScreenRecorder.swift:177, RecordingCoordinator.swift:61) or a snapshot step. Probe is signed with the stable Photonz Dev cert (codesign Authority=Photonz Dev), so a changing code identity is not the cause. Sits right after the-loop-s-test-app-never-plays-sound-out-of-the, which also touches what the probe sends to the person.",
+  "acceptance": [
+    "Find what asks, with evidence: launch the probe the way walks do (Scripts/probe-app.sh, Scripts/playtest.sh on the speed walk and a snapshot walk) while `log stream --predicate 'process == \"tccd\" OR subsystem == \"com.apple.TCC\" OR subsystem == \"com.apple.replayd\" OR process == \"universalaccessd\"'` runs, and name the call that raises it (ScreenCaptureKit content query, screenshot, a stream, system audio capture, the recorder's warm up, ProbeGrants.recordOnLaunch) and the TCC service it hits. dist/probe-grants.json said screenRecording true, prompted false at 11:37 on 2026-11-26, so it is not the plain Screen Recording grant: the likely suspects are macOS's recurring screen capture confirmation (bypassing the private window picker) or System Audio Recording.",
+    "Fix: after any answer the probe never raises that dialog again in that launch or the next (preflight before every request; a denied answer is recorded beside the probe like probe-grants.json and respected; walks that need the capture report 'not granted' as their own outcome instead of asking). The person's dev and release apps follow the same once-only rule (memory: bound OS permission requests to once per launch).",
+    "A drill: launch the probe ten times in a row with the capture denied (or stubbed as denied) and show no request call is made after the first; runs with the focus drill.",
+    "Say in the audit what the person should answer if the dialog is shown once, and what is lost if they deny (which walks go unanswered). Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T20:01:39.660Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-26T20:01:39.777Z",
+      "note": "seq 4070 -> 2"
+    }
+  ]
+}

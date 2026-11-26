@@ -5,11 +5,11 @@
   "epic": "",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T19:38:24.646Z",
-  "updated": "2026-11-26T19:38:24.775Z",
+  "updated": "2026-11-26T20:01:16.593Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"there is weird music with weird vocal synth playing in the background, wheres it coming from\". Traced in the intake window: not the user's apps and not the intake reel (stop: 'needs the video playing' in both); `pmset -g assertions` showed audio-out on BuiltInSpeakerDevice created for PID 19693, `/Users/dzearing/git/photonz/dist/Photonz Probe.app/Contents/MacOS/Photonz Probe --playtest /tmp/scrub-like.json`, the scrubbing task's runner. No mute exists for walks today (grep mute in Scripts/playtest.sh and Sources/Photonz/Playtest finds none). Walks were made to leave the person's keyboard, focus and screen alone on 2026-09-26 (CLAUDE.md 'Walks run while the person works'); sound was never part of that. Likely place: the document audio engine's output node (DocumentAudioEngine), volume zero at the main mixer output, or render to an offline/null device when a playtest is running; Experiments/feature flags are not the switch, the playtest launch is. Trap: the probe captures its own output in some diagnostics; keep those measuring the mix.",
@@ -27,6 +27,11 @@
     {
       "t": "2026-11-26T19:38:24.774Z",
       "note": "seq 4070 -> 1"
+    },
+    {
+      "t": "2026-11-26T20:01:16.589Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-11-26T20:01:16.588Z"
 }
