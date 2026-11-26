@@ -1,0 +1,32 @@
+{
+  "id": "speeding-up-a-clip-in-an-edit-leaves-no-black-ho",
+  "title": "Speeding up a clip in an edit leaves no black hole and keeps the transition after it",
+  "goal": "Setting a clip to play faster shortens it, and today that leaves a stretch of black where the clip used to be and silently removes the transition on the cut after it. Changing a clip's speed should keep the edit joined up, the way Premiere's rate stretch does with ripple, or at least never leave a black gap without saying so.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T18:37:13.604Z",
+  "updated": "2026-11-26T18:37:13.736Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nFound making a reel through the MCP tools: clip E478 at 14 to 17 s set to 200 percent became 14 to 15.5 s; 15.5 to 17 black; the doorway at 17 s disappeared from read_document's cuts. Not the speed ramp work (motion-that-feels-like-apple-springs-speed-ramps), which is about easing between speeds.",
+  "acceptance": [
+    "Reproduced first at Next defaults: a run of clips with transitions on each cut, set the middle clip to 200 percent (Clip > Speed, and run_command set_speed): today the clip ends 1.5 s early, the frames until the next clip are black (only overlay text shows), and the transition on the following cut is gone (queue/audits/2026-11-26-sizzle-intake/speed-200-leaves-black-gap.png).",
+    "Decide and write in the audit what speed does to the clips after it, against Premiere and Final Cut (ripple by default on a primary storyline is the usual answer); the transition on the next cut survives in every case, and when a gap is left on purpose it is visible on the timeline and named in the answer to the agent.",
+    "Slower speeds (50, 25) push later clips along the same way rather than covering them. Undo puts everything back in one step.",
+    "Unit tests in PhotonzCore that fail on today's code for the gap and for the lost transition, plus a walk. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T18:37:13.606Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-26T18:37:13.735Z",
+      "note": "seq 4070 -> 12"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "music-presets-that-build-a-library-of-scored-tra",
+  "title": "Music presets that build: a library of scored tracks with build ups, drops and swells that fit any edit length",
+  "goal": "A reel lives on its music, and today Photonz has none: an agent can only stack loose loop files, one track each, with no fades and no way to make a piece fit the edit. Photonz should offer a set of music presets, each a scored piece with an intro, build ups, drops, swells and an ending, in different moods (epic, uplifting, tense, playful, emotional), that fits itself to the length of the edit and hits its big moments where the edit wants them, for people and for agents.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 125,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T18:37:14.011Z",
+  "updated": "2026-11-26T18:37:14.136Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nThe user had been asked on 2026-11-24 where reel music should come from (their own tracks, a bundled library, or a local model) and did not pick; 'a bunch of music presets' is the answer to what, not to where, so this task decides where with evidence. Today through the MCP tools: add_clip refuses a sound ('is not a recording'); run_command add_media_at_playhead takes a sound but puts each on a new audio track (six tracks for one bed in queue/audits/2026-11-26-sizzle-intake/); no loop or extend; set_fade needs 'a picture or title'. Principle check: presets are app features like title styles, not stored subjects for Ask; an agent still chooses and arranges. Overlaps: music-drives-the-cut-photonz-finds-the-beats-bar (beat detection and snapping on any music) stays; this task gives it presets whose beats are known. Code to read: DocumentAudioEngine, the Duck Under Speech feature, the Library shelves.",
+  "acceptance": [
+    "Where the music comes from is decided with evidence first, in the audit: (a) arrangements built from the Apple Loops already installed on this Mac (/Library/Audio/Apple Loops, licensed for use in your own music; check and quote the licence for video use, and what happens on a Mac without them), (b) a bundled royalty-free library (licence quoted), (c) a local music model downloaded from Settings (MusicGen or Stable Audio Open class, quality and speed measured on this Mac). Pick by quality heard and measured, not by ease. Photonz never makes the person install another program.",
+    "At least 12 presets across at least 5 moods, each made of sections (intro, build, drop or peak, breakdown, swell, outro) with stems or layers so intensity can rise and fall, and with risers, impacts, whooshes and hits that can land on a moment.",
+    "Fit to the edit: a preset placed under an edit of 15, 30, 45 or 60 s rearranges its sections (repeating, shortening, skipping on bar lines) so it starts with the edit, ends on a real ending at the edit's end (no cut off note, no fade over a beat), and puts its biggest moment where the edit asks (a marker named Drop, or the start of the end card). Measured: the ending lands within one beat of the edit's end, every section change falls on a bar line.",
+    "Sound on one track: a music preset is one clip on one track, not one track per piece; a loose sound file can be looped and extended to any length on its own track; sound clips can fade in and out (set_fade works on sound) and be ducked under speech.",
+    "Agents reach all of it: list the presets with mood, tempo and sections; put one under the edit at a length; place a hit, riser or whoosh at a time or on a cut (before a transition, on a title's entrance); read its beats and sections (with music-drives-the-cut-photonz-finds-the-beats-bar, which detects beats in any music; presets know theirs already).",
+    "The Library has a Music shelf where a person can audition presets (play a few seconds of each section) and drop one under the edit.",
+    "A reel: the same 30 s edit scored with four presets of different moods, and the agent reel from queue/audits/2026-11-26-sizzle-intake/ re-scored, named in the audit for the user to listen to. Two or three people's honest reactions are not available, so score each against two references from the sizzle board (an-agent-makes-a-sizzle-reel-of-a-real-app-end-t) by ear and write it down. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T18:37:14.013Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-26T18:37:14.135Z",
+      "note": "seq 4070 -> 125"
+    }
+  ]
+}

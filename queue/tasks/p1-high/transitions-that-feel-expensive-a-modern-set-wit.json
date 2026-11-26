@@ -1,0 +1,38 @@
+{
+  "id": "transitions-that-feel-expensive-a-modern-set-wit",
+  "title": "Transitions that feel expensive: a modern set with motion blur, light and sound, not slideshow effects",
+  "goal": "The transitions read as dated slideshow effects and make a reel feel cheap. Give Photonz a set that feels like a modern product film: whip pans and zoom throughs with motion blur, light leaks and flashes, a blur or glow wipe, a shape or text mask reveal, a match on a moving element, each with an easing that has energy and an optional sound (whoosh, hit) that lands with it.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 127,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T18:37:14.407Z",
+  "updated": "2026-11-26T18:37:27.901Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nToday's kinds: dissolve, dipToBlack, dipToWhite, push, wipe, blurThrough, flip, cube, swing, doorway, revolve, pushInDepth. set_transition takes a curve through run_command set_transition_curve (Linear to Ease out expo). The 3D kinds' bugs (covering at once, black void, framing lost) are 3d-transitions-ease-in-and-out, filed beside this: fix there, not twice. Motion blur on moving layers is part of motion-that-feels-like-apple-springs-speed-ramps; share the implementation.",
+  "acceptance": [
+    "A reference study first, in the audit: the transitions in 8 or more launch films and sizzle reels from the board (an-agent-makes-a-sizzle-reel-of-a-real-app-end-t, or gathered here if it has not run), what each does frame by frame, how long, what easing, and what sound. Today's set is judged against it honestly, kind by kind.",
+    "At least 8 new or rebuilt transitions chosen from the study (for example whip pan, zoom through, spin blur, light leak, flash cut, luma or glow wipe, mask reveal through a word or shape, slide with parallax), each with motion blur matched to its speed and an easing with energy (fast out, soft landing), at their usual lengths of 0.25 to 0.6 s.",
+    "Measured bar per transition: clean on the hitch measure; mean frame to frame change through the move is high enough to read as energetic (state the number against a dissolve of the same length) while no single frame jumps; no frame mostly black unless the kind is a dip.",
+    "Each can carry a sound: a whoosh, riser or hit that lands with it, from the music presets' effects (music-presets-that-build), on by default for the energetic kinds in a reel and off for a dissolve, adjustable.",
+    "Reachable by agents through set_transition with the new kinds and a sound choice, and in the transition picker with tiles made from the person's own clips (as today).",
+    "A reel of every transition at full and quarter speed, and the agent reel from queue/audits/2026-11-26-sizzle-intake/ re-cut with them, named in the audit for the user. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T18:37:14.409Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-26T18:37:14.525Z",
+      "note": "seq 4070 -> 127"
+    },
+    {
+      "t": "2026-11-26T18:37:27.900Z",
+      "note": "Ids named in the notes in full: screen-recordings-sit-on-a-designed-backdrop-no (backdrop), music-presets-that-build-a-library-of-scored-tra (sounds), 3d-transitions-ease-in-and-out-of-the-picture-in, transitions-that-feel-expensive-a-modern-set-wit."
+    }
+  ]
+}

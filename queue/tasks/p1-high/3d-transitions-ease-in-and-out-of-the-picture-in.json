@@ -1,0 +1,37 @@
+{
+  "id": "3d-transitions-ease-in-and-out-of-the-picture-in",
+  "title": "3D transitions ease in and out of the picture instead of slamming over it or spinning through black",
+  "goal": "The 3D transitions (push in depth, cube, flip, swing, doorway, revolve) cover the picture at once with a hard, fully solid plane, and for most of their length the frame is mostly black around a spinning panel. They should carry the eye from one shot to the next: the incoming shot fades and settles in, depth reads through shadow and light rather than empty black, and a shot that has been framed or tilted keeps its framing through the move.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T18:37:13.403Z",
+  "updated": "2026-11-26T18:37:27.825Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nReproduced from the intake window through the MCP tools, 2026-11-26, pictures in queue/audits/2026-11-26-sizzle-intake/. pushInDepth at 4 s: the clip arrives as a full opacity plane over the title page at 3.8 s. flip at 14 s: frame almost all black at 13.9 s. cube at 7 s: a panel spinning in black. swing at 11 s: an opaque blue plane over the incoming clip. Code: the 3D transitions are in PhotonzRender (grep for pushInDepth / cube / doorway in Sources/PhotonzRender and Sources/PhotonzCore Transition*). This is the bug half of the user's report; making transitions less dull overall is transitions-that-feel-expensive (filed beside this). Shares the backdrop with recordings-sit-on-a-designed-backdrop.",
+  "acceptance": [
+    "Reproduced first at Next defaults, in the editor and in export, from the steps in queue/audits/2026-11-26-sizzle-intake/README.md (title page, then a recording, each 3D kind at 0.8 s). Today's pictures are there: push-in-depth-4s-covers-title.png, flip-14s-black-void.png, cube-7s-and-kinetic-bold-entrance.png, swing-11s.png.",
+    "Measured bar, on every 3D kind at its usual length: (a) the incoming shot's coverage of the outgoing one rises smoothly from 0: no frame where it jumps by more than 15 percent of the frame area, and its opacity eases in over at least the first quarter of the move; (b) no frame in the middle half of the move is more than 25 percent pure black (today flip is nearly all black at its middle); (c) frame to frame motion is clean on the hitch measure. Numbers before and after for each kind.",
+    "What fills the space a 3D move opens up is designed, not black: the outgoing shot blurred and dimmed behind, or a backdrop the edit sets (with the framing task, recordings-sit-on-a-designed-backdrop), with a soft contact shadow under the moving planes and light falloff on the turned faces. Look at 3 or 4 references (Keynote's Magic Move and Cube, Final Cut's 3D transitions, a WWDC opener) and say what was taken from each.",
+    "A clip that has its own frame, corners, shadow or 3D tilt is drawn WITH them through any transition: today the framed, tilted clip is drawn full frame and flat during the swing and jumps to its framing when the swing ends (framed-clip-pops-after-swing-and-zoom-overflows.png). A test that fails on today's code.",
+    "A reel under queue/audits/ of each 3D kind before and after, at full speed and at quarter speed, named in the audit for the user. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T18:37:13.405Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-26T18:37:13.524Z",
+      "note": "seq 4070 -> 11"
+    },
+    {
+      "t": "2026-11-26T18:37:27.824Z",
+      "note": "Ids named in the notes in full: screen-recordings-sit-on-a-designed-backdrop-no (backdrop), music-presets-that-build-a-library-of-scored-tra (sounds), 3d-transitions-ease-in-and-out-of-the-picture-in, transitions-that-feel-expensive-a-modern-set-wit."
+    }
+  ]
+}

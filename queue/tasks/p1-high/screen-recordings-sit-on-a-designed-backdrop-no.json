@@ -1,0 +1,34 @@
+{
+  "id": "screen-recordings-sit-on-a-designed-backdrop-no",
+  "title": "Screen recordings sit on a designed backdrop: no black bars, framed like a product film",
+  "goal": "A Mac screen recording does not fit a 16:9 video, so every clip in a reel sits between black bars, and an agent has no way to present it the way launch films do: the app on a soft gradient or blurred backdrop, as a card with rounded corners and a deep shadow, a little smaller than the frame, tilting and drifting slowly. Make that a first class, one step treatment for people and agents, and make zooms work inside the card.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 126,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T18:37:14.214Z",
+  "updated": "2026-11-26T18:37:14.332Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nOverlap: motion-that-feels-like-apple-springs-speed-ramps has 'a layer or a whole recording can move in 3D: tilt, perspective, depth and a soft shadow on the ground' for the floating app look; this task owns the backdrop, the inset framing, fit without bars, zoom inside the card and the presets, and uses that task's 3D keys when they exist (or adds keyed tip and swing itself if it lands first; say which in both logs). The 3D transition task (3d-transitions-ease-in-and-out) needs a backdrop to show through its moves: share it. Code: clip framing is ordinary layer frame/corner/shadow (set_layer worked), zooms are in the recording zoom code (grep RecordingZoom / punch_in).",
+  "acceptance": [
+    "Reproduced first: the reel in queue/audits/2026-11-26-sizzle-intake/: every recording has black bars at 1920x1080; set_layer framing (1400x905, corners 24, shadow, swing -14, tip 6) works on a still frame, but the backdrop is black (only a flat colour shape is available behind it), the zoom at 12 s scales the whole card past the frame's edges instead of zooming the picture inside the card, and transitions drop the framing (framed-clip-pops-after-swing-and-zoom-overflows.png).",
+    "A Backdrop for the edit or a clip: gradient (two or three colours, angle, slow drift over time), a blurred and dimmed copy of the clip itself, a solid colour, or a picture; never black bars unless chosen. A Frame treatment for a recording: inset (percent of the frame), corner radius matched to macOS windows, shadow, optional window chrome trim, and an optional slow 3D drift (keyed tip and swing, from the motion task).",
+    "Zoom, Punch In and Follow Cursor inside a framed recording zoom the picture inside the card, with the card staying put; a choice to have the card grow to full frame for a zoom instead, eased.",
+    "Presets: 4 to 6 looks (for example Clean Light, Deep Dark, Aurora gradient, Blurred, Floating 3D) applied to one clip or every recording in one step, at Next defaults, in the inspector and as an agent tool (set_layer or a new set_framing, plus read_document showing it).",
+    "Fidelity: card edges and the shadow move without jitter (the jitter bar from text-that-zooms-or-scales-in-a-video-moves-as-on), backdrop gradients without banding in export (10-bit path), playback cost measured before and after on the reference edit.",
+    "A reel of the same recording in each preset plus the agent reel re-made with framing, named in the audit, beside two references (a Screen Studio or Apple feature film shot). Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T18:37:14.216Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-26T18:37:14.331Z",
+      "note": "seq 4070 -> 126"
+    }
+  ]
+}
