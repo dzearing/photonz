@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 25,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-25T23:04:19.293Z",
-  "updated": "2026-11-25T23:04:19.424Z",
+  "updated": "2026-11-26T00:51:11.087Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-25: \"when in playback mode, and we start a video, i'd like the controls to fade out and only show up on mouse move or spacebar to pause\" and then \"when we're paused, they can also fade out after some time (5s?)\". 'Playback mode' is read as View (the player state of a video window, EditorState.isWatching, Sources/Photonz/EditorState.swift:2045); not confirmed with the user. Then: \"if themouse is over the controls they stay visible\". I did not run it myself.\n\nWhere: the View transport is the dock's transport bar (Sources/Photonz/TimelineDock.swift ~1620-1690: VideoKit.TransportBar, the Full Screen button shown only when isWatching, TimelineToggleButton). Prior art to reuse rather than reinvent: the old recording player Sources/Photonz/VideoEditorView.swift already fades its controls (controlsVisible ~26/95, reveal ~198, scheduleHide 2.4 s ~207, hideSoon, forceHide on play ~222 (do NOT copy this: it hides the controls from under a resting pointer, which the user ruled out), hover pin, guide pin pinnedOnArrival). Pointer hiding: NSCursor.setHiddenUntilMouseMoves(true) is the standard call.\n\nTraps: the dock and canvas sizes must not change when the controls fade (fade opacity and hit testing, never remove them from layout, or the picture refits and jumps; ViewEditSlideEffects.swift slides these pieces into Edit, so the fade must not fight the slide). Hit testing off while hidden, but the first mouse move must still reach the window. Walks that photograph or click the View transport will find it faded: a walk must wake it (move) first, or a playtest setting keeps it up; update the walks rather than turning the feature off for them. Playback must not re-render SwiftUI on each tick for this (use one timer, not playhead observation). Shared code, so both releases get it unless the runner finds View is Next-only.",
@@ -31,6 +31,48 @@
     {
       "t": "2026-11-25T23:04:19.423Z",
       "note": "seq 4080 -> 25"
+    },
+    {
+      "t": "2026-11-25T23:44:20.379Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-25T23:46:11.833Z",
+      "note": "Reproduced in the probe at Next defaults (Full screen Retina recording, View, Space): 3.5 s into play and 6 s after pausing, the transport (volume, go to start, play, end, speed, timecodes, scrubber, Full Screen, timeline toggle), the title, Ask, View | Edit and the window buttons all stay on screen. Pictures: queue/audits/2026-11-25-view-controls-fade-before-playing.png, -before-paused.png. Pointer not checkable in a walk (the probe is never active). Full screen already tucks the transport while playing (PlayerFullScreen.controlsTuckedAway, 2.5 s, polled pointer); this task generalises that."
+    },
+    {
+      "t": "2026-11-25T23:47:40.967Z",
+      "note": "owns these walks: view-controls-fade-walk, f-puts-a-video-full-screen-walk"
+    },
+    {
+      "t": "2026-11-26T00:50:39.097Z",
+      "note": "Adversarial pass before building: a QuickTime user expects the controls and title bar to fade while playing and the pointer to hide; the risks were the picture refitting (kept the room, opacity only), walks finding a faded transport (walk pointer steps wake it), and the person's real pointer flaking walks (a walk reads only its own pointer). Chose fading the title bar, title line, Ask and View | Edit with the transport in a window over the transport alone because QuickTime does and the user asked for 'the controls'. Chose any key while watching wakes them (not only Space/arrows/JKL) because QuickTime does."
+    },
+    {
+      "t": "2026-11-26T00:50:39.180Z",
+      "note": "Built: PlayerControlsFade (PhotonzCore, tested: 2 s playing, 5 s paused, held by pointer-over-controls/menu/popover/guide/playhead drag, never in Edit), EditorState+PlayerControlsFade (one 0.2 s pointer look per window, fades dock + title bar container + title line, NSCursor.setHiddenUntilMouseMoves only when the app is in front with the pointer over the window), wake hooks in timelineKeyDown, the canvas press in View and walk pointer steps. Replaced the full-screen-only tuck (PlayerFullScreen.controlsTuckedAway). New walk claim pointerHidden and a 'controls held up by' state readout."
+    },
+    {
+      "t": "2026-11-26T00:50:39.266Z",
+      "note": "Bug found and fixed on the way: macOS hangs an NSLocalWindowSharingWindow child on a window being filmed or shared; read as a popover it held the controls up for the whole share. Only NSPanel/popover children hold now. Also dropped an occlusion check that made walks depend on the person's windows."
+    },
+    {
+      "t": "2026-11-26T00:50:39.356Z",
+      "note": "Verified: view-controls-fade-walk ok (7 real pictures, at Next defaults, no flags), f-puts-a-video-full-screen-walk ok (its paused check now waits 2.0 s, under the new 5 s paused fade), view-mode-and-edit-mode-walk ok, focus drill clean (0/395 ticks lost), speed walk 51 numbers within baseline (play 1818/1818 frames, worst gap 50 ms vs 58), Scripts/test.sh green. Pictures looked at: 3-faded-playing (picture alone, no title/buttons/transport), 4-back-on-a-move, 7-resting-on-the-transport (controls up), contact sheet (fade in play and pause films)."
+    },
+    {
+      "t": "2026-11-26T00:50:39.434Z",
+      "note": "left rough (no task, under the bar): the speed-menu/popover hold is not proven by a walk (needs the Mac to itself); the faded transport and title strips stay as empty dark bands since they keep their room by design. Both in the audit's rough list."
+    },
+    {
+      "t": "2026-11-26T00:51:11.085Z",
+      "note": "In View the transport, title line, Ask, View | Edit and window buttons fade 2 s after play (5 s paused) and the pointer hides; a move, key, picture click or Space brings them back; resting on the controls, a menu, popover, guide or play-bar drag holds them; Edit never fades; same rule full screen. Commit 79dde72f3. Verified by view-controls-fade-walk (Next defaults), the full-screen and view/edit walks, focus drill clean, speed walk within baseline, Scripts/test.sh green. Audit queue/audits/2026-11-25-while-a-video-plays-in-view-the-controls-fade-aw.json with reel and contact sheet."
     }
-  ]
+  ],
+  "started": "2026-11-25T23:44:20.378Z",
+  "walks": [
+    "view-controls-fade-walk",
+    "f-puts-a-video-full-screen-walk"
+  ],
+  "completed": "2026-11-26T00:51:11.086Z"
 }
