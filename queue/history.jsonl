@@ -19273,3 +19273,8 @@
 {"t":"2026-11-26T02:29:04.366Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-26T02:29:04.440Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
 {"t":"2026-11-26T02:29:09.394Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 25 landed 6642090b5: a lane's late picture waits for a frame with room; main thread p95 near the whole hour 9.4-9.6 -> 7.3-8.1 ms, fast scroll 8.5-8.7 -> 7.6-7.8, both zooms under 8.3 too (95% bar now met in all four). Bars still open: none over 16 ms, edits 14-18 vs 16. Audit 2026-11-25-timeline-hour-long-pass25-spare-time.json."}
+{"t":"2026-11-26T02:29:50.663Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-26T03:33:36.426Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-26T03:33:36.516Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-26T03:33:36.600Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-26T03:33:36.674Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 26 landed 976087bbb: edits on the 60 min edit while playing now 9-15 ms (were 14-18), bar met; timeline p95 under 8.3. Still open: a rare 30 ms main thread frame (about 1 in 1,500) against none over 16."}
