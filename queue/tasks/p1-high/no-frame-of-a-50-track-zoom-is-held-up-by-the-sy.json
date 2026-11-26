@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-25T15:49:44.393Z",
-  "updated": "2026-11-26T16:35:30.400Z",
+  "updated": "2026-11-26T18:25:30.084Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split off an-edit-with-50-tracks-and-100-clips-scrolls-pla (its acceptance: what is not reached is filed, one cost each). Measure: a walk with setup {\"forget\":[\"all\"],\"wideEdit\":50}, wait 3, then {\"do\":\"speed\",\"measure\":\"timeline\",\"form\":\"long\"} six times and {\"do\":\"wait\",\"seconds\":90,\"onTheClock\":true}; profile it with Scripts/perf/pass-profile.sh <walk> then Scripts/perf/pass-profile.py /tmp/photonz-pass-sampler --waits. Caught 2026-11-25, two of two: 'PASS 139 zoom out held | 38.9' and 'PASS 576 near fit fresh | 31.6'. Main thread: CA::Transaction::run_commit_handlers -> _dispatch_sync_f_slow on RenderBox's queue (27 looks of the first on CoreAnimation's own mutex in CA::Context::commit_transaction). Holder in both, a dispatch worker: RB::SharedSurfaceGroup::prune_removed_locked -> test_markers -> RB::CommitMarker::Observer::test_displayed -> -[CAContext waitForCommitId:timeout:] -> CA::Context::ping / wait_for_synchronize -> mach_msg, 27 to 36 ms, that is the window server. No app code on it. The only lead: that cleanup runs when drawings that share a surface (RBLayer, SwiftUI Canvas and drawn text) go away or change size, so fewer drawings coming and going in a zoom (held paintings as plain CGImage layers, no Canvas) should mean fewer cleanups. Not tried.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-11-26T16:35:30.399Z",
       "note": "seq 4070 -> 20"
+    },
+    {
+      "t": "2026-11-26T18:25:30.083Z",
+      "note": "From the scrub task, pass 4 (2026-11-26): its start-of-drag hold was not this one. It was set off by the scrub sound's AVAudioEngine.start() and went away when the engine was started before the drag; the main thread blocked in its own commit send, not on RenderBox's queue. So the scrub task no longer shares this cause."
     }
   ]
 }

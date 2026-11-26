@@ -23559,3 +23559,10 @@ announced 0.25.0.
 - Changed: a transition's second shot now carries its recording, so the renderer casts its shadow from a constant box and enlarges a scrub preview in one pass (ccc85f045). Late looks per drag 7-17 -> 0-5.
 - Not reached: scrub lag worst 1 (medium 3, hunt 2). The worst is now the first looks of a drag: a window server stall early in every medium drag (gone after a warm-up drag), cold first hunt composites.
 - Next: find what the warm-up warms; leads in the task log.
+
+## 2026-11-26 — scrub lag pass 4
+
+- Found: the stall a few refreshes into every medium drag was the scrub sound starting the speakers at the press (`AVAudioEngine.start()`); about 40 ms later the window server held the picture's commit for 12 to 22 ms. Settled by elimination over 12-drag runs (a wait after the press, no scrub sound, no engine start each removed it; GPU and CPU warm-ups did not). Not the same hold as the 50 track zoom task's.
+- Changed (7c6025ec9): the scrub sound starts silently before a drag (pointer over the ruler or scrub bar, and at pause), goes quiet at let go and is given back 10 s after the last drag.
+- Measured: short speed walk 3 runs within baseline; lag worst medium 3,3,3 -> 2,3,3, hunt 2,2,2 -> 1,2,2. Bar of 1 not reached.
+- Next: the first crossing of a title (9 ms of typesetting in one draw) and the hunt's first draws of the sharp frame with Lanczos. Leads in the task log. Gotcha: `playtest.sh --no-build` reuses the probe bundle, so `swift build` alone does not put an experiment in it.

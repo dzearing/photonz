@@ -19378,3 +19378,13 @@
 {"t":"2026-11-26T16:35:35.438Z","ev":"task_resequenced","id":"the-size-badge-under-a-picked-picture-stays-read","from":480,"to":480}
 {"t":"2026-11-26T16:35:41.769Z","ev":"triage","summary":"0 merged, 0 dropped, 2 moved to p1 (jump on a wide edit, standing walk task), 0 reset, 0 leftovers; crash evidence checked (kept p1); 4 cross-reference notes on the perf tasks sharing a system hold; p1 and p2 renumbered; open 74 to 74"}
 {"t":"2026-11-26T16:36:31.715Z","ev":"digest","file":"2026-11-26.md"}
+{"t":"2026-11-26T16:36:49.134Z","ev":"task_started","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","title":"Scrubbing a long edit never trails the pointer by more than one display frame","priority":"p1-high"}
+{"t":"2026-11-26T17:51:53.614Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T18:25:29.643Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T18:25:29.717Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T18:25:29.791Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T18:25:29.864Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T18:25:29.938Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T18:25:30.011Z","ev":"task_note","id":"a-jump-on-a-wide-edit-shows-its-picture-whole-an"}
+{"t":"2026-11-26T18:25:30.085Z","ev":"task_note","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy"}
+{"t":"2026-11-26T18:25:30.159Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 4 landed 7c6025ec9: the scrub sound is started before a drag, so its speakers no longer hold the window server up a few refreshes in (medium 3,3,3 -> 2,3,3; hunt 2,2,2 -> 1,2,2). Lag worst 1 not reached: the first crossing of a title (medium) and the hunt's first sharp-frame draws; leads in the log."}

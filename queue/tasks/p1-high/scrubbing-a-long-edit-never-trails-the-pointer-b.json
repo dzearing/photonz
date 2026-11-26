@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:48:45.395Z",
-  "updated": "2026-11-26T16:35:30.315Z",
+  "updated": "2026-11-26T18:25:30.158Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (closed 2026-11-23). lag = refreshes since the hand was at the moment the picture carries (a stand-in frame counts as caught up); frame lag = the exact frame under the hand; sight lag = the frames the picture is really drawn from (SpeedWalk.ScrubTally). The medium drag's frame lag and sight lag worst are shown but not judged since 2026-11-23 (SpeedCompare.isJudged: 17 to 81 at the median on unchanged code); its lag worst is judged. Passes 20 to 22 made the hunt follow the hand (MovieSweep.window(follows:), restingPass, MovieFrameQueue.placesStillShown): hunt frame worst 43 -> 3. Lead from pass 22: the hunt's ~20 ms looks with an idle main thread (display link or render server; Metal System Trace needs developer mode). Lag worst 3-10 on medium in 45 runs: which moment is late is chance, so look at the per-look dump (temporary) before changing anything.",
@@ -123,6 +123,38 @@
     {
       "t": "2026-11-26T16:35:30.314Z",
       "note": "seq 40 -> 10"
+    },
+    {
+      "t": "2026-11-26T16:36:49.129Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-26T17:51:53.612Z",
+      "note": "Pass 4 cause found. Medium drags stalled 12-22 ms at look 4-6 in 6 of 6 drags (12-drag scrub-only walk). Experiments, each over 6 medium + 6 hunt drags on a rebuilt probe: a 0.3 s wait after beginPlayheadDrag removed it (0/6), so not GPU warmth (an earlier GPU-warm result was a stale probe: playtest.sh --no-build reuses the bundle); skipping beginScrubAudition removed it (0/6, early late looks 22 -> 1); skipping only ScrubAudioEngine's engine.start() removed it (0/6); keeping the engine running between drags left only the first drag's (1/6). So starting the audio output (built-in speakers) about 40 ms before the window server takes the commit is the stall."
+    },
+    {
+      "t": "2026-11-26T18:25:29.641Z",
+      "note": "Pass 4 (7c6025ec9): the scrub sound's engine is started before a drag (pointer over the ruler or scrub bar, at most once a second; and at pause), silenced at let go and given back 10 s after the last drag (ScrubAudioPlayer.lingerSeconds, getReady, ScrubAudioEngine.quiet). Engine asked isRunning before a grain (an output change stops a lingering engine). 12-drag scrub-only walk: early stalls 6/6 -> 1/6 (the first drag, which nothing readies in that walk)."
+    },
+    {
+      "t": "2026-11-26T18:25:29.715Z",
+      "note": "Pass 4 measured: short speed walk 3 runs (2026-11-26 10:13, 10:15, 10:17), exit 0, 51 numbers within baseline each; lag worst medium 2,3,3 (was 3,3,3), hunt 1,2,2 (was 2,2,2); hunt frame and sight worst 1,2,2 (item 2 still met). Green: hear-the-scrub, scrub-never-blacks-out; Scripts/test.sh exit 0. Baseline not rewritten: item 1 not reached."
+    },
+    {
+      "t": "2026-11-26T18:25:29.789Z",
+      "note": "Triage question answered: not the same hold as no-frame-of-a-50-track-zoom-is-held-up-by-the-sy. Here the main thread itself blocked in mach_msg send inside commit_transaction (stepTransactionFlush), set off by AVAudioEngine.start() about 40 ms earlier; the zoom's is the main thread on RenderBox's queue while a worker waits in RB::SharedSurfaceGroup::prune_removed_locked -> waitForCommitId. Removing the audio start removed this one entirely, so the two do not share a cause."
+    },
+    {
+      "t": "2026-11-26T18:25:29.862Z",
+      "note": "Not reached: lag worst 1 (medium 3, hunt 2). Leads for pass 5, from a per-look dump with each draw split (graph build / CI startTask / GPU wait; temporary, kept as /tmp/scrubana/pass4-instrumentation.patch, apply to a scratch tree): (1) MEDIUM's 3 is now the first crossing of a title around 2:44 (look ~109): one draw with 9 ms of graph build (typesetting) then lag 3; only the first medium drag after open. Lead: typeset titles ahead at their drawn size off the main thread after the edit opens (DocumentRenderer rasterCache is keyed by size). (2) HUNT's 2 is its first 3-4 draws: the in-hand sharp frame is still the one shown and is drawn with Lanczos, 4 CI passes, CI startTask 4-6 ms + GPU 2-4 ms; later draws are 2 passes. Lead: plain enlargement for any recording frame while the hand moves, but the renderer returns lastFrame for an unchanged document, so settling needs a forced sharp redraw (a screen recording left soft at rest would be a real cost). (3) MEDIUM mid-drag: composites of 7-8 ms with 5-9 CI passes at the same moments every drag (looks 9-10, 46, 80, 219: transitions) read lag 2. (4) The first drag after opening, with no pause and no hover over the ruler or scrub bar (a drag from the playhead line in the tracks), still starts the output at the press."
+    },
+    {
+      "t": "2026-11-26T18:25:29.936Z",
+      "note": "Chose readying the scrub sound on hover over the ruler and scrub bar, and at pause, over keeping the engine up the whole time a paused video is open, because an output left running stops the Mac's audio hardware sleeping; the 10 s linger bounds it. Left rough, not filed: a drag started from the playhead line in the tracks, with no hover over the ruler first, is not readied (lead 4). Measuring gotcha for the next pass: Scripts/playtest.sh --no-build reuses the probe bundle, so swift build alone does not put an experiment in it (one GPU-warm-up result this pass was a stale probe)."
+    },
+    {
+      "t": "2026-11-26T18:25:30.157Z",
+      "note": "Pass 4 landed 7c6025ec9: the scrub sound is started before a drag, so its speakers no longer hold the window server up a few refreshes in (medium 3,3,3 -> 2,3,3; hunt 2,2,2 -> 1,2,2). Lag worst 1 not reached: the first crossing of a title (medium) and the hunt's first sharp-frame draws; leads in the log."
     }
   ],
   "walks": [
@@ -130,5 +162,5 @@
     "scrub-never-blacks-out-walk",
     "hear-the-scrub-walk"
   ],
-  "started": "2026-11-26T07:32:32.736Z"
+  "started": "2026-11-26T16:36:49.128Z"
 }

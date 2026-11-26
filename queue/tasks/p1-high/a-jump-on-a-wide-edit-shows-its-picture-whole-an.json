@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-25T19:45:41.201Z",
-  "updated": "2026-11-26T16:35:30.549Z",
+  "updated": "2026-11-26T18:25:30.010Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-25: walk with setup {forget:[all],wideEdit:50}, steps speed pictures fromMS 10000 (and 62000) when [atOnce]: 5 nothing drawn at 0:10.0, 10 at 1:02.0, both in the one picture the jump itself submits (scrubDocument -> documentMomentChanged -> submit). speed starts when [atOnce] gives the waits. The wait is decoding: skipped/decoded counts per clip showed 30 to 110 samples from the key frame each, few of them skippable, about 600 a second on one decoder. Ideas not tried: hold the picture on a paused jump the way holdsPictureForStart does; small all-intra stand-ins kept per recording.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-26T16:35:30.548Z",
       "note": "seq 45 -> 40"
+    },
+    {
+      "t": "2026-11-26T18:25:30.009Z",
+      "note": "Possibly related, unmeasured: on the scrub task (pass 4, 2026-11-26) starting an AVAudioEngine at the press held the window server up about 40 ms later for 12-22 ms (main thread blocked in mach_msg send inside CA::Context::commit_transaction), fixed there by starting the scrub engine before the drag. DocumentAudioEngine starts the output at Space the same way, so Space's first frames may pay the same hold; worth a look when timing starts."
     }
   ],
   "walks": [
