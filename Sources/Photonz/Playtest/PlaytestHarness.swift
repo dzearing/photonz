@@ -88,6 +88,26 @@ enum PlaytestHarness {
         }
     }
 
+    /// While a speed measure times the window against the display's own
+    /// refreshes, the look fifty times a second waits: each one waits for the
+    /// app's last frame to reach the window server, which a person's app never
+    /// does, and on 2026-11-25 those waits were the largest share of the slow
+    /// refreshes of a timed scrub (108 of 290 ms over 24 of them,
+    /// `scrubbing-a-long-edit-never-trails-the-pointer-b`). Nothing a timed
+    /// drag does raises a window; the look runs once as soon as it is let go
+    /// (`letWindowWatchGo()`).
+    private(set) static var windowWatchIsHeld = false
+
+    /// Holds the fifty-a-second look until `letWindowWatchGo()`.
+    static func holdWindowWatch() { windowWatchIsHeld = true }
+
+    /// Lets the look go again, and looks once at once.
+    static func letWindowWatchGo() {
+        guard windowWatchIsHeld else { return }
+        windowWatchIsHeld = false
+        sendWindowsBehindThePerson()
+    }
+
     /// Checks fifty times a second, for the whole walk, whether a probe
     /// window has come up over somebody's work, and puts it back when one has.
     /// The step loop does the same after every step; this catches what rises
@@ -109,7 +129,10 @@ enum PlaytestHarness {
     /// thread no frame is ever half sent while it looks.
     private static func watchForWindowsOverThePerson() {
         let timer = Timer(timeInterval: 0.02, repeats: true) { _ in
-            MainActor.assumeIsolated { sendWindowsBehindThePerson() }
+            MainActor.assumeIsolated {
+                guard !windowWatchIsHeld else { return }
+                sendWindowsBehindThePerson()
+            }
         }
         RunLoop.main.add(timer, forMode: .common)
     }

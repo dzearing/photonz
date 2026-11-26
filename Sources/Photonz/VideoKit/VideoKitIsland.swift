@@ -184,10 +184,7 @@ extension VideoKit {
         }
 
         fileprivate override func repaint() {
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            paint(shown, self)
-            CATransaction.commit()
+            CATransaction.inThisTurnsCommit { paint(shown, self) }
         }
     }
 }

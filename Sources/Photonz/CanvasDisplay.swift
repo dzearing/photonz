@@ -340,10 +340,7 @@ extension CanvasNSView {
         // What a click is aimed against: keyed layers where this frame has
         // them (`EditorState.canvasGeometryDocument`).
         if let posed { document = posed }
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        contentLayer.contents = surface ?? picture
-        CATransaction.commit()
+        CATransaction.inThisTurnsCommit { contentLayer.contents = surface ?? picture }
         return true
     }
 

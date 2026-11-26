@@ -307,6 +307,11 @@ final class SpeedWalkProbe {
             let refreshMS = frames.refreshInterval * 1000
             let duration = Double(count) * refreshMS / 1000
             let allowed = max(15, duration * 6)
+            // The walk's own look for windows over the person's waits for the
+            // window server, which a person's app never does: held while the
+            // hand is on the clock (`PlaytestHarness.windowWatchIsHeld`).
+            PlaytestHarness.holdWindowWatch()
+            defer { PlaytestHarness.letWindowWatchGo() }
             let start = CACurrentMediaTime()
             var looks = 0
             while true {
@@ -328,6 +333,7 @@ final class SpeedWalkProbe {
                    editor.playtestShownExactMomentMS == editor.documentTimeMS { break }
             }
             editor.endPlayheadDrag()
+            PlaytestHarness.letWindowWatchGo()
             let refresh = frames.refreshInterval * 1000
             let lags = SpeedWalk.scrubLags(hand: hand, handAtMS: handAt, shown: shown, atMS: at,
                                                 refreshMS: refresh)
