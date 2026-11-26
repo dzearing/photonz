@@ -19295,3 +19295,8 @@
 {"t":"2026-11-26T07:31:45.996Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
 {"t":"2026-11-26T07:31:46.073Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
 {"t":"2026-11-26T07:31:46.149Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 2 landed 0f62e5d96: landed frames ride with the hand's next move, frames read in passing are enlarged in one pass (draw p95 7.3 -> 5.1 ms). Lag worst 1 not reached (medium 3, hunt 2, the first looks of a drag); leads in the log."}
+{"t":"2026-11-26T07:32:32.742Z","ev":"task_started","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","title":"Scrubbing a long edit never trails the pointer by more than one display frame","priority":"p1-high"}
+{"t":"2026-11-26T09:16:49.286Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T09:16:49.363Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T09:16:49.440Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-26T09:16:49.518Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 3 landed ccc85f045: transitions' second shot drawn as a recording frame (late looks per drag 7-17 -> 0-5). Lag worst still medium 3, hunt 2, set by the first looks of a drag; leads in the log."}

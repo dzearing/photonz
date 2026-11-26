@@ -23553,3 +23553,9 @@ announced 0.25.0.
 - Landed 0f62e5d96: while the hand drags the playhead, a frame that lands from the decoder rides with the hand's next move instead of being drawn alone at the refresh (the move used to wait behind that picture); frames read in passing (at most 800 wide) are enlarged in one plain pass instead of Lanczos's three (`MovieSweep.isReadInPassing`).
 - Scrub-only walk: passes per picture 5 -> 2 (transition 10 -> 4), draw p95 7.3 -> 5.1 ms, p99 8.1 -> 6.1. Short speed walk, 3 runs: within baseline; lag worst medium 3 and hunt 2 unchanged (the first looks of each drag); longest refresh hunt 10-11 -> 9 ms.
 - Next: the drag's first looks (a ~10 ms main-thread stall in the medium drag around looks 4-9, cold first draws in the hunt) and titles typeset the first time the hand crosses them (9-15 ms CPU). Leads in the task log.
+
+## 2026-11-26 — scrub lag pass 3
+
+- Changed: a transition's second shot now carries its recording, so the renderer casts its shadow from a constant box and enlarges a scrub preview in one pass (ccc85f045). Late looks per drag 7-17 -> 0-5.
+- Not reached: scrub lag worst 1 (medium 3, hunt 2). The worst is now the first looks of a drag: a window server stall early in every medium drag (gone after a warm-up drag), cold first hunt composites.
+- Next: find what the warm-up warms; leads in the task log.

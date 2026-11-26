@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:48:45.395Z",
-  "updated": "2026-11-26T07:31:46.148Z",
+  "updated": "2026-11-26T09:16:49.517Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (closed 2026-11-23). lag = refreshes since the hand was at the moment the picture carries (a stand-in frame counts as caught up); frame lag = the exact frame under the hand; sight lag = the frames the picture is really drawn from (SpeedWalk.ScrubTally). The medium drag's frame lag and sight lag worst are shown but not judged since 2026-11-23 (SpeedCompare.isJudged: 17 to 81 at the median on unchanged code); its lag worst is judged. Passes 20 to 22 made the hunt follow the hand (MovieSweep.window(follows:), restingPass, MovieFrameQueue.placesStillShown): hunt frame worst 43 -> 3. Lead from pass 22: the hunt's ~20 ms looks with an idle main thread (display link or render server; Metal System Trace needs developer mode). Lag worst 3-10 on medium in 45 runs: which moment is late is chance, so look at the per-look dump (temporary) before changing anything.",
@@ -95,6 +95,26 @@
     {
       "t": "2026-11-26T07:31:46.147Z",
       "note": "Pass 2 landed 0f62e5d96: landed frames ride with the hand's next move, frames read in passing are enlarged in one pass (draw p95 7.3 -> 5.1 ms). Lag worst 1 not reached (medium 3, hunt 2, the first looks of a drag); leads in the log."
+    },
+    {
+      "t": "2026-11-26T07:32:32.737Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-26T09:16:49.284Z",
+      "note": "Pass 3 (ccc85f045). Per-look dump (temporary, removed) showed most mid-drag late looks were composites at transitions taking 7-9 ms against a 7.6 ms window. Cause: the incoming shot of a transition is a one-frame copy of the clip (Layer.transitionPartner) made WITHOUT its MovieRef, so DocumentRenderer drew it as an ordinary picture: shadow blurred afresh from the frame every refresh (opaqueCastStandIn needs layer.movie) and frames read in passing enlarged with Lanczos (isReadInPassing needs layer.movie). Fix: transitionPartner(of: movie) in ClipTransitions and EditPointTransitions; tests in EditPointTransitionTests and FramesInHandTests. Scrub-only walk (4 drags each): 5+ pass composites 69 -> 6, late looks per drag 7-17 -> 0-5, two of four hunts worst 1."
+    },
+    {
+      "t": "2026-11-26T09:16:49.361Z",
+      "note": "Pass 3 measured: short speed walk 3 runs (2026-11-26 00:53, 01:03, 01:05), all green, 51 numbers within baseline; lag worst medium 3,3,3 hunt 2,2,2 (unchanged); hunt frame and sight worst 2,2,2 (item 2 still met). Green: scrub-never-blacks-out, hear-the-scrub, a-cross-fade-plays-as-exported, transitions-where-clips-meet, curves-on-a-zoom-and-a-dissolve, transitions-in-depth-at-a-cut, an-editing-session; Scripts/test.sh exit 0. Baseline not rewritten: item 1 not reached."
+    },
+    {
+      "t": "2026-11-26T09:16:49.438Z",
+      "note": "Not reached: lag worst 1 (medium 3, hunt 2). What sets the worst now: (1) MEDIUM: every medium drag has one main thread stall of 12-20 ms at looks 5-9 (the pass sampler fed the gaps between looks: ~8 ms blocked in mach_msg send inside CA::Context::commit_transaction, i.e. the window server not taking the commit), then the next look has only ~3 ms for its draw, so 3. Experiments (flags, removed): freezing all four playhead islands removes it (and medium read worst 1 in 3 of 4 drags); not putting the canvas picture up removes it; freezing any ONE island does not; 28 refreshes of warm-up drag before the clock starts removes it entirely; a low-priority CIContext (.priorityRequestLow) does not. So it is a start-of-activity effect when picture and islands change together (GPU or window server ramping up), not steady load. Leads: find what the warm-up warms (GPU only vs window server vs CA backing stores), e.g. warm with renders but no layer changes. (2) HUNT: its first 1-3 composites are cold (8-13 ms). (3) The first medium drag only: a title typeset the first time it is crossed (~16 ms compositeImage CPU, around look 109). (4) The end of every medium drag, hand still: a 12-16 ms tick when the hold settles (catchUpPanelPlayhead + SwiftUI panel pass) reads lag 2."
+    },
+    {
+      "t": "2026-11-26T09:16:49.516Z",
+      "note": "Pass 3 landed ccc85f045: transitions' second shot drawn as a recording frame (late looks per drag 7-17 -> 0-5). Lag worst still medium 3, hunt 2, set by the first looks of a drag; leads in the log."
     }
   ],
   "walks": [
@@ -102,5 +122,5 @@
     "scrub-never-blacks-out-walk",
     "hear-the-scrub-walk"
   ],
-  "started": "2026-11-26T05:54:36.037Z"
+  "started": "2026-11-26T07:32:32.736Z"
 }
