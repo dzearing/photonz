@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-26T19:10:44.954Z",
-  "updated": "2026-11-26T19:10:45.079Z",
+  "updated": "2026-11-26T19:30:09.041Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26, with a screenshot of the old Kinetic Bold mid swing transition in their 0.23.0 app: \"this screen, the background is so freaking amateur. we need to just remove this. it's like some kind of bland wood grain\". Their app was 0.23.0, but the 2026-11-21 redesign kept the same backdrop: Sources/PhotonzCore/TitleSet.swift:344 Condensed Poster `live(.windStreams, ground: \"#0F0E0D\", ...)` ('ember wind barely in it'). Backdrop: Sources/PhotonzCore/LiveBackdrop.swift (case windStreams, name 'Wind Streams', 'Line Weight' parameter), drawn in Sources/PhotonzRender/LiveBackdrops.swift:482, offered as a restyle at Sources/PhotonzCore/TitleRestyle.swift:246/255/272/765. Keep the enum case decodable for old documents (map it to the plain ground) rather than deleting it outright. Do not redesign the rest of Condensed Poster here; its headline running off the frame is a-main-title-headline-keeps-its-second-line-afte.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-11-26T19:10:45.078Z",
       "note": "seq 4070 -> 10.5"
+    },
+    {
+      "t": "2026-11-26T19:30:09.040Z",
+      "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
     }
   ]
 }

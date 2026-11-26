@@ -75,7 +75,8 @@ and pass `"$(cat /tmp/x.json)"`, or the shell will mangle it.
   difference between frames half a second apart, or how much of the headline is
   visible at the first frame against the hold), plus a reel (a short MP4 or GIF
   and a contact sheet under `queue/audits/`) named in the audit so the user can
-  look. Not a decision card: cards are rare, capped at three, and must show a
+  look. Every reel is added with `queue/bin/reel-add.mjs` so it shows on the
+  dashboard's Reels page and in `~/Movies/Photonz Reels`. Not a decision card: cards are rare, capped at three, and must show a
   marked picture (`queue/bin/runner-prompt.md`). Rule checks alone let seven title tasks close done
   on 2026-10-11 with flat, already-visible titles in their own pictures. When the
   user complains about a shipped look, open that task's audit frames first and

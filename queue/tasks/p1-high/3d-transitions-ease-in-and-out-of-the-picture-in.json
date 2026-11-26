@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:13.403Z",
-  "updated": "2026-11-26T19:10:45.156Z",
+  "updated": "2026-11-26T19:30:08.736Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nReproduced from the intake window through the MCP tools, 2026-11-26, pictures in queue/audits/2026-11-26-sizzle-intake/. pushInDepth at 4 s: the clip arrives as a full opacity plane over the title page at 3.8 s. flip at 14 s: frame almost all black at 13.9 s. cube at 7 s: a panel spinning in black. swing at 11 s: an opaque blue plane over the incoming clip. Code: the 3D transitions are in PhotonzRender (grep for pushInDepth / cube / doorway in Sources/PhotonzRender and Sources/PhotonzCore Transition*). This is the bug half of the user's report; making transitions less dull overall is transitions-that-feel-expensive (filed beside this). Shares the backdrop with recordings-sit-on-a-designed-backdrop.",
@@ -36,6 +36,10 @@
     {
       "t": "2026-11-26T19:10:45.155Z",
       "note": "Re-checked on Photonz Dev 0.25.0 (today's main) on 2026-11-26: the first reel ran on the user's 0.23.0 app. Still reproduces, same numbers: see queue/audits/2026-11-26-sizzle-intake/on-0.25-dev/ and the README's Correction section."
+    },
+    {
+      "t": "2026-11-26T19:30:08.735Z",
+      "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
     }
   ]
 }

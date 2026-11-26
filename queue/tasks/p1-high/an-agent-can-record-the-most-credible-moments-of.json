@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:19:30.088Z",
-  "updated": "2026-11-26T16:35:31.367Z",
+  "updated": "2026-11-26T19:30:09.192Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"I also want to have the agent make high quality 'sizzle reels'... What prevents us from having enough control to make high videlity sizzle reals that really slap. I'm talking apple smoothness coupled with high energy music that builds as we demonstrate features of aplications. And the features are smooth - we capture the most credible moments of an app, making the user really pumped to use them. With creshendos that build up and reveal something massive. We need video features that can do that. Help refine the flows and ensure that agents have the tools to do this\".\n\nWhat agents can reach today (checked 2026-11-24, plugin/skills/photonz/SKILL.md and the MCP tool list): new_video, add_clip, move_clip, trim, cut, add_title, list_titles, set_transition, apply_zooms, recommended_zooms (from recorded clicks), set_keys / change_keys with named curves, video_frame, contact_sheet, export, list_history. NOT reachable by an agent: music or any sound placement and levels, beats of any kind (nothing in Sources analyses tempo or beats), speed changes (the app has setSpeed and speed stops as commands, no agent tool), recording the screen or driving the app being shown, and any way to judge motion rather than stills. Exists in the app but not checked for agent reach: motion smear (MotionSmearFilter), depth transitions, keyframe curves, title entrances.\n\nThe probe-only playtest harness drives Photonz itself and must stay compiled out of release; whatever the agent uses to drive other apps must be a real, shipped, permission-respecting route. Bound OS permission prompts to once per launch (no prompt loops).",
@@ -36,6 +36,10 @@
     {
       "t": "2026-11-26T16:35:31.366Z",
       "note": "seq 130 -> 150"
+    },
+    {
+      "t": "2026-11-26T19:30:09.191Z",
+      "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
     }
   ]
 }

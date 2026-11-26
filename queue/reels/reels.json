@@ -1,0 +1,19 @@
+[
+  {
+    "file": "2026-11-26-agent-sizzle-attempt-on-0-25-0.mp4",
+    "title": "Agent sizzle attempt on 0.25.0",
+    "added": "2026-11-26T19:28:55.534Z",
+    "task": "an-agent-makes-a-sizzle-reel-of-a-real-app-end-t",
+    "madeOn": "0.25.0 Dev (main 2026-11-26)",
+    "kind": "before",
+    "notes": "Same steps on today's code: Condensed Poster still has the wavy lines and runs off the frame; every transition, speed and sound bug still there."
+  },
+  {
+    "file": "2026-11-26-agent-sizzle-attempt-on-0-23-0.mp4",
+    "title": "Agent sizzle attempt on 0.23.0",
+    "added": "2026-11-26T19:28:55.477Z",
+    "madeOn": "0.23.0 release app",
+    "kind": "before",
+    "notes": "First reel through the agent tools: old Kinetic Bold title, 3D transitions slamming in, black gap after a speed change, sound gap at 0:14.4. Findings in queue/audits/2026-11-26-sizzle-intake."
+  }
+]

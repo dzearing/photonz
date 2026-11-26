@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · reels</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local, prefixed `rl-`. Reels from queue/reels/reels.json, newest first:
+     every sizzle, title and transition reel made for the user to watch. */
+  #reels .rl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:var(--gap)}
+  #reels .rl-card{border:1px solid var(--line-soft);border-radius:var(--r4);background:var(--panel-2);overflow:hidden;display:flex;flex-direction:column}
+  #reels video{display:block;width:100%;aspect-ratio:16/9;background:#000}
+  #reels .rl-body{padding:var(--pad-sm) var(--pad);display:flex;flex-direction:column;gap:6px}
+  #reels .rl-title{font-size:14px;font-weight:640;margin:0;color:var(--ink)}
+  #reels .rl-meta{display:flex;gap:var(--gap-sm);flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
+  #reels .rl-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--faint);
+    border:1px solid var(--line-soft);border-radius:999px;padding:1px 8px}
+  #reels .rl-notes{font-size:12.5px;color:var(--dim);line-height:1.45;margin:0}
+  #reels .rl-task{font-family:var(--mono);font-size:11px;color:var(--accent);cursor:pointer;background:none;border:0;padding:0;text-align:left}
+  #reels .rl-empty{color:var(--dim);font-size:13px}
+  @media (max-width:520px){#reels .rl-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="reels">
+  <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Reels</h2><span class="k">· every reel made for you to watch, newest first</span></div>
+  <div class="rl-grid" id="rl-grid"><p class="rl-empty">Loading…</p></div>
+</section>
+</main>
+<script>
+(function () {
+  var grid = document.getElementById('rl-grid');
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  fetch('/api/reels', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (list) {
+    grid.textContent = '';
+    if (!list.length) { grid.appendChild(el('p', 'rl-empty', 'No reels yet.')); return; }
+    list.forEach(function (r) {
+      var card = el('div', 'rl-card');
+      var v = document.createElement('video');
+      v.controls = true; v.preload = 'metadata'; v.playsInline = true;
+      v.src = '/reels/' + encodeURIComponent(r.file) + '#t=0.5';
+      card.appendChild(v);
+      var body = el('div', 'rl-body');
+      body.appendChild(el('h3', 'rl-title', r.title));
+      var meta = el('div', 'rl-meta');
+      meta.appendChild(el('span', 'rl-kind', r.kind || 'sample'));
+      meta.appendChild(el('span', null, new Date(r.added).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })));
+      if (r.madeOn) meta.appendChild(el('span', null, 'made on ' + r.madeOn));
+      body.appendChild(meta);
+      if (r.notes) body.appendChild(el('p', 'rl-notes', r.notes));
+      if (r.task) {
+        var t = el('button', 'rl-task', r.task);
+        t.title = 'Open this task';
+        t.addEventListener('click', function () { parent.postMessage({ photonzNav: 'dashboard@tasks/' + r.task }, '*'); });
+        body.appendChild(t);
+      }
+      card.appendChild(body);
+      grid.appendChild(card);
+    });
+  }).catch(function () { grid.textContent = ''; grid.appendChild(el('p', 'rl-empty', 'Could not read the reels list.')); });
+  // A playing reel holds the page's live reload.
+  window.__holdReload = function () { return Array.prototype.some.call(document.querySelectorAll('video'), function (v) { return !v.paused; }); };
+})();
+</script>
+</body>
+</html>

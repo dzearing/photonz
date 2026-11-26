@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:19:29.688Z",
-  "updated": "2026-11-26T18:37:27.747Z",
+  "updated": "2026-11-26T19:30:08.407Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-24: \"I also want to have the agent make high quality 'sizzle reels'... What prevents us from having enough control to make high videlity sizzle reals that really slap. I'm talking apple smoothness coupled with high energy music that builds as we demonstrate features of aplications. And the features are smooth - we capture the most credible moments of an app, making the user really pumped to use them. With creshendos that build up and reveal something massive. We need video features that can do that. Help refine the flows and ensure that agents have the tools to do this\".\n\nWhat agents can reach today (checked 2026-11-24, plugin/skills/photonz/SKILL.md and the MCP tool list): new_video, add_clip, move_clip, trim, cut, add_title, list_titles, set_transition, apply_zooms, recommended_zooms (from recorded clicks), set_keys / change_keys with named curves, video_frame, contact_sheet, export, list_history. NOT reachable by an agent: music or any sound placement and levels, beats of any kind (nothing in Sources analyses tempo or beats), speed changes (the app has setSpeed and speed stops as commands, no agent tool), recording the screen or driving the app being shown, and any way to judge motion rather than stills. Exists in the app but not checked for agent reach: motion smear (MotionSmearFilter), depth transitions, keyframe curves, title entrances.\n\nThis task is re-run as the bar after the other sizzle tasks land: the second reel should close most of the first report's gaps. Reels are agent output, so the no-hardcoded-content principle applies: techniques, tools and request-time material, never a stored reel, a template keyed to one app, or a pass tuned to one eval case. Judge on a held-out set of different apps and briefs.",
@@ -40,6 +40,10 @@
     {
       "t": "2026-11-26T18:37:27.746Z",
       "note": "First pass done from the intake window on 2026-11-26 through the MCP tools: queue/audits/2026-11-26-sizzle-intake/README.md with the reel and pictures. Gaps found and filed: 3d-transitions-ease-in-and-out-of-the-picture-in, speeding-up-a-clip-in-an-edit-leaves-no-black-ho, music-made-of-several-sound-clips-plays-without, music-presets-that-build-a-library-of-scored-tra, screen-recordings-sit-on-a-designed-backdrop-no, transitions-that-feel-expensive-a-modern-set-wit; the title losing a line went onto a-main-title-headline-keeps-its-second-line-afte. Build on that list rather than rediscovering it; this task's reference board and gap ranking still stand."
+    },
+    {
+      "t": "2026-11-26T19:30:08.406Z",
+      "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
     }
   ]
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:14.407Z",
-  "updated": "2026-11-26T18:37:27.901Z",
+  "updated": "2026-11-26T19:30:08.658Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nToday's kinds: dissolve, dipToBlack, dipToWhite, push, wipe, blurThrough, flip, cube, swing, doorway, revolve, pushInDepth. set_transition takes a curve through run_command set_transition_curve (Linear to Ease out expo). The 3D kinds' bugs (covering at once, black void, framing lost) are 3d-transitions-ease-in-and-out, filed beside this: fix there, not twice. Motion blur on moving layers is part of motion-that-feels-like-apple-springs-speed-ramps; share the implementation.",
@@ -33,6 +33,10 @@
     {
       "t": "2026-11-26T18:37:27.900Z",
       "note": "Ids named in the notes in full: screen-recordings-sit-on-a-designed-backdrop-no (backdrop), music-presets-that-build-a-library-of-scored-tra (sounds), 3d-transitions-ease-in-and-out-of-the-picture-in, transitions-that-feel-expensive-a-modern-set-wit."
+    },
+    {
+      "t": "2026-11-26T19:30:08.657Z",
+      "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
     }
   ]
 }

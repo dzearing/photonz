@@ -213,8 +213,38 @@ async function handleApi(req, res, url) {
   } catch (e) { return send(500, { error: String(e.message || e) }); }
 }
 
+const REELS = join(process.env.PHOTONZ_QUEUE_DIR || join(ROOT, '..', '..', '..', 'queue'), 'reels');
+async function serveReels(req, res, url) {
+  if (url === '/api/reels') {
+    let list = [];
+    try { list = JSON.parse(await readFile(join(REELS, 'reels.json'), 'utf8')); } catch {}
+    res.writeHead(200, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' });
+    return res.end(JSON.stringify(list.filter((r) => { try { statSync(join(REELS, r.file)); return true; } catch { return false; } })));
+  }
+  const name = decodeURIComponent(url.slice('/reels/'.length));
+  if (!/^[a-z0-9._-]+\.(mp4|mov|gif)$/i.test(name)) { res.writeHead(400); return res.end('no'); }
+  const file = join(REELS, name);
+  let size;
+  try { size = statSync(file).size; } catch { res.writeHead(404); return res.end('not found'); }
+  const type = name.endsWith('.gif') ? 'image/gif' : name.endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
+  const range = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '');
+  const { createReadStream } = await import('node:fs');
+  if (range) {
+    const start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
+    const end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+    res.writeHead(206, { 'content-type': type, 'accept-ranges': 'bytes', 'content-length': end - start + 1,
+      'content-range': `bytes ${start}-${end}/${size}` });
+    return createReadStream(file, { start, end }).pipe(res);
+  }
+  res.writeHead(200, { 'content-type': type, 'accept-ranges': 'bytes', 'content-length': size });
+  return createReadStream(file).pipe(res);
+}
+
 const server = http.createServer(async (req, res) => {
   const url = req.url.split('?')[0];
+  // Reels (queue/reels/): the list and the videos, with byte ranges so a
+  // <video> can seek and Safari will play at all.
+  if (url === '/api/reels' || url.startsWith('/reels/')) return serveReels(req, res, url);
   if (url.startsWith('/api/')) return handleApi(req, res, url);
   const bundle = url === '/shared/photonz-ds.css' ? 'css'
     : url === '/shared/photonz-ds.js' ? 'js' : null;
