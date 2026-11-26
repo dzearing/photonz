@@ -3,7 +3,7 @@
 // in: covered the set, ran only the part a locked screen cannot touch, was
 // refused outright, was stopped on the clock, or was INTERRUPTED: the person
 // came back to the Mac, the loop was put down, or the run was killed and is
-// being recovered. Which of the three is `stoppedBy` (person, loop, killed).
+// being recovered. Which it was is `stoppedBy` (person, loop, sitting, killed).
 //
 // It also decides what happens to the requests the run claimed. A sweep that
 // COVERED THE SET has served them and they are gone. A sweep that did not, for
@@ -17,7 +17,7 @@
 // downstream has to know which one happened.
 //
 //   queue/bin/sweep-record.mjs <runlog> <latest.json> <claimed.json> <requested.json> \
-//       <began> <ended> <seconds> <runlogRelPath> <timedOut 0|1> <totalWalks> <headSha> [<interrupted 0|1>] [<stoppedBy person|loop>]
+//       <began> <ended> <seconds> <runlogRelPath> <timedOut 0|1> <totalWalks> <headSha> [<interrupted 0|1>] [<stoppedBy person|loop|sitting>]
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { parseSweepLog, sweepSentences } from './sweep-parse.mjs';

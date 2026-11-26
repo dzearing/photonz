@@ -94,6 +94,12 @@ The schedule now:
   November). `queue/bin/sweep.sh status` says on its `Answers:` line how long
   since every walk last had an answer (`queue/bin/sweep-resume.mjs`,
   `queue/bin/sweep-answers.mjs`, drilled by `queue/bin/sweep-resume-drill.mjs`).
+* **A whole-set run takes 90 minute sittings.** It puts itself down after a
+  sitting the way it does for a person coming back, a task runs, and the next
+  sitting carries on where it stopped; the fourth sitting of one set runs to
+  the end so the set is always answered inside its three day window. Until
+  2026-11-26 a run took the whole seven hours in one go and the loop built
+  nothing from 01:16 to 08:32 (`PHOTONZ_SWEEP_SITTING_MINUTES`, 0 turns it off).
 * **A change every walk touches can jump the floor**:
   `queue/bin/sweep.sh request --now "<why the whole set, right now>"`.
 

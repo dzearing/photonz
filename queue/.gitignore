@@ -26,3 +26,5 @@ sweep/.resume-claim.json
 # machine's reading of GitHub, refreshed between tasks, not queue state.
 ci-main.json
 ci-main.json.tmp
+# Which sitting of a whole-set run this is (sweep.sh run): the fourth runs to the end.
+sweep/.sittings

@@ -224,6 +224,7 @@ export function cutShortBecause(r) {
   if (r.interrupted) {
     if (r.stoppedBy === 'person') return ' (stopped because somebody came back to the Mac)';
     if (r.stoppedBy === 'loop') return ' (stopped because the loop was put down)';
+    if (r.stoppedBy === 'sitting') return ' (put down after its sitting so a task could run; the next sitting carries on from it)';
     if (r.stoppedBy === 'killed') return ' (the run was killed part way and picked up afterwards)';
     return ' (the run was stopped part way)';
   }

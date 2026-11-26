@@ -654,6 +654,29 @@ run)
   CAP_DEFAULT=$(queue/bin/sweep-size.mjs --cap-seconds 2>/dev/null || echo 10800)
   CAP=${PHOTONZ_SWEEP_MAX_SECONDS:-${PHOTONZ_SWEEP_MAX_MINUTES:+$(( PHOTONZ_SWEEP_MAX_MINUTES * 60 ))}}
   CAP=${CAP:-$CAP_DEFAULT}
+  # A SITTING, so the whole set never holds the loop for a night.
+  #
+  # The set had grown to about 1200 walks and seven hours, and the loop claims
+  # no task while it runs: on 2026-11-26 it ran from 01:16 to 08:32 and nothing
+  # was built in that time, the second longest stretch of the day after a task.
+  # So a run puts itself down after a sitting (90 minutes) the way it does for
+  # a person coming back, keeping what it reached, and the next sitting carries
+  # on from it after the next task (sweep-resume.mjs merges the parts into one
+  # run of the set). Tasks and walks take turns through the night instead of the
+  # walks taking all of it.
+  #
+  # The fourth sitting of one set runs to the end, so the set is always answered
+  # inside its three day window rather than chasing its own stale answers.
+  # PHOTONZ_SWEEP_SITTING_MINUTES=0 turns sittings off.
+  SITTINGS_FILE="$SDIR/.sittings"
+  (( RESUME )) || echo 0 > "$SITTINGS_FILE"
+  SITTING_N=$(( $(cat "$SITTINGS_FILE" 2>/dev/null || echo 0) + 1 ))
+  echo "$SITTING_N" > "$SITTINGS_FILE"
+  SITTING_MIN=${PHOTONZ_SWEEP_SITTING_MINUTES:-90}
+  SITTING=0
+  (( SITTING_MIN > 0 && SITTING_N < 4 )) && SITTING=$(( SITTING_MIN * 60 ))
+  (( SITTING )) && echo "==> Sitting $SITTING_N of this set: puts itself down after $SITTING_MIN minutes and carries on after the next task."
+  (( SITTING_N >= 4 )) && echo "==> Sitting $SITTING_N of this set: runs to the end."
   TIMED_OUT=0
   LAST_REPORTED=0
   while kill -0 "$SWEEP_PID" 2>/dev/null; do
@@ -676,6 +699,11 @@ run)
       LAST_REPORTED=$DONE_N
       echo "==> walk sweep: $DONE_N of $RUN_WALKS walks done"
       Q note "walk sweep: $DONE_N of $RUN_WALKS walks done" >/dev/null 2>&1
+    fi
+    if (( ! INTERRUPTED && SITTING && SECONDS - began_s > SITTING )); then
+      INTERRUPTED=1
+      STOPPED_BY=sitting
+      echo "!! The walk sweep's ${SITTING_MIN} minute sitting is up: putting it down so a task runs, and carrying on from here after it."
     fi
     if (( INTERRUPTED )); then
       echo "!! Walk sweep INTERRUPTED at walk $DONE_N of $RUN_WALKS. What it reached is recorded below and the request that asked for it goes back on the pile."
