@@ -2667,6 +2667,9 @@ final class EditorState {
     /// drags one (`ScrubAudioPlayer.swift`). Its own engine because a scrub
     /// and a playthrough want opposite things from the same plan.
     @ObservationIgnored var scrubAudioStorage: ScrubAudioPlayer?
+    /// When the scrub's sound was last got ready ahead of a drag
+    /// (`getScrubSoundReady`), on the `CACurrentMediaTime` clock.
+    @ObservationIgnored var scrubSoundReadiedAt: Double = -.infinity
     /// The document posed for the canvas at one moment
     /// (`canvasGeometryDocument`).
     @ObservationIgnored var canvasGeometryMemo: (document: PhotonzDocument, moment: Int, posed: PhotonzDocument)?

@@ -352,6 +352,8 @@ extension EditorState {
         // (`holdsPanelWhilePlaying`): it comes up to the one stopped on.
         catchUpPanelPlayhead()
         documentMomentChanged()
+        // Stopping is often to look for a moment by hand next.
+        getScrubSoundReady()
     }
 
     /// The clock. Real time rather than a frame count, so a frame that takes

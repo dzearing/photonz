@@ -760,6 +760,22 @@ extension EditorState {
         scrubAudio.begin(audioMix, atMS: documentTimeMS)
     }
 
+    /// A drag on the playhead looks likely soon: the pointer is over the ruler
+    /// or the scrub bar, or the clock just stopped. Starts the scrub's sound
+    /// now, silently, so the press finds it running: starting the output at
+    /// the press held the picture up a few refreshes into the drag
+    /// (`ScrubAudioPlayer.lingerSeconds`). At most once a second, since a
+    /// hover asks at every move of the pointer.
+    func getScrubSoundReady() {
+        guard Experiments.shared.scrubAuditionEnabled, documentHasAudio,
+              !isDocumentPlaying, !playerVolume.isSilent, !isAuditioningScrub else { return }
+        let now = CACurrentMediaTime()
+        guard now - scrubSoundReadiedAt >= 1 else { return }
+        scrubSoundReadiedAt = now
+        scrubAudio.setOutputGain(playerVolume.outputGain)
+        scrubAudio.getReady(audioMix)
+    }
+
     /// The playhead landed somewhere new while a drag is in hand.
     func auditionScrub() {
         guard let player = scrubAudioStorage, player.isAuditioning else { return }

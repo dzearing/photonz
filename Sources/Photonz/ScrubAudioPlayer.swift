@@ -85,7 +85,9 @@ final class ScrubAudioPlayer {
     ///
     /// The files are opened and the engine started from here, off the main
     /// thread, so by the time the first grain is due — a sixteenth of a second
-    /// later — there is something to play it on.
+    /// later — there is something to play it on. Usually it is already
+    /// running: `getReady(_:)` started it when the pointer came over the ruler
+    /// or the clock stopped, and it stays up a while after each drag.
     func begin(_ mix: [AudioMixSegment], atMS ms: Int) {
         lastGrainMS = ms
         lastGrainAt = Date()
@@ -94,17 +96,51 @@ final class ScrubAudioPlayer {
         grainsReversed = 0
         layersHeard = []
         worstGrainMS = 0
+        let (opening, layerSounds) = Self.sounds(in: mix)
+        Task { [engine] in await engine.warmUp(files: opening, layerSounds: layerSounds) }
+    }
+
+    /// How long the engine stays up after a drag, or after `getReady(_:)`,
+    /// for the next drag to find it running.
+    ///
+    /// Starting the output is what a drag must never wait for. The engine
+    /// starting at the press held the window server up about forty
+    /// milliseconds later, for 12 to 22 ms, in six drags out of six on the 6
+    /// minute reference edit: the main thread stood in the commit of that
+    /// refresh's picture, and the picture trailed the hand by three refreshes
+    /// (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 4). With the
+    /// engine already up, none of six did. Long enough for somebody hunting
+    /// to look at a frame and drag again; short enough that a Mac left
+    /// paused is not keeping its output awake.
+    static let lingerSeconds: Double = 10
+
+    /// A drag looks likely soon: the pointer came over the ruler or the scrub
+    /// bar, or the clock stopped. Opens the files and starts the engine now,
+    /// silently, so the press finds it running, and gives it all back after
+    /// `lingerSeconds` if no drag comes.
+    func getReady(_ mix: [AudioMixSegment]) {
+        guard !isAuditioning else { return }
+        let (opening, layerSounds) = Self.sounds(in: mix)
+        guard !layerSounds.isEmpty else { return }
+        let linger = Self.lingerSeconds
+        Task { [engine] in
+            await engine.warmUp(files: opening, layerSounds: layerSounds)
+            await engine.quiet(givingBackAfter: linger)
+        }
+    }
+
+    /// Every file the mix plays and which file each layer plays from.
+    private static func sounds(in mix: [AudioMixSegment]) -> (files: [UUID: URL], layers: [UUID: UUID]) {
         var urls: [UUID: URL] = [:]
         for segment in mix where segment.isAudible && urls[segment.sound.id] == nil {
             urls[segment.sound.id] = SoundLibrary.shared.url(for: segment.sound)
         }
-        let opening = urls.compactMapValues { $0 }
         // Which file each layer plays, because a node has to be wired up at
         // the format of the file it will be handed buffers from: a recording
         // at 48kHz and a piece of music at 44.1kHz cannot share one.
         var layerSounds: [UUID: UUID] = [:]
         for segment in mix where segment.isAudible { layerSounds[segment.layerID] = segment.sound.id }
-        Task { [engine] in await engine.warmUp(files: opening, layerSounds: layerSounds) }
+        return (urls.compactMapValues { $0 }, layerSounds)
     }
 
     /// The playhead landed on a new moment. Takes a grain if one is due, and
@@ -135,13 +171,15 @@ final class ScrubAudioPlayer {
         Task { [engine] in await engine.setOutputGain(held) }
     }
 
-    /// The hand let go. Everything stops at once and every node goes back:
-    /// what is under the playhead when nobody is dragging is a picture, not a
-    /// sound.
+    /// The hand let go. Every sound stops at once: what is under the playhead
+    /// when nobody is dragging is a picture, not a sound. The engine itself
+    /// stays up for `lingerSeconds`, for the next drag of a hunt, and then
+    /// every node and file goes back.
     func end() {
         lastGrainMS = nil
         lastGrainAt = nil
-        Task { [engine] in await engine.stop() }
+        let linger = Self.lingerSeconds
+        Task { [engine] in await engine.quiet(givingBackAfter: linger) }
     }
 }
 
@@ -160,6 +198,9 @@ actor ScrubAudioEngine {
     /// drag asks for the same file twenty times a second.
     private var files: [UUID: AVAudioFile] = [:]
     private var running = false
+    /// Counts every warm up and grain, so a give back that was waiting out
+    /// the linger can tell a drag came since and leave the engine up.
+    private var generation = 0
     /// The last grain actually played, so one that arrives late is dropped
     /// rather than played after the one that should have followed it.
     private var lastPlayed = 0
@@ -178,6 +219,7 @@ actor ScrubAudioEngine {
     /// press, so the first grain a sixteenth of a second later has somewhere
     /// to go.
     func warmUp(files opening: [UUID: URL], layerSounds: [UUID: UUID]) {
+        generation += 1
         lastPlayed = 0
         loudestSample = 0
         for (id, url) in opening where files[id] == nil {
@@ -192,6 +234,11 @@ actor ScrubAudioEngine {
             engine.connect(node, to: engine.mainMixerNode, format: format)
             nodes[layer] = node
         }
+        // An engine left up between drags can have been stopped under it (the
+        // output changed: headphones in, a display's speakers gone), and a
+        // node played on a stopped engine is an exception nothing can catch.
+        // So it is asked, not remembered.
+        if running, !engine.isRunning { running = false }
         guard !nodes.isEmpty, !running else { return }
         if heartbeatNode == nil { heartbeatNode = heartbeat.attach(to: engine) }
         engine.prepare()
@@ -205,7 +252,9 @@ actor ScrubAudioEngine {
 
     /// Play one tick's worth: a grain per piece of sound under the playhead.
     func play(_ windows: [ScrubWindow], number: Int) {
-        guard running, number > lastPlayed, heartbeat.hasTurnedOver(since: beatsAtStart) else { return }
+        guard running, engine.isRunning, number > lastPlayed,
+              heartbeat.hasTurnedOver(since: beatsAtStart) else { return }
+        generation += 1
         lastPlayed = number
         for window in windows {
             guard let file = files[window.sound.id],
@@ -216,8 +265,25 @@ actor ScrubAudioEngine {
         }
     }
 
+    /// Silent at once, every node stopped with whatever it still had to play,
+    /// and everything given back `seconds` from now unless a drag has come
+    /// in the meantime.
+    func quiet(givingBackAfter seconds: Double) {
+        for (_, node) in nodes { node.stop() }
+        let mark = generation
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(seconds))
+            await self?.stop(ifStill: mark)
+        }
+    }
+
+    private func stop(ifStill mark: Int) {
+        guard generation == mark else { return }
+        stop()
+    }
+
     /// Everything back: the nodes stopped and detached, the files closed, the
-    /// engine given up, so nothing is left running between drags.
+    /// engine given up, so nothing is left running once nobody is scrubbing.
     func stop() {
         for (_, node) in nodes {
             node.stop()

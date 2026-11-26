@@ -317,6 +317,17 @@ on the second drag — a compressed file seek — so the reads went off the main
 thread too. The hand now pays 0.1ms a grain, and `soundScrubAcrossIt` in
 `hear-the-scrub-walk` fails the walk if any single move costs a frame.
 
+**The output is started before the press, not at it (2026-11-26).** Starting
+the engine at the press held the window server up about forty milliseconds
+later, for 12 to 22 ms, in six drags out of six on the 6 minute reference edit:
+the main thread stood in the commit of that refresh's picture and the picture
+trailed the hand by three refreshes. So `EditorState.getScrubSoundReady` starts
+it silently when the pointer comes over the ruler or the scrub bar, and when
+the clock stops; letting go silences every node at once, and the engine, its
+nodes and its files go back `ScrubAudioPlayer.lingerSeconds` (10 s) after the
+last drag. An engine left up is asked whether it is still running before a
+grain is played on it, since a change of output stops it underneath.
+
 The walk also asks what was actually on the engine rather than how many buffers
 went to it: fifteen grains of silence schedule exactly as well as fifteen
 grains of somebody talking, so the loudest sample played is checked too.

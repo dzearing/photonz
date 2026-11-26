@@ -37,7 +37,7 @@
 
     { "do": "action", "action": "soundScrubAcrossIt" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "5-and-it-still-scrubs-after-playing", "note": "Dragging again after a playthrough sounds the same as it did before one: the scrub's own engine is built when the first hand takes hold and given back the moment it lets go, so nothing is left running between drags" },
+    { "do": "describe", "stage": "5-and-it-still-scrubs-after-playing", "note": "Dragging again after a playthrough sounds the same as it did before one: the scrub's own engine is started before the first hand takes hold (when the pointer comes over the ruler or the clock stops), falls silent the moment it lets go, and is given back ten seconds after the last drag, so nothing is left running once nobody is scrubbing" },
     { "do": "snapshot", "name": "5-and-it-still-scrubs-after-playing" }
   ]
 }

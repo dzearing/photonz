@@ -1087,6 +1087,9 @@ private struct TimelineRulerRow<Scrub: Gesture>: View {
             case .active(let point):
                 let ms = TimelineDock.rulerMS(point.x, laneWidth, ruler)
                 pointerMS = ms
+                // A hand over the ruler is about to drag the playhead, often:
+                // its sound is started now rather than at the press.
+                editorState.getScrubSoundReady()
                 // Over an end of the band or a marker the pointer says it can
                 // be dragged.
                 let grip = RulerRange.grip(atMS: ms, playheadMS: editorState.documentTimeMS,
@@ -1133,6 +1136,7 @@ private struct TransportScrubber: View {
             .onContinuousHover { phase in
                 if case .active(let point) = phase {
                     pointerMS = Int((VideoKit.Scrubber.travel(width).fraction(atX: point.x) * length).rounded())
+                    editorState.getScrubSoundReady()
                 }
             }
             .contextMenu {
