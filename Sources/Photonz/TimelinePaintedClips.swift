@@ -1218,6 +1218,9 @@ struct TimelinePaintedPicture: View {
         var landed = false
         /// The picture shown was laid late, so it is laid again at rest.
         var laidLate = false
+        /// What laying it took last time, in seconds, so a late lay waits
+        /// for a gap with that much room (`AfterTheFrame`).
+        var layCost: Double = 0.001
     }
 
     var body: some View {
@@ -1288,7 +1291,9 @@ struct TimelinePaintedPicture: View {
         // Anything else lays at once, as it always has: a picture laid late
         // included, when the timeline stops, in case what it was laid from
         // moved on in the same pass it landed.
+        let began = CACurrentMediaTime()
         let picture = lay(paint)
+        kept.layCost = CACurrentMediaTime() - began
         kept.waiting = nil
         kept.laidLate = false
         kept.picture = picture
@@ -1305,11 +1310,13 @@ struct TimelinePaintedPicture: View {
     private func layLate() {
         let kept = self.kept
         let landings = $landings
-        AfterTheFrame.run {
+        AfterTheFrame.run(cost: kept.layCost) {
             guard let waiting = kept.waiting else { return }
             kept.waiting = nil
             let s = waiting.shape
+            let began = CACurrentMediaTime()
             kept.picture = Self.lay(waiting.paint, width: s.width, height: s.height, scale: s.scale, scheme: s.scheme)
+            kept.layCost = CACurrentMediaTime() - began
             kept.shape = s
             kept.asked = waiting.asked
             kept.landed = true
@@ -1348,40 +1355,77 @@ struct TimelinePaintedPicture: View {
 }
 
 /// Work held until the frame being built is out: run when the main run loop
-/// next wakes, which is after this pass's drawing is handed over and before
-/// the next frame's update, so it fills the gap between two frames rather
-/// than lengthening the one that asked for it. A main queue block is not
-/// that: it can run in the same turn of the run loop, before the frame is
-/// handed over (`TimelinePaintedPicture`, 2026-11-22).
+/// next wakes with room in the refresh it is in, which is after a pass's
+/// drawing is handed over and before the next frame's update, so it fills the
+/// gap between two frames rather than lengthening the one that asked for it.
+/// A main queue block is not that: it can run in the same turn of the run
+/// loop, before the frame is handed over (`TimelinePaintedPicture`,
+/// 2026-11-22).
+///
+/// Room is read off the passes the run loop made in the last refresh, and a
+/// piece of work is weighed by what it cost last time (`SpareFrameTime`): in
+/// the first gap after the frame that built the hour-long edit's busiest lane
+/// again, its picture made that refresh the late one (2026-11-25, pass 25).
 @MainActor enum AfterTheFrame {
-    private static var waiting: [@MainActor () -> Void] = []
-    private static var listens = false
-    /// How much of it is done between two frames: what is left waits for the
-    /// next, so ten waveforms laid again in a zoom are not all charged to one.
-    private static let budget = 0.002
-    private static var nextAt: CFTimeInterval = 0
+    private struct Held {
+        let work: @MainActor () -> Void
+        let cost: Double
+        let since: CFTimeInterval
+    }
+    private static var waiting: [Held] = []
+    private static var spare = SpareFrameTime()
+    private static var watching = false
+    /// A wake asked for while work waits, so it is not left for an event
+    /// that may never come.
+    private static var wakeAsked = false
 
-    static func run(_ work: @escaping @MainActor () -> Void) {
-        waiting.append(work)
-        guard !listens else { return }
-        listens = true
-        let observer = CFRunLoopObserverCreateWithHandler(nil, CFRunLoopActivity.afterWaiting.rawValue, true, 0) { observer, _ in
+    /// Holds `work` until a gap has room for it; `cost` is about what it
+    /// took last time, in seconds.
+    static func run(cost: Double = 0.001, _ work: @escaping @MainActor () -> Void) {
+        watch()
+        waiting.append(Held(work: work, cost: cost, since: CACurrentMediaTime()))
+        askForAWake()
+    }
+
+    /// Watches every pass of the main run loop from the first held work on:
+    /// two clock reads a pass.
+    private static func watch() {
+        guard !watching else { return }
+        watching = true
+        let moments = CFRunLoopActivity.afterWaiting.rawValue | CFRunLoopActivity.beforeWaiting.rawValue
+        let observer = CFRunLoopObserverCreateWithHandler(nil, moments, true, 0) { _, activity in
             MainActor.assumeIsolated {
-                let began = CACurrentMediaTime()
-                guard began >= AfterTheFrame.nextAt else { return }
-                repeat {
-                    AfterTheFrame.waiting.removeFirst()()
-                } while !AfterTheFrame.waiting.isEmpty && CACurrentMediaTime() - began < AfterTheFrame.budget
-                // The next frame's gap, if any is left: a frame at 120 Hz.
-                AfterTheFrame.nextAt = began + 0.007
-                if AfterTheFrame.waiting.isEmpty {
-                    AfterTheFrame.listens = false
-                    AfterTheFrame.nextAt = 0
-                    CFRunLoopObserverInvalidate(observer)
+                let now = CACurrentMediaTime()
+                if activity == .beforeWaiting {
+                    AfterTheFrame.spare.passEnded(at: now)
+                    return
                 }
+                AfterTheFrame.spare.passBegan(at: now)
+                AfterTheFrame.runWhatFits(now: now)
             }
         }
         CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
+    }
+
+    private static func runWhatFits(now: CFTimeInterval) {
+        guard !waiting.isEmpty else { return }
+        let chosen = spare.runs(costs: waiting.map(\.cost), waitedSince: waiting.map(\.since), now: now)
+        guard !chosen.isEmpty else { return askForAWake() }
+        let running = chosen.map { waiting[$0] }
+        let taken = Set(chosen)
+        waiting = waiting.indices.filter { !taken.contains($0) }.map { waiting[$0] }
+        for held in running { held.work() }
+        if !waiting.isEmpty { askForAWake() }
+    }
+
+    /// Wakes the run loop a refresh from now, so work that waits runs even
+    /// if nothing else happens.
+    private static func askForAWake() {
+        guard !wakeAsked else { return }
+        wakeAsked = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + spare.refresh) {
+            MainActor.assumeIsolated { AfterTheFrame.wakeAsked = false }
+        }
     }
 }
 

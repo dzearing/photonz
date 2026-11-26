@@ -1371,7 +1371,8 @@ The rule, for any view added to the editor window:
    through `EditorState.laneRuler(_:)` and never against the window: inside a
    slid lane the window's own ruler is applied twice. A picture laid late is
    shown with the timeline's next step (`LatePictures`), never in a pass of
-   its own, and late laying stops after 2 ms a gap (`AfterTheFrame`). What is
+   its own, and a late lay runs only in a gap whose refresh has room for it
+   (`AfterTheFrame`, `SpareFrameTime`, below). What is
    painted is cut to the canvas: zoomed in, a gap is hundreds of screens wide.
    Far sleeping rows are left out of what the window asks every view
    (accessibility, hit testing) until they come near.
@@ -1601,6 +1602,22 @@ The rule, for any view added to the editor window:
      scroll's step late (no gain on the step, 16 to 27 late frames of 360
      against 9 to 13). Laying the picture into a Core Graphics context of our
      own instead of `ImageRenderer.cgImage` is four times slower.
+   - **A late lay waits for a refresh with room** (`AfterTheFrame`,
+     `SpareFrameTime`, 2026-11-25, pass 25). Laid in the first gap after the
+     frame that asked, the picture of the hour-long edit's busiest lane (V1,
+     378 clips, about 3 ms) landed in the same refresh as building that lane
+     again (about 2.5 ms on top of a 4 ms frame), and those refreshes were
+     the late ones near Fit and on a fast scroll. Now the run loop's passes
+     are watched (two clock reads a pass), and held work runs in a gap only
+     when the main thread's time over the last 8.3 ms plus what that picture
+     cost to lay last time stays under 6.5 ms. Work that has waited four
+     refreshes runs anyway, and so does work on a thread that was idle for a
+     whole refresh, so nothing waits on a frame that never comes. Main
+     thread p95 a frame on the 60 minute edit (three alternating pairs, one
+     build): near Fit 9.4 to 9.6 ms down to 7.3 to 8.1, fast scroll 8.5 to
+     8.7 down to 7.6 to 7.8, zoom out 7.7 to 8.4 down to 6.8 to 7.1. Simply
+     waiting one refresh instead got a scroll there but left near Fit at 9.0
+     to 9.5: the lays then landed on the next lane group's frame.
    - **A zoom from rest begins with the lanes as they rest** (`TimelineHeldPainting.paintedMS`,
      `TimelineLaneFrame.holding(painted:)`, `TimelineLaneFrame.isZoom`,
      `TimelinePaintedPicture.asked`, 2026-11-22, pass 23). At rest after a
