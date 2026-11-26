@@ -218,7 +218,7 @@ extension EditorState {
         }
         frames.run { [weak self] in
             guard let self else { return }
-            guard scrubAsks.refreshed() else {
+            guard let frames = scrubFrames, scrubAsks.refreshed(atRefresh: frames.count) else {
                 // A refresh with nothing new: nothing to draw until the hand
                 // moves again.
                 if !playheadInHand { scrubFrames?.stop() }

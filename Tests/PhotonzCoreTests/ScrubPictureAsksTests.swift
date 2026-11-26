@@ -20,8 +20,8 @@ struct ScrubPictureAsksTests {
         _ = asks.asked()
         do { let said = asks.handMoved(atRefresh: 1); #expect(!said) }
         // A move left waiting is asked for at the refresh, picture on its way or not.
-        do { let said = asks.refreshed(); #expect(said) }
-        do { let said = asks.refreshed(); #expect(!said) }
+        do { let said = asks.refreshed(atRefresh: 2); #expect(said) }
+        do { let said = asks.refreshed(atRefresh: 3); #expect(!said) }
         do { let said = asks.handMoved(atRefresh: 2); #expect(said) }
     }
 
@@ -31,12 +31,12 @@ struct ScrubPictureAsksTests {
         let first = asks.asked()
         asks.frameLanded()
         #expect(asks.pictureOnItsWay)
-        do { let said = asks.refreshed(); #expect(!said) }
-        do { let said = asks.refreshed(); #expect(!said) }
+        do { let said = asks.refreshed(atRefresh: 9); #expect(!said) }
+        do { let said = asks.refreshed(atRefresh: 9); #expect(!said) }
         asks.shown(first)
         #expect(!asks.pictureOnItsWay)
-        do { let said = asks.refreshed(); #expect(said) }
-        do { let said = asks.refreshed(); #expect(!said) }
+        do { let said = asks.refreshed(atRefresh: 9); #expect(said) }
+        do { let said = asks.refreshed(atRefresh: 9); #expect(!said) }
     }
 
     @Test("A frame landing with nothing on its way is asked for at the next refresh")
@@ -44,7 +44,7 @@ struct ScrubPictureAsksTests {
         var asks = ScrubPictureAsks()
         asks.shown(asks.asked())
         asks.frameLanded()
-        do { let said = asks.refreshed(); #expect(said) }
+        do { let said = asks.refreshed(atRefresh: 9); #expect(said) }
     }
 
     @Test("The hand's own next move takes a landing with it")
@@ -56,7 +56,7 @@ struct ScrubPictureAsksTests {
         let second = asks.asked()
         asks.shown(first)
         asks.shown(second)
-        do { let said = asks.refreshed(); #expect(!said) }
+        do { let said = asks.refreshed(atRefresh: 9); #expect(!said) }
     }
 
     @Test("Pictures skipped on the way count as shown once a later one arrives")
@@ -68,7 +68,7 @@ struct ScrubPictureAsksTests {
         asks.frameLanded()
         asks.shown(third)
         #expect(!asks.pictureOnItsWay)
-        do { let said = asks.refreshed(); #expect(said) }
+        do { let said = asks.refreshed(atRefresh: 9); #expect(said) }
         // An older picture arriving late does not put anything back on its way.
         asks.shown(1)
         #expect(!asks.pictureOnItsWay)
@@ -81,6 +81,50 @@ struct ScrubPictureAsksTests {
         asks.frameLanded()
         do { let said = asks.lettingGo(); #expect(said) }
         do { let said = asks.lettingGo(); #expect(!said) }
-        do { let said = asks.refreshed(); #expect(!said) }
+        do { let said = asks.refreshed(atRefresh: 9); #expect(!said) }
+    }
+
+    // A frame that lands while the hand is moving rides with the hand's next
+    // move rather than being drawn at the refresh on its own. Drawn on its
+    // own it started a whole picture at the very start of the refresh, and
+    // the move made a moment later waited behind it: on the 6 minute
+    // reference edit that was most of the moments a dragged picture was two
+    // or three refreshes behind the hand (`scrubbing-a-long-edit-never-trails-the-pointer-b`).
+
+    @Test("A frame landing while the hand moves waits for the hand's next move")
+    func landingWaitsWhileTheHandMoves() {
+        var asks = ScrubPictureAsks()
+        do { let said = asks.handMoved(atRefresh: 4); #expect(said) }
+        asks.shown(asks.asked())
+        asks.frameLanded()
+        // The refresh straight after a move: the hand is moving, so its next
+        // move carries the landed frame.
+        do { let said = asks.refreshed(atRefresh: 5); #expect(!said) }
+        #expect(asks.landingWaiting)
+        do { let said = asks.handMoved(atRefresh: 5); #expect(said) }
+        _ = asks.asked()
+        #expect(!asks.landingWaiting)
+    }
+
+    @Test("A frame landing is drawn once the hand has held still for a refresh")
+    func landingIsDrawnWhenTheHandHolds() {
+        var asks = ScrubPictureAsks()
+        do { let said = asks.handMoved(atRefresh: 4); #expect(said) }
+        asks.shown(asks.asked())
+        asks.frameLanded()
+        do { let said = asks.refreshed(atRefresh: 5); #expect(!said) }
+        // No move in refresh 5: the hand has stopped, and the frame is drawn.
+        do { let said = asks.refreshed(atRefresh: 6); #expect(said) }
+        do { let said = asks.refreshed(atRefresh: 7); #expect(!said) }
+    }
+
+    @Test("A move left waiting is still drawn at the next refresh while the hand moves")
+    func aWaitingMoveIsNotHeld() {
+        var asks = ScrubPictureAsks()
+        do { let said = asks.handMoved(atRefresh: 4); #expect(said) }
+        _ = asks.asked()
+        do { let said = asks.handMoved(atRefresh: 4); #expect(!said) }
+        asks.frameLanded()
+        do { let said = asks.refreshed(atRefresh: 5); #expect(said) }
     }
 }

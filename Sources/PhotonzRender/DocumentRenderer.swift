@@ -1716,7 +1716,14 @@ public final class DocumentRenderer: @unchecked Sendable {
             // punch-in read soft for no reason anybody could see. The `sx > 1`
             // test below is what actually spends the money, so a picture drawn
             // at or under its own size still costs exactly what it did.
-            enlargesPhoto = !magnifyNearest
+            // A frame read in passing is the exception: a scrub preview, kept
+            // small while the hand moves and replaced by a sharp frame once it
+            // holds still, so it is enlarged the plain way, in one pass rather
+            // than the better resampler's three (`MovieSweep.isReadInPassing`).
+            // Its stand-in goes the same way, so its shadow still falls from
+            // exactly the box the frame covers.
+            let preview = layer.movie.map { MovieSweep.isReadInPassing(frameWidth: cg.width, of: $0) } ?? false
+            enlargesPhoto = !magnifyNearest && !preview
         case .text(let text):
             // Baked at the resolution it will be SHOWN at, so the scale-to-frame
             // step below is 1:1 and the words stay sharp however far in you are

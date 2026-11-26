@@ -6,7 +6,8 @@
 ///
 /// A frame landing from the decoder while the hand is on the playhead waits
 /// for a refresh too, and while a picture is still on its way it waits for
-/// that picture as well. Asking at the refresh anyway drew the same picture a
+/// that picture as well; while the hand is moving it waits for the hand's
+/// next move, which carries it. Asking at the refresh anyway drew the same picture a
 /// second time (the next one asked for is drawn from every frame in hand, the
 /// landed one included), and the main thread spent the refresh's first 1.5 ms
 /// working out the document for it, exactly while the picture already drawn
@@ -65,9 +66,21 @@ public struct ScrubPictureAsks: Sendable, Equatable {
         landingWaiting = true
     }
 
-    /// The display refreshed: true when a picture is to be asked for now.
-    public mutating func refreshed() -> Bool {
-        guard moveWaiting || (landingWaiting && !pictureOnItsWay) else { return false }
+    /// The display refreshed, starting refresh `refresh` (the display's own
+    /// count, as `handMoved(atRefresh:)` is given): true when a picture is to
+    /// be asked for now.
+    ///
+    /// A frame that landed waits while the hand is moving (it moved in the
+    /// refresh just gone): the hand's next move is drawn from every frame in
+    /// hand, so it carries the landed one. Drawn on its own here, it started a
+    /// whole picture at the very start of the refresh and the move made a
+    /// moment later waited behind it, which on the 6 minute reference edit was
+    /// most of the moments a dragged picture trailed the hand by two or three
+    /// refreshes (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 2).
+    /// Once the hand holds still for a refresh, the landed frame is drawn.
+    public mutating func refreshed(atRefresh refresh: Int) -> Bool {
+        let handIsMoving = askedAtRefresh >= refresh - 1
+        guard moveWaiting || (landingWaiting && !pictureOnItsWay && !handIsMoving) else { return false }
         moveWaiting = false
         landingWaiting = false
         return true

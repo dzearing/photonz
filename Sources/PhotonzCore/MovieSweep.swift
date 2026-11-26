@@ -272,6 +272,17 @@ public enum MovieSweep {
         guard wanted.width > roughWidth, wanted.width > 0 else { return wanted }
         return CGSize(width: roughWidth, height: (wanted.height * roughWidth / wanted.width).rounded())
     }
+
+    /// Whether a frame `frameWidth` pixels wide of `movie` is one read in
+    /// passing: kept small while a hand moves, and replaced by a sharp one
+    /// once it holds still. Such a frame is a scrub preview, so it is enlarged
+    /// to its box the plain way rather than with the better resampler, which
+    /// took three of the five passes each picture of a dragged playhead cost
+    /// on the 6 minute reference edit
+    /// (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 2).
+    public static func isReadInPassing(frameWidth: Int, of movie: MovieRef) -> Bool {
+        movie.pixelSize.width > roughWidth && CGFloat(frameWidth) <= roughWidth
+    }
 }
 
 /// Which grid frames each sample of a one-pass read fills, fed the samples in

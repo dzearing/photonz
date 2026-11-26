@@ -370,3 +370,34 @@ struct MovieKeyFramesTests {
         #expect(keys.sourceMS == [0, 59, 118])
     }
 }
+
+/// A frame read in passing is a scrub preview: enlarged to its box with the
+/// plain one-pass resampler, the way Premiere and Final Cut drop resolution
+/// while you scrub. The better resampler took three of the five passes each
+/// picture of a dragged playhead cost on the 6 minute reference edit
+/// (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 2).
+@Suite("Which frames are read in passing")
+struct MovieFramesReadInPassingTests {
+
+    private let retina = MovieRef(pixelSize: CGSize(width: 2880, height: 1864), durationMS: 60_000)
+
+    @Test("A frame kept small while the hand moves is read in passing")
+    func smallFrames() {
+        #expect(MovieSweep.isReadInPassing(frameWidth: 800, of: retina))
+        #expect(MovieSweep.isReadInPassing(frameWidth: 799, of: retina))
+    }
+
+    @Test("A frame read sharp, at the recording's size or the size it is shown, is not")
+    func sharpFrames() {
+        #expect(!MovieSweep.isReadInPassing(frameWidth: 2880, of: retina))
+        #expect(!MovieSweep.isReadInPassing(frameWidth: 1520, of: retina))
+    }
+
+    @Test("A recording no wider than a frame read in passing has none")
+    func smallRecordings() {
+        let small = MovieRef(pixelSize: CGSize(width: 640, height: 360), durationMS: 60_000)
+        #expect(!MovieSweep.isReadInPassing(frameWidth: 640, of: small))
+        let edge = MovieRef(pixelSize: CGSize(width: 800, height: 450), durationMS: 60_000)
+        #expect(!MovieSweep.isReadInPassing(frameWidth: 800, of: edge))
+    }
+}
