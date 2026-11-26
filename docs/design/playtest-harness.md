@@ -495,6 +495,50 @@ it inside itself, with `closeDocument` and a second `open`. Handing that proof
 to a second walk, which is how it used to be done, made a walk that only passed
 when another one had run first.
 
+### The probe is silent to the room
+
+Walks play real documents with real soundtracks. On 2026-11-26 the person at
+the Mac heard music and synth voices from nowhere: a scrub walk's probe was
+playing out of the built-in speakers (`pmset -g assertions` listed an
+`audio-out BuiltInSpeakerDevice` assertion created for its pid). So the probe
+tells Core Audio two things about itself the moment it launches
+(`PlaytestSilentProbe`):
+
+* `kAudioHardwarePropertyProcessIsAudible` 0: nothing the process plays is
+  heard, on any device.
+* `kAudioHardwarePropertySleepingIsAllowed` 1: its running output no longer
+  keeps the Mac awake, which is what the `audio-out` assertion is. The loop
+  holds the Mac awake on its own.
+
+**Where the tap sits.** Nothing about the app's sound changes. The document's
+engine, the scrub's engine and the plain video player still run on the real
+output device, at its real rate, latency and clock; the system zeroes the
+probe's share at the very last step, inside Core Audio, after the device has
+taken it. Every measurement a walk makes is upstream of that: `listen` taps the
+main mixer, the scrub counts the loudest sample it put on its engine, the speed
+walk's sound tally and the sync checks read the engine's own clock and host
+times. A tone on an engine read the same mixer peak (0.05), the same
+presentation latency and a valid host time on its last render with the two
+switches and without them. The alert beep is played by the system's sound
+server, not the app, so the mute cannot reach it: in a silent probe `AppBeep`
+skips it. A beep AppKit makes on its own (an unhandled key in a text field) can
+still be heard.
+
+`soundExpectPlaying` and `soundScrubAcrossIt` fail when the probe is audible
+or holds an `audio-out` assertion while its sound plays, so every walk that
+plays sound is the check, and `an-editing-session-walk` carries one, which puts
+it in every rotating check.
+
+**To hear a walk**, run it by hand with the switch on:
+
+```
+PHOTONZ_PROBE_SOUND=1 Scripts/playtest.sh Scripts/playtest/hear-the-scrub-walk.json
+```
+
+`Scripts/probe-app.sh` passes it through to the app, and the probe logs
+`Probe sound: heard out loud, as asked`. The dev and release apps are never
+touched: the switch is compiled into the probe alone.
+
 `Scripts/playtest-all.sh` runs every walk in the folder and prints a line each.
 Run it twice in a row: the same answers both times is what says the set can be
 trusted.

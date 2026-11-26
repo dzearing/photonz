@@ -208,7 +208,7 @@ extension EditorState {
         guard let document, let selection, let layer = document.layer(id: id) else { return false }
         guard let piece = stillRenderer.layerRegion(of: id, in: document, store: store,
                                                     path: selection.path) else {
-            NSSound.beep() // nothing of that layer is inside the marquee
+            AppBeep.play() // nothing of that layer is inside the marquee
             return false
         }
         // Named after the layer it came out of, so pasting it reads as "Button
@@ -356,7 +356,7 @@ extension EditorState {
             .cgImage(forProposedRect: nil, context: nil, hints: nil) {
             openCapture(image)
         } else {
-            NSSound.beep()
+            AppBeep.play()
         }
     }
 

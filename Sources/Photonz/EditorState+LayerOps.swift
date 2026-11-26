@@ -864,7 +864,7 @@ extension EditorState {
         guard let document, let selection, let source = document.layer(id: id) else { return }
         guard let piece = previewRenderer.layerRegion(of: id, in: document, store: store,
                                                       path: selection.path) else {
-            NSSound.beep() // nothing of that layer is inside the marquee
+            AppBeep.play() // nothing of that layer is inside the marquee
             return
         }
         // Named the way duplicating that layer names it — an app-written name

@@ -393,14 +393,14 @@ extension EditorState {
         guard let id = regionTargetID(), let layer = document.layer(id: id),
               let ref = layer.imageRef, layer.crop == nil, layer.transform.isIdentity,
               layer.frame.width > 0, layer.frame.height > 0,
-              let bitmap = store.image(for: ref) else { NSSound.beep(); return }
+              let bitmap = store.image(for: ref) else { AppBeep.play(); return }
         var docToBitmap = CGAffineTransform(scaleX: CGFloat(bitmap.width) / layer.frame.width,
                                             y: CGFloat(bitmap.height) / layer.frame.height)
             .translatedBy(x: -layer.frame.minX, y: -layer.frame.minY)
         let localPath = region.path.copy(using: &docToBitmap) ?? region.path
         // Nothing under the marquee: an invisible new layer is worse than an
         // honest refusal, and it is what ⌘C says with the same marquee.
-        guard let cut = SmartCut.cut(bitmap, path: localPath) else { NSSound.beep(); return }
+        guard let cut = SmartCut.cut(bitmap, path: localPath) else { AppBeep.play(); return }
         // Named the way duplicating that layer names it, so the panel reads
         // "Background 2" over "Background" rather than filing an anonymous
         // piece.

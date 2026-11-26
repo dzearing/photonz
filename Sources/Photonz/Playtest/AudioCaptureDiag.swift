@@ -10,6 +10,11 @@ import PhotonzCore
 /// (`ffmpeg -i … -af volumedetect -f null -`): equal peaks mean the capture is
 /// at unity, lower ones mean it follows the output volume. Add
 /// `--with-microphone` to record the microphone alongside, as a person would.
+///
+/// It plays OUT LOUD, on purpose and only when asked by its own flag: what it
+/// measures is the Mac's real output as a recording hears it, so the sound
+/// comes from `afplay`, its own process, which the probe's mute
+/// (`PlaytestSilentProbe`) does not touch. No walk or script runs it.
 @MainActor
 enum AudioCaptureDiag {
     static func runIfRequested() {

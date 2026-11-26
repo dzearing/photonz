@@ -75,7 +75,7 @@ extension EditorState {
         guard let id = clickPlacementClip, let document else { endPlacingClick(); return }
         var trial = document
         guard trial.addClick(toClip: id, atMS: documentTimeMS, canvasPoint: documentPoint) != nil else {
-            NSSound.beep()
+            AppBeep.play()
             return
         }
         endPlacingClick()

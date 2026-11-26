@@ -85,8 +85,14 @@ export const DEFAULTS = {
   // the colour well the way every walk presses a control: from macOS 27 those
   // presses landed and did nothing for six days (2026-10-26 to 11-01) and
   // dozens of walks went red with no app change behind them.
+  // hear-the-scrub-walk plays and scrubs two sounds at once and fails if any
+  // of it reaches the room (the probe audible, or holding an audio-out
+  // assertion): on 2026-11-26 the person at the Mac heard a walk's music out
+  // of the speakers. It needs no front, so it runs with somebody at the Mac,
+  // when an-editing-session-walk (which holds the front) is skipped.
   everyCheck: ['a-press-fires-a-plain-button-walk', 'an-editing-session-walk',
-    '3d-grippers-on-a-picked-layer-walk', 'closed-windows-give-their-memory-back-walk'],
+    '3d-grippers-on-a-picked-layer-walk', 'closed-windows-give-their-memory-back-walk',
+    'hear-the-scrub-walk'],
 };
 
 const HOUR = 3600 * 1000;

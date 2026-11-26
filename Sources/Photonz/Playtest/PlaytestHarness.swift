@@ -7189,8 +7189,17 @@ private final class Run {
                         + "has \(audible.count) audible piece(s), \(sounding.count) of them sounding at "
                         + "\(now) ms and \(missing.count) of those not on the engine")
                 }
+                // And none of it reaches the room: the probe is playing, so
+                // this is the moment its speakers would be held if anything
+                // were getting out (`PlaytestSilentProbe`).
+                if let heard = PlaytestSilentProbe.whyTheRoomHearsIt() {
+                    throw Failure(description: "the sound is playing, but \(heard); a walk's sound must "
+                        + "never reach the person at the Mac (\(ProbeSound.hearItKey)=1 lets a person hear it)")
+                }
+                let room = ProbeSound.isHeard(environment: ProcessInfo.processInfo.environment)
+                    ? "heard out loud, as asked" : "silent to the room, no audio-out held"
                 note(number, step.name,
-                     "sound: the engine is running with \(on) piece(s) of sound scheduled on it",
+                     "sound: the engine is running with \(on) piece(s) of sound scheduled on it, \(room)",
                      state: describe())
             case .soundHoldTheOutputUp:
                 guard editor.documentHasAudio else {
@@ -7472,6 +7481,11 @@ private final class Run {
                 guard loudest > 0.001 else {
                     throw Failure(description: "\(player.grainsPlayed) grain(s) went to the "
                         + "engine and every sample in them was silence, so nothing was audible")
+                }
+                // Heard by the mix, never by the room (`PlaytestSilentProbe`).
+                if let heard = PlaytestSilentProbe.whyTheRoomHearsIt() {
+                    throw Failure(description: "the scrub is sounding, but \(heard); a walk's sound must "
+                        + "never reach the person at the Mac (\(ProbeSound.hearItKey)=1 lets a person hear it)")
                 }
                 editor.endPlayheadDrag()
                 guard !editor.isAuditioningScrub, !player.isMakingSound else {

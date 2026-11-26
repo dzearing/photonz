@@ -162,6 +162,9 @@ ENVS=()
 # The probe keeps off the Mac's real clipboard (PlaytestPrivateClipboard). Only
 # Scripts/clipboard-timing/, which measures that clipboard on purpose, asks.
 [[ "${PHOTONZ_PROBE_REAL_CLIPBOARD:-}" == "1" ]] && ENVS+=(--env "PHOTONZ_PROBE_REAL_CLIPBOARD=1")
+# The probe is inaudible to the room (PlaytestSilentProbe). A person running a
+# walk by hand who wants to hear it sets PHOTONZ_PROBE_SOUND=1.
+[[ "${PHOTONZ_PROBE_SOUND:-}" == "1" ]] && ENVS+=(--env "PHOTONZ_PROBE_SOUND=1")
 # quit_probe waits for LaunchServices to let the last probe go, so -600 here
 # should not happen; if it still does (a quit slower than the wait), wait again
 # and try twice more rather than handing the walk no app.

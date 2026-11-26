@@ -1,0 +1,23 @@
+{
+  "feature": "The loop's test app is silent to the room",
+  "epic": "",
+  "summary": "While the loop runs walks, its copy of Photonz still plays and checks every sound, but none of it comes out of the Mac's speakers any more, and it no longer holds the speakers open.",
+  "setup": "Nothing to set: this is the loop's own test app (Photonz Probe), not Photonz Dev. Photonz Dev and the release app are untouched. To hear a walk on purpose, run it by hand with PHOTONZ_PROBE_SOUND=1 in front (docs/design/playtest-harness.md, 'The probe is silent to the room').",
+  "switched": {},
+  "try": [
+    { "do": "Keep working at the Mac while the loop is testing, with your sound on.", "shot": "2026-11-26-silent-probe-playing-sc.png" },
+    { "do": "Listen for music or synth voices from nowhere: there should be none, even while a walk plays a video with a soundtrack." },
+    { "do": "Open Photonz Dev, play a recording with sound, and check you still hear it as before." }
+  ],
+  "evaluate": [
+    "Over the next day of loop work, did you hear anything the loop played?",
+    "Does Photonz Dev still play sound exactly as it did?"
+  ],
+  "rough": [
+    "Where the tap sits: nowhere new. The app's sound engines run on the real output device exactly as before, and the system drops the test app's share after the device has taken it. Every check a walk makes reads the mix inside the app, upstream of that (the mixer tap, the scrub's loudest sample, the engine's own clock), so they read the real mix.",
+    "Before: during hear-the-scrub-walk the test app held the speakers' audio-out assertion for 8 seconds (pmset, pid 43439). After: 0 sightings over three sound walks, the end-to-end editing walk and the scrub walk, all green.",
+    "Same numbers: the 440 Hz tone walk hears 439.8, 440.3 and 439.8 Hz at 1x, 0.5x and 1.5x (within 0.07%), the scrub still reads a loudest sample of 0.36 to 0.59, and a bench tone read the same mixer peak, output latency and host clock with the mute and without it.",
+    "No recording of the speakers themselves: recording system output needs an audio capture permission this Mac has not given, and asking would put a dialog in front of you. The speakers' assertion is the system's own record of a process playing out of them.",
+    "The app's own alert beeps are skipped in the test app (the system plays them in another process, out of reach of the mute). A beep AppKit makes by itself, such as an unhandled key in a text field, could still be heard; none was seen."
+  ]
+}

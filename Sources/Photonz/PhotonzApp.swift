@@ -25,6 +25,9 @@ struct PhotonzApp: App {
         #if PHOTONZ_PLAYTEST
         // First of all: nothing a probe does may reach the person's clipboard.
         PlaytestPrivateClipboard.install()
+        // And nothing it plays may reach the room: the walks play real
+        // soundtracks all day (`PlaytestSilentProbe`).
+        PlaytestSilentProbe.install()
         // An exception AppKit crashes the app over keeps its reason in a line
         // of its own, since macOS 27's crash report drops it
         // (`PlaytestExceptionRecorder`).

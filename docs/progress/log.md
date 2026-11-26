@@ -23566,3 +23566,10 @@ announced 0.25.0.
 - Changed (7c6025ec9): the scrub sound starts silently before a drag (pointer over the ruler or scrub bar, and at pause), goes quiet at let go and is given back 10 s after the last drag.
 - Measured: short speed walk 3 runs within baseline; lag worst medium 3,3,3 -> 2,3,3, hunt 2,2,2 -> 1,2,2. Bar of 1 not reached.
 - Next: the first crossing of a title (9 ms of typesetting in one draw) and the hunt's first draws of the sharp frame with Lanczos. Leads in the task log. Gotcha: `playtest.sh --no-build` reuses the probe bundle, so `swift build` alone does not put an experiment in it.
+
+## 2026-11-26 — the probe is silent to the room (`the-loop-s-test-app-never-plays-sound-out-of-the`)
+
+- Reproduced: hear-the-scrub-walk's probe held the speakers' `audio-out` assertion for 8 s (pmset). A bench engine playing pure zeros holds it too, so a silent mixer could not fix it.
+- Changed: the probe sets Core Audio's per-process `ProcessIsAudible` 0 and `SleepingIsAllowed` 1 at launch (`PlaytestSilentProbe`, `ProbeSound` in core). Engines still run on the real device; every walk measurement is upstream. App beeps go through `AppBeep` and are skipped in a silent probe. `PHOTONZ_PROBE_SOUND=1` hears it (passed by probe-app.sh). `soundExpectPlaying` and `soundScrubAcrossIt` fail if the probe is audible or holds audio-out; hear-the-scrub-walk joins every rotating check.
+- Measured after: 0 audio-out sightings over four sound walks, all green; the 440 Hz tone still heard within 0.07%.
+- Open: AppKit's own beeps are played by systemsoundserverd and are not muted.

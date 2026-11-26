@@ -58,7 +58,7 @@ extension EditorState {
     func closeGap(_ gap: TimelineGap) {
         guard documentHasTime, let document else { return }
         if let refusal = document.gapCloseRefusal(gap) {
-            NSSound.beep()
+            AppBeep.play()
             raiseCanvasNotice(.gapNotClosed(refusal))
             return
         }
