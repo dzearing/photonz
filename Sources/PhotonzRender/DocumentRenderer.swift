@@ -824,6 +824,24 @@ public final class DocumentRenderer: @unchecked Sendable {
                             colorSpace: colors).map { InteractiveFrame(image: $0, surface: nil) }
     }
 
+    /// Sets out and keeps the words `document` shows, and draws nothing:
+    /// what the editor does for each title of a video once it is open, at
+    /// the moments a reveal is part way in and at rest
+    /// (`PhotonzDocument.momentsToDrawWordsAhead`), so the first picture a
+    /// hand dragging the playhead asks for there finds them kept. Words are
+    /// set out while a picture's recipe is built, before anything is drawn:
+    /// the first time a drag crossed the letter-by-letter title at 2:44 of
+    /// the 6 minute reference edit, that was 9 ms inside one refresh's
+    /// picture, which was three refreshes behind the hand
+    /// (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 5).
+    ///
+    /// Safe beside a picture being drawn: everything it keeps is kept under
+    /// the same lock the drawing uses.
+    public func drawWordsAhead(_ document: PhotonzDocument, store: ImageStore, contentScale: CGFloat = 1) {
+        let contentScale = contentScale > 0 && contentScale.isFinite ? contentScale : 1
+        _ = compositeImage(document, store: store, contentScale: contentScale)
+    }
+
     /// The whole composite drawn onto the next free surface, with a picture
     /// made of it. Nil when no surface could be had, and the bitmap is used.
     /// Must hold `interactiveLock`.

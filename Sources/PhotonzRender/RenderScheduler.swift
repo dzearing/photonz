@@ -104,6 +104,20 @@ public final class RenderScheduler: Sendable {
         }
     }
 
+    /// Sets out the words of the documents `posed` makes, at low priority
+    /// and off the queue pictures are drawn on, so the pictures that will
+    /// show them find them kept (`DocumentRenderer.drawWordsAhead`). `posed`
+    /// runs there too: posing a long edit at a moment is work the main
+    /// thread need not do.
+    public func drawWordsAhead(contentScale: CGFloat,
+                               _ posed: @escaping @Sendable () -> [PhotonzDocument]) {
+        Task.detached(priority: .utility) { [renderer, store] in
+            for document in posed() {
+                renderer.drawWordsAhead(document, store: store, contentScale: contentScale)
+            }
+        }
+    }
+
     /// Suspends until every submitted document has been rendered or skipped.
     public func waitUntilIdle() async {
         while let task = queue.withLock({ $0.drainTask }) {

@@ -525,6 +525,9 @@ final class EditorState {
     @ObservationIgnored var rememberedReadings: [TextReading.Remembered] = []
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
+    /// The titles, scale and size the words were last drawn ahead for
+    /// (`drawWordsAhead(of:contentScale:canvasSize:on:)`).
+    @ObservationIgnored private var wordsDrawnAheadFor: WordsDrawnAheadKey?
 
     /// The composited document, refreshed asynchronously after every edit
     /// (latest-wins: rapid edits coalesce instead of queueing renders).
@@ -7053,6 +7056,9 @@ final class EditorState {
             })
         }
         guard let scheduler else { return }
+        if document.hasTime {
+            drawWordsAhead(of: submitted, contentScale: contentScale, canvasSize: document.canvasSize, on: scheduler)
+        }
         let moment = documentTimeMS
         // A recording's frames come and go many times a second, so its render
         // draws from the pictures as they were at this moment: a frame the
@@ -7089,6 +7095,40 @@ final class EditorState {
         Task {
             await scheduler.submit(document, store: pictures, stamp: moment, contentScale: contentScale,
                                    colorSpace: colors, tag: askedTag)
+        }
+    }
+
+    struct WordsDrawnAheadKey: Equatable {
+        let moments: [Int]
+        let contentScale: CGFloat
+        let canvasSize: CGSize
+    }
+
+    /// Each title's words set out and kept before a hand dragging the
+    /// playhead reaches them, once for each set of titles and each size the
+    /// video is shown at (`PhotonzDocument.momentsToDrawWordsAhead`). The
+    /// first time a drag crossed the letter-by-letter title at 2:44 of the 6
+    /// minute reference edit, its letters were set out inside that refresh's
+    /// picture and the picture was three refreshes behind the hand
+    /// (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 5).
+    private func drawWordsAhead(of document: PhotonzDocument, contentScale: CGFloat, canvasSize: CGSize,
+                                on scheduler: RenderScheduler) {
+        let moments = document.momentsToDrawWordsAhead()
+        let key = WordsDrawnAheadKey(moments: moments, contentScale: contentScale, canvasSize: canvasSize)
+        guard key != wordsDrawnAheadFor else { return }
+        wordsDrawnAheadFor = key
+        guard !moments.isEmpty else { return }
+        // Posed the way `submit` poses a moment, off the main thread.
+        let filtered = displayFiltered(document)
+        scheduler.drawWordsAhead(contentScale: contentScale) {
+            moments.map { ms in
+                var posed = filtered.drawn(atTimeMS: ms)
+                if contentScale < 1 {
+                    posed = posed.magnified(by: contentScale)
+                    posed.canvasSize = canvasSize
+                }
+                return posed
+            }
         }
     }
 
