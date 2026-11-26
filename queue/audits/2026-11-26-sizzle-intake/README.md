@@ -40,3 +40,23 @@ Not reachable by an agent at all: any music beyond loose loop files, a fade on a
 sound, sound effects, a backdrop behind a framed recording other than a flat colour
 shape, a zoom inside a framed recording, continuous motion on a title after its
 entrance.
+
+## Correction: the first reel ran on 0.23.0
+
+The intake window's Photonz MCP server is `/Applications/Photonz.app`'s helper, and
+that app was still 0.23.0 (installed updates are a user action). Everything above
+was rebuilt on Photonz Dev 0.25.0 (main 2026-11-26, driven through
+`dist/Photonz Dev.app/Contents/Helpers/photonz-mcp` with `PHOTONZ_APP=dev`), same
+steps, Condensed Poster in place of Kinetic Bold. Pictures in `on-0.25-dev/`.
+
+Still there on 0.25.0: every 3D transition finding (dev-push-4s, dev-cube-7s,
+dev-flip-14s), the framed clip drawn flat through the swing and the zoom past the
+frame (dev-framed-11s), the black 15.5 to 17 s after set_speed 200 and the doorway
+at 17 s removed (dev-speed-15s), the sound silent 14.358958 to 15.043938 s (same
+numbers), the entrance cutting letter bottoms (dev-cube-7s, 7.2 s).
+
+Different on 0.25.0: Condensed Poster's headline "Every window. One glance." runs
+off the right edge of the frame instead of losing its second line (dev-title-9s);
+its background is Wind Streams, the same wavy lines as the old Kinetic Bold in
+ember on warm black, which the user called "so freaking amateur ... some kind of
+bland wood grain" on 2026-11-26.

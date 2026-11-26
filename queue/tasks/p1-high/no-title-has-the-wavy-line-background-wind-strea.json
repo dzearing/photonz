@@ -1,0 +1,33 @@
+{
+  "id": "no-title-has-the-wavy-line-background-wind-strea",
+  "title": "No title has the wavy line background: Wind Streams is taken out",
+  "goal": "Some title pages draw a background of thin wavy lines drifting across the frame. The user finds it amateur, like bland wood grain, and wants it gone. Take that background out of every built-in title and out of the backgrounds a title can be restyled to, and give the titles that used it a quiet, refined ground instead.",
+  "epic": "video-sizzle",
+  "priority": "p1-high",
+  "seq": 10.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-26T19:10:44.954Z",
+  "updated": "2026-11-26T19:10:45.079Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-26, with a screenshot of the old Kinetic Bold mid swing transition in their 0.23.0 app: \"this screen, the background is so freaking amateur. we need to just remove this. it's like some kind of bland wood grain\". Their app was 0.23.0, but the 2026-11-21 redesign kept the same backdrop: Sources/PhotonzCore/TitleSet.swift:344 Condensed Poster `live(.windStreams, ground: \"#0F0E0D\", ...)` ('ember wind barely in it'). Backdrop: Sources/PhotonzCore/LiveBackdrop.swift (case windStreams, name 'Wind Streams', 'Line Weight' parameter), drawn in Sources/PhotonzRender/LiveBackdrops.swift:482, offered as a restyle at Sources/PhotonzCore/TitleRestyle.swift:246/255/272/765. Keep the enum case decodable for old documents (map it to the plain ground) rather than deleting it outright. Do not redesign the rest of Condensed Poster here; its headline running off the frame is a-main-title-headline-keeps-its-second-line-afte.",
+  "acceptance": [
+    "Reproduced first at Next defaults: Condensed Poster (formerly Kinetic Bold) draws Wind Streams, wavy ember lines on warm black (queue/audits/2026-11-26-sizzle-intake/on-0.25-dev/dev-title-9s.png); the old Kinetic Bold drew the same in white on blue (the user's screenshot, 2026-11-26). List every built-in title and restyle option that draws it.",
+    "Wind Streams is no longer drawn by any built-in title page or name card, and is no longer offered as a background when restyling a title. Condensed Poster gets a plain ground in its own palette (warm black, at most a barely visible vignette or soft light falloff), chosen by the redesign task's rules (the title reference board from five-title-pages and seven-more-built-in-titles-look-as-refined), with a before and after picture.",
+    "Look at the other live backgrounds (energy streams, sketch, particles, grid horizon, liquid gradient) with the user's words in mind ('amateur', 'bland wood grain', 'clip art'), on a still and in motion, and write down in the audit which, if any, read the same way; take out only Wind Streams here and file the rest as one follow-up with pictures if any clear the follow-up bar.",
+    "Documents saved with a Wind Streams background still open: the title shows its replacement ground, nothing breaks, and a test proves it. Tests and walks that pin Wind Streams are updated, not left asserting it.",
+    "Audit with every changed title before and after. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-26T19:10:44.956Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-26T19:10:45.078Z",
+      "note": "seq 4070 -> 10.5"
+    }
+  ]
+}

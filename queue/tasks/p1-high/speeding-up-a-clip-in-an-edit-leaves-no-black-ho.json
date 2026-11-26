@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:13.604Z",
-  "updated": "2026-11-26T18:37:13.736Z",
+  "updated": "2026-11-26T19:10:45.232Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nFound making a reel through the MCP tools: clip E478 at 14 to 17 s set to 200 percent became 14 to 15.5 s; 15.5 to 17 black; the doorway at 17 s disappeared from read_document's cuts. Not the speed ramp work (motion-that-feels-like-apple-springs-speed-ramps), which is about easing between speeds.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-11-26T18:37:13.735Z",
       "note": "seq 4070 -> 12"
+    },
+    {
+      "t": "2026-11-26T19:10:45.231Z",
+      "note": "Re-checked on Photonz Dev 0.25.0 (today's main) on 2026-11-26: the first reel ran on the user's 0.23.0 app. Still reproduces, same numbers: see queue/audits/2026-11-26-sizzle-intake/on-0.25-dev/ and the README's Correction section."
     }
   ]
 }

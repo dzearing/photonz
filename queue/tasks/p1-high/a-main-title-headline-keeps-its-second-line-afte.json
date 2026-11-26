@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-22T23:19:20.123Z",
-  "updated": "2026-11-26T18:37:27.573Z",
+  "updated": "2026-11-26T19:10:45.483Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in Scripts/playtest/hand-work-survives-new-numbers-and-a-restyle-walk.json (Scripts/playtest.sh <it> --no-build), picture 6-title-restyled-sc.png, copied to queue/audits/2026-11-22-hand-work-6-title-restyled-sc.png. Playhead at 0:01. The headline is a word reveal (riseAndFade by word, start 105 ms, stagger 63, length 630 at Punchy), so every word should be in by 1 s. Picture 5 (Original theme, before the restyle) shows two lines, The Long Way / Home. In a 1920x1080 core probe the restyled Title frame is 1536x209 (two lines) and the model is identical with and without commit for task a-chart-or-title-keeps-what-you-set-by-hand-when, so this was there before it. Not yet checked: whether the 1280x800 layout re-measures the frame for Editorial, or whether the second line is drawn under the subtitle.",
@@ -46,6 +46,10 @@
     {
       "t": "2026-11-26T18:37:27.572Z",
       "note": "Raised to p1 at the user's word, 2026-11-26: \"text would be clipped in weird spots\" in a reel they made. Second repro, through the MCP tools: add_title style Kinetic Bold, text \"Every window. One glance.\" on a 1920x1080 video: 184 pt Avenir Next Condensed bold in a 1536 x 258 box, and only \"Every window. One\" is ever drawn (queue/audits/2026-11-26-sizzle-intake/kinetic-bold-drops-glance.png). Also during its entrance at 7.2 s the bottoms of the letters are cut off by the reveal (cube-7s-and-kinetic-bold-entrance.png). Fix both here: every line of every title style shows at any length of words (shrink to fit or wrap within the frame, as the style says), and no entrance clips a letter. Check all 19 title page styles and 3 name cards with a one word, a five word and a ten word line; a test that fails on today's code."
+    },
+    {
+      "t": "2026-11-26T19:10:45.482Z",
+      "note": "On 0.25.0 (Dev, 2026-11-26) the Kinetic Bold repro is now Condensed Poster: 'Every window. One glance.' runs off the right edge of the 1920x1080 frame ('Every window. O' then cut), queue/audits/2026-11-26-sizzle-intake/on-0.25-dev/dev-title-9s.png; its entrance still cuts letter bottoms at 7.2 s (dev-cube-7s.png). Same fix: every line of every style fits inside the frame at any length of words."
     }
   ]
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:14.214Z",
-  "updated": "2026-11-26T18:37:14.332Z",
+  "updated": "2026-11-26T19:10:45.396Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nOverlap: motion-that-feels-like-apple-springs-speed-ramps has 'a layer or a whole recording can move in 3D: tilt, perspective, depth and a soft shadow on the ground' for the floating app look; this task owns the backdrop, the inset framing, fit without bars, zoom inside the card and the presets, and uses that task's 3D keys when they exist (or adds keyed tip and swing itself if it lands first; say which in both logs). The 3D transition task (3d-transitions-ease-in-and-out) needs a backdrop to show through its moves: share it. Code: clip framing is ordinary layer frame/corner/shadow (set_layer worked), zooms are in the recording zoom code (grep RecordingZoom / punch_in).",
@@ -29,6 +29,10 @@
     {
       "t": "2026-11-26T18:37:14.331Z",
       "note": "seq 4070 -> 126"
+    },
+    {
+      "t": "2026-11-26T19:10:45.395Z",
+      "note": "Re-checked on Photonz Dev 0.25.0 (today's main) on 2026-11-26: the first reel ran on the user's 0.23.0 app. Still reproduces, same numbers: see queue/audits/2026-11-26-sizzle-intake/on-0.25-dev/ and the README's Correction section."
     }
   ]
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:13.816Z",
-  "updated": "2026-11-26T18:37:13.935Z",
+  "updated": "2026-11-26T19:10:45.320Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nThe source .caf loops have no silence (silencedetect finds none). The 14 to 17 s video clip had set_speed 200 applied before export, which shortened it to 15.5; sound tracks were not touched. Related, not the same: the-sound-of-the-whole-reference-edit-plays-with (p2, playback dropouts measured once a second); if that task's measuring tool is built, reuse it.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-11-26T18:37:13.934Z",
       "note": "seq 105 -> 13"
+    },
+    {
+      "t": "2026-11-26T19:10:45.319Z",
+      "note": "Re-checked on Photonz Dev 0.25.0 (today's main) on 2026-11-26: the first reel ran on the user's 0.23.0 app. Still reproduces, same numbers: see queue/audits/2026-11-26-sizzle-intake/on-0.25-dev/ and the README's Correction section."
     }
   ]
 }
