@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 12,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:13.604Z",
-  "updated": "2026-11-26T19:10:45.232Z",
+  "updated": "2026-11-27T01:49:17.822Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nFound making a reel through the MCP tools: clip E478 at 14 to 17 s set to 200 percent became 14 to 15.5 s; 15.5 to 17 black; the doorway at 17 s disappeared from read_document's cuts. Not the speed ramp work (motion-that-feels-like-apple-springs-speed-ramps), which is about easing between speeds.",
@@ -31,6 +31,39 @@
     {
       "t": "2026-11-26T19:10:45.231Z",
       "note": "Re-checked on Photonz Dev 0.25.0 (today's main) on 2026-11-26: the first reel ran on the user's 0.23.0 app. Still reproduces, same numbers: see queue/audits/2026-11-26-sizzle-intake/on-0.25-dev/ and the README's Correction section."
+    },
+    {
+      "t": "2026-11-27T01:16:20.155Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T01:48:57.171Z",
+      "note": "owns these walks: speeding-up-a-clip-keeps-the-edit-joined-walk"
+    },
+    {
+      "t": "2026-11-27T01:49:13.553Z",
+      "note": "Reproduced in PhotonzCore first: SpeedRippleTests, three clips A 0-4s, B 4-7s, C 7-10s with dissolves on both cuts; on today's code B at 200% left C at 7-10s (black 5.5-7s) and editPoints read [4000] only, so the B>C dissolve was not drawn (still stored on C, just no longer meeting); 50% and 25% left C under B. 7 of 8 tests failed before the fix."
+    },
+    {
+      "t": "2026-11-27T01:49:13.631Z",
+      "note": "Chose rippling the clip's own track (plus captions heard off it, sparing locked layers) over every track, because it matches Final Cut's primary storyline, Premiere's Speed/Duration with Ripple Edit, and the freeze default 'This track' (user, 2026-10-17); music on another track is not broken up by a retime. Fix: PhotonzDocument.setClipSpeed -> rippleOwnTrack (ClipPieces.swift); setSectionSpeed now retimes latest clip first so a ripple never moves a later clip out from under the range. No gap is ever left, so nothing needs naming to the agent; set_speed's option text now says the clips after it move."
+    },
+    {
+      "t": "2026-11-27T01:49:13.710Z",
+      "note": "Verified: SpeedRippleTests 8/8 (faster, 50 and 25, back to 100, a gap kept, other tracks stay, one undo, piece of a cut clip, section across a cut); Scripts/test.sh exit 0; new walk speeding-up-a-clip-keeps-the-edit-joined-walk green at Next defaults with 3 real captures (looked at 1-double and 2-half: edit point at 0:03 and 0:14 with Cross dissolve on it); speed walks a-retimed-clip, command-r, cut-on-the-timeline, half-speed-reads-alike, speed-stops-ramp, speed-a-stretch, the-speed-curve all green. video-panel-order-walk fails at step 11 on panel section order, before any speed step, already owned by walks-that-fail-in-the-full-sweep-28."
+    },
+    {
+      "t": "2026-11-27T01:49:13.788Z",
+      "note": "left rough: speed stop edits on a ramp (SpeedStops.swift: setSpeedStop, moveSpeedStop, freezeSpeedStop...) go through editClip and do not ripple, so they probably leave the same gap; not reproduced here, so not filed; noted on motion-that-feels-like-apple-springs-speed-ramps. Also left rough: a title on another track over a later clip stays put and can end up over a different shot (no connected clips in Photonz)."
+    },
+    {
+      "t": "2026-11-27T01:49:17.820Z",
+      "note": "Clip > Speed and set_speed now move the clips after the retimed clip on its own track by however much it grew or shrank (PhotonzDocument.setClipSpeed -> rippleOwnTrack), so 200% leaves no black and the next cut keeps its transition, 50/25% push along, one undo. Verified by SpeedRippleTests (failed before), full test.sh green, new walk speeding-up-a-clip-keeps-the-edit-joined-walk green at Next defaults with real captures; audit queue/audits/2026-11-26-speed-ripple.json."
     }
-  ]
+  ],
+  "started": "2026-11-27T01:16:20.154Z",
+  "walks": [
+    "speeding-up-a-clip-keeps-the-edit-joined-walk"
+  ],
+  "completed": "2026-11-27T01:49:17.821Z"
 }
