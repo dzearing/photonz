@@ -771,10 +771,11 @@ final class SpeedWalkProbe {
             defer {
                 let sorted = busy.sorted()
                 if !sorted.isEmpty {
-                    busyPerFrame.append(String(format: "%@ mean %.2fms p95 %.2fms worst %.1fms (%d of %d over 8.3ms)", label,
+                    busyPerFrame.append(String(format: "%@ mean %.2fms p95 %.2fms worst %.1fms (%d of %d over 8.3ms; worst at frame %d)", label,
                                                sorted.reduce(0, +) / Double(sorted.count),
                                                sorted[min(sorted.count - 1, Int(Double(sorted.count) * 0.95))],
-                                               sorted.last ?? 0, sorted.count { $0 > 8.34 }, sorted.count))
+                                               sorted.last ?? 0, sorted.count { $0 > 8.34 }, sorted.count,
+                                               (busy.indices.max { busy[$0] < busy[$1] } ?? -1) + 1))
                 }
                 let built = ViewBuildMeter.shared.count(.clipBar)
                 barsPerFrame.append(String(format: "%@ %.0f", label, Double(built) / Double(max(1, at.count - 1))))
@@ -792,8 +793,16 @@ final class SpeedWalkProbe {
                     }.joined(separator: " "))
                 }
             }
+            let census = LayerCensus.isOn ? LayerCensus() : nil
+            defer { _ = census?.take(label) }
+            let film = label.hasPrefix("zoom") || label == "near fit" ? await LayerCensus.startFilm(editor.hostWindow) : nil
             let start = CACurrentMediaTime()
             await frames.next()
+            // The frame that starts the measure is at rest, and not one of
+            // its frames: until 2026-11-26 its passes were counted into the
+            // first moving frame, which read as one frame of two frames' work.
+            _ = MainThreadMeter.shared.takeBusy()
+            census?.look(editor.hostWindow)
             at.append(0)
             var held: [Double] = []
             var fresh: [Double] = []
@@ -813,12 +822,14 @@ final class SpeedWalkProbe {
                 await frames.next()
                 PassSampler.label = ""
                 busy.append(MainThreadMeter.shared.takeBusy() * 1000)
+                census?.look(editor.hostWindow)
                 let now = (CACurrentMediaTime() - start) * 1000
                 octaves[octave, default: []].append(now - (at.last ?? 0))
                 if isHeld { held.append(now - (at.last ?? 0)) } else { fresh.append(now - (at.last ?? 0)) }
                 if stretchMoved { moved.append(now - (at.last ?? 0)) } else { slid.append(now - (at.last ?? 0)) }
                 at.append(now)
             }
+            await LayerCensus.endFilm(film, label: label)
             func worst(_ v: [Double]) -> Double { v.max() ?? 0 }
             if label == "near fit" {
                 func mean(_ v: [Double]) -> Double { v.isEmpty ? 0 : v.reduce(0, +) / Double(v.count) }

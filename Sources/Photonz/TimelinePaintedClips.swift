@@ -653,6 +653,16 @@ struct TimelinePaintedClips: View, Equatable {
     }
     private static var setNames: [SetName: GraphicsContext.ResolvedText] = [:]
 
+    /// How `fitted` sets a name in `width`: how many of its letters it keeps
+    /// before the ellipsis (nil when the whole name fits) and how wide that
+    /// is, or nil while the name has never been set (`NameShot`).
+    static func cut(of name: String, width: CGFloat, size: CGFloat = 9.5) -> (count: Int?, width: CGFloat)? {
+        guard let widths = size != 9.5 ? tagWidths[name] : nameWidths[name] else { return nil }
+        guard widths.whole > width else { return (nil, widths.whole) }
+        let count = widths.cut.lastIndex { $0 <= width } ?? 0
+        return (count, widths.cut.isEmpty ? 0 : widths.cut[count])
+    }
+
     /// The name as the full bar sets it on one line, as `CaptionCuesLayer.fitted`
     /// sets it, from widths measured once.
     static func fitted(_ name: String, width: CGFloat, size: CGFloat = 9.5, in context: GraphicsContext,
@@ -853,6 +863,18 @@ struct TimelinePaintedClips: View, Equatable {
 /// against the window on every frame of a scroll so each stays in sight
 /// while its clip runs off (`TimelinePaint.nameFollowsTheEdge`). Every other
 /// name rides on the canvas, which a scroll only slides.
+///
+/// **Each name is a picture, laid once and slid.** Drawn as a Canvas, the
+/// names were a drawn layer redrawn on every frame of a zoom or scroll, and
+/// each redraw sent the system's drawing cleanup to ask the window server
+/// whether the last one was on screen yet: 950 asks in 360 frames of a
+/// scroll along the 50 track edit, 3,150 in 648 frames of a zoom near Fit.
+/// When the window server was slow to answer, that cleanup held a queue the
+/// main thread needed at the end of its frame for 20 to 40 ms (task
+/// `no-frame-of-a-50-track-zoom-is-held-up-by-the-sy`, 2026-11-26). A
+/// picture is a plain layer's contents and asks nothing. Each name is laid
+/// cut to its own reach (`NameShot`), so a frame that only slides it, or a
+/// zoom that only makes its clip wider, shows the picture already laid.
 struct TimelinePaintedNames: View, Equatable {
     let bars: [TimelinePaintedClips.Bar]
     let ruler: MotionStripRuler
@@ -860,22 +882,23 @@ struct TimelinePaintedNames: View, Equatable {
     let laneWidth: CGFloat
     let laneHeight: CGFloat
 
+    @Environment(\.displayScale) private var displayScale
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
-        let placed = bars.compactMap {
-            TimelinePaintedClips.place($0, ruler: ruler, drawnMS: drawnMS, laneWidth: laneWidth)
+        let scale = max(1, displayScale)
+        let shots = bars.compactMap { bar -> (place: CGPoint, picture: CGImage, size: CGSize)? in
+            guard let one = TimelinePaintedClips.place(bar, ruler: ruler, drawnMS: drawnMS, laneWidth: laneWidth),
+                  let shot = NameShot(one, scale: scale, scheme: colorScheme),
+                  let picture = shot.picture() else { return nil }
+            return (shot.place, picture, shot.size)
         }
-        Canvas { context, _ in
-            for one in placed {
-                let (rect, shape) = TimelinePaintedClips.outline(one, scale: context.environment.displayScale)
-                var inside = context
-                inside.clip(to: shape)
-                if one.bar.ground != nil {
-                    var whole = context
-                    TimelinePaintedClips.paintSoundTag(one, off: max(0, -one.x0), in: &whole)
-                    continue
-                }
-                TimelinePaintedClips.paintName(one.bar, rect: rect, hidden: max(0, -rect.minX),
-                                               pictures: one.bar.movie == nil ? 0 : one.bar.pictures, in: &inside)
+        ZStack(alignment: .topLeading) {
+            ForEach(shots.indices, id: \.self) { index in
+                let shot = shots[index]
+                Image(decorative: shot.picture, scale: scale)
+                    .frame(width: shot.size.width, height: shot.size.height)
+                    .offset(x: shot.place.x, y: shot.place.y)
             }
         }
         .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
@@ -885,6 +908,156 @@ struct TimelinePaintedNames: View, Equatable {
     nonisolated static func == (a: TimelinePaintedNames, b: TimelinePaintedNames) -> Bool {
         a.bars == b.bars && a.ruler == b.ruler && a.drawnMS == b.drawnMS && a.laneWidth == b.laneWidth
             && a.laneHeight == b.laneHeight
+    }
+}
+
+/// One edge name as a picture: the stretch of its clip the name can reach,
+/// from where it is drawn, and what is drawn there. Two frames whose names
+/// look the same in that stretch have the same `Look` and share a picture.
+///
+/// The name is painted exactly as the lane's canvas paints it
+/// (`TimelinePaintedClips.paintName`, `paintSoundTag`), in the clip's own
+/// place, and the picture is cut to the stretch, so it is the same pixels the
+/// canvas drew there. The stretch reaches as far as the name can, its whole
+/// width and its padding, so while the clip runs further than that, how far
+/// it runs changes nothing in it.
+@MainActor struct NameShot {
+    struct Look: Hashable {
+        let name: String
+        let kind: VideoKit.ClipKind
+        let isTag: Bool
+        let top: CGFloat
+        let height: CGFloat
+        let topRadius: CGFloat
+        let bottomRadius: CGFloat
+        /// How strongly the pictures under a name show, which darkens its
+        /// pill, in fiftieths.
+        let pictures: Int
+        /// How far the clip runs off the left edge, in pixels, as far as a
+        /// rounded corner could show.
+        let hidden: Int
+        /// How the name is cut short: how many letters it keeps (-1 when it
+        /// is whole), or while it has never been set, how much of the clip is
+        /// left from where it starts, in pixels, past -1.
+        let room: Int
+        /// A tag's start between two pixels, in eighths of one.
+        let fraction: Int
+        /// The tag's lead: past the fade in diamond, or not.
+        let leadsPastTheDiamond: Bool
+        let scheme: ColorScheme
+        let scale: CGFloat
+    }
+
+    /// Where the picture goes in the lane, and its size, in points.
+    let place: CGPoint
+    let size: CGSize
+    let look: Look
+    private let one: TimelinePaintedClips.Placed
+    private let origin: CGFloat
+
+    private static var laid: [Look: CGImage] = [:]
+    private static var widths: [String: CGFloat] = [:]
+
+    /// Nil when nothing of the name would be drawn.
+    init?(_ one: TimelinePaintedClips.Placed, scale: CGFloat, scheme: ColorScheme) {
+        let bar = one.bar
+        self.one = one
+        func pixels(_ v: CGFloat) -> Int { Int((v * scale).rounded()) }
+        if bar.ground != nil {
+            // `paintSoundTag`'s own sums.
+            let off = max(0, -one.x0)
+            let shown = one.lineShown
+            let start = max(shown.x, one.x0 + max(0, off - TimelineSpan.slack))
+            let left = shown.x + shown.width - start
+            guard left > 40 else { return nil }
+            let lead = off == 0 ? SoundFadeDiamond.reach + 4 : 4
+            let from = (start * scale).rounded(.down) / scale
+            let fraction = Int(((start - from) * scale * 8).rounded())
+            // The tag ends at least eight points short of the clip's end
+            // (`paintSoundTag`), so what it shows is decided by how its name
+            // is cut, not by how much clip is left.
+            let cut = TimelinePaintedClips.cut(of: bar.name, width: max(0, left - lead - 8 - 14), size: 9)
+            let reach = lead + (cut?.width ?? Self.width(of: bar.name, size: 9)) + 14 + 4
+            let width = (min(left + (start - from), reach) * scale).rounded(.up) / scale
+            origin = from
+            place = CGPoint(x: from, y: bar.top)
+            size = CGSize(width: width, height: bar.height)
+            look = Look(name: bar.name, kind: bar.kind, isTag: true, top: bar.top, height: bar.height,
+                        topRadius: 0, bottomRadius: 0, pictures: 0, hidden: 0,
+                        room: cut.map { $0.count ?? -1 } ?? -2 - pixels(left), fraction: fraction,
+                        leadsPastTheDiamond: off == 0, scheme: scheme, scale: scale)
+            return
+        }
+        guard !bar.isLinkedSound, !bar.isSound else { return nil }
+        let (rect, _) = TimelinePaintedClips.outline(one, scale: scale)
+        let hidden = max(0, -rect.minX)
+        let room = rect.width - hidden
+        guard room > 40 else { return nil }
+        let pictures = bar.movie == nil ? 0 : bar.pictures
+        // The name ends at least eight points short of the clip's end
+        // (`paintName`), so what it shows is decided by how it is cut, not
+        // by how much clip is left.
+        let cut = TimelinePaintedClips.cut(of: bar.name, width: max(0, room - (pictures > 0 ? 26 : 20)))
+        let reach = (cut?.width ?? Self.width(of: bar.name, size: 9.5)) + (pictures > 0 ? 4 + 10 + 4 : 8 + 4)
+        // The clip's rect is on the screen's pixels already, and so is the
+        // lane's left edge.
+        let from = rect.minX + hidden
+        let width = (min(room, reach) * scale).rounded(.up) / scale
+        origin = from
+        place = CGPoint(x: from, y: rect.minY)
+        size = CGSize(width: width, height: rect.height)
+        let radius = VideoKit.Metrics.clipCornerRadius
+        look = Look(name: bar.name, kind: bar.kind, isTag: false, top: bar.top, height: rect.height,
+                    topRadius: bar.half.isSound ? 0 : radius, bottomRadius: bar.half.isPicture ? 0 : radius,
+                    pictures: Int((pictures * 50).rounded()),
+                    hidden: pixels(min(hidden, radius + 2)), room: cut.map { $0.count ?? -1 } ?? -2 - pixels(room),
+                    fraction: 0, leadsPastTheDiamond: false, scheme: scheme, scale: scale)
+    }
+
+    /// How wide a name is set whole, in the type the painting sets it in,
+    /// measured once.
+    private static func width(of name: String, size: CGFloat) -> CGFloat {
+        let key = "\(size) \(name)"
+        if let known = widths[key] { return known }
+        if widths.count > 4000 { widths.removeAll() }
+        let font = NSFont.systemFont(ofSize: size, weight: .semibold)
+        let measured = ceil((name as NSString).size(withAttributes: [.font: font]).width)
+        widths[key] = measured
+        return measured
+    }
+
+    /// The picture for this look, laid the first time it is asked for.
+    func picture() -> CGImage? {
+        if let kept = Self.laid[look] { return kept }
+        guard size.width > 0, size.height > 0 else { return nil }
+        #if PHOTONZ_PLAYTEST
+        ViewBuildMeter.shared.built(.paintedPicture)
+        #endif
+        let one = self.one
+        let origin = self.origin
+        let size = self.size
+        let laid = Canvas { context, _ in
+            context.translateBy(x: -origin, y: -one.bar.top)
+            context.clip(to: Path(CGRect(x: origin, y: one.bar.top, width: size.width, height: size.height)))
+            if one.bar.ground != nil {
+                TimelinePaintedClips.paintSoundTag(one, off: max(0, -one.x0), in: &context)
+            } else {
+                let (rect, shape) = TimelinePaintedClips.outline(one, scale: context.environment.displayScale)
+                var inside = context
+                inside.clip(to: shape)
+                TimelinePaintedClips.paintName(one.bar, rect: rect, hidden: max(0, -rect.minX),
+                                               pictures: one.bar.movie == nil ? 0 : one.bar.pictures, in: &inside)
+            }
+        }
+        .frame(width: size.width, height: size.height)
+        .environment(\.colorScheme, look.scheme)
+        .environment(\.displayScale, look.scale)
+        let renderer = ImageRenderer(content: laid)
+        renderer.scale = look.scale
+        guard let picture = renderer.cgImage else { return nil }
+        if Self.laid.count > 1200 { Self.laid.removeAll() }
+        Self.laid[look] = picture
+        return picture
     }
 }
 

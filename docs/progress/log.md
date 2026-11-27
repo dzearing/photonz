@@ -23595,3 +23595,12 @@ announced 0.25.0.
 - Measured (`DepthTransitionEaseRenderTests`): middle-half black 0.26-0.93 -> 0 on every kind; biggest per-frame gain of the incoming shot at most 0.137 (doorway was 0.191, revolve 0.162). Perf: 1080p mid-move 3.8-4.5 -> 5.2-8.2 ms median.
 - Audit `queue/audits/2026-11-26-3d-transitions-ease.json`; four reels on the Reels page.
 - Next: the doorway's fading doors look pale (logged on transitions-that-feel-expensive); the designed backdrop under framed recordings is screen-recordings-sit-on-a-designed-backdrop-no.
+
+## 2026-11-26 — 50 track zoom: fewer waits on the window server (no-frame-of-a-50-track-zoom-is-held-up-by-the-sy)
+
+- Reproduced: ten timeline measures on the 50 track edit, 17,040 frames: 40.2, 38.9, 40.3 ms zoom frames and 20.9, 19.1 ms scroll frames. Profiled: main thread waiting on RenderBox's queue or CoreAnimation's lock while RenderBox's surface cleanup asks the window server about an earlier frame (this Mac's window server sits at 45% CPU with Photonz not running).
+- Built a probe-only layer census (`Sources/Photonz/Playtest/LayerCensus.swift`, switched on by `/tmp/photonz-layer-census/on`): counts the window's drawn layers added, removed, resized and redrawn per frame and every `-[CAContext waitForCommitId:timeout:]`. A drawn layer costs asks every time it is redrawn, not only when it comes or goes; the edge names' Canvas, redrawn on every frame of a zoom or scroll, was most of them.
+- Changed: edge names are cached pictures (`NameShot` in `TimelinePaintedClips.swift`), keyed by how the name is cut so a zoom reuses them. Asks: scroll along 953 -> 20, near Fit 3,149 -> 1,277, zoom in 261 -> 142. Pixel-identical at rest; filmed zooms compared.
+- Fixed in the harness: the timeline measure's first frame counted the frame before it; the pass sampler trapped on a thread leaving mid-sample.
+- Not reached: still 2 to 3 holds of 28 to 32 ms near Fit in ten runs; the first frame of a zoom from rest is 15 to 22 ms of app work (older than this change). Task left pending with both.
+- Found and filed: a title's name drawn twice for a frame while zooming near Fit, on the old drawing too (a-title-s-name-is-drawn-once-never-twice-or-not).

@@ -1,5 +1,23 @@
 [
   {
+    "file": "2026-11-27-50-track-timeline-zoom-after-edge-names-shown-as-pictures.mp4",
+    "title": "50 track timeline zoom, after: edge names shown as pictures",
+    "added": "2026-11-27T06:36:05.066Z",
+    "task": "no-frame-of-a-50-track-zoom-is-held-up-by-the-sy",
+    "madeOn": "main 5b7518a31 plus this change (v0.25.0), Photonz Probe",
+    "kind": "after",
+    "notes": "Same zooms; the names should look exactly as before, no blank or missing lanes"
+  },
+  {
+    "file": "2026-11-27-50-track-timeline-zoom-before-edge-names-drawn-live.mp4",
+    "title": "50 track timeline zoom, before: edge names drawn live",
+    "added": "2026-11-27T06:36:05.018Z",
+    "task": "no-frame-of-a-50-track-zoom-is-held-up-by-the-sy",
+    "madeOn": "main 5b7518a31 (v0.25.0), Photonz Probe",
+    "kind": "before",
+    "notes": "Zoom in, out and back and forth near Fit, filmed at half size; compare the names on the left of each lane with the after film"
+  },
+  {
     "file": "2026-11-27-condensed-poster-entrance-with-a-two-line-headline.mp4",
     "title": "Condensed Poster entrance with a two line headline",
     "added": "2026-11-27T03:34:25.567Z",

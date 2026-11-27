@@ -1415,7 +1415,14 @@ The rule, for any view added to the editor window:
      cut on `timelineDrawnMS`, measured from where that starts, and the lane
      offsets it to a whole pixel. Only a name that can be pushed along by the
      lane's left edge in this stretch (`TimelinePaint.nameFollowsTheEdge`) is
-     drawn against the window, by `TimelinePaintedNames`, every frame.
+     drawn against the window, by `TimelinePaintedNames`, every frame. Each
+     such name is a small picture (`NameShot`), laid once per look (its
+     name, how it is cut short, its clip's corners) and slid: drawn as a
+     Canvas it was a drawn layer redrawn every frame, and each redraw sent
+     RenderBox's surface cleanup to ask the window server whether the last
+     frame was on screen, which held the main thread 20 to 40 ms when the
+     window server was slow to answer (2026-11-26). Count those asks with the
+     probe's layer census (`Sources/Photonz/Playtest/LayerCensus.swift`).
    - **The stretch moves a whole window at a time where the picture
      allows it** (`TimelineDrawnStretch.stepShare`, `EditorState.timelineDrawnStepShare`):
      the stretch is the window and a step either side, and it moves once the

@@ -1,0 +1,31 @@
+{
+  "feature": "50 track zoom: fewer waits on the window server",
+  "epic": "video-perf",
+  "summary": "The clip names that stay at the timeline's left edge are now pictures that slide, not a drawing redone every frame, so zooming and scrolling ask the window server far less often whether a frame is on screen. Those asks are what held the rare 20 to 40 ms frame. The rare long frame is fewer chances, not gone.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe: ten timeline measures in one walk (17,040 frames), Scripts/perf/speed-walk.sh --wide 50, and the round trips counted by the probe's layer census (touch /tmp/photonz-layer-census/on).",
+  "switched": {},
+  "try": [
+    { "do": "Open Reference Edit 50 tracks.photonz with File > Open." },
+    { "do": "Drag the playhead to about 0:30 and zoom the timeline in two or three steps with Command-scroll, so a clip runs off the left edge.", "shot": "2026-11-26-wide-zoom-names-sc.png" },
+    { "do": "Check the name of the clip running off the left edge stays pinned there and looks as it did." },
+    { "do": "Scroll the timeline along with a two-finger swipe; watch the pinned names." },
+    { "do": "Pinch in and out near the whole-edit view a few times, quickly.", "shot": "2026-11-26-wide-zoom-names-sheet.png" },
+    { "do": "Compare the two films in Reels: the names should look the same in both.", "shot": "2026-11-26-wide-zoom-double-name-before.png" }
+  ],
+  "evaluate": [
+    "Do the names on the left edge look exactly as they did before, at rest and while zooming?",
+    "Does zooming or scrolling a wide edit ever catch for a moment, and if so, near the whole-edit view or zoomed in?",
+    "Does the very first step of a zoom from rest feel slower than the rest of the zoom?"
+  ],
+  "rough": [
+    "Window server round trips (one timeline measure, before / after): scroll along 953 / 20 in 360 frames; near Fit 3,149 / 1,277 in 648; zoom in 261 / 142; zoom out 304 / 159; scrolling through the tracks 12 / 0. With the edge names switched off entirely near Fit read 886, so most of what is left comes from elsewhere.",
+    "Not reached: no frame over 16 ms in ten runs. Before (ten runs, 17,040 frames, unprofiled): 40.2, 38.9, 40.3 ms in zooms and 20.9, 19.1 ms in scrolls. After: still two to three window-server holds of 28 to 32 ms near Fit in ten runs on this Mac, whose window server sits at 45% CPU with Photonz not running; the task stays open for them (no-frame-of-a-50-track-zoom-is-held-up-by-the-sy).",
+    "Not reached, and older than this change: the first frame of a zoom from rest takes 15 to 22 ms of main thread work (view updates, layout, accessibility), measured the same on the old name drawing. It was hidden until today because the meter counted the frame before it into it; the meter is fixed. Left on this task (no-frame-of-a-50-track-zoom-is-held-up-by-the-sy).",
+    "What still makes most round trips near Fit: a picked clip's own bar and its sound half, rebuilt as the zoom changes their width, and the ruler's numbers and the zoom readout coming and going. Left on this task's log.",
+    "Averages did not move: main thread a frame, old drawing / new, five runs each on the same evening: zoom in 4.6 to 4.9 / 4.5 to 4.9 ms, scroll along 2.6 to 2.8 / 2.4 to 2.6 ms. A first run before showed 6.4 ms; that was the Mac being busier, not the change.",
+    "Speed walk --wide 50: main thread p95 zoom in 6.3, zoom out 6.7, near Fit 6.3, scroll along 4.7 ms (bar 8.3); every edit while playing 8 to 14 ms (bar 16).",
+    "Older glitch found while filming, not from this change: near the whole-edit view a title's name is drawn twice, slightly apart, in about 1 frame in 60 (old drawing 11 of 569 frames, new 9 of 569), and now and then a title shows no name for a frame. Filed as its own task (a-title-s-name-is-drawn-once-never-twice-or-not).",
+    "Still pictures of the pinned names at rest, old against new, are the same pixel for pixel; the only differences anywhere in the timeline were film-strip thumbnails that had or had not loaded yet.",
+    "No mock covers this; nothing on screen changes."
+  ]
+}

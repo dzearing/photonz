@@ -1,0 +1,27 @@
+{
+  "id": "a-title-s-name-is-drawn-once-never-twice-or-not",
+  "title": "A title's name is drawn once, never twice or not at all, while the timeline zooms",
+  "goal": "While zooming a busy timeline back and forth near the whole-edit view, a title clip's name sometimes shows twice, slightly apart, for one to three frames, and now and then shows no name for a frame. Every frame of a zoom should show each name once.",
+  "epic": "video-perf",
+  "priority": "p2-normal",
+  "seq": 55,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-27T06:36:36.534Z",
+  "updated": "2026-11-27T06:36:36.537Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-26 by the runner of no-frame-of-a-50-track-zoom-is-held-up-by-the-sy. Command: probe walk /tmp-style census walk (setup {forget:[all], wideEdit:50}, one {do:speed, measure:timeline, form:long}) with `touch /tmp/photonz-layer-census/film /tmp/photonz-layer-census/film-all` (LayerCensus.startFilm/endFilm in Sources/Photonz/Playtest/LayerCensus.swift writes every frame of zoom in/out/near fit to /tmp/photonz-layer-census/frames). Counting bright text pixels on the Title row (y 381..398 of the 864x493 half-size frames) and looking at the outliers: OLD name drawing (Canvas, HEAD 5b7518a31) 11 of 569 near-fit frames show 'Title Page' doubled (frames 57-59, 138-140, 230, 312, 411-412, 507); NEW name pictures (NameShot) 9 of 569 (52, 138, 233, 409-411, 499-501). Pictures: queue/audits/2026-11-26-wide-zoom-double-name-before.png and -after.png. Theory, not confirmed: the lane shows a held or late-laid painting (TimelinePaintedPicture) laid when the bar did not follow the edge, so it still has the name painted in, while the current painting says the bar follows the edge and TimelinePaintedNames draws it again; the converse (laid while following, shown when not) gives the frame with no name. TimelinePaintedClips.paint skips names of bars with nameFollowsEdge (line ~471).",
+  "acceptance": [
+    "Filmed every frame of the near Fit zoom on the 50 track edit (about 570 frames): no frame shows a name twice",
+    "In the same film no title or clip bar shows without its name when its bar is wide enough to hold one",
+    "Names at rest and in a scroll look as before (still pictures compared pixel for pixel)"
+  ],
+  "log": [
+    {
+      "t": "2026-11-27T06:36:36.536Z",
+      "note": "created (manual)"
+    }
+  ]
+}

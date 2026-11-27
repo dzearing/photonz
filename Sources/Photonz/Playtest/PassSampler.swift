@@ -141,7 +141,12 @@ final class PassSampler: @unchecked Sendable {
             }
             let running = asked == KERN_SUCCESS && basic.run_state == TH_STATE_RUNNING
             let high = UInt64(UInt(bitPattern: pthread_get_stackaddr_np(p)))
-            let low = high - UInt64(pthread_get_stacksize_np(p))
+            let size = UInt64(pthread_get_stacksize_np(p))
+            // A thread on its way out can say a stack bigger than where it
+            // starts: taking one from the other trapped the probe
+            // (2026-11-26, twice in a ten-run timeline profile).
+            guard size > 0, high > size else { continue }
+            let low = high - size
             let n = walk(thread, low: low, high: high, limit: 48)
             if n > 0 { out.append((UInt64(thread), running, Array(UnsafeBufferPointer(start: buffer, count: n)))) }
         }

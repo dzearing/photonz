@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-25T15:49:44.393Z",
-  "updated": "2026-11-26T18:25:30.084Z",
+  "updated": "2026-11-27T06:37:22.117Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split off an-edit-with-50-tracks-and-100-clips-scrolls-pla (its acceptance: what is not reached is filed, one cost each). Measure: a walk with setup {\"forget\":[\"all\"],\"wideEdit\":50}, wait 3, then {\"do\":\"speed\",\"measure\":\"timeline\",\"form\":\"long\"} six times and {\"do\":\"wait\",\"seconds\":90,\"onTheClock\":true}; profile it with Scripts/perf/pass-profile.sh <walk> then Scripts/perf/pass-profile.py /tmp/photonz-pass-sampler --waits. Caught 2026-11-25, two of two: 'PASS 139 zoom out held | 38.9' and 'PASS 576 near fit fresh | 31.6'. Main thread: CA::Transaction::run_commit_handlers -> _dispatch_sync_f_slow on RenderBox's queue (27 looks of the first on CoreAnimation's own mutex in CA::Context::commit_transaction). Holder in both, a dispatch worker: RB::SharedSurfaceGroup::prune_removed_locked -> test_markers -> RB::CommitMarker::Observer::test_displayed -> -[CAContext waitForCommitId:timeout:] -> CA::Context::ping / wait_for_synchronize -> mach_msg, 27 to 36 ms, that is the window server. No app code on it. The only lead: that cleanup runs when drawings that share a surface (RBLayer, SwiftUI Canvas and drawn text) go away or change size, so fewer drawings coming and going in a zoom (held paintings as plain CGImage layers, no Canvas) should mean fewer cleanups. Not tried.",
@@ -36,6 +36,40 @@
     {
       "t": "2026-11-26T18:25:30.083Z",
       "note": "From the scrub task, pass 4 (2026-11-26): its start-of-drag hold was not this one. It was set off by the scrub sound's AVAudioEngine.start() and went away when the engine was started before the drag; the main thread blocked in its own commit send, not on RenderBox's queue. So the scrub task no longer shares this cause."
+    },
+    {
+      "t": "2026-11-27T03:59:55.020Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T06:37:13.728Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-27T06:37:13.798Z",
+      "note": "Pass 1 (2026-11-26). Reproduced: ten timeline measures (17,040 frames), long frames 40.2/38.9/40.3 ms (zoom) and 20.9/19.1 (scroll). Profiled (pass-profile --waits): main thread in run_commit_handlers waiting on RenderBox's queue or in CABackingStoreSynchronize/CA::Context mutex, while a RenderBox worker (prune_removed_locked -> test_markers -> waitForCommitId) or main itself (RBLayer add_subsurface -> wait_for_allocations) waits 27-36 ms on the window server. WindowServer at 45% CPU with the probe not running."
+    },
+    {
+      "t": "2026-11-27T06:37:13.868Z",
+      "note": "Built a probe-only layer census (Sources/Photonz/Playtest/LayerCensus.swift; touch /tmp/photonz-layer-census/on): per measure, drawn layers added/removed/resized, each drawn layer's displays, and every -[CAContext waitForCommitId:timeout:] (swizzled), with main-thread ones put down to the layer displaying. Finding: almost all asks are off the main thread and follow every REDRAW of a drawn (RBDrawingLayer) layer, not only add/remove. Trials with switches: edge names off -> asks scroll 953->16, near Fit 3149->886; ruler numbers and zoom readout off on top -> no further change (they are CGDrawingLayers, no asks; they could still cause a CABackingStore wait)."
+    },
+    {
+      "t": "2026-11-27T06:37:13.939Z",
+      "note": "Changed: TimelinePaintedNames shows each edge name as a cached picture (NameShot, TimelinePaintedClips.swift) keyed on how the name is cut (TimelinePaintedClips.cut) so zooms reuse it; ImageLayer contents ask nothing. Asks after: scroll 20, near Fit 1277, zoom in 142, zoom out 159. Pictures at rest pixel-identical to the old Canvas (pinned 'Name Card' exact); filmed zoom in/out/near Fit before and after, none blank. Averages unchanged within noise (old drawing re-measured the same evening: zoom in 4.6-4.9 ms, scroll 2.6-2.8). Speed walk --wide 50: busy p95 zoom in 6.3, out 6.7, near Fit 6.3, along 4.7; edits 8-14 ms."
+    },
+    {
+      "t": "2026-11-27T06:37:14.009Z",
+      "note": "NOT REACHED, left pending: (1) ten runs still show 2-3 window-server holds of 28-32 ms near Fit (after2 run: frames 364/567/176 of near fit). What still asks near Fit: a picked clip's live bar and its 12 pt sound half rebuilt at each width (RBDrawingLayer 48..256x12 on the top lane, ~500 added/removed in 648 frames), a 2600x28 drawing on another lane, plus edge names. Next lever: while the timeline moves, show the picked clip's bar as a picture too, or keep its drawn layers one size. (2) the first frame of a zoom from rest is 15-22 ms of app work (observation ~4 ms, layout ~4, accessibility ~2, view bodies), measured the same on the old drawing; it was hidden by the meter counting the rest frame into frame 1 (fixed: PlaytestSpeedWalk takes the busy after the first frame; the busy line now says 'worst at frame N')."
+    },
+    {
+      "t": "2026-11-27T06:37:14.080Z",
+      "note": "Harness fix: PassSampler.othersNow trapped (arithmetic overflow, line 144) when a thread leaving reported a stack size above its start; guarded. Follow-up filed: a-title-s-name-is-drawn-once-never-twice-or-not (doubled/missing title name for a frame near Fit, old drawing 11/569 frames, new 9/569). Left rough, no task: ruler numbers and the zoom readout are CGDrawingLayers that come and go each zoom frame (CABackingStore, which is what the 27 ms scroll hold sat in once); not separately reproduced as a hold. Audit: queue/audits/2026-11-26-wide-zoom-window-server-asks.json; reels on the Reels page."
+    },
+    {
+      "t": "2026-11-27T06:37:22.116Z",
+      "note": "Pass 1 landed: edge names are pictures, window-server asks while scrolling 953->20 and near Fit 3149->1277; still 2-3 holds of 28-32 ms near Fit in ten runs and a 15-22 ms first zoom frame from rest, so 'no frame over 16 ms' is not reached. Audit 2026-11-26-wide-zoom-window-server-asks.json."
     }
-  ]
+  ],
+  "started": "2026-11-27T03:59:55.019Z",
+  "walks": []
 }
