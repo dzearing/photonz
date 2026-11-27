@@ -230,6 +230,61 @@ struct SpeedWalkTests {
         #expect(SpeedWalk.lagStats([]) == (0, 0))
     }
 
+    @Test("A look stands for the latest refresh before it, read off the display link's own clock")
+    func refreshesOfLooks() {
+        // The link said 100 at each of these looks; one came 1 ms after its
+        // refresh, one 5 ms after, and one a refresh and a half late (the
+        // main thread was held), which stands for the refresh it missed.
+        let refreshes = SpeedWalk.refreshes(lookAtMS: [101, 105, 112.5], linkAtMS: [100, 100, 100], refreshMS: 8)
+        #expect(refreshes == [100, 100, 108])
+        // A look with no link time yet stands for itself, and a link time
+        // from before the drag began is as good as any.
+        #expect(SpeedWalk.refreshes(lookAtMS: [3, 7], linkAtMS: [nil, -2], refreshMS: 8) == [3, 6])
+    }
+
+    @Test("What is on screen at a refresh is the last picture put up before it")
+    func onScreenAtRefreshes() {
+        let put: [(momentMS: Int, atMS: Double)] = [(100, 5), (200, 12), (300, 16.5)]
+        // Nothing before 5; 100 until 12 (a picture put up at the refresh
+        // itself counts); 300 from 16.5.
+        #expect(SpeedWalk.onScreen(putUp: put, atMS: [4, 8, 12, 16, 24]) == [nil, 100, 200, 200, 300])
+        // Lag at each refresh by what was on screen then: the hand moved to
+        // 100 at 1, 200 at 9, 300 at 9.5 and 400 at 17.
+        let lags = SpeedWalk.scrubLags(hand: [100, 200, 300, 400], handAtMS: [1, 9, 9.5, 17],
+                                       shown: SpeedWalk.onScreen(putUp: put, atMS: [8, 16, 24]),
+                                       atMS: [8, 16, 24], refreshMS: 8)
+        // 8-1, 16-9 and 24-9.5: the picture of 400 was never put up.
+        #expect(lags == [1, 1, 2])
+    }
+
+    @Test("A hand that moves on its own clock is matched to each look by time, not by count")
+    func scrubLagsOnTheHandsOwnClock() {
+        // The hand moves at 1, 11, 21, 31 and the looks come at 5, 9, 25, 36:
+        // two looks between one pair of moves, none between the next.
+        let hand = [100, 200, 300, 400]
+        let handAt: [Double] = [1, 11, 21, 31]
+        let at: [Double] = [5, 9, 25, 36]
+        // Look 3 still shows 200: the move to 300 (at 21) has not landed.
+        let shown: [Int?] = [100, 100, 200, 400]
+        let lags = SpeedWalk.scrubLags(hand: hand, handAtMS: handAt, shown: shown, atMS: at, refreshMS: 10)
+        // 5-1, 9-1, 25-11, 36-31: 0.4, 0.8, 1.4 and 0.5 refreshes.
+        #expect(lags == [0, 1, 1, 1])
+        // A move made after a look is not yet the hand's when that look is
+        // taken: a picture of it then is of a moment the hand never visited.
+        let early = SpeedWalk.scrubLags(hand: [100, 200], handAtMS: [0, 12], shown: [100, 200],
+                                        atMS: [10, 11], refreshMS: 10)
+        #expect(early == [1, 1])
+        // More moves than looks: each look reads the moves made before it.
+        let more = SpeedWalk.scrubLags(hand: [100, 200, 300, 400, 500], handAtMS: [0, 5, 10, 15, 20],
+                                       shown: [200, 400], atMS: [8, 21], refreshMS: 10)
+        #expect(more == [0, 1])
+        // Paired as the walk used to pair them, it reads exactly as before.
+        let paired = SpeedWalk.scrubLags(hand: [100, 200, 300, 400, 500], handAtMS: [0, 10, 20, 30, 40],
+                                         shown: [100, 200, 200, 200, 999], atMS: [10, 20, 30, 40, 50],
+                                         refreshMS: 10)
+        #expect(paired == [1, 1, 2, 3, 5])
+    }
+
     @Test("A scrub's frame lag counts a picture only once it is drawn from the frames under the hand")
     func scrubFrameLag() throws {
         // The canvas answers every move at once with the frame nearest in

@@ -292,8 +292,7 @@ final class SpeedWalkProbe {
             editor.scrubDocument(toMS: low)
             await settle(editor, frames: frames)
             editor.beginPlayheadDrag()
-            var hand: [Int] = [], handAt: [Double] = [], shown: [Int?] = [], at: [Double] = []
-            var exact: [Int?] = []
+            var at: [Double] = []
             var needed: [[UUID]] = [], neededAt: [Double] = [], drawn: [Set<UUID>?] = []
             editor.playtestRecordsDrawnFrames = true
             editor.playtestShownFrameIDs = nil
@@ -313,33 +312,56 @@ final class SpeedWalkProbe {
             PlaytestHarness.holdWindowWatch()
             defer { PlaytestHarness.letWindowWatchGo() }
             let start = CACurrentMediaTime()
+            // The hand moves on its own clock, once a refresh, a millisecond
+            // after the display refreshes (`ScrubHand`), never waiting for
+            // the look: a person's pointer does not wait for the app's
+            // display link, which now and then calls back 5 ms late, and
+            // until 2026-11-27 such a call held the hand still for a refresh
+            // and a half and read as the picture falling behind.
+            let mover = ScrubHand(frames: frames, start: start) { elapsed in
+                editor.dragPlayhead(toMS: low + Int(Double(high - low) * min(1, elapsed / duration)))
+                return editor.documentTimeMS
+            }
+            mover.begin()
+            defer { mover.stop() }
             var looks = 0
+            var linkAt: [Double?] = []
             while true {
                 let elapsed = CACurrentMediaTime() - start
                 if elapsed > allowed { break }
                 let along = min(1, elapsed / duration)
-                editor.dragPlayhead(toMS: low + Int(Double(high - low) * along))
-                hand.append(editor.documentTimeMS)
-                handAt.append((CACurrentMediaTime() - start) * 1000)
                 await frames.next()
                 looks += 1
                 at.append((CACurrentMediaTime() - start) * 1000)
-                shown.append(editor.shownMomentMS)
-                exact.append(editor.playtestShownExactMomentMS)
+                linkAt.append(frames.lastRefreshAt > 0 ? (frames.lastRefreshAt - start) * 1000 : nil)
                 drawn.append(editor.playtestShownFrameIDs)
+                mover.looked()
                 // Past the end, it waits for the picture to arrive where the
                 // hand stopped.
                 if along >= 1, editor.shownMomentMS == editor.documentTimeMS,
                    editor.playtestShownExactMomentMS == editor.documentTimeMS { break }
             }
+            mover.stop()
+            let hand = mover.hand, handAt = mover.handAt
             editor.endPlayheadDrag()
             PlaytestHarness.letWindowWatchGo()
             let refresh = frames.refreshInterval * 1000
-            let lags = SpeedWalk.scrubLags(hand: hand, handAtMS: handAt, shown: shown, atMS: at,
-                                                refreshMS: refresh)
+            // Each look is judged at the refresh it stands for, by what had
+            // been put up before that refresh: what a person saw then. The
+            // link calls back anywhere from 1 to 9 ms after a refresh, and
+            // until 2026-11-27 the picture was read at the call, so the same
+            // drag read 1 or 2 by when the call happened to come.
+            let refreshes = SpeedWalk.refreshes(lookAtMS: at, linkAtMS: linkAt, refreshMS: refresh)
+            let putUp = editor.playtestPicturesPutUp.map { (momentMS: $0.momentMS, atMS: ($0.at - start) * 1000) }
+            let exactPutUp = editor.playtestPicturesPutUp.filter(\.exact)
+                .map { (momentMS: $0.momentMS, atMS: ($0.at - start) * 1000) }
+            let lags = SpeedWalk.scrubLags(hand: hand, handAtMS: handAt,
+                                           shown: SpeedWalk.onScreen(putUp: putUp, atMS: refreshes),
+                                           atMS: refreshes, refreshMS: refresh)
             let stats = SpeedWalk.lagStats(lags)
-            let frameStats = SpeedWalk.lagStats(SpeedWalk.scrubLags(hand: hand, handAtMS: handAt, shown: exact,
-                                                                    atMS: at, refreshMS: refresh))
+            let frameStats = SpeedWalk.lagStats(SpeedWalk.scrubLags(
+                hand: hand, handAtMS: handAt, shown: SpeedWalk.onScreen(putUp: exactPutUp, atMS: refreshes),
+                atMS: refreshes, refreshMS: refresh))
             let times = SpeedWalk.frameTimes(speed, refreshesAtMS: at, refreshMS: refresh)
             run.scrubs.removeAll { $0.speed == speed }
             let made = looks
@@ -1358,4 +1380,93 @@ final class SpeedWalkProbe {
         return String(format: "%@, %d cores, %.0fGB", name, ProcessInfo.processInfo.activeProcessorCount, memory)
     }
 }
+/// The speed walk's hand on a scrub: moves the playhead once a refresh, the
+/// way a pointer does, whether or not the walk's look has come back. After a
+/// look that comes on time it moves at once, as the walk always did; when the
+/// display link's call is late (now and then it comes 5 ms after the refresh
+/// instead of 1) a timer of its own moves it a millisecond and a half after
+/// the refresh, read off the link's own timestamps, so the hand is never held
+/// still waiting for the call (`SpeedWalk.scrubLags` matches the moves to the
+/// looks by time). With the main thread held up the timer waits like anything
+/// else on it, and that is still counted against the app.
+@MainActor
+final class ScrubHand {
+    private let frames: DisplayFrames
+    private let start: CFTimeInterval
+    private let move: (CFTimeInterval) -> Int
+    private var timer: DispatchSourceTimer?
+    private var lastMoveAt: CFTimeInterval = 0
+    private(set) var hand: [Int] = []
+    private(set) var handAt: [Double] = []
+    /// How long after a refresh the timer moves the hand when no look has.
+    private static let lateAfter: CFTimeInterval = 0.0015
+
+    init(frames: DisplayFrames, start: CFTimeInterval, move: @escaping (CFTimeInterval) -> Int) {
+        self.frames = frames
+        self.start = start
+        self.move = move
+    }
+
+    /// The first move now, then one a refresh until `stop()`.
+    func begin() {
+        let timer = DispatchSource.makeTimerSource(flags: .strict, queue: .main)
+        timer.setEventHandler { [weak self] in
+            MainActor.assumeIsolated { self?.fire() }
+        }
+        self.timer = timer
+        step()
+        timer.resume()
+    }
+
+    /// A look came back: the hand moves now unless it already has since the
+    /// refresh the look was for.
+    func looked() {
+        guard timer != nil else { return }
+        if lastMoveAt < frames.lastRefreshAt { step() }
+    }
+
+    func stop() {
+        timer?.cancel()
+        timer = nil
+    }
+
+    private func fire() {
+        guard timer != nil else { return }
+        if lastMoveAt < latestRefresh(atOrBefore: CACurrentMediaTime()) {
+            step()
+        } else {
+            schedule()
+        }
+    }
+
+    private func step() {
+        lastMoveAt = CACurrentMediaTime()
+        let moment = move(lastMoveAt - start)
+        hand.append(moment)
+        handAt.append((lastMoveAt - start) * 1000)
+        schedule()
+    }
+
+    /// The next refresh after this move, plus `lateAfter`, by the link's own
+    /// clock; until the link has called once, one interval from now.
+    private func schedule() {
+        let now = CACurrentMediaTime()
+        let interval = max(0.001, frames.refreshInterval)
+        var when = now + interval
+        if frames.lastRefreshAt > 0 {
+            when = latestRefresh(atOrBefore: now) + interval + Self.lateAfter
+            while when <= now { when += interval }
+        }
+        timer?.schedule(deadline: DispatchTime(uptimeNanoseconds: UInt64(max(0, when) * 1_000_000_000)),
+                        leeway: .nanoseconds(0))
+    }
+
+    private func latestRefresh(atOrBefore moment: CFTimeInterval) -> CFTimeInterval {
+        let last = frames.lastRefreshAt
+        let interval = max(0.001, frames.refreshInterval)
+        guard last > 0, moment > last else { return last }
+        return last + ((moment - last) / interval).rounded(.down) * interval
+    }
+}
+
 #endif

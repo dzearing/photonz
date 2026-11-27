@@ -654,8 +654,14 @@ final class EditorState {
     /// (`playtestRecordsDrawnFrames`, `SpeedWalk.sightLags`).
     @ObservationIgnored var playtestShownFrameIDs: Set<UUID>?
     @ObservationIgnored var playtestRecordsDrawnFrames = false {
-        didSet { playtestDrawnFrameIDs = [:] }
+        didSet { playtestDrawnFrameIDs = [:]; playtestPicturesPutUp = [] }
     }
+    /// Every picture of a moment put up on the canvas while a speed walk's
+    /// scrub asks, in order: its moment, whether it was drawn from the very
+    /// frames of that moment, and when it went up (`CACurrentMediaTime`), so
+    /// the walk can say what was on screen at each refresh rather than at the
+    /// moment its own look happened to come (`SpeedWalk.screenLags`).
+    @ObservationIgnored var playtestPicturesPutUp: [(momentMS: Int, exact: Bool, at: CFTimeInterval)] = []
     /// ...worked out as each picture is asked for, by its moment, from the
     /// frames in hand right then.
     @ObservationIgnored var playtestDrawnFrameIDs: [Int: Set<UUID>] = [:]
@@ -7037,6 +7043,8 @@ final class EditorState {
                     #if PHOTONZ_PLAYTEST
                     if frame.tag & 1 == Self.drawnFromTheExactFrames { self.playtestShownExactMomentMS = moment }
                     if self.playtestRecordsDrawnFrames, let moment {
+                        self.playtestPicturesPutUp.append((moment, frame.tag & 1 == Self.drawnFromTheExactFrames,
+                                                           CACurrentMediaTime()))
                         self.playtestShownFrameIDs = self.playtestDrawnFrameIDs[moment]
                     }
                     if let tap = self.playtestPictureTap, let moment, let image = frame.image {

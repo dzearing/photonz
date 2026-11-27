@@ -419,17 +419,28 @@ public enum SpeedWalk {
     /// the hand never visited (or none at all) is as far behind as the drag
     /// is long so far.
     ///
-    /// `hand[i]` is where the hand put the playhead before look `i`,
-    /// `handAtMS[i]` when, `atMS[i]` when the look was taken and `shown[i]`
-    /// the moment of the picture then.
+    /// `hand[i]` is where the hand put the playhead at its `i`th move and
+    /// `handAtMS[i]` when; `atMS[j]` is when look `j` was taken and
+    /// `shown[j]` the moment of the picture then. The moves and the looks are
+    /// matched by time, not by count: the walk's hand moves on its own clock,
+    /// the way a person's pointer does, so a look can fall between any two
+    /// moves (until 2026-11-27 the hand moved only when a look came, and a
+    /// look the display link delivered 5 ms late held the hand still for a
+    /// refresh and a half).
     public static func scrubLags(hand: [Int], handAtMS: [Double], shown: [Int?], atMS: [Double],
                                  refreshMS: Double) -> [Int] {
         var lastAt: [Int: Double] = [:]
         var lags: [Int] = []
         let interval = max(0.001, refreshMS)
         let first = handAtMS.first ?? 0
-        for index in hand.indices where index < atMS.count && index < handAtMS.count {
-            lastAt[hand[index]] = handAtMS[index]
+        let moves = min(hand.count, handAtMS.count)
+        var next = 0
+        for index in atMS.indices {
+            // Every move made by the time of this look, and none after it.
+            while next < moves, handAtMS[next] <= atMS[index] {
+                lastAt[hand[next]] = handAtMS[next]
+                next += 1
+            }
             let since: Double
             if index < shown.count, let moment = shown[index], let at = lastAt[moment] {
                 since = atMS[index] - at
@@ -439,6 +450,37 @@ public enum SpeedWalk {
             lags.append(max(0, Int((since / interval).rounded())))
         }
         return lags
+    }
+
+    /// The refresh each look stands for: the latest the display made at or
+    /// before the look, counted on from the display link's own time for it
+    /// (`linkAtMS[i]`, nil when the link had not called yet), so a look the
+    /// link delivered late, or the main thread held past a refresh, is
+    /// charged to the refresh that was really on screen rather than to the
+    /// moment the walk got to look.
+    public static func refreshes(lookAtMS: [Double], linkAtMS: [Double?], refreshMS: Double) -> [Double] {
+        let interval = max(0.001, refreshMS)
+        return lookAtMS.indices.map { index in
+            let look = lookAtMS[index]
+            guard index < linkAtMS.count, let link = linkAtMS[index], link <= look else { return look }
+            return link + ((look - link) / interval).rounded(.down) * interval
+        }
+    }
+
+    /// The moment on screen at each of `atMS`: that of the last picture put
+    /// up at or before it (`putUp` in the order they went up), nil before the
+    /// first. With `refreshes` it says what a person saw at each refresh,
+    /// whenever the walk's look came (`scrubLags`).
+    public static func onScreen(putUp: [(momentMS: Int, atMS: Double)], atMS: [Double]) -> [Int?] {
+        var next = 0
+        var showing: Int?
+        return atMS.map { moment in
+            while next < putUp.count, putUp[next].atMS <= moment {
+                showing = putUp[next].momentMS
+                next += 1
+            }
+            return showing
+        }
     }
 
     // MARK: - Frame times
