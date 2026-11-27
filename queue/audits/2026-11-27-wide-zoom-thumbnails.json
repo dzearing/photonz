@@ -1,0 +1,28 @@
+{
+  "feature": "50 track zoom and scroll: no frame over 16 ms",
+  "epic": "video-perf",
+  "summary": "A clip's thumbnails are now kept in the colours the timeline draws in. Before, every lane picture that showed them converted every thumbnail again, and a scroll along the 50 track edit had one 12 to 18 ms frame in each run while it waited for that. In ten runs since (17,040 frames), no frame took the main thread over 16 ms.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe: ten timeline measures in one walk, Scripts/perf/speed-walk.sh --wide 50, and the probe's pass sampler (Scripts/perf/pass-profile.sh) for where the slow frame waited.",
+  "switched": {},
+  "try": [
+    { "do": "Open Reference Edit 50 tracks.photonz with File > Open.", "shot": "2026-11-27-wide-thumbnails-sc.png" },
+    { "do": "Press = about eight times to zoom in until the clips show their pictures." },
+    { "do": "Swipe sideways on the tracks to scroll along the edit, quickly, from the start to the end." },
+    { "do": "Pinch in and out near the whole-edit view a few times, then press Shift-Z to fit." },
+    { "do": "Compare the clip pictures before (top) and after (bottom).", "shot": "2026-11-27-wide-thumbnails-before-after.png" }
+  ],
+  "evaluate": [
+    "Does a fast scroll along the zoomed-in edit ever catch for a moment near its start?",
+    "Do the clip pictures look exactly as they did before?",
+    "Does the very first step of a zoom from the whole-edit view still feel slower than the rest?"
+  ],
+  "rough": [
+    "Ten runs before this change (unprofiled, main today): worst main thread frame 17.1 ms, a scroll frame about the 17th of each run at 12.2 to 17.1 ms in nine of ten; the first zoom frame from Fit 7.5 to 14.6 ms. After: worst 15.8 ms (the first zoom in frame from Fit), scroll worst 10.9 ms; every one of 17,040 frames under 16 ms.",
+    "Where the slow scroll frame went: Core Animation's commit waited 9 to 10 ms for the lane picture RenderBox was still drawing, and RenderBox was converting each clip thumbnail from the recording's colours on the CPU (TextureCache prepare_cgimage, CGContextDrawImage with colour conversion), again for every lane picture.",
+    "The first zoom frame from Fit, which pass 2 measured at 16 to 21 ms, read 7.5 to 15.8 ms in the 30 runs of this pass with no change aimed at it. It is SwiftUI's own view graph work and stays the closest frame to the bar; nothing in this pass made it faster.",
+    "Tried and taken out: laying each lane picture straight into the display's colours. On the main thread it cost 1.6 to 5 ms a picture (p95 went from 6.4 to 10 to 13 ms); off it, for late pictures only, it changed nothing measurable.",
+    "Speed walk --wide 50 after: main thread p95 zoom in 6.5, zoom out 6.9, near Fit 6.4, scroll along 5.2 ms (bar 8.3); the longest pass of every edit while playing 7 to 13 ms (bar 16).",
+    "Pictures: the stills at Fit before and after are the same to within 0.001 of a level; 258 filmed frames of zoom in, zoom out and near Fit, none blank. The filmed frames do not line up frame for frame between two runs (the film's timing drifts), so they were compared by eye, and the thumbnails' colours read the same.",
+    "No mock covers this; nothing on screen changes."
+  ]
+}

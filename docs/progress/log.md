@@ -23617,3 +23617,9 @@ announced 0.25.0.
 - Landed cad1896ab: a title's first picture is drawn once ahead on a scratch surface (stand-ins for unread recording frames), so Core Image's plan is ready before a drag reaches it. The 2:44 title's first picture: startTask 4.6 ms (once 57 ms, lag 8) -> 2.7-3.7 ms.
 - Found: the hunt's remaining late looks are display frames of 20.8 ms (48 Hz, the ProMotion floor) with the app idle; they persist with the canvas and playhead frozen, with the link pinned at 120 Hz and with a layer changed every refresh. The medium's first transition after a rest runs 7-12 ms of GPU kernel time (GPU clocks).
 - Speed walk: medium 3,3,2, hunt 3,2,3; lag worst 1 not reached, task left pending. Open question for the user: judge the lag in refreshes the display really made.
+
+## 2026-11-27 — 50 track zoom and scroll: no frame over 16 ms (pass 3)
+
+- Clip thumbnails are kept as 8 bit BGRA in sRGB when they land (`ClipFilmstripFrames.finish`, `PictureReadyToDraw` in PhotonzRender). Before, RenderBox converted every thumbnail again for every lane picture, and a scroll's commit waited 9 to 10 ms for it.
+- Ten timeline measures on the 50 track edit: worst main thread frame 17.1 ms before, 15.8 after (17,040 frames). Audit `queue/audits/2026-11-27-wide-zoom-thumbnails.json`.
+- Next: the first zoom frame from Fit (SwiftUI graph work) is the closest to the bar; the hour-long edit's 30 ms frame may be the same thumbnail wait, unchecked.

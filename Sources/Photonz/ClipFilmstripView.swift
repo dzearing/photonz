@@ -1,6 +1,7 @@
 import AppKit
 import PhotonzCore
 import PhotonzMedia
+import PhotonzRender
 import SwiftUI
 
 // **Pictures along a clip on the timeline** (`ClipFilmstrip.swift`).
@@ -33,6 +34,8 @@ final class ClipFilmstripFrames {
     /// How many reads run at once: enough to keep both of the decoder's
     /// picture lanes busy.
     static let running = MovieDecoder.pictureLanes * 2
+    /// The colours a picture is kept in: what a lane's painting is drawn in.
+    static let drawnIn = CGColorSpace(name: CGColorSpace.sRGB)
 
     struct Key: Hashable, Sendable {
         let movie: UUID
@@ -119,9 +122,15 @@ final class ClipFilmstripFrames {
         }
     }
 
-    private func finish(_ key: Key, _ image: CGImage?) {
+    private func finish(_ key: Key, _ read: CGImage?) {
         inFlight.remove(key)
         wanted[key] = nil
+        // In the 8 bit sRGB a lane's painting is drawn in, once, here: as the
+        // movie gives it up, in the recording's own colours, every painting
+        // that drew it converted it again on the CPU, and the frame that
+        // showed the painting waited for that, 9 to 10 ms of a scroll's frame
+        // on the 50 track reference edit (2026-11-27, `PictureReadyToDraw`).
+        let image = read.map { PictureReadyToDraw.picture($0, in: Self.drawnIn) }
         if let image { file(image, for: key) }
         for continuation in (waiters.removeValue(forKey: key) ?? [:]).values {
             continuation.resume(returning: image)
