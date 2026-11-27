@@ -4,12 +4,12 @@
   "goal": "Three of the moving title backgrounds a person can pick (Energy Streams, Grid Horizon and Color Bubbles) look like stock screensaver art at the strength the Library and the Background picker give them: neon wavy lines, a synthwave sun over a neon grid, and flat purple discs. The user called the closest of them, Wind Streams, amateur and took it out; these need the same look before somebody else picks them.",
   "epic": "video-sizzle",
   "priority": "p2-normal",
-  "seq": 4100,
+  "seq": 490,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T23:20:14.593Z",
-  "updated": "2026-11-26T23:20:14.596Z",
+  "updated": "2026-11-27T14:49:27.295Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while taking Wind Streams out (task no-title-has-the-wavy-line-background-wind-strea, 2026-11-26). Contact sheet of every remaining look at 1.0, 2.5 and 4.0 s in its Library tile colours (VideoCatalog.backgroundPaint): queue/audits/2026-11-26-wind-streams-other-looks-sheet.png; the Background picker as drawn: queue/audits/2026-11-26-wind-streams-picker-nine-looks-sc.png. Rows: aurora, energy streams, color bubbles, light rays, light leaks, sketch, particles, liquid gradient, grid horizon. Made by a throwaway render test calling DocumentRenderer on LiveBackdropRenderTests.document(VideoCatalog.backgroundPaint(look)). Judgement against the user words amateur, bland wood grain, clip art: Energy Streams is the same family as Wind Streams (glowing wavy lines); Grid Horizon is the synthwave sun the 2026-11-21 redesign already took off Command Line; Color Bubbles is flat discs (type rule 7: ornament is never a blob). Aurora, Light Leaks, Particles and Sketch read as light. Retiring a look: LiveLook.retiredLooks + TitleBackgroundKind decoding + Paint decoding, as Wind Streams did. Not reproduced as a user complaint, so p2.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-11-26T23:20:14.595Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-27T14:49:27.294Z",
+      "note": "seq 4100 -> 490"
     }
   ]
 }

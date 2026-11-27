@@ -4,12 +4,12 @@
   "goal": "On a long edit the timeline is where a person spends their time, and it is the part most likely to slow down as clips pile up: every clip bar, thumbnail strip and waveform drawn again when anything moves. Make the timeline of the 60 minute reference edit, several hundred clips, scroll, zoom and follow a playing playhead at the display's 120 Hz, and keep an edit on it inside one frame.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 30,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-26T16:35:30.474Z",
+  "updated": "2026-11-27T14:49:22.403Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-26T16:35:30.473Z",
-      "note": "... 115 earlier entries elided",
-      "elided": 115
-    },
-    {
-      "t": "2026-11-21T20:18:59.636Z",
-      "note": "Pass 20 landed: a quick zoom holds its painting to 17 per cent for its first 50 ms (TimelinePaint.quickHeldStretch, quickHoldMS; slower holds stay at 8.5 so a name never visibly swells and springs back), zoom sliver 1/32 -> 1/12 so a zoom out stays covered three steps (zoomSliver), held painting remembers when it began (TimelineHeldPainting.since). Tests in TimelinePaintTests (aQuickZoomHoldsItsPaintingFurther; reach/canvas bounds widened). A/B one build, throwaway defaults switch, 2 runs each at load ~5: near Fit 11.5/11.9 -> 10.5/11.1 ms, late 239/293 -> 166/194 of 648; zoom out late 41/68 -> 17/29; a quarter no better, an eighth in between. Final build, 3 runs at load ~3.5: near Fit 9.5-9.6 ms, late 120-124; zoom in 43-49 late of 240, out 8-16, scroll 12-17 of 360; lanes built a frame near Fit 2.09 -> 1.05. Look: held at 16% photographed beside the same zoom painted afresh (queue/audits/2026-11-21-timeline-hour-long-pass20-held-vs-fresh.png): names a sixth wider, picture tiles fall differently, Music fade diamonds appear on the fresh paint. 11 timeline walks + speed-walk + an-editing-session-walk + an-hour-long-edit-opens-without-a-freeze-walk green; Scripts/test.sh exit 0. Rules in docs/design/video.md 8f. Audit queue/audits/2026-11-21-timeline-hour-long-pass20-quick-hold.json."
-    },
-    {
-      "t": "2026-11-21T20:18:59.714Z",
-      "note": "Still open, bars not reached: near Fit ~20% late (the fresh frames, ~14 ms), zoom in ~45 of 240, edits (a-long-edit-with-transitions-plays-scrubs-and-ed). Next: make a fresh frame cost a held one: lay the next painting ahead in a held frame's spare ~3 ms (one lane per frame), so the frame that lets go only swaps in a laid picture. Left rough, not filed: none new. Main CI red owned by main-checks-go-green-again-the-stopped-sweep-dri (not this change)."
+      "t": "2026-11-27T14:49:22.402Z",
+      "note": "... 117 earlier entries elided",
+      "elided": 117
     },
     {
       "t": "2026-11-21T20:19:16.173Z",
@@ -506,6 +498,14 @@
     {
       "t": "2026-11-26T16:35:30.472Z",
       "note": "seq 30 -> 30"
+    },
+    {
+      "t": "2026-11-27T14:48:36.262Z",
+      "note": "Triage 2026-11-27: no-frame-of-a-50-track-zoom-is-held-up-by-the-sy closed today (e4ef471bc). Its last slow frame was not the system's own cleanup after all: Core Animation's commit waited while RenderBox converted every clip thumbnail's colours on the CPU, and thumbnails are now kept in sRGB BGRA. The hour-long timeline's lanes draw thumbnails too. Next pass: measure the 60 min edit on main first (ten runs). If the 30 ms frame is gone, close this task citing that commit. If not, profile it with pass-profile as pass 26 said, and close only when it is fixed or shown to hold no app code."
+    },
+    {
+      "t": "2026-11-27T14:49:22.401Z",
+      "note": "seq 30 -> 20"
     }
   ],
   "started": "2026-11-26T02:29:50.657Z",

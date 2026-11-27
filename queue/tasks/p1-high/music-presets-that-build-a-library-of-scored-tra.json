@@ -4,12 +4,12 @@
   "goal": "A reel lives on its music, and today Photonz has none: an agent can only stack loose loop files, one track each, with no fades and no way to make a piece fit the edit. Photonz should offer a set of music presets, each a scored piece with an intro, build ups, drops, swells and an ending, in different moods (epic, uplifting, tense, playful, emotional), that fits itself to the length of the edit and hits its big moments where the edit wants them, for people and for agents.",
   "epic": "video-sizzle",
   "priority": "p1-high",
-  "seq": 125,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:14.011Z",
-  "updated": "2026-11-26T19:30:08.481Z",
+  "updated": "2026-11-27T14:49:23.224Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nThe user had been asked on 2026-11-24 where reel music should come from (their own tracks, a bundled library, or a local model) and did not pick; 'a bunch of music presets' is the answer to what, not to where, so this task decides where with evidence. Today through the MCP tools: add_clip refuses a sound ('is not a recording'); run_command add_media_at_playhead takes a sound but puts each on a new audio track (six tracks for one bed in queue/audits/2026-11-26-sizzle-intake/); no loop or extend; set_fade needs 'a picture or title'. Principle check: presets are app features like title styles, not stored subjects for Ask; an agent still chooses and arranges. Overlaps: music-drives-the-cut-photonz-finds-the-beats-bar (beat detection and snapping on any music) stays; this task gives it presets whose beats are known. Code to read: DocumentAudioEngine, the Duck Under Speech feature, the Library shelves.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-26T19:30:08.480Z",
       "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
+    },
+    {
+      "t": "2026-11-27T14:49:23.223Z",
+      "note": "seq 125 -> 120"
     }
   ]
 }

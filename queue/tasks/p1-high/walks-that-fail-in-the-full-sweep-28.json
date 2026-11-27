@@ -4,12 +4,12 @@
   "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 120,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-11-23T14:33:29.634Z",
-  "updated": "2026-11-26T16:35:31.144Z",
+  "updated": "2026-11-27T14:49:23.144Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-26T16:32:01Z: 1188 of 1208 walks passed in 435 minutes.\n\nFailing walks (20): a-clip-s-sound-is-linked-under-it-walk, a-sound-s-volume-line-picks-and-shapes-walk, a-video-edit-saves-as-a-project-walk, ask-rows-say-what-they-made-walk, caption-pick-answers-at-once-walk, clicking-a-timeline-item-moves-the-playhead-walk, dock-headers-walk, panel-shows-what-is-picked-video-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, section-fold-motion-walk, shorten-the-cut-for-a-dissolve-walk, the-timeline-is-the-layer-list-walk, timeline-right-click-menus-walk, title-presets-library-shelf-walk, title-size-box-walk, transition-band-reads-as-the-mock-walk, transition-picker-at-a-cut-walk, transition-tile-comes-away-walk, video-panel-order-walk\n\nAlready named by another open task, so read that one before re-diagnosing (8):\n  a-video-edit-saves-as-a-project-walk -> a-picked-transition-shows-its-own-settings-in-th (that task says it owns this walk)\n  caption-pick-answers-at-once-walk -> picking-a-caption-answers-at-once-again (that task says it owns this walk)\n  section-fold-motion-walk -> folding-a-section-that-lets-the-panel-fit-again (that task says it owns this walk)\n  shorten-the-cut-for-a-dissolve-walk -> clicking-shorten-the-cut-trims-the-clips-and-pla (that task says it owns this walk)\n  title-presets-library-shelf-walk -> the-title-presets-walk-pulls-film-super-off-the (that task says it owns this walk)\n  transition-band-reads-as-the-mock-walk -> a-picked-transition-shows-its-own-settings-in-th (that task says it owns this walk)\n  transition-picker-at-a-cut-walk -> a-picked-transition-shows-its-own-settings-in-th (that task says it owns this walk)\n  transition-tile-comes-away-walk -> the-title-presets-walk-pulls-film-super-off-the (that task says it owns this walk)\n\nThis task owns the other 12: a-clip-s-sound-is-linked-under-it-walk, a-sound-s-volume-line-picks-and-shapes-walk, ask-rows-say-what-they-made-walk, clicking-a-timeline-item-moves-the-playhead-walk, dock-headers-walk, panel-shows-what-is-picked-video-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, the-timeline-is-the-layer-list-walk, timeline-right-click-menus-walk, title-size-box-walk, video-panel-order-walk\n\nStopped failing since the last sweep (1): ask-row-thumbs-walk\n\nFull output: queue/sweep/2026-11-26-011728.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -102,6 +102,10 @@
     {
       "t": "2026-11-26T16:35:31.143Z",
       "note": "seq 70 -> 120"
+    },
+    {
+      "t": "2026-11-27T14:49:23.143Z",
+      "note": "seq 120 -> 110"
     }
   ],
   "standing": "walk-sweep"

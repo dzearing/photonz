@@ -4,12 +4,12 @@
   "goal": "A person should never see a blank, a stale picture or a frame from somewhere else flash by while an edit plays, and what they watch should be what they export. Today that is checked only on short fixtures and in a few spots; nothing watches a whole long edit play through its dissolves, its 3D transition, its titles and its zooms and compares each shown frame against the export.",
   "epic": "video-perf",
   "priority": "p1-high",
-  "seq": 70,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-24T14:24:29.780Z",
-  "updated": "2026-11-26T16:35:30.773Z",
+  "updated": "2026-11-27T14:49:22.723Z",
   "deps": [
     "jumping-back-while-a-video-plays-never-flickers"
   ],
@@ -48,6 +48,10 @@
     {
       "t": "2026-11-26T16:35:30.772Z",
       "note": "seq 70 -> 70"
+    },
+    {
+      "t": "2026-11-27T14:49:22.722Z",
+      "note": "seq 70 -> 60"
     }
   ]
 }

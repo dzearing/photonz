@@ -4,12 +4,12 @@
   "goal": "The transitions read as dated slideshow effects and make a reel feel cheap. Give Photonz a set that feels like a modern product film: whip pans and zoom throughs with motion blur, light leaks and flashes, a blur or glow wipe, a shape or text mask reveal, a match on a moving element, each with an easing that has energy and an optional sound (whoosh, hit) that lands with it.",
   "epic": "video-sizzle",
   "priority": "p1-high",
-  "seq": 127,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:14.407Z",
-  "updated": "2026-11-27T01:10:17.312Z",
+  "updated": "2026-11-27T14:49:48.476Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nToday's kinds: dissolve, dipToBlack, dipToWhite, push, wipe, blurThrough, flip, cube, swing, doorway, revolve, pushInDepth. set_transition takes a curve through run_command set_transition_curve (Linear to Ease out expo). The 3D kinds' bugs (covering at once, black void, framing lost) are 3d-transitions-ease-in-and-out, filed beside this: fix there, not twice. Motion blur on moving layers is part of motion-that-feels-like-apple-springs-speed-ramps; share the implementation.",
@@ -41,6 +41,14 @@
     {
       "t": "2026-11-27T01:10:17.311Z",
       "note": "From 3d-transitions-ease-in-and-out-of-the-picture-in (2026-11-26): the doorway's doors now fade while they open, and mid move they read as pale translucent panels over the incoming shot (queue/audits/2026-11-26-3d-transitions-ease-sheet-after-unframed.png, row 5). Worth a better doorway when the set is rebuilt. The 3D kinds now share a backdrop (both shots blurred and dimmed), light falloff and a contact shadow in Layer.depthTransitionDrawn; new kinds can reuse them."
+    },
+    {
+      "t": "2026-11-27T14:49:23.379Z",
+      "note": "seq 127 -> 140"
+    },
+    {
+      "t": "2026-11-27T14:49:48.475Z",
+      "note": "Triage 2026-11-27, from the speed ripple audit picture (queue/audits/2026-11-26-speed-ripple-1-double.png): the Transitions tiles' second lines read 'A pushed out', 'B wiped over', 'A swung away', 'A opens as doors'. The A and B are the editor's own names for the two shots and mean nothing to a person browsing. When the set is rebuilt here, each tile's line says what the viewer sees (for example 'slides the next shot in'), and the mock's tile copy wins if it has one."
     }
   ]
 }
