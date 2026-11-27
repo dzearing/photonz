@@ -19424,3 +19424,5 @@
 {"t":"2026-11-27T06:37:14.011Z","ev":"task_note","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy"}
 {"t":"2026-11-27T06:37:14.082Z","ev":"task_note","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy"}
 {"t":"2026-11-27T06:37:22.118Z","ev":"task_pending","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy","from":"in_progress","note":"Pass 1 landed: edge names are pictures, window-server asks while scrolling 953->20 and near Fit 3149->1277; still 2-3 holds of 28-32 ms near Fit in ten runs and a 15-22 ms first zoom frame from rest, so 'no frame over 16 ms' is not reached. Audit 2026-11-26-wide-zoom-window-server-asks.json."}
+{"t":"2026-11-27T06:37:53.448Z","ev":"task_note","id":"the-app-crashed-in-passsampler-othersnow"}
+{"t":"2026-11-27T06:37:53.520Z","ev":"task_note","id":"the-app-crashed-in-passsampler-othersnow"}
