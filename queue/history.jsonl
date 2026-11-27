@@ -19436,3 +19436,10 @@
 {"t":"2026-11-27T09:56:01.852Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
 {"t":"2026-11-27T09:56:01.934Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
 {"t":"2026-11-27T09:56:02.016Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 6 landed cad1896ab (titles drawn once ahead). Lag worst 1 not reached: medium 3,3,2, hunt 3,2,3, set mostly by the display's own 48 Hz frames; leads and a suggested measure change in the log."}
+{"t":"2026-11-27T09:56:44.465Z","ev":"task_started","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","title":"Scrubbing a long edit never trails the pointer by more than one display frame","priority":"p1-high"}
+{"t":"2026-11-27T11:00:12.898Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-27T11:13:28.804Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-27T11:13:28.891Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-27T11:13:28.969Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-27T11:13:29.046Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-27T11:13:29.124Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 7 landed f4a0dd703 (measure now read at each display refresh, hand on its own clock). Lag worst 1 not reached: medium 2,5,2, hunt 2,2,2; leads in the log."}

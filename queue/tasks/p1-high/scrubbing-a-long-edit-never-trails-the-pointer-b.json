@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:48:45.395Z",
-  "updated": "2026-11-27T09:56:02.015Z",
+  "updated": "2026-11-27T11:13:29.123Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (closed 2026-11-23). lag = refreshes since the hand was at the moment the picture carries (a stand-in frame counts as caught up); frame lag = the exact frame under the hand; sight lag = the frames the picture is really drawn from (SpeedWalk.ScrubTally). The medium drag's frame lag and sight lag worst are shown but not judged since 2026-11-23 (SpeedCompare.isJudged: 17 to 81 at the median on unchanged code); its lag worst is judged. Passes 20 to 22 made the hunt follow the hand (MovieSweep.window(follows:), restingPass, MovieFrameQueue.placesStillShown): hunt frame worst 43 -> 3. Lead from pass 22: the hunt's ~20 ms looks with an idle main thread (display link or render server; Metal System Trace needs developer mode). Lag worst 3-10 on medium in 45 runs: which moment is late is chance, so look at the per-look dump (temporary) before changing anything.",
@@ -211,6 +211,34 @@
     {
       "t": "2026-11-27T09:56:02.014Z",
       "note": "Pass 6 landed cad1896ab (titles drawn once ahead). Lag worst 1 not reached: medium 3,3,2, hunt 3,2,3, set mostly by the display's own 48 Hz frames; leads and a suggested measure change in the log."
+    },
+    {
+      "t": "2026-11-27T09:56:44.460Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T11:00:12.896Z",
+      "note": "Pass 7 found (temporary per-look dump with display link timestamps and the time each picture went up): the link calls the walk back at varying delays after a refresh, 1.0 ms or 5.2 ms (bimodal, in runs) in pass 6's hunt dumps, 4 to 9 ms in later runs, never in between, with the main thread free (a timer set for 1.5 ms after the refresh fired on time). The walk moved its hand only when the call came, so a late call held the hand still for a refresh and a half, and the look AFTER it (back to 1 ms) read 2: in pass 6's dumps, 16 of 19 hunt lag-2 looks with an on-time refresh followed a 5.2 ms call. And the picture was read at the call, so the same drag read 1 or 2 by when the call came (a picture put up 4 ms after the refresh counted as on time for a 5 ms call, and as late for a 1 ms one)."
+    },
+    {
+      "t": "2026-11-27T11:13:28.802Z",
+      "note": "Pass 7 (f4a0dd703), measuring fix: the walk's hand moves on its own clock (straight after an on-time look, or 1.5 ms after the refresh on a timer when the look is late: ScrubHand), and each look is judged at the latest refresh at or before it (SpeedWalk.refreshes from the link's timestamp) by the last picture put up before that refresh (EditorState.playtestPicturesPutUp, SpeedWalk.onScreen; scrubLags now matches moves to looks by time). Chose reading at the refresh over reading at the call because it is what a person sees at each refresh, it does not depend on when the call happens to come, and it is stricter where draws are slow (the hunt's first cold 7-9 ms draws read 2 where a late look had read them 1). Calibration is the same: a picture up at the next refresh after the move reads 1."
+    },
+    {
+      "t": "2026-11-27T11:13:28.889Z",
+      "note": "Pass 7 measured: hunt-only walk (1 medium + 6 hunts) after the change: every drag worst 2, no 3s, medians 1 (before, the same walk read hunts 1 to 3). Short speed walk 3 runs (2026-11-27 03:01-03:07), exit 0, 51 numbers within baseline each: lag worst medium 2,5,2 hunt 2,2,2 (pass 6: medium 3,3,2 hunt 3,2,3); hunt frame and sight worst 2,2,2 (item 2 met in 3 of 3). The medium 5 was one picture held about 40 ms while refreshes stayed on time (longest refresh 10 ms), the same one-launch-in-several Core Image planning spike pass 6 saw at the first title crossing. Green: scrub-never-blacks-out, hear-the-scrub; Scripts/test.sh exit 0. Baseline not rewritten: item 1 not reached."
+    },
+    {
+      "t": "2026-11-27T11:13:28.967Z",
+      "note": "Not reached: lag worst 1 (medium 2-5, hunt 2). Every 2 left is now a picture really late to the screen: moved at refresh+1.5 ms, it must be up by the next refresh, so any draw over about 6.8 ms move-to-put-up reads 2. Move-to-put-up in a hunt-only walk: median 3.7-3.9 ms, p95 4.8-8.4; medium 26 over 6.8 in one drag, hunts 1-14 per drag. Leads for pass 8: (1) the hunt's first 3-5 draws take 7-9 ms (cold: Core Image planning a turned clip with a shadow); draw one ahead once the edit opens, like titles' words in passes 5-6. (2) mid-hunt, a second picture of the SAME moment goes up (a landed sharp frame redrawn), then the next move's picture takes 12-13 ms and the look comes ~9 ms late with the hand's move itself under 1 ms (main thread held about 7 ms by something else): profile that gap. (3) medium transitions draw 6-8 ms. (4) the one-off ~40 ms planning spike in the medium (1 in 3 launches). Kit: /tmp/scrubana/tl.py (timeline of moves, refreshes and pictures put up) and rb.py; re-add a dump of at, linkAt, hand, handAt and playtestPicturesPutUp in PlaytestSpeedWalk.scrub to use them."
+    },
+    {
+      "t": "2026-11-27T11:13:29.044Z",
+      "note": "Pass 7 landed f4a0dd703: the scrub is read at each refresh the display made, with a hand that no longer waits on the link's late calls. Hunt worst 3,2,3 -> 2,2,2, and every 2 left is a draw really over 6.8 ms. Lag worst 1 not reached; leads in the log."
+    },
+    {
+      "t": "2026-11-27T11:13:29.122Z",
+      "note": "Pass 7 landed f4a0dd703 (measure now read at each display refresh, hand on its own clock). Lag worst 1 not reached: medium 2,5,2, hunt 2,2,2; leads in the log."
     }
   ],
   "walks": [
@@ -218,6 +246,6 @@
     "scrub-never-blacks-out-walk",
     "hear-the-scrub-walk"
   ],
-  "started": "2026-11-27T08:30:22.758Z",
+  "started": "2026-11-27T09:56:44.459Z",
   "failures": 0
 }
