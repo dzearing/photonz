@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-25T15:49:44.393Z",
-  "updated": "2026-11-27T08:19:26.008Z",
+  "updated": "2026-11-27T14:38:50.588Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split off an-edit-with-50-tracks-and-100-clips-scrolls-pla (its acceptance: what is not reached is filed, one cost each). Measure: a walk with setup {\"forget\":[\"all\"],\"wideEdit\":50}, wait 3, then {\"do\":\"speed\",\"measure\":\"timeline\",\"form\":\"long\"} six times and {\"do\":\"wait\",\"seconds\":90,\"onTheClock\":true}; profile it with Scripts/perf/pass-profile.sh <walk> then Scripts/perf/pass-profile.py /tmp/photonz-pass-sampler --waits. Caught 2026-11-25, two of two: 'PASS 139 zoom out held | 38.9' and 'PASS 576 near fit fresh | 31.6'. Main thread: CA::Transaction::run_commit_handlers -> _dispatch_sync_f_slow on RenderBox's queue (27 looks of the first on CoreAnimation's own mutex in CA::Context::commit_transaction). Holder in both, a dispatch worker: RB::SharedSurfaceGroup::prune_removed_locked -> test_markers -> RB::CommitMarker::Observer::test_displayed -> -[CAContext waitForCommitId:timeout:] -> CA::Context::ping / wait_for_synchronize -> mach_msg, 27 to 36 ms, that is the window server. No app code on it. The only lead: that cleanup runs when drawings that share a surface (RBLayer, SwiftUI Canvas and drawn text) go away or change size, so fewer drawings coming and going in a zoom (held paintings as plain CGImage layers, no Canvas) should mean fewer cleanups. Not tried.",
@@ -84,8 +84,29 @@
     {
       "t": "2026-11-27T08:19:26.007Z",
       "note": "Pass 2: title marks fixed, window-server holds gone in ten runs; first zoom frame from Fit still 16-21 ms"
+    },
+    {
+      "t": "2026-11-27T12:52:08.255Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T14:38:46.806Z",
+      "note": "Pass 3 (2026-11-27). Ten runs on main first: the first zoom frame from Fit was already 7.5-14.6 ms (no change aimed at it; pass 2's 16-21 did not reproduce), but a scroll frame around the 17th of each run was 12.2-17.1 ms. Profiled with pass-profile (others threshold lowered to 8 ms for one run, put back): the commit waited in -[_SwiftUIProxyImage finish] for CA::Render::copy_image -> RB::ImageProvider::wait_phase, while RenderBox drew a lane picture and converted every clip thumbnail in it on the CPU (RB::TextureCache::prepare_cgimage -> CGContextDrawImage, colour conversion from the recording's space). Fix: ClipFilmstripFrames.finish keeps each thumbnail as 8 bit BGRA in sRGB (PictureReadyToDraw, PhotonzRender, tested). After, ten runs: worst 15.8 ms (zoom in frame 1), scroll worst 10.9; speed walk --wide 50 p95 6.5/6.9/6.4/5.2, edits 7-13 ms."
+    },
+    {
+      "t": "2026-11-27T14:38:46.884Z",
+      "note": "Chose converting the thumbnails once over converting each lane picture into the display's colours because the latter forced the drawing onto the main thread (1.6-5 ms a picture, p95 6.4 -> 10-13 ms) and off the main thread for late pictures it changed nothing measurable; both tried, the second taken out. Pictures: stills at Fit identical (0.001 mean), 258 filmed frames none blank. Walks run: the three recording walks that read thumbnails (a-recording-replaced-on-disk..., a-recording-replaced-while-open..., exporting-over-the-open-recording...) all ok. Not checked: whether the hour-long timeline's 30 ms frame (triage note) was the same wait; its lanes draw thumbnails too, so it may be. Left rough, no task: the first zoom frame from Fit (SwiftUI graph, up to 15.8 ms) is the nearest frame to the bar."
+    },
+    {
+      "t": "2026-11-27T14:38:46.961Z",
+      "note": "walks none -> none"
+    },
+    {
+      "t": "2026-11-27T14:38:50.586Z",
+      "note": "Clip thumbnails kept as 8 bit BGRA sRGB when they land (ClipFilmstripFrames, PictureReadyToDraw), so RenderBox no longer converts them per lane picture while the commit waits. Ten timeline measures on the 50 track edit (17,040 frames): worst 17.1 -> 15.8 ms, none over 16; speed walk --wide 50 p95 6.5/6.9/6.4/5.2 ms, edits 7-13 ms; stills identical, 258 filmed frames none blank. Commit e4ef471bc, audit queue/audits/2026-11-27-wide-zoom-thumbnails.json."
     }
   ],
-  "started": "2026-11-27T06:38:06.975Z",
-  "walks": []
+  "started": "2026-11-27T12:52:08.254Z",
+  "walks": [],
+  "completed": "2026-11-27T14:38:50.587Z"
 }
