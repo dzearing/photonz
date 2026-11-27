@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-27T15:47:47.915Z",
+  "updated": "2026-11-27T15:56:24.480Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-27T15:47:47.914Z",
-      "note": "... 122 earlier entries elided",
-      "elided": 122
-    },
-    {
-      "t": "2026-11-22T14:26:54.201Z",
-      "note": "Still open, bars not reached: near Fit ~15% late (fresh frames ~13 ms, now mostly SwiftUI rebuilding lanes + layout), zoom in ~45 of 240, edits (a-long-edit-with-transitions-plays-scrubs-and-ed). Next: zoom in is untouched by holds and late lays (its late frames are not the let-go frames alone); profile zoom in's late frames by label before another lever. Left rough, not filed: the one-off re-lay of every picture at the stop (~3 ms, at rest, not seen)."
-    },
-    {
-      "t": "2026-11-22T14:27:19.128Z",
-      "note": "Pass 21 landed 2b678edf0: a pinch lays each lane's new picture between frames instead of on the frame that lets go of a held painting; near Fit late frames 122-129 -> 89-113 of 648 (same build, switch), mean 9.6 -> 9.2 ms; scroll and zoom in unchanged; look unchanged. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+      "t": "2026-11-27T15:56:24.479Z",
+      "note": "... 124 earlier entries elided",
+      "elided": 124
     },
     {
       "t": "2026-11-22T14:27:44.737Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-27T15:47:47.913Z",
       "note": "Pass 27: the 30 ms frame is gone (ten runs on main, worst 13.8-21.7 ms). Not reached: none over 16 ms. The first frame after rest costs a median of about 14-16 ms (zoom from Fit and scroll from rest alike) and goes over 16 in about half the runs. Near Fit p95 sits at 8.0-8.65 against 8.3. One fix was tried, measured slower and reverted. Next lever is in the log."
+    },
+    {
+      "t": "2026-11-27T15:48:20.974Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T15:56:24.478Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets 12am (America/Los_Angeles)"
     }
   ],
-  "started": "2026-11-27T14:50:51.885Z",
+  "started": "2026-11-27T15:48:20.973Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
@@ -522,10 +522,10 @@
     "a-cut-slid-under-a-still-pointer-walk",
     "a-painted-gap-takes-a-right-click-walk"
   ],
-  "failures": 0,
+  "failures": 1,
   "lastError": {
-    "at": "2026-11-18T11:54:19.025Z",
+    "at": "2026-11-27T15:56:24.477Z",
     "exit": 1,
-    "message": "You've hit your weekly limit · resets Nov 21 at 12am (America/Los_Angeles)"
+    "message": "You've hit your weekly limit · resets 12am (America/Los_Angeles)"
   }
 }
