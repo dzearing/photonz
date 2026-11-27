@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:48:45.395Z",
-  "updated": "2026-11-26T22:39:47.769Z",
+  "updated": "2026-11-27T09:56:02.015Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (closed 2026-11-23). lag = refreshes since the hand was at the moment the picture carries (a stand-in frame counts as caught up); frame lag = the exact frame under the hand; sight lag = the frames the picture is really drawn from (SpeedWalk.ScrubTally). The medium drag's frame lag and sight lag worst are shown but not judged since 2026-11-23 (SpeedCompare.isJudged: 17 to 81 at the median on unchanged code); its lag worst is judged. Passes 20 to 22 made the hunt follow the hand (MovieSweep.window(follows:), restingPass, MovieFrameQueue.placesStillShown): hunt frame worst 43 -> 3. Lead from pass 22: the hunt's ~20 ms looks with an idle main thread (display link or render server; Metal System Trace needs developer mode). Lag worst 3-10 on medium in 45 runs: which moment is late is chance, so look at the per-look dump (temporary) before changing anything.",
@@ -191,6 +191,26 @@
     {
       "t": "2026-11-26T22:39:30.025Z",
       "note": "Pass 5 landed 57e79e49c: titles' words drawn ahead once the edit is open, so the first crossing of the 2:44 title no longer sets out letters inside a refresh (9.1 -> 0.4 ms; medium worst 2,3,2,2 against pass 4's 2,3,3). Lag worst 1 not reached; leads in the log."
+    },
+    {
+      "t": "2026-11-27T08:30:22.759Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T09:42:50.700Z",
+      "note": "Pass 6 found (per-look dump plus display link timestamps, temporary, kept as /tmp/scrubana/pass6-all.patch): (1) the medium drag's first crossing of the 2:44 title spent up to 57 ms in Core Image planning (startTask) in 1 of 6 fresh launches, lag 8; otherwise 4.6 ms. (2) Every lag-2 look of the hunt with an idle main thread is a refresh the DISPLAY did not make: the link's own timestamp steps 20.8 ms (48 Hz, the ProMotion floor) instead of 8.3, 2 to 12 times a hunt drag. Nothing in the app runs in those 16 to 20 ms (sampler: main in nextEvent, every other thread parked). Experiments, 6 hunt drags each: canvas picture never put up, still 1 to 3 a drag; picture and playhead islands both frozen, still 0 to 3; scrub sound off, more (5 to 16); preferredFrameRateRange pinned at 120, still 20.8 ms frames; a 2x2 layer changed early in every refresh (so the window always has something new), still 20.8 ms frames. Pictures landing 4 to 6 ms after a refresh precede about 6 per cent of the long frames, later ones none, so it is the window server missing its deadline, not the app's load (our GPU work is about 1 ms a picture in the hunt). (3) The medium drag's first transition (0:14 to 0:20) in the first drag after a rest: 4-pass draws with 7 to 12 ms of GPU kernel time and a 25 ms display frame, never in later drags of the same launch: the GPU clocking up, which drawing ahead does not touch."
+    },
+    {
+      "t": "2026-11-27T09:56:01.850Z",
+      "note": "Pass 6 landed cad1896ab: drawWordsAhead also draws each posed title moment once on a scratch surface (stand-ins for unread recording frames at read-in-passing size), so Core Image's plan for the title's first picture is made before the hand gets there. 3 fresh launches: that picture's startTask 2.7-3.7 ms (was 4.6, once 57), worst startTask of any medium picture 3.7. Short speed walk 3 runs (2026-11-27 01:30-01:50), exit 0, 51 numbers within baseline each: lag worst medium 3,3,2 hunt 3,2,3; hunt frame and sight worst 3,2,3 (item 2: met in 1 of 3 this time, against 3 of 4 in pass 5: the 20.8 ms display frames decide it). Green: hear-the-scrub, title-words-mask-reveal, title-words-turn-in-depth, an-editing-session; scrub-never-blacks-out failed once at 251 ms against its 250 ms sharp-frame limit, then passed 3 of 3. Scripts/test.sh exit 0. Baseline not rewritten: item 1 not reached."
+    },
+    {
+      "t": "2026-11-27T09:56:01.932Z",
+      "note": "Not reached: lag worst 1 (medium 2-3, hunt 2-3). What sets the worst now is mostly NOT app work: the hunt's late looks are 48 Hz display frames (link timestamp steps 20.8 ms) with the whole app idle, and they stay with the canvas picture and islands frozen. Suggestion for the person who owns the bar: the walk can tell those apart (a refresh whose link timestamp steps more than 1.5 intervals is the display's, not ours); counting lag in refreshes the display really made, or leaving out looks after one, would judge the app. Not changed here because it moves the bar, which is the user's call. App-side leads still open: (a) the medium's first transition after a rest runs 7-12 ms of GPU kernel time (GPU clocks), once per launch; (b) pictures landing 4-6 ms after a refresh precede the long display frames about 6 per cent of the time: drawing earlier in the refresh (commit off the main thread, or starting the hand's draw before the walk's own work) may lower that rate. Kit: /tmp/scrubana/pass6-all.patch (temporary), hunt.sh, deadline.py."
+    },
+    {
+      "t": "2026-11-27T09:56:02.014Z",
+      "note": "Pass 6 landed cad1896ab (titles drawn once ahead). Lag worst 1 not reached: medium 3,3,2, hunt 3,2,3, set mostly by the display's own 48 Hz frames; leads and a suggested measure change in the log."
     }
   ],
   "walks": [
@@ -198,6 +218,6 @@
     "scrub-never-blacks-out-walk",
     "hear-the-scrub-walk"
   ],
-  "started": "2026-11-26T21:39:36.925Z",
+  "started": "2026-11-27T08:30:22.758Z",
   "failures": 0
 }

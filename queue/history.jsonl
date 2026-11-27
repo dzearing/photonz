@@ -19430,3 +19430,9 @@
 {"t":"2026-11-27T08:19:25.868Z","ev":"task_note","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy"}
 {"t":"2026-11-27T08:19:25.939Z","ev":"task_note","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy"}
 {"t":"2026-11-27T08:19:26.009Z","ev":"task_pending","id":"no-frame-of-a-50-track-zoom-is-held-up-by-the-sy","from":"in_progress","note":"Pass 2: title marks fixed, window-server holds gone in ten runs; first zoom frame from Fit still 16-21 ms"}
+{"t":"2026-11-27T08:30:22.551Z","ev":"slice_pass","walks":18,"passed":18,"failed":0,"seconds":467,"of":1210,"couldNotRun":0,"timedOut":false,"rotating":true,"from":208,"to":221,"moved":13}
+{"t":"2026-11-27T08:30:22.764Z","ev":"task_started","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","title":"Scrubbing a long edit never trails the pointer by more than one display frame","priority":"p1-high"}
+{"t":"2026-11-27T09:42:50.702Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-27T09:56:01.852Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-27T09:56:01.934Z","ev":"task_note","id":"scrubbing-a-long-edit-never-trails-the-pointer-b"}
+{"t":"2026-11-27T09:56:02.016Z","ev":"task_pending","id":"scrubbing-a-long-edit-never-trails-the-pointer-b","from":"in_progress","note":"Pass 6 landed cad1896ab (titles drawn once ahead). Lag worst 1 not reached: medium 3,3,2, hunt 3,2,3, set mostly by the display's own 48 Hz frames; leads and a suggested measure change in the log."}

@@ -23611,3 +23611,9 @@ announced 0.25.0.
 - Not reached: the first frame of a zoom that starts at Fit, 16 to 21 ms. A zoom starting zoomed in has a 7 to 11 ms first frame, so it is leaving Fit. Profiled over 30 first frames: ~8 ms more, spread through SwiftUI graph invalidation, text and geometry queries. Ruled out: lanes rebuilding their layers on frame 1 (stopped it with a never-identity slide; no change, reverted); clip names as pictures (no change, reverted).
 - Speed walk --wide 50: p95 zoom in 6.1, out 6.3, near Fit 6.2, along 5.2 ms; edits 6.6-15.3 ms.
 - Next: find which views read the window at rest at Fit and stop them being invalidated by the first zoom step.
+
+## 2026-11-27 — Scrub lag, pass 6 (scrubbing-a-long-edit-never-trails-the-pointer-b)
+
+- Landed cad1896ab: a title's first picture is drawn once ahead on a scratch surface (stand-ins for unread recording frames), so Core Image's plan is ready before a drag reaches it. The 2:44 title's first picture: startTask 4.6 ms (once 57 ms, lag 8) -> 2.7-3.7 ms.
+- Found: the hunt's remaining late looks are display frames of 20.8 ms (48 Hz, the ProMotion floor) with the app idle; they persist with the canvas and playhead frozen, with the link pinned at 120 Hz and with a layer changed every refresh. The medium's first transition after a rest runs 7-12 ms of GPU kernel time (GPU clocks).
+- Speed walk: medium 3,3,2, hunt 3,2,3; lag worst 1 not reached, task left pending. Open question for the user: judge the lag in refreshes the display really made.
