@@ -23604,3 +23604,10 @@ announced 0.25.0.
 - Fixed in the harness: the timeline measure's first frame counted the frame before it; the pass sampler trapped on a thread leaving mid-sample.
 - Not reached: still 2 to 3 holds of 28 to 32 ms near Fit in ten runs; the first frame of a zoom from rest is 15 to 22 ms of app work (older than this change). Task left pending with both.
 - Found and filed: a title's name drawn twice for a frame while zooming near Fit, on the old drawing too (a-title-s-name-is-drawn-once-never-twice-or-not).
+
+## 2026-11-27 — 50 track zoom, pass 2: title marks (no-frame-of-a-50-track-zoom-is-held-up-by-the-sy)
+
+- Found with the layer census (now also printing what the first three frames of each measure add, remove and resize): the 12 pt drawn layers that churned near Fit were the titles' part timing marks (`TimelineChildMarks`, `TimelinePartBar.swift`), a Canvas per title re-made at each width, about 500 times in 648 frames. Now plain `RoundedRectangle` fills. Window server asks: near Fit 1,022-1,325 -> 25, zoom in ~140 -> 10, scroll ~17 -> 0. Ten runs: no window-server hold over 16 ms (before: 28.7 ms).
+- Not reached: the first frame of a zoom that starts at Fit, 16 to 21 ms. A zoom starting zoomed in has a 7 to 11 ms first frame, so it is leaving Fit. Profiled over 30 first frames: ~8 ms more, spread through SwiftUI graph invalidation, text and geometry queries. Ruled out: lanes rebuilding their layers on frame 1 (stopped it with a never-identity slide; no change, reverted); clip names as pictures (no change, reverted).
+- Speed walk --wide 50: p95 zoom in 6.1, out 6.3, near Fit 6.2, along 5.2 ms; edits 6.6-15.3 ms.
+- Next: find which views read the window at rest at Fit and stop them being invalidated by the first zoom step.

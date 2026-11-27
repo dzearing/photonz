@@ -81,6 +81,19 @@ final class LayerCensus {
     private var framesWithDrawnChurn = 0
     private var drawnCount = 0
 
+    /// Bodies built by each of the first frames, against the one before.
+    private var bodies: [String] = []
+    private var bodiesBefore: [ViewBuildMeter.Subject: Int] = [:]
+    private var firstShapes: [String] = []
+    func noteBodies(_ frame: Int, _ counts: [ViewBuildMeter.Subject: Int]) {
+        let diff = counts.compactMap { key, n -> String? in
+            let d = n - (bodiesBefore[key] ?? 0)
+            return d > 0 ? "\(key.rawValue) \(d)" : nil
+        }.sorted()
+        bodies.append("frame \(frame): " + diff.joined(separator: ", ") + " | layers " + (firstShapes.last ?? ""))
+        bodiesBefore = counts
+    }
+
     /// What the window holds now, weighed against the last look.
     func look(_ window: NSWindow?) {
         guard let root = window?.contentView?.layer else { return }
@@ -139,6 +152,20 @@ final class LayerCensus {
             if seen.kind.contains("RB") { churn = true }
         }
         if churn { framesWithDrawnChurn += 1 }
+        if frames <= 3 {
+            var adds = 0, gone = 0, sized = 0
+            var what: [String: Int] = [:]
+            func key(_ sign: String, _ seen: Seen) -> String {
+                String(format: "%@%@ %.0fx%.0f at %.0f,%.0f", sign, seen.kind, seen.size.width, seen.size.height,
+                       seen.place.minX, seen.place.minY)
+            }
+            for (id, seen) in now {
+                if last[id] == nil { adds += 1; what[key("+", seen), default: 0] += 1 }
+                else if last[id]?.size != seen.size { sized += 1; what[key("~", seen), default: 0] += 1 }
+            }
+            for (id, seen) in last where now[id] == nil { gone += 1; what[key("-", seen), default: 0] += 1 }
+            firstShapes.append("added \(adds) removed \(gone) resized \(sized) [" + what.sorted { $0.key < $1.key }.prefix(60).map { "\($0.key) \($0.value)" }.joined(separator: ", ") + "]")
+        }
     }
 
     /// The tree of layers between two heights of the window, written once.
@@ -175,10 +202,12 @@ final class LayerCensus {
                           label, asks.asks, asks.onMain, asks.slow, asks.worstMS, asks.totalMS)
             + DrawnDisplays.take() + "; \(frames) frames, \(framesWithDrawnChurn) with a drawn layer added, removed or resized; "
             + "\(drawnCount) drawn layers; added [\(top(added))]; removed [\(top(removed))]; resized [\(top(resized))]; shapes [\(shapes.sorted { $0.value > $1.value }.prefix(25).map { "\($0.key): \($0.value)" }.joined(separator: ", "))]"
+        let firsts = (bodies.isEmpty ? "" : "\n  " + bodies.joined(separator: "\n  "))
+        bodies = []; bodiesBefore = [:]; firstShapes = []
         shapes = [:]
         added = [:]; removed = [:]; resized = [:]; frames = 0; framesWithDrawnChurn = 0
         last = [:]; held = []
-        if let data = (line + "\n").data(using: .utf8) {
+        if let data = (line + firsts + "\n").data(using: .utf8) {
             let url = URL(fileURLWithPath: Self.folder + "/census.txt")
             if let handle = try? FileHandle(forWritingTo: url) {
                 handle.seekToEndOfFile()

@@ -1,0 +1,27 @@
+{
+  "feature": "50 track zoom: the title marks no longer wait on the window server",
+  "epic": "video-perf",
+  "summary": "The thin lines along the foot of a title's bar, one for each of its parts, are now plain shapes instead of a drawing redone at every width. They were what still made a zoom near Fit ask the window server, up to 1,300 times a measure, and those asks were what held the rare 28 to 40 ms frame. In ten runs since, no frame was held up that way. The first frame of a zoom that starts at Fit still takes 16 to 21 ms.",
+  "setup": "Photonz Dev, release Next, no flag changed. Your copy of the 50 track edit: File > Open (Cmd-Shift-G) ~/Library/Caches/Photonz Reference Edit/Photonz Dev/Reference Edit 50 tracks.photonz. Measured in the probe: ten timeline measures in one walk (about 17,000 frames), Scripts/perf/speed-walk.sh --wide 50, and the probe's layer census (touch /tmp/photonz-layer-census/on), which counts each ask of the window server.",
+  "switched": {},
+  "try": [
+    { "do": "Open Reference Edit 50 tracks.photonz with File > Open.", "shot": "2026-11-27-title-marks-sc.png" },
+    { "do": "Look at the Title track at the top: each title's bar has short pale lines along its foot, one for each part.", "shot": "2026-11-27-title-marks-closeup.png" },
+    { "do": "Pinch in and out quickly near the whole-edit view, about 8 times, watching the Title track." },
+    { "do": "Zoom well in with = and check the lines under each title still line up with the title's parts." },
+    { "do": "Compare the two strips: before on top, after below.", "shot": "2026-11-27-title-marks-before-after.png" }
+  ],
+  "evaluate": [
+    "Do the lines along the foot of a title look exactly as they did before, at rest and while zooming?",
+    "Near the whole-edit view, does a fast pinch ever catch for a moment?",
+    "Does the very first step of a zoom that starts at Fit feel slower than the steps after it?"
+  ],
+  "rough": [
+    "Window server asks in one timeline measure, before / after: near Fit 1,022 to 1,325 / 25 in 648 frames; zoom in 125 to 157 / 10; zoom out 120 to 184 / 24; scroll along 16 to 18 / 0. The five titles' mark drawings were taken away and made again about 500 times in 648 frames near Fit, each at a new width.",
+    "Ten runs before (unprofiled): a 28.7 ms window server hold near Fit, the first frame of a zoom from Fit at 16.6 to 20.2 ms in nine runs, and scrolls at 16.3 to 18.1 ms around frame 17 in three. After: no window server hold over 16 ms; one zoom out frame at 18.6 ms (frame 61) and one scroll frame at 16.4 ms, both unexplained, single.",
+    "Not reached, so the task stays open (no-frame-of-a-50-track-zoom-is-held-up-by-the-sy): the first frame of a zoom that starts at Fit is still 16 to 21 ms of main thread work. A zoom that starts already zoomed in has a 7 to 11 ms first frame, so the cost is leaving Fit. Profiled over 30 such frames: about 8 ms more than a later frame, spread through SwiftUI's view graph (views that read the timeline's window at rest being invalidated, text, geometry readers), no one view of ours. Ruled out: the seven lanes rebuilding their layers on that frame (made to stop it; the frame cost the same, so it was put back), and the clip names (made into pictures; no change, put back).",
+    "Speed walk --wide 50 after: main thread p95 zoom in 6.1, zoom out 6.3, near Fit 6.2, scroll along 5.2 ms (bar 8.3); the longest pass of every edit while playing 6.6 to 15.3 ms (bar 16).",
+    "Still pictures of the whole timeline at Fit, old against new: the same but for 68 edge pixels of the marks' antialiasing out of 200,000 in the title row.",
+    "No mock covers this; nothing on screen changes."
+  ]
+}

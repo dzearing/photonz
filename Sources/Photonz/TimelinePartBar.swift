@@ -151,20 +151,37 @@ struct TimelineChildMarks: View, Equatable {
     let laneWidth: CGFloat
     let height: CGFloat
 
+    /// Where one part's line lies across a lane `width` wide and `height`
+    /// tall: stacked a hair apart at the foot of the bar, so two parts that
+    /// overlap read as two.
+    static func line(_ mark: LayerTime, index: Int, ruler: MotionStripRuler, width: CGFloat,
+                     height: CGFloat) -> CGRect {
+        let x0 = width * ruler.fraction(ofMS: Double(mark.inMS))
+        let x1 = width * ruler.fraction(ofMS: Double(mark.outMS))
+        let y = height - 5 - CGFloat(index % 3) * 2.5
+        return CGRect(x: x0 + 2, y: y, width: max(2, x1 - x0 - 4), height: 1.5)
+    }
+
     var body: some View {
         if !marks.isEmpty {
-            Canvas { context, size in
-                for (index, mark) in marks.enumerated() {
-                    let x0 = size.width * ruler.fraction(ofMS: Double(mark.inMS))
-                    let x1 = size.width * ruler.fraction(ofMS: Double(mark.outMS))
-                    // Stacked a hair apart at the foot of the bar, so two parts
-                    // that overlap read as two.
-                    let y = size.height - 5 - CGFloat(index % 3) * 2.5
-                    let line = CGRect(x: x0 + 2, y: y, width: max(2, x1 - x0 - 4), height: 1.5)
-                    context.fill(Path(roundedRect: line, cornerRadius: 0.75), with: .color(.white.opacity(0.55)))
+            // Each a plain filled shape, not a Canvas: a drawn layer whose
+            // size follows the zoom takes a new piece of RenderBox's shared
+            // surface each time, and each time RenderBox asks the window
+            // server whether the last frame is on screen, which held the
+            // main thread 28 to 40 ms when it was slow to answer. Near Fit
+            // on the 50 track edit these were the five titles' marks
+            // replaced about 500 times in 648 frames (task
+            // `no-frame-of-a-50-track-zoom-is-held-up-by-the-sy`).
+            ZStack(alignment: .topLeading) {
+                ForEach(marks.indices, id: \.self) { index in
+                    let line = Self.line(marks[index], index: index, ruler: ruler, width: laneWidth, height: height)
+                    RoundedRectangle(cornerRadius: 0.75)
+                        .fill(Color.white.opacity(0.55))
+                        .frame(width: line.width, height: line.height)
+                        .offset(x: line.minX, y: line.minY)
                 }
             }
-            .frame(width: laneWidth, height: height)
+            .frame(width: laneWidth, height: height, alignment: .topLeading)
             .allowsHitTesting(false)
             .panelReadout("\(marks.count) part timing mark\(marks.count == 1 ? "" : "s")")
         }

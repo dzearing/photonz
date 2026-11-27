@@ -803,6 +803,7 @@ final class SpeedWalkProbe {
             // first moving frame, which read as one frame of two frames' work.
             _ = MainThreadMeter.shared.takeBusy()
             census?.look(editor.hostWindow)
+            census?.noteBodies(0, ViewBuildMeter.shared.counts)
             at.append(0)
             var held: [Double] = []
             var fresh: [Double] = []
@@ -823,6 +824,7 @@ final class SpeedWalkProbe {
                 PassSampler.label = ""
                 busy.append(MainThreadMeter.shared.takeBusy() * 1000)
                 census?.look(editor.hostWindow)
+                if let census, at.count <= 3 { census.noteBodies(at.count, ViewBuildMeter.shared.counts) }
                 let now = (CACurrentMediaTime() - start) * 1000
                 octaves[octave, default: []].append(now - (at.last ?? 0))
                 if isHeld { held.append(now - (at.last ?? 0)) } else { fresh.append(now - (at.last ?? 0)) }
