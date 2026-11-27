@@ -1,5 +1,14 @@
 [
   {
+    "file": "2026-11-27-condensed-poster-entrance-with-a-two-line-headline.mp4",
+    "title": "Condensed Poster entrance with a two line headline",
+    "added": "2026-11-27T03:34:25.567Z",
+    "task": "a-main-title-headline-keeps-its-second-line-afte",
+    "madeOn": "main + this task's fix, offscreen render (not the app)",
+    "kind": "after",
+    "notes": "Each word rises out of its line; once a word lands its letters are whole, and nothing cuts their tops or bottoms near the end of the slide"
+  },
+  {
     "file": "2026-11-27-3d-transitions-after-between-plain-full-frame-recordings.mp4",
     "title": "3D transitions after, between plain full-frame recordings",
     "added": "2026-11-27T01:09:18.985Z",

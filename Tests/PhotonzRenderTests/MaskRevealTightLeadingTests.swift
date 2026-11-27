@@ -53,4 +53,31 @@ struct MaskRevealTightLeadingTests {
         let firstAlone = TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: 399, reach: reach)
         #expect(Self.ink(midFirst) < Self.ink(firstAlone) + whole * 0.001)
     }
+
+    /// A word almost landed is almost whole: its mask holds the whole of its
+    /// letters, not only its line box (task
+    /// `a-main-title-headline-keeps-its-second-line-afte`). Cut to a box
+    /// shorter than the capitals, the tops and bottoms of the letters stayed
+    /// cut for the whole slow end of the slide and then appeared at once:
+    /// Condensed Poster's entrance, seen with its letter bottoms sliced on
+    /// 2026-11-26.
+    @Test("A word nearly landed shows nearly all of its letters, at any leading",
+          arguments: [0.62, 0.78, 1.1])
+    func nearlyLandedIsNearlyWhole(_ leading: Double) throws {
+        var text = TextContent(string: "MAKE\nNOISE", fontName: "DIN Condensed", fontSize: 200,
+                               colorHex: "#FFFFFF", weight: .bold)
+        text.lineHeight = leading
+        let size = TextRasterizer.naturalSize(text, maxWidth: .greatestFiniteMagnitude)
+        let pieces = try #require(TextRasterizer.revealPieces(text, size: size, unit: .word))
+        let reveal = TextReveal(style: .maskReveal, unit: .word, staggerMS: 300, lengthMS: 900, startMS: 100,
+                                curve: .easeOutExpo)
+        let reach = TextRevealCompositor.reach(of: pieces, reveal: reveal)
+        let whole = Self.ink(TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: 5000, reach: reach))
+        // The second word 60% through its slide, 1.6% of the way still to
+        // go on an expo curve; the first 93% through.
+        let nearly = Self.ink(TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: 940, reach: reach))
+        #expect(whole > 100)
+        #expect(nearly / whole > 0.95,
+                "only \(String(format: "%.1f", nearly / whole * 100))% of the letters show nearly landed at leading \(leading)")
+    }
 }

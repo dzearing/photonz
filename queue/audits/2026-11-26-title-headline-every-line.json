@@ -1,0 +1,28 @@
+{
+  "feature": "Every line of a title's headline shows",
+  "epic": "video-titles-graphics",
+  "task": "a-main-title-headline-keeps-its-second-line-afte",
+  "summary": "A title headline that wraps onto a second or third line now shows every line, after a theme, font pair or energy change and after you type longer words into it. The lines under it move down to make room, a line never runs off the side of the picture, and a headline too long for the frame is set smaller until it fits.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Checked on the probe with the walk hand-work-survives-new-numbers-and-a-restyle-walk (no flags), plus a core test of all 22 shelf styles with one, five and ten word headlines on 1920x1080 and 1280x800, before and after Sunset, Editorial and Punchy.",
+  "switched": {},
+  "try": [
+    { "do": "Open a video, open the Library, choose Catalog and add a Main Title.", "shot": "2026-11-26-title-lines-before-sc.png", "shotNote": "Before the fix (2026-11-22): Sunset, Editorial and Punchy left only \"The Long Way\"." },
+    { "do": "In the Title section, pick the Sunset theme, set Font Pair to Editorial and Energy to Punchy.", "shot": "2026-11-26-title-lines-restyled-sc.png" },
+    { "do": "Check that the headline reads The Long Way, then Home on a second line, with A FILM BY JUNE HALE under both." },
+    { "do": "Double-click the headline and type a ten word line, then click outside the title to finish.", "shot": "2026-11-26-title-lines-sheet.png" },
+    { "do": "Add a Condensed Poster, type Every window. One glance. into its headline and play its entrance." },
+    { "do": "Scrub slowly through the entrance and watch each word's letters as it lands." }
+  ],
+  "evaluate": [
+    "Does every line of the headline show after you change the theme, font pair and energy?",
+    "When the headline grows to two or three lines, does the line under it sit where you expect, not on top of it?",
+    "When a headline is too long, is shrinking it to fit better than letting it run off the frame?",
+    "In the Condensed Poster entrance, do the letters land whole, with nothing sliced off their tops or bottoms once they arrive?"
+  ],
+  "rough": [
+    "A headline set smaller to fit keeps that smaller size if you later type shorter words; it does not grow back to the style's size. Logged on the task, not filed.",
+    "A centred title page grows downwards when its headline wraps, so a three line headline sits lower than the style centres it. Logged on the task.",
+    "Gradient Glow's colour band grows with a wrapped headline, but the band slides across a box twice the first line's width, so a long second line can catch less of the colour.",
+    "The contact sheet and the Condensed Poster reel are offscreen renders with the app's own type measurement, not captures of the window; the restyled Main Title picture is a real capture from the probe."
+  ]
+}

@@ -182,6 +182,16 @@ enum TitlePieces {
         return Dictionary(found.filter { counts[$0.1] == 1 }, uniquingKeysWith: { first, _ in first })
     }
 
+    /// How tall every line of words in `group` is, by path.
+    static func textHeights(_ group: Layer) -> [String: CGFloat] {
+        let paths = paths(group)
+        var heights: [String: CGFloat] = [:]
+        for piece in group.selfAndDescendants where piece.text != nil {
+            if let path = paths[piece.id] { heights[path] = piece.frame.height }
+        }
+        return heights
+    }
+
     /// The effects every piece of `group` wears, by path.
     static func effects(_ group: Layer) -> [String: [LayerEffect]] {
         let paths = paths(group)

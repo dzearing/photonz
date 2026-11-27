@@ -497,13 +497,23 @@ public enum TextRevealCompositor {
     /// What a piece sliding out from behind its own line box is cut to: that
     /// box, on the axis it travels, and the whole piece where it is not
     /// sliding at all.
+    ///
+    /// The box never cuts the piece's own letters where they land: words set
+    /// tighter than their letters (condensed capitals stacked at 0.62) stand
+    /// taller than their line box, and cut to the box alone their tops and
+    /// bottoms stayed sliced through the whole slow end of the slide and came
+    /// back at once when it stopped (task
+    /// `a-main-title-headline-keeps-its-second-line-afte`).
     private static func mask(of piece: TextRevealPieces.Piece, pose: TextRevealPose, em: CGFloat) -> CGRect {
         guard pose.slide > 0 else { return piece.rect }
-        return pose.direction == .up || pose.direction == .down
-            ? CGRect(x: piece.rect.minX, y: piece.box.minY - em * 0.08,
-                     width: piece.rect.width, height: piece.box.height + em * 0.16)
-            : CGRect(x: piece.box.minX - em * 0.04, y: piece.rect.minY,
-                     width: piece.box.width + em * 0.08, height: piece.rect.height)
+        if pose.direction == .up || pose.direction == .down {
+            let bottom = min(piece.box.minY - em * 0.08, piece.rect.minY)
+            let top = max(piece.box.maxY + em * 0.08, piece.rect.maxY)
+            return CGRect(x: piece.rect.minX, y: bottom, width: piece.rect.width, height: top - bottom)
+        }
+        let left = min(piece.box.minX - em * 0.04, piece.rect.minX)
+        let right = max(piece.box.maxX + em * 0.04, piece.rect.maxX)
+        return CGRect(x: left, y: piece.rect.minY, width: right - left, height: piece.rect.height)
     }
 
     /// How far a piece has slid out from behind its box, in pixels, y up.

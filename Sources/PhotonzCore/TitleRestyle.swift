@@ -379,6 +379,12 @@ public struct TitleRecipe: Hashable, Codable, Sendable {
     /// somebody edited (`TitleHandEdits.swift`). Nil on a title from before,
     /// whose effects are all taken as drawn until its next restyle.
     public var drawnEffects: [String: [LayerEffect]]? = nil
+    /// How tall each line of words was when the title was last laid out, by
+    /// where it sits (`TitlePieces`). Words typed into a box grow it before
+    /// the title is laid out again, so this is what says how much it grew and
+    /// how far the lines under it move down. Nil on a title from before,
+    /// which is read from the boxes it has now.
+    public var laidHeights: [String: CGFloat]? = nil
 
     public static let intensityRange: ClosedRange<Double> = 0...200
 
@@ -445,6 +451,7 @@ extension PhotonzDocument {
         var recipe = TitleRecipe.reading(group, design: design)
         recipe.keyedOver = group.time.map(TitleKeyedSpan.init)
         recipe.drawnEffects = TitlePieces.effects(group)
+        recipe.laidHeights = TitlePieces.textHeights(group)
         updateLayer(id: layerID) { edited in
             guard case .group(var content) = edited.content else { return }
             content.titleRecipe = recipe
@@ -533,13 +540,19 @@ extension PhotonzDocument {
         // writes is its own; whatever somebody edited, added or took away
         // goes back on after.
         group = TitlePieces.wearing(old.drawnEffects, group)
-        group = TitleRestyler(recipe: recipe, unit: titleUnit).restyled(group)
+        let paths = TitlePieces.paths(group)
+        let laid = Dictionary(uniqueKeysWithValues: paths.compactMap { id, path in
+            old.laidHeights?[path].map { (id, $0) }
+        })
+        group = TitleRestyler(recipe: recipe, unit: titleUnit, canvas: canvasSize,
+                              origin: parentOrigin(of: layerID) ?? .zero, laid: laid).restyled(group)
         group = chartRedrawn(group, recipe: recipe, from: old)
         recipe.drawnEffects = TitlePieces.effects(group)
         let chartDrawn = chartDrawing(old)
         group = TitlePieces.keepingHandEdits(hand, in: group, remembered: old.drawnEffects) { piece in
             chartDrawn[piece.name]?.style.effects
         }
+        recipe.laidHeights = TitlePieces.textHeights(group)
         if case .group(var content) = group.content {
             content.titleRecipe = recipe
             group.content = .group(content)
@@ -661,6 +674,16 @@ struct TitleRestyler {
     let recipe: TitleRecipe
     /// One point of a 1080 line frame, on this document's.
     let unit: CGFloat
+    /// The picture the title is drawn on, so every line of its words is
+    /// kept inside it.
+    var canvas: CGSize = .zero
+    /// Where the space the title's own frame is stated in sits on the
+    /// picture: zero for a title on its own track.
+    var origin: CGPoint = .zero
+    /// How tall each line of words was at the title's last layout, by piece:
+    /// a box words were typed into has grown since, and the lines under it
+    /// move down by what it grew.
+    var laid: [UUID: CGFloat] = [:]
 
     /// The fill a backdrop or a box is painted with.
     static func paint(of layer: Layer) -> Paint? {
@@ -719,7 +742,7 @@ struct TitleRestyler {
             effect.shutterAngle = recipe.energy.shutterAngle
             group.style.effects[blur] = .motionBlur(effect)
         }
-        group = laidOut(group)
+        group = fitted(group)
         return legible(group)
     }
 
@@ -896,13 +919,85 @@ struct TitleRestyler {
 
     // MARK: Layout
 
+    /// The title laid out so every line of its words shows inside the
+    /// picture (task `a-main-title-headline-keeps-its-second-line-afte`).
+    ///
+    /// Each line of words wraps in the room it has, a centred line inside its
+    /// own box and one set from an edge no further than the title safe edge
+    /// of the picture, and its box is as tall as all of its lines. Only when
+    /// that still leaves the picture, top or bottom, or a single word is wider
+    /// than its room, is the headline set smaller, a step at a time, until it
+    /// fits, the way a poster's headline is set to the space it has.
+    private func fitted(_ group: Layer) -> Layer {
+        let laid = laidOut(group)
+        guard canvas.width > 0, canvas.height > 0, !fits(laid) else { return laid }
+        let headlines = Set(recipe.design.parts.filter { $0.role == .headline }.map(\.path))
+        guard !headlines.isEmpty else { return laid }
+        var scale: CGFloat = 1
+        var best = laid
+        for _ in 0..<Self.shrinkSteps {
+            scale *= Self.shrinkStep
+            var smaller = group
+            for path in headlines {
+                guard let at = Self.locate(path, in: smaller) else { continue }
+                Self.edit(&smaller, at: at) { piece in
+                    guard case .text(var text) = piece.content else { return }
+                    text.fontSize = max(1, (text.fontSize * scale).rounded())
+                    piece.content = .text(text)
+                }
+            }
+            best = laidOut(smaller)
+            if fits(best) { break }
+        }
+        return best
+    }
+
+    /// Each step a headline that does not fit is set smaller by, and how many
+    /// it may take: down to about a fifth of its size, which no headline of
+    /// ten words on the smallest picture a title lands on needs.
+    static let shrinkStep: CGFloat = 0.9
+    static let shrinkSteps = 16
+
+    /// The share of the picture's width kept clear at each side: the title
+    /// safe edge a broadcast title keeps inside (5%).
+    static let safeShare: CGFloat = 0.05
+
+    /// The share of the picture's height a title may come to at the top and
+    /// bottom before its headline is set smaller.
+    static let edgeShare: CGFloat = 0.02
+
+    /// Whether every line of the title's words shows, inside the picture.
+    private func fits(_ group: Layer) -> Bool {
+        let room = CGRect(origin: .zero, size: canvas)
+            .insetBy(dx: canvas.width * Self.edgeShare, dy: canvas.height * Self.edgeShare)
+        func check(_ pieces: [Layer], at offset: CGPoint) -> Bool {
+            for piece in pieces where piece.isVisible {
+                if piece.isGroup {
+                    let inner = CGPoint(x: offset.x + piece.frame.minX, y: offset.y + piece.frame.minY)
+                    if !check(piece.children, at: inner) { return false }
+                    continue
+                }
+                guard let text = piece.text, !text.string.isEmpty else { continue }
+                let frame = piece.frame.offsetBy(dx: offset.x, dy: offset.y)
+                let needs = TextMeasurement.size(of: text, wrappingAt: frame.width)
+                if needs.width > frame.width + 0.5 || needs.height > frame.height + 0.5 { return false }
+                if TextMeasurement.widestWord(in: text) > frame.width + 0.5 { return false }
+                if frame.minY < room.minY - 0.5 || frame.maxY > room.maxY + 0.5 { return false }
+            }
+            return true
+        }
+        return check(group.children,
+                     at: CGPoint(x: origin.x + group.frame.minX, y: origin.y + group.frame.minY))
+    }
+
     /// Every line of words measured again in its new face, the pieces under a
     /// line that grew moved down by as much, and a card that arranges itself
     /// arranged again, keeping its bottom left corner where it was.
     private func laidOut(_ group: Layer) -> Layer {
         var group = group
         let before = group.localBounds
-        group.children = Self.measured(group.children)
+        let at = CGPoint(x: origin.x + group.frame.minX, y: origin.y + group.frame.minY)
+        group.children = measured(group.children, at: at, reserve: group.group?.layout?.padding.right ?? 0).pieces
         // A page arranges nothing itself, but a row inside it may (a cursor
         // kept after its words), and it follows the words it holds.
         guard group.group?.layout != nil else { return GroupFlow.flowing(group) }
@@ -913,31 +1008,107 @@ struct TitleRestyler {
         return group
     }
 
-    private static func measured(_ pieces: [Layer]) -> [Layer] {
-        var pieces = pieces.map { piece -> Layer in
-            guard piece.isGroup else { return piece }
-            var group = piece
-            group.children = measured(piece.children)
-            return group
-        }
-        let order = pieces.indices.filter { pieces[$0].text != nil }.sorted {
-            pieces[$0].frame.minY < pieces[$1].frame.minY
-        }
-        for index in order {
-            guard let text = pieces[index].text else { continue }
-            let natural = TextMeasurement.size(of: text)
-            let old = pieces[index].frame
+    /// `pieces` measured where they sit: `offset` is where the space their
+    /// frames are stated in sits on the picture, and `reserve` the room a
+    /// group holding them keeps at its right. Gives back how far the bottom
+    /// of the pieces moved, so a group that grew moves what is under it.
+    private func measured(_ pieces: [Layer], at offset: CGPoint, reserve: CGFloat) -> (pieces: [Layer], grew: CGFloat) {
+        let wasBottom = pieces.map(bottomAsLaid).max() ?? 0
+        var pieces = pieces
+        // How much each line of words, or group of them, grew, and where its
+        // top sat and how tall it was as last laid out.
+        var growth: [(index: Int, top: CGFloat, was: CGFloat, grew: CGFloat)] = []
+        let edge = canvas.width * Self.safeShare
+        for index in pieces.indices {
+            let piece = pieces[index]
+            if piece.isGroup {
+                let inner = CGPoint(x: offset.x + piece.frame.minX, y: offset.y + piece.frame.minY)
+                let top = piece.children.map(\.frame.minY).min().map { piece.frame.minY + $0 } ?? piece.frame.minY
+                let was = bottomAsLaid(piece) - top
+                let (children, grew) = measured(piece.children, at: inner,
+                                                reserve: reserve + (piece.group?.layout?.padding.right ?? 0))
+                pieces[index].children = children
+                if grew != 0 { growth.append((index, top, was, grew)) }
+                continue
+            }
+            guard let text = piece.text else { continue }
+            let old = piece.frame
             var frame = old
-            frame.size.height = natural.height.rounded(.up)
-            if text.alignment != .center { frame.size.width = natural.width.rounded(.up) }
+            if canvas.width > 0 {
+                let left = offset.x + old.minX
+                if text.alignment == .center {
+                    // A centred line keeps its box, inside the safe edges.
+                    let start = max(left, edge)
+                    let end = min(left + old.width, canvas.width - edge)
+                    if end > start {
+                        frame.origin.x = start - offset.x
+                        frame.size.width = (end - start).rounded(.down)
+                    }
+                } else {
+                    // A line set from an edge hugs its words on one line, as
+                    // far as the safe edge and the room its group keeps.
+                    let room = max(TextMeasurement.minimumWidth,
+                                   (canvas.width - edge - reserve - left).rounded(.down))
+                    frame.size.width = min(TextMeasurement.size(of: text).width.rounded(.up), room)
+                }
+                frame.size.height = TextMeasurement.size(of: text, wrappingAt: frame.width).height.rounded(.up)
+            } else {
+                let natural = TextMeasurement.size(of: text)
+                frame.size.height = natural.height.rounded(.up)
+                if text.alignment != .center { frame.size.width = natural.width.rounded(.up) }
+            }
             pieces[index].frame = frame
-            let grew = frame.height - old.height
-            guard grew != 0 else { continue }
-            for other in pieces.indices where other != index && pieces[other].frame.minY >= old.maxY - 0.5 {
-                pieces[other].frame.origin.y += grew
+            let was = laid[piece.id] ?? old.height
+            let grew = frame.height - was
+            if grew != 0 { growth.append((index, old.minY, was, grew)) }
+        }
+        // From the top down: whatever starts below the middle of what grew,
+        // as it was laid out, sits under it and moves down by as much (a line
+        // tucked into the box of the words above it included), and a box
+        // drawn behind the whole of it grows with it.
+        growth.sort { $0.top < $1.top }
+        for (offsetIndex, item) in growth.enumerated() {
+            let top = pieces[item.index].isGroup ? item.top : pieces[item.index].frame.minY
+            for other in pieces.indices where other != item.index {
+                let frame = pieces[other].frame
+                if frame.minY > top + item.was / 2 {
+                    pieces[other].frame.origin.y += item.grew
+                    for later in growth.indices where later > offsetIndex && growth[later].index == other {
+                        growth[later].top += item.grew
+                    }
+                } else if Self.isBacking(pieces[other]), frame.minY <= top + 0.5,
+                          frame.maxY >= top + item.was - 0.5, frame.height < canvas.height * 0.9 {
+                    pieces[other].frame.size.height = max(1, frame.height + item.grew)
+                }
             }
         }
-        return pieces
+        let nowBottom = pieces.map(bottomNow).max() ?? 0
+        return (pieces, nowBottom - wasBottom)
+    }
+
+    /// A shape drawn behind words: a panel, or the colours a headline is cut
+    /// out of.
+    private static func isBacking(_ piece: Layer) -> Bool {
+        guard case .annotation(let shape) = piece.content else { return false }
+        return shape.shape == .rectangle || shape.shape == .ellipse
+    }
+
+    /// Where the bottom of `piece` sat when the title was last laid out, in
+    /// the space its frame is stated in.
+    private func bottomAsLaid(_ piece: Layer) -> CGFloat {
+        if piece.text != nil { return piece.frame.minY + (laid[piece.id] ?? piece.frame.height) }
+        if piece.isGroup, !piece.children.isEmpty {
+            return piece.frame.minY + (piece.children.map(bottomAsLaid).max() ?? 0)
+        }
+        return piece.frame.maxY
+    }
+
+    /// Where the bottom of `piece` sits now.
+    private func bottomNow(_ piece: Layer) -> CGFloat {
+        if piece.isGroup, !piece.children.isEmpty {
+            return piece.frame.minY + (piece.children.map(bottomNow).max() ?? 0)
+        }
+        return piece.frame.maxY
     }
 
     // MARK: Legibility
