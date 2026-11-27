@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:14.214Z",
-  "updated": "2026-11-26T19:30:08.561Z",
+  "updated": "2026-11-27T01:10:17.383Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nOverlap: motion-that-feels-like-apple-springs-speed-ramps has 'a layer or a whole recording can move in 3D: tilt, perspective, depth and a soft shadow on the ground' for the floating app look; this task owns the backdrop, the inset framing, fit without bars, zoom inside the card and the presets, and uses that task's 3D keys when they exist (or adds keyed tip and swing itself if it lands first; say which in both logs). The 3D transition task (3d-transitions-ease-in-and-out) needs a backdrop to show through its moves: share it. Code: clip framing is ordinary layer frame/corner/shadow (set_layer worked), zooms are in the recording zoom code (grep RecordingZoom / punch_in).",
@@ -37,6 +37,10 @@
     {
       "t": "2026-11-26T19:30:08.560Z",
       "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
+    },
+    {
+      "t": "2026-11-27T01:10:17.382Z",
+      "note": "From 3d-transitions-ease-in-and-out-of-the-picture-in (2026-11-26): a framed, tilted clip now keeps its frame, corners, shadow and tilt through every transition (the framed-clip-pops-after-swing half of this task's evidence is done). Over nothing, a framed card's 3D move now glows with the two shots' colours while it runs (Layer.transitionBackdrop(filling:)); when the edit has its own picture under the clips, that picture shows instead, so the designed backdrop this task adds will simply replace the glow. The zoom past the card's edges is still open here."
     }
   ]
 }

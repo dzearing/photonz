@@ -5,11 +5,11 @@
   "epic": "video-sizzle",
   "priority": "p1-high",
   "seq": 11,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:13.403Z",
-  "updated": "2026-11-26T19:30:08.736Z",
+  "updated": "2026-11-27T01:15:48.111Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nReproduced from the intake window through the MCP tools, 2026-11-26, pictures in queue/audits/2026-11-26-sizzle-intake/. pushInDepth at 4 s: the clip arrives as a full opacity plane over the title page at 3.8 s. flip at 14 s: frame almost all black at 13.9 s. cube at 7 s: a panel spinning in black. swing at 11 s: an opaque blue plane over the incoming clip. Code: the 3D transitions are in PhotonzRender (grep for pushInDepth / cube / doorway in Sources/PhotonzRender and Sources/PhotonzCore Transition*). This is the bug half of the user's report; making transitions less dull overall is transitions-that-feel-expensive (filed beside this). Shares the backdrop with recordings-sit-on-a-designed-backdrop.",
@@ -40,6 +40,45 @@
     {
       "t": "2026-11-26T19:30:08.735Z",
       "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
+    },
+    {
+      "t": "2026-11-26T23:29:47.938Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-26T23:41:17.000Z",
+      "note": "Reproduced on today's main in the probe (editor, contact_sheet) and in export with Scripts/depth-transition-drill.mjs (title page + six reference recordings, each 3D kind at 0.8 s, the swing's clip framed and tilted as in the intake). Push in depth arrives as a full opacity plane over the title; flip's middle frame is almost all black; the framed clip's tilt is dropped through the swing (incoming) and the flip (outgoing) and pops back after. Export measure (Scripts/depth-transition-measure.mjs, 30 fps, pillarbox bars are 0.127 of the frame): worst black in the middle half pushInDepth 0.94 (title page is black), cube 0.69, swing 0.44, flip 0.96, doorway 0.28, revolve 0.54; hitches pushInDepth 6, doorway 4, revolve 4. Render measure on stand-ins (DepthTransitionEaseRenderTests): biggest coverage jump revolve 0.162, doorway 0.191; middle black flip 0.934, cube 0.685, pushInDepth 0.537, revolve 0.490, swing 0.292, doorway 0.262; hitches doorway 6, revolve 4."
+    },
+    {
+      "t": "2026-11-26T23:41:17.000Z",
+      "note": "Adversarial pass before building: (1) a blurred backdrop over a pillarboxed recording must stay inside the clip's own box or the black bars would flash blurred colour during the move and pop back after; (2) an edit that has its own picture under the clips (the backdrop task) must show that, not our blur; (3) a framed card cannot have its tilt folded into one LayerTurn3D (two turns about different pivots), so the transition's turn goes on a pass-through group that keeps its contents in space and the card keeps its own; (4) the doorway's doors are windows on the shot, so a tilted card with a shadow would be clipped at the door edges unless the windows reach past the card; (5) the kinds' curve (cubic 0.4,0,0.2,1) puts p=0.5 at t=0.35, so a fade defined in progress has to be checked in time. 'Opacity eases in over at least the first quarter of the move' is read as: from the frame the incoming shot first shows, its opacity takes at least a quarter of the move's time to reach full."
+    },
+    {
+      "t": "2026-11-27T01:10:17.452Z",
+      "note": "owns these walks: transitions-in-depth-at-a-cut-walk, insert-a-title-before-a-clip-walk, cube-between-two-recordings-with-no-spare-walk"
+    },
+    {
+      "t": "2026-11-27T01:14:40.383Z",
+      "note": "Built in Layer.depthTransitionDrawn (Sources/PhotonzCore/DepthTransitions.swift): DepthTransitionPart gained light (cosine falloff to 0.45 edge on) and lift (sin of progress, nought at both ends); every incoming shot fades in (smoothstep, set per kind so it spans at least a quarter of the time on the kinds' 0.4,0,0.2,1 curve); doorway re-timed on acos(1-2p)/pi so its reveal is even; revolve's pop at 0.3 is a fade to 0.85. Drawn planes are darkened by a colour grade's exposure and, if the clip has no shadow, cast a soft one scaled by lift. A clip with its own tilt is drawn inside a pass-through group (keeps3D) that takes the move's turn, so both turns compose; door windows reach past a card that hangs over its box. transitionPartner now carries turn3D, so a tilted clip arrives tilted through every kind, flat ones included. Backdrop: given the canvas and nothing of the edit's drawn under the clips (DocumentTime and EditPointTransitions decide; the borrowed clip does not count), two whole-frame shots get blurred, dimmed (-1 stop) copies in their own boxes; otherwise the canvas glows with them, swelling with sin(p*pi). Chose the shots themselves over a fixed colour because it needs no setting and matches what is in the edit; chose to glow behind framed cards over leaving black because the intake's black-void flip was a framed card."
+    },
+    {
+      "t": "2026-11-27T01:14:40.454Z",
+      "note": "Verified: DepthTransitionEaseTests (11) and DepthTransitionEaseRenderTests (5 + numbers) pass; the framing tests fail on the old behaviour for all six kinds (checked by putting the old code back), and the out-of-black hitch test fails on the old revolve. Full Scripts/test.sh green (one earlier run lost IconPreviewRenderTests' speed check to load; it passes alone and on the rerun). Walks green at Next defaults: transitions-in-depth-at-a-cut, cube-between-two-recordings-with-no-spare, a-transition-is-picked-at-the-cut, insert-a-title-before-a-clip, transition-direction-on-a-click, title-words-turn-in-depth. Pictures I opened: probe contact sheets of all six kinds before and after (framed and unframed), the three sheets in the audit, walk captures of cube half way, title into cube, swing and doorway: the incoming shot fades in, the space is the shots blurred, the framed card keeps its tilt. Perf note: 1080p mid-move median 3.8-4.5 ms before, 5.2-8.2 ms after (DepthTransitionRenderTests.perf now draws the backdrop)."
+    },
+    {
+      "t": "2026-11-27T01:14:40.534Z",
+      "note": "Left rough, not filed: (1) doorway doors look pale while fading: logged on transitions-that-feel-expensive-a-modern-set-wit; (2) behind a dark title page the dimmed page reads near-black (25/255): its own colour, under the bar, kept here; (3) the framed-card glow is an invented look, logged on screen-recordings-sit-on-a-designed-backdrop-no which owns the designed backdrop; (4) my hitch measure stands in until an-agent-can-watch-its-own-video-and-tell-whethe defines the official one (that task already says it will)."
+    },
+    {
+      "t": "2026-11-27T01:15:48.109Z",
+      "note": "Shipped in 95d085b3e (PhotonzCore DepthTransitions/ClipTransitions/EditPointTransitions/DocumentTime): incoming shots fade in over at least a quarter of every 3D move, planes darken as they turn and cast a soft shadow, the space a move opens is the shots blurred and dimmed (a swelling glow behind a framed card) unless the edit has its own picture under them, and a framed, tilted clip keeps its frame, corners, shadow and tilt through every transition. Reproduced first in the probe and export (Scripts/depth-transition-drill.mjs). Measured: middle-half black 0.26-0.93 to 0 on every kind, biggest one-frame gain at most 0.137, no hitches; framed-card tests fail on the old code. Full suite and six transition walks green at Next defaults. Audit queue/audits/2026-11-26-3d-transitions-ease.json, four reels on the Reels page."
     }
-  ]
+  ],
+  "started": "2026-11-26T23:29:47.937Z",
+  "walks": [
+    "transitions-in-depth-at-a-cut-walk",
+    "insert-a-title-before-a-clip-walk",
+    "cube-between-two-recordings-with-no-spare-walk"
+  ],
+  "completed": "2026-11-27T01:15:48.110Z"
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:14.407Z",
-  "updated": "2026-11-26T19:30:08.658Z",
+  "updated": "2026-11-27T01:10:17.312Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nToday's kinds: dissolve, dipToBlack, dipToWhite, push, wipe, blurThrough, flip, cube, swing, doorway, revolve, pushInDepth. set_transition takes a curve through run_command set_transition_curve (Linear to Ease out expo). The 3D kinds' bugs (covering at once, black void, framing lost) are 3d-transitions-ease-in-and-out, filed beside this: fix there, not twice. Motion blur on moving layers is part of motion-that-feels-like-apple-springs-speed-ramps; share the implementation.",
@@ -37,6 +37,10 @@
     {
       "t": "2026-11-26T19:30:08.657Z",
       "note": "User, 2026-11-26: 'i would love for the sizzle reels to be saved somewhere so i can see samples'. Every reel this task makes (samples, before and after) goes through node queue/bin/reel-add.mjs so it shows on the dashboard's Reels page (http://127.0.0.1:8791/#reels) and in ~/Movies/Photonz Reels; the finished task leaves at least one sample there."
+    },
+    {
+      "t": "2026-11-27T01:10:17.311Z",
+      "note": "From 3d-transitions-ease-in-and-out-of-the-picture-in (2026-11-26): the doorway's doors now fade while they open, and mid move they read as pale translucent panels over the incoming shot (queue/audits/2026-11-26-3d-transitions-ease-sheet-after-unframed.png, row 5). Worth a better doorway when the set is rebuilt. The 3D kinds now share a backdrop (both shots blurred and dimmed), light falloff and a contact shadow in Layer.depthTransitionDrawn; new kinds can reuse them."
     }
   ]
 }
