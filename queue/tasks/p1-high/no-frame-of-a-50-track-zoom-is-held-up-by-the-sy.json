@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-25T15:49:44.393Z",
-  "updated": "2026-11-27T06:37:22.117Z",
+  "updated": "2026-11-27T08:19:26.008Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split off an-edit-with-50-tracks-and-100-clips-scrolls-pla (its acceptance: what is not reached is filed, one cost each). Measure: a walk with setup {\"forget\":[\"all\"],\"wideEdit\":50}, wait 3, then {\"do\":\"speed\",\"measure\":\"timeline\",\"form\":\"long\"} six times and {\"do\":\"wait\",\"seconds\":90,\"onTheClock\":true}; profile it with Scripts/perf/pass-profile.sh <walk> then Scripts/perf/pass-profile.py /tmp/photonz-pass-sampler --waits. Caught 2026-11-25, two of two: 'PASS 139 zoom out held | 38.9' and 'PASS 576 near fit fresh | 31.6'. Main thread: CA::Transaction::run_commit_handlers -> _dispatch_sync_f_slow on RenderBox's queue (27 looks of the first on CoreAnimation's own mutex in CA::Context::commit_transaction). Holder in both, a dispatch worker: RB::SharedSurfaceGroup::prune_removed_locked -> test_markers -> RB::CommitMarker::Observer::test_displayed -> -[CAContext waitForCommitId:timeout:] -> CA::Context::ping / wait_for_synchronize -> mach_msg, 27 to 36 ms, that is the window server. No app code on it. The only lead: that cleanup runs when drawings that share a surface (RBLayer, SwiftUI Canvas and drawn text) go away or change size, so fewer drawings coming and going in a zoom (held paintings as plain CGImage layers, no Canvas) should mean fewer cleanups. Not tried.",
@@ -68,8 +68,24 @@
     {
       "t": "2026-11-27T06:37:22.116Z",
       "note": "Pass 1 landed: edge names are pictures, window-server asks while scrolling 953->20 and near Fit 3149->1277; still 2-3 holds of 28-32 ms near Fit in ten runs and a 15-22 ms first zoom frame from rest, so 'no frame over 16 ms' is not reached. Audit 2026-11-26-wide-zoom-window-server-asks.json."
+    },
+    {
+      "t": "2026-11-27T06:38:06.976Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T08:19:25.866Z",
+      "note": "Pass 2 (2026-11-27): the near-Fit churn was the titles' part timing marks (TimelineChildMarks, a Canvas per title re-made at each width, ~500 drawn layers taken and given back in 648 frames), not the picked clip's bar. Now plain RoundedRectangle fills (TimelinePartBar.swift). Asks per measure: near Fit 1,022-1,325 -> 25, zoom in ~140 -> 10, scroll ~17 -> 0. Ten unprofiled runs: no window-server hold over 16 ms (before 28.7 ms); one zoom out 18.6 ms (frame 61) and one scroll 16.4 ms, single and unexplained. Speed walk --wide 50: p95 zoom in 6.1, out 6.3, near Fit 6.2, along 5.2; edits 6.6-15.3 ms. Pictures at Fit match (68 antialiased edge pixels differ). Commit c5e0d0abd, audit queue/audits/2026-11-27-wide-zoom-title-marks.json."
+    },
+    {
+      "t": "2026-11-27T08:19:25.937Z",
+      "note": "NOT REACHED, left pending: the first frame of a zoom that starts at Fit is 16 to 21 ms (ten runs: zoom in 17.1-20.5 in 7, near Fit 16.3-19.4 in 7). A zoom that starts at 1.5x has a 7-11 ms first frame, so the cost is leaving Fit. Profiled 30 first frames (a temporary loop in the timeline measure, removed): pass 1 ~11 ms (graph 4.1, observation 3.5, bodies 1.4) + pass 3 ~4.3 (layout 2.3, accessibility 1.3); 57% of samples in AG UpdateStack (DynamicBody.updateValue, text, SecondaryLayerGeometryQuery, DynamicContainerInfo), 18% propagate_dirty/ObservationTracking.cancel; bodies TimelineTimeScroller, DrawnOnItsOwn, TimelinePaintedNames, TimelineWindowMoves, TimelineRulerRow. Ruled out: the 7 visible lanes rebuild their container layers on frame 1 because the slide goes from identity to a scale (stopped it with a never-identity scale: layers stopped rebuilding, frame cost unchanged, reverted); clip names as cached pictures (TimelinePictureName, no change in asks or time, reverted). Next lever: find which views read the window/zoom at rest at Fit and get invalidated by the first step."
+    },
+    {
+      "t": "2026-11-27T08:19:26.007Z",
+      "note": "Pass 2: title marks fixed, window-server holds gone in ten runs; first zoom frame from Fit still 16-21 ms"
     }
   ],
-  "started": "2026-11-27T03:59:55.019Z",
+  "started": "2026-11-27T06:38:06.975Z",
   "walks": []
 }
