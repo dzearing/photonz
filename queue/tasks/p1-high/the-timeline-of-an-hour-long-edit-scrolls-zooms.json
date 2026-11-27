@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-27T15:59:08.189Z",
+  "updated": "2026-11-27T16:04:16.859Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,13 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-27T15:59:08.188Z",
-      "note": "... 128 earlier entries elided",
-      "elided": 128
-    },
-    {
-      "t": "2026-11-22T15:19:24.331Z",
-      "note": "claimed by go loop"
+      "t": "2026-11-27T16:04:16.858Z",
+      "note": "... 129 earlier entries elided",
+      "elided": 129
     },
     {
       "t": "2026-11-22T16:27:31.012Z",
@@ -506,6 +502,10 @@
     {
       "t": "2026-11-27T15:59:08.187Z",
       "note": "parked after 3 runner failures in a row; last error: You've hit your weekly limit · resets 12am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-11-27T16:04:16.857Z",
+      "note": "unparked: runners are failing regardless of which task runs, so the earlier failures were not this task"
     }
   ],
   "started": "2026-11-27T15:59:05.736Z",
@@ -522,12 +522,12 @@
     "a-cut-slid-under-a-still-pointer-walk",
     "a-painted-gap-takes-a-right-click-walk"
   ],
-  "failures": 3,
+  "failures": 0,
   "lastError": {
     "at": "2026-11-27T15:59:08.186Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets 12am (America/Los_Angeles)"
   },
-  "parked": true,
-  "parkReason": "parked after 3 runner failures in a row; last error: You've hit your weekly limit · resets 12am (America/Los_Angeles)"
+  "parked": false,
+  "parkReason": ""
 }
