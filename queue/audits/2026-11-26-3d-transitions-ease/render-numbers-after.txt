@@ -1,0 +1,6 @@
+  flip: biggest jump 0.120, middle black 0.000, biggest step 0.098, hitches 0
+  cube: biggest jump 0.078, middle black 0.000, biggest step 0.089, hitches 0
+  swing: biggest jump 0.108, middle black 0.000, biggest step 0.081, hitches 0
+  doorway: biggest jump 0.137, middle black 0.000, biggest step 0.079, hitches 0
+  revolve: biggest jump 0.113, middle black 0.000, biggest step 0.085, hitches 0
+  pushInDepth: biggest jump 0.072, middle black 0.000, biggest step 0.096, hitches 0

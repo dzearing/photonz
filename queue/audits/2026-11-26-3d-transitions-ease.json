@@ -1,0 +1,35 @@
+{
+  "feature": "3D transitions ease in and out of the picture",
+  "epic": "video-sizzle",
+  "task": "3d-transitions-ease-in-and-out-of-the-picture-in",
+  "summary": "The six 3D transitions (push in depth, cube, swing, flip, doorway, revolve) now fade the incoming shot in instead of landing it at full strength, darken each plane as it turns away and give it a soft shadow, and fill the space the move opens with the two shots blurred and dimmed instead of black. A clip with its own frame, corners, shadow or tilt keeps them all the way through.",
+  "setup": "Photonz Dev at Next defaults, no switch changed, once the loop has refreshed it after this commit. Measured in the probe with Scripts/depth-transition-drill.mjs (a title page, then six reference recordings, each 3D kind at 0.8 s, the swing's clip framed and tilted as in the intake) and Scripts/depth-transition-measure.mjs on its export; the frame-by-frame bar is DepthTransitionEaseRenderTests. Numbers and per-kind contact sheets from the app are in queue/audits/2026-11-26-3d-transitions-ease/.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording, press B at about 3 seconds to cut it, click the cut and pick Cube from the transition tiles.", "shot": "2026-11-26-3d-transitions-ease-walk-cube-half-way-sc.png" },
+    { "do": "Press Space to play across the cut, then drag the playhead slowly through it." },
+    { "do": "In the panel's Type menu try Flip, Swing, Doorway, Revolve and Push in depth, playing each.", "shot": "2026-11-26-3d-transitions-ease-walk-swing-sc.png" },
+    { "do": "Insert a title page in front of the recording (Sequence > Insert Title Page) with Cube on the join, and play from the start.", "shot": "2026-11-26-3d-transitions-ease-walk-title-into-cube-sc.png" },
+    { "do": "Pick the clip after the cut, make it a smaller card with rounded corners, a shadow and some Tip and Swing in the inspector, then play across the cut again.", "shot": "2026-11-26-3d-transitions-ease-sheet-after-framed.png" },
+    { "do": "File > Export the video and watch the cuts in the exported file." },
+    { "do": "On the dashboard's Reels page, play \"3D transitions before beside after\": each kind at full speed, then quarter speed.", "shot": "2026-11-26-3d-transitions-ease-sheet-before.png" }
+  ],
+  "evaluate": [
+    "Does the incoming shot now settle into the picture rather than landing on top of it?",
+    "Does the space behind a turning shot read as the shots themselves, softly behind, or would you rather choose a colour or picture for it?",
+    "Is the darkening of a turned face about right, or too strong on a light recording?",
+    "Does a framed, tilted clip read as the same card all the way through a move, with no jump at either end?",
+    "When a framed card turns over plain black, is the glow of its own colours that rises behind it during the move welcome, or would you rather the black stayed?"
+  ],
+  "rough": [
+    "Measured bar, before and after on stand-in shots at 30 fps (DepthTransitionEaseRenderTests): biggest share of the frame the incoming shot gains in one frame flip 0.132 to 0.120, cube 0.075 to 0.078, swing 0.097 to 0.108, doorway 0.191 to 0.137, revolve 0.162 to 0.113, push in depth 0.106 to 0.072 (bar 0.15); worst black in the middle half flip 0.934, cube 0.685, push in depth 0.537, revolve 0.490, swing 0.292, doorway 0.262, all to 0.000 (bar 0.25); biggest frame to frame step down from 0.208 to 0.098 at most. The incoming shot now takes at least a quarter of the move to reach full opacity from the frame it first shows, in every kind.",
+    "In the export of the intake's edit the worst middle-half black went cube 0.685 to 0.129, swing 0.438 to 0.000, flip 0.955 to 0.000, doorway 0.278 to 0.127, revolve 0.537 to 0.129; the 0.127 left is the recordings' own side bars. Push in depth stays at 0.944 because its outgoing shot is a black title page: the black is the page, not a void (with pictures it is 0.000).",
+    "Hitches: no kind has one before or after on the measure used here (a frame that jumps against its neighbours or stalls between two moving ones). This is my own measure: the official one belongs to an-agent-can-watch-its-own-video-and-tell-whethe, which is not built yet. A first version that compared each step with the whole move's median flagged every eased move and was dropped.",
+    "Out of a dark title page (Keynote Section) the space behind the move is that page dimmed to half, which reads almost black (about 25 of 255) next to the turning face. Left as is: it is the page's own colour.",
+    "A framed card turning over nothing now has the frame glow with the two shots' colours while the move runs, rising from nothing and settling back. That look is mine; a designed backdrop under framed recordings belongs to screen-recordings-sit-on-a-designed-backdrop-no, and when an edit has its own picture under the clips the glow is not drawn.",
+    "The doorway's doors fade while they open, so mid-move they read as pale translucent panels over the incoming shot (row 5 of the after sheets). Logged on transitions-that-feel-expensive-a-modern-set-wit, which rebuilds the set.",
+    "Cost: a 1080p frame mid move rose from 3.8 to 4.5 ms to 5.2 to 8.2 ms median (the two blurred shots behind), inside the 16 ms budget.",
+    "References, from how they play rather than filmed side by side here: Final Cut's Doors and Swing darken a panel as it turns from the light (taken: light falloff); Keynote's Cube and Flip back off only a little and ease out (kept: our curves and back-off); Apple's product films and the iOS app switcher float cards over a blurred, dimmed copy of the content with soft contact shadows (taken: the backdrop and the shadow); Keynote's Magic Move fades what arrives rather than cutting it in (taken: the fade-in).",
+    "No mock covers how a transition looks mid move; the picker, tiles and panel are unchanged."
+  ]
+}

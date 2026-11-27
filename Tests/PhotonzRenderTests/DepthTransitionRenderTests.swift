@@ -27,8 +27,10 @@ struct DepthTransitionRenderTests {
     static func scene(_ kind: ClipTransitionKind, progress: Double, store: ImageStore,
                       shots: (Layer, Layer), motionBlur: Bool = false) throws -> PhotonzDocument {
         let ground = Self.box(CGRect(origin: .zero, size: canvas), hex: "#000000", name: "Ground")
+        // With the canvas, so the blurred shots behind the move are drawn
+        // and timed too (`3d-transitions-ease-in-and-out-of-the-picture-in`).
         var pictures = Layer.depthTransitionDrawn(kind, direction: .left, progress: progress,
-                                                  outgoing: shots.0, incoming: shots.1)
+                                                  outgoing: shots.0, incoming: shots.1, canvas: canvas)
         if motionBlur {
             // A smear the size a mid transition makes in one 180 degree
             // shutter: 32 places, the picture averaged over all of them.

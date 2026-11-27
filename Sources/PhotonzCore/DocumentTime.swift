@@ -302,9 +302,15 @@ extension PhotonzDocument {
         // overwritten by the fade.
         // Only a clip mid-transition, or something holding one, can change.
         if shown.layers.indices.contains(where: { shown.layers[$0].mayDrawATransition(atTimeMS: moment) }) {
-            shown.layers = shown.layers.flatMap {
-                $0.withTransitionDrawn(atTimeMS: moment, framesInHand: framesInHand, projection: projection)
+            var drawnSoFar: [Layer] = []
+            var pictureUnder = false
+            for layer in shown.layers {
+                drawnSoFar += layer.withTransitionDrawn(atTimeMS: moment, framesInHand: framesInHand,
+                                                        projection: projection,
+                                                        canvas: pictureUnder ? nil : canvasSize)
+                pictureUnder = pictureUnder || layer.drawsAPicture
             }
+            shown.layers = drawnSoFar
         }
         // ...and so does a cut between two clips (`EditPointTransitions.swift`).
         if hasEditPointTransitions {

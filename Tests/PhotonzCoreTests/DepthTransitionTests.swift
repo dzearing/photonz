@@ -220,10 +220,15 @@ struct DepthTransitionTests {
         let document = ClipTransitionTests.clipDocument(pieces)
         #expect(!document.isSeenInSpace)
         let shown = document.drawn(atTimeMS: 2800)
-        #expect(shown.layers.count == 2)
+        // Behind them, the two shots blurred and dimmed fill what the flip
+        // opens up (`DepthTransitionEaseTests`); the incoming face is not
+        // drawn at all until it has turned towards you and starts fading in.
+        let turned = shown.layers.filter { $0.turn3D != nil }
+        #expect(shown.layers.count - turned.count == 2)
+        #expect(!turned.isEmpty)
         #expect(shown.isSeenInSpace)
-        #expect(shown.layers.allSatisfy { $0.turn3D?.showsBackFace == false })
-        #expect(shown.layers.contains { abs($0.turn3D?.rotationY ?? 0) > 20 })
+        #expect(turned.allSatisfy { $0.turn3D?.showsBackFace == false })
+        #expect(turned.contains { abs($0.turn3D?.rotationY ?? 0) > 20 })
         // Away from it, one flat picture again.
         #expect(document.drawn(atTimeMS: 500).layers.count == 1)
         #expect(!document.drawn(atTimeMS: 500).isSeenInSpace)
@@ -235,10 +240,11 @@ struct DepthTransitionTests {
         _ = pieces.setTransition(ClipTransition(kind: .doorway, lengthMS: 1000), atCut: 1)
         let document = ClipTransitionTests.clipDocument(pieces)
         let shown = document.drawn(atTimeMS: 2900)
-        #expect(shown.layers.count == 3)
+        // Two doors and the incoming shot, over the two blurred shots behind.
+        #expect(shown.layers.count == 5)
         let doors = shown.layers.filter { $0.group?.isFrame == true }
         #expect(doors.count == 2)
-        #expect(Set(shown.layers.map(\.id)).count == 3)
+        #expect(Set(shown.layers.map(\.id)).count == 5)
         #expect(Set(doors.compactMap { $0.turn3D?.hinge }) == [CGPoint(x: 0, y: 0.5), CGPoint(x: 1, y: 0.5)])
         // The left door's outer edge stays put while it opens.
         let left = try #require(doors.first { $0.turn3D?.hinge == CGPoint(x: 0, y: 0.5) })

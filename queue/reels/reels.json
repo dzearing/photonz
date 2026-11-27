@@ -1,5 +1,41 @@
 [
   {
+    "file": "2026-11-27-3d-transitions-after-between-plain-full-frame-recordings.mp4",
+    "title": "3D transitions after, between plain full-frame recordings",
+    "added": "2026-11-27T01:09:18.985Z",
+    "task": "3d-transitions-ease-in-and-out-of-the-picture-in",
+    "madeOn": "0.25.0 Probe, main 9958b7bc plus this task",
+    "kind": "sample",
+    "notes": "No framed card: every kind between two whole-frame recordings. The black at the sides is the recordings' own bars."
+  },
+  {
+    "file": "2026-11-27-3d-transitions-before-beside-after.mp4",
+    "title": "3D transitions before beside after",
+    "added": "2026-11-27T01:09:18.939Z",
+    "task": "3d-transitions-ease-in-and-out-of-the-picture-in",
+    "madeOn": "0.25.0 Probe, main 9958b7bc plus this task",
+    "kind": "sample",
+    "notes": "Before on the left, after on the right, the six kinds at full then quarter speed."
+  },
+  {
+    "file": "2026-11-27-3d-transitions-after-same-edit-as-before.mp4",
+    "title": "3D transitions after, same edit as before",
+    "added": "2026-11-27T01:09:18.892Z",
+    "task": "3d-transitions-ease-in-and-out-of-the-picture-in",
+    "madeOn": "0.25.0 Probe, main 9958b7bc plus this task",
+    "kind": "after",
+    "notes": "Same edit and order. The incoming shot fades in, planes darken as they turn and cast a soft shadow, the shots blurred and dimmed fill the space, the framed card keeps its tilt."
+  },
+  {
+    "file": "2026-11-27-3d-transitions-before-push-in-depth-cube-swing-flip-doorway-.mp4",
+    "title": "3D transitions before: push in depth, cube, swing, flip, doorway, revolve",
+    "added": "2026-11-27T01:09:18.845Z",
+    "task": "3d-transitions-ease-in-and-out-of-the-picture-in",
+    "madeOn": "0.25.0 Probe, main 9958b7bc",
+    "kind": "before",
+    "notes": "Each kind at full speed then quarter speed, in that order. Look for the incoming shot landing at full strength and the black around the planes; the swing's framed card goes flat."
+  },
+  {
     "file": "2026-11-26-condensed-poster-after-still-warm-black.mp4",
     "title": "Condensed Poster after: still warm black",
     "added": "2026-11-26T23:20:01.768Z",

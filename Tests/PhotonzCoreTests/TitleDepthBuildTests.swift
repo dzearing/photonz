@@ -187,8 +187,12 @@ struct TitleDepthBuildTests {
                                            atCut: 1)
             #expect(put)
             let shown = ClipTransitionTests.clipDocument(pieces).drawn(atTimeMS: 3000)
-            #expect(shown.layers.count == 2)
-            #expect(shown.layers.allSatisfy { ($0.motionSmear != nil) == blurred })
+            // The two faces smear; the blurred shots behind them hold still,
+            // so they never do.
+            let faces = shown.layers.filter { $0.turn3D != nil }
+            #expect(faces.count == 2)
+            #expect(faces.allSatisfy { ($0.motionSmear != nil) == blurred })
+            #expect(shown.layers.filter { $0.turn3D == nil }.allSatisfy { $0.motionSmear == nil })
         }
     }
 }

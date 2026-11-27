@@ -695,8 +695,11 @@ extension Layer {
     /// the renderer draws a transition without having been told transitions
     /// exist — the same trick that let a clip be a picture layer in the first
     /// place (`MovieClip.swift`).
+    ///
+    /// `canvas` is given for a clip with nothing of the edit's drawn under
+    /// it, so a move in depth may fill what it opens up (`transitionDrawn`).
     func withTransitionDrawn(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil,
-                             projection: Projection3D? = nil) -> [Layer] {
+                             projection: Projection3D? = nil, canvas: CGSize? = nil) -> [Layer] {
         var drawn = self
         if isGroup {
             drawn.children = children.flatMap {
@@ -717,12 +720,13 @@ extension Layer {
                                                                               within: playedSourceFrames)),
                                                of: movie)
             let pictures = Layer.transitionDrawn(kind, progress: moment.progress,
-                                                 outgoing: drawn, incoming: over, direction: moment.direction)
+                                                 outgoing: drawn, incoming: over, direction: moment.direction,
+                                                 canvas: canvas)
             guard moment.motionBlur, let projection else { return pictures }
             return Layer.smearedTransition(pictures, atMS: ms, projection: projection) { other in
                 guard let then = clipMoment(atTimeMS: other), then.kind == kind else { return nil }
                 return Layer.transitionDrawn(kind, progress: then.progress, outgoing: drawn, incoming: over,
-                                             direction: moment.direction)
+                                             direction: moment.direction, canvas: canvas)
             }
         }
         guard let hex = moment.dipColorHex else { return [drawn] }
@@ -748,6 +752,11 @@ extension Layer {
                             frame: frame, crop: crop, transform: transform, style: style,
                             isVisible: true, isLocked: true, placement: placement)
         partner.movie = movie
+        // ...and its own tilt: a framed, tilted clip arriving through a
+        // transition arrives tilted, rather than flat and then popping onto
+        // its tilt the frame the transition ends (task
+        // `3d-transitions-ease-in-and-out-of-the-picture-in`).
+        partner.turn3D = turn3D
         return partner
     }
 
@@ -783,13 +792,18 @@ extension Layer {
     /// Everything comes back as ordinary layers, in the order they are drawn,
     /// to stand where the one on screen stood. A push and a wipe are drawn
     /// through windows, so neither shot ever spills past the frame it had.
+    ///
+    /// `canvas`, given, lets a move in depth fill the space it opens with the
+    /// shots themselves (`depthTransitionDrawn`): give it only where nothing
+    /// of the edit's own is drawn under them.
     static func transitionDrawn(_ kind: ClipTransitionKind, progress p: Double,
-                                outgoing: Layer, incoming: Layer, direction: TitleDirection = .left) -> [Layer] {
+                                outgoing: Layer, incoming: Layer, direction: TitleDirection = .left,
+                                canvas: CGSize? = nil) -> [Layer] {
         let p = min(max(p, 0), 1)
         switch kind {
         case .flip, .cube, .swing, .doorway, .revolve, .pushInDepth:
             return depthTransitionDrawn(kind, direction: direction, progress: p,
-                                        outgoing: outgoing, incoming: incoming)
+                                        outgoing: outgoing, incoming: incoming, canvas: canvas)
         case .dissolve, .dipToBlack, .dipToWhite:
             var into = incoming
             into.style.opacity = incoming.style.opacity * p

@@ -365,9 +365,16 @@ extension PhotonzDocument {
             let borrowed = other.transitionPartner(standingFor: moment.onScreen, showing: content, of: recording)
             let pair = moment.onScreenIsOutgoing ? (onScreen, borrowed) : (borrowed, onScreen)
             let transition = moment.transition
+            // The space a move in depth opens up is filled with the two shots,
+            // blurred and dimmed, unless the edit draws a picture of its own
+            // under them (`depthTransitionDrawn`).
+            // The borrowed clip is switched on to be drawn from, wherever it
+            // sits, so it is not a picture of the edit's own.
+            let opens = shown.layers[..<index].contains { $0.id != moment.borrowed && $0.drawsAPicture }
+                ? nil : canvasSize
             func pictures(at progress: Double) -> [Layer] {
                 Layer.transitionDrawn(transition.kind, progress: progress, outgoing: pair.0, incoming: pair.1,
-                                      direction: transition.direction)
+                                      direction: transition.direction, canvas: opens)
             }
             var drawn = pictures(at: moment.progress)
             if transition.motionBlur {
