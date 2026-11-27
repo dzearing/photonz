@@ -19524,3 +19524,8 @@
 {"t":"2026-11-27T14:49:48.477Z","ev":"task_note","id":"transitions-that-feel-expensive-a-modern-set-wit"}
 {"t":"2026-11-27T14:49:56.333Z","ev":"triage","summary":"0 merged, 0 dropped, 0 moved, 0 reset, 0 leftovers; 2 findings folded (speed ramp ripple into motion task, A/B tile copy into transitions task); hour-long timeline told to re-measure after the thumbnail fix; 67 resequenced to clean steps of 10; 77 open (p1 21, p2 49, p3 7)"}
 {"t":"2026-11-27T14:50:37.209Z","ev":"digest","file":"2026-11-27.md"}
+{"t":"2026-11-27T14:50:51.891Z","ev":"task_started","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","title":"The timeline of an hour-long edit scrolls, zooms and redraws at 120 Hz with hundreds of clips","priority":"p1-high"}
+{"t":"2026-11-27T15:47:47.677Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-27T15:47:47.758Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-27T15:47:47.837Z","ev":"task_note","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms"}
+{"t":"2026-11-27T15:47:47.916Z","ev":"task_pending","id":"the-timeline-of-an-hour-long-edit-scrolls-zooms","from":"in_progress","note":"Pass 27: the 30 ms frame is gone (ten runs on main, worst 13.8-21.7 ms). Not reached: none over 16 ms. The first frame after rest costs a median of about 14-16 ms (zoom from Fit and scroll from rest alike) and goes over 16 in about half the runs. Near Fit p95 sits at 8.0-8.65 against 8.3. One fix was tried, measured slower and reverted. Next lever is in the log."}

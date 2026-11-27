@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-27T14:49:22.403Z",
+  "updated": "2026-11-27T15:47:47.915Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,29 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-27T14:49:22.402Z",
-      "note": "... 117 earlier entries elided",
-      "elided": 117
-    },
-    {
-      "t": "2026-11-21T20:19:16.173Z",
-      "note": "Pass 20 landed 28ec9f2bf: a quick pinch holds each lane's picture to 17 per cent for 50 ms; near Fit late frames 239-293 -> 166-194 of 648 (same build, switch), zoom out 41-68 -> 17-29 of 240. Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open (next: lay the next painting ahead in held frames)."
-    },
-    {
-      "t": "2026-11-22T02:30:41.463Z",
-      "note": "rotating check 2026-11-22T02:30:41Z, 31 walks run from 157 onward in the rotation: speed-walk (its script changed since the last check) failing."
-    },
-    {
-      "t": "2026-11-22T13:29:11.094Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-22T14:26:54.063Z",
-      "note": "Pass 21 (2026-11-22). Baseline at 7d86bc5a2 (60 min edit, timeline measure, load ~3-5): near Fit 9.62 ms mean, 130 late of 648 (held 513 at 8.47, fresh 135 at 14.00), zoom in 50 late of 240 (p95 20.6), out 16, scroll 15 of 360. Every-pass profile of a fresh near-Fit frame: 8.6 ms update pass (picture getter 2.6, lane 1.8, graph 1.7) + 2.0 layout/draw. The rotating check's speed-walk failure (scrub medium frame lag 81 vs 63, 6 min edit) is not the timeline; speed-walk ok on rerun today on the final build (46 numbers within baseline)."
-    },
-    {
-      "t": "2026-11-22T14:26:54.133Z",
-      "note": "Pass 21 change: while a lane has a frame and its canvas changes scale (a zoom letting go of a held painting), TimelinePaintedPicture shows the last picture placed on the new canvas (TimelinePaint.Canvas.place(ofPictureLaidOn:laneWidth:), tested) and lays the new one from AfterTheFrame (a one-shot CFRunLoop afterWaiting observer: between this frame and the next). At rest always laid at once; every picture laid again when the frame goes nil. A/B one build, throwaway switch, 3 runs each (load ~3.5): near Fit late 122/129/124 -> 113/94/89, mean 9.6 -> 9.2, p95 16.7 -> 15.5; zoom out late 21/15/13 -> 14/12/10; zoom in and scroll unchanged. Backed out: DispatchQueue.main.async for the late lay (ran before the frame's commit: fresh 13.7 -> 14.8, scroll late 9-14 -> 82-89); late lay on scroll steps too (scroll late 9-13 -> 16-27); ImageRenderer.render into our own CGContext (4x slower than cgImage in a microbenchmark). 12 timeline walks green (task's + an-editing-session, timeline-zooms-out-past-the-end); speed-walk ok; Scripts/test.sh exit 0. Looked at the mid-pinch and at-rest captures of the 60 min edit: lanes filled, names, cuts, fade diamonds in place. Rule in docs/design/video.md 8f. Audit queue/audits/2026-11-22-timeline-hour-long-pass21-late-lay.json. Landed 2b678edf0."
+      "t": "2026-11-27T15:47:47.914Z",
+      "note": "... 122 earlier entries elided",
+      "elided": 122
     },
     {
       "t": "2026-11-22T14:26:54.201Z",
@@ -506,9 +486,29 @@
     {
       "t": "2026-11-27T14:49:22.401Z",
       "note": "seq 30 -> 20"
+    },
+    {
+      "t": "2026-11-27T14:50:51.886Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T15:47:47.674Z",
+      "note": "Pass 27 (2026-11-27), measured on main at 25195120f, ten runs of the timeline measure on the 60 min edit (about 15,000 frames), no code changed: the 30 ms main thread frame is gone. Worst frame per run 13.8-21.7 ms (pass 26: 30-32 ms in 2 of 3 runs). Near Fit the window server was asked 0 times a measure (census), so pass 26's 32 ms near Fit frame was the window server hold c5e0d0abd and 01c80bf53 removed. The scroll's 30 ms frame matches the thumbnail colour wait e4ef471bc removed. That is inferred: no before/after A/B was run. Main thread p95 a frame: zoom in 6.4-7.0, out 6.7-7.5, near Fit 8.0-8.65 (8 of 10 runs at or just over 8.3: 26-41 of 648 frames over, against the 32 that 5 per cent allows), scroll 7.6-8.6."
+    },
+    {
+      "t": "2026-11-27T15:47:47.755Z",
+      "note": "Pass 27, still NOT REACHED (none over 16 ms): 5 frames in the ten runs were 16.4-21.7 ms, and every one was among the first three frames after the timeline was at rest (zoom in from Fit frame 1: 19.3, 16.9; scroll frames 2-3: 17.0, 21.7, 16.4). Measured 30 times each with a temporary probe-only loop (taken out again): the first frame leaving rest has a median main thread cost of 13.7-16.3 ms (worst 17.6-21.6) for a zoom from Fit, and 13.8-17.1 ms (worst 18.8-23.9) for a scroll from rest. Frames 2-4 are 4.5-8 ms. Sampled (pass-profile, 30 first frames): 55 per cent AttributeGraph update, 33 per cent the Core Animation commit (19 per cent NSHostingView layout); 60 layers added and 62 removed on zoom frame 1 (the five lanes' containers and the edge names); app view bodies are a small share (TimelinePaintedNames, ZoomBarsView, TimelineRulerRow, IslandView.readAndWatch, TimelineLaneSlide, NameShot). So the cost runs through app code (the timeline's views leaving rest), not only the system's cleanup, and by the triage rule the task stays open."
+    },
+    {
+      "t": "2026-11-27T15:47:47.834Z",
+      "note": "Pass 27, tried and dropped: on the first frames of a scroll from rest, five or six lane pictures were laid again for the same painting (same ask) on the same canvas, because only the lane's frame changed. Pass 23 made a zoom keep its picture in that case; the same rule for a scroll (laneFrame not at rest) took those lays to 0. A/B on one build with a throwaway file switch, 3 alternating pairs: scroll frame 1 median 13.8-15.1 ms -> 16.3-17.1, so slower. Reverted. Next lever, untried: why frame 1 rebuilds the lane containers (60 layers in and out), seen through the census's first-three-frames line, or send the switch from rest to moving ahead of the first step. The 50 track task's pass 2 stopped the rebuild with a never-identity slide and the frame cost did not change, so read that first."
+    },
+    {
+      "t": "2026-11-27T15:47:47.913Z",
+      "note": "Pass 27: the 30 ms frame is gone (ten runs on main, worst 13.8-21.7 ms). Not reached: none over 16 ms. The first frame after rest costs a median of about 14-16 ms (zoom from Fit and scroll from rest alike) and goes over 16 in about half the runs. Near Fit p95 sits at 8.0-8.65 against 8.3. One fix was tried, measured slower and reverted. Next lever is in the log."
     }
   ],
-  "started": "2026-11-26T02:29:50.657Z",
+  "started": "2026-11-27T14:50:51.885Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
