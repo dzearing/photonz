@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-27T15:57:02.489Z",
+  "updated": "2026-11-27T15:59:08.189Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-27T15:57:02.488Z",
-      "note": "... 126 earlier entries elided",
-      "elided": 126
-    },
-    {
-      "t": "2026-11-22T15:11:34.698Z",
-      "note": "Still open, bars not reached: zoom in ~20 of 240 late (8% vs 5%), near Fit ~75 of 648 (the frames that let go of a held painting, ~13 ms), edits (a-long-edit-with-transitions-plays-scrubs-and-ed). Next: near Fit's fresh frames are SwiftUI rebuilding lanes + layout; with zoom in's loop cost gone, re-profile zoom in's remaining late frames at 4x-8x. Left rough, not filed: the Motion section's play button is dimmed in a video if a person turns that section on (correct: a video plays with Space)."
-    },
-    {
-      "t": "2026-11-22T15:11:34.780Z",
-      "note": "Pass 22 landed 85922f62c: a video no longer runs a picture's motion loop (it redrew the whole edit 30 times a second after opening); zoom in late frames 44-48 -> 19-22 of 240, mean 10.1 -> 9.0 ms (same build, switch). Bars of 8.3 ms zoom/scroll and 16 ms edits not reached; stays open."
+      "t": "2026-11-27T15:59:08.188Z",
+      "note": "... 128 earlier entries elided",
+      "elided": 128
     },
     {
       "t": "2026-11-22T15:19:24.331Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-27T15:57:02.487Z",
       "note": "runner failed (exit 1, attempt 2): You've hit your weekly limit · resets 12am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-11-27T15:59:05.737Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T15:59:08.187Z",
+      "note": "parked after 3 runner failures in a row; last error: You've hit your weekly limit · resets 12am (America/Los_Angeles)"
     }
   ],
-  "started": "2026-11-27T15:56:58.083Z",
+  "started": "2026-11-27T15:59:05.736Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
@@ -522,10 +522,12 @@
     "a-cut-slid-under-a-still-pointer-walk",
     "a-painted-gap-takes-a-right-click-walk"
   ],
-  "failures": 2,
+  "failures": 3,
   "lastError": {
-    "at": "2026-11-27T15:57:02.486Z",
+    "at": "2026-11-27T15:59:08.186Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets 12am (America/Los_Angeles)"
-  }
+  },
+  "parked": true,
+  "parkReason": "parked after 3 runner failures in a row; last error: You've hit your weekly limit · resets 12am (America/Los_Angeles)"
 }
