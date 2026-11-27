@@ -23623,3 +23623,10 @@ announced 0.25.0.
 - Clip thumbnails are kept as 8 bit BGRA in sRGB when they land (`ClipFilmstripFrames.finish`, `PictureReadyToDraw` in PhotonzRender). Before, RenderBox converted every thumbnail again for every lane picture, and a scroll's commit waited 9 to 10 ms for it.
 - Ten timeline measures on the 50 track edit: worst main thread frame 17.1 ms before, 15.8 after (17,040 frames). Audit `queue/audits/2026-11-27-wide-zoom-thumbnails.json`.
 - Next: the first zoom frame from Fit (SwiftUI graph work) is the closest to the bar; the hour-long edit's 30 ms frame may be the same thumbnail wait, unchecked.
+
+## 2026-11-27 — Hour-long timeline, pass 27 (the-timeline-of-an-hour-long-edit-scrolls-zooms)
+
+- Measured on main, ten timeline measures on the 60 minute edit: the rare 30 ms main thread frame is gone (worst 13.8 to 21.7 ms a run). Near Fit the window server was asked nothing, which fits today's title marks and edge names fixes. That the scroll's slow frame was the thumbnail colour wait is inferred, not A/B'd.
+- Still open: none over 16 ms. The first frame after rest costs a median of about 14 to 16 ms, for a zoom from Fit and a scroll from rest alike, and passes 16 in about half the runs. It is mostly SwiftUI graph and commit work as the timeline's views leave rest. Near Fit p95 is 8.0 to 8.65 against 8.3.
+- Tried and reverted: a scroll keeping its lane pictures when only the lane's frame changed (6 lays to 0) measured slower in three A/B pairs.
+- No code changed. Next: why frame 1 rebuilds the lane containers.
