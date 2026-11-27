@@ -127,4 +127,69 @@ struct ScrubPictureAsksTests {
         asks.frameLanded()
         do { let said = asks.refreshed(atRefresh: 5); #expect(said) }
     }
+
+    // The display link calls back anywhere from 1 to 9 ms after the refresh
+    // it is for. Counted by its calls, a move made in that gap read as a
+    // second move in the refresh before and waited for the late call, so its
+    // picture missed the refresh it could have made
+    // (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 8).
+
+    @Test("A move after a refresh whose call has not come yet is in the new refresh")
+    func aRefreshCountsBeforeItsCall() {
+        let interval = 1.0 / 120
+        // The last call was for a refresh at 10.000 s, numbered 7.
+        #expect(ScrubPictureAsks.refresh(at: 10.004, numbered: 7, lastRefreshAt: 10.0, interval: interval) == 7)
+        // 1.5 ms after the next refresh, its call not come yet: refresh 8.
+        #expect(ScrubPictureAsks.refresh(at: 10.0 + interval + 0.0015, numbered: 7,
+                                         lastRefreshAt: 10.0, interval: interval) == 8)
+        // ...and once its call comes, the call says 8 as well.
+        let called = ScrubPictureAsks.refreshNumber(after: 7, at: 10.0 + interval, previousAt: 10.0, interval: interval)
+        #expect(called == 8)
+        #expect(ScrubPictureAsks.refresh(at: 10.0 + interval + 0.005, numbered: called,
+                                         lastRefreshAt: 10.0 + interval, interval: interval) == 8)
+        // Just short of the refresh is still the refresh before.
+        #expect(ScrubPictureAsks.refresh(at: 10.0 + interval - 0.0005, numbered: 7,
+                                         lastRefreshAt: 10.0, interval: interval) == 7)
+        // Before the display has refreshed once there is only the number.
+        #expect(ScrubPictureAsks.refresh(at: 3, numbered: 0, lastRefreshAt: 0, interval: interval) == 0)
+    }
+
+    @Test("A link paused between drags catches up with the clock when it calls again")
+    func aPausedLinkCatchesUp() {
+        let interval = 1.0 / 120
+        var asks = ScrubPictureAsks()
+        // The link last called for refresh 40, at 10 s, then paused. A drag
+        // starts two seconds later: its first move is asked for at once.
+        let first = ScrubPictureAsks.refresh(at: 12.0001, numbered: 40, lastRefreshAt: 10, interval: interval)
+        #expect(first == 40 + 240)
+        do { let said = asks.handMoved(atRefresh: first); #expect(said) }
+        _ = asks.asked()
+        // The link wakes and calls for the next refresh, at 12 s + one interval.
+        let wokeAt = 12 + interval
+        let woke = ScrubPictureAsks.refreshNumber(after: 40, at: wokeAt, previousAt: 10, interval: interval)
+        #expect(woke == first + 1)
+        do { let said = asks.refreshed(atRefresh: woke); #expect(!said) }
+        // The next move, in that refresh, is the first of it: asked for at once.
+        let second = ScrubPictureAsks.refresh(at: wokeAt + 0.0015, numbered: woke, lastRefreshAt: wokeAt, interval: interval)
+        do { let said = asks.handMoved(atRefresh: second); #expect(said) }
+    }
+
+    @Test("The move after a late call's refresh is asked for at once, and the call then asks for nothing")
+    func aMoveBeforeALateCallIsAskedAtOnce() {
+        let interval = 1.0 / 120
+        var asks = ScrubPictureAsks()
+        // A move at refresh 7, asked for at once.
+        do { let said = asks.handMoved(atRefresh: ScrubPictureAsks.refresh(at: 10.0015, numbered: 7, lastRefreshAt: 10, interval: interval)); #expect(said) }
+        _ = asks.asked()
+        // The next move, 1.5 ms after the next refresh, its call 5 ms late.
+        let next = ScrubPictureAsks.refresh(at: 10 + interval + 0.0015, numbered: 7, lastRefreshAt: 10, interval: interval)
+        do { let said = asks.handMoved(atRefresh: next); #expect(said) }
+        _ = asks.asked()
+        // The late call for that refresh has nothing left to ask for.
+        let called = ScrubPictureAsks.refreshNumber(after: 7, at: 10 + interval, previousAt: 10, interval: interval)
+        do { let said = asks.refreshed(atRefresh: called); #expect(!said) }
+        // A second move in the same refresh waits for the next one.
+        do { let said = asks.handMoved(atRefresh: ScrubPictureAsks.refresh(at: 10 + interval + 0.006, numbered: called, lastRefreshAt: 10 + interval, interval: interval)); #expect(!said) }
+        do { let said = asks.refreshed(atRefresh: called + 1); #expect(said) }
+    }
 }

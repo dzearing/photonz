@@ -51,6 +51,7 @@ public final class RenderScheduler: Sendable {
         let colorSpace: CGColorSpace?
         let stamp: Int
         let tag: Int
+        let inPassing: Bool
         let asked: ContinuousClock.Instant
     }
 
@@ -91,10 +92,13 @@ public final class RenderScheduler: Sendable {
     /// `contentScale` is how much `document` was magnified by on its way here
     /// (`DocumentRenderer.renderInteractive`), and `colorSpace` the colours
     /// the frame is written in: the window's own, so it goes up as it is.
+    /// `inPassing` is a hand moving the playhead
+    /// (`DocumentRenderer.renderInteractiveFrame`).
     public func submit(_ document: PhotonzDocument, store: ImageStore? = nil, stamp: Int = 0,
-                       contentScale: CGFloat = 1, colorSpace: CGColorSpace? = nil, tag: Int = 0) {
+                       contentScale: CGFloat = 1, colorSpace: CGColorSpace? = nil, tag: Int = 0,
+                       inPassing: Bool = false) {
         let job = Job(document: document, store: store, contentScale: contentScale,
-                      colorSpace: colorSpace, stamp: stamp, tag: tag, asked: .now)
+                      colorSpace: colorSpace, stamp: stamp, tag: tag, inPassing: inPassing, asked: .now)
         queue.withLock { queue in
             queue.pending = job
             guard queue.drainTask == nil else { return }
@@ -147,7 +151,8 @@ public final class RenderScheduler: Sendable {
             let began = ContinuousClock.now
             let drawn = renderer.renderInteractiveFrame(job.document, store: job.store ?? store,
                                                         contentScale: job.contentScale,
-                                                        colorSpace: job.colorSpace)
+                                                        colorSpace: job.colorSpace,
+                                                        inPassing: job.inPassing)
             let done = ContinuousClock.now
             await onFrame(Frame(image: drawn?.image, drawn: drawn, document: job.document,
                                 stamp: job.stamp, tag: job.tag,

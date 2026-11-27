@@ -7100,10 +7100,20 @@ final class EditorState {
                 .filter { pictures.image(for: $0) != nil }.map(\.id))
         }
         #endif
-        Task {
-            await scheduler.submit(document, store: pictures, stamp: moment, contentScale: contentScale,
-                                   colorSpace: colors, tag: askedTag)
-        }
+        // Handed in now, not from a task: a task started here waits for the
+        // main actor's next turn before it runs, which is after the rest of
+        // the hand's move and of whatever else the turn holds, and a dragged
+        // playhead's picture started drawing 1 ms after the move in the
+        // middle and 4 to 5 ms at the slow end, with a draw of 6 to 7 ms
+        // then missing the refresh it could have made
+        // (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 8).
+        // A hand moving the playhead is shown every recording frame the
+        // plain way, the sharp one still in hand from where it rested
+        // included; holding still asks again without, and gets it sharp
+        // (`DocumentRenderer.renderInteractiveFrame`).
+        let inPassing = playheadInHand && !playheadSettled && !isDocumentPlaying
+        scheduler.submit(document, store: pictures, stamp: moment, contentScale: contentScale,
+                         colorSpace: colors, tag: askedTag, inPassing: inPassing)
     }
 
     struct WordsDrawnAheadKey: Equatable {

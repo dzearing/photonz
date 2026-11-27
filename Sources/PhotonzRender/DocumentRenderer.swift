@@ -643,6 +643,8 @@ public final class DocumentRenderer: @unchecked Sendable {
     private var lastPictures: [UUID: ObjectIdentifier?] = [:]
     /// The magnification `lastFrame` was composited at.
     private var lastContentScale: CGFloat = 1
+    /// Whether `lastFrame` was drawn for a moving hand.
+    private var lastInPassing = false
     /// Where `lastFrame` was mixed. A frame mixed the other way cannot be
     /// patched, or a canvas open when the switch flips shows both at once.
     private var lastCompositing: CompositingSpace?
@@ -746,9 +748,10 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// here instead, on the GPU, as part of the draw.
     public func renderInteractive(_ document: PhotonzDocument, store: ImageStore,
                                   contentScale: CGFloat = 1,
-                                  colorSpace: CGColorSpace? = nil) -> CGImage? {
+                                  colorSpace: CGColorSpace? = nil,
+                                  inPassing: Bool = false) -> CGImage? {
         renderInteractiveFrame(document, store: store, contentScale: contentScale,
-                               colorSpace: colorSpace)?.image
+                               colorSpace: colorSpace, inPassing: inPassing)?.image
     }
 
     /// One picture for the canvas, and the GPU surface it is on when it was
@@ -774,9 +777,20 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// change straight after (a title nudged on a paused video) draws the
     /// whole picture into the bitmap once, and is patched from then on, as a
     /// still picture always is.
+    ///
+    /// `inPassing` is a hand moving the playhead: every frame of a recording
+    /// is then enlarged to its box the plain way, as a frame read in passing
+    /// is (`MovieSweep.isReadInPassing`), the sharp one still in hand from
+    /// where it rested included. That one, enlarged with the better
+    /// resampler, took 7 to 9 ms a picture, so the first three to five
+    /// pictures of every hunt on the 6 minute reference edit missed their
+    /// refresh (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 8).
+    /// The same moment asked for again without it, once the hand holds
+    /// still, is drawn again rather than handed back.
     public func renderInteractiveFrame(_ document: PhotonzDocument, store: ImageStore,
                                        contentScale: CGFloat = 1,
-                                       colorSpace: CGColorSpace? = nil) -> InteractiveFrame? {
+                                       colorSpace: CGColorSpace? = nil,
+                                       inPassing: Bool = false) -> InteractiveFrame? {
         let width = Int(document.canvasSize.width.rounded())
         let height = Int(document.canvasSize.height.rounded())
         guard width >= 1, height >= 1 else { return nil }
@@ -791,14 +805,15 @@ public final class DocumentRenderer: @unchecked Sendable {
         let colors = colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? Self.srgb
         defer {
             lastPictures = pictures; lastContentScale = contentScale; lastCompositing = space
-            lastColorSpace = colors
+            lastColorSpace = colors; lastInPassing = inPassing
         }
         // A picture that arrived, went, or was read again at another size
         // since the last frame changes pixels the document says nothing
         // about, so the whole canvas is drawn again. So does a new scale.
         if let lastDocument, let lastFrame,
            frameSize == (width, height), pictures == lastPictures,
-           contentScale == lastContentScale, space == lastCompositing, colors == lastColorSpace {
+           contentScale == lastContentScale, space == lastCompositing, colors == lastColorSpace,
+           inPassing == lastInPassing {
             switch RenderDiff.dirtyRegion(from: lastDocument, to: document) {
             case .none:
                 return InteractiveFrame(image: lastFrame, surface: lastSurface)
@@ -809,19 +824,20 @@ public final class DocumentRenderer: @unchecked Sendable {
                 // whole picture goes into it once, to patch from.
                 return renderLocked(document, store: store, region: bufferHoldsLastFrame ? dirty : nil,
                                     width: width, height: height, contentScale: contentScale,
-                                    colorSpace: colors).map { InteractiveFrame(image: $0, surface: nil) }
+                                    colorSpace: colors, inPassing: inPassing)
+                    .map { InteractiveFrame(image: $0, surface: nil) }
             default:
                 break
             }
         }
         if drawsMovingPicturesOnASurface, document.hasTime,
            let frame = renderOnASurface(document, store: store, width: width, height: height,
-                                        contentScale: contentScale, colorSpace: colors) {
+                                        contentScale: contentScale, colorSpace: colors, inPassing: inPassing) {
             return frame
         }
         return renderLocked(document, store: store, region: nil,
                             width: width, height: height, contentScale: contentScale,
-                            colorSpace: colors).map { InteractiveFrame(image: $0, surface: nil) }
+                            colorSpace: colors, inPassing: inPassing).map { InteractiveFrame(image: $0, surface: nil) }
     }
 
     /// Sets out and keeps the words `document` shows, and draws nothing:
@@ -917,9 +933,10 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// Must hold `interactiveLock`.
     private func renderOnASurface(_ document: PhotonzDocument, store: ImageStore,
                                   width: Int, height: Int, contentScale: CGFloat,
-                                  colorSpace: CGColorSpace) -> InteractiveFrame? {
+                                  colorSpace: CGColorSpace, inPassing: Bool = false) -> InteractiveFrame? {
         guard let buffer = nextSurface(width: width, height: height) else { return nil }
-        guard let output = compositeImage(document, store: store, contentScale: contentScale) else { return nil }
+        guard let output = compositeImage(document, store: store, contentScale: contentScale,
+                                          inPassing: inPassing) else { return nil }
         // The picture made of the surface, and the canvas showing it, both
         // read the colours it is in from here.
         CVBufferSetAttachment(buffer, kCVImageBufferCGColorSpaceKey, colorSpace, .shouldPropagate)
@@ -987,8 +1004,10 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// buffer and snapshots it as a CGImage. Must hold `interactiveLock`.
     private func renderLocked(_ document: PhotonzDocument, store: ImageStore,
                               region: CGRect?, width: Int, height: Int,
-                              contentScale: CGFloat, colorSpace: CGColorSpace) -> CGImage? {
-        guard let output = compositeImage(document, store: store, contentScale: contentScale) else { return nil }
+                              contentScale: CGFloat, colorSpace: CGColorSpace,
+                              inPassing: Bool = false) -> CGImage? {
+        guard let output = compositeImage(document, store: store, contentScale: contentScale,
+                                          inPassing: inPassing) else { return nil }
         let rowBytes = width * 4
         if frameBufferCapacity < rowBytes * height {
             frameBuffer?.deallocate()
@@ -1180,7 +1199,8 @@ public final class DocumentRenderer: @unchecked Sendable {
 
     private func compositeImage(_ document: PhotonzDocument, store: ImageStore,
                                 contentScale: CGFloat = 1,
-                                magnifyNearest: Bool = false) -> CIImage? {
+                                magnifyNearest: Bool = false,
+                                inPassing: Bool = false) -> CIImage? {
         let canvas = document.canvasSize
         guard canvas.width >= 1, canvas.height >= 1 else { return nil }
         let extent = CGRect(origin: .zero, size: canvas)
@@ -1196,7 +1216,7 @@ public final class DocumentRenderer: @unchecked Sendable {
                                      onDesignedSurface: false,
                                      contentScale: contentScale, magnifyNearest: magnifyNearest,
                                      projection: document.isSeenInSpace ? document.projection : nil,
-                                     playing: document.isDrawnOverTime ? Playing(camera: document.camera) : nil)
+                                     playing: document.isDrawnOverTime ? playing(document, inPassing: inPassing) : nil)
 
         // The canvas defines the document's bounds: layers hanging outside it
         // (e.g. after a canvas-size change) must not grow the rendered frame.
@@ -1211,6 +1231,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         /// Something a key shows at other sizes, or something inside it, or
         /// anything at all under a camera that moves.
         var grows = false
+        /// A hand is moving the playhead: every frame of a recording is a
+        /// scrub preview, enlarged the plain way (`renderInteractiveFrame`).
+        var inPassing = false
 
         init(camera: SceneCamera?) {
             grows = camera.map { !($0.motions ?? []).isEmpty || $0.depth != 0 } ?? false
@@ -1228,6 +1251,12 @@ public final class DocumentRenderer: @unchecked Sendable {
             }
             return inside
         }
+    }
+
+    private func playing(_ document: PhotonzDocument, inPassing: Bool) -> Playing {
+        var playing = Playing(camera: document.camera)
+        playing.inPassing = inPassing
+        return playing
     }
 
     /// Draws a stack of layers (bottom-up) onto `base`.
@@ -1809,7 +1838,11 @@ public final class DocumentRenderer: @unchecked Sendable {
             // than the better resampler's three (`MovieSweep.isReadInPassing`).
             // Its stand-in goes the same way, so its shadow still falls from
             // exactly the box the frame covers.
-            let preview = layer.movie.map { MovieSweep.isReadInPassing(frameWidth: cg.width, of: $0) } ?? false
+            // So is every frame of a recording while a hand moves the
+            // playhead (`renderInteractiveFrame`'s `inPassing`).
+            let preview = layer.movie.map {
+                playing?.inPassing == true || MovieSweep.isReadInPassing(frameWidth: cg.width, of: $0)
+            } ?? false
             enlargesPhoto = !magnifyNearest && !preview
         case .text(let text):
             // Baked at the resolution it will be SHOWN at, so the scale-to-frame

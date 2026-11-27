@@ -61,6 +61,36 @@ public struct ScrubPictureAsks: Sendable, Equatable {
         return false
     }
 
+    /// The refresh it is at `moment`, numbered by the display's own clock:
+    /// `numbered` is the number of the refresh at `lastRefreshAt` (the
+    /// display link's own timestamp), `interval` apart, and every refresh
+    /// since counts, whether or not the link has called back for it yet. The
+    /// link calls back 1 to 9 ms after the refresh it is for, and counted by
+    /// its calls a move made in that gap read as a second move in the refresh
+    /// before, so its picture waited for the late call and missed the refresh
+    /// it could have made (`scrubbing-a-long-edit-never-trails-the-pointer-b`,
+    /// pass 8). The call for that refresh then says the same number
+    /// (`refreshNumber(after:at:previousAt:interval:)`), so it asks for
+    /// nothing more unless the hand moved again.
+    public static func refresh(at moment: Double, numbered: Int, lastRefreshAt: Double,
+                               interval: Double) -> Int {
+        guard lastRefreshAt > 0, interval > 0, moment > lastRefreshAt else { return numbered }
+        // A hair of slack for the two clocks' rounding, no more: a move
+        // counted a refresh early would make that refresh's real first move wait.
+        return numbered + Int(((moment - lastRefreshAt) / interval + 0.01).rounded(.down))
+    }
+
+    /// The number of the refresh at `moment`, the one before it numbered
+    /// `previous` at `previousAt`: one on at least, and as many on as the
+    /// display refreshed in between, so a link that was paused between two
+    /// drags (or a call that never came) does not fall behind the clock
+    /// `refresh(at:numbered:lastRefreshAt:interval:)` counts by.
+    public static func refreshNumber(after previous: Int, at moment: Double, previousAt: Double,
+                                     interval: Double) -> Int {
+        guard previousAt > 0, interval > 0, moment > previousAt else { return previous + 1 }
+        return previous + max(1, Int(((moment - previousAt) / interval).rounded()))
+    }
+
     /// A frame landed from the decoder.
     public mutating func frameLanded() {
         landingWaiting = true

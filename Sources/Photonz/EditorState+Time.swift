@@ -213,12 +213,12 @@ extension EditorState {
         // way (`ScrubPictureAsks`).
         if !atOnce {
             scrubAsks.frameLanded()
-        } else if scrubAsks.handMoved(atRefresh: frames.count) {
+        } else if scrubAsks.handMoved(atRefresh: frames.refreshNumber()) {
             documentMomentChanged()
         }
         frames.run { [weak self] in
             guard let self else { return }
-            guard let frames = scrubFrames, scrubAsks.refreshed(atRefresh: frames.count) else {
+            guard let frames = scrubFrames, scrubAsks.refreshed(atRefresh: frames.refreshNumber()) else {
                 // A refresh with nothing new: nothing to draw until the hand
                 // moves again.
                 if !playheadInHand { scrubFrames?.stop() }

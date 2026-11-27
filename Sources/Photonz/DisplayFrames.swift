@@ -1,4 +1,5 @@
 import AppKit
+import PhotonzCore
 import QuartzCore
 
 /// The display's own refresh, as something the main actor can wait on or be
@@ -37,6 +38,17 @@ final class DisplayFrames: NSObject {
         guard lastRefreshAt > 0, refreshInterval > 0 else { return nil }
         return lastRefreshAt + ((moment - lastRefreshAt) / refreshInterval).rounded(.up) * refreshInterval
     }
+
+    /// The refresh it is now, numbered by the display's own clock rather
+    /// than by the link's calls: a refresh that has happened but not yet
+    /// called back counts, and a link paused for a while catches up when it
+    /// calls again (`ScrubPictureAsks.refresh`).
+    func refreshNumber(at moment: CFTimeInterval = CACurrentMediaTime()) -> Int {
+        ScrubPictureAsks.refresh(at: moment, numbered: numberedByClock, lastRefreshAt: lastRefreshAt,
+                                 interval: refreshInterval)
+    }
+    /// The number of the refresh at `lastRefreshAt`, by the display's clock.
+    private var numberedByClock = 0
 
     init(view: NSView, fallback: Double = 1.0 / 50) {
         self.fallback = fallback
@@ -102,6 +114,8 @@ final class DisplayFrames: NSObject {
     }
 
     @objc private func tick(_ link: CADisplayLink) {
+        numberedByClock = ScrubPictureAsks.refreshNumber(after: numberedByClock, at: link.timestamp,
+                                                         previousAt: lastRefreshAt, interval: refreshInterval)
         lastRefreshAt = link.timestamp
         if link.duration > 0 { refreshInterval = link.duration }
         fallbackTask?.cancel()

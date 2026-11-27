@@ -68,4 +68,55 @@ struct FramesReadInPassingRenderTests {
         let box = CGSize(width: 1350, height: 60)
         #expect(try drawn(sharp, box: box, movie: movie) == drawn(sharp, box: box, movie: nil))
     }
+
+    // While a hand moves the playhead, the sharp frame still in hand from
+    // where it rested is what the first pictures of the drag show, until the
+    // frames read in passing land: enlarged with the better resampler it took
+    // 7 to 9 ms a picture, so the first three to five pictures of every hunt
+    // on the 6 minute reference edit missed their refresh
+    // (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 8).
+
+    /// `frame` drawn as a clip of `movie` into `box`, by `renderer`.
+    private func drawn(_ frame: CGImage, box: CGSize, movie: MovieRef?, inPassing: Bool,
+                       by renderer: DocumentRenderer, store: ImageStore, ref: ImageRef) throws -> [UInt8] {
+        var layer = Layer(name: "Clip", content: .image(ref), frame: CGRect(origin: .zero, size: box))
+        layer.movie = movie
+        var doc = PhotonzDocument(canvasSize: box, layers: [layer])
+        doc.durationMS = 10_000
+        return rgba(try #require(renderer.renderInteractive(doc, store: store, inPassing: inPassing)))
+    }
+
+    @Test("While the hand moves, a sharp frame punched in on is enlarged the plain way too")
+    func movingHandDrawsSharpFramesPlain() throws {
+        let movie = MovieRef(pixelSize: CGSize(width: 900, height: 40), durationMS: 10_000)
+        let sharp = stripes(900, 40)
+        let box = CGSize(width: 1350, height: 60)
+        let store = ImageStore()
+        let ref = store.register(sharp)
+        let moving = try drawn(sharp, box: box, movie: movie, inPassing: true,
+                               by: DocumentRenderer(compositing: .linearLight), store: store, ref: ref)
+        let still = try drawn(sharp, box: box, movie: movie, inPassing: false,
+                              by: DocumentRenderer(compositing: .linearLight), store: store, ref: ref)
+        #expect(moving != still)
+        // A photo is not a frame of a recording, and keeps the better resampler.
+        let photoMoving = try drawn(sharp, box: box, movie: nil, inPassing: true,
+                                    by: DocumentRenderer(compositing: .linearLight), store: store, ref: ref)
+        #expect(photoMoving == still)
+    }
+
+    @Test("Once the hand holds still, the same moment is drawn again sharp")
+    func holdingStillRedrawsSharp() throws {
+        let movie = MovieRef(pixelSize: CGSize(width: 900, height: 40), durationMS: 10_000)
+        let sharp = stripes(900, 40)
+        let box = CGSize(width: 1350, height: 60)
+        let store = ImageStore()
+        let ref = store.register(sharp)
+        let renderer = DocumentRenderer(compositing: .linearLight)
+        let moving = try drawn(sharp, box: box, movie: movie, inPassing: true, by: renderer, store: store, ref: ref)
+        let settled = try drawn(sharp, box: box, movie: movie, inPassing: false, by: renderer, store: store, ref: ref)
+        let fresh = try drawn(sharp, box: box, movie: movie, inPassing: false,
+                              by: DocumentRenderer(compositing: .linearLight), store: store, ref: ref)
+        #expect(settled != moving)
+        #expect(settled == fresh)
+    }
 }
