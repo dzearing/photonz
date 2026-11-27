@@ -1,0 +1,25 @@
+{
+  "feature": "Changing a clip's speed keeps the edit joined up",
+  "epic": "video-editing",
+  "summary": "Speeding a clip up no longer leaves black where it used to be, and slowing it down no longer runs over the next clip: the clips after it on its track move to meet it, and the transition on the next cut stays.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Measured with Scripts/playtest/speeding-up-a-clip-keeps-the-edit-joined-walk.json on the probe, plus SpeedRippleTests in PhotonzCore.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording and drag a second one onto V1 right after it so the two meet.", "shot": "2026-11-26-speed-ripple-0-before.png" },
+    { "do": "Click the cut between them and pick Cross dissolve in Transitions." },
+    { "do": "Click the first clip and choose Clip > Speed > 2x.", "shot": "2026-11-26-speed-ripple-1-double.png" },
+    { "do": "Play across the cut: no black, and the dissolve plays." },
+    { "do": "Press Command Z once: both clips go back where they were." },
+    { "do": "Choose Clip > Speed > 0.5x: the second clip is pushed along, not covered.", "shot": "2026-11-26-speed-ripple-2-half.png" }
+  ],
+  "evaluate": [
+    "Does the clip after the sped one land where you expect it, with no black in between?",
+    "Is it right that titles and music on other tracks stay where you put them while the picture track moves?",
+    "Does one Command Z feel like the right size of undo for a speed change?"
+  ],
+  "rough": [
+    "Chose rippling the clip's own track (and captions heard off it) over every track, matching Final Cut's primary storyline and Premiere's Speed with Ripple Edit, and a freeze's 'This track' default. A title or callout on another track over a later clip stays put, so it can end up over a different shot; Final Cut would carry a connected clip along, Photonz has no connected clips yet.",
+    "Speed stops on a ramp (Add Speed Stop, dragging a stop) still change a clip's length without moving the clips after it; this task covered constant speed only (Clip > Speed and set_speed).",
+    "No mock covers this: it is an edit rule, not a surface. Nothing on screen changed apart from where the clips land."
+  ]
+}

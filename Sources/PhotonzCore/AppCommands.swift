@@ -673,7 +673,7 @@ public enum AppCommandTable {
             make(.showPicture, "Show Picture", clip, .timeline, needs: "a stretch whose picture was hidden",
                  picks: .clipAtPlayhead),
             make(.setSpeed, "Speed", "Clip > Speed", .timeline, needs: clipInHand, picks: .clipAtPlayhead,
-                 options: [.init("percent", .number(speeds), "The speed, in percent of normal.", required: true)]),
+                 options: [.init("percent", .number(speeds), "The speed, in percent of normal. The clip grows or shrinks and the clips after it on its track move with it, so no gap opens.", required: true)]),
             make(.addSpeedStop, "Add Speed Stop", "Clip > Speed", .timeline, needs: "a picture clip in hand",
                  picks: .clipAtPlayhead),
             make(.deleteSpeedStop, "Delete Speed Stop", "Clip > Speed", .timeline, needs: "a speed stop in hand",

@@ -352,7 +352,11 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func setSectionSpeed(_ ids: [UUID], within range: Range<Int>, percent: Int) -> Bool {
         var changed = false
-        for id in ids {
+        // Latest first: a clip retimed moves the clips after it on its track
+        // (`setClipSpeed`), so one taken earlier would move a later one out
+        // from under the range before its own turn came.
+        let latestFirst = ids.sorted { (layer(id: $0)?.time?.inMS ?? 0) > (layer(id: $1)?.time?.inMS ?? 0) }
+        for id in latestFirst {
             guard let index = sectionPiece(id, within: range) else { continue }
             if setClipSpeed(id, ofPiece: index, percent: percent) { changed = true }
         }

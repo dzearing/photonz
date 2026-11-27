@@ -1175,10 +1175,40 @@ extension PhotonzDocument {
         return true
     }
 
-    /// Give a piece of a clip a speed.
+    /// Give a piece of a clip a speed, and keep the edit joined up.
+    ///
+    /// A clip played faster takes less time and one played slower takes
+    /// more, so **the clips after it on its own track move along** by however
+    /// much it grew or shrank, the way Final Cut's primary storyline and
+    /// Premiere's Speed with Ripple Edit do. Without this a clip at 200
+    /// percent left a stretch of black where it used to be, and the cut after
+    /// it stopped meeting, which took its transition off the screen; one at 50
+    /// percent ran over the clip after it. A gap somebody left after the clip
+    /// travels with what follows it, at the length they left it.
+    ///
+    /// Every other track runs on, as a hold of this track does
+    /// (`HoldPush.swift`): the music under an edit is not broken up by a clip
+    /// being retimed above it. The captions heard off the clip move with it.
     @discardableResult
     public mutating func setClipSpeed(_ id: UUID, ofPiece index: Int, percent: Int) -> Bool {
-        editClip(id) { pieces, _ in pieces.setSpeed(ofPiece: index, percent: percent) }
+        let was = layer(id: id)?.time?.outMS
+        guard editClip(id, { pieces, _ in pieces.setSpeed(ofPiece: index, percent: percent) }) else {
+            return false
+        }
+        if let was, let now = layer(id: id)?.time?.outMS { rippleOwnTrack(id, fromOutMS: was, toOutMS: now) }
+        return true
+    }
+
+    /// The clips after `id` on its own track, and the captions heard off it,
+    /// moved by however much its end moved. A locked layer stays put.
+    mutating func rippleOwnTrack(_ id: UUID, fromOutMS was: Int, toOutMS now: Int) {
+        let mine = clipLayerIDs(id)
+        let track = heldWithClip(id).subtracting(mine)
+        guard now != was, !track.isEmpty else { return }
+        // Time comes out from the new end to the old one, and goes in at the
+        // old end: either way the moment is the earlier of the two, so a clip
+        // that met the old end lands on the new one.
+        rippleTime(atMS: min(was, now), byMS: now - was, except: mine, only: track, sparingLocked: true)
     }
 
     /// Put a transition on one of a clip's cuts, or take one off with nil
