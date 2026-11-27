@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-25T19:45:41.201Z",
-  "updated": "2026-11-27T16:19:25.249Z",
+  "updated": "2026-11-27T16:49:33.817Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-25: walk with setup {forget:[all],wideEdit:50}, steps speed pictures fromMS 10000 (and 62000) when [atOnce]: 5 nothing drawn at 0:10.0, 10 at 1:02.0, both in the one picture the jump itself submits (scrubDocument -> documentMomentChanged -> submit). speed starts when [atOnce] gives the waits. The wait is decoding: skipped/decoded counts per clip showed 30 to 110 samples from the key frame each, few of them skippable, about 600 a second on one decoder. Ideas not tried: hold the picture on a paused jump the way holdsPictureForStart does; small all-intra stand-ins kept per recording.",
@@ -58,14 +58,22 @@
     {
       "t": "2026-11-27T16:19:25.248Z",
       "note": "runner failed (exit 1, not charged: runners are failing whichever task runs): You've hit your weekly limit · resets 12am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-11-27T16:49:28.964Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T16:49:33.816Z",
+      "note": "runner failed (exit 1, not charged: runners are failing whichever task runs): You've hit your weekly limit · resets 12am (America/Los_Angeles)"
     }
   ],
   "walks": [
     "play-starts-at-once-on-a-wide-edit-walk"
   ],
-  "started": "2026-11-27T16:19:20.261Z",
+  "started": "2026-11-27T16:49:28.963Z",
   "lastError": {
-    "at": "2026-11-27T16:19:25.247Z",
+    "at": "2026-11-27T16:49:33.815Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets 12am (America/Los_Angeles)"
   }
