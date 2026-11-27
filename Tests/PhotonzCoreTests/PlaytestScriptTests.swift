@@ -4324,6 +4324,27 @@ struct PlaytestScriptTests {
         #expect(slow.claimsSomething)
     }
 
+    @Test("An expectSoundUnbroken step listens for three seconds by default, at most ten")
+    func expectSoundUnbrokenParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectSoundUnbroken" },
+                     { "do": "expectSoundUnbroken", "seconds": 6 } ] }
+        """)
+        guard case .expectSoundUnbroken(let seconds) = script.steps[0],
+              case .expectSoundUnbroken(let longer) = script.steps[1] else {
+            Issue.record("expectSoundUnbroken"); return
+        }
+        #expect(seconds == 3)
+        #expect(longer == 6)
+        #expect(script.steps[0].name == "expectSoundUnbroken")
+        #expect(PlaytestStep.names.contains("expectSoundUnbroken"))
+        for bad in [#""seconds": 0"#, #""seconds": 11"#] {
+            #expect(throws: (any Error).self) {
+                try decode(#"{ "steps": [ { "do": "expectSoundUnbroken", \#(bad) } ] }"#)
+            }
+        }
+    }
+
     @Test("An expectSoundPitch step names the pitch it listens for, two percent either side by default")
     func expectSoundPitchParses() throws {
         let script = try decode("""

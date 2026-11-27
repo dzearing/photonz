@@ -146,15 +146,27 @@ final class DocumentAudioPlayer {
         return (power / Double(heard.samples.count)).squareRoot()
     }
 
+    /// Every dropout in what the engine puts out over `seconds`
+    /// (`SoundDropouts`), and how long was heard. Nil when nothing is playing.
+    func listenForDropouts(seconds: Double) async
+        -> (dropouts: [SoundDropouts.Dropout], heardMS: Double)? {
+        let heard = await engine.listen(seconds: seconds)
+        guard let heard, !heard.samples.isEmpty, heard.sampleRate > 0 else { return nil }
+        return (SoundDropouts.find(in: heard.samples, sampleRate: heard.sampleRate),
+                Double(heard.samples.count) / heard.sampleRate * 1000)
+    }
+
     /// Keep each layer's level where the plan says it is at this moment.
     ///
     /// Called on the document's own clock as the playhead moves, which is what
     /// makes a duck a slide rather than a step: the tick is thirty times a
     /// second and a duck is a third of a second long.
     func follow(_ mix: [AudioMixSegment], atMS ms: Int) {
+        // A voice whose next piece is just ahead is already at its opening
+        // level, so a clip meeting another comes in on time (`AudioVoiceLevels`).
         var wanted: [DocumentAudioEngine.Voice: Float] = [:]
-        for segment in mix where segment.contains(ms: ms) {
-            wanted[DocumentAudioEngine.Voice(segment)] = Float(segment.gain(atMS: ms))
+        for (key, gain) in AudioVoiceLevels.at(ms: ms, in: mix) {
+            wanted[DocumentAudioEngine.Voice(layerID: key.layerID, voice: key.voice)] = Float(gain)
         }
         engine.run { [wanted] in $0.setLevels(wanted) }
     }
@@ -217,6 +229,10 @@ final class DocumentAudioEngine: @unchecked Sendable {
         init(_ segment: AudioMixSegment) {
             layerID = segment.layerID
             voice = segment.voice
+        }
+        init(layerID: UUID, voice: Int) {
+            self.layerID = layerID
+            self.voice = voice
         }
     }
 

@@ -4236,6 +4236,9 @@ private final class Run {
             note(number, step.name, try await checkSoundPitch(hz: hz, withinPercent: within, seconds: seconds),
                  state: describe())
 
+        case .expectSoundUnbroken(let seconds):
+            note(number, step.name, try await checkSoundUnbroken(seconds: seconds), state: describe())
+
         case .expectPlaybackNeverBlank(let name, let seconds, let moments, let rate):
             note(number, step.name,
                  try await checkPlaybackNeverBlank(name: name, seconds: seconds, moments: moments, rate: rate),
@@ -12513,6 +12516,34 @@ private final class Run {
             heard, PlaybackSpeed.label(editor.documentPlaybackRate), off, hz, editor.audioPlayer.speed)
         guard off <= withinPercent else {
             throw Failure(description: reading + String(format: ", more than %.1f%% off", withinPercent))
+        }
+        return reading
+    }
+
+    /// Listens to what the sound engine puts out while the document plays and
+    /// fails on any stretch over 10 ms quieter than -45 dB in it
+    /// (`expectSoundUnbroken`, `SoundDropouts`).
+    private func checkSoundUnbroken(seconds: Double) async throws -> String {
+        let editor = try requireEditor()
+        guard editor.isDocumentPlaying else {
+            throw Failure(description: "expectSoundUnbroken listens while it plays, and nothing is playing")
+        }
+        guard editor.audioPlayer.isPlaying else {
+            throw Failure(description: "nothing is coming out of the sound engine at "
+                + PlaybackSpeed.label(editor.documentPlaybackRate))
+        }
+        let fromMS = editor.documentTimeMS
+        guard let heard = await editor.audioPlayer.listenForDropouts(seconds: seconds) else {
+            throw Failure(description: "listened for \(seconds)s and heard nothing at all")
+        }
+        let reading = String(format: "listened for %.2fs from %.2fs of the document: ",
+                             heard.heardMS / 1000, Double(fromMS) / 1000)
+            + SoundDropouts.describe(heard.dropouts)
+            + (heard.dropouts.isEmpty ? "" : " (seconds into the listening)")
+        guard heard.dropouts.isEmpty else { throw Failure(description: reading) }
+        guard heard.heardMS >= seconds * 1000 * 0.8 else {
+            throw Failure(description: reading + String(format: ", but only %.2fs of the %.2fs asked for "
+                + "came out of the engine", heard.heardMS / 1000, seconds))
         }
         return reading
     }

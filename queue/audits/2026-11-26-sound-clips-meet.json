@@ -1,0 +1,23 @@
+{
+  "feature": "Music made of several sound clips plays straight through",
+  "epic": "video-perf",
+  "summary": "Sound clips that meet now play without a gap, in export and in playback. In export, speeding up one clip squeezed every other sound playing beside it, so the music ran out early and left a hole before the next loop. In playback, each clip that started part way through came in about 20 ms late.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Export measured by SoundClipsMeetExportTests (every sample of the written file read back) and by the sizzle reel's own Apple Loops run through the export mix: 14.38 to 15.00 s silent before, nothing silent after. Playback measured by sound-clips-that-meet-play-straight-through-walk, which listens to the engine's output: a 18 to 26 ms dropout at 5 s in 3 runs of 3 before, none in 3 runs of 3 after.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording that has sound and choose Clip > Speed > 2x.", "shot": "2026-11-26-sound-clips-meet-1-sc.png" },
+    { "do": "Drag two music loops from /Library/Audio/Apple Loops onto the timeline so the second starts where the first ends, under the sped-up clip." },
+    { "do": "Press Space from the start and listen where the loops meet." },
+    { "do": "Choose File > Export, export an MP4 and play it in QuickTime across the same spot." }
+  ],
+  "evaluate": [
+    "Does the music run straight through where the loops meet, with nothing missing before the second one?",
+    "Does the sped-up clip's own sound still play fast and high, while the music beside it keeps its speed?",
+    "In playback, does a loop that starts mid-play come in on the beat?"
+  ],
+  "rough": [
+    "No mock covers this: it is how the sound is mixed, not a surface. Nothing on screen changed.",
+    "The reel's own export also showed 44 ms of silence at 0 s and 40 ms after 15 s. Those came from the 720p re-encode of the reel, not from the app: the app's own mix of the same plan has neither.",
+    "A clip's level inside a piece (a fade drawn on it) is still set from the picture's clock about 30 times a second, so a fade follows a few milliseconds behind what is drawn. Nobody has heard it as a fault, so it stays in the task log."
+  ]
+}

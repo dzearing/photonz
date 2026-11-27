@@ -1,0 +1,136 @@
+{
+  "out": "/tmp/photonz-playtest/sound-clips-that-meet-play-straight-through-walk",
+  "seed": "At Next defaults with no flag set: the sample recording played at double speed (Clip > Speed > 2x) over a 440 Hz test tone on the sound track, the tone cut in two at 2.5s and a second tone dropped over it from 5s, so two pieces of one clip meet at 2.5s and two clips meet at 5s on one track. Played from the start, the sound coming out of the engine never drops out: no stretch over 10 ms quieter than -45 dB where the pieces meet, past the end of the sped-up clip at 4s, or where the clips meet. The export side of the same bar is SoundClipsMeetExportTests.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "fixtures/A 440 Hz tone 12s.m4a",
+      "track": "V1",
+      "seconds": 0.0
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "A 440 Hz tone 12s",
+      "track": "Audio",
+      "startsAt": 0.0,
+      "endsAt": 8.0
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.5
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "fixtures/A 440 Hz tone 12s.m4a",
+      "track": "Audio",
+      "seconds": 5.0
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "A 440 Hz tone 12s",
+      "track": "Audio",
+      "startsAt": 5.0,
+      "endsAt": 8.0
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "action",
+      "action": "clipSpeedDouble"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 4.0,
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-built",
+      "note": "the sample recording at double speed on V1 (0 to 4s), a test tone under it cut at 2.5s, and a second tone over it from 5s, so pieces meet at 2.5s and clips meet at 5s"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-tones-meeting-beside-a-sped-up-clip"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectSoundUnbroken",
+      "seconds": 6.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-played-from-the-start",
+      "note": "THE TEST: played from the start through the cut in the tone at 2.5s, past the end of the sped-up clip at 4s and across the second tone meeting the first at 5s, with no dropout in what the engine puts out"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    }
+  ]
+}

@@ -97,9 +97,15 @@ public enum AudioMixdown {
             // ...and then squeezed or stretched to the length it occupies, which
             // is what makes a piece at 200% play twice as fast and rise in
             // pitch, exactly as its picture does.
+            //
+            // On its own track and nowhere else. Scaling the COMPOSITION scales
+            // every track over that stretch, so a clip at 200% squeezed the
+            // music playing beside it into half the time and left a hole where
+            // it should have handed over to the next loop (2026-11-26, the
+            // sizzle reel silent from 14.36 to 15.04 s).
             if segment.speedPercent != ClipPiece.asRecordedPercent {
-                composition.scaleTimeRange(CMTimeRange(start: at, duration: read.duration),
-                                           toDuration: ms(segment.lengthMS))
+                track.scaleTimeRange(CMTimeRange(start: at, duration: read.duration),
+                                     toDuration: ms(segment.lengthMS))
             }
             // A track waits for its next segment at the level that segment
             // starts at. Left alone it waits at full volume (a new track) or

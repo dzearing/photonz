@@ -295,6 +295,9 @@ public enum PlaytestLockSafety {
         // output and reads the transport's speed off the editor, never a
         // name off the screen.
         "expectSoundPitch",
+        // Added 2026-11-26 by reading: the same tap on the sound engine's
+        // output as expectSoundPitch, never a name off the screen.
+        "expectSoundUnbroken",
         // Added 2026-10-11 by reading, NOT yet watched under a lock: the same
         // press and drag as dragTracks, held at an edge while the timeline
         // scrolls, reading only the editor. box-scrolls-at-the-edge-walk is
