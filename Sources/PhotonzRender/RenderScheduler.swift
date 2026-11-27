@@ -109,11 +109,11 @@ public final class RenderScheduler: Sendable {
     /// show them find them kept (`DocumentRenderer.drawWordsAhead`). `posed`
     /// runs there too: posing a long edit at a moment is work the main
     /// thread need not do.
-    public func drawWordsAhead(contentScale: CGFloat,
+    public func drawWordsAhead(contentScale: CGFloat, colorSpace: CGColorSpace? = nil,
                                _ posed: @escaping @Sendable () -> [PhotonzDocument]) {
         Task.detached(priority: .utility) { [renderer, store] in
             for document in posed() {
-                renderer.drawWordsAhead(document, store: store, contentScale: contentScale)
+                renderer.drawWordsAhead(document, store: store, contentScale: contentScale, colorSpace: colorSpace)
             }
         }
     }

@@ -7120,7 +7120,7 @@ final class EditorState {
         guard !moments.isEmpty else { return }
         // Posed the way `submit` poses a moment, off the main thread.
         let filtered = displayFiltered(document)
-        scheduler.drawWordsAhead(contentScale: contentScale) {
+        scheduler.drawWordsAhead(contentScale: contentScale, colorSpace: canvasColorSpace) {
             moments.map { ms in
                 var posed = filtered.drawn(atTimeMS: ms)
                 if contentScale < 1 {

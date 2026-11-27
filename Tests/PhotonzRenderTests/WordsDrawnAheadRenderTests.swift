@@ -43,6 +43,49 @@ struct WordsDrawnAheadRenderTests {
         #expect(renderer.contentCacheMisses == missedAhead)
     }
 
+    /// A title over a recording none of whose frames has been read yet:
+    /// what the editor poses ahead once a video is open.
+    private func titleOverARecording() -> PhotonzDocument {
+        let movie = MovieRef(pixelSize: CGSize(width: 1920, height: 1080), durationMS: 10_000)
+        var doc = PhotonzDocument.recording(movie, name: "Take 1")
+        doc.canvasSize = CGSize(width: 640, height: 360)
+        let id = doc.layers[0].id
+        doc.updateLayer(id: id) { $0.frame = CGRect(x: 0, y: 0, width: 640, height: 360) }
+        doc.layers.append(contentsOf: titleMidReveal().layers)
+        return doc
+    }
+
+    @Test("A moment drawn ahead is drawn once, so its programs are ready before the hand gets there")
+    func drawnAheadIsDrawn() throws {
+        // Setting the words out was only half of it: the first picture of
+        // the 2:44 title still spent 4.6 ms, and once 57 ms, while Core Image
+        // planned a recipe it had never seen (pass 6).
+        let doc = titleOverARecording()
+        let ms = try #require(doc.momentsToDrawWordsAhead().first)
+        let store = ImageStore()
+        let renderer = DocumentRenderer()
+        renderer.drawWordsAhead(doc.drawn(atTimeMS: ms), store: store, contentScale: 1, colorSpace: nil)
+        #expect(renderer.momentsDrawnAhead == 1)
+        // The frames it stood in for are not left behind as if they had been
+        // read: the store is as it was.
+        #expect(store.count == 0)
+    }
+
+    @Test("Drawing ahead stands in for a recording's frames at the size they are read at in passing")
+    func standInsAreReadInPassingSize() throws {
+        let doc = titleOverARecording()
+        let ms = try #require(doc.momentsToDrawWordsAhead().first)
+        let posed = doc.drawn(atTimeMS: ms)
+        let live = ImageStore()
+        let (standing, stoodIn) = DocumentRenderer.standInsForFramesNotRead(in: posed, store: live)
+        #expect(stoodIn.count == 1)
+        #expect(live.count == 0)
+        let picture = try #require(stoodIn.first.flatMap { standing.image(for: $0) })
+        #expect(picture.width == Int(MovieSweep.roughWidth))
+        #expect(MovieSweep.isReadInPassing(frameWidth: picture.width,
+                                           of: MovieRef(pixelSize: CGSize(width: 1920, height: 1080), durationMS: 1)))
+    }
+
     @Test("Drawing words ahead leaves the picture as it would have been")
     func samePicture() throws {
         let doc = titleMidReveal()

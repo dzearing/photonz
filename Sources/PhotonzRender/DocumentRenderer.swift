@@ -835,11 +835,81 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// picture, which was three refreshes behind the hand
     /// (`scrubbing-a-long-edit-never-trails-the-pointer-b`, pass 5).
     ///
+    /// The picture is then drawn once, onto a surface of its own that is
+    /// never shown, in the colours the canvas shows it in. Setting the words
+    /// out was only half of it: the first picture of that title still spent
+    /// 4.6 ms, and once 57 ms, while Core Image planned a recipe it had never
+    /// seen, and read up to eight refreshes behind (pass 6). Frames of a
+    /// recording not read yet are stood in for at the size a frame read in
+    /// passing has (`standInsForFramesNotRead`), so the recipe planned is the
+    /// one a dragging hand's picture has; the store is left as it was.
+    ///
     /// Safe beside a picture being drawn: everything it keeps is kept under
-    /// the same lock the drawing uses.
-    public func drawWordsAhead(_ document: PhotonzDocument, store: ImageStore, contentScale: CGFloat = 1) {
+    /// the same lock the drawing uses, and its surface is not one of the
+    /// pictures' own.
+    public func drawWordsAhead(_ document: PhotonzDocument, store: ImageStore, contentScale: CGFloat = 1,
+                               colorSpace: CGColorSpace? = nil) {
         let contentScale = contentScale > 0 && contentScale.isFinite ? contentScale : 1
-        _ = compositeImage(document, store: store, contentScale: contentScale)
+        let (standing, _) = Self.standInsForFramesNotRead(in: document, store: store)
+        guard let output = compositeImage(document, store: standing, contentScale: contentScale) else { return }
+        let width = Int(document.canvasSize.width.rounded())
+        let height = Int(document.canvasSize.height.rounded())
+        guard width >= 1, height >= 1 else { return }
+        let colors = colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? Self.srgb
+        let attributes: [String: Any] = [
+            kCVPixelBufferIOSurfacePropertiesKey as String: [String: Any](),
+            kCVPixelBufferMetalCompatibilityKey as String: true,
+        ]
+        var made: CVPixelBuffer?
+        guard CVPixelBufferCreate(nil, width, height, kCVPixelFormatType_32BGRA,
+                                  attributes as CFDictionary, &made) == kCVReturnSuccess,
+              let buffer = made else { return }
+        CVBufferSetAttachment(buffer, kCVImageBufferCGColorSpaceKey, colors, .shouldPropagate)
+        let destination = CIRenderDestination(pixelBuffer: buffer)
+        destination.colorSpace = colors
+        let canvas = CGRect(x: 0, y: 0, width: width, height: height)
+        guard let task = try? context.startTask(toRender: output.cropped(to: canvas), from: canvas,
+                                                to: destination, at: .zero),
+              (try? task.waitUntilCompleted()) != nil else { return }
+        cacheLock.lock()
+        momentsDrawnAhead += 1
+        cacheLock.unlock()
+    }
+
+    /// Test hook: how many moments `drawWordsAhead` has drawn.
+    private(set) var momentsDrawnAhead = 0
+
+    /// `store`, as a copy, with a plain picture standing for every frame of a
+    /// recording `document` shows that it does not hold, each the size a
+    /// frame read in passing is (`MovieSweep.roughSize`), and the frames
+    /// stood in for. `store` itself is left as it was.
+    static func standInsForFramesNotRead(in document: PhotonzDocument,
+                                         store: ImageStore) -> (ImageStore, [ImageRef]) {
+        var missing: [(ImageRef, CGSize)] = []
+        var seen = Set<UUID>()
+        for layer in document.allLayers where layer.isVisible {
+            guard let movie = layer.movie, case .image(let ref) = layer.content,
+                  seen.insert(ref.id).inserted, store.image(for: ref) == nil else { continue }
+            missing.append((ref, MovieSweep.roughSize(for: movie.pixelSize)))
+        }
+        guard !missing.isEmpty else { return (store, []) }
+        let copy = store.snapshot()
+        var pictures: [String: CGImage] = [:]
+        for (ref, size) in missing {
+            let width = max(1, Int(size.width.rounded())), height = max(1, Int(size.height.rounded()))
+            let key = "\(width)x\(height)"
+            if pictures[key] == nil {
+                let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+                                        bytesPerRow: 0, space: srgb,
+                                        bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
+                                            | CGBitmapInfo.byteOrder32Little.rawValue)
+                context?.setFillColor(gray: 0.5, alpha: 1)
+                context?.fill(CGRect(x: 0, y: 0, width: width, height: height))
+                pictures[key] = context?.makeImage()
+            }
+            if let picture = pictures[key] { copy.register(picture, as: ref) }
+        }
+        return (copy, missing.map(\.0))
     }
 
     /// The whole composite drawn onto the next free surface, with a picture
@@ -902,7 +972,6 @@ public final class DocumentRenderer: @unchecked Sendable {
         guard CVPixelBufferPoolCreatePixelBuffer(nil, surfacePool, &buffer) == kCVReturnSuccess else { return nil }
         return buffer
     }
-
     /// Which bitmap every visible picture layer would be drawn with right now.
     private static func pictures(in document: PhotonzDocument,
                                  store: ImageStore) -> [UUID: ObjectIdentifier?] {
