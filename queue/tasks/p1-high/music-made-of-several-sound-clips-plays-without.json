@@ -5,11 +5,11 @@
   "epic": "video-perf",
   "priority": "p1-high",
   "seq": 13,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-26T18:37:13.816Z",
-  "updated": "2026-11-26T19:10:45.320Z",
+  "updated": "2026-11-27T02:49:04.238Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-26: \"I tried making one this morning. it was boring, the transitions were a bit buggy (e.g. 3d transitions wouldn't fade in and would immediately cover content, text would be clipped in weird spots, the transitions were dull). I don't see anything queued or done with improving the features and quality to make amazing sizzle reels (with a bunch of music presets that can create epic build ups and intensity and draw emotion).\" \n\nThe source .caf loops have no silence (silencedetect finds none). The 14 to 17 s video clip had set_speed 200 applied before export, which shortened it to 15.5; sound tracks were not touched. Related, not the same: the-sound-of-the-whole-reference-edit-plays-with (p2, playback dropouts measured once a second); if that task's measuring tool is built, reuse it.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-11-26T19:10:45.319Z",
       "note": "Re-checked on Photonz Dev 0.25.0 (today's main) on 2026-11-26: the first reel ran on the user's 0.23.0 app. Still reproduces, same numbers: see queue/audits/2026-11-26-sizzle-intake/on-0.25-dev/ and the README's Correction section."
+    },
+    {
+      "t": "2026-11-27T01:57:58.994Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T02:16:29.797Z",
+      "note": "Cause found and reproduced: AudioMixdown.composition applied a piece's speed with composition.scaleTimeRange, which scales EVERY track over that stretch. The reel's 14 s clip (a screen recording with a sound track) at 200% squeezed the synth and beat beside it into half the time, so they ran out ~0.6 s early and the loops at 15 s came in on time after a hole. Repro with the real Apple Loops + a sound-bearing recording at 200% from 13.72 s through AudioMixdown.write: silencedetect -45 dB 14.380875 to 14.999937 (reel export: 14.358958 to 15.043938; the extra 40 ms either end is the 720p re-encode, which also shows 0 to 44 ms silent at the start that the mix itself does not have). After the fix (track.scaleTimeRange) the same repro finds no silence at all over 22.55 s. A slowed clip did the opposite: stretched every track, pushing music past the next loop, which was then dropped (file 1.09 s short)."
+    },
+    {
+      "t": "2026-11-27T02:16:29.878Z",
+      "note": "owns these walks: sound-clips-that-meet-play-straight-through-walk"
+    },
+    {
+      "t": "2026-11-27T02:48:53.226Z",
+      "note": "Second cause, found by the new walk: in playback, the player sets each clip's fader from the picture's clock on a 30 Hz tick and held a voice with nothing sounding at 0, so a clip starting mid-play (a different layer meeting another on a track) was muted until the first tick after its start plus output latency: 18 to 26 ms dropout at the 5 s meeting, 3 of 3 runs. Pieces of one clip meeting (same layer) had no gap. Fix: AudioVoiceLevels (PhotonzCore) turns a voice up to its next piece's opening level up to 250 ms ahead. Walk 3 of 3 clean after."
+    },
+    {
+      "t": "2026-11-27T02:48:53.300Z",
+      "note": "Verified: SoundClipsMeetExportTests 3 of 4 failed before the AudioMixdown fix (5.025 to 6.0 s silent, a file 1.09 s short after a slow-down), all pass after; the reel's real loops through AudioMixdown.write: 14.381 to 15.000 s silent before, none after. AudioVoiceLevelsTests, SoundDropoutsTests, expectSoundUnbroken parse test added. 11 nearby sound walks ok (cross-fade, ducks, music bed, playback speed, speed stretch, transition sound, transport volume, title sounds). Scripts/test.sh green. Rough items: the 0 s and 15.04 s re-encode silence is not the app (logged in the audit, no task). Left rough: a fade inside a piece still follows the picture-clock tick, a few ms behind; nobody has heard it, so it did not earn a task. The p2 the-sound-of-the-whole-reference-edit-plays-with can reuse expectSoundUnbroken / SoundDropouts as its measure."
+    },
+    {
+      "t": "2026-11-27T02:49:04.236Z",
+      "note": "Two causes fixed. Export: a clip's speed scaled the whole mix instead of its own track (AudioMixdown), so music beside the reel's 2x clip ran out 0.6 s early. Playback: a clip starting mid-play was muted until the next 30 Hz fader tick, an 18 to 26 ms gap where clips meet (AudioVoiceLevels). Verified: the reel's loops through the export, 14.38 to 15.00 s silent before and none after; SoundClipsMeetExportTests failed before and pass after; the new walk failed 3 of 3 before and passes 3 of 3 after; 11 nearby sound walks ok; test.sh green. Commit 71d15e54b. Audit: queue/audits/2026-11-26-sound-clips-meet.json"
     }
-  ]
+  ],
+  "started": "2026-11-27T01:57:58.993Z",
+  "walks": [
+    "sound-clips-that-meet-play-straight-through-walk"
+  ],
+  "completed": "2026-11-27T02:49:04.237Z"
 }
