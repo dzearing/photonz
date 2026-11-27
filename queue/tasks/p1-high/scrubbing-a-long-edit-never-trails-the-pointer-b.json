@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-23T14:48:45.395Z",
-  "updated": "2026-11-27T11:13:29.123Z",
+  "updated": "2026-11-27T12:38:30.008Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-long-edit-with-transitions-plays-scrubs-and-ed (closed 2026-11-23). lag = refreshes since the hand was at the moment the picture carries (a stand-in frame counts as caught up); frame lag = the exact frame under the hand; sight lag = the frames the picture is really drawn from (SpeedWalk.ScrubTally). The medium drag's frame lag and sight lag worst are shown but not judged since 2026-11-23 (SpeedCompare.isJudged: 17 to 81 at the median on unchanged code); its lag worst is judged. Passes 20 to 22 made the hunt follow the hand (MovieSweep.window(follows:), restingPass, MovieFrameQueue.placesStillShown): hunt frame worst 43 -> 3. Lead from pass 22: the hunt's ~20 ms looks with an idle main thread (display link or render server; Metal System Trace needs developer mode). Lag worst 3-10 on medium in 45 runs: which moment is late is chance, so look at the per-look dump (temporary) before changing anything.",
@@ -239,6 +239,34 @@
     {
       "t": "2026-11-27T11:13:29.122Z",
       "note": "Pass 7 landed f4a0dd703 (measure now read at each display refresh, hand on its own clock). Lag worst 1 not reached: medium 2,5,2, hunt 2,2,2; leads in the log."
+    },
+    {
+      "t": "2026-11-27T11:14:02.443Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T11:41:05.841Z",
+      "note": "Pass 8 found (per-look dump with each picture's draw time and ask time, temporary): in hunt drags 2 to 9 moves a drag waited 4 to 5 ms before their picture was even asked for (median 1.0 ms). Cause: the once-a-refresh pacing counted refreshes by the editor's own display link calls, which come 1 to 9 ms after the refresh they are for, so a move made just after a refresh but before its call read as a second move in the refresh before and waited for the late call. A person's pointer events land in that gap the same way. Fix: ScrubPictureAsks.refresh(at:calls:lastRefreshAt:interval:) counts a refresh by the link's own timestamp (DisplayFrames.refreshNumber), tests in ScrubPictureAsksTests. Hunt-only walk after it: moves waiting over 3 ms 2-9 -> 0-3 a drag. Second cause of the 1 ms: EditorState.submit still handed the picture to RenderScheduler through Task { await }, which waits for the main actor's next turn although submit has been synchronous since 2026-11-19; now called directly."
+    },
+    {
+      "t": "2026-11-27T12:14:52.863Z",
+      "note": "Pass 8, two more: (1) every hunt's first 3-5 pictures were 7-10 ms in every hunt, not only the first: until the frames read in passing land, the sharp frame in hand from where the playhead rested is drawn, enlarged with Lanczos. Fix: RenderScheduler.submit(inPassing:) -> DocumentRenderer.renderInteractiveFrame(inPassing:) (carried in Playing.inPassing) enlarges every recording frame the plain way while the hand moves; the same moment asked again once the hand holds still is redrawn sharp, not handed back (lastInPassing in the unchanged check). Tests in FramesReadInPassingRenderTests. (2) A regression in this pass's own first fix: the editor's link is paused between drags, so its last timestamp was stale and the clock count ran one ahead of the calls; the second move of every drag waited 6.4 ms. Fixed by numbering refreshes by the display's timestamps throughout (ScrubPictureAsks.refreshNumber(after:at:previousAt:interval:), a paused link catching up by however many refreshes passed). Hunt-only walk (1 medium + 6 hunts), late looks over the six hunts: 23, 15, 19 before -> 12 after; moves waiting over 3 ms for their ask 2-9 a drag -> 0-1."
+    },
+    {
+      "t": "2026-11-27T12:14:52.945Z",
+      "note": "Chose plain enlargement of every recording frame while the hand moves over keeping Lanczos for a sharp frame in hand, because it is the same trade pass 2 made for frames read in passing (a moving picture a touch softer for a few refreshes, Premiere and Final Cut drop quality while scrubbing too) and holding still redraws it sharp within a refresh of settling. Only frames enlarged past their own pixels are affected (a punched-in or grown clip); photos keep Lanczos."
+    },
+    {
+      "t": "2026-11-27T12:38:29.853Z",
+      "note": "Pass 8 measured (13f45444c): short speed walk 3 runs (2026-11-27 04:14, 04:24, 04:26), exit 0, 51 numbers within baseline each: lag worst medium 2,2,2 (pass 7: 2,5,2), hunt 2,2,2 (unchanged); hunt frame and sight worst 2,2,2 (item 2 met in 3 of 3); composite median 3.7-3.8 ms. Green: scrub-never-blacks-out, hear-the-scrub, an-editing-session, scrubbing-shows-the-zoom, a-recording-opens-sharp, soft-gradients-in-a-recording-play-smooth; Scripts/test.sh exit 0. a-cross-fade-plays-as-exported failed once at step 22 (dropOnTimeline: the strip moved 43% in one frame on letting go of a dropped clip, nothing to do with the scrub), then passed twice running: left rough, not filed (once in three, a drop animation, not this task's code). Baseline not rewritten: item 1 not reached."
+    },
+    {
+      "t": "2026-11-27T12:38:29.932Z",
+      "note": "Not reached: lag worst 1 (medium 2, hunt 2). The budget now: the hand moves 1.5 ms after a refresh, the ask follows 0.8 ms later, so a draw over about 6 ms reads 2. Leads for pass 9 (dump kit: /tmp/scrubana/pass8-dump.patch adds /tmp/scrub8-N-speed.json per drag with every picture's put-up time, draw and ask; a8.py lists each late look with the pictures around it, b8.py move-to-ask, c8.py the first moves of each drag): (1) MEDIUM: every remaining 2 is a transition picture of 6-7.6 ms drawn from stand-ins (looks 10-11, 37, 46-47, 53, 65, 110 in one drag, the same moments each drag); find what those 4-5 Core Image passes are now and cut one. (2) HUNT: in about half the hunts the first 2-4 pictures still take 7-9 ms even with the plain enlargement (others 3-5 ms), and a few isolated 6-9 ms pictures mid-hunt; split those draws (graph build / startTask / GPU wait) to see whether it is Core Image planning or the GPU clock."
+    },
+    {
+      "t": "2026-11-27T12:38:30.007Z",
+      "note": "Pass 8 landed 13f45444c: moves asked for at the refresh they are made in (refreshes counted by the display's clock, not the link's late calls), the render asked without a main actor hop, and every recording frame drawn the plain way while the hand moves. Medium 2,5,2 -> 2,2,2, hunt 2,2,2 with half the late looks; lag worst 1 not reached, leads in the log."
     }
   ],
   "walks": [
@@ -246,6 +274,6 @@
     "scrub-never-blacks-out-walk",
     "hear-the-scrub-walk"
   ],
-  "started": "2026-11-27T09:56:44.459Z",
+  "started": "2026-11-27T11:14:02.442Z",
   "failures": 0
 }
