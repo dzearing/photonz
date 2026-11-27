@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-13T04:57:39.758Z",
-  "updated": "2026-11-27T15:56:24.480Z",
+  "updated": "2026-11-27T15:57:02.489Z",
   "deps": [
     "a-speed-walk-measures-the-long-reference-edit-th"
   ],
@@ -107,17 +107,9 @@
       "note": "Pass 2 landed (f76901a22): busy lanes paint plain clips and cuts; zoom 567 -> 50 ms a frame, edits 150-245 ms. Bars of 8.3 ms and 16 ms not reached; next is painting clips that show pictures."
     },
     {
-      "t": "2026-11-27T15:56:24.479Z",
-      "note": "... 124 earlier entries elided",
-      "elided": 124
-    },
-    {
-      "t": "2026-11-22T14:27:44.737Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-11-22T15:11:34.629Z",
-      "note": "Pass 22 (2026-11-22). Baseline at 93fbf8874 (60 min edit, timeline measure, load ~4-10): zoom in 44-48 late of 240, mean 10.1 ms, busy 6.2; by zoom its slow frames were 1x-8x. Every-pass profile of zoom in (pass-profile.sh --match 'zoom in'): 460 samples in restartMotionPreview's loop calling EditorState.submit -> displayDocument -> drawn(atTimeMS:), up to 5.5 ms a pass. The picture motion preview (EditorState+Motion, 30 fps) started on open for ANY document with motion, a video included (titles/zooms), and a video's window has nothing to stop it (Space goes to the transport). Fix: PhotonzDocument.hasALoopToPlay (LayerMotion.swift, tested in DocumentTimeTests.onlyAPictureHasALoopToPlay) is false with hasTime; canPlayMotion reads it. A/B one build, throwaway defaults switch, 3 alternating runs: zoom in late 44/45/48 -> 19/20/22, mean 10.1 -> 9.0 ms, p95 ~20 -> ~15, busy 6.2 -> 4.9; near Fit 84/82/71 -> 76/77/75 late of 648 (within noise), zoom out and scroll unchanged. 17 walks (task's 11 + an-editing-session, hour-long open, 4 video title walks): 16 green; insert-a-title-before-a-clip-walk fails identically on main with the change stashed, filed undo-backs-a-title-page-inserted-before-a-clip-o. Scripts/test.sh exit 0. Looked at the at-rest capture of the 60 min edit: canvas on its first frame, lanes filled, names and fade diamonds in place. Rule in docs/design/video.md 8f. Audit queue/audits/2026-11-22-timeline-hour-long-pass22-no-loop-in-video.json. Landed 85922f62c."
+      "t": "2026-11-27T15:57:02.488Z",
+      "note": "... 126 earlier entries elided",
+      "elided": 126
     },
     {
       "t": "2026-11-22T15:11:34.698Z",
@@ -506,9 +498,17 @@
     {
       "t": "2026-11-27T15:56:24.478Z",
       "note": "runner failed (exit 1, attempt 1): You've hit your weekly limit · resets 12am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-11-27T15:56:58.084Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-27T15:57:02.487Z",
+      "note": "runner failed (exit 1, attempt 2): You've hit your weekly limit · resets 12am (America/Los_Angeles)"
     }
   ],
-  "started": "2026-11-27T15:48:20.973Z",
+  "started": "2026-11-27T15:56:58.083Z",
   "walks": [
     "open-out-the-timeline-walk",
     "timeline-pinch-both-ways-walk",
@@ -522,9 +522,9 @@
     "a-cut-slid-under-a-still-pointer-walk",
     "a-painted-gap-takes-a-right-click-walk"
   ],
-  "failures": 1,
+  "failures": 2,
   "lastError": {
-    "at": "2026-11-27T15:56:24.477Z",
+    "at": "2026-11-27T15:57:02.486Z",
     "exit": 1,
     "message": "You've hit your weekly limit · resets 12am (America/Los_Angeles)"
   }
